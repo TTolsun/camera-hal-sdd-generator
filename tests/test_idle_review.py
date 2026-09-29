@@ -178,3 +178,26 @@ def test_revision_retries_a_previously_deferred_proposal(idle_case, monkeypatch)
     cfg.raw.pop("site")
     cfg.raw["automation"]["idle_review"]["revision"] = 2
     assert idle_review.run(cfg, target, "retry")["status"] == "applied"
+
+
+def test_json_review_does_not_inherit_markdown_writer_contract(idle_case):
+    cfg, target = idle_case
+    (cfg.prompts_dir / "system.md").write_text("Return only Markdown paragraphs, never JSON.", encoding="utf-8")
+    _, section, excerpt = idle_review._scope(cfg, target, {}, {})
+    prompt = idle_review._prompt(cfg, section, excerpt)
+    assert "Return only Markdown paragraphs" not in prompt
+    assert "Return ONLY one JSON object" in prompt
+    assert "기존 계약을 유지합니다." in prompt
+
+
+@pytest.mark.parametrize("prefix", ["", "Here is my answer:\n"])
+def test_hermes_accepts_only_a_whole_fenced_json_response(idle_case, monkeypatch, tmp_path, prefix):
+    import subprocess
+    cfg, _ = idle_case
+    output = prefix + '```json\n{"kind":"no_gap","reason":"covered"}\n```'
+    monkeypatch.setattr(idle_review.subprocess, "run", lambda *a, **kw: subprocess.CompletedProcess([], 0, output, ""))
+    if prefix:
+        with pytest.raises(ValueError):
+            idle_review._ask(cfg, "review", {}, tmp_path)
+    else:
+        assert idle_review._ask(cfg, "review", {}, tmp_path)["kind"] == "no_gap"

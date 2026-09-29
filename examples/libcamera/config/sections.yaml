@@ -474,6 +474,42 @@ sections:
       - completion
       covers:
       - concurrency
+  - id: disconnection
+    title: 연결 해제와 대기 요청
+    question: 카메라 연결이 끊어지면 상태·API 접근·대기 요청에 어떤 변화와 확인 한계가 있습니까?
+    sources:
+    - id: access
+      file: src/libcamera/camera.cpp
+      start: int Camera::Private::isAccessAllowed(State state, bool allowDisconnected,
+      end: void Camera::Private::setState(State state)
+      sha256: 1e0ac0e45422136580c0722ca5a356f17a7c0b8ae18dbb64090f7734afdbfaae
+    - id: notification
+      file: src/libcamera/camera.cpp
+      start: \brief Notify camera disconnection
+      end: int Camera::exportFrameBuffers(Stream *stream,
+      sha256: cbc12aaba21898e519c8599faec5e998b408162912a507880b162ee6787cf8b0
+    statements:
+    - text: Camera::disconnect()는 내부 disconnect()를 호출한 다음 disconnected 신호를 보냅니다. 내부
+        구현은 실행 중인 카메라의 상태를 CameraConfigured로 바꾸고 disconnected_를 설정합니다. 소스 주석은 애플리케이션이
+        자원을 해제하고 release()를 호출할 수 있도록 이 상태를 선택한다고 설명합니다.
+      evidence:
+      - access
+      - notification
+      covers:
+      - disconnection
+    - text: 접근 검사 isAccessAllowed()는 연결이 끊겼고 allowDisconnected가 false이면 -ENODEV를 반환합니다.
+        따라서 개별 API의 동작은 해당 API가 이 검사를 호출하는지와 allowDisconnected 인자를 함께 확인해야 합니다.
+      evidence:
+      - access
+      covers:
+      - disconnection
+    - text: disconnect()의 문서 주석에는 실행 중 연결 해제 시 대기 요청 처리가 TODO로 남아 있습니다. 이 발췌만으로 연결 해제가
+        stop()과 같은 취소·동기 완료 계약을 보장한다고 해석할 수 없습니다. 장치별 연결 해제 경로와 미완료 요청의 실제 완료 통지는 별도
+        검증이 필요합니다.
+      evidence:
+      - notification
+      covers:
+      - disconnection
   design_requirements:
   - id: responsibility
     question: CameraManager, Camera, Request의 책임과 객체 수명은 어떻게 나뉩니까?
@@ -487,6 +523,8 @@ sections:
     question: queueRequest의 오류 조건과 stop의 취소·완료·복귀 상태를 설명하세요.
   - id: concurrency
     question: threadsafe 보장, 호출자의 동기화 책임과 파이프라인의 완료 통지 계약을 구분하세요. 애플리케이션 콜백 전달 방식과 실기기 검증은 별도로 확인하세요.
+  - id: disconnection
+    question: 카메라 연결이 끊어지면 상태·API 접근·대기 요청에 어떤 변화와 확인 한계가 있습니까?
   show_evidence: true
 - id: pipeline-handler
   group: For Vendors
