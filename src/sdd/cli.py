@@ -365,6 +365,26 @@ def cmd_verify_publication(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_improve(args: argparse.Namespace) -> int:
+    import json
+    import uuid
+    from .automation import locked
+    from .idle_review import run
+    cfg = _cfg(args)
+    with locked(cfg.build_dir / "automation.lock"):
+        state_path = cfg.build_dir / "idle-review-state.json"
+        previous = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
+        if (cfg.build_dir / "automation-state.json").exists():
+            publication = json.loads((cfg.build_dir / "automation-state.json").read_text(encoding="utf-8"))
+            if publication.get("pending"):
+                raise RuntimeError("진행 중인 게시가 있습니다. sdd automate로 먼저 재개하세요.")
+        target = str(_load_model(cfg).meta.get("source_commit", ""))
+        job = previous.get("pending", {}).get("job") or uuid.uuid4().hex
+        result = run(cfg, target, job)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 2 if result["status"] == "deferred" else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     # Windows 콘솔의 기본 코드 페이지(cp949)에서도 한국어 메시지가 깨지지 않게 한다.
     for stream in (sys.stdout, sys.stderr):
@@ -433,6 +453,7 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(fn=cmd_update)
 
     sub.add_parser("build").set_defaults(fn=cmd_build)
+    sub.add_parser("improve", help="현재 facts 커밋에서 누락 한 항목을 점검·검증하여 보완 (Git 게시 없음)").set_defaults(fn=cmd_improve)
 
     s = sub.add_parser("automate", help="Hermes 설명 검토·증분 갱신·Git 반영·배포 확인을 재개 가능한 작업으로 실행")
     s.add_argument("--cron", action="store_true", help="설정한 시간·시간대의 crontab 내용을 출력 (설치하지 않음)")

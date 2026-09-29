@@ -7,6 +7,7 @@ import os
 import re
 import shlex
 import subprocess
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -91,6 +92,10 @@ def _settings(cfg):
     pub = opts.get("publish", {})
     if not isinstance(pub, dict) or not isinstance(opts.get("hermes", {}), dict):
         raise ValueError("publish와 hermes 설정은 객체여야 합니다.")
+    if not isinstance(opts.get("idle_review", {}), dict):
+        raise ValueError("idle_review 설정은 객체여야 합니다.")
+    if opts.get("idle_review", {}).get("enabled") and not opts.get("hermes", {}).get("enabled"):
+        raise ValueError("누락 점검에는 automation.hermes.enabled가 필요합니다.")
     if int(pub.get("timeout_sec", 900)) <= 0:
         raise ValueError("publish.timeout_sec은 양수여야 합니다.")
     for key in ("repo", "directory", "remote", "branch"):
@@ -146,7 +151,7 @@ def run(cfg):
                                              "repo": str(repo), "site": cfg.raw.get("site", {}),
                                              "destination": destination}, sort_keys=True).encode()).hexdigest()
         job = state.get("pending")
-        if job and job.get("phase") not in {"update", "build", "copy", "commit", "push", "deploy", "verify"}:
+        if job and job.get("phase") not in {"update", "idle", "build", "copy", "commit", "push", "deploy", "verify"}:
             raise ValueError("지원하지 않는 게시 단계입니다.")
         if job and job["identity"] != identity:
             raise RuntimeError("미완료 작업의 설정이 바뀌었습니다. 기존 설정으로 먼저 재개하세요.")
@@ -164,6 +169,9 @@ def run(cfg):
                 source_git.fetch(cfg.source_root)
             target = source_git.resolve_commit(cfg.source_root, opts["to"])
             job = {"identity": identity, "target": target, "phase": "update", "initial_docs_commit": remote_head}
+            if opts.get("idle_review", {}).get("enabled"):
+                job["idle_allowed"] = update._baseline(cfg, update.load_state(cfg)) == target
+                job["idle_job"] = uuid.uuid4().hex
             state["pending"] = job
             save(path, state)
         try:
@@ -195,6 +203,11 @@ def _resume(cfg, opts, pub, repo, out, path, state, job):
             raise RuntimeError("needs-review 문서가 남아 있어 게시하지 않습니다.")
         if KnowledgeModel.load(cfg.facts_path).meta.get("source_commit") != job["target"]:
             raise RuntimeError("facts가 이번 게시 대상 커밋과 다릅니다.")
+        phase("idle" if job.get("idle_allowed") else "build")
+    if job["phase"] == "idle":
+        from .idle_review import run as review_omissions
+        job["idle_result"] = review_omissions(cfg, job["target"], job["idle_job"])
+        print("누락 점검: " + json.dumps(job["idle_result"], ensure_ascii=False))
         phase("build")
     if job["phase"] == "build":
         if source_git.resolve_commit(repo, "HEAD") != job["initial_docs_commit"] or not source_git.is_clean(repo):
