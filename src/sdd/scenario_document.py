@@ -12,7 +12,7 @@ from .facts.model import Message, Scenario
 
 
 def fingerprint(sc: Scenario, settings: dict) -> str:
-    data = {"scenario": asdict(sc), "settings": settings, "presentation_version": 1}
+    data = {"scenario": asdict(sc), "settings": settings, "presentation_version": 2}
     return hashlib.sha256(json.dumps(data, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
@@ -35,7 +35,7 @@ def reference(message: Message) -> str:
 
 def kind(message: Message) -> str:
     if message.note.startswith("예약된 호출"):
-        return "예약 대상이며 즉시 실행되는 호출이 아닙니다."
+        return "메서드 전달 대상이며 동기·비동기 여부는 호출부에서 확인해야 합니다."
     if "virtual" in message.note:
         return "동적 디스패치 후보이며 실제 대상은 확인이 필요합니다."
     return message.note or "정적 호출 지점입니다."
@@ -116,7 +116,8 @@ def build(sc: Scenario, settings: dict, max_nodes: int = 16) -> ScenarioDocument
               f"facts에 기록된 호출은 {len(sc.messages)}개이며, 요약의 hide 규칙에 해당하는 호출은 {hidden}개입니다. "
               "전체 추적 기록에는 해당 호출도 모두 보존합니다. 기록 번호는 정적 탐색의 식별자이며 실행 순번이 아닙니다.", "",
               "조건 분기, 반복 횟수와 실제 실행 스레드는 이 호출 목록만으로 확정할 수 없습니다. "
-              "가상 호출 후보는 실제 객체에 따라 선택되며, 예약 대상은 큐나 신호 구현에서 이어서 확인해야 합니다."]
+              "가상 호출 후보는 실제 객체에 따라 선택됩니다. 예약 표시는 인자로 전달한 메서드 대상을 뜻하며, "
+              "비동기 실행을 보증하지 않습니다. 호출부의 연결 방식과 동기화 계약을 확인해야 합니다."]
     if boundaries:
         # Group candidates at one call site, without asserting mutually exclusive
         # runtime branches from incomplete/legacy facts.
@@ -142,7 +143,7 @@ def build(sc: Scenario, settings: dict, max_nodes: int = 16) -> ScenarioDocument
     overview = "\n".join(rows)
     details = "\n".join(detail)
     prompt = ("이 입력은 정적 호출 기록이며 실행 순서가 아닙니다. virtual 후보를 연속 실행으로 설명하지 않습니다. "
-              "예약 대상은 즉시 실행되는 호출이 아닙니다. 조건·스레드·소유권을 근거 없이 추측하지 않습니다.\n"
+              "메서드 전달만으로 동기·비동기 실행을 단정하지 않습니다. 조건·스레드·소유권을 근거 없이 추측하지 않습니다.\n"
               + overview.split("## 주요 호출 관계")[0] + "\n\n" + trace_table(shown))
     introduction = (f"`{sc.entry}`에서 시작한 정적 탐색으로 호출 기록 {len(sc.messages)}개를 수집했습니다. "
                     f"주요 확인 지점 {len(groups)}개를 아래 표와 관계도에 표시합니다. "

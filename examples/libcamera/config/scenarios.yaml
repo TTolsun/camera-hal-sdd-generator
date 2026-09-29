@@ -1,5 +1,5 @@
 # libclang 대체 경로(tools.clang_uml: none)가 이 진입점에서 호출 순서를 추적한다.
-# 아래 시그니처는 커밋 279d355ef8f7a4f98bb0a3004c0f788387814506 의 정의와 대조했고, 근거 위치를
+# 아래 시그니처는 커밋 d48b72e710fb1a72b0d291b912c179c93619e1d8 의 정의와 대조했고, 근거 위치를
 # 항목마다 적었다. 소스 커밋을 올린 뒤에는 다시 대조해야 한다. 맞지 않으면 extract 로그가
 # "진입 함수를 찾지 못했습니다" 와 missing_entries 개수를 보고한다. 그 경고를 무시하면 안 된다.
 # 목록에 있다는 것은 정적 호출 순서를 추출했다는 뜻이고, 실행으로 검증했다는 뜻은 아니다.
@@ -57,3 +57,14 @@ scenarios:
       - {title: 대기 요청 처리, names: [doQueueRequests], src: PipelineHandler}
       - {title: 하드웨어별 큐잉 후보, names: [queueRequestDevice], src: PipelineHandler}
     # 정의: src/libcamera/pipeline_handler.cpp:584
+
+  - id: camera_stop
+    title: 캡처 종료 요청 (Camera::stop)
+    from: "Camera::stop()"
+    depth: 5
+    focus:
+      - {title: 종료 상태 반영, names: [setState], src: Camera}
+      - {title: 파이프라인 종료 대상, names: [stop], src: Camera}
+      - {title: 종료 뒤 대기 요청 확인, names: [hasPendingRequests], src: Camera}
+    # Camera::stop()의 상태 검사와 종료 호출 대상을 추적합니다.
+    # invokeMethod 경계 뒤의 취소 처리는 Pipeline Handler의 소스 계약에서 확인합니다.

@@ -25,7 +25,8 @@ def test_all_records_survive_presentation_and_hidden_boundaries_stay_visible():
     assert "76–78 / 78개" in doc.details
     assert "BackendA::queue()" in doc.overview and "BackendB::queue()" in doc.overview
     assert "sequenceDiagram" not in doc.overview
-    assert "즉시 실행되는 호출이 아닙니다" in doc.details
+    assert "동기·비동기 여부는 호출부에서 확인" in doc.details
+    assert "즉시 실행되는 호출이 아닙니다" not in doc.details
     assert "이후 단계는 생략" not in doc.details
 
 
