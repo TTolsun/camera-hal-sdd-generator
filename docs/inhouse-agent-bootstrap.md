@@ -134,7 +134,7 @@ uv run sdd --config ../hal-sdd-project/sdd.yaml verify-site
 | 증분 갱신 | `sdd update --to <ref>`를 실행합니다. 빌드 입력 재생성이 필요하면 `update.compdb_cmd`에 명령 인자 목록을 설정합니다. |
 | 실패·재검토 처리 | 종료 코드와 `update-state.json`·영향 보고서·설계 검사 결과를 보관하고 담당자가 확인할 수 있게 합니다. 실패한 커밋을 완료 처리하지 않습니다. |
 | 검토와 사이트 검증 | 실제 검토에 따라 승인 장부를 기록하고 `export-site`와 `verify-site`를 실행합니다. 자동 검사 통과만으로 승인자를 대신하지 않습니다. |
-| 게시 | 검증된 사이트를 사내 운영 정책에 따라 반영합니다. 생성기 자체에는 서버 배포나 Git push가 포함되지 않습니다. |
+| 게시 | `sdd automate`로 Git 반영과 환경별 배포·확인 명령을 연결합니다. [예약 게시 절차](scheduled-publication.md)를 따릅니다. |
 
 `update`는 커밋마다 소스를 체크아웃하므로 개발자가 수정 중인 작업 폴더와 분리합니다. 같은 소스·설정·출력 경로를 사용하는 작업은 CI에서 동시 실행되지 않도록 설정합니다. 기준 facts, `build/update-state.json`, 원고와 승인 장부는 재실행에 필요한 상태이므로 실행 간에 보존합니다.
 

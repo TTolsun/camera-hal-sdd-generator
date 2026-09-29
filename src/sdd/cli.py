@@ -345,6 +345,26 @@ def cmd_verify_site(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_automate(args: argparse.Namespace) -> int:
+    from . import automation
+    cfg = _cfg(args)
+    if args.cron:
+        config_path = Path(args.config).resolve() if args.config else cfg.root / "sdd.yaml"
+        print(automation.cron(cfg, config_path), end="")
+        return 0
+    return automation.run(cfg)
+
+
+def cmd_verify_publication(args: argparse.Namespace) -> int:
+    import os
+    from .publication import verify_remote
+    site = args.site or os.environ.get("SDD_SITE_DIR")
+    if not site:
+        raise ValueError("--site 또는 SDD_SITE_DIR이 필요합니다.")
+    print(verify_remote(Path(site), args.url, timeout=args.timeout, interval=args.interval))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     # Windows 콘솔의 기본 코드 페이지(cp949)에서도 한국어 메시지가 깨지지 않게 한다.
     for stream in (sys.stdout, sys.stderr):
@@ -413,6 +433,17 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(fn=cmd_update)
 
     sub.add_parser("build").set_defaults(fn=cmd_build)
+
+    s = sub.add_parser("automate", help="Hermes 설명 검토·증분 갱신·Git 반영·배포 확인을 재개 가능한 작업으로 실행")
+    s.add_argument("--cron", action="store_true", help="설정한 시간·시간대의 crontab 내용을 출력 (설치하지 않음)")
+    s.set_defaults(fn=cmd_automate)
+
+    s = sub.add_parser("verify-publication", help="실제 URL의 manifest와 모든 산출물 해시가 로컬 사이트와 일치할 때까지 확인")
+    s.add_argument("--url", required=True)
+    s.add_argument("--site", help="로컬 사이트 (기본: SDD_SITE_DIR)")
+    s.add_argument("--timeout", type=int, default=600)
+    s.add_argument("--interval", type=int, default=10)
+    s.set_defaults(fn=cmd_verify_publication)
 
     s = sub.add_parser("export-site", help="탐색 메뉴, 목차, 검색, Mermaid 확대를 갖춘 정적 문서 사이트")
     s.add_argument("--out", help="출력 디렉터리 (기본: build/site)")
