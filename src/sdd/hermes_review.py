@@ -19,8 +19,12 @@ def revise(cfg, model, report, options):
     Missing anchors require an operator: Hermes cannot widen evidence selectors,
     edit source, relax questions, change approval policy, or update hashes alone.
     """
+    # Capture the optimistic concurrency baseline before any slow model call.
+    # Reading it after Hermes returns would silently bless intervening user edits.
+    original = cfg.sections_file.read_bytes()
+    data = yaml.safe_load(original)
+    sections = copy.deepcopy(data.get("sections", []) or [])
     evidence.collect(cfg, model)
-    sections = copy.deepcopy(cfg.sections())
     changed = []
     audit_dir = cfg.build_dir / "hermes" / report.head
     for sec in sections:
@@ -95,9 +99,7 @@ def revise(cfg, model, report, options):
         return
     # Validate the whole proposal before touching the authoritative configuration.
     candidate = cfg.sections_file.with_name(cfg.sections_file.name + ".hermes-candidate")
-    original = cfg.sections_file.read_bytes()
     (audit_dir / "sections.before.yaml").write_bytes(original)
-    data = yaml.safe_load(original)
     data["sections"] = sections
     candidate.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
     try:

@@ -68,6 +68,36 @@ def test_publish_and_no_change_does_not_create_commit(pipeline):
     assert first == git(repo, "rev-parse", "HEAD")
 
 
+def test_changed_publication_policy_is_not_skipped(pipeline):
+    cfg, repo, remote, calls = pipeline
+    assert automation.run(cfg) == 0
+    cfg.raw["automation"]["publish"]["verify_command"] = [sys.executable, "-c", "raise SystemExit(7)"]
+    with pytest.raises(subprocess.CalledProcessError):
+        automation.run(cfg)
+    state = json.loads((cfg.build_dir / "automation-state.json").read_text())
+    assert state["pending"]["phase"] == "verify"
+
+
+def test_pending_publication_rejects_changed_remote_url(pipeline, monkeypatch, tmp_path):
+    cfg, repo, remote, calls = pipeline
+    real = automation.git
+    def offline(repo, *args):
+        if args[0] == "push":
+            raise RuntimeError("offline")
+        return real(repo, *args)
+    monkeypatch.setattr(automation, "git", offline)
+    with pytest.raises(RuntimeError, match="offline"):
+        automation.run(cfg)
+    replacement = tmp_path / "replacement.git"
+    git(tmp_path, "clone", "--bare", str(remote), str(replacement))
+    before = git(replacement, "rev-parse", "HEAD")
+    git(repo, "remote", "set-url", "--push", "origin", str(replacement))
+    monkeypatch.setattr(automation, "git", real)
+    with pytest.raises(RuntimeError, match="설정이 바뀌었습니다"):
+        automation.run(cfg)
+    assert git(replacement, "rev-parse", "HEAD") == before
+
+
 def test_verification_retry_keeps_same_target_even_after_new_source_commit(pipeline):
     cfg, repo, remote, calls = pipeline
     marker = cfg.root / "ready"
