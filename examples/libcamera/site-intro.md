@@ -33,6 +33,6 @@
 
 분석 기준 커밋은 각 문서에 표시합니다. WSL2에서 IPU3·RKISP1·UVC와 GStreamer를 포함해 빌드하고 추출한 결과를 사용합니다. 개요·카메라·Pipeline·IPA·LSC 처리 설명은 예제 설정에 작성된 계약을 소스 발췌와 대조하여 생성합니다. 핵심 시나리오에는 `Camera::stop()`의 종료·취소 경로도 포함합니다. 시나리오는 libclang으로 추출한 호출 관계와 경계를 표시하며, 실기기 촬영과 실행 검증은 후속 작업입니다.
 
-[camera-hal-sdd-generator](https://github.com/TTolsun/camera-hal-sdd-generator)는 분석·생성·검증·화면 구성 기술을 관리합니다. [libcamera-sdd](https://github.com/TTolsun/libcamera-sdd)는 원본 소스 이력과 완성 문서의 배포를 담당합니다. 공개 검증 환경은 매일 한국 시간 21시에 upstream 이력을 동기화하고, 로컬 실행기가 문서 갱신·누락 점검과 PR 게시를 수행하도록 구성되어 있습니다. 로컬 PC가 켜져 있고 실행 계정이 로그인된 상태여야 하며, 검증을 통과하지 못한 제안은 게시하지 않습니다.
+[camera-hal-sdd-generator](https://github.com/TTolsun/camera-hal-sdd-generator)는 분석·생성·검증·화면 구성 기술을 관리합니다. [libcamera-sdd](https://github.com/TTolsun/libcamera-sdd)는 원본 소스 이력과 완성 문서의 배포를 담당합니다. 공개 환경에는 정기 예약을 두지 않습니다. 생성기 저장소에서 작업할 때 공식 upstream 확인·동기화와 문서 갱신·배포를 함께 수행하고, 새 커밋이 없으면 기존 카테고리의 누락을 점검합니다. 정기 예약과 시간 변경 기능은 사내 운영을 위한 공통 실행기에서 제공합니다.
 
 원래 라이브러리의 사용법은 [libcamera 공식 문서](https://docs.libcamera.org/master/)에서 확인할 수 있습니다.
