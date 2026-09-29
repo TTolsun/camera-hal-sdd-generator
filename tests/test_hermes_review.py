@@ -87,3 +87,19 @@ def test_missing_anchor_and_budget_do_not_call_hermes(review_case, monkeypatch):
     cfg.sections_file.write_text(original.decode().replace("start: BEGIN", "start: MISSING"), encoding="utf-8")
     with pytest.raises(RuntimeError, match="앵커"):
         revise(cfg, model, report, {})
+
+
+def test_concurrent_edit_during_hermes_call_is_preserved(review_case, monkeypatch):
+    cfg, model, report = review_case
+    original_run = subprocess.run
+    edited = cfg.sections_file.read_text(encoding="utf-8").replace("title: API", "title: User edit")
+    def run(args, **kwargs):
+        if args[0] == "fake-hermes":
+            cfg.sections_file.write_text(edited, encoding="utf-8")
+            return SimpleNamespace(stdout=json.dumps({"reason": "reviewed", "statements": [
+                {"text": "새 계약입니다.", "covers": ["contract"], "evidence": ["api"]}]}))
+        return original_run(args, **kwargs)
+    monkeypatch.setattr(subprocess, "run", run)
+    with pytest.raises(RuntimeError, match="검토 중 sections 설정이 변경"):
+        revise(cfg, model, report, {"command": ["fake-hermes", "{prompt}"]})
+    assert cfg.sections_file.read_text(encoding="utf-8") == edited

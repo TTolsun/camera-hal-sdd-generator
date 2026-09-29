@@ -139,8 +139,12 @@ def run(cfg):
         if state.get("schema") != 1:
             raise ValueError("지원하지 않는 automation state schema입니다.")
         # A pending publication cannot silently switch destination or source.
+        # Resolve named remotes too: `git remote set-url` need not change YAML.
+        destination = {"fetch": git(repo, "remote", "get-url", pub["remote"]),
+                       "push": git(repo, "remote", "get-url", "--push", "--all", pub["remote"])}
         identity = hashlib.sha256(json.dumps({"options": {k: v for k, v in opts.items() if k != "schedule"}, "source": str(cfg.source_root),
-                                             "repo": str(repo), "site": cfg.raw.get("site", {})}, sort_keys=True).encode()).hexdigest()
+                                             "repo": str(repo), "site": cfg.raw.get("site", {}),
+                                             "destination": destination}, sort_keys=True).encode()).hexdigest()
         job = state.get("pending")
         if job and job.get("phase") not in {"update", "build", "copy", "commit", "push", "deploy", "verify"}:
             raise ValueError("지원하지 않는 게시 단계입니다.")
@@ -247,7 +251,7 @@ def _resume(cfg, opts, pub, repo, out, path, state, job):
     if source_git.resolve_commit(repo, "HEAD") != job["docs_commit"] or not source_git.is_clean(repo):
         raise RuntimeError("게시 대기 중인 문서 커밋 또는 작업본이 변경됐습니다.")
     if job["phase"] == "push":
-        if state.get("last_published") == {k: job[k] for k in ("target", "docs_commit", "build_id")}:
+        if state.get("last_published") == {k: job[k] for k in ("target", "docs_commit", "build_id", "identity")}:
             state.pop("pending")
             save(path, state)
             print("산출물 변경이 없어 게시를 생략합니다.")
@@ -261,7 +265,7 @@ def _resume(cfg, opts, pub, repo, out, path, state, job):
         phase("verify")
     if job["phase"] == "verify":
         _hook(pub["verify_command"], repo, job, out, timeout)
-        state["last_published"] = {k: job[k] for k in ("target", "docs_commit", "build_id")}
+        state["last_published"] = {k: job[k] for k in ("target", "docs_commit", "build_id", "identity")}
         state.pop("pending")
         state.pop("error", None)
         save(path, state)
