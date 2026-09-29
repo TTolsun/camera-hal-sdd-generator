@@ -25,6 +25,12 @@ def revise(cfg, model, report, options):
     audit_dir = cfg.build_dir / "hermes" / report.head
     for sec in sections:
         for topic in sec.get("design_topics", []):
+            # Persist regeneration scope across a retry after a validated proposal
+            # was saved but Markdown generation failed. Pins already match then.
+            if any(s.get("file") in report.changed_files for s in topic.get("sources", [])):
+                reasons = report.sections.setdefault(sec["id"], [])
+                if "설계 근거 파일 변경" not in reasons:
+                    reasons.append("설계 근거 파일 변경")
             records = [model.evidence[f"{sec['id']}/{topic['id']}/{s['id']}"]
                        for s in topic.get("sources", [])]
             if not any(r.get("status") != "available" for r in records):
@@ -85,6 +91,7 @@ def revise(cfg, model, report, options):
                 source["sha256"] = record["sha256"]
             changed.append(sec["id"])
     if not changed:
+        report.save(cfg.build_dir / "impact.json")
         return
     # Validate the whole proposal before touching the authoritative configuration.
     candidate = cfg.sections_file.with_name(cfg.sections_file.name + ".hermes-candidate")

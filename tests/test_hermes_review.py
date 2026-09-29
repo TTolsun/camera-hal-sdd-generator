@@ -35,7 +35,7 @@ def review_case(tmp_cfg, monkeypatch):
             "statements": [{"text": "기존 계약입니다.", "covers": ["contract"], "evidence": ["api"]}]}]}]}
     tmp_cfg.sections_file.write_text(yaml.safe_dump(sections, allow_unicode=True), encoding="utf-8")
     model = KnowledgeModel(meta={"source_commit": head})
-    report = ImpactReport(base, head)
+    report = ImpactReport(base, head, changed_files=["api.cpp"])
     return tmp_cfg, model, report
 
 
@@ -58,6 +58,9 @@ def test_changes_only_reviewed_statements_and_hashes(review_case, monkeypatch):
     assert topic["sources"][0]["sha256"] == hashlib.sha256(b"BEGIN new contract END").hexdigest()
     assert "api" in report.sections
     assert not (cfg.sdd_dir / "approvals.json").exists()
+    retry = ImpactReport(report.base, report.head, changed_files=["api.cpp"])
+    revise(cfg, model, retry, {"command": ["must-not-call-again", "{prompt}"]})
+    assert "api" in retry.sections
 
 
 @pytest.mark.parametrize("response", [

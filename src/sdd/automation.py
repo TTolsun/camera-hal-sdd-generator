@@ -89,6 +89,10 @@ def _settings(cfg):
     if not isinstance(opts, dict):
         raise ValueError("automation 설정은 객체여야 합니다.")
     pub = opts.get("publish", {})
+    if not isinstance(pub, dict) or not isinstance(opts.get("hermes", {}), dict):
+        raise ValueError("publish와 hermes 설정은 객체여야 합니다.")
+    if int(pub.get("timeout_sec", 900)) <= 0:
+        raise ValueError("publish.timeout_sec은 양수여야 합니다.")
     for key in ("repo", "directory", "remote", "branch"):
         if not isinstance(pub.get(key), str) or not pub[key].strip():
             raise ValueError(f"automation.publish.{key}가 필요합니다.")
