@@ -51,7 +51,7 @@ def style_rules(readme_text: str) -> str:
     """style/README.md 에서 번호 붙은 규칙만 뽑는다.
 
     README 전체(출처 링크, brief.mjs 설명)를 넣으면 소형 모델이 그 문서를 그대로 되풀이하는 일이 있었다.
-    규칙 5개만 넣으면 그 문제가 사라지고 프롬프트도 짧아진다."""
+    번호 붙은 집필 규칙만 넣어 출처 설명의 재출력을 피하고 프롬프트를 짧게 유지한다."""
     rules = [l.strip() for l in readme_text.splitlines() if re.match(r"^\s*\d+\.\s", l)]
     return "개발자 가이드 집필 규칙:\n" + "\n".join(rules) if rules else readme_text.strip()
 

@@ -100,7 +100,7 @@ sections:
       covers:
       - discovery
     - text: 각 팩토리는 핸들러 인스턴스를 만들고 `match()`가 실패할 때까지 반복합니다. 성공한 인스턴스는 한 파이프라인에 필요한 장치를 확보합니다. 등록된 IPU3·RKISP1·UVC
-        구현이 하나의 캡처 요청에서 차례로 실행된다는 뜻은 아닙니다.
+        구현이 하나의 캡처 요청에서 차례로 실행된다는 뜻은 아닙니다. 명단에 함께 있다고 단체 출근하는 것은 아닙니다.
       evidence:
       - discovery
       - handler
@@ -358,7 +358,7 @@ sections:
       covers:
       - request
     - text: '`queueRequest()`는 검사를 통과한 요청을 `ConnectionTypeQueued`로 PipelineHandler에 전달합니다. 반환값 0은 이 큐잉을 마쳤다는 뜻이며,
-        장치 제출이나 캡처 완료를 보장하지 않습니다.'
+        장치 제출이나 캡처 완료를 보장하지 않습니다. 접수증을 받았다고 사진까지 나온 것은 아닌 셈입니다.'
       evidence:
       - queue
       covers:
@@ -392,7 +392,7 @@ sections:
       covers:
       - lifetime
     - text: reuse()는 요청 상태와 컨트롤·메타데이터를 초기화합니다. ReuseBuffers를 지정하면 기존 버퍼 연결을 재사용하고, 지정하지 않으면 버퍼 맵을 비웁니다. 새 요청 대신
-        재사용하는 경우 재큐잉 전에 호출합니다.
+        재사용하는 경우 재큐잉 전에 호출합니다. 구현은 상태를 `RequestPending`으로 되돌리고, `ReuseBuffers` 경로에서는 각 버퍼를 요청에 다시 연결하여 완료 대기 집합에 넣습니다. 버퍼 연결을 재사용해도 이전 컨트롤과 메타데이터는 남지 않습니다. 그릇은 다시 쓰지만 지난 주문서까지 재탕하지는 않는 셈입니다.
       evidence:
       - reuse
       covers:
@@ -1021,7 +1021,7 @@ sections:
       end: '} /* namespace ipa::ipu3 */'
       sha256: e373aff7c5b5e5f034637b3d9030b0fdef974614261025791afd6e3146b1108d
     statements:
-    - text: IPU3 알고리즘 빌드 목록에는 lsc.cpp가 포함됩니다. 이 목록에 있다는 사실만으로 실행 중인 카메라에서 LSC가 활성화됐다고 판단할 수는 없습니다.
+    - text: IPU3 알고리즘 빌드 목록에는 lsc.cpp가 포함됩니다. 이 목록에 있다는 사실만으로 실행 중인 카메라에서 LSC가 활성화됐다고 판단할 수는 없습니다. 출연진 명단에 올랐다고 모든 장면에 등장하는 것은 아닌 셈입니다.
       evidence:
       - build
       covers:
