@@ -8,11 +8,11 @@ import argparse
 import copy
 from dataclasses import asdict
 import hashlib
+import http.client
 import json
 from pathlib import Path
 import re
 import time
-import urllib.request
 
 from .budget import fit
 from .config import load
@@ -44,7 +44,12 @@ class RecordingAgent(Agent):
         self.response = {}
 
     def _post(self, url: str, body: dict) -> dict:
-        self.response = super()._post(url, body)
+        try:
+            self.response = super()._post(url, body)
+        except (OSError, http.client.HTTPException, UnicodeError, json.JSONDecodeError) as exc:
+            # urlopen/read/decode can raise these without wrapping them in URLError.
+            # Keep filesystem writes outside this handler: a failed archive must abort.
+            raise AgentError("Model transport or response decoding failed") from exc
         write_json(self.dump_dir / "transport-response.json", self.response)
         return self.response
 
@@ -92,8 +97,8 @@ def run(config: Path, models: list[str], cases: list[str], out: Path, repeats: i
                          topic["title"], blocks))
     identities = {name: {"model": name, "digest": None} for name in models}
     if cfg.agent.kind == "ollama":
-        with urllib.request.urlopen(cfg.agent.base_url + "/api/tags", timeout=30) as response:
-            installed = {x["name"]: x for x in json.load(response)["models"]}
+        metadata = Agent(cfg.agent)._get(cfg.agent.base_url + "/api/tags")
+        installed = {x["name"]: x for x in metadata["models"]}
         for name in models:
             if name not in installed:
                 raise ValueError(f"Install the model before evaluation: {name}")
@@ -142,7 +147,8 @@ def run(config: Path, models: list[str], cases: list[str], out: Path, repeats: i
                         item["verdict"]["notes"].append("Output token limit reached")
                 except AgentError as exc:
                     # Do not record response bodies/endpoints from HTTP errors in reports.
-                    item.update(error=type(exc).__name__, verdict={"ok": False})
+                    item.update(error=type(exc).__name__, error_kind=type(exc.__cause__ or exc).__name__,
+                                verdict={"ok": False})
                 item.update(seconds=round(time.monotonic() - started, 2), prompt_sha256=agent.prompt_hash)
                 report["samples"].append(item)
                 write_json(out / "result.json", report)

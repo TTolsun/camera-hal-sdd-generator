@@ -421,6 +421,12 @@ sections:
       - queue
       covers:
       - shutdown
+    - text: '`queueRequest()`는 요청 상태가 `RequestPending`이 아니거나, 요청의 컨트롤 목록이 해당 카메라의 컨트롤 정보 맵을 참조하지 않거나,
+        요청 버퍼의 스트림이 활성 스트림에 포함되지 않으면 `-EINVAL`을 반환합니다. 이 검사는 파이프라인에 요청을 전달하기 전에 수행합니다.'
+      evidence:
+      - queue
+      covers:
+      - shutdown
     - text: stop()은 대기 중인 요청을 오류 상태로 취소하여 동기적으로 완료합니다. 구현은 실행 중이 아니면 즉시 0을 반환하므로, 이 경로가 -EACCES를 반환한다고 해석하면 안 됩니다.
       evidence:
       - stop

@@ -1,3 +1,5 @@
+import http.client
+import json
 import subprocess
 
 import pytest
@@ -79,3 +81,68 @@ def test_changed_prompt_is_rejected(tmp_path, tmp_cfg, monkeypatch):
     agent.chat('system', 'original', 'case')
     with pytest.raises(ValueError, match='Prompt changed'):
         agent.chat('system', 'modified', 'case')
+
+
+@pytest.mark.parametrize('error', [TimeoutError('private endpoint'),
+                                   ConnectionResetError('private endpoint'),
+                                   http.client.IncompleteRead(b'private partial response', 100),
+                                   json.JSONDecodeError('bad response', 'private body', 0)])
+def test_transport_failure_is_recorded_and_next_candidate_runs(evaluation_config, tmp_path, monkeypatch, error):
+    calls = []
+    def post(self, url, body):
+        calls.append(body['model'])
+        if body['model'] == 'failed':
+            raise error
+        return {'choices': [{'message': {'content': '요청 소유권은 호출자에게 있습니다. `camera.cpp:1`'},
+                             'finish_reason': 'stop'}]}
+    monkeypatch.setattr(Agent, '_post', post)
+    out = tmp_path / 'experiment'
+    report = evaluate.run(evaluation_config, ['failed', 'working'], ['camera/lifetime'], out, 1)
+    assert calls == ['failed', 'working']
+    assert report['samples'][0]['error'] == 'AgentError'
+    assert 'error' not in report['samples'][1]
+    assert 'private' not in (out / 'result.json').read_text(encoding='utf-8')
+    assert len(json.loads((out / 'result.json').read_text(encoding='utf-8'))['samples']) == 2
+
+
+def test_ollama_discovery_uses_configured_auth_and_timeout(evaluation_config, tmp_path, monkeypatch):
+    import urllib.request
+    config = yaml.safe_load(evaluation_config.read_text(encoding='utf-8'))
+    config['agent'].update(kind='ollama', base_url='https://ollama.example.invalid', timeout_sec=37)
+    evaluation_config.write_text(yaml.safe_dump(config), encoding='utf-8')
+    monkeypatch.setenv('SDD_AGENT_API_KEY', 'fixture-key')
+    observed = []
+    class Response:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+        def read(self):
+            return json.dumps({'models': [{'name': name, 'digest': name} for name in ('a', 'b')]}).encode()
+    def urlopen(request, timeout):
+        assert isinstance(request, urllib.request.Request)
+        observed.append((request.full_url, request.get_header('Authorization'), timeout))
+        return Response()
+    monkeypatch.setattr(urllib.request, 'urlopen', urlopen)
+    monkeypatch.setattr(Agent, '_post', lambda *a: {'message': {'content': '완료했습니다.'}, 'done_reason': 'stop'})
+    out = tmp_path / 'experiment'
+    evaluate.run(evaluation_config, ['a', 'b'], ['camera/lifetime'], out, 1)
+    assert observed == [('https://ollama.example.invalid/api/tags', 'Bearer fixture-key', 37)]
+    assert 'fixture-key' not in (out / 'result.json').read_text(encoding='utf-8')
+
+
+def test_archive_write_failure_stops_comparison(evaluation_config, tmp_path, monkeypatch):
+    calls = []
+    def post(self, url, body):
+        calls.append(body['model'])
+        return {'choices': [{'message': {'content': 'response'}, 'finish_reason': 'stop'}]}
+    monkeypatch.setattr(Agent, '_post', post)
+    original = evaluate.write_json
+    def write(path, value):
+        if path.name == 'transport-response.json':
+            raise PermissionError('archive unavailable')
+        return original(path, value)
+    monkeypatch.setattr(evaluate, 'write_json', write)
+    with pytest.raises(PermissionError, match='archive unavailable'):
+        evaluate.run(evaluation_config, ['a', 'b'], ['camera/lifetime'], tmp_path / 'experiment', 1)
+    assert calls == ['a']
