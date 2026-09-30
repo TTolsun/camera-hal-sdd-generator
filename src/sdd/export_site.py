@@ -394,4 +394,6 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(doc, encoding="utf-8", newline="\n")
     (out / "assets" / "search.json").write_text(json.dumps(search, ensure_ascii=False), encoding="utf-8")
+    from .site_localization import localize_site
+    localize_site(cfg, out)
     return out

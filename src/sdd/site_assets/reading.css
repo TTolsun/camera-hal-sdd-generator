@@ -27,3 +27,11 @@ dialog{color:var(--ink);background:#fff;border:1px solid var(--line);border-radi
 @media(max-width:760px){.site-header{height:60px;padding:0 18px}.brand{font-size:15px;gap:8px}.brand-mark{font-size:23px}#search-open{width:auto;font-size:12px}#search-open kbd{display:none}#menu-toggle{font-size:12px}.layout{display:block}#sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:20px}body.js #sidebar:not(.is-open){display:none}.edition,.sidebar-note{display:none}main{padding:28px 20px}.breadcrumb{font-size:11px}h1{font-size:28px}h2{font-size:21px}table{min-width:500px}.page-state{margin-bottom:24px}.diagram-tools input{width:150px}.diagram-tools label{display:none}#diagram-dialog{padding:12px;max-height:94vh}.evidence dl{grid-template-columns:1fr;gap:3px}.evidence dd{margin-bottom:10px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 @media print{.site-header,#sidebar,.page-toc,.mobile-toc,.pagination,dialog,.diagram-hint{display:none!important}.layout{display:block}main{max-width:none;padding:0}.table-scroll{overflow:visible}table{min-width:0}details{display:block}footer{font-size:10px}}
+/* The native disclosure keeps language switching available without JavaScript. */
+.language-selector { position: relative; font-size: 14px; margin: 0; padding: 0; align-self: center; }
+.language-selector summary { cursor: pointer; padding: .4rem .65rem; white-space: nowrap; }
+.language-selector nav { position: absolute; right: 0; top: 100%; min-width: 130px; padding: .4rem; background: white; border: 1px solid #cbd8d2; border-radius: 6px; z-index: 50; box-shadow: 0 4px 12px #17201e18; }
+.language-selector nav a { display: block; padding: .4rem .65rem; }
+.language-selector [aria-current] { font-weight: 700; background: #edf5f1; }
+.translation-note { font-size: 13px; color: #52635c; border-left: 3px solid #8ba99e; padding-left: 12px; }
+@media(max-width:760px){.site-header{height:auto;min-height:60px;flex-wrap:wrap;padding:10px 18px;gap:8px}.brand{flex:1 1 100%}.header-actions{margin-left:auto}.language-selector{font-size:12px}}

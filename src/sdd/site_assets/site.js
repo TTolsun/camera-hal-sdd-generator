@@ -2,7 +2,29 @@
 (() => {
   'use strict';
   const config = JSON.parse(document.querySelector('#site-config').textContent);
+  const english = config.language === 'en';
+  const t = (ko, en) => english ? en : ko;
   const root = new URL(config.root, location.href);
+  const languages = document.querySelector('.language-selector');
+  if (languages) {
+    languages.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        languages.open = false;
+        languages.querySelector('summary').focus();
+      }
+    });
+    document.addEventListener('click', event => {
+      if (!languages.contains(event.target)) languages.open = false;
+    });
+    languages.addEventListener('focusout', event => {
+      if (!languages.contains(event.relatedTarget)) languages.open = false;
+    });
+    languages.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+      const target = new URL(link.href);
+      target.hash = location.hash;
+      link.href = target.href;
+    }));
+  }
   document.body.classList.add('js');
   const menu = document.querySelector('#menu-toggle');
   menu.hidden = false;
@@ -38,7 +60,7 @@
       li.append(a);
       results.append(li);
     });
-    count.textContent = `${matches.length}개 결과 · 문서 제목과 절 제목을 검색합니다.`;
+    count.textContent = t(`${matches.length}개 결과 · 문서 제목과 절 제목을 검색합니다.`, `${matches.length} results · Searching document and section titles.`);
   }
   async function openSearch() {
     if (document.querySelector('dialog[open]')) return;
@@ -46,13 +68,13 @@
     searchDialog.showModal();
     searchInput.focus();
     if (!index) {
-      count.textContent = '검색 목록을 읽고 있습니다.';
+      count.textContent = t('검색 목록을 읽고 있습니다.', 'Loading the search index.');
       try {
         const response = await fetch(new URL('assets/search.json', root));
         if (!response.ok) throw new Error(String(response.status));
         index = await response.json();
       } catch (_) {
-        count.textContent = '검색 목록을 읽지 못했습니다. 왼쪽 문서 메뉴를 이용하세요.';
+        count.textContent = t('검색 목록을 읽지 못했습니다. 왼쪽 문서 메뉴를 이용하세요.', 'Could not load the search index. Use the documentation menu.');
         return;
       }
     }
@@ -67,6 +89,10 @@
   });
   searchDialog.addEventListener('close', () => searchTrigger?.focus());
   document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      const opened = document.querySelector('dialog[open]');
+      if (opened) { event.preventDefault(); opened.close(); }
+    }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault(); openSearch();
     }
@@ -106,7 +132,7 @@
       node.classList.toggle('is-match', matches);
       if (matches) { total++; first ||= node; }
     });
-    document.querySelector('#node-count').textContent = query ? `${total}개 일치` : '';
+    document.querySelector('#node-count').textContent = query ? t(`${total}개 일치`, `${total} matches`) : '';
     if (first) first.scrollIntoView({block: 'nearest', inline: 'nearest'});
   }
   function openDiagram(trigger) {
@@ -121,7 +147,7 @@
     canvas.append(svg);
     nodeInput.value = '';
     document.querySelector('#node-count').textContent = '';
-    document.querySelector('#diagram-title').textContent = trigger.getAttribute('data-title') || '다이어그램';
+    document.querySelector('#diagram-title').textContent = trigger.getAttribute('data-title') || t('다이어그램', 'Diagram');
     diagramDialog.showModal();
     fit();
     nodeInput.focus();
@@ -160,10 +186,10 @@
           diagram.dataset.ready = 'true';
           let heading = diagram.previousElementSibling;
           while (heading && !/^H[1-6]$/.test(heading.tagName)) heading = heading.previousElementSibling;
-          diagram.dataset.title = heading?.textContent || '다이어그램';
+          diagram.dataset.title = heading?.textContent || t('다이어그램', 'Diagram');
           diagram.tabIndex = 0;
           diagram.setAttribute('role', 'button');
-          diagram.setAttribute('aria-label', '다이어그램 확대');
+          diagram.setAttribute('aria-label', t('다이어그램 확대', 'Enlarge diagram'));
           diagram.setAttribute('aria-haspopup', 'dialog');
           diagram.addEventListener('click', () => openDiagram(diagram));
           diagram.addEventListener('keydown', event => {
@@ -171,18 +197,18 @@
           });
           const hint = document.createElement('p');
           hint.className = 'diagram-hint';
-          hint.textContent = '그림을 누르면 확대하고 요소를 검색할 수 있습니다.';
+          hint.textContent = t('그림을 누르면 확대하고 요소를 검색할 수 있습니다.', 'Click the diagram to enlarge it and search its elements.');
           diagram.after(hint);
         } catch (_) {
           diagram.textContent = source;
           diagram.classList.add('diagram-error');
-          diagram.before(Object.assign(document.createElement('p'), {textContent: '그림을 그리지 못했습니다. 아래 Mermaid 원문을 확인하세요.'}));
+          diagram.before(Object.assign(document.createElement('p'), {textContent: t('그림을 그리지 못했습니다. 아래 Mermaid 원문을 확인하세요.', 'Could not render the diagram. See the Mermaid source below.')}));
         }
       }
     }).catch(() => {
       diagrams.forEach(diagram => {
         diagram.before(Object.assign(document.createElement('p'), {className: 'diagram-error',
-          textContent: 'Mermaid를 불러오지 못해 원문을 표시합니다. 사내망에서는 로컬 Mermaid 경로를 설정하세요.'}));
+          textContent: t('Mermaid를 불러오지 못해 원문을 표시합니다. 사내망에서는 로컬 Mermaid 경로를 설정하세요.', 'Could not load Mermaid; showing the source. Configure a local Mermaid path for an internal network.')}));
       });
     });
   }
