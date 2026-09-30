@@ -1,0 +1,298 @@
+{
+  "schema": 1,
+  "source_commit": "d48b72e710fb1a72b0d291b912c179c93619e1d8",
+  "input_facts_sha256": "1fa923f2fe077905d6b057491cc704f4d8a2c4b5e549a5934e5801867b68ba81",
+  "evidence_facts_sha256": "1fa923f2fe077905d6b057491cc704f4d8a2c4b5e549a5934e5801867b68ba81",
+  "settings": {
+    "kind": "ollama",
+    "max_input_chars": 18000,
+    "temperature": 0.1,
+    "timeout_sec": 1200,
+    "num_ctx": 16384,
+    "full_style_guides": false,
+    "think": false,
+    "max_output_tokens": 1500
+  },
+  "models": {
+    "qwen3.5:4b": {
+      "name": "qwen3.5:4b",
+      "model": "qwen3.5:4b",
+      "modified_at": "2026-09-04T19:43:28.4151894+09:00",
+      "size": 3389983735,
+      "digest": "2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "qwen35",
+        "families": [
+          "qwen35"
+        ],
+        "parameter_size": "4.7B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 262144,
+        "embedding_length": 2560
+      },
+      "capabilities": [
+        "completion",
+        "vision",
+        "tools",
+        "thinking"
+      ]
+    },
+    "qwen3.5:9b": {
+      "name": "qwen3.5:9b",
+      "model": "qwen3.5:9b",
+      "modified_at": "2026-10-01T02:44:16.1885367+09:00",
+      "size": 6594474711,
+      "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "qwen35",
+        "families": [
+          "qwen35"
+        ],
+        "parameter_size": "9.7B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 262144,
+        "embedding_length": 4096
+      },
+      "capabilities": [
+        "completion",
+        "vision",
+        "tools",
+        "thinking"
+      ]
+    }
+  },
+  "cases": [
+    "camera-model/lifetime",
+    "camera-model/shutdown",
+    "ipa/execution"
+  ],
+  "repeats": 2,
+  "repair_retries": 0,
+  "human_review": "pending",
+  "samples": [
+    {
+      "model": "qwen3.5:4b",
+      "repeat": 1,
+      "case": "camera-model/lifetime",
+      "path": "model-1/repeat-1/camera-model--lifetime",
+      "verdict": {
+        "ok": true,
+        "invalid": [],
+        "total": 3,
+        "uncited_paragraphs": 0,
+        "notes": []
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "943834fa1654f0d2b038a0b1535b5c05fb6ab75aaddc451c29f7d55899d5a74c"
+    },
+    {
+      "model": "qwen3.5:4b",
+      "repeat": 1,
+      "case": "camera-model/shutdown",
+      "path": "model-1/repeat-1/camera-model--shutdown",
+      "verdict": {
+        "ok": true,
+        "invalid": [],
+        "total": 2,
+        "uncited_paragraphs": 0,
+        "notes": []
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "51afda10b3fa646a5b03d9b61bbf0420c4d93fb72fb0498fc914e4bf0ccf5aab"
+    },
+    {
+      "model": "qwen3.5:4b",
+      "repeat": 1,
+      "case": "ipa/execution",
+      "path": "model-1/repeat-1/ipa--execution",
+      "verdict": {
+        "ok": false,
+        "invalid": [],
+        "total": 2,
+        "uncited_paragraphs": 1,
+        "notes": [
+          "클래스나 함수를 언급하면서 인용이 없는 문단 1 개",
+          "설명 문단에 근거 인용이 없습니다."
+        ]
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "6fd72d53cd4640a37606cb98f400cbcb8193b30b72715ef276781bf261d612bd"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "repeat": 1,
+      "case": "camera-model/lifetime",
+      "path": "model-2/repeat-1/camera-model--lifetime",
+      "verdict": {
+        "ok": true,
+        "invalid": [],
+        "total": 3,
+        "uncited_paragraphs": 0,
+        "notes": []
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "943834fa1654f0d2b038a0b1535b5c05fb6ab75aaddc451c29f7d55899d5a74c"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "repeat": 1,
+      "case": "camera-model/shutdown",
+      "path": "model-2/repeat-1/camera-model--shutdown",
+      "verdict": {
+        "ok": false,
+        "invalid": [],
+        "total": 0,
+        "uncited_paragraphs": 2,
+        "notes": [
+          "인용이 하나도 없습니다.",
+          "클래스나 함수를 언급하면서 인용이 없는 문단 2 개",
+          "설명 문단에 근거 인용이 없습니다."
+        ]
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "51afda10b3fa646a5b03d9b61bbf0420c4d93fb72fb0498fc914e4bf0ccf5aab"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "repeat": 1,
+      "case": "ipa/execution",
+      "path": "model-2/repeat-1/ipa--execution",
+      "verdict": {
+        "ok": false,
+        "invalid": [
+          "src/libcamera/ipc_pipe_unixsocket.cpp:103"
+        ],
+        "total": 3,
+        "uncited_paragraphs": 0,
+        "notes": [
+          "facts 에 없는 인용 1 개: src/libcamera/ipc_pipe_unixsocket.cpp:103",
+          "현재 설명 입력에 제공되지 않은 위치를 인용했습니다: src/libcamera/ipc_pipe_unixsocket.cpp:103"
+        ]
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "6fd72d53cd4640a37606cb98f400cbcb8193b30b72715ef276781bf261d612bd"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "repeat": 2,
+      "case": "camera-model/lifetime",
+      "path": "model-2/repeat-2/camera-model--lifetime",
+      "verdict": {
+        "ok": true,
+        "invalid": [],
+        "total": 3,
+        "uncited_paragraphs": 0,
+        "notes": []
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "943834fa1654f0d2b038a0b1535b5c05fb6ab75aaddc451c29f7d55899d5a74c"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "repeat": 2,
+      "case": "camera-model/shutdown",
+      "path": "model-2/repeat-2/camera-model--shutdown",
+      "verdict": {
+        "ok": false,
+        "invalid": [],
+        "total": 0,
+        "uncited_paragraphs": 2,
+        "notes": [
+          "인용이 하나도 없습니다.",
+          "클래스나 함수를 언급하면서 인용이 없는 문단 2 개",
+          "설명 문단에 근거 인용이 없습니다."
+        ]
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "51afda10b3fa646a5b03d9b61bbf0420c4d93fb72fb0498fc914e4bf0ccf5aab"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "repeat": 2,
+      "case": "ipa/execution",
+      "path": "model-2/repeat-2/ipa--execution",
+      "verdict": {
+        "ok": false,
+        "invalid": [
+          "src/libcamera/ipc_pipe_unixsocket.cpp:104"
+        ],
+        "total": 3,
+        "uncited_paragraphs": 0,
+        "notes": [
+          "facts 에 없는 인용 1 개: src/libcamera/ipc_pipe_unixsocket.cpp:104",
+          "현재 설명 입력에 제공되지 않은 위치를 인용했습니다: src/libcamera/ipc_pipe_unixsocket.cpp:104"
+        ]
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "6fd72d53cd4640a37606cb98f400cbcb8193b30b72715ef276781bf261d612bd"
+    },
+    {
+      "model": "qwen3.5:4b",
+      "repeat": 2,
+      "case": "camera-model/lifetime",
+      "path": "model-1/repeat-2/camera-model--lifetime",
+      "verdict": {
+        "ok": true,
+        "invalid": [],
+        "total": 3,
+        "uncited_paragraphs": 0,
+        "notes": []
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "943834fa1654f0d2b038a0b1535b5c05fb6ab75aaddc451c29f7d55899d5a74c"
+    },
+    {
+      "model": "qwen3.5:4b",
+      "repeat": 2,
+      "case": "camera-model/shutdown",
+      "path": "model-1/repeat-2/camera-model--shutdown",
+      "verdict": {
+        "ok": true,
+        "invalid": [],
+        "total": 2,
+        "uncited_paragraphs": 0,
+        "notes": []
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "51afda10b3fa646a5b03d9b61bbf0420c4d93fb72fb0498fc914e4bf0ccf5aab"
+    },
+    {
+      "model": "qwen3.5:4b",
+      "repeat": 2,
+      "case": "ipa/execution",
+      "path": "model-1/repeat-2/ipa--execution",
+      "verdict": {
+        "ok": true,
+        "invalid": [],
+        "total": 2,
+        "uncited_paragraphs": 0,
+        "notes": []
+      },
+      "omitted": [],
+      "finish_reason": "stop",
+      "prompt_sha256": "6fd72d53cd4640a37606cb98f400cbcb8193b30b72715ef276781bf261d612bd"
+    }
+  ],
+  "scope": "Automatic checks are not semantic evaluation or publication approval.",
+  "prompt_sha256": {
+    "camera-model--lifetime_0": "943834fa1654f0d2b038a0b1535b5c05fb6ab75aaddc451c29f7d55899d5a74c",
+    "camera-model--shutdown_0": "51afda10b3fa646a5b03d9b61bbf0420c4d93fb72fb0498fc914e4bf0ccf5aab",
+    "ipa--execution_0": "6fd72d53cd4640a37606cb98f400cbcb8193b30b72715ef276781bf261d612bd"
+  },
+  "mode": "Rechecked the exact original transport responses after template citation fix; no new model generation."
+}

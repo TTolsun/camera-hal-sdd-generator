@@ -1,0 +1,17 @@
+{
+  "model": "qwen3.5:9b",
+  "created_at": "2026-09-30T17:46:22.9177599Z",
+  "message": {
+    "role": "assistant",
+    "content": "`queueRequest` 메서드는 요청에 포함된 버퍼가 비어 있거나 요청 상태가 유효하지 않을 경우 오류를 반환하며, 요청이 해당 카메라에서 생성되지 않았거나 활성화된 스트림에 속하지 않는 경우에도 거부합니다 [src/libcamera/camera.cpp:1308]. 이 함수는 카메라가 실행 중일 때만 호출 가능하며, 요청을 큐에 추가한 후 완료 신호를 통해 애플리케이션에게 결과를 통보합니다 [src/libcamera/camera.cpp:1308].\n\n`stop` 메서드는 카메라가 실행 중인 상태에서만 호출되어 캡처를 즉시 중단하고 대기 중인 요청들을 오류 상태로 동기적으로 완료시킵니다 [src/libcamera/camera.cpp:1431]. 카메라가 실행되지 않은 상태에서 이 함수를 호출하면 아무 동작도 하지 않으며, 내부적으로 상태 변경과 함께 `PipelineHandler`에 중독 호출을 수행합니다 [src/libcamera/camera.cpp:1431]."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 5943682700,
+  "load_duration": 1564700,
+  "prompt_eval_count": 1777,
+  "prompt_eval_cached_count": 1773,
+  "prompt_eval_duration": 66549000,
+  "eval_count": 212,
+  "eval_duration": 5788144000
+}

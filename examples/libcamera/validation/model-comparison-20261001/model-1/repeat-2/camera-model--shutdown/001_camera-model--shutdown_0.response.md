@@ -1,0 +1,3 @@
+`queueRequest()`가 오류를 반환하거나 성공할 조건은 소스 `src/libcamera/camera.cpp:1308`에서 확인됩니다. 카메라가 연결되지 않았거나 (`-ENODEV`) 실행 상태가 아니면 (`-EACCES`) 요청을 큐에 넣지 않으며, 요청이 해당 카메라로 생성되지 않았거나 (`-EXDEV`) 유효하지 않거나 (`-EINVAL`) 버퍼가 없으면 거부합니다. 또한 제어 목록이 잘못 설정되어 있으면 (`-EINVAL`) 처리를 중단하며, 내부적으로 `PipelineHandler::queueRequest()` 호출을 통해 실제 큐링이 이루어집니다.
+
+`stop()` 함수는 카메라 상태와 접근 권한을 먼저 검증한 후 `CameraStopping` 상태로 전환하고 `PipelineHandler::stop()` 을 동기식으로 호출합니다. 소스 `src/libcamera/camera.cpp:1431`에 따르면 실행 중이 아닐 경우 즉시 종료하며, 요청은 모두 취소되어 오류 상태로 완료됩니다. 그러나 상태 기계 내에서 `stop()` 호출 시점에 대한 구체적인 처리 흐름과 콜백 순서는 현재 문서에서 명시되지 않았습니다.

@@ -1,0 +1,17 @@
+{
+  "model": "qwen3.5:4b",
+  "created_at": "2026-09-30T17:45:28.5780753Z",
+  "message": {
+    "role": "assistant",
+    "content": "`queueRequest()`가 호출될 때 카메라 상태와 요청 유효성을 검증하며, 실패 시 `-ENODEV`, `-EACCES`, `-EXDEV`, `-EINVAL` 중 하나를 반환합니다 `src/libcamera/camera.cpp:1308`. 이 함수는 요청이 생성된 카메라에만 호출되며, 버퍼가 없거나 제어 목록이 유효하지 않을 경우 오류 코드를 반환합니다. 또한 `PipelineHandler::queueRequest()`에 연결되어 실제 큐잉 작업을 수행하며, 상태 변경 중에도 잠금 없이 안전하게 동작하도록 설계되었습니다.\n\n`stop()`은 즉시 캡처를 중단하고 모든 대기 중인 요청을 취소하여 오류 상태로 완료시킵니다 `src/libcamera/camera.cpp:1431`. 카메라가 실행 중이 아닐 경우 무작위 노오퍼로 처리하며, 호출 시 스레드 동기화를 수행해야 합니다. 상태는 `CameraStopping`으로 변경된 후 `CameraConfigured`로 복귀되며, `PipelineHandler::stop()`을 블로킹 방식으로 호출하여 완료 상태를 보장합니다."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 3249968400,
+  "load_duration": 2713300,
+  "prompt_eval_count": 1777,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 524836000,
+  "eval_count": 228,
+  "eval_duration": 2650874000
+}
