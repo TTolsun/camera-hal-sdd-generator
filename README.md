@@ -91,6 +91,8 @@ uv run sdd verify-site
 
 ## 유지보수와 검증
 
+공개 libcamera의 [4B·9B 동일 입력 비교](docs/model-comparison.md)를 완료했습니다. 더 큰 모델에서도 의미 오류와 조건 누락이 남아 기본 모델은 유지합니다. `python -m sdd.evaluate`로 사내 모델 비교를 반복할 수 있습니다.
+
 ```bash
 uv run pytest -q
 ```

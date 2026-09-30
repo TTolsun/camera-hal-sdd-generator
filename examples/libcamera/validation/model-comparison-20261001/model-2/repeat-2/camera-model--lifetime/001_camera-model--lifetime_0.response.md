@@ -1,0 +1,3 @@
+libcamera 의 `Camera::createRequest()` 메서드는 요청 객체의 소유권을 호출자에게 이양하며, 해당 객체는 완료 콜백에서 삭제되거나 상태 초기화를 통해 재사용될 수 있습니다 `src/libcamera/camera.cpp:1243`. 요청이 재사용되려면 먼저 `Request::reuse()` 를 호출하여 내부 상태를 초기화해야 하며, 이때 `ReuseBuffers` 플래그를 설정하면 이전에 추가된 버퍼가 다시 사용 가능해집니다 `src/libcamera/request.cpp:376`.
+
+버퍼를 요청에 추가할 때는 `Request::addBuffer()` 메서드를 통해 소유권을 명시하고, 유효한 펜스 (fence) 가 제공될 경우 해당 펜스의 신호 대기 후에만 요청이 큐에 등록됩니다 `src/libcamera/request.cpp:442`. 펜스가 아직 신호되지 않은 상태에서 버퍼를 재사용하려면 반드시 `FrameBuffer::releaseFence()` 를 호출하여 펜스를 해제해야 합니다.

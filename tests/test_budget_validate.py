@@ -30,6 +30,18 @@ def test_unknown_citation_fails():
     assert v.invalid == ["device/Nope.cpp:1"]
 
 
+def test_template_citation_is_evidence_and_invalid_template_cannot_hide():
+    template = "utils/codegen/proxy.cpp.tmpl:48"
+    allowed = {template, "ipc.cpp:27"}
+    assert check(f"호출 경계는 코드 생성 템플릿에서 확인합니다. 실행 시점이나 스레드 동작을 추측하지 않고 입력으로 제공한 소스 위치를 그대로 인용합니다 `{template}`.", allowed).ok
+    v = check("호출 경계입니다 `utils/codegen/proxy.cpp.tmpl:999`. "
+              "다른 근거도 있습니다 `ipc.cpp:27`.", allowed)
+    assert not v.ok and v.invalid == ["utils/codegen/proxy.cpp.tmpl:999"]
+    from sdd.semantic import review
+    from sdd.facts.model import KnowledgeModel
+    assert not review(f"호출 경계입니다 `{template}`.", KnowledgeModel(), {template})
+
+
 def test_malformed_namespace_citation_cannot_hide_beside_valid_citations():
     # Reproduced by the real libcamera two-revision experiment (IPU3 LSC probe).
     text = ("처리 상태 클래스는 `libcamera::ipa::lsc.h:27` 에 선언되어 있다고 설명합니다. "
