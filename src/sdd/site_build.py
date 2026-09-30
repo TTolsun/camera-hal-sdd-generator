@@ -94,6 +94,9 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         intro = (cfg.raw.get("site") or {}).get("intro")
         if intro:
             inputs["intro"] = digest(cfg.root / intro)
+        catalog = (cfg.raw.get("site") or {}).get("english_catalog")
+        if catalog:
+            inputs["english_catalog"] = digest(cfg.root / catalog)
         if cfg.facts_path.exists():
             inputs["facts"] = digest(cfg.facts_path)
         from .approvals import ledger_path
@@ -103,6 +106,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
             inputs["markdown/" + p.relative_to(cfg.sdd_dir).as_posix()] = digest(p)
         code_root = Path(__file__).parent
         engine = {p.name: digest(p) for p in [code_root / "diagrams.py", code_root / "export_site.py",
+                                            code_root / "site_localization.py",
                                             code_root / "document_metadata.py", code_root / "scenario_document.py",
                                             code_root / "design_contracts.py", code_root / "evidence.py",
                                             Path(__file__)]}

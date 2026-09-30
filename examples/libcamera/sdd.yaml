@@ -44,6 +44,7 @@ site:
   enabled: true
   title: libcamera 설계 문서
   intro: site-intro.md
+  english_catalog: english.json
   source_url: https://github.com/TTolsun/libcamera-sdd
   # 왼쪽 메뉴의 그룹 순서. 섹션 순서(읽는 차례)와 따로 정한다.
   # 여기에 없는 그룹은 처음 나온 순서대로 뒤에 붙는다.
