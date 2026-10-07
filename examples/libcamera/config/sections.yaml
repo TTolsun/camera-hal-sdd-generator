@@ -216,8 +216,358 @@ sections:
   - src/libcamera/**
   - src/ipa/**
   next:
+    title: 요청 처리와 문제 진단
+    link: request-lifecycle.md
+- id: request-lifecycle
+  group: For Developers
+  title: 요청 처리와 문제 진단
+  output: request-lifecycle.md
+  kind: prose
+  lead: 요청의 제출 성공과 촬영 완료를 구분하고, 버퍼를 유지할 기간과 오류가 난 위치를 확인하세요.
+  reader: libcamera를 연동하거나 요청 처리 코드를 수정하는 개발자
+  answers:
+  - 요청을 제출한 뒤 완료될 때까지 어느 단계에서 기다리는가?
+  - 요청·버퍼·fence를 언제 다시 사용할 수 있는가?
+  - 완료가 오지 않거나 정지할 때 무엇을 확인해야 하는가?
+  routes:
+  - q: 요청 제출과 완료의 연결을 확인합니다.
+    to: '#제출에서-완료까지'
+  - q: 자원을 재사용하거나 해제할 시점을 확인합니다.
+    to: '#요청버퍼fence의-수명'
+  - q: 오류가 난 단계를 찾습니다.
+    to: '#실패-위치별-확인-순서'
+  - q: 정지와 연결 해제의 차이를 확인합니다.
+    to: '#정지와-연결-해제를-구분하기'
+  facts:
+    classes:
+    - libcamera::Camera
+    - libcamera::Request
+    - libcamera::PipelineHandler
+    class_table: false
+  diagram:
+    enabled: false
+  watch:
+  - src/libcamera/camera.cpp
+  - src/libcamera/request.cpp
+  - src/libcamera/pipeline_handler.cpp
+  - include/libcamera/**
+  semantic_review: true
+  show_evidence: true
+  next:
     title: 카메라와 요청 모델
     link: camera-model.md
+  design_topics:
+  - id: journey
+    title: 제출에서 완료까지
+    question: 제출 성공 이후의 대기 조건과 완료 책임은 무엇입니까?
+    sources:
+    - id: create
+      file: src/libcamera/camera.cpp
+      start: \brief Create a request object for the camera
+      end: std::unique_ptr<Request> Camera::createRequest(uint64_t cookie)
+      sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+    - id: queue
+      file: src/libcamera/camera.cpp
+      start: \brief Queue a request to the camera
+      end: \brief Start capture from camera
+      sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+    - id: buffer
+      file: src/libcamera/request.cpp
+      start: \brief Add a FrameBuffer with its associated Stream to the Request
+      end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+      sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
+    - id: device-queue
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::registerRequest()
+      end: \brief Complete a buffer for a request
+      sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+      sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+    statements:
+    - text: '이 문서는 Camera와 공통 PipelineHandler의 소스 계약을 연결합니다. 장치별 구현의 실행 기록은 아닙니다. 먼저 제출 반환값을 확인하고, 제출에 성공한
+        요청은 완료 통지까지 추적하세요.
+
+
+        | 단계 | 실행 주체와 처리 | 다음 단계의 조건 |
+
+        |---|---|---|
+
+        | 준비 | 애플리케이션이 `createRequest()`로 요청을 만들고 `addBuffer()`로 스트림별 버퍼를 연결합니다. | 요청에는 최소 하나의 버퍼가 필요합니다. |
+
+        | 제출 | `Camera::queueRequest()`가 상태·카메라·컨트롤·스트림을 검사하고 파이프라인 호출을 예약합니다. | 반환값 0은 예약 성공이며 장치 전달이나 촬영
+        완료가 아닙니다. |
+
+        | 준비 대기 | 공통 파이프라인이 요청을 대기 큐에 넣고 `prepare(300ms)`를 호출합니다. | 장치 큐 한도 안에서 준비된 요청을 앞에서부터 꺼냅니다. 유효한 fence는 신호를 기다립니다.
+        |
+
+        | 장치 전달 | 공통 파이프라인이 장치 큐에 기록하고 `queueRequestDevice()`를 호출합니다. | 구체적인 장치 구현이 버퍼와 파라미터를 적용합니다. 반환 오류는
+        요청 취소로 이어집니다. |
+
+        | 완료 | 파이프라인이 `completeBuffer()`와 `completeRequest()`를 구분하여 호출합니다. | 마지막 버퍼 완료만으로 요청이 자동 완료되지 않습니다.
+        요청은 제출 순서로 반환됩니다. |
+
+
+        '
+      evidence:
+      - create
+      - queue
+      - buffer
+      - device-queue
+      - completion
+      covers:
+      - journey
+    - text: 공통 파이프라인의 장치 큐잉과 완료 함수는 CameraManager 스레드에서 실행해야 합니다. 애플리케이션의 완료 콜백 실행 스레드는 신호 연결 방식까지 확인해야 합니다.
+        이 표를 모든 콜백의 실행 순서를 보장하는 시퀀스도로 해석하지 마세요.
+      evidence:
+      - device-queue
+      - completion
+      covers:
+      - journey
+  - id: resources
+    title: 요청·버퍼·fence의 수명
+    question: 어떤 자원을 누가 유지하고 완료 후 무엇을 초기화해야 합니까?
+    sources:
+    - id: create
+      file: src/libcamera/camera.cpp
+      start: \brief Create a request object for the camera
+      end: std::unique_ptr<Request> Camera::createRequest(uint64_t cookie)
+      sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+    - id: buffer
+      file: src/libcamera/request.cpp
+      start: \brief Add a FrameBuffer with its associated Stream to the Request
+      end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+      sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
+    - id: reuse
+      file: src/libcamera/request.cpp
+      start: \brief Reset the request for reuse
+      end: \fn Request::controls()
+      sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+      sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+    - id: reuse-flags
+      file: src/libcamera/request.cpp
+      start: \enum Request::ReuseFlag
+      end: \typedef Request::BufferMap
+      sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+    statements:
+    - text: '| 자원 | 제출과 대기 중의 책임 | 완료 뒤의 처리 |
+
+        |---|---|---|
+
+        | Request | `createRequest()`가 반환한 요청은 호출자가 소유합니다. | 완료 핸들러에서 삭제하거나 `reuse()`로 초기화하여 다시 사용합니다. |
+
+        | FrameBuffer | `addBuffer()`는 참조를 저장합니다. 호출자는 요청 완료 콜백까지 버퍼의 유효성을 보장합니다. | 버퍼 완료 신호 하나만 보고 요청 전체가
+        끝났다고 판단하지 않습니다. |
+
+        | fence | `addBuffer()` 성공 시에만 소유권이 버퍼로 이동합니다. 실패하면 전달한 fence는 변경되지 않습니다. | 타임아웃 후 남은 fence는 버퍼 재사용
+        전에 `releaseFence()`로 꺼냅니다. |
+
+        | 컨트롤·메타데이터 | 컨트롤은 요청 입력이고 메타데이터는 결과입니다. | `reuse()`가 둘 다 비우므로 다음 요청의 컨트롤을 다시 설정합니다. |
+
+
+        '
+      evidence:
+      - create
+      - buffer
+      - reuse
+      - completion
+      covers:
+      - resources
+    - text: '`reuse(ReuseBuffers)`는 버퍼 연결을 유지하지만 fence를 재사용하지 않습니다. fence를 사용하는 경우에는 이 플래그를 사용하지 말라는 API 주의를
+        따르세요. 기본 `reuse()`는 버퍼 연결을 비우므로 필요한 버퍼를 다시 연결해야 합니다.'
+      evidence:
+      - reuse
+      - reuse-flags
+      covers:
+      - resources
+    - text: 파이프라인 개발자는 `completeRequest()` 또는 `cancelRequest()`가 돌아온 뒤 요청에 다시 접근해서는 안 됩니다. 애플리케이션이 완료 처리에서
+        요청을 삭제할 수 있기 때문입니다.
+      evidence:
+      - completion
+      covers:
+      - resources
+  - id: diagnosis
+    title: 실패 위치별 확인 순서
+    question: 제출 실패와 제출 후 완료 지연을 어떻게 구분합니까?
+    sources:
+    - id: queue
+      file: src/libcamera/camera.cpp
+      start: \brief Queue a request to the camera
+      end: \brief Start capture from camera
+      sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+    - id: buffer
+      file: src/libcamera/request.cpp
+      start: \brief Add a FrameBuffer with its associated Stream to the Request
+      end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+      sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
+    - id: device-queue
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::registerRequest()
+      end: \brief Complete a buffer for a request
+      sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+      sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+    statements:
+    - text: '아래 표는 소스의 실패 조건에 따라 확인할 위치를 정리한 진단 순서입니다. 자동 복구나 재시도 성공을 보장하는 절차는 아닙니다.
+
+
+        | 관찰한 결과 | 먼저 확인할 내용 | 다음 확인 위치 |
+
+        |---|---|---|
+
+        | `addBuffer()`가 `-EEXIST`를 반환합니다. | 같은 스트림에 버퍼를 이미 연결했는지, 버퍼에 fence가 남았는지 확인합니다. | 스트림별 연결과 남은 fence를
+        확인한 뒤 버퍼 재사용 계약을 적용합니다. |
+
+        | `queueRequest()`가 음수를 반환합니다. | `-ENODEV`는 연결 해제, `-EACCES`는 실행 상태, `-EXDEV`는 요청의 카메라를 확인합니다. | 파이프라인
+        전달 전의 실패이므로 이 제출의 완료 통지를 기다리는 경로와 구분합니다. |
+
+        | `queueRequest()`가 `-EINVAL`을 반환합니다. | 빈 버퍼 목록, Pending이 아닌 요청, 컨트롤 정보 맵, 비활성 스트림을 확인합니다. | `reuse()`
+        여부와 현재 카메라 구성에 맞는 요청인지 점검합니다. |
+
+        | 제출은 성공했지만 완료가 오지 않습니다. | 준비 대기와 장치 전달을 구분합니다. fence 신호와 대기 큐 앞 요청의 준비 여부를 확인합니다. | 장치 전달 뒤라면 구현의
+        버퍼 완료와 명시적인 요청 완료 호출을 추적합니다. |
+
+        | 뒤 요청의 장치 처리가 끝나도 반환되지 않습니다. | 공통 파이프라인은 제출 순서로 반환합니다. | 장치 큐 앞쪽에 Pending 요청이 남았는지 확인합니다. |
+
+
+        '
+      evidence:
+      - queue
+      - buffer
+      - device-queue
+      - completion
+      covers:
+      - diagnosis
+    - text: 문제 재현 시에는 제출 반환값, 요청 식별값, fence 준비, 장치 전달, 버퍼 완료, 요청 완료를 서로 구분하여 관찰하세요. 이 관찰 지점에 대한 실제 로그 존재 여부와
+        기기별 지연은 별도 확인이 필요합니다. 이 문서는 존재하지 않는 로그 메시지나 정상 지연 기준을 제시하지 않습니다.
+      evidence:
+      - queue
+      - device-queue
+      - completion
+      covers:
+      - diagnosis
+      kind: limitation
+  - id: stopping
+    title: 정지와 연결 해제를 구분하기
+    question: 정지 중 요청 반환과 연결 해제의 보장 범위는 어떻게 다릅니까?
+    sources:
+    - id: stop
+      file: src/libcamera/camera.cpp
+      start: \brief Stop capture from camera
+      end: \brief Handle request completion and notify application
+      sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+    - id: device-stop
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Stop capturing from all running streams and cancel pending requests
+      end: \brief Determine if the camera has any requests pending
+      sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+      sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+    - id: notification
+      file: src/libcamera/camera.cpp
+      start: \brief Notify camera disconnection
+      end: int Camera::exportFrameBuffers(Stream *stream,
+      sha256: cbc12aaba21898e519c8599faec5e998b408162912a507880b162ee6787cf8b0
+    statements:
+    - text: '| 상황 | 코드의 계약 | 호출자가 확인할 경계 |
+
+        |---|---|---|
+
+        | 정상 완료 | 버퍼 완료와 요청 완료를 구분하고 요청을 제출 순서로 반환합니다. | 요청 완료 처리에서 재사용·해제를 결정합니다. |
+
+        | 실행 중 `stop()` | Camera는 Stopping으로 전환하고 파이프라인 정지를 blocking 방식으로 호출한 뒤 Configured로 돌아갑니다. | 상태 변경
+        호출 간 동기화는 호출자 책임입니다. |
+
+        | 파이프라인 정지 | 대기 큐를 분리하고 `stopDevice()`를 호출한 다음 남은 대기 요청을 취소합니다. | 장치 구현은 미완료 요청을 오류 상태로 완료해야 합니다. 정지
+        중 다시 장치에 큐잉하지 않도록 해야 합니다. |
+
+        | 연결 해제 | 연결 해제 통지의 소스 주석에는 실행 중 대기 요청 처리가 TODO로 남아 있습니다. | `stop()`과 같은 취소·동기 완료를 보장한다고 가정하지 않습니다.
+        |
+
+
+        '
+      evidence:
+      - stop
+      - device-stop
+      - completion
+      - notification
+      covers:
+      - stopping
+    - text: 공통 정지 함수가 반환했다는 사실과 애플리케이션이 별도 스레드에 예약한 콜백까지 모두 처리했다는 사실은 구분해야 합니다. 수신자 연결 방식, 정지와 완료의 경합, 장치 제거
+        중 미완료 요청은 실제 구현과 기기에서 확인하세요.
+      evidence:
+      - stop
+      - device-stop
+      - notification
+      covers:
+      - stopping
+      kind: limitation
+  - id: review
+    title: 변경 검토와 실행 확인
+    question: 문서를 읽고 어떤 질문에 답하고 어떤 실행 증거를 확보해야 합니까?
+    sources:
+    - id: queue
+      file: src/libcamera/camera.cpp
+      start: \brief Queue a request to the camera
+      end: \brief Start capture from camera
+      sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+    - id: reuse
+      file: src/libcamera/request.cpp
+      start: \brief Reset the request for reuse
+      end: \fn Request::controls()
+      sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+      sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+    - id: device-stop
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Stop capturing from all running streams and cancel pending requests
+      end: \brief Determine if the camera has any requests pending
+      sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+    statements:
+    - text: 코드를 수정하기 전에 다음 질문의 답을 변경 전후로 비교하세요. `queueRequest()` 성공을 촬영 완료로 취급하지 않는가? 마지막 버퍼 완료 후 요청 완료를 누가
+        호출하는가? 앞 요청이 Pending일 때 뒤 요청이 반환되는가? 재사용 시 컨트롤과 버퍼 연결을 다시 준비하는가? 정지 중 완료가 발생해도 대기 요청을 장치에 다시 넣지 않는가?
+      evidence:
+      - queue
+      - reuse
+      - completion
+      - device-stop
+      covers:
+      - review
+    - text: 실행 검증에서는 정상 요청 반복, fence 대기, 장치 큐잉 실패, 요청이 남아 있는 상태의 정지를 각각 재현하고 제출·반환 요청을 대조하세요. 관찰 기록에는 소스 커밋,
+        파이프라인, 기기와 신호 연결 방식을 함께 남겨야 합니다. 이 문서에는 해당 실기기 시험 결과가 아직 없습니다.
+      evidence:
+      - queue
+      - completion
+      - device-stop
+      covers:
+      - review
+      kind: limitation
+  design_requirements:
+  - id: journey
+    question: 제출 성공 이후의 대기 조건과 완료 책임은 무엇입니까?
+  - id: resources
+    question: 어떤 자원을 누가 유지하고 완료 후 무엇을 초기화해야 합니까?
+  - id: diagnosis
+    question: 제출 실패와 제출 후 완료 지연을 어떻게 구분합니까?
+  - id: stopping
+    question: 정지 중 요청 반환과 연결 해제의 보장 범위는 어떻게 다릅니까?
+  - id: review
+    question: 문서를 읽고 어떤 질문에 답하고 어떤 실행 증거를 확보해야 합니까?
 - id: camera-model
   group: For Developers
   title: 카메라와 요청 모델
@@ -1046,9 +1396,9 @@ sections:
       file: src/ipa/ipu3/algorithms/lsc.cpp
       start: static constexpr unsigned int kMaxNumHCells
       end: void Lsc::queueRequest(
-      sha256: 943557ac46750b8b53d8280921b313e4331e786e8ff88766abb0fe02959d2f63
+      sha256: b4b73b83ec5f1caeb1e654f00aace0f49abf402b43c0ff6bd30528176ea8a566
     statements:
-    - text: init()는 센서 activeAreaSize를 기준으로 그리드를 계산합니다. 가로 73개와 세로 56개라는 셀 수 상한에 맞춰 필요한 셀 크기를 계산하고, 이를 2의 거듭제곱으로
+    - text: init()는 센서 activeArea의 너비와 높이를 기준으로 그리드를 계산합니다. 가로 73개와 세로 56개라는 셀 수 상한에 맞춰 필요한 셀 크기를 계산하고, 이를 2의 거듭제곱으로
         올림한 뒤 실제 셀 수와 블록 크기를 정합니다.
       evidence:
       - setup
@@ -1103,21 +1453,40 @@ sections:
       end: int Lsc::init(
       sha256: 7807718b4ae9327f1ca428627d2b00f59ba38ced03261465ee8c79312ea27833
     statements:
-    - text: prepare()는 현재 프레임 AWB의 색온도를 읽어 10 단위로 반올림합니다. update가 false일 때만 다음 생략 조건을 검사합니다. 비활성 상태이면 바로 반환하고, 활성
-        상태에서도 직전 적용 색온도와의 차이가 5 미만이거나 양자화된 값이 같으면 갱신을 생략합니다. update가 true이면 이 생략 조건들을 적용하지 않습니다.
+    - text: prepare()는 현재 프레임 AWB의 색온도를 읽어 10 단위로 반올림합니다. update가 false일 때만 다음 생략 조건을 검사합니다. 비활성 상태이면 바로 반환하고,
+        활성 상태에서도 직전 적용 색온도와의 차이가 5 미만이거나 양자화된 값이 같으면 갱신을 생략합니다. update가 true이면 이 생략 조건들을 적용하지 않습니다.
       evidence:
       - prepare
       - constants
       covers:
       - prepare
-    - text: 갱신 경로에서는 use.acc_shd를 1로 설정하고 shd_enable에 현재 활성 상태를 기록합니다. update가 true이고 enabled가 false인 경우에도 이 플래그를
-        기록한 뒤 반환하므로, 단순히 비활성 상태의 모든 호출을 생략하는 것은 아닙니다.
+    - text: 갱신 경로에서는 use.acc_shd를 1로 설정하고 shd_enable에 현재 활성 상태를 기록합니다. update가 true이고 enabled가 false인 경우에도 이
+        플래그를 기록한 뒤 반환하므로, 단순히 비활성 상태의 모든 호출을 생략하는 것은 아닙니다.
       evidence:
       - prepare
       covers:
       - prepare
-    - text: 활성 상태에서는 그리드와 크롭 오프셋을 설정하고, 양자화한 색온도로 interpolateComponents()를 호출합니다. 반환된 r·gr·gb·b 배열을 LUT에 복사한 뒤 마지막으로
-        적용한 색온도 두 값을 저장합니다. 실제 하드웨어의 적용 시점과 LUT 분할 경계의 적합성은 기기에서 별도로 검증해야 합니다.
+    - text: 활성 상태에서는 그리드와 크롭 오프셋을 설정하고, 양자화한 색온도로 interpolateComponents()를 호출합니다. 반환된 r·gr·gb·b 배열을 LUT에 복사한
+        뒤 마지막으로 적용한 색온도 두 값을 저장합니다. 실제 하드웨어의 적용 시점과 LUT 분할 경계의 적합성은 기기에서 별도로 검증해야 합니다.
+      evidence:
+      - prepare
+      covers:
+      - prepare
+    - text: '| 조건 | prepare()의 처리 | 변경 검토 지점 |
+
+        |---|---|---|
+
+        | `update=false`, 비활성 상태입니다. | 파라미터를 갱신하지 않고 반환합니다. | 비활성 상태 유지와 비활성화 전환을 구분합니다. |
+
+        | `update=false`, 활성 상태이며 직전 색온도와의 차이가 5 미만이거나 양자화한 값이 같습니다. | LUT 갱신을 생략합니다. | 원래 색온도의 차이와 10 단위로 반올림한 값을 모두 확인합니다. |
+
+        | `update=true`, 비활성 상태입니다. | 갱신 경로에서 `use.acc_shd`와 비활성 `shd_enable`을 기록합니다. | 비활성화 전환을 전달하는 경로를 조기
+        반환으로 없애지 않습니다. |
+
+        | 갱신 경로이며 활성 상태입니다. | 그리드·크롭 오프셋과 보간 LUT를 기록하고 색온도를 저장합니다. | 출력 파라미터와 프레임 상태를 함께 대조합니다. |
+
+
+        '
       evidence:
       - prepare
       covers:
