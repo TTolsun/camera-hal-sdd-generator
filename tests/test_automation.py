@@ -68,6 +68,18 @@ def test_publish_and_no_change_does_not_create_commit(pipeline):
     assert first == git(repo, "rev-parse", "HEAD")
 
 
+def test_document_health_blocks_publication_and_preserves_remote(pipeline):
+    cfg, repo, remote, calls = pipeline
+    cfg.raw["documentation"] = {"enabled": True}
+    before = git(remote, "rev-parse", "main")
+    with pytest.raises(RuntimeError, match="lifecycle"):
+        automation.run(cfg)
+    state = json.loads((cfg.build_dir / "automation-state.json").read_text())
+    assert state["pending"]["phase"] == "build"
+    assert git(remote, "rev-parse", "main") == before
+    assert not (repo / "docs").exists()
+
+
 def test_changed_publication_policy_is_not_skipped(pipeline):
     cfg, repo, remote, calls = pipeline
     assert automation.run(cfg) == 0

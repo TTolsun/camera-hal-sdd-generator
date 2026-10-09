@@ -44,6 +44,34 @@ def _seed_baseline(cfg, sha):
     KnowledgeModel(meta={"source_commit": sha}).save(cfg.facts_path)
 
 
+def test_document_health_failure_retries_same_commit_without_advancing_baseline(tmp_cfg, source_repo):
+    import yaml
+    from sdd import document_health
+    _seed_baseline(tmp_cfg, source_repo[0])
+    tmp_cfg.raw["documentation"] = {"enabled": True}
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({"sections": [
+        {"id": "overview", "kind": "prose", "output": "overview.md"}]}))
+    tmp_cfg.sdd_dir.mkdir()
+    page = tmp_cfg.sdd_dir / "overview.md"
+    page.write_text(f"---\nsource_commit: {source_repo[0]}\n---\n\n" + "short " * 180)
+    ledger = approvals.load(tmp_cfg)
+    approvals.record_finding(ledger, "no-extracted-entity:file:a.txt", "accepted", by="reviewer")
+    approvals.save(tmp_cfg, ledger)
+    order = []
+    steps = _steps(order)
+    def generate(cfg, model, report):
+        page.write_text(f"---\nsource_commit: {model.meta['source_commit']}\n---\n\n" + "growth " * 1000)
+    steps.generate = generate
+    first = update.run_update(tmp_cfg, to=source_repo[1], steps=steps, log=lambda _: None)
+    assert first.exit_code == 1
+    before = document_health.baseline(tmp_cfg)
+    again = update.run_update(tmp_cfg, to=source_repo[1], steps=steps, log=lambda _: None)
+    assert again.exit_code == 1 and again.processed == []
+    assert order == [source_repo[1], source_repo[1]]
+    assert document_health.baseline(tmp_cfg) == before
+    assert update.load_state(tmp_cfg)["last_done"] == ""
+
+
 def test_승인되지_않은_범위_항목은_생성_전에_멈춘다(tmp_cfg, source_repo):
     _seed_baseline(tmp_cfg, source_repo[0])
     result = update.run_update(tmp_cfg, steps=_steps([]), log=lambda _: None)

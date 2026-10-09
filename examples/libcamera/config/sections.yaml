@@ -1524,3 +1524,159 @@ sections:
   - id: metadata
     question: 프레임 처리 결과를 전달하는 경계와 미검증 사항을 설명하세요.
   show_evidence: true
+- id: rkisp1-dewarp
+  group: For Vendors
+  title: RKISP1 카메라별 왜곡 보정
+  output: rkisp1-dewarp.md
+  kind: prose
+  lead: 카메라별 보정값의 보관 위치와 설정 시점을 확인한 뒤 튜닝 입력과 커널 지원을 점검하세요.
+  reader: RKISP1 다중 카메라 설정과 DW100 보정기를 수정하는 개발자
+  facts:
+    classes:
+    - libcamera::RkISP1CameraData
+    - libcamera::PipelineHandlerRkISP1
+    - libcamera::ConverterDW100Module
+    - libcamera::Dw100VertexMap
+    - libcamera::Converter
+    class_table: false
+  diagram:
+    enabled: false
+  watch:
+  - src/libcamera/pipeline/rkisp1/rkisp1.cpp
+  - src/libcamera/converter/converter_dw100.cpp
+  - src/libcamera/converter/converter_dw100_vertexmap.cpp
+  - include/libcamera/internal/converter/converter_dw100*.h
+  - src/libcamera/converter.cpp
+  next:
+    title: Pipeline Handler
+    link: pipeline-handler.md
+  design_topics:
+  - id: ownership
+    title: 카메라별 보정값의 소유권
+    question: 여러 카메라의 보정값이 섞이지 않도록 누가 값을 보관하고 전달합니까?
+    sources:
+    - id: camera
+      file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
+      start: 'class RkISP1CameraData :'
+      end: 'class RkISP1CameraConfiguration :'
+      sha256: 4c9387123443d958220746e355a9e93b30dca2bb4a32b4f4020c938e1a699de1
+    - id: load
+      file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
+      start: int RkISP1CameraData::loadTuningFile(
+      end: void RkISP1CameraData::paramsComputed(
+      sha256: d0fb5eb90b4c6d0df3e90cff142c95b4f7daeddb6d483a4272a5fb07d7dd3fec
+    - id: configure
+      file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
+      start: int PipelineHandlerRkISP1::configure(
+      end: int PipelineHandlerRkISP1::exportFrameBuffers(
+      sha256: 85e3aef5f0b623538bedbd13a895c0a08ada48616ab1e9ee8fe1a87882b67ee6
+    statements:
+    - text: 보정값은 카메라마다 다를 수 있습니다. `RkISP1CameraData`는 카메라별 `dewarpParams_`를 보관하고, 튜닝 파일의 Dewarp 항목을 읽을 때 그 객체에 값을
+        저장합니다.
+      evidence:
+      - camera
+      - load
+      covers:
+      - ownership
+      kind: behavior
+    - text: '`PipelineHandlerRkISP1`은 보정기를 설정할 때 현재 카메라의 `data->dewarpParams_`를 함께 전달합니다. 보정값을 읽는 시점과 장치에 설정하는 시점을
+        분리하므로, 어떤 카메라의 값인지 전달 경로에서 확인할 수 있습니다.'
+      evidence:
+      - configure
+      covers:
+      - ownership
+      kind: behavior
+    - text: 보정기가 없으면 튜닝 파일의 보정 설정을 읽지 않고 성공을 반환합니다. 파일 열기나 YAML 해석 실패는 오류를 반환하며, Dewarp 항목을 성공적으로 읽은 경우에 `canUseDewarper_`를
+        설정합니다.
+      evidence:
+      - load
+      covers:
+      - ownership
+      kind: behavior
+  - id: parameters
+    title: 튜닝 입력의 기본값과 오류
+    question: 보정값이 없거나 일부만 있을 때 어떤 결과를 반환합니까?
+    sources:
+    - id: parameters
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: int ConverterDW100Module::loadDewarpParams(
+      end: int ConverterDW100Module::configure(
+      sha256: 5e4f1317cd9611173e6e5b1fa350ab26f28500656037c812909008604ebfb091
+    statements:
+    - text: '`loadDewarpParams()`는 출력 optional을 먼저 비웁니다. `cm`, `coefficients`, `cmNew`가 모두 없으면 성공을 반환하지만 보정 파라미터는
+        없는 상태로 남습니다. 성공 코드만으로 렌즈 보정값이 준비됐다고 판단하면 안 됩니다.'
+      evidence:
+      - parameters
+      covers:
+      - parameters
+      kind: behavior
+    - text: 설정값이 하나라도 있으면 유효한 3×3 `cm`과 계수 목록이 필요합니다. 계수는 4개, 5개, 8개 또는 12개여야 합니다. 필수 값이 없거나 형식이 틀리면 `-EINVAL`을
+        반환합니다.
+      evidence:
+      - parameters
+      covers:
+      - parameters
+      kind: behavior
+    - text: '`cmNew`를 생략하면 `cm`을 사용합니다. `cmNew`가 있으면 3×3 행렬로 읽을 수 있어야 합니다. 모든 검사가 끝난 뒤에만 출력 optional에 값을 저장합니다.'
+      evidence:
+      - parameters
+      covers:
+      - parameters
+      kind: behavior
+  - id: application
+    title: 스트림 적용과 실행 확인 범위
+    question: 보정값은 어느 스트림에 적용되고 어떤 실행 조건을 따로 확인해야 합니까?
+    sources:
+    - id: configure
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: int ConverterDW100Module::configure(
+      end: bool ConverterDW100Module::isConfigured(
+      sha256: b517243a55de2dab95250c687c7f2aab9fd32b4ed115e3b65b8878daa39b0bc8
+    - id: controls
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: void ConverterDW100Module::updateControlInfos(
+      end: void ConverterDW100Module::populateMetadata(
+      sha256: aa6937cbf814f9c7bf5c1dfab84e4d5e0fa96ace063b360484f3858066454e02
+    - id: metadata
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: void ConverterDW100Module::populateMetadata(
+      end: void ConverterDW100Module::setSensorCrop(
+      sha256: 37f3f992d5270f1f7309de486064df8a88ceebdafa81963ddb49872b7e674ecb
+    statements:
+    - text: '`configure()`는 이전 스트림 맵을 비우고 내부 변환기를 설정합니다. 성공하면 각 출력 스트림의 입력·출력 크기와 센서 크롭을 설정하고, 보정 파라미터가 있을 때 해당
+        값을 적용한 뒤 갱신 필요 상태로 표시합니다.'
+      evidence:
+      - configure
+      covers:
+      - application
+      kind: behavior
+    - text: 보정 파라미터가 있을 때 `LensDewarpEnable`을 지원 제어 목록과 결과 metadata에 포함합니다. 스트림이 설정되지 않았으면 `setControls()`와 `populateMetadata()`는
+        그대로 반환합니다.
+      evidence:
+      - controls
+      - metadata
+      covers:
+      - application
+      kind: behavior
+    - text: 실행 중 동적으로 보정 제어를 바꾸려면 커널 드라이버의 requests 지원이 필요합니다. 지원하지 않는 상태에서 변경하면 오류 로그를 남깁니다. 카메라 전환 후 적용값과 실제 영상
+        결과는 장치 시험으로 확인해야 합니다.
+      evidence:
+      - controls
+      covers:
+      - application
+      kind: behavior
+    - text: 이 설명은 공개 libcamera의 고정 커밋을 소스와 대조한 결과입니다. 여러 카메라의 동시 촬영, 보정 화질, 커널별 동작과 사내 Camera HAL 적용을 검증한 결과는 아닙니다.
+      evidence:
+      - configure
+      - controls
+      covers:
+      - application
+      kind: limitation
+  design_requirements:
+  - id: ownership
+    question: 여러 카메라의 보정값이 섞이지 않도록 누가 값을 보관하고 전달합니까?
+  - id: parameters
+    question: 보정값이 없거나 일부만 있을 때 어떤 결과를 반환합니까?
+  - id: application
+    question: 보정값은 어느 스트림에 적용되고 어떤 실행 조건을 따로 확인해야 합니까?
+  show_evidence: true

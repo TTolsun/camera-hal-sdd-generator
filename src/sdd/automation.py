@@ -148,6 +148,7 @@ def run(cfg):
         destination = {"fetch": git(repo, "remote", "get-url", pub["remote"]),
                        "push": git(repo, "remote", "get-url", "--push", "--all", pub["remote"])}
         identity = hashlib.sha256(json.dumps({"options": {k: v for k, v in opts.items() if k != "schedule"}, "source": str(cfg.source_root),
+                                             "documentation": cfg.raw.get("documentation", {}),
                                              "repo": str(repo), "site": cfg.raw.get("site", {}),
                                              "destination": destination}, sort_keys=True).encode()).hexdigest()
         job = state.get("pending")
@@ -189,6 +190,8 @@ def _resume(cfg, opts, pub, repo, out, path, state, job):
         save(path, state)
 
     if job["phase"] == "update":
+        from .document_health import prepare
+        prepare(cfg)
         def generate(config, model, report):
             if opts.get("hermes", {}).get("enabled", False):
                 from .hermes_review import revise
@@ -210,6 +213,8 @@ def _resume(cfg, opts, pub, repo, out, path, state, job):
         print("누락 점검: " + json.dumps(job["idle_result"], ensure_ascii=False))
         phase("build")
     if job["phase"] == "build":
+        from .document_health import enforce
+        job["document_health"] = enforce(cfg)
         if source_git.resolve_commit(repo, "HEAD") != job["initial_docs_commit"] or not source_git.is_clean(repo):
             raise RuntimeError("사이트 빌드 전에 문서 작업본이 변경됐습니다.")
         # Build outside Git first. On failure the existing published tree is preserved.
@@ -278,6 +283,8 @@ def _resume(cfg, opts, pub, repo, out, path, state, job):
         phase("verify")
     if job["phase"] == "verify":
         _hook(pub["verify_command"], repo, job, out, timeout)
+        from .document_health import checkpoint
+        checkpoint(cfg, job.get("document_health"))
         state["last_published"] = {k: job[k] for k in ("target", "docs_commit", "build_id", "identity")}
         state.pop("pending")
         state.pop("error", None)

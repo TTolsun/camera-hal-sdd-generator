@@ -45,7 +45,11 @@ def carry_forward(cfg: Config, model: KnowledgeModel,
     done = {p.resolve() for p in written}
     allowed = model.citations()
     sections = {s["id"]: s for s in cfg.sections()}
+    from .document_health import retired_paths
+    retired = retired_paths(cfg)
     for path in sorted(cfg.sdd_dir.rglob("*.md")):
+        if path.relative_to(cfg.sdd_dir).as_posix() in retired:
+            continue
         if path.resolve() in done:
             continue
         text = path.read_text(encoding="utf-8")
