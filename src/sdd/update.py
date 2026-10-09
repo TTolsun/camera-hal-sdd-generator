@@ -163,6 +163,8 @@ def run_update(cfg: Config, to: str = "HEAD", max_count: int | None = None,
     if max_count is not None:
         queue = queue[:max_count]
     if not queue:
+        from .document_health import enforce
+        enforce(cfg)
         log(f"새 커밋이 없습니다 (기준: {base[:12]}).")
         return result
     log(f"처리할 커밋 {len(queue)} 개 (기준: {base[:12]})")
@@ -195,6 +197,8 @@ def _process_queue(cfg: Config, queue: list[str], base: str, state: dict[str, An
     for sha in queue:
         log(f"== {sha[:12]} 처리 시작")
         try:
+            from . import document_health
+            document_health.prepare(cfg)
             steps.checkout(cfg, sha)
             steps.prepare_compdb(cfg, sha)
             # 직전 커밋의 facts 를 비교 기준으로 보존한 뒤 새 facts 를 추출한다. 실패 후 재시도로
@@ -230,6 +234,9 @@ def _process_queue(cfg: Config, queue: list[str], base: str, state: dict[str, An
                 log(result.stopped_reason)
                 return result
             steps.generate(cfg, model, report)
+            health = document_health.enforce(cfg, model)
+            if not _needs_review_pages(cfg, ledger):
+                document_health.checkpoint(cfg, health)
             state["last_done"] = sha
             state["failed"].pop(sha, None)
             save_state(cfg, state)

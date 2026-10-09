@@ -264,6 +264,8 @@ def _promote(path, state):
 
 
 def run(cfg, target, job_id):
+    from .document_health import prepare
+    prepare(cfg)
     options = cfg.raw.get("automation", {}).get("idle_review", {})
     revision = options.get("revision", 1)
     identity = hashlib.sha256(json.dumps({"target": target, "raw": cfg.raw,

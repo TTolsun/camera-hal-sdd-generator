@@ -208,6 +208,8 @@ def cmd_accept(args: argparse.Namespace) -> int:
 
 def cmd_generate(args: argparse.Namespace) -> int:
     cfg = _cfg(args)
+    from . import document_health
+    document_health.prepare(cfg)
     model = _load_model(cfg)
     if any(s.get("design_topics") for s in cfg.sections()):
         from .evidence import collect as collect_evidence
@@ -248,9 +250,11 @@ def cmd_generate(args: argparse.Namespace) -> int:
             summary = "# 변경 영향 요약\n\n추출 사실과 영향 보고서로 구성한 요약입니다.\n\n" + summary
         (cfg.build_dir / "change_impact.md").write_text(summary + "\n", encoding="utf-8")
         print("-> build/change_impact.md (리뷰어용 변경 요약)")
+    health = document_health.enforce(cfg, model)
     if (cfg.raw.get("site") or {}).get("enabled", False):
         from .export_site import export_site
         print(f"-> {export_site(cfg)}")
+    document_health.checkpoint(cfg, health)
     return 0
 
 
@@ -331,11 +335,22 @@ def cmd_export_html(args: argparse.Namespace) -> int:
 
 def cmd_export_site(args: argparse.Namespace) -> int:
     from .export_site import export_site
-
-    out = export_site(_cfg(args), out=Path(args.out).resolve() if args.out else None,
+    from . import document_health
+    cfg = _cfg(args)
+    health = document_health.enforce(cfg)
+    out = export_site(cfg, out=Path(args.out).resolve() if args.out else None,
                       mermaid_src=args.mermaid)
+    document_health.checkpoint(cfg, health)
     print(f"-> {out}")
     return 0
+
+
+def cmd_audit_docs(args: argparse.Namespace) -> int:
+    from .document_health import audit
+    cfg = _cfg(args)
+    report = audit(cfg, _load_model(cfg))
+    print(f"{report['status']}: {cfg.build_dir / 'document-health.md'}")
+    return 2 if report["findings"] else 0
 
 
 def cmd_verify_site(args: argparse.Namespace) -> int:
@@ -396,6 +411,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
+    sub.add_parser("audit-docs", help="문서 분량·증가·중복·Feature 범위·폐기 계획을 검사한다 (기준선 변경 없음)").set_defaults(fn=cmd_audit_docs)
 
     s = sub.add_parser("compdb", help="compile DB 확보와 정규화")
     s.add_argument("--regenerate", action="store_true")

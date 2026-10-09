@@ -59,6 +59,8 @@ site:
 
 `package_depth`는 libcamera에서 실제로 문제가 됐던 값입니다. 소스가 `src/`와 `include/` 아래로만 나뉘면 기본값 1은 패키지를 세 개로 뭉쳐서 개요의 패키지 표가 쓸모없어집니다. 추출 후 `facts.json`의 `packages` 개수를 보고 정합니다.
 
+`documentation.enabled: true`로 [문서 수명주기 검사](document-lifecycle.md)를 켜고, Feature별 기준 문서와 필수 섹션·시나리오·심볼을 등록합니다. 분량 한도는 실제 HAL 문서를 읽으며 조정합니다. 분리·통합·폐기 판단은 근거를 보존한 상태에서 검토하고, `audit-docs` 실패가 CI와 게시를 중단하는지 확인하세요.
+
 인용 링크 형식은 `source_link`(github·gitiles) 또는 `source_link_template`으로 코드 열람 도구에 맞춥니다. 템플릿의 자리표시자는 `{url}` `{commit}` `{file}` `{line}` 네 개이며, 어긋난 템플릿은 export-site 가 즉시 거부합니다.
 
 ### config/scenarios.yaml

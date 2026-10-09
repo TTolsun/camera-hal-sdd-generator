@@ -54,6 +54,16 @@ review:
   # 검증 실패 시 재시도 횟수. 초과하면 status: needs-review 로 기록하고 사람에게 넘긴다.
   max_retries: 1
 
+# See docs/document-lifecycle.md. Limits measure prose separately from code/tables.
+documentation:
+  enabled: true
+  limits:
+    max_chars: 18000
+    max_markdown_chars: 120000
+    max_growth_ratio: 1.5
+    min_growth_chars: 1000
+    duplicate_min_chars: 180
+
 site:
   enabled: true
   title: Camera HAL 설계 문서

@@ -40,6 +40,23 @@ review:
   require_citations: true
   max_retries: 1
 
+documentation:
+  enabled: true
+  features:
+    - id: request-lifecycle
+      primary: request-lifecycle.md
+      sections: [camera-model, pipeline-handler]
+      scenarios: [queue_request, complete_request, camera_stop]
+      symbols: [libcamera::Camera, libcamera::Request, libcamera::PipelineHandler]
+    - id: ipu3-lsc
+      primary: ipu3-lsc-flow.md
+      sections: [ipu3-lsc]
+      symbols: [libcamera::ipa::ipu3::algorithms::Lsc]
+    - id: rkisp1-dewarp
+      primary: rkisp1-dewarp.md
+      sections: [pipeline-handler]
+      symbols: [libcamera::RkISP1CameraData, libcamera::ConverterDW100Module, libcamera::Dw100VertexMap]
+
 site:
   enabled: true
   title: libcamera 설계 문서

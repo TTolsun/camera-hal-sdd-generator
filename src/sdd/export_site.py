@@ -171,11 +171,15 @@ def _grouped(entries: list[tuple[str, str, str]], preferred: list[str] | None = 
 
 
 def export_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None) -> Path:
+    from .document_health import enforce
+    enforce(cfg)
     from .site_build import build_site
     return build_site(cfg, out or cfg.build_dir / "site", _render_site, mermaid_src)
 
 
 def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None) -> Path:
+    from .document_health import retired_paths
+    retired = retired_paths(cfg)
     settings = cfg.raw.get("site", {}) or {}
     title = str(settings.get("title", "Camera HAL SDD"))
     source_url = str(settings.get("source_url", ""))
@@ -201,6 +205,8 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
                if (cfg.sdd_dir / rel).is_file()]
     # Include configured MkDocs pages and scenario pages without losing section ordering.
     for group, name, rel in _nav_entries(cfg.root / "mkdocs.yml", cfg.sdd_dir):
+        if rel in retired:
+            continue
         if sections and not (cfg.root / "mkdocs.yml").exists():
             # Old Markdown can remain for history; removed sections must not return to the menu.
             if not (rel.startswith("scenarios/") and any(s.get("kind") == "per-scenario" for s in sections.values())):
