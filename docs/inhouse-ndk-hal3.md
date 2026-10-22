@@ -138,7 +138,7 @@ ndk-build compile_commands.json
         ├─ DB 의 NDK clang -print-resource-dir ──► -resource-dir 추가
         │      (이름이 clang 이 아니면 실행하지 않고 중단)
         ▼
-정규화본: source.compile_commands 가 원본을 가리키면 build/compile_commands.ndk.json
+정규화본: source.compile_commands 가 원본을 가리키면 build/compdb/compile_commands.json
         ▼
 libclang 파싱
 ```

@@ -148,7 +148,7 @@ compile DB 는 빌드 시스템별로 이렇게 확보합니다.
 2. `source.compile_commands`가 아직 정규화되지 않은 원본 DB를 가리킬 때입니다. 사람이나 CI가 ndk-build를 직접 실행한 경우가 여기에 해당합니다.
 3. `sdd update`가 `update.compdb_cmd`로 DB를 다시 만든 직후입니다. 이 단계가 없으면 커밋마다 원본 DB로 추출하게 되어 파싱이 실패합니다.
 
-정규화할 때는 `ccache` 같은 컴파일러 wrapper를 떼고, 원본 DB에 적힌 NDK clang에서 `-print-resource-dir`로 내장 헤더 위치를 찾아 `-resource-dir`를 채웁니다. 원본 DB는 고치지 않습니다. 원본이 소스 저장소 안에 있으면 작업 트리가 바뀌어 `sdd update`가 멈추기 때문입니다. `source.compile_commands`가 원본을 가리키면 정규화본은 `build/compile_commands.ndk.json`에 씁니다.
+정규화할 때는 `ccache` 같은 컴파일러 wrapper를 떼고, 원본 DB에 적힌 NDK clang에서 `-print-resource-dir`로 내장 헤더 위치를 찾아 `-resource-dir`를 채웁니다. 원본 DB는 고치지 않습니다. 원본이 소스 저장소 안에 있으면 작업 트리가 바뀌어 `sdd update`가 멈추기 때문입니다. `source.compile_commands`가 원본을 가리키면 정규화본은 `build/compdb/compile_commands.json`에 씁니다. clang-uml은 지정한 디렉터리 안의 `compile_commands.json`만 읽으므로 파일 이름을 바꾸지 않습니다.
 
 DB에 적힌 컴파일러는 파일 이름이 `clang`, `clang++`, `clang-18` 같은 형태일 때만 실행합니다. 다른 이름이거나 추출하는 머신에서 그 clang을 실행할 수 없으면 추출을 중단합니다. 이 경우 `source.ndk_build.clang`에 신뢰하는 NDK clang 경로를 지정합니다. pip libclang은 18.1.1이므로, NDK clang의 주 버전이 크게 다르면 내장 헤더가 맞지 않을 수 있습니다. 사내 NDK 버전으로 실제 파싱 결과를 확인해야 합니다.
 

@@ -429,5 +429,4 @@ def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]]) -
     (diagrams / "class_overview.mmd").write_text(mermaid_class(model) + "\n", encoding="utf-8")
     for sid, sc in model.scenarios.items():
         (diagrams / f"seq_{sid}.mmd").write_text(sc.mermaid + "\n", encoding="utf-8")
-    model.meta["callgraph"] = stats
     return stats
