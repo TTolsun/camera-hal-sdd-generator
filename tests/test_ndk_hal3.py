@@ -9,12 +9,13 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 from types import SimpleNamespace
 
 from sdd import compdb, extract, update
 from sdd.config import load
-from sdd.facts import callgraph
+from sdd.facts import callgraph, clang_uml
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -162,8 +163,11 @@ def test_ndk_원본_DB_를_정규화해서_HAL3_시나리오까지_추출한다(
     # 원본은 소스 저장소에 있을 수 있으므로 고치지 않고, 정규화본은 build/ 에 둔다.
     assert cfg.compile_commands.read_bytes() == raw_before
     normalized = Path(model.meta["compile_commands"])
-    assert normalized == cfg.build_dir / "compile_commands.ndk.json"
+    assert normalized == cfg.build_dir / "compdb" / "compile_commands.json"
     _assert_normalized(normalized, Path(cfg.ndk_build["project_dir"]), resource)
+    # clang-uml 은 지정한 디렉터리의 compile_commands.json 만 읽는다. 정규화본이 그 자리에 있어야 한다.
+    db_dir = yaml.safe_load(clang_uml.write_config(cfg, normalized.parent).read_text(encoding="utf-8"))
+    assert compdb.is_normalized(compdb.load_entries(Path(db_dir["compilation_database_dir"]) / "compile_commands.json"))
     assert model.meta["comments"]["errors"] == 0
     assert "hal::CameraDevice" in model.classes
 
@@ -253,7 +257,7 @@ def test_update_가_ndk_build_로_다시_만든_DB_도_정규화한다(ndk_proje
     monkeypatch.setattr(subprocess, "run", fake_run)
     update._run_compdb_cmd(cfg)
     assert calls == [["ndk-build", "compile_commands.json"]]
-    normalized = cfg.build_dir / "compile_commands.ndk.json"
+    normalized = cfg.build_dir / "compdb" / "compile_commands.json"
     assert compdb.is_normalized(compdb.load_entries(normalized))
     _assert_normalized(normalized, project, resource)
     assert not compdb.is_normalized(compdb.load_entries(cfg.compile_commands))   # 원본은 그대로다

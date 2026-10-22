@@ -37,7 +37,7 @@ def test_스킬이_인용한_문구가_코드에_있다(text):
 
 
 def test_가이드가_스킬과_같은_설정_키를_쓴다():
-    for key in ("source.ndk_build.clang", "update.compdb_cmd", ".git/info/exclude", "compile_commands.ndk.json"):
+    for key in ("source.ndk_build.clang", "update.compdb_cmd", ".git/info/exclude", "build/compdb/compile_commands.json"):
         assert key in GUIDE
     for key in ("source.ndk_build.clang", ".git/info/exclude"):
         assert key in SKILL

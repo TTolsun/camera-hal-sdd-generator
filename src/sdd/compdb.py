@@ -62,7 +62,8 @@ def normalize_ndk(cfg: Config, raw: Path | None = None) -> Path:
     normalized = normalize(entries, clang_resource_dir(_trusted_clang(cfg, entries[0])))
     out = cfg.compile_commands
     if raw.resolve() == out.resolve():
-        out = cfg.build_dir / "compile_commands.ndk.json"
+        # clang-uml 은 compilation_database_dir 안의 compile_commands.json 만 읽으므로 파일 이름은 그대로 둔다.
+        out = cfg.build_dir / "compdb" / "compile_commands.json"
     _write_atomic(out, json.dumps(normalized, ensure_ascii=False, indent=1))
     return out
 
