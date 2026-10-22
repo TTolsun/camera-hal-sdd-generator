@@ -48,7 +48,9 @@ agent:
 
 - 작은 HAL 예제: [examples/mini-hal](examples/mini-hal/)과 [기존 결과 스냅샷](examples/mini-hal/expected-output/)
 - 사내 Camera HAL: [적용 절차와 준비 항목](docs/inhouse-adoption.md) (사내 환경에서 실행되지 않은 절차입니다)
+- NDK-build·legacy HAL3 HAL: [설정·정규화·진입점 작성·문제 해결](docs/inhouse-ndk-hal3.md)
 - 사내 Claude에 구축 맡기기: [복사용 지시문과 구축·완료 기준](docs/inhouse-agent-bootstrap.md)
+- 사내 LLM 에이전트로 운영하기: [SDD 생성 스킬](skills/camera-hal-sdd/SKILL.md)과 [설치 방법](skills/README.md)
 - Hermes와 예약 배포: [시간 설정·실행·실패 후 재개](docs/scheduled-publication.md)
 - 공개 libcamera: [환경 준비와 실행](docs/libcamera-home-lab.md), [실제 WSL 실행 기록](docs/libcamera-wsl-run.md)
 - 게시 결과: [검토용 사이트](https://ttolsun.github.io/libcamera-sdd/), [카메라 모델 문서의 충분성 평가](docs/camera-model-review.md)

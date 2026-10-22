@@ -2,7 +2,7 @@
 
 **먼저 [필요한 입력](#1-필요한-입력)을 확보하고 [바꿀 설정](#2-바꿀-설정)을 실제 환경에 맞춘 뒤 [실행 순서](#3-실행-순서)를 따르세요.**
 
-사내 Claude에 초기 구축과 CI 연결을 맡기려면 [복사용 지시문과 구축 가이드](inhouse-agent-bootstrap.md)를 사용하세요.
+사내 Claude에 초기 구축과 CI 연결을 맡기려면 [복사용 지시문과 구축 가이드](inhouse-agent-bootstrap.md)를 사용하세요. NDK-build와 legacy HAL3에서 달라지는 설정과 오류 대응은 [NDK·HAL3 가이드](inhouse-ndk-hal3.md)에 있습니다.
 
 이 문서는 libcamera 공개 검증에서 확인한 파이프라인을 사내 Camera HAL에 옮기는 절차입니다. **사내 소스와 빌드 구성을 아직 받지 못했으므로 여기 적은 절차는 실행으로 검증되지 않았습니다.** libcamera에서 확인한 동작과 사내에서 확인해야 할 항목을 구분해서 적습니다.
 
@@ -148,7 +148,9 @@ compile DB 는 빌드 시스템별로 이렇게 확보합니다.
 2. `source.compile_commands`가 아직 정규화되지 않은 원본 DB를 가리킬 때입니다. 사람이나 CI가 ndk-build를 직접 실행한 경우가 여기에 해당합니다.
 3. `sdd update`가 `update.compdb_cmd`로 DB를 다시 만든 직후입니다. 이 단계가 없으면 커밋마다 원본 DB로 추출하게 되어 파싱이 실패합니다.
 
-정규화할 때는 `ccache` 같은 컴파일러 wrapper를 떼고, 원본 DB에 적힌 NDK clang에서 `-print-resource-dir`로 내장 헤더 위치를 찾아 `-resource-dir`를 채웁니다. 추출하는 머신에서 그 clang을 실행할 수 없으면 추출을 중단합니다. 이 경우 `source.ndk_build.clang`에 NDK clang 경로를 지정합니다. pip libclang은 18.1.1이므로, NDK clang의 주 버전이 크게 다르면 내장 헤더가 맞지 않을 수 있습니다. 사내 NDK 버전으로 실제 파싱 결과를 확인해야 합니다.
+정규화할 때는 `ccache` 같은 컴파일러 wrapper를 떼고, 원본 DB에 적힌 NDK clang에서 `-print-resource-dir`로 내장 헤더 위치를 찾아 `-resource-dir`를 채웁니다. 원본 DB는 고치지 않습니다. 원본이 소스 저장소 안에 있으면 작업 트리가 바뀌어 `sdd update`가 멈추기 때문입니다. `source.compile_commands`가 원본을 가리키면 정규화본은 `build/compile_commands.ndk.json`에 씁니다.
+
+DB에 적힌 컴파일러는 파일 이름이 `clang`, `clang++`, `clang-18` 같은 형태일 때만 실행합니다. 다른 이름이거나 추출하는 머신에서 그 clang을 실행할 수 없으면 추출을 중단합니다. 이 경우 `source.ndk_build.clang`에 신뢰하는 NDK clang 경로를 지정합니다. pip libclang은 18.1.1이므로, NDK clang의 주 버전이 크게 다르면 내장 헤더가 맞지 않을 수 있습니다. 사내 NDK 버전으로 실제 파싱 결과를 확인해야 합니다.
 
 ```bash
 uv run sdd --config <사내설정>/sdd.yaml compdb --normalize --normalize-input <빌드출력>/compile_commands.json --clang clang --out <사내설정>/build/compile_commands.json

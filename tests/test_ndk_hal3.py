@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from types import SimpleNamespace
+
 from sdd import compdb, extract, update
 from sdd.config import load
 from sdd.facts import callgraph
@@ -142,15 +144,26 @@ agent:
     return load(tmp_path / "sdd.yaml"), seen, resource
 
 
+def _assert_normalized(path: Path, project: Path, resource: Path) -> None:
+    argv = compdb.load_entries(path)[0]["arguments"]
+    assert argv[0] == "/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++" and "ccache" not in argv
+    assert "-I" + str((project / "jni").resolve()) in argv
+    assert f"-working-directory={project.resolve()}" in argv
+    assert f"-resource-dir={resource}" in argv
+
+
 def test_ndk_원본_DB_를_정규화해서_HAL3_시나리오까지_추출한다(ndk_project):
     cfg, seen, resource = ndk_project
+    raw_before = cfg.compile_commands.read_bytes()
     model = extract.run(cfg)
 
     # 원본 DB 의 컴파일러(ccache 를 뗀 NDK clang)로 내장 헤더 위치를 찾았다.
     assert seen == ["/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"]
-    argv = compdb.load_entries(cfg.compile_commands)[0]["arguments"]
-    assert argv[0].endswith("clang++") and "ccache" not in argv
-    assert f"-resource-dir={resource}" in argv
+    # 원본은 소스 저장소에 있을 수 있으므로 고치지 않고, 정규화본은 build/ 에 둔다.
+    assert cfg.compile_commands.read_bytes() == raw_before
+    normalized = Path(model.meta["compile_commands"])
+    assert normalized == cfg.build_dir / "compile_commands.ndk.json"
+    _assert_normalized(normalized, Path(cfg.ndk_build["project_dir"]), resource)
     assert model.meta["comments"]["errors"] == 0
     assert "hal::CameraDevice" in model.classes
 
@@ -163,13 +176,30 @@ def test_ndk_원본_DB_를_정규화해서_HAL3_시나리오까지_추출한다(
     assert [m.name for m in model.scenarios["flush"].messages] == ["flush"]
 
 
-def test_원본_DB_의_상대_include_가_절대_경로가_된다(ndk_project):
-    cfg, _, _ = ndk_project
+def test_DB_의_컴파일러가_clang_이_아니면_실행하지_않는다(ndk_project):
+    cfg, seen, _ = ndk_project
+    entry = _raw_entry(Path(cfg.ndk_build["project_dir"]))
+    entry["command"] = entry["command"].replace(
+        "/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++", "/tmp/evil.sh")
+    cfg.compile_commands.write_text(json.dumps([entry]), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="source.ndk_build.clang"):
+        compdb.ensure(cfg)
+    assert seen == []
+    # 신뢰하는 NDK clang 을 설정에 적으면 그 경로만 실행한다.
+    cfg.ndk_build["clang"] = "/opt/ndk/bin/clang++"
     compdb.ensure(cfg)
-    argv = compdb.load_entries(cfg.compile_commands)[0]["arguments"]
-    project = cfg.ndk_build["project_dir"]
-    assert "-I" + str((Path(project) / "jni").resolve()) in argv
-    assert f"-working-directory={Path(project).resolve()}" in argv
+    assert seen == ["/opt/ndk/bin/clang++"]
+
+
+def test_정규화본을_다시_만들어도_내장_헤더_위치를_잃지_않는다(tmp_path):
+    entries = [{"directory": str(tmp_path), "file": "a.cpp",
+                "arguments": ["clang++", "-c", "a.cpp", "-resource-dir=/opt/ndk/clang/18"]}]
+    out = compdb.normalize(entries)
+    assert "-resource-dir=/opt/ndk/clang/18" in out[0]["arguments"]
+    assert compdb.is_normalized(out)
+    # 일부 항목만 정규화된 DB 는 정규화된 것으로 보지 않는다.
+    assert not compdb.is_normalized(out + [{"directory": str(tmp_path), "file": "b.cpp",
+                                            "arguments": ["clang++", "-c", "b.cpp"]}])
 
 
 def test_같은_이름이_여럿이면_진입점을_임의로_고르지_않는다(ndk_project):
@@ -185,19 +215,32 @@ def test_같은_이름이_여럿이면_진입점을_임의로_고르지_않는�
     assert entry is not None and entry.qualified == "hal::Pipeline::flush"
 
 
+def test_완전한_이름은_접미사가_같은_다른_정의보다_우선한다():
+    def fd(q):
+        return SimpleNamespace(qualified=q, display=q.rpartition("::")[2] + "()")
+    g = SimpleNamespace(defs={"a": fd("hal::CameraDevice::flush"), "b": fd("vendor::hal::CameraDevice::flush")})
+    entry, _ = callgraph.match_entry(g, "hal::CameraDevice::flush()")
+    assert entry.qualified == "hal::CameraDevice::flush"
+    entry, reason = callgraph.match_entry(g, "CameraDevice::flush()")
+    assert entry is None and "2개" in reason
+
+
 def test_모호한_진입점은_추출을_중단하고_facts_를_보존한다(ndk_project, tmp_path):
     cfg, _, _ = ndk_project
     extract.run(cfg)
     before = cfg.facts_path.read_bytes()
+    import shutil
+    shutil.rmtree(cfg.diagrams_dir)
     (tmp_path / "scenarios.yaml").write_text(SCENARIOS.replace('"CameraDevice::flush()"', '"flush()"'),
                                              encoding="utf-8")
     with pytest.raises(RuntimeError, match="진입점 1개"):
         extract.run(load(tmp_path / "sdd.yaml"))
     assert cfg.facts_path.read_bytes() == before
+    assert not cfg.diagrams_dir.exists()     # 실패한 추출이 그림만 새로 쓰지 않는다
 
 
 def test_update_가_ndk_build_로_다시_만든_DB_도_정규화한다(ndk_project, tmp_path, monkeypatch):
-    cfg, _, _ = ndk_project
+    cfg, _, resource = ndk_project
     cfg.raw.setdefault("update", {})["compdb_cmd"] = ["ndk-build", "compile_commands.json"]
     project = Path(cfg.ndk_build["project_dir"])
     calls = []
@@ -210,4 +253,7 @@ def test_update_가_ndk_build_로_다시_만든_DB_도_정규화한다(ndk_proje
     monkeypatch.setattr(subprocess, "run", fake_run)
     update._run_compdb_cmd(cfg)
     assert calls == [["ndk-build", "compile_commands.json"]]
-    assert compdb.is_normalized(compdb.load_entries(cfg.compile_commands))
+    normalized = cfg.build_dir / "compile_commands.ndk.json"
+    assert compdb.is_normalized(compdb.load_entries(normalized))
+    _assert_normalized(normalized, project, resource)
+    assert not compdb.is_normalized(compdb.load_entries(cfg.compile_commands))   # 원본은 그대로다

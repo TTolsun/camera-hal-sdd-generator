@@ -263,6 +263,8 @@ def match_entry(g: Graph, from_sig: str) -> tuple[FuncDef | None, str]:
     """
     name, params = _normalize_sig(from_sig)
     candidates = [fd for fd in g.defs.values() if fd.qualified == name or fd.qualified.endswith("::" + name)]
+    # 완전한 이름으로 적었으면 그 이름이 접미사로 들어간 다른 네임스페이스의 정의는 후보에서 뺀다.
+    candidates = [fd for fd in candidates if fd.qualified == name] or candidates
     if not candidates:
         return None, "같은 이름의 함수 정의가 없습니다"
     listed = ", ".join(sorted(f"{fd.qualified.rpartition('::')[0] or '<전역>'}::{fd.display}" for fd in candidates))
@@ -418,6 +420,10 @@ def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]]) -
             unresolved=unresolved, deferred=deferred)
         stats["scenarios"] += 1
 
+    model.meta["callgraph"] = stats
+    if stats["missing_entries"]:
+        # 추출은 이어서 중단된다. 기존 facts 와 짝이 맞는 그림을 일부만 새것으로 바꾸지 않는다.
+        return stats
     diagrams = cfg.diagrams_dir
     diagrams.mkdir(parents=True, exist_ok=True)
     (diagrams / "class_overview.mmd").write_text(mermaid_class(model) + "\n", encoding="utf-8")

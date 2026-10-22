@@ -17,7 +17,9 @@ source:
     args: []
     # NDK r25 이상을 권장한다. 그 이하는 compile_commands.json 의 인자 escaping 이 불안정하다.
     # ndk-build 가 만든 DB 는 자동으로 정규화한다(절대 경로, ccache 제거, -resource-dir).
-    # 내장 헤더 위치는 DB 에 적힌 NDK clang 으로 찾는다. 그 clang 을 실행할 수 없는 머신에서는 경로를 지정한다.
+    # 원본은 고치지 않고, compile_commands 가 원본을 가리키면 정규화본을 build/compile_commands.ndk.json 에 쓴다.
+    # 내장 헤더 위치는 DB 에 적힌 NDK clang 으로 찾는다. 이름이 clang 이 아니거나 실행할 수 없으면 경로를 지정한다.
+    # 자세한 절차: docs/inhouse-ndk-hal3.md
     # clang: /opt/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++
 
 output:
