@@ -243,20 +243,45 @@ def build_graph(cfg: Config, entries: list[dict[str, Any]]) -> Graph:
     return g
 
 
-def _normalize_sig(sig: str) -> tuple[str, str]:
-    name, _, params = sig.partition("(")
-    params = re.sub(r"\s+", "", params.rstrip(")"))
-    return name.strip(), params
+def _normalize_params(params: str) -> str:
+    # HAL3 C 헤더는 `const struct camera3_device *` 처럼 struct 를 붙여 쓰는 곳과 typedef 를 쓰는 곳이 섞인다.
+    params = re.sub(r"\b(struct|class|enum|union)\s+", "", params.rstrip(")"))
+    return re.sub(r"\s+", "", params)
+
+
+def _normalize_sig(sig: str) -> tuple[str, str | None]:
+    """(이름, 인자) 를 돌려준다. 괄호가 없으면 인자는 None 이고, `f()` 의 인자는 빈 문자열이다."""
+    name, paren, params = sig.partition("(")
+    return name.strip(), (_normalize_params(params) if paren else None)
+
+
+def match_entry(g: Graph, from_sig: str) -> tuple[FuncDef | None, str]:
+    """진입 함수와, 찾지 못했거나 고르지 못한 이유를 돌려준다.
+
+    같은 이름이 여럿인데 시그니처로 하나를 고를 수 없으면 임의의 정의를 고르지 않는다.
+    엉뚱한 함수에서 시작한 시나리오가 문서에 조용히 실리기 때문이다.
+    """
+    name, params = _normalize_sig(from_sig)
+    candidates = [fd for fd in g.defs.values() if fd.qualified == name or fd.qualified.endswith("::" + name)]
+    if not candidates:
+        return None, "같은 이름의 함수 정의가 없습니다"
+    listed = ", ".join(sorted(f"{fd.qualified.rpartition('::')[0] or '<전역>'}::{fd.display}" for fd in candidates))
+    if params is not None:
+        exact = [fd for fd in candidates if _normalize_params(fd.display.partition("(")[2]) == params]
+        if len(exact) == 1:
+            return exact[0], ""
+        if len(exact) > 1:
+            return None, f"시그니처가 같은 정의가 {len(exact)}개입니다. 클래스나 네임스페이스를 붙이세요: {listed}"
+    if len(candidates) == 1:
+        if params is not None:
+            print(f"[callgraph] 경고: 인자가 다르지만 같은 이름의 정의가 하나뿐이라 사용합니다: "
+                  f"{from_sig} -> {listed}")
+        return candidates[0], ""
+    return None, f"같은 이름의 정의가 {len(candidates)}개라 고를 수 없습니다: {listed}"
 
 
 def find_entry(g: Graph, from_sig: str) -> FuncDef | None:
-    name, params = _normalize_sig(from_sig)
-    candidates = [fd for fd in g.defs.values() if fd.qualified == name or fd.qualified.endswith("::" + name)]
-    if params:
-        exact = [fd for fd in candidates if re.sub(r"\s+", "", fd.display.partition("(")[2].rstrip(")")) == params]
-        if exact:
-            return exact[0]
-    return candidates[0] if candidates else None
+    return match_entry(g, from_sig)[0]
 
 
 def trace(g: Graph, entry: FuncDef, depth: int) -> tuple[list[Message], int, int]:
@@ -380,9 +405,9 @@ def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]]) -
 
     stats = {"functions": len(g.defs), "scenarios": 0, "missing_entries": 0}
     for sc in cfg.scenarios():
-        entry = find_entry(g, sc["from"])
+        entry, reason = match_entry(g, sc["from"])
         if entry is None:
-            print(f"[callgraph] 시나리오 {sc['id']}: 진입 함수를 찾지 못했습니다: {sc['from']}")
+            print(f"[callgraph] 시나리오 {sc['id']}: 진입 함수를 정하지 못했습니다: {sc['from']} ({reason})")
             stats["missing_entries"] += 1
             continue
         messages, unresolved, deferred = trace(g, entry, int(sc.get("depth", 4) or 4))

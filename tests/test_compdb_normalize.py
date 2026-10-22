@@ -44,3 +44,24 @@ def test_sysroot_등호_형식도_절대_경로가_된다(tmp_path):
                 "arguments": ["clang++", "--sysroot=ndk/sysroot", "-c", "a.cpp"]}]
     out = compdb.normalize(entries)
     assert "--sysroot=" + str((tmp_path / "ndk/sysroot").resolve()) in out[0]["arguments"]
+
+
+def test_ccache_wrapper_를_떼고_실제_컴파일러를_남긴다(tmp_path):
+    entries = [{"directory": str(tmp_path), "file": "jni/a.cpp",
+                "command": "ccache /ndk/bin/clang++ -Ijni -c jni/a.cpp"}]
+    out = compdb.normalize(entries)
+    assert out[0]["arguments"][0] == "/ndk/bin/clang++"
+    assert compdb.compiler_of(entries[0]) == "/ndk/bin/clang++"
+
+
+def test_정규화를_반복해도_인자가_늘지_않는다(tmp_path):
+    entries = [{"directory": str(tmp_path), "file": "a.cpp", "arguments": ["clang++", "-Iinc", "-c", "a.cpp"]}]
+    once = compdb.normalize(entries, resource_dir=Path("/opt/clang/lib/clang/18"))
+    twice = compdb.normalize(once, resource_dir=Path("/opt/clang/lib/clang/18"))
+    assert once == twice
+    assert compdb.is_normalized(once) and not compdb.is_normalized(entries)
+
+
+def test_clang_을_실행하지_못하면_설정할_항목을_알린다():
+    with pytest.raises(RuntimeError, match="source.ndk_build.clang"):
+        compdb.clang_resource_dir("no-such-clang-for-sdd-test")

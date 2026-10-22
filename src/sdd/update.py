@@ -126,9 +126,13 @@ def _run_compdb_cmd(cfg: Config) -> None:
     그대로 쓰므로, 빌드 구성이 자주 바뀌는 저장소는 이 설정을 두어야 한다.
     """
     import subprocess
+
+    from . import compdb
     cmd = (cfg.raw.get("update", {}) or {}).get("compdb_cmd")
     if cmd:
         subprocess.run([str(c) for c in cmd], cwd=cfg.source_root, check=True)
+        if cfg.ndk_build.get("enabled"):
+            compdb.normalize_ndk(cfg)
 
 
 @dataclass

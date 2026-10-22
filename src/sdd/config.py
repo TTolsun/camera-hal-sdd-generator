@@ -158,6 +158,9 @@ def load(path: Path | None = None) -> Config:
     ndk = dict(src.get("ndk_build", {}) or {})
     if ndk.get("project_dir"):
         ndk["project_dir"] = str(rel(ndk["project_dir"], "."))
+    # PATH 의 이름(clang++)은 그대로 두고, 경로로 적은 NDK clang 만 설정 파일 기준으로 푼다.
+    if ndk.get("clang") and any(sep in str(ndk["clang"]) for sep in "/\\"):
+        ndk["clang"] = str(rel(ndk["clang"], "."))
 
     agent = AgentConfig(
         kind=str(agent_raw.get("kind", "dry-run")),

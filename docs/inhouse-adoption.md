@@ -76,6 +76,13 @@ scenarios:
     depth: 5
 ```
 
+사내 HAL은 legacy HAL3(`camera3_*`) 인터페이스를 사용합니다. 진입점은 다음 기준으로 적습니다.
+
+- **ops 표의 trampoline에서 시작할 수 있습니다.** `camera3_device_ops`에 등록한 정적 함수가 `dev->priv`를 캐스트하여 멤버 함수를 부르면, libclang 경로가 그 호출을 따라 멤버 함수로 이어서 추적합니다.
+- **`struct` 표기 차이는 같은 시그니처로 취급합니다.** 헤더의 `const struct camera3_device *`를 `const camera3_device *`로 적어도 같은 정의로 찾습니다.
+- **framework 쪽 콜백은 경계로 남습니다.** `camera3_callback_ops`의 `process_capture_result`와 `notify` 호출은 함수 포인터 호출이므로 "함수 포인터, 정적 추적 불가"로 표시합니다. 이것은 HAL에서 framework로 돌아가는 경계이며, 그 뒤의 처리는 문서화 대상이 아닙니다.
+- **이름이 겹치면 클래스나 네임스페이스를 붙입니다.** `flush()`처럼 같은 이름의 정의가 여럿이고 시그니처로도 하나를 고를 수 없으면, 임의의 정의에서 시작하지 않고 후보 목록과 함께 추출을 중단합니다.
+
 libclang 경로에서 시그니처에 맞는 진입점을 찾지 못하면 `extract`가 실패하고 기존 facts를 보존합니다. 파싱 오류나 빈 compile DB도 같은 방식으로 중단합니다. 생성 단계에서도 설정된 시나리오가 facts에 빠져 있으면 목차를 `needs-review`로 표시합니다.
 
 로깅 매크로가 호출 그래프의 대부분을 차지하면 `defaults.hide`에 이름을 적습니다. libcamera에서는 `LOG()` 매크로와 d-pointer 접근자가 첫 30단계 중 22단계를 차지했습니다. 사내 HAL은 `ALOGD` 계열이 같은 자리에 올 가능성이 높습니다.
@@ -128,12 +135,20 @@ compile DB 는 빌드 시스템별로 이렇게 확보합니다.
 
 | 빌드 시스템 | 확보 방법 |
 |---|---|
-| NDK-build | `sdd compdb` (`source.ndk_build.enabled: true`) |
+| NDK-build | `sdd compdb` (`source.ndk_build.enabled: true`). 원본 DB를 자동으로 정규화합니다. |
 | Soong (AOSP) | `SOONG_GEN_COMPDB=1 SOONG_GEN_COMPDB_DEBUG=1 m nothing` 후 `out/soong/development/ide/compdb/compile_commands.json` |
 | CMake | `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` |
 | Meson | 빌드 디렉터리에 `compile_commands.json` 생성됨 |
 
 어느 빌드가 만든 DB든 그대로 넘기면 상대 경로와 clang 내장 헤더 때문에 파싱이 전부 실패할 수 있습니다(libcamera 실측: TU 171개 전부 실패). `sdd compdb --normalize`가 경로를 절대 경로로 바꾸고 `-working-directory`를 채우며, `--clang <실행 파일>`을 주면 `-resource-dir`도 채웁니다. 정규화본은 원본과 별도 파일로 쓰고 `source.compile_commands`가 그 파일을 가리키게 합니다.
+
+`source.ndk_build.enabled: true`이면 이 정규화를 따로 실행하지 않아도 됩니다. ndk-build의 원본 DB는 `LOCAL_PATH` 기준 상대 경로를 쓰기 때문에, 생성기가 다음 세 시점에 정규화합니다.
+
+1. `sdd compdb`나 `extract`가 `ndk-build compile_commands.json`을 실행한 직후입니다.
+2. `source.compile_commands`가 아직 정규화되지 않은 원본 DB를 가리킬 때입니다. 사람이나 CI가 ndk-build를 직접 실행한 경우가 여기에 해당합니다.
+3. `sdd update`가 `update.compdb_cmd`로 DB를 다시 만든 직후입니다. 이 단계가 없으면 커밋마다 원본 DB로 추출하게 되어 파싱이 실패합니다.
+
+정규화할 때는 `ccache` 같은 컴파일러 wrapper를 떼고, 원본 DB에 적힌 NDK clang에서 `-print-resource-dir`로 내장 헤더 위치를 찾아 `-resource-dir`를 채웁니다. 추출하는 머신에서 그 clang을 실행할 수 없으면 추출을 중단합니다. 이 경우 `source.ndk_build.clang`에 NDK clang 경로를 지정합니다. pip libclang은 18.1.1이므로, NDK clang의 주 버전이 크게 다르면 내장 헤더가 맞지 않을 수 있습니다. 사내 NDK 버전으로 실제 파싱 결과를 확인해야 합니다.
 
 ```bash
 uv run sdd --config <사내설정>/sdd.yaml compdb --normalize --normalize-input <빌드출력>/compile_commands.json --clang clang --out <사내설정>/build/compile_commands.json
@@ -171,7 +186,7 @@ libcamera에서 확인한 것이 사내에서도 같다고 가정하지 않습�
 
 사내 HAL의 실제 소스 구성은 아직 확인하지 않았습니다. C++ 클래스 중심인 부분에는 클래스 표, 상속·필드 관계와 패키지 요약을 적용할 수 있습니다. 함수 포인터, 가상 호출, 큐와 콜백이 중심인 부분은 정적 추적이 끊기므로 해당 비중과 경계를 실제 소스에서 확인해야 합니다. 운영 환경에서 확인할 항목은 아래와 같습니다.
 
-- **실제 빌드 시스템을 확인해야 합니다.** libcamera는 Meson으로 검증했으며 사내 HAL의 빌드 시스템은 아직 확인하지 않았습니다. libcamera에서도 Meson이 만든 DB를 그대로 넘겨 171개 TU가 전부 파싱에 실패했고, 경로를 절대 경로로 바꾸고 `-resource-dir`를 채운 뒤에야 통과했습니다. NDK/AOSP 등 다른 빌드에서도 실제 헤더와 인자를 대조해야 합니다.
+- **실제 NDK 빌드로 확인해야 합니다.** 사내 HAL은 NDK-build와 legacy HAL3 인터페이스를 사용합니다. 원본 DB의 모양(상대 경로, `ccache`, `-MF`/`-o`)과 HAL3 ops·콜백 구조는 `tests/test_ndk_hal3.py`에서 재현해 검사하지만, 실제 NDK와 사내 소스로 실행한 결과는 아닙니다. libcamera에서도 Meson이 만든 DB를 그대로 넘겨 171개 TU가 전부 파싱에 실패했으므로, 사내 NDK 버전의 헤더와 인자로 파싱 오류 0개를 확인해야 합니다.
 - **게시 방식이 다릅니다.** GitHub Pages를 쓰지 않습니다. `export-site`의 출력은 정적 파일이므로 사내 웹 서버에 그대로 올릴 수 있지만, 경로와 접근 권한은 별도로 정해야 합니다.
 - **모델이 다릅니다.** 문장 품질은 모델에 크게 좌우됩니다. libcamera 검증은 4B 모델로 수행했고, 그 결과 이름 표기와 인용을 자동 검사로 보완해야 했습니다.
 - **반출 금지.** 사내 소스에서 파생된 facts, 문서, 프롬프트, 로그를 공개 저장소에 올리지 않습니다. 공개 저장소는 libcamera 검증 전용입니다.
