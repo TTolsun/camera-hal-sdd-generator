@@ -62,10 +62,21 @@ def normalize_ndk(cfg: Config, raw: Path | None = None) -> Path:
     normalized = normalize(entries, clang_resource_dir(_trusted_clang(cfg, entries[0])))
     out = cfg.compile_commands
     if raw.resolve() == out.resolve():
-        # clang-uml 은 compilation_database_dir 안의 compile_commands.json 만 읽으므로 파일 이름은 그대로 둔다.
-        out = cfg.build_dir / "compdb" / "compile_commands.json"
+        out = _generated_compdb(cfg)
+        if raw.resolve() == out.resolve():
+            raise RuntimeError(f"source.compile_commands 가 정규화본을 쓰는 자리({out})를 가리킵니다. "
+                               "원본을 덮어쓰지 않도록 ndk-build 원본 DB 는 다른 경로에 두세요.")
     _write_atomic(out, json.dumps(normalized, ensure_ascii=False, indent=1))
     return out
+
+
+def _generated_compdb(cfg: Config) -> Path:
+    """원본 대신 정규화본을 둘 자리. clang-uml 은 지정한 디렉터리의 compile_commands.json 만 읽는다."""
+    directory = cfg.build_dir / "compdb"
+    # 저장소에 build/compdb 가 다른 곳을 가리키는 symlink 로 들어 있으면 그 너머의 파일을 덮게 된다.
+    if directory.exists() and directory.resolve().parent != cfg.build_dir.resolve():
+        raise RuntimeError(f"정규화한 compile DB 를 쓸 디렉터리가 build 디렉터리 밖을 가리킵니다: {directory}")
+    return directory / "compile_commands.json"
 
 
 def _trusted_clang(cfg: Config, entry: dict[str, Any]) -> str:

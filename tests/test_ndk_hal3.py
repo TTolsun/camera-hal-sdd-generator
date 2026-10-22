@@ -6,12 +6,11 @@
 
 import json
 import subprocess
+from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
-import yaml
-
-from types import SimpleNamespace
 
 from sdd import compdb, extract, update
 from sdd.config import load
@@ -165,9 +164,6 @@ def test_ndk_원본_DB_를_정규화해서_HAL3_시나리오까지_추출한다(
     normalized = Path(model.meta["compile_commands"])
     assert normalized == cfg.build_dir / "compdb" / "compile_commands.json"
     _assert_normalized(normalized, Path(cfg.ndk_build["project_dir"]), resource)
-    # clang-uml 은 지정한 디렉터리의 compile_commands.json 만 읽는다. 정규화본이 그 자리에 있어야 한다.
-    db_dir = yaml.safe_load(clang_uml.write_config(cfg, normalized.parent).read_text(encoding="utf-8"))
-    assert compdb.is_normalized(compdb.load_entries(Path(db_dir["compilation_database_dir"]) / "compile_commands.json"))
     assert model.meta["comments"]["errors"] == 0
     assert "hal::CameraDevice" in model.classes
 
@@ -261,3 +257,51 @@ def test_update_가_ndk_build_로_다시_만든_DB_도_정규화한다(ndk_proje
     assert compdb.is_normalized(compdb.load_entries(normalized))
     _assert_normalized(normalized, project, resource)
     assert not compdb.is_normalized(compdb.load_entries(cfg.compile_commands))   # 원본은 그대로다
+
+
+def test_extract_가_clang_uml_에_정규화본_디렉터리를_넘긴다(ndk_project, tmp_path, monkeypatch):
+    cfg, _, resource = ndk_project
+    passed = []
+    write_config = clang_uml.write_config
+
+    def capture(cfg_, compdb_dir):
+        passed.append(Path(compdb_dir))
+        return write_config(cfg_, compdb_dir)
+
+    out = tmp_path / "uml-out"
+    out.mkdir()
+    monkeypatch.setattr(extract, "structure_backend", lambda cfg_: "clang-uml")
+    monkeypatch.setattr(clang_uml, "write_config", capture)
+    monkeypatch.setattr(clang_uml, "run", lambda cfg_, path, only=None: out)
+    monkeypatch.setattr(clang_uml, "parse_into", lambda model, cfg_, directory: None)
+    extract.run(cfg)
+
+    # clang-uml 은 넘겨받은 디렉터리의 compile_commands.json 을 읽는다.
+    assert passed == [cfg.build_dir / "compdb"]
+    _assert_normalized(passed[0] / "compile_commands.json", Path(cfg.ndk_build["project_dir"]), resource)
+
+
+def test_원본_DB_가_정규화본_자리에_있으면_덮어쓰지_않고_멈춘다(ndk_project):
+    cfg, _, _ = ndk_project
+    generated = cfg.build_dir / "compdb" / "compile_commands.json"
+    generated.parent.mkdir(parents=True)
+    raw = json.dumps([_raw_entry(Path(cfg.ndk_build["project_dir"]))])
+    generated.write_text(raw, encoding="utf-8")
+    with pytest.raises(RuntimeError, match="원본을 덮어쓰지 않도록"):
+        compdb.ensure(replace(cfg, compile_commands=generated))
+    assert generated.read_text(encoding="utf-8") == raw
+
+
+def test_정규화본_디렉터리가_build_밖을_가리키면_쓰지_않는다(ndk_project, tmp_path):
+    cfg, _, _ = ndk_project
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "compile_commands.json").write_text("keep", encoding="utf-8")
+    cfg.build_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        (cfg.build_dir / "compdb").symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("이 환경에서는 symlink 를 만들 수 없습니다")
+    with pytest.raises(RuntimeError, match="build 디렉터리 밖"):
+        compdb.ensure(cfg)
+    assert (outside / "compile_commands.json").read_text(encoding="utf-8") == "keep"
