@@ -151,6 +151,28 @@ def root_relative(name: str, roots: tuple[str, ...]) -> str | None:
     return None
 
 
+# libclang 은 이름 없는 형식과 람다의 이름에 절대 경로를 넣는다: "(unnamed struct at /abs/a.h:3:5)".
+# 그대로 두면 문서에 추출한 기계의 경로가 실리고, 기계마다 이름이 달라져 영향 분석이 이름 변경으로 본다.
+_PATH_IN_NAME = re.compile(r"\(((?:unnamed|anonymous) [^()]*?|lambda) at (.+?):(\d+):(\d+)\)")
+
+
+def portable_names(data: Any, roots: tuple[str, ...]) -> Any:
+    """facts 의 모든 키·문자열에서 이름 속 경로를 소스 루트 기준 경로로 바꾼다. 루트 밖이면 파일 이름만 남긴다."""
+    def fix(text: str) -> str:
+        def sub(m: re.Match[str]) -> str:
+            rel = root_relative(m.group(2), roots) or re.split(r"[\\/]", m.group(2))[-1]
+            return f"({m.group(1)} at {rel}:{m.group(3)}:{m.group(4)})"
+        return _PATH_IN_NAME.sub(sub, text) if " at " in text else text
+
+    if isinstance(data, str):
+        return fix(data)
+    if isinstance(data, dict):
+        return {fix(k) if isinstance(k, str) else k: portable_names(v, roots) for k, v in data.items()}
+    if isinstance(data, list):
+        return [portable_names(v, roots) for v in data]
+    return data
+
+
 def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]],
             only_files: set[str] | None = None) -> dict[str, int]:
     """entries 의 TU 를 파싱해서 model 에 주석과 위치를 채운다. 통계를 돌려준다."""

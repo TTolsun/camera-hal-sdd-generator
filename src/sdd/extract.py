@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -84,6 +85,8 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
     from .evidence import collect as collect_evidence
     collect_evidence(cfg, model)
 
+    roots = (os.path.abspath(cfg.source_root), str(cfg.source_root.resolve()))
+    model = KnowledgeModel.from_dict(comments.portable_names(model.to_dict(), roots))
     model.meta["classes"] = len(model.classes)
     model.meta["functions"] = len(model.functions)
     model.meta["scenarios"] = len(model.scenarios)
