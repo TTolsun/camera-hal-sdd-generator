@@ -28,6 +28,8 @@ class AgentConfig:
     think: bool = False
     # 출력 토큰 상한. 소형 모델이 같은 문단을 반복하는 폭주를 막는다. 0 이면 지정하지 않는다.
     max_output_tokens: int = 1500
+    # 인증 토큰을 읽을 환경 변수. 설정 파일로 바꿀 수 없고, 다른 엔드포인트로 갈 때만 코드가 바꾼다.
+    api_key_env: str = "SDD_AGENT_API_KEY"
 
 
 @dataclass

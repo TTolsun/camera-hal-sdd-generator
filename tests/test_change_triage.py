@@ -1,5 +1,6 @@
 """범위 검토 항목의 자동 분류(주석·공백·#include)와 LLM 판정(승인과 별도 기록)."""
 
+import copy
 import json
 import subprocess
 
@@ -63,12 +64,28 @@ def test_의미_없는_변경_파일에만_걸린_항목은_검토_항목이_아
                                     "Both": ClassInfo("Both", Location("both.h", 3))})
     model.classes["Both"].methods = []
     files = ["dev.h", "both.h", "rpi.h"]
-    report = compute(tmp_cfg, model, files, "a", "b", non_semantic={"dev.h": NON_SEMANTIC, "rpi.h": NON_SEMANTIC})
+    report = compute(tmp_cfg, model, files, "a", "b", copy.deepcopy(model),
+                     non_semantic={"dev.h": NON_SEMANTIC, "rpi.h": NON_SEMANTIC})
     assert [f["name"] for f in report.coverage["findings"]] == ["Both"]
     assert {c["name"] for c in report.coverage["classified"]} == {"Dev", "rpi.h"}
     assert {f["file"]: f["status"] for f in report.coverage["files"]}["rpi.h"] == "non-semantic"
     text = review_markdown(report)
     assert "## 자동 분류한 변경" in text and "`Dev`" in text and "사람의 승인이 아니며" in text
+
+
+def test_include_변경이_선언을_바꿨거나_이전_facts_가_없으면_분류하지_않는다(tmp_cfg):
+    from sdd.facts.model import Method
+    _sections(tmp_cfg, [{"id": "api", "facts": {"classes": ["Other"]}}])
+    head = KnowledgeModel(classes={"Dev": ClassInfo("Dev", Location("dev.h", 5),
+                                                    methods=[Method("run", Location("dev.h", 6))])})
+    base = copy.deepcopy(head)
+    base.classes["Dev"].methods = []                   # #include 가 매크로로 메서드를 더했다
+    marked = {"dev.h": NON_SEMANTIC}
+    assert [f["name"] for f in compute(tmp_cfg, head, ["dev.h"], "a", "b", base, marked).coverage["findings"]] == ["Dev"]
+    assert [f["name"] for f in compute(tmp_cfg, head, ["dev.h"], "a", "b", None, marked).coverage["findings"]] == ["Dev"]
+    moved = copy.deepcopy(head)
+    moved.classes["Dev"].loc = Location("dev.h", 9)     # 줄만 밀린 것은 같은 구조다
+    assert compute(tmp_cfg, head, ["dev.h"], "a", "b", moved, marked).coverage["findings"] == []
 
 
 def test_한_항목이_의미_있는_변경_파일에도_걸리면_검토_항목으로_남는다(tmp_cfg):
@@ -105,9 +122,9 @@ def header_repo(tmp_cfg):
 
 def test_compute_가_소스_저장소의_두_판을_읽어_분류한다(tmp_cfg, header_repo):
     model = KnowledgeModel(classes={"Dev": ClassInfo("Dev", Location("dev.h", 5))})
-    include_only = compute(tmp_cfg, model, ["dev.h"], header_repo[0], header_repo[1])
+    include_only = compute(tmp_cfg, model, ["dev.h"], header_repo[0], header_repo[1], copy.deepcopy(model))
     assert include_only.coverage["findings"] == [] and include_only.coverage["status"] == "mapped"
-    code = compute(tmp_cfg, model, ["dev.h"], header_repo[1], header_repo[2])
+    code = compute(tmp_cfg, model, ["dev.h"], header_repo[1], header_repo[2], copy.deepcopy(model))
     assert [f["name"] for f in code.coverage["findings"]] == ["Dev"]
 
 
@@ -227,3 +244,78 @@ def test_update_는_pass_gate_일_때만_LLM_범위_밖_판정으로_관문을_�
     passed = update.run_update(tmp_cfg, to=header_repo[2], steps=_steps(_model), log=lambda _: None)
     assert passed.exit_code == 0 and passed.processed == [header_repo[2]]
     assert approvals.load(tmp_cfg)["findings"] == {}           # 승인으로 기록하지 않았다
+
+
+@pytest.mark.parametrize("opts", [{"enabled": True, "pass_gate": "false"}, {"enabled": "yes"},
+                                  {"enabled": True, "max_diff_chars": "100"}, {"enabled": True, "max_diff_chars": 0}])
+def test_관문을_여는_설정값은_정확한_타입만_받는다(tmp_cfg, opts):
+    tmp_cfg.raw["review"] = {"coverage_triage": opts}
+    with pytest.raises(ValueError, match="coverage_triage"):
+        coverage_triage.settings(tmp_cfg)
+
+
+@pytest.mark.parametrize("reason", ["null", "123", '["범위 밖"]', '"   "'])
+def test_이유가_문자열이_아니면_판단_불가로_남는다(reason):
+    assert coverage_triage.parse('{"decision": "out-of-scope", "reason": ' + reason + "}")[0] == "unsure"
+
+
+def test_문서_목록이_바뀌면_같은_비교_범위라도_다시_묻는다(tmp_cfg, header_repo):
+    _enable(tmp_cfg)
+    report = _report(tmp_cfg, header_repo)
+    agent = FakeAgent(['{"decision": "out-of-scope", "reason": "내부 변경입니다."}',
+                       '{"decision": "needs-document", "reason": "새 문서가 다룰 대상입니다."}'])
+    coverage_triage.triage(tmp_cfg, report, {}, agent=agent)
+    _sections(tmp_cfg, [{"id": "dev", "title": "Dev 문서", "facts": {"classes": ["Other"]}}])
+    judged = coverage_triage.triage(tmp_cfg, report, {}, agent=agent)
+    assert len(agent.calls) == 2 and next(iter(judged.values()))["decision"] == "needs-document"
+
+
+def test_판정_기록은_다른_항목을_지우지_않고_덧붙인다(tmp_cfg, header_repo):
+    _enable(tmp_cfg)
+    coverage_triage._save(tmp_cfg, {"other:class:X": {"decision": "unsure"}})
+    coverage_triage.triage(tmp_cfg, _report(tmp_cfg, header_repo), {},
+                           agent=FakeAgent(['{"decision": "unsure", "reason": "근거가 부족합니다."}']))
+    assert set(coverage_triage.load(tmp_cfg)["entries"]) == {"other:class:X", "entity-outside-document-scope:class:Dev"}
+    assert not list(tmp_cfg.build_dir.glob(".coverage-triage.json.*.tmp"))
+
+
+def test_판정_모델이_다른_곳이면_문장_생성용_토큰을_보내지_않는다(tmp_cfg):
+    _enable(tmp_cfg)
+    same = coverage_triage.agent_config(tmp_cfg, coverage_triage.settings(tmp_cfg))
+    assert same.api_key_env == "SDD_AGENT_API_KEY"
+    tmp_cfg.raw["review"]["coverage_triage"]["agent"] = {"kind": "openai-compatible", "base_url": "https://other.example/"}
+    other = coverage_triage.agent_config(tmp_cfg, coverage_triage.settings(tmp_cfg))
+    assert other.api_key_env == coverage_triage.TRIAGE_KEY_ENV and other.base_url == "https://other.example"
+    tmp_cfg.raw["review"]["coverage_triage"]["agent"] = {"api_key_env": "SDD_AGENT_API_KEY"}
+    with pytest.raises(ValueError, match="api_key_env"):
+        coverage_triage.agent_config(tmp_cfg, coverage_triage.settings(tmp_cfg))
+
+
+def test_200_응답이_JSON_이_아니면_AgentError_로_바꾼다(monkeypatch):
+    import io
+    from sdd.config import AgentConfig
+    from sdd.llm import Agent
+
+    class Response(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=0: Response(b"<html>proxy</html>"))
+    with pytest.raises(AgentError, match="JSON"):
+        Agent(AgentConfig(kind="ollama")).chat("s", "u")
+
+
+def test_diff_는_파일_이름을_pathspec_문법으로_해석하지_않는다(monkeypatch, tmp_path):
+    from sdd import source_git
+    seen = []
+
+    def run(cmd, **kwargs):
+        seen.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(source_git.subprocess, "run", run)
+    source_git.diff_text(tmp_path, "a", "b", [":(glob)**/*"])
+    assert seen[0][:3] == ["git", "--literal-pathspecs", "diff"] and seen[0][-1] == ":(glob)**/*"

@@ -99,7 +99,7 @@ class Agent:
 
     def _headers(self) -> dict[str, str]:
         h = {"Content-Type": "application/json"}
-        key = os.environ.get("SDD_AGENT_API_KEY")
+        key = os.environ.get(self.cfg.api_key_env)
         if key:
             h["Authorization"] = f"Bearer {key}"
         return h
@@ -121,3 +121,5 @@ class Agent:
             raise AgentError(f"{req.full_url} -> HTTP {e.code}: {e.read()[:200]!r}") from e
         except urllib.error.URLError as e:
             raise AgentError(f"{req.full_url} 에 연결하지 못했습니다: {e.reason}") from e
+        except (ValueError, UnicodeDecodeError) as e:      # 200 응답이지만 JSON 이 아닌 경우
+            raise AgentError(f"{req.full_url} 의 응답이 JSON 이 아닙니다: {e}") from e

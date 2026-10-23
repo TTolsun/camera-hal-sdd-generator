@@ -68,7 +68,9 @@ def file_at(source_root: Path, rev: str, path: str) -> str | None:
 
 def diff_text(source_root: Path, base: str, head: str, paths: list[str], limit: int = 6000) -> str:
     """사람이나 모델에게 보여 줄 unified diff. limit 를 넘으면 자르고 잘랐다고 적는다."""
-    res = subprocess.run(["git", "diff", "--no-color", "--no-ext-diff", "--no-renames", "--relative",
+    # --literal-pathspecs: 파일 이름이 ":(glob)**" 같은 pathspec 문법이어도 그 파일 하나만 가리킨다.
+    res = subprocess.run(["git", "--literal-pathspecs", "diff", "--no-color", "--no-ext-diff", "--no-renames",
+                          "--relative",
                           f"{base}..{head}", "--", *paths],
                          cwd=source_root, check=True, capture_output=True, encoding="utf-8", errors="replace")
     text = res.stdout

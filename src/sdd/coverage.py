@@ -25,13 +25,24 @@ def _select_sections(kind: str, name: str, snapshot: KnowledgeModel, sections: l
     return selected
 
 
+def _shape(snapshot: KnowledgeModel | None, kind: str, name: str):
+    """위치와 설명을 뺀 엔티티 구조. #include 변경이 선언을 바꿨는지 가리는 데 쓴다."""
+    if snapshot is None:
+        return None
+    if kind == "class":
+        c = snapshot.classes.get(name)
+        return None if c is None else (c.kind, tuple(sorted(c.bases)), tuple(sorted(m.name for m in c.methods)))
+    return ("function",) if name in snapshot.functions else None
+
+
 def audit(model: KnowledgeModel, files: list[str],
           base_model: KnowledgeModel | None = None, *, sections: list[dict], excluded: list[str],
           manual_evidence: dict[str, list[str]], impacted_sections: set[str],
           non_semantic: dict[str, str] | None = None) -> dict:
     """non_semantic: 주석·공백·#include 만 바뀐 파일과 그 이유 (change_kind.classify 결과).
 
-    그 파일들에만 걸린 항목은 검토 항목(findings)이 아니라 자동 분류(classified)로 남긴다.
+    그 파일들에만 걸리고 이전·현재 facts 의 구조(종류·기반 클래스·메서드 이름)가 같은 항목은
+    검토 항목(findings)이 아니라 자동 분류(classified)로 남긴다.
     """
     non_semantic = non_semantic or {}
     ignored = sorted(f for f in set(files) if match_any(f, excluded))
@@ -69,7 +80,11 @@ def audit(model: KnowledgeModel, files: list[str],
         item["sections"] = sorted(item["sections"])
         reason = ("entity-outside-document-scope" if not item["sections"] else
                   "document-not-scheduled" if not impacted_sections.intersection(item["sections"]) else None)
-        if reason and all(f in non_semantic for f in item["files"]):
+        # 주석·공백·#include 만 바뀐 파일에 있어도, #include 가 선언을 바꿨을 수 있으므로
+        # 이전·현재 facts 의 구조가 같다고 확인될 때만 분류한다. 이전 facts 가 없으면 분류하지 않는다.
+        unchanged = (_shape(base_model, item["kind"], item["name"]) is not None
+                     and _shape(base_model, item["kind"], item["name"]) == _shape(model, item["kind"], item["name"]))
+        if reason and unchanged and all(f in non_semantic for f in item["files"]):
             item["status"] = "non-semantic"
             classified.append({"reason": reason, "kind": item["kind"], "name": item["name"],
                                "files": item["files"], "classification": non_semantic[item["files"][0]]})
