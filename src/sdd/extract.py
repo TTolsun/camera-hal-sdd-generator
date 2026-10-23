@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -53,7 +54,7 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
         cfg_path = clang_uml.write_config(cfg, compdb_path.parent)
         diagrams_dir = clang_uml.run(cfg, cfg_path, only=only_diagrams)
         clang_uml.parse_into(model, cfg, diagrams_dir)
-        _copy_mermaid(diagrams_dir, cfg.diagrams_dir)
+        _copy_mermaid(diagrams_dir, cfg.diagrams_dir, _roots(cfg))
 
     # 주석과 선언/정의 위치는 항상 libclang 이 채운다. clang-uml 이 없을 때는 클래스 목록 자체도 여기서 나온다.
     if not skip_comments or backend == "libclang":
@@ -84,6 +85,7 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
     from .evidence import collect as collect_evidence
     collect_evidence(cfg, model)
 
+    model = KnowledgeModel.from_dict(comments.portable_names(model.to_dict(), _roots(cfg)))
     model.meta["classes"] = len(model.classes)
     model.meta["functions"] = len(model.functions)
     model.meta["scenarios"] = len(model.scenarios)
@@ -92,7 +94,13 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
     return model
 
 
-def _copy_mermaid(src: Path, dst: Path) -> None:
+def _roots(cfg: Config) -> tuple[str, ...]:
+    return (os.path.abspath(cfg.source_root), str(cfg.source_root.resolve()))
+
+
+def _copy_mermaid(src: Path, dst: Path, roots: tuple[str, ...]) -> None:
+    # clang-uml 그림에도 이름 없는 형식의 절대 경로가 들어 있으므로 facts 와 같은 규칙으로 바꾼다.
     dst.mkdir(parents=True, exist_ok=True)
     for f in src.glob("*.mmd"):
-        shutil.copyfile(f, dst / f.name)
+        text = comments.portable_names(f.read_text(encoding="utf-8"), roots)
+        (dst / f.name).write_text(text, encoding="utf-8", newline="\n")
