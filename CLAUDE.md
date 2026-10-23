@@ -12,11 +12,11 @@ Camera HAL 소스에서 검토용 설계 문서(SDD)를 생성하고, 코드 변
 
 ## 변경 작업의 완료 기준
 
-사용자의 상시 지시에 따라 생성기 작업과 공개 libcamera SDD 갱신을 함께 완료합니다. 생성기 리뷰·검증·병합 후 공개 입력으로 문서와 사이트를 갱신하고, `TTolsun/libcamera-sdd`의 PR 병합·Pages 배포·공개 URL 반영까지 확인합니다. 자세한 절차와 산출물 변경이 없는 경우의 처리는 [공개 libcamera SDD 동반 배포](docs/document-site.md#공개-libcamera-sdd-동반-배포)를 따릅니다. 사내 소스와 파생물은 공개 저장소에 배포하지 않습니다.
+사용자의 상시 지시에 따라 생성기 작업과 공개 libcamera SDD 갱신을 함께 완료합니다. 생성기 리뷰·검증·병합 후 공개 입력으로 문서와 사이트를 갱신하고, `TTolsun/libcamera-sdd`의 PR 병합·Pages 배포·공개 URL 반영까지 확인합니다. 자세한 절차와 산출물 변경이 없는 경우의 처리는 [공개 libcamera SDD 동반 배포](docs/libcamera/workflow.md#공개-libcamera-sdd-동반-배포)를 따릅니다. 사내 소스와 파생물은 공개 저장소에 배포하지 않습니다.
 
 ## 사내 문서 자동화 구축 요청을 받았을 때
 
-[사내 Claude 구축 가이드](docs/inhouse-agent-bootstrap.md)를 읽고 실제 HAL 한 경로의 추출·설계 문서·변경 반영 검증부터 진행합니다. 가이드에는 초기 입력, 프로젝트 설정 작성, 사내 CI 연결, 완료 기준과 인계할 결과가 있습니다. 사내 정보가 없을 때 공개 libcamera 결과만으로 사내 적용 완료를 선언하지 않습니다.
+[사내 에이전트에게 맡기기](docs/inhouse/agent.md)의 지시문과 완료 기준을 따르고, [사내 운영 절차](docs/README.md) 1~4단계 순서로 실제 HAL 한 경로의 추출·설계 문서·변경 반영 검증부터 진행합니다. 사내 정보가 없을 때 공개 libcamera 결과만으로 사내 적용 완료를 선언하지 않습니다.
 
 설계 질문과 소스에 연결한 설명은 프로젝트별 설정으로 작성합니다. `design_requirements`·`covers`·`evidence` 검사를 사용하고, 근거 변경 시 해시만 교체하지 말고 연결된 설명을 재검토합니다. Claude의 구축 작업과 생성기의 `agent.kind` 모델 호출 설정은 별개입니다. 생성물의 직접 수정과 자동 검사에 근거한 사람 승인 대행은 하지 않습니다.
 
@@ -29,20 +29,7 @@ uv run pytest tests/test_impact.py -q                    # 파일 하나만 실�
 uv run pytest tests/test_impact.py::test_이름 -q         # 테스트 하나만 실행
 ```
 
-파이프라인 명령은 `sdd` CLI(`src/sdd/cli.py`)로 실행합니다.
-
-```bash
-uv run sdd extract                 # compile DB에서 facts.json 추출
-uv run sdd impact --base <이전-커밋> --base-facts <이전-facts.json> --fail-on-coverage-gap
-uv run sdd generate                # 문서 생성 (--from-impact로 영향 범위만 생성)
-uv run sdd update --to <ref>       # 새 커밋을 차례로 증분 갱신 (관문에서 멈춤, 게시 없음)
-uv run sdd accept                  # 사람 검토 승인 장부 확인·기록 (sdd/approvals.json)
-uv run sdd compdb --normalize      # 빌드 시스템이 만든 compile DB를 libclang용으로 정규화
-uv run sdd fetch-mermaid           # Mermaid ESM 배포본을 사내·오프라인 자산으로 준비
-uv run sdd export-site             # 정적 사이트 생성
-uv run sdd verify-site             # 산출물 해시와 내부 링크 검사
-uv run sdd export-html             # 단일 HTML 생성
-```
+파이프라인 명령(`sdd extract`, `impact`, `generate`, `update`, `accept`, `export-site` 등)과 종료 코드·상태 파일은 [명령 참조](docs/reference/cli.md)에 있습니다. 설정 키는 [설정 참조](docs/reference/config.md)에 있습니다. 문서를 추가·수정할 때는 [문서 지도](docs/README.md)의 구조 원칙을 따릅니다.
 
 다른 프로젝트 설정은 `uv run sdd --config examples/libcamera/sdd.yaml <명령>`처럼 지정합니다. `--config`는 지정한 파일을 그대로 읽으므로 한 디렉터리에 설정을 여럿 둘 수 있고, 로컬 덮어쓰기는 같은 이름의 `.local.yaml`에서 찾습니다. LLM 없이 흐름만 확인하려면 `sdd.local.yaml`(Git 제외)에 `agent: {kind: dry-run}`을 둡니다. 기본 `sdd.yaml`은 사내 HAL용 예시 경로이므로 실제 실행 전에 수정이 필요합니다.
 
@@ -50,7 +37,7 @@ uv run sdd export-html             # 단일 HTML 생성
 
 파이프라인 단계: `extract`(facts.json 추출) → `impact`(Git diff로 재생성 대상 계산과 범위 누락 검사) → `generate`(LLM 설명 + Mermaid + 인용 검증) → `export-site`/`verify-site`(사이트 생성과 검증).
 
-핵심 데이터 흐름과 책임 분리는 `docs/code-structure.md`에 있습니다. 요점은 다음과 같습니다.
+핵심 데이터 흐름과 책임 분리는 `docs/concepts/code-structure.md`에 있습니다. 요점은 다음과 같습니다.
 
 - 구조 정보(클래스, 관계, 다이어그램)는 `facts.json`에서만 가져옵니다. `src/sdd/diagrams.py`가 Markdown 생성과 사이트 빌드가 공유하는 Mermaid 규칙이며, LLM에는 배치나 화살표 생성을 맡기지 않습니다.
 - `impact.py`가 재생성 대상을 계산하고, `coverage.py`가 문서 범위 누락을 판정합니다. `coverage.py`는 Config·Git·파일에 접근하지 않고 주입받은 값만 사용합니다. `impact → coverage → impact` 순환 의존을 다시 만들지 않습니다.

@@ -19,7 +19,7 @@ source:
     # ndk-build 가 만든 DB 는 자동으로 정규화한다(절대 경로, ccache 제거, -resource-dir).
     # 원본은 고치지 않고, compile_commands 가 원본을 가리키면 정규화본을 build/compdb/compile_commands.json 에 쓴다.
     # 내장 헤더 위치는 DB 에 적힌 NDK clang 으로 찾는다. 이름이 clang 이 아니거나 실행할 수 없으면 경로를 지정한다.
-    # 자세한 절차: docs/inhouse-ndk-hal3.md
+    # 자세한 절차: docs/inhouse/02-first-run.md
     # clang: /opt/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++
 
 output:
@@ -59,12 +59,12 @@ review:
   # 검증 실패 시 재시도 횟수. 초과하면 status: needs-review 로 기록하고 사람에게 넘긴다.
   max_retries: 1
   # 범위 검토 항목을 LLM 이 먼저 판정한다. 판정은 build/coverage-triage.json 에 남고 승인이 아니다.
-  # pass_gate: true 이면 "범위 밖" 판정이 관문을 통과시킨다. 자세한 내용: docs/document-coverage.md
+  # pass_gate: true 이면 "범위 밖" 판정이 관문을 통과시킨다. 자세한 내용: docs/concepts/coverage.md
   coverage_triage:
     enabled: false
     pass_gate: false
 
-# See docs/document-lifecycle.md. Limits measure prose separately from code/tables.
+# See docs/concepts/document-lifecycle.md. Limits measure prose separately from code/tables.
 documentation:
   enabled: true
   limits:

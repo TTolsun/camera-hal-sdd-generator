@@ -17,7 +17,7 @@
 
 기존 소스 작업본을 바꾸지 않고 Linux worktree 두 개에서 같은 Clang/Meson 옵션으로 각각 새로 빌드했습니다. IPU3·RKISP1·UVC, IPU3/RKISP1 IPA와 GStreamer를 활성화했습니다. compile DB를 각각 보정하고 전체 facts를 각각 추출했습니다. 두 실행은 병렬로 진행했습니다.
 
-문서 생성에는 동일한 Windows 로컬 Ollama `qwen3.5:4b`, temperature 0, 16,384 토큰 컨텍스트를 사용했습니다. 모델 digest는 [검증 기록](../examples/libcamera/validation/20260921/result.json)에 남겼습니다. 기존 원고가 없는 별도 디렉터리에서 각 커밋의 네 페이지를 생성했으며, 사실 입력 생략은 없었습니다. 생성기의 기준 커밋은 `bec652f`이고 이 검증을 위한 실행 스크립트를 추가했습니다.
+문서 생성에는 동일한 Windows 로컬 Ollama `qwen3.5:4b`, temperature 0, 16,384 토큰 컨텍스트를 사용했습니다. 모델 digest는 [검증 기록](../../../examples/libcamera/validation/20260921/result.json)에 남겼습니다. 기존 원고가 없는 별도 디렉터리에서 각 커밋의 네 페이지를 생성했으며, 사실 입력 생략은 없었습니다. 생성기의 기준 커밋은 `bec652f`이고 이 검증을 위한 실행 스크립트를 추가했습니다.
 
 ## 코드와 그림의 대조
 
@@ -33,7 +33,7 @@
 
 이름이 있는 클래스의 순증은 `Lsc` 한 개입니다. 익명 구조체는 추출 식별자에 파일 경로와 줄 번호가 들어가므로, 비교할 때 worktree 루트를 정규화해도 줄 이동이 별도의 추가·삭제로 보일 수 있습니다. 이를 실제 클래스 추가로 집계하지 않았습니다.
 
-검증용 섹션은 공통 LSC 타입, IPU3 상태 타입과 `Lsc`를 명시적으로 선택했습니다. [변경 전 Mermaid](../examples/libcamera/validation/20260921/before.mmd)에는 노드 7개와 관계 2개가 있고, [변경 후 Mermaid](../examples/libcamera/validation/20260921/after.mmd)에는 노드 9개와 관계 6개가 있습니다. 추가된 두 노드는 `Lsc`와 직접 기반 클래스이며, 추가된 네 관계는 위 표와 일치합니다. 브라우저에서도 두 그림이 실제 SVG로 렌더링되는 것을 확인했습니다.
+검증용 섹션은 공통 LSC 타입, IPU3 상태 타입과 `Lsc`를 명시적으로 선택했습니다. [변경 전 Mermaid](../../../examples/libcamera/validation/20260921/before.mmd)에는 노드 7개와 관계 2개가 있고, [변경 후 Mermaid](../../../examples/libcamera/validation/20260921/after.mmd)에는 노드 9개와 관계 6개가 있습니다. 추가된 두 노드는 `Lsc`와 직접 기반 클래스이며, 추가된 네 관계는 위 표와 일치합니다. 브라우저에서도 두 그림이 실제 SVG로 렌더링되는 것을 확인했습니다.
 
 ## 기존 문서 범위의 한계
 
@@ -77,4 +77,4 @@ uv run python examples/libcamera/compare_revision_outputs.py --base-dir build/re
 
 전체 facts·빌드 로그·프롬프트·HTML·원고는 로컬 `build/revision-validation/20260921/`에 보관했습니다. 작은 비교 기록과 Mermaid만 저장소에 포함했습니다. 검증 과정에서 공개 Pages를 새 원고로 교체하거나 upstream 브랜치를 갱신하지 않았습니다.
 
-후속 작업에서 문서 범위 검사, 관계 근거 입력, 주제별 소스 발췌와 지문 검사를 추가했습니다. 같은 커밋 쌍으로 수행한 결과와 남은 한계는 [설계 근거 재검증](libcamera-design-validation.md)에 기록합니다. 위 최초 실행 결과는 실패 사례를 포함하여 그대로 보존합니다.
+후속 작업에서 문서 범위 검사, 관계 근거 입력, 주제별 소스 발췌와 지문 검사를 추가했습니다. 같은 커밋 쌍으로 수행한 결과와 남은 한계는 [설계 근거 재검증](design-validation.md)에 기록합니다. 위 최초 실행 결과는 실패 사례를 포함하여 그대로 보존합니다.

@@ -24,7 +24,7 @@
 | 사이트 | A/B의 내부 링크·산출물 검사가 통과했고 반복 빌드 manifest가 동일했습니다. |
 | 회귀 검사 | 로컬 테스트 80개가 통과했습니다. |
 
-전체 기계 판독 결과는 [design-result.json](../examples/libcamera/validation/20260921/design-result.json), 관계 원문은 [A](../examples/libcamera/validation/20260921/design-before.mmd)와 [B](../examples/libcamera/validation/20260921/design-after.mmd)에 남겼습니다. 원고·프롬프트·사이트·실행 로그는 로컬 `build/revision-validation/design-delivery-20260921/`에 있습니다.
+전체 기계 판독 결과는 [design-result.json](../../../examples/libcamera/validation/20260921/design-result.json), 관계 원문은 [A](../../../examples/libcamera/validation/20260921/design-before.mmd)와 [B](../../../examples/libcamera/validation/20260921/design-after.mmd)에 남겼습니다. 원고·프롬프트·사이트·실행 로그는 로컬 `build/revision-validation/design-delivery-20260921/`에 있습니다.
 
 ## 실패 사례에서 보완한 내용
 
@@ -43,7 +43,7 @@
 
 발췌 지문은 연결해 둔 근거의 변경만 확인하며 설명의 참·거짓을 증명하지 않습니다. 발췌 밖 실행 코드, 콜백 스레드, 하드웨어별 종료와 사내 HAL 고유 계약은 별도 검증이 필요합니다. 생성된 원고는 사람 검토 전이며 이번 작업에서 공개 사이트에 배포하지 않았습니다.
 
-설정과 재실행 방법은 [설계 근거 검사](design-evidence.md)를 참고하세요.
+설정과 재실행 방법은 [설계 근거 검사](../../concepts/design-evidence.md)를 참고하세요.
 
 ## 머지 전 코드 리뷰
 
