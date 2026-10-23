@@ -104,7 +104,12 @@ def record_finding(ledger: dict[str, Any], key: str, state: str, by: str, note: 
     return entry
 
 
-def open_findings(coverage: dict[str, Any], ledger: dict[str, Any]) -> list[dict[str, Any]]:
-    """승인(accepted)되지 않은 범위 검토 항목. 관문(종료 코드 2)은 이 목록으로 판정한다."""
+def open_findings(coverage: dict[str, Any], ledger: dict[str, Any],
+                  passed: set[str] | frozenset[str] = frozenset()) -> list[dict[str, Any]]:
+    """승인(accepted)되지 않은 범위 검토 항목. 관문(종료 코드 2)은 이 목록으로 판정한다.
+
+    passed 는 설정이 허용한 LLM "범위 밖" 판정의 장부 키다(coverage_triage.passed). 승인이 아니므로
+    장부에는 기록하지 않고, 관문 판정에서만 뺀다.
+    """
     return [f for f in (coverage.get("findings") or [])
-            if finding_state(ledger, f) != "accepted"]
+            if finding_state(ledger, f) != "accepted" and finding_key(f) not in passed]

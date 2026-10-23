@@ -53,3 +53,23 @@ def changed_files(source_root: Path, base: str, head: str = "HEAD") -> list[str]
     res = subprocess.run(["git", "diff", "--name-only", "-z", "--no-renames", "--relative", f"{base}..{head}", "--"], cwd=source_root,
                          check=True, capture_output=True, encoding="utf-8")
     return sorted(set(path for path in res.stdout.split("\0") if path))
+
+
+def file_at(source_root: Path, rev: str, path: str) -> str | None:
+    """소스 루트 상대 경로의 파일 내용을 그 커밋 기준으로 읽는다. 그 커밋에 없으면 None."""
+    # ./ 를 붙여야 소스 루트가 저장소의 하위 디렉터리여도 소스 루트 기준으로 찾는다.
+    try:
+        res = subprocess.run(["git", "show", f"{rev}:./{path}"], cwd=source_root,
+                             capture_output=True, encoding="utf-8", errors="replace")
+    except OSError:                       # 소스 루트가 없거나 git 이 없으면 분류하지 않는다
+        return None
+    return res.stdout if res.returncode == 0 else None
+
+
+def diff_text(source_root: Path, base: str, head: str, paths: list[str], limit: int = 6000) -> str:
+    """사람이나 모델에게 보여 줄 unified diff. limit 를 넘으면 자르고 잘랐다고 적는다."""
+    res = subprocess.run(["git", "diff", "--no-color", "--no-ext-diff", "--no-renames", "--relative",
+                          f"{base}..{head}", "--", *paths],
+                         cwd=source_root, check=True, capture_output=True, encoding="utf-8", errors="replace")
+    text = res.stdout
+    return text if len(text) <= limit else text[:limit] + f"\n... (diff {len(text) - limit}자 생략)\n"

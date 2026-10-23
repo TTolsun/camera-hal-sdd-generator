@@ -27,7 +27,13 @@ def _select_sections(kind: str, name: str, snapshot: KnowledgeModel, sections: l
 
 def audit(model: KnowledgeModel, files: list[str],
           base_model: KnowledgeModel | None = None, *, sections: list[dict], excluded: list[str],
-          manual_evidence: dict[str, list[str]], impacted_sections: set[str]) -> dict:
+          manual_evidence: dict[str, list[str]], impacted_sections: set[str],
+          non_semantic: dict[str, str] | None = None) -> dict:
+    """non_semantic: 주석·공백·#include 만 바뀐 파일과 그 이유 (change_kind.classify 결과).
+
+    그 파일들에만 걸린 항목은 검토 항목(findings)이 아니라 자동 분류(classified)로 남긴다.
+    """
+    non_semantic = non_semantic or {}
     ignored = sorted(f for f in set(files) if match_any(f, excluded))
     active = set(files) - set(ignored)
     # Inspect both sides so deleted declarations and renamed paths cannot disappear.
@@ -56,12 +62,19 @@ def audit(model: KnowledgeModel, files: list[str],
 
     items = []
     findings = []
+    classified = []
     for key in sorted(entities):
         item = entities[key]
         item["files"] = sorted(item["files"])
         item["sections"] = sorted(item["sections"])
         reason = ("entity-outside-document-scope" if not item["sections"] else
                   "document-not-scheduled" if not impacted_sections.intersection(item["sections"]) else None)
+        if reason and all(f in non_semantic for f in item["files"]):
+            item["status"] = "non-semantic"
+            classified.append({"reason": reason, "kind": item["kind"], "name": item["name"],
+                               "files": item["files"], "classification": non_semantic[item["files"][0]]})
+            items.append(item)
+            continue
         item["status"] = "needs-review" if reason else "mapped"
         items.append(item)
         if reason:
@@ -74,6 +87,13 @@ def audit(model: KnowledgeModel, files: list[str],
         manual = sorted(s["id"] for s in sections if s.get("kind") == "manual"
                         and file in manual_evidence.get(s["id"], []))
         related = [item for item in items if file in item["files"]]
+        if file in non_semantic:
+            if not related:
+                classified.append({"reason": "no-extracted-entity", "kind": "file", "name": file,
+                                   "files": [file], "classification": non_semantic[file]})
+            file_items.append({"file": file, "watch_sections": watch, "manual_review_sections": manual,
+                               "status": "non-semantic"})
+            continue
         if not related:
             # Build scripts, unparsed sources and deleted files without baseline facts
             # require review even when a broad watch rule selects a document.
@@ -82,7 +102,9 @@ def audit(model: KnowledgeModel, files: list[str],
                            "status": "needs-review" if not related or any(i["status"] == "needs-review" for i in related) else "mapped"})
     return {"schema": 1, "status": "needs-review" if findings else "mapped",
             "baseline_available": base_model is not None, "ignored_files": ignored,
-            "files": file_items, "entities": items, "findings": findings,
+            "files": file_items, "entities": items, "findings": findings, "classified": classified,
             "limitations": ["File-level scope mapping does not prove changed-line coverage, generated prose accuracy or human approval.",
                             "Without baseline facts, removed entities in surviving files may be missed.",
-                            "A watch hit, package summary or scenario call is not class/function documentation coverage."]}
+                            "A watch hit, package summary or scenario call is not class/function documentation coverage.",
+                            "Comment, whitespace and #include-only changes are classified without review; "
+                            "an #include can still change preprocessing elsewhere."]}

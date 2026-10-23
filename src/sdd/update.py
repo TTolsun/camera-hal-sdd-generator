@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from . import approvals as approvals_mod, extract, impact as impact_mod, source_git
+from . import approvals as approvals_mod, coverage_triage, extract, impact as impact_mod, source_git
 from .carryover import carry_forward
 from .config import Config, section_output
 from .facts.model import KnowledgeModel
@@ -227,9 +227,15 @@ def _process_queue(cfg: Config, queue: list[str], base: str, state: dict[str, An
             files = source_git.changed_files(cfg.source_root, base, sha)
             report = impact_mod.compute(cfg, model, files, base, sha, base_model)
             report.save(cfg.build_dir / "impact.json")
-            (cfg.build_dir / "impact-review.md").write_text(review_markdown(report, ledger),
+            # 판정 기록은 사람 승인 장부와 따로 둔다. 관문 통과 여부는 review.coverage_triage.pass_gate 가 정한다.
+            judged = coverage_triage.triage(cfg, report, ledger)
+            passed = coverage_triage.passed(cfg, judged)
+            (cfg.build_dir / "impact-review.md").write_text(review_markdown(report, ledger, judged, passed),
                                                             encoding="utf-8", newline="\n")
-            open_items = approvals_mod.open_findings(report.coverage, ledger)
+            if report.coverage.get("classified") or judged:
+                log(f"{sha[:12]}: 자동 분류 {len(report.coverage.get('classified', []))}개, "
+                    f"LLM 판정 {len(judged)}개 (관문 제외 {len(passed)}개, 사람 검토 전)")
+            open_items = approvals_mod.open_findings(report.coverage, ledger, passed)
             if open_items:
                 result.stopped_reason = (f"{sha[:12]}: 승인되지 않은 범위 검토 항목 {len(open_items)}개. "
                                          "build/impact-review.md 를 확인하고 sdd accept --finding 으로 "
