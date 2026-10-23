@@ -56,19 +56,19 @@ def _shape(snapshot: KnowledgeModel | None, kind: str, name: str):
 OUTSIDE_BUILD = "outside-analyzed-build"
 
 
-def _outside_build(files: list[str], model: KnowledgeModel, base_model: KnowledgeModel | None) -> set[str]:
+def outside_build(files: list[str], model: KnowledgeModel, base_model: KnowledgeModel | None) -> set[str]:
     """분석한 빌드에서 Clang 이 읽지 않은 C/C++ 파일.
 
     추출할 때 기록한 parsed_files(컴파일한 TU 와 그 include)에 없으면, 이 빌드 구성에서는 컴파일되지
-    않는 코드다(다른 플랫폼, 꺼진 옵션, 설치되지 않은 라이브러리). 이전 facts 에도 기록이 있으면 그쪽에도
-    없어야 한다. 빌드에서 빠진 파일의 변경은 계속 검토 대상으로 남기기 위해서다. 기록이 없는 facts
-    (이전 버전 추출)나 빌드 파일은 판단하지 않는다.
+    않는 코드다(다른 플랫폼, 꺼진 옵션, 설치되지 않은 라이브러리). 이전·현재 facts 모두에 기록이 있고
+    양쪽 모두에 없을 때만 판단한다. 빌드에서 빠진 파일이나 기록이 없는 facts(이전 버전 추출), 빌드 파일은
+    판단하지 않고 검토 대상으로 남긴다.
     """
     head = model.meta.get("parsed_files")
-    if head is None:
-        return set()
     base = base_model.meta.get("parsed_files") if base_model is not None else None
-    head, base = set(head), set(base) if base is not None else set()
+    if head is None or base is None:
+        return set()
+    head, base = set(head), set(base)
     return {f for f in files
             if Path(f).suffix.lower() in CXX_SUFFIXES and f not in head and f not in base}
 
@@ -83,7 +83,7 @@ def audit(model: KnowledgeModel, files: list[str],
     검토 항목(findings)이 아니라 자동 분류(classified)로 남긴다.
     """
     non_semantic = non_semantic or {}
-    outside = _outside_build(files, model, base_model)
+    outside = outside_build(files, model, base_model)
     ignored = sorted(f for f in set(files) if match_any(f, excluded))
     active = set(files) - set(ignored)
     # Inspect both sides so deleted declarations and renamed paths cannot disappear.
@@ -141,7 +141,8 @@ def audit(model: KnowledgeModel, files: list[str],
         manual = sorted(s["id"] for s in sections if s.get("kind") == "manual"
                         and file in manual_evidence.get(s["id"], []))
         related = [item for item in items if file in item["files"]]
-        if not related and file in outside:
+        # 수동 문서가 근거로 삼는 파일은 사람이 다시 볼 자리이므로 빌드 밖이어도 분류하지 않는다.
+        if not related and file in outside and not manual:
             classified.append({"reason": "no-extracted-entity", "kind": "file", "name": file,
                                "files": [file], "classification": OUTSIDE_BUILD})
             file_items.append({"file": file, "watch_sections": watch, "manual_review_sections": manual,

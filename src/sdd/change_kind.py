@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import PurePosixPath
 
-CXX_SUFFIXES = {".h", ".hh", ".hpp", ".hxx", ".c", ".cc", ".cpp", ".cxx", ".inl"}
+CXX_SUFFIXES = {".h", ".hh", ".hpp", ".hxx", ".c", ".cc", ".cpp", ".cxx", ".c++", ".inl", ".ipp", ".tpp"}
 
 NON_SEMANTIC = "comment-whitespace-include-only"
 

@@ -7,6 +7,7 @@ pip 의 `libclang` 패키지가 공유 라이브러리를 함께 설치하므로
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Any, Iterator
@@ -134,6 +135,22 @@ def _walk(cursor: cindex.Cursor, root: Path) -> Iterator[cindex.Cursor]:
             yield from _walk(child, root)
 
 
+def root_relative(name: str, roots: tuple[str, ...]) -> str | None:
+    """소스 루트 안의 파일이면 루트 기준 posix 경로, 밖이면 None.
+
+    symlink 를 따라가지 않은 경로로 먼저 비교한다. Git 이 보고하는 변경 경로도 링크 자신의 경로이기
+    때문이다. 루트 밖 여부는 첫 경로 요소가 `..` 인지로 판단한다(`..generated` 같은 이름은 루트 안이다).
+    """
+    path = os.path.abspath(name)
+    for base in roots:
+        if os.path.splitdrive(path)[0].lower() != os.path.splitdrive(base)[0].lower():
+            continue
+        rel = os.path.relpath(path, base)
+        if rel != "." and not os.path.isabs(rel) and Path(rel).parts[0] != "..":
+            return Path(rel).as_posix()
+    return None
+
+
 def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]],
             only_files: set[str] | None = None) -> dict[str, int]:
     """entries 의 TU 를 파싱해서 model 에 주석과 위치를 채운다. 통계를 돌려준다."""
@@ -146,10 +163,11 @@ def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]],
     parsed: set[str] = set()
     resolved: dict[str, str | None] = {}
 
+    roots = (os.path.abspath(cfg.source_root), str(root))
+
     def inside(name: str) -> str | None:
         if name not in resolved:
-            rel = relpath(name, root)
-            resolved[name] = None if Path(rel).is_absolute() or rel.startswith("..") else rel
+            resolved[name] = root_relative(name, roots)
         return resolved[name]
 
     for entry in entries:
