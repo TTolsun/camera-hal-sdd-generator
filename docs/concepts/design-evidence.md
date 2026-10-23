@@ -20,21 +20,7 @@ prose 섹션에서 `semantic_review: true`를 지정하면 문단별 인용, 실
 
 `design_topics`는 책임·상태·요청·소유권·종료·동시성과 같은 질문을 개별 절로 생성합니다. `sources`의 시작·종료 앵커로 facts의 `source_commit`에 해당하는 Git 객체를 읽습니다. 현재 체크아웃의 수정 파일은 읽지 않습니다. 시작 앵커가 유일하지 않거나 파일·종료 앵커가 없으면 해당 질문을 확인 필요로 남깁니다.
 
-```yaml
-design_topics:
-  - id: shutdown
-    title: 종료 계약
-    question: 종료 시 대기 요청은 언제 반환됩니까?
-    sources:
-      - id: stop
-        file: src/device.cpp
-        start: "고유한 종료 계약 주석의 시작"
-        end: "해당 구현 다음의 고유한 표식"
-        sha256: "실제 발췌를 검토한 뒤 기록한 SHA-256"
-    statements:
-      - text: "코드와 대조하여 작성한 종료 계약 설명입니다."
-        evidence: [stop]
-```
+키와 예시는 [설계 질문과 근거](../reference/sections.md#설계-질문과-근거)에 있습니다.
 
 `statements`가 없으면 주제별 발췌를 LLM에 전달합니다. 있으면 작성된 설명을 그대로 출력하며 각 설명의 근거를 자동 인용합니다. 이 경우 모든 연결된 발췌에 SHA-256이 필요합니다. 발췌가 변경되면 예전 설명을 표시하지 않고 재검토 과제를 표시합니다. 해시를 자동으로 새 값으로 바꾸지 않습니다. 코드 변경의 의미를 확인하고 설명과 지문을 함께 갱신해야 합니다.
 
@@ -45,31 +31,6 @@ design_topics:
 ## 필수 설계 항목 검사
 
 `design_requirements`는 문서가 답해야 할 질문을 별도로 선언합니다. 각 `statements`의 `covers`는 답변하는 항목 ID를 연결합니다. 이 모드는 소스 발췌 해시가 고정된 설명을 요구하므로 LLM의 자유 서술을 필수 답변으로 인정하지 않습니다. 기존 LLM 모드는 필수 항목을 설정하지 않은 섹션에서 계속 사용할 수 있습니다.
-
-```yaml
-design_requirements:
-  - id: lifetime
-    question: 정지할 때 대기 요청은 어떻게 반환됩니까?
-show_evidence: true
-design_topics:
-  - id: shutdown
-    title: 종료 계약
-    question: 대기 요청의 취소와 완료 순서는 무엇입니까?
-    sources:
-      - id: stop
-        file: src/device.cpp
-        start: "고유한 시작 앵커"
-        end: "고유한 종료 앵커"
-        sha256: "검토한 발췌의 실제 SHA-256"
-    statements:
-      - text: "소스와 대조하여 작성한 취소·완료 동작을 여기에 적습니다."
-        evidence: [stop]
-        covers: [lifetime]
-      - text: "드라이버의 실제 완료 시점은 기기에서 확인해야 합니다."
-        kind: limitation
-        evidence: [stop]
-        covers: [lifetime]
-```
 
 필수 질문은 프로젝트 담당자가 정합니다. 질문 목록 자체가 시스템 설계 전체를 빠짐없이 대표하는지는 자동으로 판정하지 않습니다. 책임·상태·입출력·소유권·오류·종료·동시성 중 해당 문서에 필요한 질문을 정의하고 코드와 대조한 설명을 추가해야 합니다. libcamera 클래스명과 답변은 예제 설정에만 있습니다.
 
@@ -89,19 +50,4 @@ design_topics:
 
 ## libcamera 예제
 
-카메라 문서의 여섯 주제는 원본의 API 계약과 구현을 대조한 설명을 발췌 해시에 연결합니다. `stop()`의 실행 중이 아닌 분기는 0을 반환하고, 파이프라인 호출은 `ConnectionTypeBlocking`이라는 점을 명시합니다. fence는 성공 시 Request가 아니라 버퍼로 이동합니다. 실제 콜백 스레드와 하드웨어 종료는 추가 검증 대상으로 남깁니다.
-
-별도 `ipu3-lsc` 페이지는 LSC 구현, IPU3 처리 상태와 세션 설정, 관련 자유 함수를 선택합니다. A에서 Lsc가 추출되지 않고 B에서 추가되는 차이를 표와 관계 그림에 반영합니다. 익명 구조체와 엔티티가 추출되지 않은 파일은 범위 검토 보고서에 계속 남습니다.
-
-이 페이지는 공통 옵션 `narration: facts`를 사용합니다. 선택한 클래스의 직접 기반 클래스와 추출 관계를 문장으로 직접 만들며 LLM을 호출하지 않습니다. 클래스 구조를 자유롭게 의역하면서 관계를 잘못 연결하는 문제를 방지합니다. 실행 순서와 소유권은 이 모드에서 추정하지 않으며, 함수 목록도 HAL 진입점으로 단정하지 않고 관련 자유 함수로 표시합니다.
-
-보존한 빌드·facts를 사용한 재검증은 다음과 같이 실행합니다. 새 출력 디렉터리가 필요하며 원본 검증 결과를 덮어쓰지 않습니다.
-
-```powershell
-.venv/Scripts/python.exe examples/libcamera/validate_design.py `
-  --baseline build/revision-validation/20260921 `
-  --source build/publication/libcamera-sdd `
-  --out build/revision-validation/new-design-run
-```
-
-이 실행은 새 빌드나 구조 재추출을 하지 않습니다. 동일한 A/B facts에 새 소스 근거를 수집하고, A 생성 → 엄격 범위 검사 → 남은 항목을 기록한 B 증분 생성 → 원래 오류 원고 재검사 → 사이트 반복 빌드를 수행합니다. 검토용 사이트를 만들며 공개 배포와 사내 HAL 검증은 수행하지 않습니다.
+공개 libcamera의 설계 근거 예제와 보존한 입력으로 재검증하는 방법은 [설계 근거 재검증 기록](../libcamera/records/design-validation.md#설계-근거-예제와-재검증-방법)에 있습니다.
