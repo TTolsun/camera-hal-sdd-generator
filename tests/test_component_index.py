@@ -3,12 +3,13 @@
 import yaml
 
 from sdd.document_metadata import generation_method
-from sdd.facts.model import ClassInfo, KnowledgeModel, Location, PackageInfo
+from sdd.facts.model import ClassInfo, FunctionInfo, KnowledgeModel, Location, PackageInfo
 from sdd.generate import Generator
 from sdd.impact import compute
 
 INDEX = {"id": "index-pkg", "title": "구성 요소 색인", "output": "component-index.md", "kind": "per-package",
-         "narration": "facts", "lead": "패키지별로 찾으세요.", "facts": {"classes": ["*"], "packages": ["src/*"]}}
+         "narration": "facts", "lead": "패키지별로 찾으세요.",
+         "facts": {"classes": ["*"], "functions": ["*"], "packages": ["src/*"]}}
 
 
 class _NoModel:
@@ -21,6 +22,9 @@ def _model():
     m.classes["Pipe"] = ClassInfo("Pipe", Location("src/pipe/pipe.h", 3), package="src/pipe", brief="Moves frames")
     m.classes["Cam"] = ClassInfo("Cam", Location("src/cam/cam.h", 7), package="src/cam", bases=["Pipe"])
     m.classes["drm_mode"] = ClassInfo("drm_mode", Location("include/linux/drm.h", 9), package="include/linux")
+    m.functions["logCategoryLsc"] = FunctionInfo("logCategoryLsc", def_loc=Location("src/pipe/lsc.cpp", 12))
+    m.functions["helper"] = FunctionInfo("helper", Location("src/tools/helper.h", 4), brief="Formats ids")
+    m.functions["drm_ioctl"] = FunctionInfo("drm_ioctl", Location("include/linux/drm.h", 30))
     m.packages = {"src/pipe": PackageInfo("src/pipe", "src/pipe", ["Pipe"]),
                   "src/cam": PackageInfo("src/cam", "src/cam", ["Cam"]),
                   "include/linux": PackageInfo("include/linux", "include/linux", ["drm_mode"])}
@@ -54,5 +58,23 @@ def test_범위_검사는_색인이_싣지_않는_패키지의_클래스를_다�
     _sections(tmp_cfg, [INDEX])
     model = _model()
     report = compute(tmp_cfg, model, ["src/cam/cam.h", "include/linux/drm.h"], "a", "b", non_semantic={})
-    assert [f["name"] for f in report.coverage["findings"]] == ["drm_mode"]
+    # include/linux 는 색인이 싣지 않으므로 그 파일의 클래스와 함수는 검토 항목으로 남는다.
+    assert sorted(f["name"] for f in report.coverage["findings"]) == ["drm_ioctl", "drm_mode"]
     assert "index-pkg" in {s for e in report.coverage["entities"] if e["name"] == "Cam" for s in e["sections"]}
+
+
+def test_facts_색인은_자유_함수도_선언_파일의_패키지로_싣는다(tmp_cfg):
+    tmp_cfg.package_depth = 2
+    _sections(tmp_cfg, [INDEX])
+    Generator(tmp_cfg, _model(), _NoModel()).run()
+    page = (tmp_cfg.sdd_dir / "component-index.md").read_text(encoding="utf-8")
+    assert "| `logCategoryLsc` | – | `src/pipe/lsc.cpp:12` | 확인 필요 |" in page
+    assert "## src/tools" in page and "| `helper` | `src/tools/helper.h:4` | – | Formats ids |" in page
+    assert "drm_ioctl" not in page
+
+
+def test_범위_검사는_색인의_함수도_같은_패키지_규칙으로_판정한다(tmp_cfg):
+    tmp_cfg.package_depth = 2
+    _sections(tmp_cfg, [INDEX])
+    report = compute(tmp_cfg, _model(), ["src/pipe/lsc.cpp", "include/linux/drm.h"], "a", "b", non_semantic={})
+    assert sorted(f["name"] for f in report.coverage["findings"]) == ["drm_ioctl", "drm_mode"]

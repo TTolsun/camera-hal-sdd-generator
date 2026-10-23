@@ -20,6 +20,7 @@ from typing import Any
 from clang import cindex
 
 from ..config import Config
+from ..matching import package_of
 from .comments import _CLASS_KINDS, _FUNCTION_KINDS, _METHOD_KINDS, _loc, _qualified, _under, parse_args
 from .model import ClassInfo, KnowledgeModel, Location, Message, PackageInfo, Relation, Scenario, relpath
 
@@ -366,19 +367,6 @@ def mermaid_class(model: KnowledgeModel) -> str:
         elif r.type == "association":
             parts.append(f"    {s} --> {t}")
     return "\n".join(parts)
-
-
-def package_of(file: str, depth: int) -> str:
-    """패키지 = 선언 파일 경로의 앞 depth 개 디렉터리.
-
-    clang-uml 의 package_type: directory 와 같은 규칙이되, 깊이를 설정으로 정한다.
-    경로가 depth 보다 얕으면 그 파일이 들어 있는 디렉터리까지만 쓰고, 루트 바로 아래 파일은
-    "(root)" 로 묶는다. 깊이를 올려도 얕은 트리가 빈 이름을 만들지 않게 하려는 처리다.
-    """
-    parts = Path(file).parts
-    if len(parts) > depth:
-        return "/".join(parts[:depth])
-    return "/".join(parts[:-1]) or "(root)"
 
 
 def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]]) -> dict[str, int]:

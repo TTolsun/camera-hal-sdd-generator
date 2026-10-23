@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from .facts.model import KnowledgeModel
-from .matching import is_anonymous, match_any, matches_symbol, package_selected
+from .matching import is_anonymous, match_any, matches_symbol, package_of, package_selected
 
 
-def _select_sections(kind: str, name: str, snapshot: KnowledgeModel, sections: list[dict]) -> set[str]:
+def _select_sections(kind: str, name: str, snapshot: KnowledgeModel, sections: list[dict],
+                     package_depth: int = 1) -> set[str]:
     selected = set()
     for section in sections:
         section_kind = section.get("kind", "prose")
@@ -23,6 +24,15 @@ def _select_sections(kind: str, name: str, snapshot: KnowledgeModel, sections: l
                     continue
         elif kind == "function" and section_kind == "prose":
             if not matches_symbol(name, facts.get("functions") or []):
+                continue
+        elif kind == "function" and section_kind == "per-package":
+            # 패키지 색인은 함수도 선언 파일의 패키지로 묶어 싣는다(generate._per_package 와 같은 규칙).
+            if not matches_symbol(name, facts.get("functions") or []):
+                continue
+            entity = snapshot.functions.get(name)
+            loc = entity and (entity.loc or entity.def_loc)
+            pkg_pats = facts.get("packages") or []
+            if not loc or (pkg_pats and not package_selected(package_of(loc.file, package_depth), pkg_pats)):
                 continue
         else:
             continue
@@ -43,7 +53,7 @@ def _shape(snapshot: KnowledgeModel | None, kind: str, name: str):
 def audit(model: KnowledgeModel, files: list[str],
           base_model: KnowledgeModel | None = None, *, sections: list[dict], excluded: list[str],
           manual_evidence: dict[str, list[str]], impacted_sections: set[str],
-          non_semantic: dict[str, str] | None = None) -> dict:
+          non_semantic: dict[str, str] | None = None, package_depth: int = 1) -> dict:
     """non_semantic: 주석·공백·#include 만 바뀐 파일과 그 이유 (change_kind.classify 결과).
 
     그 파일들에만 걸리고 이전·현재 facts 의 구조(종류·기반 클래스·메서드 이름)가 같은 항목은
@@ -74,7 +84,7 @@ def audit(model: KnowledgeModel, files: list[str],
                                                           "evidence": {}, "sections": set()})
                 item["files"].update(loc.file for loc in locations)
                 item["evidence"][side] = sorted({loc.cite() for loc in locations})
-                item["sections"].update(_select_sections(kind, name, snapshot, sections))
+                item["sections"].update(_select_sections(kind, name, snapshot, sections, package_depth))
 
     items = []
     findings = []

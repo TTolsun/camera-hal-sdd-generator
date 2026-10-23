@@ -1688,13 +1688,14 @@ sections:
   title: 구성 요소 색인
   output: component-index.md
   kind: per-package
-  # 빌드한 모든 파이프라인·IPA·앱의 클래스를 패키지별 표로 싣는다. LLM 을 부르지 않는다.
+  # 빌드한 모든 파이프라인·IPA·앱의 클래스와 자유 함수를 패키지별 표로 싣는다. LLM 을 부르지 않는다.
   # include/linux(커널 UAPI 사본)와 빌드 디렉터리의 생성 헤더는 libcamera 설계가 아니므로 뺀다.
   narration: facts
-  lead: 빌드한 모든 파이프라인·IPA·앱의 클래스를 패키지별로 찾으세요. 표는 추출 사실에서 만들었고 동작은 설명하지 않습니다.
+  lead: 빌드한 모든 파이프라인·IPA·앱의 클래스와 함수를 패키지별로 찾으세요. 표는 추출 사실에서 만들었고 동작은 설명하지 않습니다.
   reader: 클래스가 어느 패키지에 선언되어 있는지 찾는 개발자
   facts:
     classes: ['*']
+    functions: ['*']
     packages: ['src/*', 'include/libcamera*']
   watch: ['src/**', 'include/libcamera/**']
   next:

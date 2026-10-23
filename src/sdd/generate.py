@@ -25,9 +25,9 @@ from .diagrams import diagram_block, section_diagram
 from .document_metadata import generation_info, generation_method
 from .design_contracts import audit as audit_design, coverage_table, source_details
 from .scenario_document import build as scenario_document, hidden_message, fingerprint as scenario_fingerprint
-from .facts.model import ClassInfo, KnowledgeModel
+from .facts.model import ClassInfo, FunctionInfo, KnowledgeModel
 from .impact import ImpactReport
-from .matching import is_anonymous, matches_symbol, package_selected
+from .matching import is_anonymous, matches_symbol, package_of, package_selected
 from .llm import Agent
 from .manuscript import describe, lint, unwrap
 from .validate import Verdict, check, extract_citations, normalize_citations, strip_echo, strip_headings
@@ -243,20 +243,35 @@ class Generator:
         # narration: facts 는 패키지별 클래스 표만 facts 에서 만든다. LLM 을 부르지 않고, 패키지마다
         # 달라지는 설명 문장도 만들지 않는다(번역 목록과 검토 대상이 패키지 수만큼 늘지 않게).
         facts_only = sec.get("narration") == "facts"
-        for pkg_name in sorted(self.model.packages):
+        functions: dict[str, list[FunctionInfo]] = {}
+        if facts_only:
+            pats = sec.get("facts", {}).get("functions") or []
+            for f in self.model.functions.values():
+                loc = f.loc or f.def_loc
+                if loc and pats and matches_symbol(f.name, pats):
+                    functions.setdefault(package_of(loc.file, self.cfg.package_depth), []).append(f)
+        for pkg_name in sorted(set(self.model.packages) | set(functions)):
             if pkg_pats and not _pkg_selected(pkg_name, pkg_pats):
                 continue
-            classes = [self.model.classes[n] for n in self.model.packages[pkg_name].classes if n in self.model.classes]
+            classes = [self.model.classes[n] for n in self.model.packages[pkg_name].classes
+                       if n in self.model.classes] if pkg_name in self.model.packages else []
             classes = [c for c in classes if _match_class(c, sec)]
-            if not classes:
-                continue
             if facts_only:
-                table = _class_table(sorted(classes, key=lambda c: c.name))
+                tables = []
+                if classes:
+                    tables.append(_class_table(sorted(classes, key=lambda c: c.name)))
+                if functions.get(pkg_name):
+                    tables.append(_function_table(sorted(functions[pkg_name], key=lambda f: f.name)))
+                if not tables:
+                    continue
+                table = "\n\n".join(tables)
                 parts.append(f"## {pkg_name}\n\n{table}")
                 all_blocks.append(Block("table", f"### 패키지 {pkg_name}\n{table}", 0))
                 all_tables.append(table)
                 if not all(c.loc for c in classes):
                     worst = Verdict(ok=False, notes=[f"{pkg_name}: 선언 위치가 없는 클래스가 있습니다."])
+                continue
+            if not classes:
                 continue
             if limit is not None and pkg_name not in limit:
                 reused = reusable.get(pkg_name, "")
@@ -602,11 +617,15 @@ class Generator:
                     if c and c.loc:
                         files.add(c.loc.file)
         fn_pats = facts.get("functions") or []
+        # 패키지 색인은 고른 패키지의 함수만 싣는다. 싣지 않은 함수의 파일을 근거로 적지 않는다.
+        by_package = sec.get("kind") == "per-package" and bool(pkg_pats)
         for name, fn in self.model.functions.items():
             if matches_symbol(name, fn_pats):
-                for l in (fn.def_loc, fn.loc):
-                    if l:
-                        files.add(l.file)
+                locs = [l for l in (fn.def_loc, fn.loc) if l]
+                if by_package and not any(package_selected(package_of(l.file, self.cfg.package_depth), pkg_pats)
+                                          for l in locs):
+                    continue
+                files.update(l.file for l in locs)
         sc = self.model.scenarios.get(str(facts.get("reading_order", "")))
         if sc:
             files.update(m.loc.file for m in sc.messages if m.loc)
@@ -779,6 +798,15 @@ def _class_table(classes: list[ClassInfo]) -> str:
         bases = ", ".join(f"`{b}`" for b in c.bases) or "–"
         loc = f"`{c.loc.cite()}`" if c.loc else "위치 없음"
         rows.append(f"| `{c.name}` | {loc} | {bases} | {c.brief or '확인 필요'} |")
+    return "\n".join(rows)
+
+
+def _function_table(functions: list[FunctionInfo]) -> str:
+    rows = ["| 함수 | 선언 위치 | 정의 위치 | 설명 (주석) |", "|---|---|---|---|"]
+    for f in functions:
+        decl = f"`{f.loc.cite()}`" if f.loc else "–"
+        defn = f"`{f.def_loc.cite()}`" if f.def_loc else "–"
+        rows.append(f"| `{f.name}` | {decl} | {defn} | {f.brief or '확인 필요'} |")
     return "\n".join(rows)
 
 

@@ -209,15 +209,18 @@ def _process_queue(cfg: Config, queue: list[str], base: str, state: dict[str, An
             # facts.json 이 이미 대상 커밋 것으로 덮여 있으면, 커밋이 어긋난 사본은 쓰지 않는다.
             base_model = None
             kept = cfg.build_dir / f"facts-{base[:12]}.json"
-            if kept.exists():
-                candidate = KnowledgeModel.load(kept)
-                base_model = candidate if candidate.meta.get("source_commit") == base else None
-            if base_model is None and cfg.facts_path.exists():
+            # 기준 커밋의 facts.json 이 있으면 그것이 가장 최근 추출이다. 빌드 구성을 바꿔 기준선을
+            # 다시 추출한 뒤에도 옛 사본을 쓰지 않도록, 사본보다 먼저 보고 사본을 새로 맞춘다.
+            if cfg.facts_path.exists():
                 current = KnowledgeModel.load(cfg.facts_path)
                 if current.meta.get("source_commit") == base:
                     kept.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(cfg.facts_path, kept)
                     base_model = current
+            # 재시도에서는 facts.json 이 이미 대상 커밋 것으로 덮였으므로 보관한 사본을 쓴다.
+            if base_model is None and kept.exists():
+                candidate = KnowledgeModel.load(kept)
+                base_model = candidate if candidate.meta.get("source_commit") == base else None
             if base_model is None:
                 log(f"기준 {base[:12]} 의 facts 가 없어 삭제된 심볼 검사가 제한됩니다.")
             model = steps.extract(cfg)

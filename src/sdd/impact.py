@@ -100,7 +100,7 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
         non_semantic = non_semantic_files(cfg, [f for f in files if not match_any(f, cfg.exclude)], base, head)
     report.coverage = audit(model, files, base_model, sections=sections, excluded=cfg.exclude,
                             manual_evidence=manual_evidence, impacted_sections=set(report.sections),
-                            non_semantic=non_semantic)
+                            non_semantic=non_semantic, package_depth=cfg.package_depth)
     return report
 
 
