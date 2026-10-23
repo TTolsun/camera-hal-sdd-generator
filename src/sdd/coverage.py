@@ -73,6 +73,29 @@ def outside_build(files: list[str], model: KnowledgeModel, base_model: Knowledge
             if Path(f).suffix.lower() in CXX_SUFFIXES and f not in head and f not in base}
 
 
+PINNED_EVIDENCE = "pinned-design-evidence"
+
+
+def pinned_files(model: KnowledgeModel, impacted_sections: set[str]) -> dict[str, list[str]]:
+    """설계 근거가 파일 전체를 현재 내용의 해시로 고정한 파일과 그 문서.
+
+    튜닝 YAML·설정 XML 처럼 클래스·함수가 추출되지 않는 파일도, 다시 만드는 문서의 설계 설명이 이번
+    커밋의 파일 전체를 근거로 고정했다면 그 문서가 변경을 다룬다. 내용이 다시 바뀌면 해시가 어긋나
+    근거 상태가 needs-review 가 되므로 여기서 빠지고 검토 대상으로 돌아간다. 일부만 발췌한 근거는
+    발췌 밖의 변경을 다루지 못하므로 쓰지 않는다.
+    """
+    pinned: dict[str, list[str]] = {}
+    for key, record in (model.evidence or {}).items():
+        section = key.split("/", 1)[0]
+        if (section in impacted_sections and record.get("status") == "available" and record.get("whole_file")
+                and record.get("commit") == model.meta.get("source_commit")
+                and (record.get("selector") or {}).get("sha256") == record.get("sha256")):
+            pinned.setdefault(record["file"], [])
+            if section not in pinned[record["file"]]:
+                pinned[record["file"]].append(section)
+    return pinned
+
+
 def audit(model: KnowledgeModel, files: list[str],
           base_model: KnowledgeModel | None = None, *, sections: list[dict], excluded: list[str],
           manual_evidence: dict[str, list[str]], impacted_sections: set[str],
@@ -84,6 +107,7 @@ def audit(model: KnowledgeModel, files: list[str],
     """
     non_semantic = non_semantic or {}
     outside = outside_build(files, model, base_model)
+    pinned = pinned_files(model, impacted_sections)
     ignored = sorted(f for f in set(files) if match_any(f, excluded))
     active = set(files) - set(ignored)
     # Inspect both sides so deleted declarations and renamed paths cannot disappear.
@@ -147,6 +171,12 @@ def audit(model: KnowledgeModel, files: list[str],
                                "files": [file], "classification": OUTSIDE_BUILD})
             file_items.append({"file": file, "watch_sections": watch, "manual_review_sections": manual,
                                "status": "outside-build"})
+            continue
+        if not related and file in pinned:
+            classified.append({"reason": "no-extracted-entity", "kind": "file", "name": file, "files": [file],
+                               "classification": PINNED_EVIDENCE, "sections": pinned[file]})
+            file_items.append({"file": file, "watch_sections": watch, "manual_review_sections": manual,
+                               "status": "design-evidence"})
             continue
         if file in non_semantic:
             if not related:

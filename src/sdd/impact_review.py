@@ -43,10 +43,12 @@ def review_markdown(report: ImpactReport, ledger: dict[str, Any] | None = None,
         lines.append("현재 추출 사실과 설정에서 범위 누락을 찾지 못했습니다.")
     if coverage.get("classified"):
         kinds = {"comment-whitespace-include-only": "주석·공백·#include만 바뀜",
-                 "outside-analyzed-build": "분석한 빌드에서 컴파일되지 않음"}
+                 "outside-analyzed-build": "분석한 빌드에서 컴파일되지 않음",
+                 "pinned-design-evidence": "다시 만드는 문서의 설계 근거가 파일 전체를 고정함"}
         lines += ["", "## 자동 분류한 변경", "",
-                  "주석·공백·`#include`만 바뀌고 구조가 같은 항목, 그리고 분석한 빌드 구성에서 컴파일되지 않는 파일입니다. "
-                  "문서가 다루는 코드가 바뀌지 않았으므로 검토 항목에서 뺐습니다. 사람의 승인이 아니며 장부에 기록하지 않습니다.", ""]
+                  "주석·공백·`#include`만 바뀌고 구조가 같은 항목, 분석한 빌드 구성에서 컴파일되지 않는 파일, "
+                  "그리고 다시 만드는 문서의 설계 근거가 이번 커밋의 파일 전체를 해시로 고정한 파일입니다. "
+                  "검토 항목에서 뺐지만 사람의 승인이 아니며 장부에 기록하지 않습니다. 고정한 설계 설명은 그 문서의 사람 검토 대상입니다.", ""]
         for item in coverage["classified"]:
             lines.append(f"- `{item['name']}` ({kinds.get(item['classification'], item['classification'])}): "
                          + ", ".join(f"`{f}`" for f in item["files"]))
@@ -58,7 +60,8 @@ def review_markdown(report: ImpactReport, ledger: dict[str, Any] | None = None,
               "- 변경 파일 안의 선언·정의 위치를 사용합니다. 줄별 변경이나 LLM 입력 예산에 따른 생략은 별도 검증이 필요합니다.",
               "- watch 일치만으로 누락이 해결되지는 않습니다. facts.classes/functions 범위를 보완하거나 검토자가 범위 밖 변경인지 판단해야 합니다.",
               "- 빌드 파일, 그리고 빌드에서 읽었지만 클래스·함수가 추출되지 않은 코드는 검토 대상으로 남습니다. "
-              "분석한 빌드가 읽지 않은 C/C++ 파일은 자동 분류합니다. 수동 문서의 근거 연결은 검토 위치만 안내합니다."]
+              "분석한 빌드가 읽지 않은 C/C++ 파일과, 설계 근거가 파일 전체를 현재 해시로 고정한 파일은 자동 분류합니다. "
+              "수동 문서의 근거 연결은 검토 위치만 안내합니다."]
     if not coverage["baseline_available"]:
         lines.append("- 이전 facts가 없어 삭제된 심볼을 완전히 검사하지 못했습니다. --base-facts로 비교 기준의 facts를 제공하세요.")
     if coverage["ignored_files"]:

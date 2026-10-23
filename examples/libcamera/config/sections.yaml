@@ -1295,6 +1295,58 @@ sections:
       kind: limitation
       covers:
       - errors
+  - id: tuning
+    title: 보정 전 튜닝 파일
+    question: 센서별 튜닝 파일이 없으면 어떤 파일과 알고리즘이 쓰입니까?
+    sources:
+    - id: rkisp1-tuning
+      file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
+      start: /* The IPA tuning file is made from the sensor name. */
+      end: '"uncalibrated.yaml");'
+      sha256: 5085c39368b264636b7bc7386979e019ea9cd60621335cc42d1e3ad28d810c6c
+    - id: mali-c55-tuning
+      file: src/libcamera/pipeline/mali-c55/mali-c55.cpp
+      start: std::string ipaTuningFile = ipa_->configurationFile(sensor()->model() + ".yaml",
+      end: '"uncalibrated.yaml");'
+      sha256: 226c3c21c4b760c25b2a3323369bce67c92f92db80b9fcef19589a44af6eaa2a
+    - id: fallback
+      file: src/libcamera/ipa_proxy.cpp
+      start: 'std::string IPAProxy::configurationFile(const std::string &name,'
+      end: '"'', falling back to ''" << confPath << "''";'
+      sha256: 6c48d1f3994c22addbc1b338c87cf7b166f9fee0f9223ecf718a254be0aa93a8
+    - id: rkisp1-uncalibrated
+      file: src/ipa/rkisp1/data/uncalibrated.yaml
+      start: '# SPDX-License-Identifier: CC0-1.0'
+      end: '...'
+      sha256: f3e8a3a6257b7fb82f16cf5c8239901d57bcc15023908c8994dcac3714e9e648
+    - id: mali-c55-uncalibrated
+      file: src/ipa/mali-c55/data/uncalibrated.yaml
+      start: '# SPDX-License-Identifier: CC0-1.0'
+      end: '...'
+      sha256: 532d8234c4d0a6d5429c8a8f8df85d151b0701e965fb7372abc71fe70d2bed82
+    statements:
+    - text: rkisp1과 mali-c55 파이프라인은 센서 모델 이름에 `.yaml`을 붙인 튜닝 파일을 먼저 찾고, 대체 파일로 `uncalibrated.yaml`을 넘깁니다.
+        `IPAProxy::configurationFile()`은 첫 이름의 파일을 찾지 못하면 대체 이름으로 같은 탐색을 반복하고 경고 로그를 남깁니다.
+      evidence:
+      - rkisp1-tuning
+      - mali-c55-tuning
+      - fallback
+      covers:
+      - tuning
+    - text: rkisp1의 `uncalibrated.yaml`은 `algorithms` 목록에 Agc, Awb, BlackLevelCorrection, Ccm, GammaOutCorrection을 올립니다.
+        mali-c55의 `uncalibrated.yaml`은 Agc, Awb, BlackLevelCorrection, Ccm을 올립니다. 두 파일 모두 알고리즘 항목에 매개변수를 적지 않습니다.
+      evidence:
+      - rkisp1-uncalibrated
+      - mali-c55-uncalibrated
+      covers:
+      - tuning
+    - text: 매개변수가 없을 때 각 알고리즘이 쓰는 기본값과, 보정하지 않은 센서에서 얻는 화질은 각 알고리즘 구현과 실제 촬영으로 확인해야 합니다.
+      evidence:
+      - rkisp1-uncalibrated
+      - mali-c55-uncalibrated
+      kind: limitation
+      covers:
+      - tuning
   design_requirements:
   - id: selection
     question: 어떤 IPA 모듈과 실행 방식이 선택됩니까?
@@ -1306,6 +1358,8 @@ sections:
     question: 인터페이스를 만들고 비동기 처리를 끝내는 계약은 무엇입니까?
   - id: errors
     question: 모듈 생성과 IPC 오류는 어떻게 관찰됩니까?
+  - id: tuning
+    question: 센서별 튜닝 파일이 없으면 어떤 파일과 알고리즘이 쓰입니까?
   show_evidence: true
 - id: ipu3-lsc
   group: For Vendors
