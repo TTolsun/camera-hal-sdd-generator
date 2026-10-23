@@ -8,13 +8,13 @@ import re
 import shlex
 import subprocess
 import uuid
-from contextlib import contextmanager
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from . import approvals, source_git, update
 from .export_site import export_site
 from .facts.model import KnowledgeModel
+from .locking import locked
 from .site_build import MANIFEST, verify_site
 
 
@@ -23,35 +23,6 @@ def save(path, data):
     temporary = path.with_suffix(".tmp")
     temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     temporary.replace(path)
-
-
-@contextmanager
-def locked(path):
-    """OS lock is released even after a crash. The lock file is never unlinked."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a+b") as stream:
-        stream.seek(0, 2)
-        if not stream.tell():
-            stream.write(b"0")
-            stream.flush()
-        stream.seek(0)
-        try:
-            if os.name == "nt":
-                import msvcrt
-                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
-            else:
-                import fcntl
-                fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as exc:
-            raise RuntimeError("같은 설정의 자동화 작업이 이미 실행 중입니다.") from exc
-        try:
-            yield
-        finally:
-            stream.seek(0)
-            if os.name == "nt":
-                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
-            else:
-                fcntl.flock(stream, fcntl.LOCK_UN)
 
 
 def cron(cfg, config_path):

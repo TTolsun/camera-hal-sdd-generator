@@ -1,6 +1,6 @@
 # 2단계: 첫 실행 (NDK-build · legacy HAL3)
 
-**사내 설정 디렉터리를 만들고 아래 4단계를 순서대로 실행하세요.** 각 단계의 확인 값이 맞지 않으면 다음 단계로 넘어가지 않고 [문제 해결](troubleshooting.md)을 봅니다. 처음이면 1시간 정도 걸립니다(추출 시간은 소스 규모에 따라 10~30분).
+**사내 설정 템플릿을 복사하고 아래 4단계를 순서대로 진행하세요.** 각 단계의 확인 값이 맞지 않으면 다음 단계로 넘어가지 않고 [문제 해결](troubleshooting.md)을 봅니다. 처음이면 1시간 정도 걸립니다(추출 시간은 소스 규모에 따라 10~30분).
 
 ```
 1단계 준비물 → [2단계 첫 실행] → 3단계 갱신 시스템 → 4단계 사람 검토
@@ -8,73 +8,32 @@
 
 ## 1. 설정 디렉터리 만들기
 
-5분 정도 걸립니다.
-
-생성기 저장소 옆에 사내 전용 디렉터리를 둡니다. 사내 클래스명과 설명이 들어가므로 사내 저장소에서 관리합니다.
+5분 정도 걸립니다. 생성기 저장소의 [사내 설정 템플릿](../../examples/inhouse-template/)을 생성기 저장소 옆으로 복사합니다. 사내 클래스명과 설명이 들어가므로 이 디렉터리는 사내 저장소에서 관리합니다.
 
 ```text
 workspace/
   camera-hal-sdd-generator/   # 생성기 (이 저장소)
   hal-camera-analysis/        # 분석 전용 HAL 체크아웃
-  hal-sdd-project/            # 사내 설정과 산출물
-    sdd.yaml
-    config/sections.yaml
-    config/scenarios.yaml
+  hal-sdd-project/            # examples/inhouse-template 을 복사한 곳
 ```
 
-`config/sections.yaml`은 생성기 저장소의 `config/sections.yaml`을 복사해 시작합니다.
+## 2. sdd.yaml 채우기
 
-## 2. sdd.yaml 쓰기
+10분 정도 걸립니다. 복사한 `sdd.yaml`에서 `<...>`로 표시한 칸을 채웁니다.
 
-10분 정도 걸립니다.
+1. `site.source_url`: 인용을 연결할 사내 코드 열람 주소. Gitiles가 아니면 `source_link`도 바꿉니다.
+2. `source.ndk_build.args`: 제품 빌드와 같은 ndk-build 인자.
+3. 경로가 위 배치와 다르면 `source.root`, `ndk_build.project_dir`, `paths.*`를 고칩니다.
 
-```yaml
-source:
-  root: ../hal-camera-analysis
-  compile_commands: ../hal-camera-analysis/compile_commands.json
-  exclude: ["third_party/**"]
-  ndk_build:
-    enabled: true
-    project_dir: ../hal-camera-analysis
-paths:
-  prompts: ../camera-hal-sdd-generator/prompts
-  templates: ../camera-hal-sdd-generator/templates
-  style: ../camera-hal-sdd-generator/style
-facts:
-  package_depth: 2
-agent:
-  kind: dry-run          # 모델 없이 먼저 확인합니다. 모델을 쓸 때 openai-compatible 등으로 바꿉니다.
-tools:
-  clang_uml: none
-site:
-  enabled: false         # 첫 실행에서는 생성과 사이트 빌드를 나눠 확인합니다.
-  source_url: <사내 코드 열람 주소>
-  source_link: gitiles
-  mermaid_dir: assets/mermaid   # 그림 라이브러리를 사이트에 동봉합니다. 사내 문서가 외부 CDN 코드를 실행하지 않게 합니다.
-documentation:
-  enabled: true
-```
-
-키의 뜻과 기본값은 [설정 참조](../reference/config.md)에 있습니다.
+템플릿은 모델 없이(`agent.kind: dry-run`) 시작하고, Mermaid 동봉과 승인 없는 문서의 게시 차단을 켜 둡니다. 키의 뜻은 [설정 참조](../reference/config.md)에 있습니다.
 
 ## 3. 무엇을 문서화할지 정하기
 
 30분 이상 걸립니다. 사내 네임스페이스와 진입점 수에 따라 늘어납니다.
 
-1. `config/sections.yaml`의 `facts.classes` 패턴을 사내 네임스페이스로 바꿉니다.
-2. 빌드한 모든 클래스·함수가 한 문서에는 실리도록, 복사한 설정의 `components` 섹션을 **구성 요소 색인**으로 바꿉니다. 이 색인이 없으면 문서가 다루지 않는 코드가 바뀔 때마다 갱신이 멈춥니다.
-
-   ```yaml
-   - id: components
-     kind: per-package
-     narration: facts                      # 추가: 모델 없이 패키지별 표만 만듭니다
-     facts:
-       classes: ['*']
-       functions: ['*']                    # 추가: 자유 함수도 싣습니다
-     # 나머지 키(title, output, lead, watch 등)는 그대로 둡니다
-   ```
-
-3. `config/scenarios.yaml`에 HAL3 진입점을 실제 시그니처로 적습니다. 규칙은 [HAL3 진입점 작성 규칙](../reference/sections.md#hal3-진입점-작성-규칙)에 있습니다.
+1. `config/scenarios.yaml`의 `<namespace>`와 시그니처를 실제 정의로 바꿉니다. 규칙은 [HAL3 진입점 작성 규칙](../reference/sections.md#hal3-진입점-작성-규칙)에 있습니다.
+2. `config/sections.yaml`의 `overview`·`threading` 클래스 패턴을 사내 이름에 맞춥니다. 그대로 두어도 동작합니다.
+3. `components` 섹션은 **구성 요소 색인**으로 켜 두었습니다(`narration: facts`, 클래스·함수 `'*'`). 빌드한 모든 코드가 한 문서에 실리므로, 문서가 다루지 않는 코드가 바뀔 때마다 갱신이 멈추는 일이 크게 줄어듭니다. 끄지 않습니다.
 
 ## 4. 실행하기
 

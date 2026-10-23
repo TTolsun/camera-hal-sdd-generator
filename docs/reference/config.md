@@ -129,7 +129,7 @@
 
 | 키 | 기본값 | 뜻 |
 |---|---|---|
-| `compdb_cmd` | 없음 | `sdd update`가 커밋마다 **소스 루트에서** 실행할 compile DB 재생성 명령. `ndk_build.enabled`이면 실행 뒤 자동 정규화합니다. 없으면 기존 DB를 그대로 씁니다. NDK 프로젝트 디렉터리가 소스 루트와 다르면 `["ndk-build", "-C", "<project_dir>", "compile_commands.json"]`처럼 디렉터리를 명시합니다. |
+| `compdb_cmd` | 없음 | `sdd update`가 커밋마다 **소스 루트에서** 실행할 compile DB 재생성 명령. `ndk_build.enabled`이면 실행 뒤 자동 정규화합니다. 없을 때 `ndk_build.enabled`이면 `sdd compdb`와 같은 방법(`project_dir`, `args`)으로 다시 만들고, 그 밖에는 기존 DB를 그대로 씁니다. |
 
 ## automation
 

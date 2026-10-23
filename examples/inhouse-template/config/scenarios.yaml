@@ -1,0 +1,28 @@
+# 사내 HAL 의 호출 흐름 진입점. <...> 를 실제 정의의 시그니처로 바꾼다.
+# 작성 규칙: docs/reference/sections.md 의 "HAL3 진입점 작성 규칙"
+#   - 네임스페이스와 클래스까지 적는다. 인자 이름은 빼고 타입만 소스와 같게 적는다.
+#   - 대조한 정의 위치를 주석으로 남긴다.
+#   - 확인하지 못한 진입점은 지우고 시작한다. 틀린 시그니처는 추출을 멈춘다.
+
+defaults:
+  glob: ["**/*.cpp", "**/*.cc"]
+  depth: 5
+  hide:
+    names: ["ALOG*", "ATRACE*"]      # 로그·트레이스 호출이 흐름을 덮지 않게 한다
+
+scenarios:
+  - id: configure_streams
+    title: 스트림 구성
+    from: "<namespace>::CameraDevice::configureStreams(camera3_stream_configuration_t *)"
+    # 정의: <파일>:<줄>
+
+  - id: process_capture_request
+    title: 캡처 요청 처리
+    from: "<namespace>::CameraDevice::processCaptureRequest(camera3_capture_request_t *)"
+    # 정의: <파일>:<줄>
+    depth: 6
+
+  - id: flush
+    title: 플러시
+    from: "<namespace>::CameraDevice::flush()"
+    # 정의: <파일>:<줄>
