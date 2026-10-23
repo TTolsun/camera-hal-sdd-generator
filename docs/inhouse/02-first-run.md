@@ -50,6 +50,7 @@ site:
   enabled: false         # 첫 실행에서는 생성과 사이트 빌드를 나눠 확인합니다.
   source_url: <사내 코드 열람 주소>
   source_link: gitiles
+  mermaid_dir: assets/mermaid   # 그림 라이브러리를 사이트에 동봉합니다. 사내 문서가 외부 CDN 코드를 실행하지 않게 합니다.
 documentation:
   enabled: true
 ```
@@ -79,7 +80,11 @@ documentation:
 
 20~40분 정도 걸립니다.
 
-생성기 저장소 루트에서 하나씩 실행합니다.
+생성기 저장소 루트에서 하나씩 실행합니다. 첫 명령은 ndk-build로 compile DB를 만들고 정규화합니다. 새 체크아웃에는 DB가 없으므로 `doctor`보다 먼저 실행합니다.
+
+```bash
+uv run sdd --config ../hal-sdd-project/sdd.yaml compdb
+```
 
 ```bash
 uv run sdd --config ../hal-sdd-project/sdd.yaml doctor
@@ -93,6 +98,12 @@ uv run sdd --config ../hal-sdd-project/sdd.yaml extract
 uv run sdd --config ../hal-sdd-project/sdd.yaml generate
 ```
 
+Mermaid 사본을 준비합니다. npm에 접근할 수 없는 사내망이면 반입한 파일을 `--tarball mermaid-<버전>.tgz`로 넘깁니다.
+
+```bash
+uv run sdd --config ../hal-sdd-project/sdd.yaml fetch-mermaid
+```
+
 ```bash
 uv run sdd --config ../hal-sdd-project/sdd.yaml export-site
 ```
@@ -103,20 +114,13 @@ uv run sdd --config ../hal-sdd-project/sdd.yaml verify-site
 
 | 명령 | 확인할 값 | 어긋나면 |
 |---|---|---|
-| `doctor` | compile DB 경고 없음 | [문제 해결](troubleshooting.md) |
+| `compdb` | `compile DB: ... (TU N 개, ...)` 출력 | [문제 해결](troubleshooting.md) |
+| `doctor` | 모든 줄이 `[OK]`(clang-uml은 `..`이어도 됩니다) | [문제 해결](troubleshooting.md) |
 | `extract` | `파싱 오류 0 개`, `진입점 못 찾음 0 개`, 클래스 수가 HAL 규모와 비슷함 | [문제 해결](troubleshooting.md) |
 | `generate` | 원고마다 `status: ok` 또는 `needs-review` | `needs-review`는 [4단계](04-review.md)에서 처리합니다. |
 | `verify-site` | `broken_links: 0` | 링크가 깨진 채 게시하지 않습니다. |
 
-결과는 `hal-sdd-project/build/site/index.html`에서 엽니다.
-
-사내망에서 외부 CDN에 접근할 수 없으면 그림이 그려지지 않습니다. 이때는 Mermaid를 사이트에 동봉합니다. npm에 접근할 수 없으면 `--tarball mermaid-<버전>.tgz`로 반입한 파일을 씁니다.
-
-```bash
-uv run sdd --config ../hal-sdd-project/sdd.yaml fetch-mermaid
-```
-
-그다음 `sdd.yaml`의 `site.mermaid_dir: assets/mermaid`를 켜고 `export-site`를 다시 실행합니다.
+결과는 `hal-sdd-project/build/site/index.html`에서 엽니다. 공개 CDN(`site.mermaid` 기본값)은 사내 문서 사이트에서 외부 코드를 실행하게 하므로, 보안 승인을 받은 경우에만 씁니다.
 
 ## compile DB가 어떻게 바뀌는가
 
