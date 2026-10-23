@@ -15,7 +15,7 @@ from typing import Any
 from . import source_git
 from .change_kind import classify
 from .config import Config
-from .coverage import audit
+from .coverage import audit, outside_build
 from .document_metadata import manual_evidence_files
 from .matching import match_any, matches_symbol
 from .facts.model import KnowledgeModel
@@ -62,9 +62,10 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
     manual_evidence = {s["id"]: manual_evidence_files(cfg.sdd_dir / s.get("output", f"{s['id']}.md"))
                        for s in sections if s.get("kind") == "manual"}
 
-    # 1. 경로 규칙
+    # 1. 경로 규칙. 분석한 빌드가 읽지 않은 C/C++ 파일은 문서 내용을 바꾸지 않으므로 다시 만들 계기로 보지 않는다.
+    unbuilt = outside_build(files, model, base_model)
     for sec in sections:
-        hits = [f for f in files if match_any(f, sec.get("watch", []) or [])]
+        hits = [f for f in files if f not in unbuilt and match_any(f, sec.get("watch", []) or [])]
         if hits:
             report.sections.setdefault(sec["id"], []).append(f"watch 일치: {', '.join(hits[:5])}")
 

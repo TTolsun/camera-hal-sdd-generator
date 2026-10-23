@@ -165,6 +165,8 @@ def test_ndk_원본_DB_를_정규화해서_HAL3_시나리오까지_추출한다(
     assert normalized == cfg.build_dir / "compdb" / "compile_commands.json"
     _assert_normalized(normalized, Path(cfg.ndk_build["project_dir"]), resource)
     assert model.meta["comments"]["errors"] == 0
+    # Clang 이 읽은 파일 목록: 범위 검사가 빌드 밖 파일을 가리는 근거
+    assert {"CameraDevice.cpp", "CameraDevice.h", "hal3.h"} <= set(model.meta["parsed_files"])
     assert "hal::CameraDevice" in model.classes
 
     steps = [(m.dst, m.name, m.note) for m in model.scenarios["process_capture_request"].messages]
