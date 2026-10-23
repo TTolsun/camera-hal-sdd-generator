@@ -85,7 +85,7 @@ sections:
       packages: ["*"]
       classes: ["*"]
       functions: ["*"]
-    watch: ["**/*.h", "**/*.hpp", "**/*.cpp", "**/*.cc"]
+    watch: ["**/*.h", "**/*.hh", "**/*.hpp", "**/*.hxx", "**/*.c", "**/*.cc", "**/*.cpp", "**/*.cxx"]
     next: {title: 핵심 시나리오 시퀀스, link: scenarios/index.md}
 
   - id: scenarios
@@ -112,7 +112,7 @@ sections:
     lead: 바꾸려는 동작이 어떤 -D 플래그 아래에 있는지 표에서 확인하세요. 이 표는 NDK-build 구성 기준입니다.
     facts:
       defines: "*"
-    watch: ["Android.mk", "Application.mk", "**/*.mk", "**/*.h", "**/*.cpp"]
+    watch: ["Android.mk", "Application.mk", "**/*.mk", "**/*.h", "**/*.hpp", "**/*.c", "**/*.cc", "**/*.cpp"]
     next: {title: 스레드와 큐 모델, link: threading.md}
 
   - id: threading

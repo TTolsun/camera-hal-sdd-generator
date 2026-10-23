@@ -25,6 +25,7 @@ from .carryover import carry_forward
 from .config import Config, section_output
 from .facts.model import KnowledgeModel
 from .impact_review import review_markdown
+from .locking import locked
 
 
 def state_path(cfg: Config) -> Path:
@@ -133,6 +134,10 @@ def _run_compdb_cmd(cfg: Config) -> None:
         subprocess.run([str(c) for c in cmd], cwd=cfg.source_root, check=True)
         if cfg.ndk_build.get("enabled"):
             compdb.normalize_ndk(cfg)
+    elif cfg.ndk_build.get("enabled"):
+        # 명령을 따로 적지 않았으면 sdd compdb 와 같은 방법(project_dir, args)으로 다시 만든다.
+        # 커밋마다 Android.mk 가 바뀔 수 있으므로 기존 DB 를 재사용하지 않는다.
+        compdb.generate_with_ndk(cfg)
 
 
 @dataclass
@@ -145,9 +150,19 @@ class Result:
 def run_update(cfg: Config, to: str = "HEAD", max_count: int | None = None,
                fetch: bool = False, steps: Steps | None = None,
                log: Callable[[str], None] = print) -> Result:
+    # 같은 설정의 update 가 동시에 돌면 서로의 체크아웃과 상태를 덮는다.
+    with locked(cfg.build_dir / "update.lock", "같은 설정의 sdd update"):
+        return _run_update(cfg, to, max_count, fetch, steps, log)
+
+
+def _run_update(cfg: Config, to: str, max_count: int | None, fetch: bool, steps: Steps | None,
+                log: Callable[[str], None]) -> Result:
     steps = steps or Steps()
     result = Result()
-    if not source_git.is_clean(cfg.source_root):
+    # ndk-build 는 소스 트리 안에 compile_commands.json 을 쓴다. 추적되지 않은 그 파일은 변경으로 보지 않는다.
+    generated = (cfg.compile_commands,
+                 Path(cfg.ndk_build.get("project_dir") or cfg.source_root) / "compile_commands.json")
+    if not source_git.is_clean(cfg.source_root, ignore_untracked=generated):
         raise RuntimeError(f"소스 저장소에 커밋되지 않은 변경이 있습니다: {cfg.source_root}. "
                            "자동 갱신은 소스를 체크아웃하며 진행하므로 먼저 정리해야 합니다.")
     if fetch:

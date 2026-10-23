@@ -83,8 +83,16 @@ def test_package_summary_or_manual_class_selector_is_not_class_coverage(tmp_cfg)
     assert compute(tmp_cfg, model, ['new.h'], 'a', 'b').coverage['findings']
 
 
-def test_mapped_function_without_regeneration_rule_requires_review(tmp_cfg):
+def test_changed_mapped_function_schedules_its_section(tmp_cfg):
     sections(tmp_cfg, [{'id': 'api', 'facts': {'functions': ['open']}}])
+    model = KnowledgeModel(functions={'open': FunctionInfo('open', Location('api.cpp', 1))})
+    report = compute(tmp_cfg, model, ['api.cpp'], 'a', 'b')
+    assert report.sections == {'api': ['함수 변경: open']}
+    assert report.coverage['findings'] == []
+
+
+def test_mapped_function_without_regeneration_rule_requires_review(tmp_cfg):
+    sections(tmp_cfg, [{'id': 'api', 'facts': {'functions': ['open'], 'impact_functions': []}}])
     model = KnowledgeModel(functions={'open': FunctionInfo('open', Location('api.cpp', 1))})
     report = compute(tmp_cfg, model, ['api.cpp'], 'a', 'b')
     assert report.coverage['findings'][0]['reason'] == 'document-not-scheduled'

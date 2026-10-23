@@ -12,7 +12,9 @@ TEMPLATE = Path(__file__).resolve().parents[1] / "examples" / "inhouse-template"
 def test_템플릿_설정을_읽고_검사_설정이_유효하다():
     cfg = load(TEMPLATE / "sdd.yaml")
     assert cfg.ndk_build["enabled"] is True
-    assert cfg.raw["update"]["compdb_cmd"] == ["ndk-build", "compile_commands.json"]
+    # update 는 compdb_cmd 없이 ndk_build 의 project_dir·args 로 DB 를 다시 만든다.
+    assert "compdb_cmd" not in (cfg.raw.get("update") or {})
+    assert cfg.raw["site"]["require_approval"] is False
     coverage_triage.settings(cfg)
     document_health.settings(cfg)
     assert cfg.prompts_dir.name == "prompts" and "camera-hal-sdd-generator" in cfg.prompts_dir.as_posix()
@@ -30,3 +32,9 @@ def test_템플릿의_구성_요소_색인은_모델_없이_모든_클래스와_
 def test_템플릿에는_채울_자리만_있고_사내_값은_없다():
     text = "\n".join(p.read_text(encoding="utf-8") for p in TEMPLATE.rglob("*") if p.is_file())
     assert "<namespace>" in text and "<사내 코드 열람 주소>" in text
+
+
+def test_템플릿은_원고와_승인_장부와_mermaid_사본을_git_에_남긴다():
+    ignored = (TEMPLATE / ".gitignore").read_text(encoding="utf-8").split()
+    assert "build/" in ignored and "sdd.local.yaml" in ignored
+    assert not {"sdd/", "assets/"} & set(ignored)

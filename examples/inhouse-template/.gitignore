@@ -1,4 +1,3 @@
+# 원고(sdd/), 승인 장부(sdd/approvals.json), Mermaid 사본(assets/)은 커밋해 새 작업 공간에서도 유지한다.
 build/
-sdd/
-assets/
 sdd.local.yaml

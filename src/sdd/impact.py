@@ -81,6 +81,15 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
         hit = [c.name for c in changed_classes if matches_symbol(c.name, patterns)]
         if hit:
             report.sections.setdefault(sec["id"], []).append(f"클래스 변경: {', '.join(hit[:5])}")
+    # 자유 함수도 같은 규칙으로 본다. impact_functions 가 있으면 그것을, 없으면 functions 를 쓴다.
+    changed_functions = sorted(name for name, fn in model.functions.items()
+                               if any(loc and loc.file in fileset for loc in (fn.loc, fn.def_loc)))
+    for sec in sections:
+        facts = sec.get("facts", {})
+        patterns = facts.get("impact_functions", facts.get("functions")) or []
+        hit = [name for name in changed_functions if matches_symbol(name, patterns)]
+        if hit:
+            report.sections.setdefault(sec["id"], []).append(f"함수 변경: {', '.join(hit[:5])}")
 
     for sc in model.scenarios_touching(fileset):
         report.scenarios.setdefault(sc.id, []).append("시나리오 경로에 포함된 파일이 변경됨")
