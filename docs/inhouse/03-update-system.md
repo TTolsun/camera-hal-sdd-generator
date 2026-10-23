@@ -28,12 +28,14 @@ export-site → verify-site → 게시 (사내 웹 서버 / 문서 저장소)
 
 30분 정도 걸립니다.
 
-1. `sdd.yaml`에 compile DB 재생성 명령을 추가합니다. ndk-build를 쓰면 실행 뒤 자동으로 정규화합니다.
+1. `sdd.yaml`에 compile DB 재생성 명령을 추가합니다. 이 명령은 소스 루트에서 실행되고, ndk-build를 쓰면 실행 뒤 자동으로 정규화합니다.
 
    ```yaml
    update:
      compdb_cmd: ["ndk-build", "compile_commands.json"]
    ```
+
+   `jni/`의 부모(`ndk_build.project_dir`)가 소스 루트와 다르면 `["ndk-build", "-C", "<project_dir>", "compile_commands.json"]`로 디렉터리를 명시합니다.
 
 2. 분석 전용 체크아웃의 `.git/info/exclude`에 `compile_commands.json`을 한 줄 추가합니다. ndk-build가 만든 이 파일이 추적되지 않는 파일로 남으면 `sdd update`가 "소스 저장소에 커밋되지 않은 변경이 있습니다"라며 시작하지 않습니다. 이 파일은 로컬에만 적용되어 HAL 저장소에 커밋되지 않습니다.
 
@@ -109,7 +111,11 @@ export-site → verify-site → 게시 (사내 웹 서버 / 문서 저장소)
 
 1. **같은 설정·출력으로 동시에 두 번 실행하지 않습니다.** `sdd automate`는 OS 잠금으로 막지만, CI에서 `sdd update`를 직접 부르면 스케줄러에서 직렬화해야 합니다.
 2. **상태 파일을 실행 사이에 보존합니다.** 목록은 [build에 생기는 파일](../reference/cli.md#build에-생기는-파일)의 굵은 항목입니다.
-3. **전체 재생성은 기준이 바뀔 때만 합니다.** 빌드 구성(`-D`, 빌드 대상), 문서 정의(`sections.yaml`), 집필 규칙(`style/`)이 바뀌면 그 시점의 커밋에서 다시 기준을 잡습니다.
+3. **전체 재생성은 기준이 바뀔 때만 합니다.** 빌드 구성(`-D`, 빌드 대상), 문서 정의(`sections.yaml`), 집필 규칙(`style/`)이 바뀌면 그 시점의 커밋에서 다시 기준을 잡습니다. 분석 체크아웃을 `update-state.json`의 마지막 처리 커밋(`last_done`)으로 체크아웃한 뒤 **세 명령을 모두** 실행합니다. 중간에 멈췄으면 처음부터 다시 실행합니다.
+
+   ```bash
+   uv run sdd --config ../hal-sdd-project/sdd.yaml compdb --regenerate
+   ```
 
    ```bash
    uv run sdd --config ../hal-sdd-project/sdd.yaml extract
@@ -119,6 +125,6 @@ export-site → verify-site → 게시 (사내 웹 서버 / 문서 저장소)
    uv run sdd --config ../hal-sdd-project/sdd.yaml generate
    ```
 
-   이 두 명령은 `update-state.json`의 마지막 처리 커밋(`last_done`)으로 소스를 체크아웃한 상태에서 실행합니다. 그다음 `sdd update`를 이어서 실행합니다.
+   첫 명령이 바뀐 빌드 구성으로 compile DB를 다시 만듭니다. 이것을 빼면 옛 DB로 추출합니다. `generate`를 빼면 새 커밋이 없을 때 `sdd update`가 아무것도 다시 만들지 않으므로 문서가 옛 facts에 남습니다. 그다음 `sdd update`를 이어서 실행합니다.
 
 다음 단계: 갱신이 멈췄을 때 할 일은 [4단계: 사람 검토](04-review.md)에 있습니다.

@@ -23,7 +23,7 @@
 | `sdd run --base <ref>` | extract → impact → generate를 한 번에 합니다. `update`와 달리 커밋을 하나씩 나누지 않습니다. |
 | `sdd audit-docs` | 문서 분량·증가·중복·Feature 범위를 검사합니다. 문제가 있으면 2. |
 | `sdd improve` | 새 커밋이 없을 때 기존 문서의 누락 한 항목을 점검·보완합니다. 보류되면 2. |
-| `sdd verify-publication --url <주소>` | 실제 게시 URL의 manifest와 산출물 해시가 로컬 사이트와 같을 때까지 확인합니다. |
+| `sdd verify-publication --url <주소> --site <로컬 사이트>` | 실제 게시 URL의 manifest와 산출물 해시가 로컬 사이트와 같을 때까지 확인합니다. `--site`를 생략하면 `SDD_SITE_DIR`을 씁니다(`sdd automate`가 설정합니다). 예: `sdd verify-publication --url https://docs.internal/hal/ --site build/site --timeout 600`. |
 | `sdd fetch-mermaid` | Mermaid 배포본을 사내·오프라인 자산으로 준비합니다. `--tarball`로 반입한 파일을 씁니다. |
 | `sdd export-html` | 문서 전체를 HTML 파일 하나로 만듭니다. |
 

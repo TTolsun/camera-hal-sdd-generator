@@ -40,8 +40,8 @@
 | `output.diagrams_dir` | `sdd/diagrams` | Mermaid 원문 위치. |
 | `paths.sections_file` | `config/sections.yaml` | 문서 정의. [sections.yaml 참조](sections.md). |
 | `paths.scenarios_file` | `config/scenarios.yaml` | 시나리오 정의. [scenarios.yaml 참조](sections.md#scenariosyaml). |
-| `paths.prompts`, `paths.templates`, `paths.style` | 생성기 저장소의 같은 이름 | 지시문, 페이지 뼈대, 집필 규칙. 사내 설정 디렉터리를 따로 둘 때 생성기 저장소의 것을 가리킵니다. |
-| `paths.clang_uml_file` | `config/clang-uml.yaml` | clang-uml을 쓸 때의 기본 설정. |
+| `paths.prompts`, `paths.templates`, `paths.style` | 설정 디렉터리의 `prompts`, `templates`, `style` | 지시문, 페이지 뼈대, 집필 규칙. **설정 디렉터리를 생성기 저장소 밖에 두면 반드시 생성기 저장소의 것을 가리키게 적습니다.** 적지 않으면 생성할 때 파일을 찾지 못합니다. |
+| `paths.clang_uml_file` | 설정 디렉터리의 `config/clang-uml.yaml` | clang-uml을 쓸 때의 기본 설정. |
 
 상태 파일(`update-state.json`, `impact.json`, `coverage-triage.json` 등)은 설정 디렉터리의 `build/`에 생깁니다. 목록은 [명령 참조](cli.md#build에-생기는-파일)에 있습니다.
 
@@ -119,8 +119,8 @@
 | `source_url` | 없음 | 인용을 코드로 연결할 저장소 주소. |
 | `source_link` | `github` | `github` 또는 `gitiles`. |
 | `source_link_template` | 없음 | 그 밖의 코드 열람 도구. 자리표시자 `{url}` `{commit}` `{file}` `{line}`. |
-| `mermaid` | 공개 CDN | Mermaid ESM 주소. |
-| `mermaid_dir` | 없음 | `sdd fetch-mermaid`로 준비한 사본. 지정하면 사이트에 동봉해 CDN 없이 그립니다. |
+| `mermaid` | 공개 CDN | Mermaid ESM 주소. 사내 문서에서 공개 CDN을 쓰면 외부 코드가 문서 화면에서 실행되므로, 보안 승인 없이 쓰지 않습니다. |
+| `mermaid_dir` | 없음 | `sdd fetch-mermaid`로 준비한 사본. 지정하면 사이트에 동봉해 CDN 없이 그립니다. 사내 사이트의 기본 설정입니다. |
 | `require_approval` | `false` | 사람 승인 없는 원고가 있으면 게시를 중단합니다. |
 | `nav_groups` | `[]` | 왼쪽 메뉴 그룹 순서. |
 | `english_catalog` | 없음 | 영어판 번역 목록. 공개 libcamera에서만 씁니다. |
@@ -129,7 +129,7 @@
 
 | 키 | 기본값 | 뜻 |
 |---|---|---|
-| `compdb_cmd` | 없음 | `sdd update`가 커밋마다 소스 루트에서 실행할 compile DB 재생성 명령. `ndk_build.enabled`이면 실행 뒤 자동 정규화합니다. 없으면 기존 DB를 그대로 씁니다. |
+| `compdb_cmd` | 없음 | `sdd update`가 커밋마다 **소스 루트에서** 실행할 compile DB 재생성 명령. `ndk_build.enabled`이면 실행 뒤 자동 정규화합니다. 없으면 기존 DB를 그대로 씁니다. NDK 프로젝트 디렉터리가 소스 루트와 다르면 `["ndk-build", "-C", "<project_dir>", "compile_commands.json"]`처럼 디렉터리를 명시합니다. |
 
 ## automation
 

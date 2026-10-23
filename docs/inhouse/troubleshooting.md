@@ -31,7 +31,7 @@
 | 메시지에 포함된 문구 | 원인 | 조치 |
 |---|---|---|
 | `소스 저장소에 커밋되지 않은 변경이 있습니다` | 분석 체크아웃에 추적되지 않는 파일이 있습니다. | ndk-build가 만든 `compile_commands.json`이면 `.git/info/exclude`에 추가합니다. 다른 파일이면 지우지 말고 누가 만들었는지 확인합니다. |
-| `기준 커밋 ... 이 ... 의 조상이 아닙니다` | rebase나 force-push로 기준이 이력에서 사라졌습니다. | 새 이력의 커밋에서 `extract`로 기준을 다시 잡고 `build/update-state.json`을 지운 뒤 실행합니다. |
+| `기준 커밋 ... 이 ... 의 조상이 아닙니다` | rebase나 force-push로 기준이 이력에서 사라졌습니다. | `build/update-state.json`을 지우고, 새 이력의 커밋에서 [기준 재설정 세 명령](03-update-system.md#지켜야-할-것)(`compdb --regenerate`, `extract`, `generate`)을 실행한 뒤 `update`를 실행합니다. |
 | `추출된 facts 의 source_commit 이 대상 커밋과 다릅니다` | 체크아웃이 반영되지 않았습니다. | 분석 체크아웃의 권한과 상태를 확인합니다. |
 | `LLM 판정: 판단 불가 · 모델 호출에 실패했습니다` | 판정 모델에 연결하지 못했습니다. | 관문은 유지됩니다. 엔드포인트와 토큰(`SDD_TRIAGE_API_KEY` 또는 `SDD_AGENT_API_KEY`)을 확인합니다. |
 

@@ -11,6 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 SKIP = {".venv", "build", "node_modules", ".git", ".claude"}
 LINK = re.compile(r"\]\(([^)\s]+)\)")
+REFERENCE = re.compile(r"^\s*\[[^\]]+\]:\s*(\S+)", re.M)   # [이름]: 경로
 FENCE = re.compile(r"^(```|~~~).*?^\1", re.S | re.M)
 
 
@@ -32,23 +33,34 @@ def _slug(heading: str) -> str:
 
 def _anchors(path: Path) -> set[str]:
     text = FENCE.sub("", path.read_text(encoding="utf-8"))
-    seen: dict[str, int] = {}
-    out = set()
+    # GitHub 와 같이 이미 쓴 id 와 겹치지 않을 때까지 -1, -2 를 붙인다.
+    counts: dict[str, int] = {}
+    used: set[str] = set()
     for heading in re.findall(r"^#{1,6} (.+)$", text, re.M):
-        slug = _slug(heading)
-        n = seen.get(slug, 0)
-        out.add(slug if n == 0 else f"{slug}-{n}")
-        seen[slug] = n + 1
-    return out
+        base = _slug(heading)
+        n = counts.get(base, 0)
+        candidate = base if n == 0 else f"{base}-{n}"
+        while candidate in used:
+            n += 1
+            candidate = f"{base}-{n}"
+        counts[base] = n + 1
+        used.add(candidate)
+    return used
 
 
 def _links():
     for path in _docs():
         text = FENCE.sub("", path.read_text(encoding="utf-8"))
-        for target in LINK.findall(text):
+        for target in LINK.findall(text) + REFERENCE.findall(text):
             if re.match(r"^[a-z]+:", target) or target.startswith("{"):
                 continue
             yield path, target
+
+
+def test_중복_제목은_이미_쓴_id_와_겹치지_않게_번호를_붙인다(tmp_path):
+    page = tmp_path / "p.md"
+    page.write_text("## A\n\n## A\n\n## A 1\n\n## A\n", encoding="utf-8")
+    assert _anchors(page) == {"a", "a-1", "a-1-1", "a-2"}
 
 
 @pytest.mark.parametrize("path,target", list(_links()), ids=lambda v: str(v)[-60:])
