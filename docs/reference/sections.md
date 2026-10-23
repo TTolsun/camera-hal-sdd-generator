@@ -36,6 +36,7 @@
 | `facts.functions` | 실을 자유 함수 glob. |
 | `facts.packages` | 실을 패키지 glob(`src/*`). `per-package`는 이 패키지만 싣고, 범위 검사도 같은 기준을 씁니다. |
 | `facts.impact_classes` | 다시 만들 계기로 볼 클래스. 생략하면 `facts.classes`. 인용용으로만 클래스를 넘기는 개요에서 `[]`로 둡니다. |
+| `facts.impact_functions` | 다시 만들 계기로 볼 자유 함수. 생략하면 `facts.functions`. 선언이나 정의가 있는 파일이 바뀌면 절을 다시 만듭니다. |
 | `facts.defines` | `table` 종류의 표시용 값. 현재 생성기는 compile DB의 `-D`를 모두 싣습니다. |
 | `facts.reading_order` | 개요의 "코드를 처음 읽는 순서"에 쓸 시나리오 id. |
 | `watch` | 이 경로가 바뀌면 다시 만듭니다(소스 루트 상대 glob, `**` 지원). |

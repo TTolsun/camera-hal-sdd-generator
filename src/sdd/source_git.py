@@ -23,9 +23,19 @@ def is_ancestor(source_root: Path, base: str, to: str) -> bool:
     return res.returncode == 0
 
 
-def is_clean(source_root: Path) -> bool:
-    out = subprocess.check_output(["git", "status", "--porcelain"], cwd=source_root, encoding="utf-8")
-    return not out.strip()
+def is_clean(source_root: Path, ignore_untracked: tuple[Path, ...] = ()) -> bool:
+    """ignore_untracked: 추적되지 않은 상태일 때만 무시할 파일(빌드가 만든 compile DB 등)."""
+    out = subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=all"],
+                                  cwd=source_root, encoding="utf-8")
+    root = source_root.resolve()
+    ignored = set()
+    for path in ignore_untracked:
+        try:
+            ignored.add(path.resolve().relative_to(root).as_posix())
+        except ValueError:
+            continue
+    return all(line.startswith("?? ") and line[3:].strip('"') in ignored
+               for line in out.splitlines() if line.strip())
 
 
 def checkout(source_root: Path, sha: str) -> None:

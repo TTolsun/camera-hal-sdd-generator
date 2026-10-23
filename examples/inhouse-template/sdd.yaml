@@ -1,0 +1,65 @@
+# 사내 HAL 설정 템플릿. 이 디렉터리를 생성기 저장소 옆으로 복사한 뒤 <...> 를 채운다.
+# 배치 (docs/inhouse/02-first-run.md):
+#   workspace/camera-hal-sdd-generator/   생성기
+#   workspace/hal-camera-analysis/        분석 전용 HAL 체크아웃
+#   workspace/hal-sdd-project/            이 템플릿을 복사한 곳
+# 키의 뜻과 기본값: docs/reference/config.md
+#
+# 보안: sdd update 는 커밋마다 HAL 의 빌드 스크립트(Android.mk 등)로 compile DB 를 다시 만든다.
+# 리뷰를 거쳐 병합된 브랜치(origin/main 등)만 따라가고, 비밀 값이 없는 전용 계정·컨테이너에서 실행한다.
+
+source:
+  root: ../hal-camera-analysis
+  compile_commands: ../hal-camera-analysis/compile_commands.json
+  exclude: ["third_party/**"]
+  ndk_build:
+    enabled: true
+    project_dir: ../hal-camera-analysis      # jni/ 의 부모
+    args: []                                 # 제품 빌드와 같은 인자. 예: ["APP_ABI=arm64-v8a"]
+    # clang: <NDK>/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++   # DB 의 clang 을 쓸 수 없을 때만
+
+paths:
+  # 설정 디렉터리가 생성기 저장소 밖에 있으므로 공용 자산은 생성기 저장소를 가리켜야 한다.
+  prompts: ../camera-hal-sdd-generator/prompts
+  templates: ../camera-hal-sdd-generator/templates
+  style: ../camera-hal-sdd-generator/style
+  clang_uml_file: ../camera-hal-sdd-generator/config/clang-uml.yaml
+
+facts:
+  package_depth: 2
+
+tools:
+  clang_uml: none
+
+agent:
+  # 처음에는 dry-run 으로 흐름만 확인한다. 사내 모델을 쓸 때 openai-compatible 로 바꾼다.
+  # 토큰은 설정에 적지 않고 환경 변수 SDD_AGENT_API_KEY 로 넘긴다.
+  kind: dry-run
+  # base_url: https://<사내 엔드포인트>
+  # model: <모델 이름>
+
+review:
+  require_citations: true
+  max_retries: 1
+  coverage_triage:
+    enabled: false            # 사내 모델이 준비되면 켠다
+    pass_gate: false          # 사람 승인 운영에서는 false 로 둔다
+
+documentation:
+  enabled: true
+
+diagrams:
+  enabled: true
+  max_nodes: 16
+
+site:
+  enabled: false              # 첫 실행에서는 생성과 사이트 빌드를 나눠 확인한다
+  title: Camera HAL 설계 문서
+  source_url: <사내 코드 열람 주소>
+  source_link: gitiles        # GitHub/GHE 는 github, 그 밖은 source_link_template
+  mermaid_dir: assets/mermaid # sdd fetch-mermaid 로 준비한 사본을 동봉한다 (외부 CDN 코드를 실행하지 않음)
+  require_approval: false     # 첫 실행에서는 승인 전 문서로 사이트를 확인한다. 게시 전에 true 로 바꾼다 (4단계)
+  nav_groups: ["시작하기", "For Users", "For Developers"]
+
+# update.compdb_cmd 를 두지 않으면 sdd update 가 커밋마다 위 ndk_build 설정(project_dir, args)으로
+# sdd compdb 와 같은 방법으로 DB 를 다시 만든다. 제품 빌드 스크립트를 따로 써야 할 때만 적는다.

@@ -198,3 +198,28 @@ def test_기준선을_다시_추출하면_보관한_옛_사본_대신_새_facts_
     finally:
         update.impact_mod.compute = saved
     assert seen[0] == 2
+
+
+def test_빌드가_만든_추적되지_않은_compile_db_는_작업_트리_검사에서_뺀다(tmp_cfg, source_repo):
+    (tmp_cfg.source_root / "compile_commands.json").write_text("[]", encoding="utf-8")
+    _seed_baseline(tmp_cfg, source_repo[-1])
+    update.run_update(tmp_cfg, steps=_steps([]), log=lambda _: None)
+    (tmp_cfg.source_root / "other.txt").write_text("x", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="커밋되지 않은 변경"):
+        update.run_update(tmp_cfg, steps=_steps([]), log=lambda _: None)
+
+
+def test_compdb_cmd_가_없으면_ndk_설정으로_db_를_다시_만든다(tmp_cfg, monkeypatch):
+    from sdd import compdb
+    calls = []
+    monkeypatch.setattr(compdb, "generate_with_ndk", lambda cfg: calls.append(cfg))
+    tmp_cfg.ndk_build["enabled"] = True
+    update._run_compdb_cmd(tmp_cfg)
+    assert calls == [tmp_cfg]
+
+
+def test_같은_설정의_update_가_실행_중이면_두_번째_실행을_거부한다(tmp_cfg, source_repo):
+    from sdd.locking import locked
+    with locked(tmp_cfg.build_dir / "update.lock"):
+        with pytest.raises(RuntimeError, match="이미 실행 중"):
+            update.run_update(tmp_cfg, steps=_steps([]), log=lambda _: None)

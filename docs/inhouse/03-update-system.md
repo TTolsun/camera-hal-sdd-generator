@@ -1,6 +1,6 @@
 # 3단계: 문서 갱신 시스템 만들기
 
-**첫 실행을 마친 설정에 `update.compdb_cmd`를 추가하고 `sdd update --to origin/main`을 한 번 실행하세요.** 종료 코드 0이 나오면 시스템의 핵심이 동작하는 것입니다. 그다음 예약 실행과 게시를 붙입니다. 전체 구축에 반나절 정도 걸립니다.
+**첫 실행을 마친 설정으로 `sdd update --to origin/main`을 한 번 실행하세요.** 종료 코드 0이 나오면 시스템의 핵심이 동작하는 것입니다. 그다음 예약 실행과 게시를 붙입니다. 전체 구축에 반나절 정도 걸립니다.
 
 ```
 1단계 준비물 → 2단계 첫 실행 → [3단계 갱신 시스템] → 4단계 사람 검토
@@ -11,7 +11,7 @@
 ```
 새 커밋 (HAL 저장소)
    │  sdd update: 오래된 커밋부터 하나씩
-   ├─ 1. 체크아웃 → compile DB 재생성 (update.compdb_cmd) → 사실 추출
+   ├─ 1. 체크아웃 → compile DB 재생성 (ndk_build 설정) → 사실 추출
    ├─ 2. 이전 커밋과 비교 → 다시 만들 문서 + 범위 검토 항목
    │        ├─ 주석·공백·#include 만 바뀜, 빌드 밖 파일 → 자동 분류 (관문 통과)
    │        ├─ LLM 판정 (선택)              → "범위 밖"만 통과 (pass_gate: true 일 때)
@@ -28,24 +28,17 @@ export-site → verify-site → 게시 (사내 웹 서버 / 문서 저장소)
 
 30분 정도 걸립니다.
 
-1. `sdd.yaml`에 compile DB 재생성 명령을 추가합니다. 이 명령은 소스 루트에서 실행되고, ndk-build를 쓰면 실행 뒤 자동으로 정규화합니다.
+1. 실행 환경을 확인합니다. `sdd update`는 커밋마다 HAL의 빌드 스크립트(`Android.mk` 등)를 실행해 compile DB를 다시 만듭니다. 따라서 리뷰를 거쳐 병합된 브랜치만 따라가고, 비밀 값(토큰, 서명 키)이 없는 전용 계정이나 컨테이너에서 실행합니다.
 
-   ```yaml
-   update:
-     compdb_cmd: ["ndk-build", "compile_commands.json"]
-   ```
+   compile DB는 `source.ndk_build`의 `project_dir`·`args`로 `sdd compdb`와 같은 방법으로 다시 만들고 정규화합니다. ndk-build가 소스 트리에 쓰는 `compile_commands.json`은 추적되지 않는 파일이면 작업 트리 검사에서 제외합니다. 제품 빌드 스크립트를 따로 써야 할 때만 [`update.compdb_cmd`](../reference/config.md#update)를 적습니다.
 
-   `jni/`의 부모(`ndk_build.project_dir`)가 소스 루트와 다르면 `["ndk-build", "-C", "<project_dir>", "compile_commands.json"]`로 디렉터리를 명시합니다.
-
-2. 분석 전용 체크아웃의 `.git/info/exclude`에 `compile_commands.json`을 한 줄 추가합니다. ndk-build가 만든 이 파일이 추적되지 않는 파일로 남으면 `sdd update`가 "소스 저장소에 커밋되지 않은 변경이 있습니다"라며 시작하지 않습니다. 이 파일은 로컬에만 적용되어 HAL 저장소에 커밋되지 않습니다.
-
-3. 실행합니다.
+2. 실행합니다.
 
    ```bash
    uv run sdd --config ../hal-sdd-project/sdd.yaml update --to origin/main --fetch
    ```
 
-4. 종료 코드를 확인합니다. 2·3이면 [4단계: 사람 검토](04-review.md)로 처리한 뒤 같은 명령을 다시 실행합니다.
+3. 종료 코드를 확인합니다. 2·3이면 [4단계: 사람 검토](04-review.md)로 처리한 뒤 같은 명령을 다시 실행합니다.
 
 ## B. 범위 판단을 줄이기
 
@@ -109,7 +102,7 @@ export-site → verify-site → 게시 (사내 웹 서버 / 문서 저장소)
 
 ## 지켜야 할 것
 
-1. **같은 설정·출력으로 동시에 두 번 실행하지 않습니다.** `sdd automate`는 OS 잠금으로 막지만, CI에서 `sdd update`를 직접 부르면 스케줄러에서 직렬화해야 합니다.
+1. **같은 설정으로 동시에 두 번 실행하지 않습니다.** `sdd update`와 `sdd automate`는 OS 잠금으로 두 번째 실행을 거부합니다. 잠금은 같은 `build` 디렉터리에서만 동작하므로, 여러 서버에서 같은 설정을 돌리지 않습니다.
 2. **상태 파일을 실행 사이에 보존합니다.** 목록은 [build에 생기는 파일](../reference/cli.md#build에-생기는-파일)의 굵은 항목입니다.
 3. **전체 재생성은 기준이 바뀔 때만 합니다.** 빌드 구성(`-D`, 빌드 대상), 문서 정의(`sections.yaml`), 집필 규칙(`style/`)이 바뀌면 그 시점의 커밋에서 다시 기준을 잡습니다. 분석 체크아웃을 `update-state.json`의 마지막 처리 커밋(`last_done`)으로 체크아웃한 뒤 **세 명령을 모두** 실행합니다. 중간에 멈췄으면 처음부터 다시 실행합니다.
 

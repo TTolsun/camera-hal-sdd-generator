@@ -71,7 +71,7 @@ review:
 | 이유 코드 | 의미 | 검토 방법 |
 |---|---|---|
 | `entity-outside-document-scope` | 변경 파일의 클래스·함수를 선택하는 자동 문서가 없습니다. | 적절한 절의 `facts.classes` 또는 `facts.functions`를 보완하거나 새 절을 정의합니다. |
-| `document-not-scheduled` | 대응 문서가 있지만 영향 분석에서 재생성 대상으로 선택되지 않았습니다. | 해당 절의 `watch`와 `impact_classes` 설정을 확인합니다. |
+| `document-not-scheduled` | 대응 문서가 있지만 영향 분석에서 재생성 대상으로 선택되지 않았습니다. | 해당 절의 `watch`, `impact_classes`, `impact_functions` 설정을 확인합니다. |
 | `no-extracted-entity` | 변경 파일을 클래스·함수 근거에 연결하지 못했습니다. | 빌드 설정·주석 전용 파일·추출 누락·삭제 파일인지 확인합니다. |
 
 클래스는 prose 또는 per-package 문서의 클래스 선택 규칙, 자유 함수는 prose 문서의 함수 선택 규칙과 대조합니다. 전체 이름과 짧은 이름을 모두 지원합니다. 패키지 요약, 시나리오의 일부 호출, 수동 문서의 파일 참조를 클래스·함수 전체가 설명된 근거로 취급하지 않습니다. 수동 문서의 `evidence_files`는 사람이 재검토할 위치로 안내합니다.
