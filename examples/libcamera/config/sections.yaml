@@ -886,6 +886,9 @@ sections:
   group: For Vendors
   title: Pipeline Handler
   output: pipeline-handler.md
+  # 빌드한 파이프라인 핸들러 10종과 기반 클래스를 한 그림에 싣는다.
+  diagram:
+    max_nodes: 24
   kind: prose
   lead: 파이프라인 구현이 지켜야 하는 구성·요청·완료·종료 계약을 확인하세요.
   reader: 파이프라인 구현을 수정하는 개발자
@@ -1680,3 +1683,20 @@ sections:
   - id: application
     question: 보정값은 어느 스트림에 적용되고 어떤 실행 조건을 따로 확인해야 합니까?
   show_evidence: true
+- id: component-index
+  group: For Developers
+  title: 구성 요소 색인
+  output: component-index.md
+  kind: per-package
+  # 빌드한 모든 파이프라인·IPA·앱의 클래스를 패키지별 표로 싣는다. LLM 을 부르지 않는다.
+  # include/linux(커널 UAPI 사본)와 빌드 디렉터리의 생성 헤더는 libcamera 설계가 아니므로 뺀다.
+  narration: facts
+  lead: 빌드한 모든 파이프라인·IPA·앱의 클래스를 패키지별로 찾으세요. 표는 추출 사실에서 만들었고 동작은 설명하지 않습니다.
+  reader: 클래스가 어느 패키지에 선언되어 있는지 찾는 개발자
+  facts:
+    classes: ['*']
+    packages: ['src/*', 'include/libcamera*']
+  watch: ['src/**', 'include/libcamera/**']
+  next:
+    title: 시스템 개요
+    link: overview.md

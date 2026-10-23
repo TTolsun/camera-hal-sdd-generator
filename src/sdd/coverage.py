@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .facts.model import KnowledgeModel
-from .matching import is_anonymous, match_any, matches_symbol
+from .matching import is_anonymous, match_any, matches_symbol, package_selected
 
 
 def _select_sections(kind: str, name: str, snapshot: KnowledgeModel, sections: list[dict]) -> set[str]:
@@ -14,8 +14,13 @@ def _select_sections(kind: str, name: str, snapshot: KnowledgeModel, sections: l
         if kind == "class" and section_kind in ("prose", "per-package"):
             if not matches_symbol(name, facts.get("classes") or []):
                 continue
-            if section_kind == "per-package" and not any(name in p.classes for p in snapshot.packages.values()):
-                continue
+            if section_kind == "per-package":
+                # 패키지 문서는 facts.packages 로 고른 패키지의 클래스만 싣는다. 실리지 않는 클래스를
+                # 다룬다고 보면 범위 누락이 감춰진다.
+                owners = [n for n, p in snapshot.packages.items() if name in p.classes]
+                pkg_pats = facts.get("packages") or []
+                if not owners or (pkg_pats and not any(package_selected(n, pkg_pats) for n in owners)):
+                    continue
         elif kind == "function" and section_kind == "prose":
             if not matches_symbol(name, facts.get("functions") or []):
                 continue

@@ -27,7 +27,7 @@ from .design_contracts import audit as audit_design, coverage_table, source_deta
 from .scenario_document import build as scenario_document, hidden_message, fingerprint as scenario_fingerprint
 from .facts.model import ClassInfo, KnowledgeModel
 from .impact import ImpactReport
-from .matching import is_anonymous, matches_symbol
+from .matching import is_anonymous, matches_symbol, package_selected
 from .llm import Agent
 from .manuscript import describe, lint, unwrap
 from .validate import Verdict, check, extract_citations, normalize_citations, strip_echo, strip_headings
@@ -239,10 +239,24 @@ class Generator:
         if diagram:
             parts.append("## 전체 구조도\n\n" + diagram)
 
+        pkg_pats = sec.get("facts", {}).get("packages") or []
+        # narration: facts 는 패키지별 클래스 표만 facts 에서 만든다. LLM 을 부르지 않고, 패키지마다
+        # 달라지는 설명 문장도 만들지 않는다(번역 목록과 검토 대상이 패키지 수만큼 늘지 않게).
+        facts_only = sec.get("narration") == "facts"
         for pkg_name in sorted(self.model.packages):
+            if pkg_pats and not _pkg_selected(pkg_name, pkg_pats):
+                continue
             classes = [self.model.classes[n] for n in self.model.packages[pkg_name].classes if n in self.model.classes]
             classes = [c for c in classes if _match_class(c, sec)]
             if not classes:
+                continue
+            if facts_only:
+                table = _class_table(sorted(classes, key=lambda c: c.name))
+                parts.append(f"## {pkg_name}\n\n{table}")
+                all_blocks.append(Block("table", f"### 패키지 {pkg_name}\n{table}", 0))
+                all_tables.append(table)
+                if not all(c.loc for c in classes):
+                    worst = Verdict(ok=False, notes=[f"{pkg_name}: 선언 위치가 없는 클래스가 있습니다."])
                 continue
             if limit is not None and pkg_name not in limit:
                 reused = reusable.get(pkg_name, "")
@@ -265,6 +279,8 @@ class Generator:
             if not verdict.ok:
                 worst = verdict
 
+        if facts_only and not parts:
+            worst = Verdict(ok=False, notes=["선택한 패키지에 클래스가 없습니다."])
         return self._write_section(sec, "\n\n".join(parts), all_blocks, all_tables, worst, omitted_all,
                                    routes=routes or None)
 
@@ -749,8 +765,7 @@ def _hidden_message(m: Any, hide: dict[str, Any]) -> bool:
 
 
 def _pkg_selected(name: str, pats: list[str]) -> bool:
-    """패키지 이름 glob. 경로 구분자를 특별히 다루지 않으므로 `src/*` 는 `src/ipa/ipu3` 에도 걸린다."""
-    return any(fnmatch.fnmatch(name, p) for p in pats)
+    return package_selected(name, pats)
 
 
 def _match_class(c: ClassInfo, sec: dict[str, Any]) -> bool:

@@ -18,6 +18,11 @@ def matches_symbol(name: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatchcase(name, p) or fnmatch.fnmatchcase(name.rsplit("::", 1)[-1], p) for p in patterns)
 
 
+def package_selected(name: str, patterns: list[str]) -> bool:
+    """패키지 이름 glob. 경로 구분자를 특별히 다루지 않으므로 `src/*` 는 `src/ipa/ipu3` 에도 걸린다."""
+    return any(fnmatch.fnmatch(name, p) for p in patterns)
+
+
 def glob_to_regex(pattern: str) -> re.Pattern[str]:
     """`**/` 는 0개 이상의 디렉터리, `*` 는 슬래시를 넘지 않는 glob 을 정규식으로 바꾼다."""
     out = ""
