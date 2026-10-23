@@ -28,7 +28,7 @@ export-site → verify-site → 게시 (사내 웹 서버 / 문서 저장소)
 
 30분 정도 걸립니다.
 
-1. `sdd.yaml`에 compile DB 재생성 명령을 추가합니다. 이 명령은 소스 루트에서 실행되고, ndk-build를 쓰면 실행 뒤 자동으로 정규화합니다.
+1. `sdd.yaml`에 compile DB 재생성 명령이 있는지 확인합니다([사내 설정 템플릿](../../examples/inhouse-template/sdd.yaml)에는 들어 있습니다). 이 명령은 소스 루트에서 실행되고, ndk-build를 쓰면 실행 뒤 자동으로 정규화합니다.
 
    ```yaml
    update:
