@@ -18,6 +18,24 @@ def matches_symbol(name: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatchcase(name, p) or fnmatch.fnmatchcase(name.rsplit("::", 1)[-1], p) for p in patterns)
 
 
+def package_of(file: str, depth: int) -> str:
+    """패키지 = 선언 파일 경로의 앞 depth 개 디렉터리.
+
+    clang-uml 의 package_type: directory 와 같은 규칙이되, 깊이를 설정으로 정한다.
+    경로가 depth 보다 얕으면 그 파일이 들어 있는 디렉터리까지만 쓰고, 루트 바로 아래 파일은
+    "(root)" 로 묶는다. 깊이를 올려도 얕은 트리가 빈 이름을 만들지 않게 하려는 처리다.
+    """
+    parts = file.replace("\\", "/").split("/")
+    if len(parts) > depth:
+        return "/".join(parts[:depth])
+    return "/".join(parts[:-1]) or "(root)"
+
+
+def package_selected(name: str, patterns: list[str]) -> bool:
+    """패키지 이름 glob. 경로 구분자를 특별히 다루지 않으므로 `src/*` 는 `src/ipa/ipu3` 에도 걸린다."""
+    return any(fnmatch.fnmatch(name, p) for p in patterns)
+
+
 def glob_to_regex(pattern: str) -> re.Pattern[str]:
     """`**/` 는 0개 이상의 디렉터리, `*` 는 슬래시를 넘지 않는 glob 을 정규식으로 바꾼다."""
     out = ""

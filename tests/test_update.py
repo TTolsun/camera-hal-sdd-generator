@@ -174,3 +174,27 @@ def test_기준이_이력에서_사라지면_전체_재처리_대신_중단한�
     update.save_state(tmp_cfg, {"schema": 1, "last_done": "f" * 40, "failed": {}})
     with pytest.raises(RuntimeError, match="조상이 아닙니다"):
         update.run_update(tmp_cfg, steps=_steps([]), log=lambda _: None)
+
+
+def test_기준선을_다시_추출하면_보관한_옛_사본_대신_새_facts_를_기준으로_쓴다(tmp_cfg, source_repo):
+    old = KnowledgeModel(meta={"source_commit": source_repo[0], "translation_units": 1})
+    old.save(tmp_cfg.build_dir / f"facts-{source_repo[0][:12]}.json")        # 빌드 범위를 넓히기 전 사본
+    KnowledgeModel(meta={"source_commit": source_repo[0], "translation_units": 2}).save(tmp_cfg.facts_path)
+    ledger = approvals.load(tmp_cfg)
+    approvals.record_finding(ledger, "no-extracted-entity:file:a.txt", "accepted", by="검토자")
+    approvals.save(tmp_cfg, ledger)
+    seen = []
+    steps = _steps([])
+    def generate(cfg, model, report):
+        seen.append(report.coverage["baseline_available"])
+    steps.generate = generate
+    original = update.impact_mod.compute
+    def compute(cfg, model, files, base, head, base_model=None, **kw):
+        seen.append(base_model.meta.get("translation_units"))
+        return original(cfg, model, files, base, head, base_model, **kw)
+    update.impact_mod.compute, saved = compute, update.impact_mod.compute
+    try:
+        update.run_update(tmp_cfg, to=source_repo[1], steps=steps, log=lambda _: None)
+    finally:
+        update.impact_mod.compute = saved
+    assert seen[0] == 2

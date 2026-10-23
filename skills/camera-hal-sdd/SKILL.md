@@ -88,8 +88,10 @@ uv run sdd --config $CFG update --to origin/main
 |---|---|---|
 | 0 | 새 커밋을 모두 처리했다 | A의 4단계(사이트 생성과 검증)를 실행한다. |
 | 1 | 한 커밋의 처리가 실패했다 | 로그의 원인으로 C를 수행한다. 해결 후 같은 명령을 다시 실행하면 같은 커밋부터 재시도한다. |
-| 2 | 승인되지 않은 범위 검토 항목이 있다 | `build/impact-review.md`를 요약해 보고하고 멈춘다. `sdd accept --finding`은 사람이 결정한다. |
+| 2 | 승인되지 않은 범위 검토 항목이 있다 | `build/impact-review.md`를 요약해 보고하고 멈춘다. 각 항목의 "LLM 판정" 줄도 함께 옮긴다. `sdd accept --finding`은 사람이 결정한다. |
 | 3 | `needs-review` 페이지가 있다 | 페이지 목록과 사유를 보고하고 멈춘다. 사유가 근거 변경이면 E의 재검토 초안을 만들 수 있다. `sdd accept`는 사람이 결정한다. |
+
+주석·공백·`#include`만 바뀐 파일의 항목은 "자동 분류한 변경"으로 빠져 관문에 걸리지 않는다. LLM 판정(`build/coverage-triage.json`)은 `review.coverage_triage.pass_gate: true`일 때만 관문을 통과시킨다. 이 두 결과를 승인으로 보고하지 않는다.
 
 "소스 저장소에 커밋되지 않은 변경이 있습니다"로 시작하지 않으면, 분석용 HAL 체크아웃의 `git status`를 보고한다. ndk-build가 만든 `compile_commands.json`이 원인이면 그 체크아웃의 `.git/info/exclude`에 한 줄 추가한다. 다른 파일이 원인이면 지우지 말고 보고한다. 사람이 작업 중인 변경일 수 있기 때문이다.
 

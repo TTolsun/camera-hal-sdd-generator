@@ -12,6 +12,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from . import source_git
+from .change_kind import classify
 from .config import Config
 from .coverage import audit
 from .document_metadata import manual_evidence_files
@@ -39,8 +41,21 @@ class ImpactReport:
         return cls(**json.loads(path.read_text(encoding="utf-8")))
 
 
+def non_semantic_files(cfg: Config, files: list[str], base: str, head: str) -> dict[str, str]:
+    """주석·공백·#include 만 바뀐 파일과 그 이유. 범위 검사는 이 파일들을 검토 항목에서 뺀다."""
+    out = {}
+    for path in files:
+        reason = classify(path, source_git.file_at(cfg.source_root, base, path),
+                          source_git.file_at(cfg.source_root, head, path))
+        if reason:
+            out[path] = reason
+    return out
+
+
 def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, head: str,
-            base_model: KnowledgeModel | None = None) -> ImpactReport:
+            base_model: KnowledgeModel | None = None,
+            non_semantic: dict[str, str] | None = None) -> ImpactReport:
+    """non_semantic 을 주지 않으면 소스 저장소에서 두 판을 읽어 직접 분류한다."""
     report = ImpactReport(base=base, head=head, changed_files=files)
     fileset = set(files)
     sections = cfg.sections()
@@ -81,8 +96,11 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
         if hit:
             report.sections.setdefault(sec["id"], []).append(f"수동 문서의 근거 파일 변경: {', '.join(hit[:5])} (사람이 재검토)")
 
+    if non_semantic is None:
+        non_semantic = non_semantic_files(cfg, [f for f in files if not match_any(f, cfg.exclude)], base, head)
     report.coverage = audit(model, files, base_model, sections=sections, excluded=cfg.exclude,
-                            manual_evidence=manual_evidence, impacted_sections=set(report.sections))
+                            manual_evidence=manual_evidence, impacted_sections=set(report.sections),
+                            non_semantic=non_semantic, package_depth=cfg.package_depth)
     return report
 
 

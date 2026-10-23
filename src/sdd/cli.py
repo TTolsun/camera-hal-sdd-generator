@@ -22,7 +22,7 @@ import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 
-from . import approvals as approvals_mod, compdb, extract, impact as impact_mod
+from . import approvals as approvals_mod, compdb, coverage_triage, extract, impact as impact_mod
 from .carryover import carry_forward
 from .config import Config, load
 from .document_metadata import generation_method
@@ -128,15 +128,20 @@ def cmd_impact(args: argparse.Namespace) -> int:
     out = cfg.build_dir / "impact.json"
     report.save(out)
     ledger = approvals_mod.load(cfg)
+    judged = coverage_triage.triage(cfg, report, ledger)
+    passed = coverage_triage.passed(cfg, judged)
     review = cfg.build_dir / "impact-review.md"
-    review.write_text(review_markdown(report, ledger), encoding="utf-8", newline="\n")
+    review.write_text(review_markdown(report, ledger, judged, passed), encoding="utf-8", newline="\n")
     print(f"변경 파일 {len(files)} 개, 영향 섹션 {sorted(report.sections)}, 시나리오 {sorted(report.scenarios)}")
     print(f"-> {out}")
-    open_items = approvals_mod.open_findings(report.coverage, ledger)
-    accepted = len(report.coverage["findings"]) - len(open_items)
+    open_items = approvals_mod.open_findings(report.coverage, ledger, passed)
+    excluded = len(report.coverage["findings"]) - len(open_items)
     print(f"문서 범위: {report.coverage['status']}, 검토 항목 {len(report.coverage['findings'])}개"
-          + (f" (장부에서 승인된 {accepted}개 제외, 미결 {len(open_items)}개)" if accepted else "")
+          + (f" (장부 승인·LLM 판정으로 {excluded}개 제외, 미결 {len(open_items)}개)" if excluded else "")
           + f" -> {review}")
+    if report.coverage.get("classified") or judged:
+        print(f"자동 분류 {len(report.coverage.get('classified', []))}개, "
+              f"LLM 판정 {len(judged)}개 (관문 제외 {len(passed)}개, 사람 검토 전)")
     if not base_model:
         print("이전 facts 미제공: 삭제된 심볼의 범위 검사는 제한됩니다. --base-facts를 사용할 수 있습니다.")
     return 2 if args.fail_on_coverage_gap and open_items else 0

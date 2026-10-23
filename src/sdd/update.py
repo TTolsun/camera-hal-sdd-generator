@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from . import approvals as approvals_mod, extract, impact as impact_mod, source_git
+from . import approvals as approvals_mod, coverage_triage, extract, impact as impact_mod, source_git
 from .carryover import carry_forward
 from .config import Config, section_output
 from .facts.model import KnowledgeModel
@@ -209,15 +209,18 @@ def _process_queue(cfg: Config, queue: list[str], base: str, state: dict[str, An
             # facts.json 이 이미 대상 커밋 것으로 덮여 있으면, 커밋이 어긋난 사본은 쓰지 않는다.
             base_model = None
             kept = cfg.build_dir / f"facts-{base[:12]}.json"
-            if kept.exists():
-                candidate = KnowledgeModel.load(kept)
-                base_model = candidate if candidate.meta.get("source_commit") == base else None
-            if base_model is None and cfg.facts_path.exists():
+            # 기준 커밋의 facts.json 이 있으면 그것이 가장 최근 추출이다. 빌드 구성을 바꿔 기준선을
+            # 다시 추출한 뒤에도 옛 사본을 쓰지 않도록, 사본보다 먼저 보고 사본을 새로 맞춘다.
+            if cfg.facts_path.exists():
                 current = KnowledgeModel.load(cfg.facts_path)
                 if current.meta.get("source_commit") == base:
                     kept.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(cfg.facts_path, kept)
                     base_model = current
+            # 재시도에서는 facts.json 이 이미 대상 커밋 것으로 덮였으므로 보관한 사본을 쓴다.
+            if base_model is None and kept.exists():
+                candidate = KnowledgeModel.load(kept)
+                base_model = candidate if candidate.meta.get("source_commit") == base else None
             if base_model is None:
                 log(f"기준 {base[:12]} 의 facts 가 없어 삭제된 심볼 검사가 제한됩니다.")
             model = steps.extract(cfg)
@@ -227,9 +230,15 @@ def _process_queue(cfg: Config, queue: list[str], base: str, state: dict[str, An
             files = source_git.changed_files(cfg.source_root, base, sha)
             report = impact_mod.compute(cfg, model, files, base, sha, base_model)
             report.save(cfg.build_dir / "impact.json")
-            (cfg.build_dir / "impact-review.md").write_text(review_markdown(report, ledger),
+            # 판정 기록은 사람 승인 장부와 따로 둔다. 관문 통과 여부는 review.coverage_triage.pass_gate 가 정한다.
+            judged = coverage_triage.triage(cfg, report, ledger)
+            passed = coverage_triage.passed(cfg, judged)
+            (cfg.build_dir / "impact-review.md").write_text(review_markdown(report, ledger, judged, passed),
                                                             encoding="utf-8", newline="\n")
-            open_items = approvals_mod.open_findings(report.coverage, ledger)
+            if report.coverage.get("classified") or judged:
+                log(f"{sha[:12]}: 자동 분류 {len(report.coverage.get('classified', []))}개, "
+                    f"LLM 판정 {len(judged)}개 (관문 제외 {len(passed)}개, 사람 검토 전)")
+            open_items = approvals_mod.open_findings(report.coverage, ledger, passed)
             if open_items:
                 result.stopped_reason = (f"{sha[:12]}: 승인되지 않은 범위 검토 항목 {len(open_items)}개. "
                                          "build/impact-review.md 를 확인하고 sdd accept --finding 으로 "

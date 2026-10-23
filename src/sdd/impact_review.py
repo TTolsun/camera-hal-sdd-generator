@@ -10,9 +10,12 @@ if TYPE_CHECKING:
     from .impact import ImpactReport
 
 
-def review_markdown(report: ImpactReport, ledger: dict[str, Any] | None = None) -> str:
+def review_markdown(report: ImpactReport, ledger: dict[str, Any] | None = None,
+                    triage: dict[str, dict[str, Any]] | None = None, passed: set[str] | None = None) -> str:
     coverage = report.coverage
     ledger = ledger or {}
+    triage = triage or {}
+    passed = passed or set()
     lines = ["# 변경 문서 범위 검토", "", f"비교 범위: `{report.base}..{report.head}`", ""]
     if not coverage:
         return "\n".join(lines + ["범위 검사가 없는 이전 영향 보고서입니다. impact를 다시 실행하세요.", ""])
@@ -24,13 +27,27 @@ def review_markdown(report: ImpactReport, ledger: dict[str, Any] | None = None) 
               "no-extracted-entity": "추출한 클래스·함수와 연결되지 않아 범위를 확인할 수 없습니다"}
     state_labels = {"accepted": "장부에서 승인됨 · 관문 제외",
                     "deferred": "장부에서 보류됨 · 관문 유지", "open": "미결"}
+    decisions = {"out-of-scope": "범위 밖", "needs-document": "문서 추가 필요", "unsure": "판단 불가"}
     for item in coverage["findings"]:
         state = finding_state(ledger, item) if ledger else "open"
+        key = finding_key(item)
         lines += [f"- `{item['name']}`: {labels[item['reason']]}. ({state_labels[state]})",
                   "  근거 파일: " + ", ".join(f"`{f}`" for f in item["files"]) + ".",
-                  f"  장부 키: `{finding_key(item)}` (승인: `sdd accept --finding \"{finding_key(item)}\"`)"]
+                  f"  장부 키: `{key}` (승인: `sdd accept --finding \"{key}\"`)"]
+        if key in triage:
+            entry = triage[key]
+            gate = "관문 제외" if key in passed else "관문 유지"
+            lines.append(f"  LLM 판정: **{decisions[entry['decision']]}** · {entry['reason']} "
+                         f"({entry['model']}, 사람 검토 전 · {gate})")
     if not coverage["findings"]:
         lines.append("현재 추출 사실과 설정에서 범위 누락을 찾지 못했습니다.")
+    if coverage.get("classified"):
+        lines += ["", "## 자동 분류한 변경", "",
+                  "주석·공백·`#include`만 바뀐 파일에 걸린 항목입니다. 문서가 다루는 선언과 동작이 바뀌지 않았으므로 "
+                  "검토 항목에서 뺐습니다. 사람의 승인이 아니며 장부에 기록하지 않습니다.", ""]
+        for item in coverage["classified"]:
+            lines.append(f"- `{item['name']}` ({labels[item['reason']]}): "
+                         + ", ".join(f"`{f}`" for f in item["files"]))
     lines += ["", "## 파일 감시와 수동 검토 연결", ""]
     for item in coverage["files"]:
         lines.append(f"- `{item['file']}`: {item['status']}; watch={', '.join(item['watch_sections']) or '(없음)'}; "

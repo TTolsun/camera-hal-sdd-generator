@@ -27,6 +27,8 @@ def generation_method(section: dict, agent_kind: str) -> str:
         return "deterministic"
     if kind == "per-scenario" and section.get("narration", "facts") == "facts":
         return "extracted-scenario"
+    if kind == "per-package" and section.get("narration") == "facts":
+        return "extracted-structure"
     topics = (section.get("design_topics") or []) if kind == "prose" else []
     if topics and all("statements" in topic for topic in topics):
         return "source-bound-contract"

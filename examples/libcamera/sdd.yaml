@@ -42,6 +42,10 @@ review:
 
 documentation:
   enabled: true
+  pages:
+    # 빌드한 모든 패키지의 클래스 표라서 크다. 산문이 아니라 표이므로 전체 분량 한도만 넓힌다.
+    component-index.md:
+      max_markdown_chars: 250000
   features:
     - id: request-lifecycle
       primary: request-lifecycle.md
