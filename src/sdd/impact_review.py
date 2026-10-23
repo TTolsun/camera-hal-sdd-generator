@@ -42,11 +42,13 @@ def review_markdown(report: ImpactReport, ledger: dict[str, Any] | None = None,
     if not coverage["findings"]:
         lines.append("현재 추출 사실과 설정에서 범위 누락을 찾지 못했습니다.")
     if coverage.get("classified"):
+        kinds = {"comment-whitespace-include-only": "주석·공백·#include만 바뀜",
+                 "outside-analyzed-build": "분석한 빌드에서 컴파일되지 않음"}
         lines += ["", "## 자동 분류한 변경", "",
-                  "주석·공백·`#include`만 바뀐 파일에 걸린 항목입니다. 문서가 다루는 선언과 동작이 바뀌지 않았으므로 "
-                  "검토 항목에서 뺐습니다. 사람의 승인이 아니며 장부에 기록하지 않습니다.", ""]
+                  "주석·공백·`#include`만 바뀌고 구조가 같은 항목, 그리고 분석한 빌드 구성에서 컴파일되지 않는 파일입니다. "
+                  "문서가 다루는 코드가 바뀌지 않았으므로 검토 항목에서 뺐습니다. 사람의 승인이 아니며 장부에 기록하지 않습니다.", ""]
         for item in coverage["classified"]:
-            lines.append(f"- `{item['name']}` ({labels[item['reason']]}): "
+            lines.append(f"- `{item['name']}` ({kinds.get(item['classification'], item['classification'])}): "
                          + ", ".join(f"`{f}`" for f in item["files"]))
     lines += ["", "## 파일 감시와 수동 검토 연결", ""]
     for item in coverage["files"]:

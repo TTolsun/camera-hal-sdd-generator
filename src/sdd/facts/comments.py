@@ -141,6 +141,16 @@ def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]],
     root = cfg.source_root.resolve()
     stats = {"tus": 0, "errors": 0, "classes": 0, "methods": 0, "functions": 0}
     seen: set[str] = set()
+    # Clang 이 실제로 읽은 소스 루트 안의 파일. 범위 검사가 "분석한 빌드에서 컴파일되지 않은 파일"을
+    # 가리는 근거다. include 경로는 같은 문자열이 반복되므로 해석 결과를 캐시한다.
+    parsed: set[str] = set()
+    resolved: dict[str, str | None] = {}
+
+    def inside(name: str) -> str | None:
+        if name not in resolved:
+            rel = relpath(name, root)
+            resolved[name] = None if Path(rel).is_absolute() or rel.startswith("..") else rel
+        return resolved[name]
 
     for entry in entries:
         src, args = parse_args(entry)
@@ -154,6 +164,8 @@ def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]],
             stats["errors"] += 1
             continue
         stats["tus"] += 1
+        if only_files is None:
+            parsed.update(r for r in [inside(str(src))] + [inside(inc.include.name) for inc in tu.get_includes()] if r)
         diagnostics = [d for d in tu.diagnostics if d.severity >= cindex.Diagnostic.Error]
         stats["errors"] += len(diagnostics)
         for diagnostic in diagnostics[:10]:
@@ -205,6 +217,8 @@ def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]],
                 stats["functions"] += 1
 
     model.meta["comments"] = stats
+    if only_files is None:
+        model.meta["parsed_files"] = sorted(parsed)
     return stats
 
 
