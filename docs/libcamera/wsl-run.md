@@ -7,7 +7,7 @@
 | 생성된 문서를 읽습니다. | [GitHub Pages](https://ttolsun.github.io/libcamera-sdd/) |
 | 문서와 실행 기록을 확인합니다. | [TTolsun/libcamera-sdd](https://github.com/TTolsun/libcamera-sdd) |
 | 분석한 원본 코드를 확인합니다. | [분석 커밋](https://github.com/TTolsun/libcamera-sdd/tree/279d355ef8f7a4f98bb0a3004c0f788387814506) |
-| 환경을 다시 구성합니다. | [가정용 검증 절차](libcamera-home-lab.md) |
+| 환경을 다시 구성합니다. | [가정용 검증 절차](home-lab.md) |
 
 ## 실행 환경
 
@@ -67,9 +67,9 @@ WSL의 `localhost:11434`에서는 Windows Ollama에 연결되지 않았습니다
 
 ## 실행 중 발견해 보완한 문제
 
-1. pip libclang이 `stddef.h`를 찾지 못했습니다. [prepare_compdb.py](../examples/libcamera/prepare_compdb.py)가 실제 Clang의 resource 디렉터리를 지정하도록 했습니다.
+1. pip libclang이 `stddef.h`를 찾지 못했습니다. [prepare_compdb.py](../../examples/libcamera/prepare_compdb.py)가 실제 Clang의 resource 디렉터리를 지정하도록 했습니다.
 2. 상대 include 경로 때문에 Camera 등의 헤더 선언이 사실 추출에서 빠졌습니다. 같은 스크립트가 include 경로를 절대 경로로 변환하도록 했습니다. Meson의 원본 compile DB는 보존합니다.
-3. 파싱 오류 0건만으로는 누락을 발견할 수 없었습니다. [verify_facts.py](../examples/libcamera/verify_facts.py)를 추가해 핵심 클래스, 페이지별 사실 선택, 소스 SHA, 인용 위치를 확인하게 했습니다. 이 검사가 초기 불완전한 facts를 거절하고 보완된 facts를 통과시키는 것을 확인했습니다.
+3. 파싱 오류 0건만으로는 누락을 발견할 수 없었습니다. [verify_facts.py](../../examples/libcamera/verify_facts.py)를 추가해 핵심 클래스, 페이지별 사실 선택, 소스 SHA, 인용 위치를 확인하게 했습니다. 이 검사가 초기 불완전한 facts를 거절하고 보완된 facts를 통과시키는 것을 확인했습니다.
 4. IPA 전체를 한 페이지에 넣으면 입력 한도를 초과했습니다. 관리자·모듈·프록시와 IPU3/RKISP1 구현의 주요 클래스 다섯 개로 첫 페이지의 범위를 제한했습니다.
 
 초기의 불완전한 출력은 로컬 `examples/libcamera/build/initial-incomplete/`에 보관했습니다. 게시된 결과는 보완된 facts로 다시 생성한 `build/verified-sdd/`에서 가져왔습니다. 이 경로의 `verified`는 입력 사실의 존재·위치 검증을 의미하며, 서술의 사람 검토 완료를 뜻하지 않습니다.
@@ -87,7 +87,7 @@ WSL의 `localhost:11434`에서는 Windows Ollama에 연결되지 않았습니다
 
 사용자가 공개 배포를 선택한 뒤 저장소와 Pages를 공개했습니다. libcamera upstream으로 변경을 보내지는 않았습니다.
 
-문서 화면은 [사이트 구성](document-site.md)에 따라 여러 페이지로 개편했습니다. libcamera 공식 문서의 탐색 구조와 OMM의 읽기 중심 디자인·그림 확대 규칙을 적용했으며, 원본 Markdown과 인용 검사 상태는 보존합니다. OMM 이력 관리 실행기는 추가하지 않았습니다.
+문서 화면은 [사이트 구성](../concepts/site.md)에 따라 여러 페이지로 개편했습니다. libcamera 공식 문서의 탐색 구조와 OMM의 읽기 중심 디자인·그림 확대 규칙을 적용했으며, 원본 Markdown과 인용 검사 상태는 보존합니다. OMM 이력 관리 실행기는 추가하지 않았습니다.
 
 **upstream 자동 fetch, 커밋 큐, 자동 문서 갱신과 PR 생성은 아직 연결하지 않았습니다.** 이번 작업은 WSL2 실제 빌드·생성, 원본 이력의 최초 동기화, 검토용 웹 문서 공개까지 완료한 기록입니다. 문서 생성은 로컬 모델을 사용하므로 후속 자동화에서도 집의 실행기 또는 모델이 설치된 실행 환경을 연결해야 합니다.
 

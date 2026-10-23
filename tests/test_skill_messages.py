@@ -1,4 +1,4 @@
-"""사내 에이전트 스킬과 가이드가 인용하는 CLI 문구가 실제 코드에 남아 있는지 확인한다.
+"""사내 에이전트 스킬과 사내 운영 문서가 인용하는 CLI 문구가 실제 코드에 남아 있는지 확인한다.
 
 에이전트는 출력 문구로 다음 행동을 고른다. 코드에서 문구가 바뀌었는데 스킬이 옛 문구를 찾으면
 에이전트가 오류를 알아보지 못하므로, 문구를 바꾸면 이 테스트가 스킬과 가이드 갱신을 요구한다.
@@ -11,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "src" / "sdd").rglob("*.py"))
 SKILL = (ROOT / "skills" / "camera-hal-sdd" / "SKILL.md").read_text(encoding="utf-8")
-GUIDE = (ROOT / "docs" / "inhouse-ndk-hal3.md").read_text(encoding="utf-8")
+GUIDE = "\n".join(p.read_text(encoding="utf-8") for p in sorted((ROOT / "docs" / "inhouse").glob("*.md")))
 
 QUOTED = [
     "파싱 오류",
@@ -33,7 +33,7 @@ QUOTED = [
 @pytest.mark.parametrize("text", QUOTED)
 def test_스킬이_인용한_문구가_코드에_있다(text):
     assert text in SKILL, f"스킬에서 빠진 문구: {text}"
-    assert text in SOURCE, f"코드에서 바뀐 문구: {text}. skills/ 와 docs/inhouse-ndk-hal3.md 를 함께 고치세요."
+    assert text in SOURCE, f"코드에서 바뀐 문구: {text}. skills/ 와 docs/inhouse/troubleshooting.md 를 함께 고치세요."
 
 
 def test_가이드가_스킬과_같은_설정_키를_쓴다():

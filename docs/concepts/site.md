@@ -13,7 +13,7 @@ site:
   require_approval: true    # 미승인·본문 변경 문서가 있으면 export-site 를 중단한다
 ```
 
-유지보수 기준은 [DESIGN.md](../DESIGN.md)입니다. 그림 생성은 `src/sdd/diagrams.py`, 페이지 배치는 `src/sdd/export_site.py`, 출력 검증·관리는 `src/sdd/site_build.py`, 공통 화면 자산은 `src/sdd/site_assets/`에서 관리합니다. 변경을 생성기에 반영하면 다음 빌드부터 모든 페이지에 적용됩니다.
+유지보수 기준은 [DESIGN.md](../../DESIGN.md)입니다. 그림 생성은 `src/sdd/diagrams.py`, 페이지 배치는 `src/sdd/export_site.py`, 출력 검증·관리는 `src/sdd/site_build.py`, 공통 화면 자산은 `src/sdd/site_assets/`에서 관리합니다. 변경을 생성기에 반영하면 다음 빌드부터 모든 페이지에 적용됩니다.
 
 ## 반복 실행 계약
 
@@ -41,16 +41,6 @@ uv run sdd --config examples/libcamera/sdd.yaml verify-site
 
 Git push는 생성 명령에 포함하지 않습니다. 검증된 출력 디렉터리를 `libcamera-sdd/docs`로 지정해 만들고 해당 저장소에서 커밋·push하면 기존 Pages가 게시합니다. 생성기 CI는 push/PR마다 Windows·Linux, Python 3.11·3.14에서 회귀 검사를 실행하도록 구성했습니다. 원격 CI 통과 여부는 실제 실행 결과로 확인해야 합니다.
 
-## 공개 libcamera SDD 동반 배포
-
-사용자는 이 프로젝트의 변경 작업마다 공개 libcamera SDD도 함께 갱신하도록 상시 지시했습니다. 아래 절차는 에이전트의 작업 완료 기준이며, 필요한 공개 배포를 다시 요청받을 때까지 미루지 않습니다. 명시적으로 배포를 보류하라는 후속 지시가 있으면 그 지시를 따릅니다.
-
-1. 생성기 변경을 리뷰하고 필요한 테스트와 CI를 확인한 뒤 PR을 main에 병합합니다.
-2. 공개 libcamera의 분석 기준 커밋과 사용한 생성기 커밋을 고정합니다. 추출 동작이 바뀌면 facts를 다시 추출하고, 원고 내용·근거·집필 규칙이 바뀌면 원고도 재생성합니다. CSS 등 표시만 바뀌면 기존 원고를 검증하여 사이트를 다시 빌드할 수 있습니다. facts를 재사용한 경우에는 재추출했다고 기록하지 않습니다.
-3. `TTolsun/libcamera-sdd`의 기존 변경사항과 지침을 확인합니다. 분석용 체크아웃을 보존하고 배포 작업본의 `docs/`에 생성기로 출력합니다. HTML과 배포용 CSS를 직접 수정하지 않습니다. CSS 원본은 `src/sdd/site_assets/reading.css`이며 `docs/assets/reading.css`는 그 복사본입니다.
-4. 내부 링크·manifest 해시·반복 빌드를 검사합니다. 화면 변경은 데스크톱·모바일에서 확인하고, README·사이트 안내·`run.json`의 생성기 커밋과 검증 범위를 실제 결과에 맞춥니다. 공개 입력과 산출물만 포함하며 사람의 내용 승인 상태를 자동으로 바꾸지 않습니다.
-5. 문서 저장소에 PR을 만들고 검증 후 main에 병합합니다. GitHub Pages 배포가 성공할 때까지 확인한 뒤, [공개 사이트](https://ttolsun.github.io/libcamera-sdd/)의 manifest와 HTML·CSS 해시를 해당 생성 결과와 대조합니다. 저장소와 Pages 설정은 배포 시점의 실제 구성을 확인합니다.
-6. 완료 보고에는 생성기와 문서 저장소의 PR, 공개 URL과 배포 확인 결과를 남깁니다. 지침·테스트만 바뀌어 공개 산출물에 차이가 없으면 불필요한 배포 커밋을 만들지 않고 그 결과를 알립니다. 실패하거나 권한이 부족하면 원인과 미완료 단계를 명시하고 기존 공개 사이트를 보존합니다.
 
 ## 디자인 기준
 
@@ -66,43 +56,16 @@ Git push는 생성 명령에 포함하지 않습니다. 검증된 출력 디렉�
 
 검색은 실제 문서 제목과 모든 페이지의 절 제목을 대상으로 합니다. Ctrl/⌘+K로 열고 Escape로 닫습니다. 표와 코드 블록은 가로로 스크롤할 수 있습니다. 이전·다음 링크는 실제 문서 순서에서 생성합니다.
 
-## 실행 방법
+## 로컬에서 보기
 
 ```powershell
-uv run sdd --config examples/libcamera/sdd.yaml export-site
-python -m http.server 8765 --bind 127.0.0.1 --directory examples/libcamera/build/site
+python -m http.server 8765 --bind 127.0.0.1 --directory <설정 디렉터리>/build/site
 ```
 
-브라우저에서 `http://127.0.0.1:8765/`를 엽니다. 검색과 Mermaid 모듈을 불러오려면 파일을 직접 여는 대신 HTTP 서버를 사용하세요.
+브라우저에서 `http://127.0.0.1:8765/`를 엽니다. 검색과 Mermaid 모듈을 불러오려면 파일을 직접 여는 대신 HTTP 서버를 사용하세요. 사이트 설정 키(`title`, `intro`, `source_url`, `source_link`, `source_link_template`)는 [설정 참조](../reference/config.md#site)에 있습니다.
 
-설정은 `sdd.yaml`의 `site`에 둡니다.
+인용 링크는 facts에 기록된 정확한 파일·줄과 40자리 커밋이 일치할 때만 만듭니다. 원고와 facts의 커밋이 다르면 prose 페이지의 새 그림 생성을 거절합니다. `export-site --out <디렉터리>`는 출력만 갱신하며 Git push를 하지 않습니다. 출력 디렉터리는 전용으로 씁니다.
 
-```yaml
-site:
-  enabled: true
-  title: libcamera 설계 문서
-  intro: site-intro.md
-  source_url: https://github.com/TTolsun/libcamera-sdd
-```
-
-`intro`는 설정 파일 기준의 안내 원고입니다. 생략하면 짧은 기본 안내를 만듭니다. 페이지는 `sections.yaml` 순서를 따르며 추가 MkDocs·시나리오 페이지를 뒤에 연결합니다. `source_url`은 선택 사항이며 해당 커밋이 실제로 존재하는 미러를 지정하세요.
-
-인용 링크의 주소 형식은 코드 열람 호스트에 따라 설정합니다. 기본값은 GitHub/GHE의 `/blob/` 형식이고, Gerrit Gitiles는 `source_link: gitiles`로, 그 밖의 호스트는 템플릿으로 지정합니다. 커밋 40자리 확인과 경로 검증은 형식과 무관하게 적용됩니다.
-
-```yaml
-site:
-  source_url: https://gerrit.example.com/plugins/gitiles/hal-camera
-  source_link: gitiles                                   # github(기본) 또는 gitiles
-  # source_link_template: "{url}/browse/{file}?at={commit}#{line}"   # 다른 호스트 형식
-```
-
-인용 링크는 facts에 기록된 정확한 파일·줄과 40자리 커밋이 일치할 때만 생성합니다. 원고와 facts의 커밋이 다르면 prose 페이지의 새 그림 생성을 거절합니다.
-
-```powershell
-uv run sdd --config examples/libcamera/sdd.yaml export-site --out build/publication/libcamera-sdd/docs
-```
-
-이 명령은 출력만 갱신하며 Git push를 수행하지 않습니다. 출력 디렉터리를 전용으로 사용하세요. 기존 `export-html`은 단일 파일 배포용으로 유지합니다.
 
 ## 한국어·영어 전환
 

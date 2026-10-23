@@ -2,7 +2,7 @@
 
 **Ubuntu에서 libcamera의 한 커밋으로 문서를 먼저 생성하고, 두 커밋 사이의 변경이 관련 문서에 반영되는지 검증합니다.** 이 공개 검증 결과를 바탕으로 사내 Camera HAL과 Gerrit에 적용합니다.
 
-실제 WSL2 빌드·생성과 GitHub Pages 공개 결과는 [실행 및 배포 기록](libcamera-wsl-run.md)에 있습니다.
+실제 WSL2 빌드·생성과 GitHub Pages 공개 결과는 [실행 및 배포 기록](wsl-run.md)에 있습니다.
 
 | 지금 확인할 내용 | 이동할 절 |
 |---|---|
@@ -30,7 +30,7 @@ libcamera의 모든 설계 이유를 코드에서 복원하는 것이 목표는 
 | 클래스·위치·호출 관계 추출 | libclang 대체 경로를 지원합니다. | 파싱 오류와 추출 누락을 확인합니다. |
 | 변경 파일 → 문서 영향 분석 | 경로 규칙과 현재 facts의 클래스·시나리오를 이용합니다. | `impact --base A --head B`를 실행합니다. |
 | 영향받은 문서 생성 | 지원합니다. | `generate --from-impact`를 실행합니다. |
-| 커밋 큐·재시작 | `sdd update`와 `sdd automate`가 지원합니다. | [예약 갱신·게시](scheduled-publication.md)에 따라 실행 환경과 예약을 연결합니다. |
+| 커밋 큐·재시작 | `sdd update`와 `sdd automate`가 지원합니다. | [예약 갱신·게시](../inhouse/03-update-system.md)에 따라 실행 환경과 예약을 연결합니다. |
 | 이전/현재 심볼 비교·삭제 추적·근거 역색인 | 완전한 형태로 구현되지 않았습니다. | 이전 facts와 문서를 보관하고 사람이 대조합니다. |
 | 리뷰 대기·문서 저장소 커밋·게시 | 승인 관문과 Git 게시·배포 확인을 지원합니다. | 사이트별 배포 명령을 설정하며, PR 생성·병합은 운영 절차에 연결합니다. |
 | 커밋 없는 날의 누락 보완 | `sdd improve`와 선택적 `idle_review`를 지원합니다. | 기존 카테고리에서 소스에 근거한 누락을 찾고 추출·원고·사이트 검증을 통과한 제안만 반영합니다. |
@@ -331,13 +331,13 @@ flowchart TD
 
 ## 근거와 검토 정보
 
-이 문서는 2026-09-20에 공식 Getting Started 두 버전과 현재 저장소 코드를 대조해 작성했습니다. 이후 WSL2에서 실제 빌드·추출·LLM 생성과 GitHub Pages 공개를 수행했고, 결과는 [실행 및 배포 기록](libcamera-wsl-run.md)에 남겼습니다. 커밋 감시와 자동 갱신 운영은 아직 실행하지 않았습니다.
+이 문서는 2026-09-20에 공식 Getting Started 두 버전과 현재 저장소 코드를 대조해 작성했습니다. 이후 WSL2에서 실제 빌드·추출·LLM 생성과 GitHub Pages 공개를 수행했고, 결과는 [실행 및 배포 기록](wsl-run.md)에 남겼습니다. 커밋 감시와 자동 갱신 운영은 아직 실행하지 않았습니다.
 
 | 근거 | 확인한 내용 |
 |---|---|
 | [master Getting Started](https://docs.libcamera.org/master/getting-started.html) | 소스 주소와 빌드 의존성, 소스 트리에서의 실행 방법 |
-| [설정 로더](../src/sdd/config.py)와 [compile DB 처리](../src/sdd/compdb.py) | 상대 경로와 기존 compile DB 입력 |
-| [사실 추출](../src/sdd/extract.py)와 [libclang 인자 처리](../src/sdd/facts/comments.py) | 백엔드 선택, 작업 디렉터리, 메타데이터 |
-| [영향 분석](../src/sdd/impact.py), [문서 생성](../src/sdd/generate.py), [CLI](../src/sdd/cli.py) | 영향 범위, 페이지 갱신, 검토 상태와 종료 코드의 차이 |
+| [설정 로더](../../src/sdd/config.py)와 [compile DB 처리](../../src/sdd/compdb.py) | 상대 경로와 기존 compile DB 입력 |
+| [사실 추출](../../src/sdd/extract.py)와 [libclang 인자 처리](../../src/sdd/facts/comments.py) | 백엔드 선택, 작업 디렉터리, 메타데이터 |
+| [영향 분석](../../src/sdd/impact.py), [문서 생성](../../src/sdd/generate.py), [CLI](../../src/sdd/cli.py) | 영향 범위, 페이지 갱신, 검토 상태와 종료 코드의 차이 |
 
-다음 단계: [libcamera 예제 설정](../examples/libcamera/sdd.yaml)을 열어 Linux 소스 경로부터 확인합니다.
+다음 단계: [libcamera 예제 설정](../../examples/libcamera/sdd.yaml)을 열어 Linux 소스 경로부터 확인합니다.

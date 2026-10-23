@@ -14,7 +14,7 @@ metadata:
 
 - 생성기 저장소 루트에서 명령을 실행한다. 모든 명령에 `--config <사내설정>/sdd.yaml`을 붙인다. 아래에서는 이 경로를 `$CFG`로 적는다.
 - 너(에이전트)와 생성기의 문장 모델은 다르다. 생성기의 모델은 `sdd.yaml`의 `agent` 설정이 정한다. 네가 이 저장소에서 작업한다고 생성기가 너를 모델로 쓰지 않는다.
-- 상세 절차와 오류 표는 생성기 저장소의 `docs/inhouse-ndk-hal3.md`에 있다. 설계 설명의 설정 형식은 `docs/design-evidence.md`에 있다. 이 스킬의 표에 없는 경우에만 그 문서를 읽는다.
+- 사람용 절차는 생성기 저장소의 `docs/README.md`(사내 운영자 1~4단계)에, 오류 표는 `docs/inhouse/troubleshooting.md`에, 설정 키는 `docs/reference/`에 있다. 이 스킬의 표에 없는 경우에만 그 문서를 읽는다.
 
 ## 절대 하지 않는 것
 
@@ -104,7 +104,7 @@ uv run sdd --config $CFG update --to origin/main
 | `clang 내장 헤더 위치를 확인하지 못했습니다` | 이 머신의 NDK clang 경로를 찾아 `source.ndk_build.clang`에 적는다. 찾지 못하면 보고한다. |
 | `진입 함수를 정하지 못했습니다` | D를 수행한다. |
 | `응답 파일(@...)` | 보고한다. 빌드 설정 변경이 필요하다. |
-| 그 밖의 메시지 | `docs/inhouse-ndk-hal3.md`의 "6. 문제 해결"을 읽는다. 없으면 메시지 원문과 실행한 명령을 보고한다. |
+| 그 밖의 메시지 | `docs/inhouse/troubleshooting.md`에서 문구를 찾는다. 없으면 메시지 원문과 실행한 명령을 보고한다. |
 
 같은 오류로 두 번 실패하면 더 시도하지 않고 보고한다. 세 번째 시도는 대개 추측이다.
 
@@ -139,7 +139,7 @@ HAL3 `flush`의 진입점은 device 쪽이므로 이렇게 고친다.
 
 ## E. 설계 설명 초안
 
-`config/sections.yaml`의 `design_topics`에 소스와 대조한 설명을 적는다. 이 설명은 사람이 검토하기 전까지 초안이다. 형식은 `docs/design-evidence.md`를 따른다.
+`config/sections.yaml`의 `design_topics`에 소스와 대조한 설명을 적는다. 이 설명은 사람이 검토하기 전까지 초안이다. 키 형식은 `docs/reference/sections.md`의 "설계 질문과 근거"를 따른다.
 
 ### 무엇을 근거로 쓰는가
 

@@ -27,4 +27,4 @@
 
 배포된 생성기 커밋·문서 커밋·build ID와 공개 URL 확인 결과는 공개 문서 저장소의 `run.json` 및 해당 PR에 남깁니다.
 
-다음 단계: [문서 수명주기 설정](document-lifecycle.md)을 사내 Feature와 검토 절차에 맞추세요.
+다음 단계: [문서 수명주기 설정](../../concepts/document-lifecycle.md)을 사내 Feature와 검토 절차에 맞추세요.
