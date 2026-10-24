@@ -50,8 +50,6 @@ sections:
     question: 공통 큐와 하드웨어 구현은 요청 처리 책임을 어떻게 나눕니까?
   - id: algorithm
     question: IPA 모듈과 실행 방식은 어떻게 선택되며 언제 생성에 실패합니까?
-  - id: interface
-    question: 알고리즘에 무엇을 전달하고 어떤 결과를 받습니까?
   - id: shutdown
     question: 정지 시 공통 코드와 하드웨어 구현은 무엇을 끝내야 합니까?
   - id: validation
@@ -102,24 +100,6 @@ sections:
       file: include/libcamera/internal/ipa_manager.h
       start: template<typename T>
       end: "return proxy;\n\t}"
-  - id: interface
-    title: 프레임 입력과 알고리즘 결과
-    question: IPU3와 RKISP1의 queueRequest와 processStats 입력 인자를 설명한 다음 paramsComputed와 metadataReady 결과 인자를 설명하세요. 선언된 인자와 async 표기만 설명하고 내부 처리·즉시 실행·반환 순서를 추정하지 마세요.
-    covers:
-    - interface
-    sources:
-    - id: ipu3-api
-      file: include/libcamera/ipa/ipu3.mojom
-      start: "[async] queueRequest(uint32 frame"
-      end: 'metadataReady(uint32 frame, libcamera.ControlList metadata);
-
-        };'
-    - id: rkisp1-api
-      file: include/libcamera/ipa/rkisp1.mojom
-      start: "[async] queueRequest(uint32 frame"
-      end: 'metadataReady(uint32 frame, libcamera.ControlList metadata);
-
-        };'
   - id: shutdown
     title: 정지와 오류 처리의 책임
     question: 공통 stop과 하드웨어별 stopDevice의 책임을 나누고 대기 요청과 장치 요청이 종료되는 조건을 설명하세요.
