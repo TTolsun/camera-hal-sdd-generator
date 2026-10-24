@@ -165,7 +165,9 @@ python tools/build_inhouse_package.py --ref HEAD --out build/import/camera-hal-s
 
 ## 이 패키지에서 확인한 범위
 
-공개 mini HAL의 기존 검증 입력으로, ZIP을 공백이 있는 다른 경로에 풀어 동봉한 생성기를 실행했습니다. 반입 파일 해시와 안내 문서의 로컬 링크를 검사했고 doctor·generate·audit-docs·export-site·verify-site가 통과했습니다. 반복 manifest는 같았고, 필수 답변을 제거한 시험에서는 생성·사이트 반영이 차단되면서 기존 파일 123개가 보존됐습니다. 설정을 복구한 뒤 같은 명령으로 정상 재개했습니다.
+최초 반입 패키지 검증에서는 공개 mini HAL의 기존 검증 입력으로, ZIP을 공백이 있는 다른 경로에 풀어 동봉한 생성기를 실행했습니다. 반입 파일 해시와 안내 문서의 로컬 링크를 검사했고 doctor·generate·audit-docs·export-site·verify-site가 통과했습니다. 반복 manifest는 같았고, 필수 답변을 제거한 시험에서는 생성·사이트 반영이 차단되면서 기존 파일 123개가 보존됐습니다. 설정을 복구한 뒤 같은 명령으로 정상 재개했습니다.
+
+독자 기준 수정 뒤에도 ZIP을 별도 경로에 풀어 동봉한 생성기와 Vendor·Developer 계약으로 generate·audit-docs·export-site·verify-site를 다시 실행했습니다. 현재 독자 기준과 공개 검증 범위는 [수정 기록](records/developer-reader-correction.md)에 있습니다.
 
 패키지 회귀는 같은 커밋의 ZIP 동일성, 미커밋·로컬 산출물 제외, 파일 변조·누락·추가 차단, 복구 후 성공, 다른 작업 디렉터리에서의 실행과 실패 종료 코드 보존을 검사합니다. 실제 압축 해제 중 발견한 Windows 긴 경로 문제는 반입에 필요하지 않은 과거 모델 원시 실행 자료를 제외해 해결했습니다.
 
