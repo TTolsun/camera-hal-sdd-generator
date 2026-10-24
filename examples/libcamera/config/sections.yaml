@@ -162,7 +162,8 @@ sections:
   design_topics:
   - id: journey
     title: 제출에서 완료까지
-    question: 제출 성공 이후의 대기 조건과 완료 책임은 무엇입니까?
+    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임,
+      버퍼 완료와 요청 완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션 콜백 스레드의 확인 범위를 구분하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -188,7 +189,8 @@ sections:
     - journey
   - id: resources
     title: 요청·버퍼·fence의 수명
-    question: 어떤 자원을 누가 유지하고 완료 후 무엇을 초기화해야 합니까?
+    question: 요청과 버퍼의 소유권·유효 기간, reuse()가 초기화하는 상태·controls·metadata 및 ReuseBuffers 조건, fence 소유권과 재사용 주의, completeRequest()/cancelRequest()
+      반환 후 핸들러의 접근 규칙을 설명하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -214,7 +216,8 @@ sections:
     - resources
   - id: diagnosis
     title: 실패 위치별 확인 순서
-    question: 제출 실패와 제출 후 완료 지연을 어떻게 구분합니까?
+    question: addBuffer()의 -EEXIST와 queueRequest()의 -ENODEV/-EACCES/-EXDEV/-EINVAL 원인을 코드 조건별로 구분하세요. 제출 후 지연에서는
+      준비 대기·장치 전달·버퍼 완료·요청 완료와 선두 Pending 요청을 구분하세요. 실제 로그 메시지나 정상 지연 수치는 만들지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -236,7 +239,8 @@ sections:
     - diagnosis
   - id: stopping
     title: 정지와 연결 해제를 구분하기
-    question: 정지 중 요청 반환과 연결 해제의 보장 범위는 어떻게 다릅니까?
+    question: Camera::stop()의 상태 전환과 blocking 호출, PipelineHandler::stop()의 대기 큐 분리·장치 정지·취소 순서를 설명하세요. disconnect()의
+      미완료 요청 TODO와 정상 stop()의 반환 계약, 별도 스레드 콜백 처리의 확인 범위를 구분하세요.
     sources:
     - id: stop
       file: src/libcamera/camera.cpp
@@ -258,7 +262,8 @@ sections:
     - stopping
   - id: review
     title: 변경 검토와 실행 확인
-    question: 문서를 읽고 어떤 질문에 답하고 어떤 실행 증거를 확보해야 합니까?
+    question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기 요청 처리를 정리하세요. 정상 반복·fence 대기·장치
+      오류·미완료 요청 정지의 실행 확인은 limitation으로 구분하고 실제 시험 결과를 만들지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -332,7 +337,8 @@ sections:
   design_topics:
   - id: responsibility
     title: 장치 매칭과 객체 수명
-    question: 핸들러는 어떤 객체와 장치를 만들고 관리합니까?
+    question: 팩토리를 통한 생성과 shared_ptr 수명, match() 성공·실패 시 장치 확보·해제와 카메라 등록, acquireMediaDevice()의 장치 해제 시점, acquire()/release()의
+      호출 짝과 공유 자원 반납 시점을 설명하세요. 특정 드라이버의 전력 최적화 예시는 이 질문의 범위가 아닙니다.
     sources:
     - id: handler
       file: src/libcamera/pipeline_handler.cpp
@@ -348,8 +354,8 @@ sections:
     - responsibility
   - id: configuration
     title: 구성의 입력과 검증 책임
-    question: generateConfiguration()의 roles 입력과 반환 구성, configure()의 setStream 책임을 설명하세요. configure()가 검증된 입력을 가정해도
-      된다는 API 계약과 실제 구현이 검증을 전혀 수행하지 않는다는 주장은 다릅니다. 입력 검증의 필요 여부만 설명하고 후자는 단정하지 마세요.
+    question: generateConfiguration()의 roles 입력·반환값·호출 문맥과 configure()의 검증 전제·setStream 책임·반환값을 구분해 설명하세요. API 계약의
+      의무와 허용을 원문의 강도로 옮기세요.
     sources:
     - id: configuration
       file: src/libcamera/pipeline_handler.cpp
@@ -359,19 +365,24 @@ sections:
     - configuration
   - id: queue
     title: 요청 준비와 장치 큐
-    question: PipelineHandler::queueRequest()가 waitingRequests_에 추가하고 prepare()를 호출하는 순서를 설명하세요. doQueueRequests()의
-      준비 여부·개수 한도·FIFO 조건, doQueueRequest()의 취소 및 장치 큐 오류 처리를 함수 이름으로 구분하세요. prepare 전에 준비된 요청만 목록에 추가한다고 설명하지 마세요.
+    question: registerRequest(), queueRequest(), doQueueRequests(), doQueueRequest(), queueRequestDevice()의 역할을
+      구분하세요. 대기 큐 추가와 준비 순서, prepare(300ms)의 인자 의미, 대기 큐의 맨 앞 준비 여부와 장치 큐 한도에 따른 반복 중단, 큐 제거와 전달 순서, 취소·장치 오류 분기를
+      설명하세요.
     sources:
     - id: queue
       file: src/libcamera/pipeline_handler.cpp
       start: \fn PipelineHandler::registerRequest()
       end: \brief Complete a buffer for a request
+    - id: prepare
+      file: src/libcamera/request.cpp
+      start: \brief Prepare the Request to be queued to the device
+      end: \var Request::Private::prepared
     covers:
     - queue
   - id: completion
     title: 버퍼 완료와 요청 반환
-    question: completeBuffer()의 알림·추적 역할과 completeRequest()의 명시적 요청 완료를 함수 이름으로 구분하세요. completeRequest 반환 후 핸들러
-      접근 금지, 애플리케이션 반환 순서와 핸들러 완료 호출 순서를 구분하세요.
+    question: completeBuffer()의 알림·추적과 명시적인 completeRequest()를 구분하세요. completeRequest()가 장치 큐 앞의 Pending 상태를 만나면
+      반복을 어떻게 처리하는지, 애플리케이션 반환 순서와 핸들러 완료 호출 순서, 대기 요청 전달 재개, 호출 스레드와 반환 후 접근 규칙을 설명하세요.
     sources:
     - id: completion
       file: src/libcamera/pipeline_handler.cpp

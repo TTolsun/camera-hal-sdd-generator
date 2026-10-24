@@ -129,15 +129,46 @@ def test_repeated_answer_is_rejected(tmp_cfg, generated):
         materialize(model, section, {'stop': [agent.statement, agent.statement]})
 
 
-def test_no_quotable_excerpt_fails_before_model_call(tmp_cfg, generated):
+def test_real_quote_with_another_valid_source_is_rejected(tmp_cfg, generated):
     section, model, save, agent = generated
-    record = model.evidence['device/stop/stop']
-    record['text'] = 'x' * 1700
-    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    other = dict(id='other', file='other.cpp', start='void flush()', end='}')
+    section['design_topics'][0]['sources'].append(other)
+    text = 'void flush() { flushBuffers(); }'
+    model.evidence['device/stop/other'] = dict(selector=other, commit='a' * 40,
+        file='other.cpp', line=1, end_line=1, text=text,
+        sha256=hashlib.sha256(text.encode()).hexdigest(), status='available')
     save()
-    with pytest.raises(ValueError, match='인용 구절이 없습니다'):
+    agent.statement['evidence'] = ['other']
+    with pytest.raises(ValueError, match='실제 원문과 일치하지 않습니다'):
         Generator(tmp_cfg, model, agent).run()
-    assert not agent.calls
+    assert not (tmp_cfg.sdd_dir / 'device.md').exists()
+
+
+def test_passage_selection_resolves_real_quote_and_source(tmp_cfg, generated):
+    section, model, save, agent = generated
+    statement = {k: v for k, v in agent.statement.items() if k not in {'quote', 'evidence'}}
+    statement['quote_id'] = 'stop:0'
+    agent.statement = statement
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    text = path.read_text(encoding='utf-8')
+    assert verify(model, section, text)['status'] == 'documented'
+    assert 'cancelPending' in text and 'device.cpp:10' in text
+    export_site(tmp_cfg)
+    original = path.read_bytes()
+    agent.statement['quote_id'] = 'stop:999'
+    with pytest.raises(ValueError, match='제공되지 않은 quote_id'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+
+
+def test_passages_keep_context_and_reject_forged_source():
+    from sdd.generated_design import source_passages, resolve_passages, quote_text
+    source = 'if (!ready) {\n  return;\n}\n\n* Continue processing.\n*\nfinish();'
+    annotated, passages = source_passages({'code': source})
+    assert quote_text('\n\n'.join(item['text'] for item in annotated['code'])) == quote_text(source)
+    key = next(iter(passages))
+    with pytest.raises(ValueError, match='함께 쓸 수'):
+        resolve_passages([dict(quote_id=key, text='설명합니다.', covers=['q'], kind='behavior', evidence=['forged'])], passages)
 
 
 def test_changed_source_regenerates_and_selects_overview_without_watch(tmp_cfg, generated):
@@ -206,31 +237,6 @@ def test_quote_comparison_ignores_comment_decoration_but_preserves_negation():
     assert quote_text('It must access the request after completion.') not in quote_text(source)
 
 
-def test_constrained_quote_choices_are_verbatim_source_spans():
-    from sdd.generated_design import quote_choices, quote_text, response_schema
-    source = 'The handler shall not access\n * the request after completion.\n *\n * Return requests in order.'
-    choices = quote_choices([source])
-    assert 'The handler shall not access the request after completion.' in choices
-    assert 'The handler shall not access' not in choices
-    assert all(quote in quote_text(source) for quote in choices)
-    schema = response_schema({'sources': [{'id': 'source'}], 'covers': ['question']}, choices)
-    assert schema['properties']['statements']['items']['properties']['quote']['enum'] == choices
-
-
-def test_quote_schema_binds_each_excerpt_to_its_source_id():
-    from sdd.generated_design import response_schema
-    topic = {'sources': [{'id': 'queue'}, {'id': 'complete'}], 'covers': ['lifecycle']}
-    quotes = {'queue': ['Queue the request.'], 'complete': ['Complete the request.']}
-    schema = response_schema(topic, [q for values in quotes.values() for q in values], quotes)
-    choices = schema['properties']['statements']['items']['anyOf']
-    for choice, (source, spans) in zip(choices, quotes.items()):
-        assert choice['required'] == ['quote', 'text', 'evidence', 'covers', 'kind']
-        assert choice['properties']['quote']['enum'] == spans
-        assert choice['properties']['evidence']['const'] == [source]
-        assert choice['properties']['covers']['items']['enum'] == ['lifecycle']
-        assert 'text' in choice['properties'] and 'kind' in choice['properties']
-
-
 def test_libcamera_design_documents_have_no_fixed_answers():
     from pathlib import Path
     from sdd.contract_schema import configuration_errors
@@ -263,7 +269,7 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
         def chat(self, system, user, **kw):
             self.calls.append(user)
             statement = copy.deepcopy(base_agent.statement)
-            statement_schema = kw['response_schema']['properties']['statements']['items']['anyOf'][0]
+            statement_schema = kw['response_schema']['properties']['statements']['items']
             statement['covers'] = statement_schema['properties']['covers']['items']['enum']
             if len(self.calls) == 1:
                 statement['text'] = '요청을 취소합니다. ' * 80
