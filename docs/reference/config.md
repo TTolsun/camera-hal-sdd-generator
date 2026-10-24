@@ -59,7 +59,7 @@
 
 | 키 | 기본값 | 뜻 |
 |---|---|---|
-| `kind` | `dry-run` | `ollama`, `openai-compatible`, `dry-run`. `dry-run`은 모델을 부르지 않고 프롬프트만 `build/prompts/`에 남깁니다. |
+| `kind` | `dry-run` | `ollama`, `openai-compatible`, `response-bundle`, `dry-run`. `dry-run`은 모델을 부르지 않고 프롬프트만 `build/prompts/`에 남깁니다. |
 | `model` | `qwen3.5:4b` | 모델 이름. |
 | `base_url` | `http://localhost:11434` | 엔드포인트. 인증 토큰은 환경 변수 `SDD_AGENT_API_KEY`로만 전달합니다. |
 | `max_input_chars` | `18000` | 입력 상한. 넘으면 우선순위 낮은 사실부터 빼고 그 목록을 원고에 남깁니다. |
@@ -69,8 +69,24 @@
 | `think` | `false` | Ollama thinking 모델의 사고 생성. 켜면 호출당 수 분이 더 걸립니다. |
 | `max_output_tokens` | `1500` | 출력 상한. 소형 모델의 반복 폭주를 막습니다. |
 | `full_style_guides` | `false` | 집필 규칙 전문을 프롬프트에 넣습니다(약 13k자). 소형 모델에서는 끕니다. |
+| `response_dir` | 없음 | `response-bundle`의 요청·응답 디렉터리. 설정 파일 기준 상대 경로 또는 절대 경로입니다. |
 
 설정만으로 데이터 반출을 막지는 못합니다. 실제 연결 대상은 운영 환경에서 관리합니다.
+
+### 파일로 LLM 응답 교환하기
+
+`response-bundle`은 네트워크 호출 없이 별도 LLM 실행기가 만든 응답을 같은 생성·검증 경로로 가져옵니다. 생성기는 `<해시>.request.json`을 기록하고 대응하는 `<해시>.response.json`을 읽습니다. 응답이 없으면 기존 원고를 보존하고 실패합니다. 별도 실행기가 응답을 만든 뒤 같은 생성 명령을 다시 실행하세요. 여러 주제는 순서대로 요청되므로 새 요청이 나오면 이 과정을 반복합니다. 이 방식 자체가 LLM을 실행하거나 새 응답을 자동 작성하지는 않습니다. 연결된 모델의 자동 호출에는 `ollama` 또는 `openai-compatible`을 사용합니다.
+
+요청 해시는 `system`, `user`, `response_schema`를 `json.dumps(..., ensure_ascii=False, sort_keys=True)`로 직렬화한 UTF-8의 SHA-256입니다. 응답에는 요청의 `schema`, `model`, `request_sha256`을 그대로 복사하고, `response`에 모델 출력 문자열을 넣습니다. 프롬프트·근거·응답 스키마가 바뀌면 이전 응답을 사용할 수 없습니다. `model`은 생성 주체를 기록하는 이름이며 인증된 신원이나 품질 보증이 아닙니다.
+
+```yaml
+agent:
+  kind: response-bundle
+  model: approved-local-model
+  response_dir: build/llm-responses
+```
+
+파일에는 원본 소스와 파생 설명이 포함됩니다. 사내 응답 실행기는 사내 보안 경계 안에 두며, 공개 libcamera 응답과 섞지 않습니다. 파일 가져오기에도 인용·필수 질문·본문 지문 검사가 그대로 적용되고 사람 승인 상태는 바뀌지 않습니다.
 
 ## review
 
@@ -78,6 +94,7 @@
 |---|---|---|
 | `require_citations` | `true` | 모델이 쓴 모든 `파일:줄` 인용이 facts에 있어야 통과합니다. |
 | `max_retries` | `1` | 검사 실패 시 재시도 횟수. 넘으면 `status: needs-review`로 남깁니다. |
+| `design_revision` | `false` | 필수 설계 답변마다 소스와 초안을 다시 보내 수정 답변을 받습니다. 호출 수가 늘며 입력 한도 초과 시 근거를 생략하지 않고 실패합니다. 모델의 재검토는 사람 승인이 아닙니다. |
 | `coverage_triage.enabled` | `false` | 사람이 승인하지 않은 범위 검토 항목을 모델이 먼저 판정합니다. |
 | `coverage_triage.pass_gate` | `false` | `true`이면 "범위 밖" 판정이 관문을 통과시킵니다. YAML 불리언만 받습니다. |
 | `coverage_triage.agent` | `agent` 값 | 판정 모델만 다르게 할 때 `kind`, `model`, `base_url` 등을 적습니다. `base_url`이 `agent.base_url`과 다르면 토큰은 `SDD_TRIAGE_API_KEY`에서만 읽습니다. |

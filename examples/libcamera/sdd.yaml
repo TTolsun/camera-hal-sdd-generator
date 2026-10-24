@@ -41,6 +41,7 @@ agent:
 review:
   require_citations: true
   max_retries: 1
+  design_revision: true
 
 documentation:
   enabled: true

@@ -69,6 +69,16 @@ def test_system_prompt_includes_style_readme_only_by_default(tmp_cfg):
     assert "Lead with the next action" in compose_system_prompt(tmp_cfg)
 
 
+def test_structured_prompt_is_optional_and_keeps_style(tmp_cfg):
+    original = compose_system_prompt(tmp_cfg)
+    assert compose_system_prompt(tmp_cfg, structured=True) == original
+    (tmp_cfg.prompts_dir / 'design-system.md').write_text('Return structured JSON.', encoding='utf-8')
+    structured = compose_system_prompt(tmp_cfg, structured=True)
+    assert structured.startswith('Return structured JSON.')
+    assert '개발자 가이드 집필 규칙:' in structured
+    assert compose_system_prompt(tmp_cfg) == original
+
+
 def test_dry_run_generates_all_pages_with_frame(tmp_cfg, sample_model):
     agent = Agent(tmp_cfg.agent, dump_dir=tmp_cfg.build_dir / "prompts")
     written = Generator(tmp_cfg, sample_model, agent).run()

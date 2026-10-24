@@ -12,9 +12,12 @@ def style_rules(readme_text: str) -> str:
     rules = [l.strip() for l in readme_text.splitlines() if re.match(r"^\s*\d+\.\s", l)]
     return "개발자 가이드 집필 규칙:\n" + "\n".join(rules) if rules else readme_text.strip()
 
-def compose_system_prompt(cfg: Config) -> str:
+def compose_system_prompt(cfg: Config, *, structured: bool = False) -> str:
     """prompts/system.md + style/README.md 의 규칙 (+ 원문 두 개, 설정 시). omm-doc-workflow 의 brief.mjs 와 같은 방식."""
-    parts = [(cfg.prompts_dir / "system.md").read_text(encoding="utf-8").strip()]
+    prompt = cfg.prompts_dir / "system.md"
+    if structured and (cfg.prompts_dir / "design-system.md").exists():
+        prompt = cfg.prompts_dir / "design-system.md"
+    parts = [prompt.read_text(encoding="utf-8").strip()]
     readme = cfg.style_dir / "README.md"
     if readme.exists():
         parts.append(style_rules(readme.read_text(encoding="utf-8")))

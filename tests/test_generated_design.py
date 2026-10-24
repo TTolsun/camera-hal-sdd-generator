@@ -62,6 +62,39 @@ def test_generate_export_and_carryover_required_llm_answers(tmp_cfg, generated):
     export_site(tmp_cfg)
 
 
+def test_response_bundle_generates_then_rejects_changed_source(tmp_cfg, generated, tmp_path):
+    from sdd.llm import Agent
+    section, model, save, draft = generated
+    path = Generator(tmp_cfg, model, draft).run()[0]
+    original = path.read_bytes()
+    tmp_cfg.agent.kind = 'response-bundle'
+    tmp_cfg.agent.response_dir = str(tmp_path / 'responses')
+    agent = Agent(tmp_cfg.agent)
+    with pytest.raises(ValueError, match='현재 입력'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+    request_path = next((tmp_path / 'responses').glob('*.request.json'))
+    request = json.loads(request_path.read_text(encoding='utf-8'))
+    response = {k: request[k] for k in ('schema', 'model', 'request_sha256')}
+    response['response'] = json.dumps({'statements': [draft.statement]}, ensure_ascii=False)
+    request_path.with_name(request_path.name.replace('.request.', '.response.')).write_text(
+        json.dumps(response, ensure_ascii=False), encoding='utf-8')
+    Generator(tmp_cfg, model, agent).run()
+    text = path.read_text(encoding='utf-8')
+    assert 'agent: response-bundle/' in text
+    assert verify(model, section, text)['human_review'] == 'pending'
+    original = path.read_bytes()
+    record = model.evidence['device/stop/stop']
+    record['text'] = 'void stop() { if (ready) cancelPending(); }'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    save()
+    with pytest.raises(ValueError, match='현재 입력'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+    with pytest.raises(ValueError, match='재생성'):
+        export_site(tmp_cfg)
+
+
 @pytest.mark.parametrize('extension', ['frag', 'vert', 'comp'])
 def test_generated_shader_explanation_is_cited_and_exported(tmp_cfg, generated, extension):
     from sdd.validate import check
@@ -175,6 +208,25 @@ def test_exhausted_thinking_budget_preserves_manuscript(tmp_cfg, generated, monk
     with pytest.raises(ValueError, match='출력 토큰 한도'):
         Generator(tmp_cfg, model, agent).run()
     assert len(calls) == 1
+    assert path.read_bytes() == original
+
+
+def test_source_revision_is_validated_and_is_not_approval(tmp_cfg, generated):
+    section, model, save, agent = generated
+    tmp_cfg.raw['review'] = {'design_revision': True}
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert len(agent.calls) == 2
+    assert 'Draft to check (untrusted, not evidence)' in agent.calls[1]
+    assert 'cancelPending' in agent.calls[1]
+    assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+    original = path.read_bytes()
+    good = agent.chat
+    def bad_revision(system, user, **kw):
+        result = good(system, user, **kw)
+        return result.replace('cancelPending', 'inventedFunction') if kw['tag'].endswith('_revision') else result
+    agent.chat = bad_revision
+    with pytest.raises(ValueError, match='실제 원문'):
+        Generator(tmp_cfg, model, agent).run()
     assert path.read_bytes() == original
 
 

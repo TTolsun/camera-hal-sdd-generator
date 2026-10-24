@@ -51,7 +51,7 @@ def normalize_symbols(text: str, model: KnowledgeModel) -> str:
     return re.sub(r"`([\w:]+)`", fix, text)
 
 
-def review(text: str, model: KnowledgeModel, supplied: set[str]) -> list[str]:
+def review(text: str, model: KnowledgeModel, supplied: set[str], *, source_identifiers: set[str] | None = None) -> list[str]:
     findings = []
     # A declared base may be a typedef/alias without its own ClassInfo.
     known = known_names(model)
@@ -76,7 +76,7 @@ def review(text: str, model: KnowledgeModel, supplied: set[str]) -> list[str]:
             absence = bool(re.search(r"존재하지 않|추출되지 않|포함되지 않|포함되어 있지 않", tail))
             if absence and candidate:
                 findings.append(f"현재 facts에 있는 클래스를 없다고 서술했습니다: {name}")
-            if "::" in name and not candidate and name not in model.functions:
+            if "::" in name and not candidate and name not in model.functions and name not in (source_identifiers or set()):
                 # Qualified methods and enumerators may not be class entities.
                 owner = name.rsplit("::", 1)[0]
                 if not absence and not any(n == owner or n.rsplit('::', 1)[-1] == owner for n in model.classes):

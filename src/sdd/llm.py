@@ -4,13 +4,15 @@
 - openai-compatible : Hermes 서비스나 vLLM 처럼 `/v1/chat/completions` 를 제공하는 사내 게이트웨이.
                       토큰이 필요하면 환경 변수 SDD_AGENT_API_KEY 로 넘긴다. 설정 파일에는 두지 않는다.
 - dry-run           : 호출하지 않고 build/prompts/ 에 프롬프트를 기록한다. 파이프라인 점검용.
+- response-bundle   : 입력 해시에 연결된 LLM 응답을 파일로 교환한다. 모델 실행은 별도 실행기 책임이다.
 
-외부 SaaS 는 지원하지 않는다. 코드가 사내 밖으로 나가면 안 된다.
+사내 소스와 파생 데이터는 사내 경계 안에서 처리해야 한다. 연결 대상과 파일 교환 실행기는 운영 환경에서 관리한다.
 """
 
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import urllib.error
 import urllib.request
@@ -35,7 +37,7 @@ class Agent:
             self.dump_dir.mkdir(parents=True, exist_ok=True)
             (self.dump_dir / f"{self._counter:03d}_{tag}.md").write_text(
                 f"<!-- system -->\n{system}\n\n<!-- user -->\n{user}\n", encoding="utf-8")
-            if response_schema and self.cfg.kind == 'ollama':
+            if response_schema and self.cfg.kind in ('ollama', 'response-bundle'):
                 (self.dump_dir / f"{self._counter:03d}_{tag}.schema.json").write_text(
                     json.dumps(response_schema, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         kind = self.cfg.kind
@@ -45,6 +47,8 @@ class Agent:
             text = self._ollama(system, user, response_schema) if response_schema else self._ollama(system, user)
         elif kind == "openai-compatible":
             text = self._openai(system, user)
+        elif kind == 'response-bundle':
+            text = self._response_bundle(system, user, response_schema)
         else:
             raise AgentError(f"알 수 없는 agent.kind: {kind}")
         if self.dump_dir:
@@ -56,6 +60,10 @@ class Agent:
         """doctor 용. 도달 가능하면 한 줄 요약, 아니면 예외."""
         if self.cfg.kind == "dry-run":
             return "dry-run (호출 없음)"
+        if self.cfg.kind == 'response-bundle':
+            if not self.cfg.response_dir:
+                raise AgentError('response-bundle에는 agent.response_dir가 필요합니다.')
+            return f'response-bundle/{self.cfg.model} (파일 교환; 모델 접속 검사는 아님)'
         if self.cfg.kind == "ollama":
             data = self._get(f"{self.cfg.base_url}/api/tags")
             names = [m.get("name", "") for m in data.get("models", [])]
@@ -66,6 +74,28 @@ class Agent:
         return f"openai-compatible 모델 {len(names)} 개, {self.cfg.model} {'있음' if self.cfg.model in names else '목록에 없음'}"
 
     # ---- transports ------------------------------------------------------
+
+    def _response_bundle(self, system, user, response_schema):
+        if not self.cfg.response_dir:
+            raise AgentError('response-bundle에는 agent.response_dir가 필요합니다.')
+        request = {'system': system, 'user': user, 'response_schema': response_schema}
+        key = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        directory = Path(self.cfg.response_dir)
+        directory.mkdir(parents=True, exist_ok=True)
+        envelope = {'schema': 1, 'model': self.cfg.model, 'request_sha256': key}
+        (directory / f'{key}.request.json').write_text(json.dumps(envelope | request, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        path = directory / f'{key}.response.json'
+        if not path.exists():
+            raise AgentError(f'현재 입력에 대응하는 LLM 응답이 없습니다: {path}')
+        try:
+            data = json.loads(path.read_text(encoding='utf-8'))
+            if not isinstance(data, dict) or any(data.get(k) != v for k, v in envelope.items()):
+                raise ValueError('입력 지문·모델·형식 버전이 다릅니다.')
+            if not isinstance(data.get('response'), str) or not data['response'].strip():
+                raise ValueError('응답 본문이 비었습니다.')
+        except (ValueError, OSError) as exc:
+            raise AgentError(f'LLM 응답 파일을 사용할 수 없습니다: {path}: {exc}') from exc
+        return data['response'].strip()
 
     def _ollama(self, system: str, user: str, response_schema: dict | None = None) -> str:
         body: dict = {
