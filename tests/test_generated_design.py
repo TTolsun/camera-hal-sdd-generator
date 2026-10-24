@@ -62,6 +62,24 @@ def test_generate_export_and_carryover_required_llm_answers(tmp_cfg, generated):
     export_site(tmp_cfg)
 
 
+@pytest.mark.parametrize('extension', ['frag', 'vert', 'comp'])
+def test_generated_shader_explanation_is_cited_and_exported(tmp_cfg, generated, extension):
+    from sdd.validate import check
+    section, model, save, agent = generated
+    filename = f'shaders/process.{extension}'
+    section['design_topics'][0]['sources'][0]['file'] = filename
+    model.evidence['device/stop/stop']['file'] = filename
+    save()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    text = path.read_text(encoding='utf-8')
+    assert f'`{filename}:10`' in text
+    assert verify(model, section, text)['status'] == 'documented'
+    export_site(tmp_cfg)
+    allowed = {f'{filename}:10'}
+    verdict = check(f'설명 ' * 40 + f'`{filename}:10` `https://wrong/{filename}:10`', allowed)
+    assert not verdict.ok and verdict.invalid == [f'https://wrong/{filename}:10']
+
+
 @pytest.mark.parametrize('change', ['missing', 'wrong_source', 'wrong_quote', 'wrong_question', 'limitation', 'uncertainty', 'uncited_paragraph', 'html'])
 def test_failed_llm_answer_preserves_all_pages(tmp_cfg, generated, change):
     section, model, save, agent = generated
@@ -102,6 +120,24 @@ def test_export_revalidates_llm_record(tmp_cfg, generated, change):
     with pytest.raises(ValueError, match='LLM'):
         export_site(tmp_cfg)
     assert (tmp_cfg.build_dir / 'site/site-manifest.json').read_bytes() == manifest
+
+
+def test_repeated_answer_is_rejected(tmp_cfg, generated):
+    section, model, save, agent = generated
+    from sdd.generated_design import materialize
+    with pytest.raises(ValueError, match='중복'):
+        materialize(model, section, {'stop': [agent.statement, agent.statement]})
+
+
+def test_no_quotable_excerpt_fails_before_model_call(tmp_cfg, generated):
+    section, model, save, agent = generated
+    record = model.evidence['device/stop/stop']
+    record['text'] = 'x' * 1700
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    save()
+    with pytest.raises(ValueError, match='인용 구절이 없습니다'):
+        Generator(tmp_cfg, model, agent).run()
+    assert not agent.calls
 
 
 def test_changed_source_regenerates_and_selects_overview_without_watch(tmp_cfg, generated):
@@ -175,9 +211,37 @@ def test_constrained_quote_choices_are_verbatim_source_spans():
     source = 'The handler shall not access\n * the request after completion.\n *\n * Return requests in order.'
     choices = quote_choices([source])
     assert 'The handler shall not access the request after completion.' in choices
+    assert 'The handler shall not access' not in choices
     assert all(quote in quote_text(source) for quote in choices)
     schema = response_schema({'sources': [{'id': 'source'}], 'covers': ['question']}, choices)
     assert schema['properties']['statements']['items']['properties']['quote']['enum'] == choices
+
+
+def test_quote_schema_binds_each_excerpt_to_its_source_id():
+    from sdd.generated_design import response_schema
+    topic = {'sources': [{'id': 'queue'}, {'id': 'complete'}], 'covers': ['lifecycle']}
+    quotes = {'queue': ['Queue the request.'], 'complete': ['Complete the request.']}
+    schema = response_schema(topic, [q for values in quotes.values() for q in values], quotes)
+    choices = schema['properties']['statements']['items']['anyOf']
+    for choice, (source, spans) in zip(choices, quotes.items()):
+        assert choice['required'] == ['quote', 'text', 'evidence', 'covers', 'kind']
+        assert choice['properties']['quote']['enum'] == spans
+        assert choice['properties']['evidence']['const'] == [source]
+        assert choice['properties']['covers']['items']['enum'] == ['lifecycle']
+        assert 'text' in choice['properties'] and 'kind' in choice['properties']
+
+
+def test_libcamera_design_documents_have_no_fixed_answers():
+    from pathlib import Path
+    from sdd.contract_schema import configuration_errors
+    sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
+    designs = [section for section in sections if section.get('design_requirements')]
+    assert len(designs) == 8
+    for section in designs:
+        assert section['design_generation'] == 'llm'
+        assert not configuration_errors(section)
+        assert all('statements' not in topic for topic in section['design_topics'])
+        assert all('sha256' not in source for topic in section['design_topics'] for source in topic['sources'])
 
 
 @pytest.mark.parametrize('profile', ['architecture', 'vendor'])
@@ -199,7 +263,8 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
         def chat(self, system, user, **kw):
             self.calls.append(user)
             statement = copy.deepcopy(base_agent.statement)
-            statement['covers'] = kw['response_schema']['properties']['statements']['items']['properties']['covers']['items']['enum']
+            statement_schema = kw['response_schema']['properties']['statements']['items']['anyOf'][0]
+            statement['covers'] = statement_schema['properties']['covers']['items']['enum']
             if len(self.calls) == 1:
                 statement['text'] = '요청을 취소합니다. ' * 80
             return json.dumps({'statements': [statement]}, ensure_ascii=False)

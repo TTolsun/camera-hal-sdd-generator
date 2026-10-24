@@ -58,16 +58,16 @@ def quote_text(text):
 
 
 def quote_choices(sources):
-    """Offer verbatim lines/paragraphs, never synthesized source statements."""
+    """Offer verbatim paragraphs, retaining conditions with their explanation."""
     choices = set()
     for source in sources:
         plain = re.sub(r'^\s*\*(?: |$)', '', source, flags=re.M)
-        chunks = plain.splitlines() + re.split(r'\n\s*\n', plain)
-        choices.update(quote_text(chunk) for chunk in chunks if 12 <= len(quote_text(chunk)) <= 800)
+        chunks = re.split(r'\n\s*\n', plain)
+        choices.update(quote_text(chunk) for chunk in chunks if 12 <= len(quote_text(chunk)) <= 1600)
     return sorted(choices)
 
 
-def response_schema(topic, quotes=None):
+def response_schema(topic, quotes=None, source_quotes=None):
     def ids(values):
         return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
     statement = {'type': 'object', 'additionalProperties': False,
@@ -77,8 +77,22 @@ def response_schema(topic, quotes=None):
                      'evidence': ids([s['id'] for s in topic['sources']]),
                      'covers': ids(topic['covers']),
                      'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
+    if source_quotes:
+        # Keep the selected quotation and its source together. A global quote
+        # enum alone lets the model attach a real quote to the wrong excerpt.
+        alternatives = []
+        for source_id, values in source_quotes.items():
+            if not values:
+                continue
+            branch = copy.deepcopy(statement)
+            branch['properties']['quote'] = {'type': 'string', 'enum': values}
+            branch['properties']['evidence'] = {'type': 'array', 'const': [source_id]}
+            alternatives.append(branch)
+        # Ollama's grammar conversion needs the entire object in each branch;
+        # sibling properties/required next to anyOf are not reliably retained.
+        statement = {'anyOf': alternatives}
     return {'type': 'object', 'additionalProperties': False, 'required': ['statements'],
-            'properties': {'statements': {'type': 'array', 'maxItems': 4, 'items': statement}}}
+            'properties': {'statements': {'type': 'array', 'maxItems': 8, 'items': statement}}}
 
 
 def materialize(model, section, answers):
@@ -93,6 +107,7 @@ def materialize(model, section, answers):
         statements = answers[topic['id']]
         if not isinstance(statements, list) or not statements:
             raise ValueError(f"{topic['id']}: 생성된 설명이 없습니다.")
+        seen = set()
         for st in statements:
             if not isinstance(st, dict) or set(st) - {'quote', 'text', 'evidence', 'covers', 'kind'}:
                 raise ValueError('LLM 설명의 필드가 올바르지 않습니다.')
@@ -103,6 +118,10 @@ def materialize(model, section, answers):
                 raise ValueError(f"{topic['id']}: 다른 주제의 질문에 답할 수 없습니다.")
             if not isinstance(st.get('text'), str) or not st['text'].strip():
                 raise ValueError('LLM 설명이 비었습니다.')
+            normalized = ' '.join(st['text'].split())
+            if normalized in seen:
+                raise ValueError('LLM 설명 문단이 중복됐습니다. 각 문단은 서로 다른 내용을 설명해야 합니다.')
+            seen.add(normalized)
             quote = st.get('quote')
             if not isinstance(quote, str) or len(quote.strip()) < 12:
                 raise ValueError('각 설명에는 직접 근거로 삼은 원문 구절 quote가 필요합니다.')
@@ -180,7 +199,7 @@ def generate(generator, section):
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
     from .prompting import compose_system_prompt
     system = compose_system_prompt(cfg) + (
-        '\n\n이 호출의 출력 형식은 구조화된 JSON입니다. 위의 Markdown 출력 및 파일:줄 인용 지시를 '
+        '\n\n이 호출의 출력 형식은 구조화된 JSON입니다. 위의 두 문단 분량 제한, Markdown 출력 및 파일:줄 인용 지시를 '
         '이 호출에서는 적용하지 않습니다. text에 한국어 문단을 쓰고 evidence에는 제공된 소스 키를 '
         '그대로, covers에는 제공된 질문 키를 그대로 복사합니다. id에 줄 번호나 접두사를 붙이지 마세요. '
         '인용·제목·링크는 생성기가 연결합니다. kind는 behavior 또는 limitation 중 하나입니다. '
@@ -189,7 +208,7 @@ def generate(generator, section):
         '프레임워크를 호출하는 쪽과 인터페이스를 구현하는 쪽의 책임을 구분하세요. '
         '함수 전체의 코드 근거가 없으면 추가 검증 유무·소유권·즉시 실행·스레드 보장을 추정하지 마세요. '
         '각 설명마다 먼저 직접 근거인 영어 주석이나 코드 구절을 quote에 원문 그대로 복사하고, '
-            'text에는 선택한 quote의 조건과 예외를 빠짐없이 한국어로 옮기세요. '
+            'text에는 선택한 quote의 조건과 예외를 빠짐없이 한국어로 옮기세요. 코드 구절은 발췌 전체의 제어 흐름 안에서 해석하세요. '
         'before와after, must와must not, null 반환과 프록시 선택을 바꾸지 마세요. '
             'quote 밖의 추론이나 일반적인 위험 설명을 덧붙이지 마세요. '
             '소스의 접근 금지를 메모리 해제 의무로, 함수 선언을 실행 결과 보장으로 바꾸지 마세요. '
@@ -198,7 +217,10 @@ def generate(generator, section):
     answers = {}
     for topic in section['design_topics']:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
-        quotes = quote_choices(sources.values())
+        source_quotes = {key: quote_choices([value]) for key, value in sources.items()}
+        quotes = sorted({quote for values in source_quotes.values() for quote in values})
+        if not quotes:
+            raise ValueError(f"{section['id']}/{topic['id']}: LLM에 제공할 인용 구절이 없습니다. 소스 선택자를 확인하세요.")
         request = {'reader': section.get('reader', ''), 'topic': topic['question'],
                    'requirements': {key: requirements[key] for key in topic['covers']}, 'sources': sources,
                    'quote_choices': quotes}
@@ -208,7 +230,8 @@ def generate(generator, section):
             '각 필수 질문에 behavior 설명이 있어야 합니다. 답을 찾을 수 없으면 빈 statements로 반환하세요. '
             '실기기·스레드·성능 등 추가 확인은 limitation으로 분리하세요. '
             '클래스·함수 이름은 백틱으로 감싸세요. 링크, 인용 위치, 표, 제목, 그림은 생성기가 만듭니다. '
-            '설명은 주제당 2~3개의 짧은 문단으로 작성하고 각 text는 줄바꿈 없는 한 문단으로 쓰세요. '
+            '필수 질문에 포함된 조건·분기·반환값과 각 소스의 역할을 빠뜨리지 않도록 최대 8개의 짧은 문단으로 작성하세요. '
+            '각 text는 줄바꿈 없는 한 문단으로 쓰고, 함수 이름을 밝혀 서로 다른 함수의 계약을 섞지 마세요. '
             'quote는 quote_choices 중 해당 설명을 뒷받침하는 구절 하나를 그대로 선택하세요. '
             'JSON 객체만 반환하세요: {"statements":[{"quote":"소스의 실제 원문 구절", "text":"설명합니다.",'
             '"evidence":["소스 id"],"covers":["질문 id"],"kind":"behavior 또는 limitation"}]}\n'
@@ -222,7 +245,7 @@ def generate(generator, section):
                 raise ValueError(f"{section['id']}/{topic['id']}: 필수 근거 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
             # Ollama supports constrained JSON; generic compatible gateways still
             # use the portable prompt + parser/validator and need no schema API.
-            options = {'response_schema': response_schema(topic, quotes)} if cfg.agent.kind == 'ollama' else {}
+            options = {'response_schema': response_schema(topic, quotes, source_quotes)} if cfg.agent.kind == 'ollama' else {}
             raw = generator.agent.chat(system, user, tag=f"{section['id']}_{topic['id']}_{attempt}", **options)
             try:
                 cleaned = re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip())
