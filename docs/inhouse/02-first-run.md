@@ -1,6 +1,6 @@
 # 2단계: 첫 실행 (NDK-build · legacy HAL3)
 
-**사내 설정 템플릿을 복사하고 아래 4단계를 순서대로 진행하세요.** 각 단계의 확인 값이 맞지 않으면 다음 단계로 넘어가지 않고 [문제 해결](troubleshooting.md)을 봅니다. 처음이면 1시간 정도 걸립니다(추출 시간은 소스 규모에 따라 10~30분).
+**사내 설정 템플릿을 복사하고 아래 4단계를 순서대로 진행하세요.** 각 단계의 확인 값이 맞지 않으면 다음 단계로 넘어가지 않고 [문제 해결](troubleshooting.md)을 봅니다.
 
 ```
 1단계 준비물 → [2단계 첫 실행] → 3단계 갱신 시스템 → 4단계 사람 검토
@@ -8,7 +8,7 @@
 
 ## 1. 설정 디렉터리 만들기
 
-5분 정도 걸립니다. 생성기 저장소의 [사내 설정 템플릿](../../examples/inhouse-template/)을 생성기 저장소 옆으로 복사합니다. 사내 클래스명과 설명이 들어가므로 이 디렉터리는 사내 저장소에서 관리합니다.
+생성기 저장소의 [사내 설정 템플릿](../../examples/inhouse-template/)을 생성기 저장소 옆으로 복사합니다. 사내 클래스명과 설명이 들어가므로 이 디렉터리는 사내 저장소에서 관리합니다.
 
 ```text
 workspace/
@@ -19,28 +19,26 @@ workspace/
 
 ## 2. sdd.yaml 채우기
 
-10분 정도 걸립니다. 복사한 `sdd.yaml`에서 `<...>`로 표시한 칸을 채웁니다.
+복사한 `sdd.yaml`에서 `<...>`로 표시한 칸을 채웁니다.
 
 1. `site.source_url`: 인용을 연결할 사내 코드 열람 주소. Gitiles가 아니면 `source_link`도 바꿉니다.
 2. `source.ndk_build.args`: 제품 빌드와 같은 ndk-build 인자.
 3. 경로가 위 배치와 다르면 `source.root`, `ndk_build.project_dir`, `paths.*`를 고칩니다.
 
-템플릿은 모델 없이(`agent.kind: dry-run`) 시작하고, Mermaid 동봉과 승인 없는 문서의 게시 차단을 켜 둡니다. 키의 뜻은 [설정 참조](../reference/config.md)에 있습니다.
+템플릿은 모델 없이(`agent.kind: dry-run`) 시작하고, Mermaid 동봉과 승인 전 로컬 미리보기를 사용합니다. 게시 전에 사람 승인 정책에 맞춰 `site.require_approval`을 적용합니다. 키의 뜻은 [설정 참조](../reference/config.md)에 있습니다.
 
 ## 3. 무엇을 문서화할지 정하기
 
-30분 이상 걸립니다. 사내 네임스페이스와 진입점 수에 따라 늘어납니다.
+실제 제품에서 빌드한 범위와 문서가 답할 질문을 정합니다.
 
 1. `config/scenarios.yaml`의 `<namespace>`와 시그니처를 실제 정의로 바꿉니다. 규칙은 [HAL3 진입점 작성 규칙](../reference/sections.md#hal3-진입점-작성-규칙)에 있습니다.
-2. `config/sections.yaml`의 클래스 패턴을 사내 이름에 맞추고, `vendor-contract`·`overview`의 필수 질문에 소스 근거와 답변을 작성합니다. 빈 계약으로는 생성할 수 없습니다. [공통 품질 기준](../concepts/reader-quality.md)의 순서를 따릅니다.
+2. `config/sections.yaml`의 클래스 패턴을 사내 이름에 맞추고, `vendor-contract`·`overview`의 필수 질문에 소스 근거와 답변을 작성합니다. 빈 계약으로는 생성할 수 없습니다. [계약 작성 절차](contract-authoring.md)를 따릅니다. 사내 에이전트가 이 작업을 직접 수행할 수 있습니다.
 3. `config/glossary.yaml`에 사내 약어의 뜻을 적습니다. `export-site`는 뜻이 없는 약어를 알려 주고 게시를 멈춥니다. 형식은 [glossary.yaml 참조](../reference/glossary.md)에 있습니다.
 4. `components` 섹션은 **구성 요소 색인**으로 켜 두었습니다(`narration: facts`, 클래스·함수 `'*'`). 빌드한 모든 코드가 한 문서에 실리므로, 문서가 다루지 않는 코드가 바뀔 때마다 갱신이 멈추는 일이 크게 줄어듭니다. 끄지 않습니다.
 
 ## 4. 실행하기
 
-`extract` 후에는 발췌 원문을 확인하고 해시와 답변을 채운 뒤 `generate`를 실행합니다. 첫 설정만으로 계약의 의미를 자동 완성하지 않습니다.
-
-20~40분 정도 걸립니다.
+`extract` 후에는 발췌 원문을 확인하고 해시와 답변을 채운 뒤 `generate`를 실행합니다. 첫 설정만으로 계약의 의미를 자동 완성하지 않습니다. 이 문서는 NDK-build 사례이며 다른 빌드는 [환경별 선택](agent.md#1-환경과-데이터-경계)을 따릅니다.
 
 생성기 저장소 루트에서 하나씩 실행합니다. 첫 명령은 ndk-build로 compile DB를 만들고 정규화합니다. 새 체크아웃에는 DB가 없으므로 `doctor`보다 먼저 실행합니다.
 

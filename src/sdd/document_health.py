@@ -80,7 +80,12 @@ def paragraphs(text):
     body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
     body = re.sub(r"(?ms)^\s*(`{3,}|~{3,})[^\n]*\n.*?^\s*\1\s*$", "", body)
     body = re.split(r'(?m)^(?:\?\?\? note "근거와 검토 정보"|## (?:근거와 검토 정보|다음 단계)\s*$)', body)[0]
-    lines = ["" if re.match(r"\s*(?:#{1,6}\s|\||>|<|\[.*\]:|다음 단계:)", line) else line
+    # Reused source navigation is not prose. Match only the generated link list,
+    # so a sentence merely beginning with this label still receives normal checks.
+    evidence_link = r"\[[^\]\n]+:\d+\]\(#source-[0-9a-f]{16}\)"
+    evidence_nav = re.compile(r"근거 원문: " + evidence_link + r"(?: · " + evidence_link + r")*")
+    lines = ["" if (re.match(r"\s*(?:#{1,6}\s|\||>|<|\[.*\]:|다음 단계:)", line)
+                    or evidence_nav.fullmatch(line.strip())) else line
              for line in body.splitlines()]
     return [re.sub(r"\s+", " ", block).strip() for block in
             re.split(r"\n\s*\n", "\n".join(lines)) if block.strip()]
