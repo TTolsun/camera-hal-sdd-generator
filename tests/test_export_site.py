@@ -45,7 +45,7 @@ def test_site_preserves_verdicts_and_links_nested_pages(tmp_cfg, sample_model):
     nested = (out / 'nested/detail.html').read_text(encoding='utf-8')
     assert 'href="nested/detail.html#methods"' in doc
     assert 'href="../device.html#evidence"' in nested
-    assert 'href="../assets/reading.css"' in nested
+    assert 'href="../assets/reading.css?v=' in nested
     assert 'Test &lt;Site&gt;' in doc
     assert 'id="한글-목차"' in doc and 'href="#한글-목차"' in doc
     assert '사람 검토 전' in doc and 'needs-review' in doc
