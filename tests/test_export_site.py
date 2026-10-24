@@ -428,3 +428,26 @@ def test_require_approval_은_미승인_문서의_게시를_차단한다(tmp_cfg
     page.write_text(page.read_text(encoding='utf-8') + '\n추가 문장.\n', encoding='utf-8')
     with pytest.raises(RuntimeError, match='require_approval'):
         export_site(tmp_cfg)
+
+
+def test_configured_next_overrides_menu_order_and_preserves_anchor(tmp_cfg, sample_model):
+    import yaml
+    prepare(tmp_cfg, sample_model)
+    sections = tmp_cfg.sections()
+    sections[0]['next']['link'] = 'device.md#evidence'
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': sections}), encoding='utf-8')
+    out = export_site(tmp_cfg)
+    page = (out / 'device.html').read_text(encoding='utf-8')
+    assert '<a class="next" href="device.html#evidence">' in page
+
+
+def test_navigation_table_has_mobile_layout_without_changing_data_tables(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    path = tmp_cfg.sdd_dir / 'device.md'
+    with path.open('a', encoding='utf-8') as f:
+        f.write('\n| 지금 확인할 내용 | 이동할 절 |\n|---|---|\n| 확인합니다. | [근거](#evidence) |\n')
+        f.write('\n| 데이터 | 값 |\n|---|---|\n| 상태 | 정상 |\n')
+    out = export_site(tmp_cfg)
+    page = (out / 'device.html').read_text(encoding='utf-8')
+    assert page.count('class="table-scroll reading-routes"') == 1
+    assert page.count('class="table-scroll"') == 1

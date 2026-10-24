@@ -10,79 +10,41 @@ LLM 은 표만으로 알 수 없는 관계와 순서를 서술하는 문단만 �
 
 from __future__ import annotations
 
-import datetime as dt
-import fnmatch
 import json
-import os
 import re
-from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .budget import Block, fit
+from .budget import Block
 from .config import Config, section_output
 from .diagrams import diagram_block, section_diagram
-from .document_metadata import generation_info, generation_method
-from .design_contracts import audit as audit_design, coverage_table, source_details
+from .document_metadata import generation_method
+from .design_contracts import audit as audit_design
+from .contract_render import coverage_table, SourceDetails
 from .scenario_document import build as scenario_document, hidden_message, fingerprint as scenario_fingerprint
 from .facts.model import ClassInfo, FunctionInfo, KnowledgeModel
 from .impact import ImpactReport
 from .matching import is_anonymous, matches_symbol, package_of, package_selected
-from .llm import Agent, AgentError
+from .narration import Narrator, ChatPort
+from .page_writer import PageWriter
+from .fact_presenter import FactPresenter
+from .markdown_text import slugify
+from .prompting import style_rules, compose_system_prompt
+from .validate import Verdict, extract_citations
+from .llm import AgentError
 from . import generated_design
-from .manuscript import describe, lint, unwrap
-from .validate import Verdict, check, extract_citations, normalize_citations, strip_echo, strip_headings
 from .evidence import contract_text, fingerprint, requires_fingerprint, topic_blocks
-from .semantic import known_names, normalize_symbols, relation_facts, structural_text, review as semantic_review
+from .semantic import relation_facts, structural_text
 
 _FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
-_YAML_FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
-_MAX_READING = 6
-# 개요의 의존 표에 싣는 방향 수. 넘으면 관계가 많은 순으로 자르고 자른 개수를 문서에 적는다.
-_MAX_DEPS = 20
-
-
-def slugify(text: str) -> str:
-    """pymdownx.slugs.slugify(case=lower) 와 같은 규칙. 한글 제목도 앵커가 된다."""
-    text = re.sub(r"[^\w\s-]", "", text.strip().lower())
-    return re.sub(r"[-\s]+", "-", text)
-
-
-def style_rules(readme_text: str) -> str:
-    """style/README.md 에서 번호 붙은 규칙만 뽑는다.
-
-    README 전체(출처 링크, brief.mjs 설명)를 넣으면 소형 모델이 그 문서를 그대로 되풀이하는 일이 있었다.
-    번호 붙은 집필 규칙만 넣어 출처 설명의 재출력을 피하고 프롬프트를 짧게 유지한다."""
-    rules = [l.strip() for l in readme_text.splitlines() if re.match(r"^\s*\d+\.\s", l)]
-    return "개발자 가이드 집필 규칙:\n" + "\n".join(rules) if rules else readme_text.strip()
-
-
-def compose_system_prompt(cfg: Config) -> str:
-    """prompts/system.md + style/README.md 의 규칙 (+ 원문 두 개, 설정 시). omm-doc-workflow 의 brief.mjs 와 같은 방식."""
-    parts = [(cfg.prompts_dir / "system.md").read_text(encoding="utf-8").strip()]
-    readme = cfg.style_dir / "README.md"
-    if readme.exists():
-        parts.append(style_rules(readme.read_text(encoding="utf-8")))
-    if cfg.agent.full_style_guides:
-        for name in ("i-have-adhd.md", "fluent-korean.md"):
-            p = cfg.style_dir / name
-            if p.exists():
-                parts.append(_YAML_FRONTMATTER.sub("", p.read_text(encoding="utf-8"), count=1).strip())
-    return "\n\n---\n\n".join(parts)
 
 
 class Generator:
-    def __init__(self, cfg: Config, model: KnowledgeModel, agent: Agent):
+    def __init__(self, cfg: Config, model: KnowledgeModel, agent: ChatPort):
         self.cfg = cfg
         self.model = model
         self.agent = agent
-        self.system = compose_system_prompt(cfg)
-        self.section_tpl = (cfg.prompts_dir / "section.md").read_text(encoding="utf-8")
-        self.page_tpl = (cfg.templates_dir / "page.md").read_text(encoding="utf-8")
         self.allowed = model.citations()
-        # 본문에서 코드 표기 없이 나오면 안 되는 이름. 한정 이름과 마지막 마디를 모두 본다.
-        self.symbols = {n for n in known_names(model) if n}
-        self.symbols |= {n.rsplit("::", 1)[-1] for n in set(self.symbols) if "::" in n}
         self.reviews: dict[str, dict] = {}
         self.generated_designs: dict[str, tuple] = {}
         # routes 표의 링크 글자: 페이지 링크는 섹션 제목, 앵커 링크는 본문의 ## 제목 원문을 쓴다.
@@ -92,6 +54,10 @@ class Generator:
         # 읽는 사람이 호출이 일어나는 차례대로 따라갈 수 있다.
         self.scenario_order = [sc["id"] for sc in cfg.scenarios()]
         self.scenario_cfg = {sc["id"]: sc for sc in cfg.scenarios()}
+        self.narrator = Narrator(cfg, model, agent, self._record_review)
+        self.writer = PageWriter(cfg, model, self.page_titles)
+        self.facts = FactPresenter(model, cfg.package_depth)
+
 
     # ---- 진입점 ------------------------------------------------------------
 
@@ -101,7 +67,7 @@ class Generator:
         selected = [s for s in self.cfg.sections()
                     if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)]
         reports = {s['id']: audit_design(self.model, s) for s in selected
-                   if s.get('design_requirements') and not generated_design.enabled(s)}
+                   if (s.get('design_requirements') or s.get('reader_profile')) and not generated_design.enabled(s)}
         # Generate and validate every required LLM answer before replacing any page.
         # Failed responses remain in the agent's prompt logs; old manuscripts survive.
         self.generated_designs = {}
@@ -195,6 +161,7 @@ class Generator:
 
         if sec.get("design_topics"):
             parts, omitted, verdict = [], [], Verdict(ok=True)
+            sources = SourceDetails()
             for topic in sec["design_topics"]:
                 evidence, gaps = topic_blocks(evidence_model, sec["id"], topic)
                 topic_sec = {**sec, "answers": [topic["question"]], "semantic_review": True}
@@ -210,7 +177,7 @@ class Generator:
                                         mode="generated-prose" if generated_design.enabled(original) else "source-bound-contract")
                 else:
                     text, missing, current = self._ask(tag, topic_sec, topic["title"], evidence, "")
-                detail = source_details(evidence_model, sec['id'], topic) if sec.get('show_evidence') and current.ok else ''
+                detail = sources.links(evidence_model, sec['id'], topic) if sec.get('show_evidence') and current.ok else ''
                 parts.append(f"## {topic['title']}\n\n{text}" + (f"\n\n{detail}" if detail else ''))
                 blocks += evidence
                 omitted += missing
@@ -218,7 +185,9 @@ class Generator:
                     verdict.ok = False
                     verdict.notes += current.notes
             if sec.get('design_requirements'):
-                parts.insert(0, coverage_table(evidence_model, sec))
+                parts.append(coverage_table(evidence_model, sec))
+            if sources.records:
+                parts.append(sources.render())
             prose = "\n\n".join(parts)
         elif sec.get("narration") == "facts":
             selected = {c.name for c in self._sorted_classes() if _match_class(c, sec)}
@@ -450,74 +419,8 @@ class Generator:
 
     # ---- LLM 호출 ------------------------------------------------------------
 
-    def _ask(self, tag: str, sec: dict[str, Any], title: str, blocks: list[Block],
-             existing: str) -> tuple[str, list[str], Verdict]:
-        # Prior prose is not evidence. In particular, an A-side absence claim
-        # must not contaminate B after a class is added.
-        if sec.get("semantic_review"):
-            existing = ""
-        if existing:
-            blocks = blocks + [Block("existing", existing, 9)]
-        reserved = len(self.system) + len(self.section_tpl) + len(title) + 400
-        facts, omitted = fit(blocks, self.cfg.agent.max_input_chars, reserved=reserved)
-        existing_txt = existing if existing and "existing" not in omitted else "(없음)"
-        answers = "\n".join(f"- {a}" for a in (sec.get("answers") or ["이 절의 독자가 알아야 하는 구조와 관계는 무엇인가?"]))
-        fields = {"title": title, "reader": sec.get("reader", "이 HAL 을 수정하는 개발자"),
-                  "answers": answers, "facts": facts}
-        user = self.section_tpl.format(**fields, existing=existing_txt)
-        # 메아리 판정에서 기존 본문은 뺀다. 프롬프트가 "구조를 유지하고 바뀐 부분만 고치라" 고
-        # 지시하므로 모델이 기존 문장을 그대로 다시 쓰는 것이 정상이다. 그 문장까지 메아리로
-        # 지우면 증분 생성에서 본문이 통째로 사라지고 빈 페이지가 남는다.
-        echo_source = self.system + "\n" + self.section_tpl.format(**fields, existing="(없음)")
-        if existing:
-            # 기존 본문은 사실 블록으로도 들어가므로 렌더링된 프롬프트에서 한 번 더 뺀다.
-            echo_source = echo_source.replace(existing, "")
-        # 페이지 머리말(lead)은 뼈대가 굵게 한 번 찍는다. 모델이 그 문장을 본문 첫 줄로 다시 쓰면
-        # 같은 문장이 두 번 보이므로 메아리로 본다.
-        if sec.get("lead"):
-            echo_source += "\n" + str(sec["lead"])
-        if self.cfg.agent.kind == "dry-run":
-            # 프롬프트만 기록한다. 검증할 출력이 없으므로 사람이 볼 문서로 표시한다.
-            text = self.agent.chat(self.system, user, tag=tag)
-            verdict = Verdict(ok=False, notes=["dry-run: LLM 을 호출하지 않았습니다."])
-            self._record_review(tag, text, verdict, omitted)
-            return text, omitted, verdict
-
-        verdict = Verdict(ok=False)
-        text = ""
-        for attempt in range(self.cfg.max_retries + 1):
-            raw = self.agent.chat(self.system, user, tag=f"{tag}_{attempt}")
-            text = normalize_symbols(normalize_citations(unwrap(raw), self.allowed), self.model)
-            text = strip_headings(strip_echo(text, echo_source))
-            verdict = check(text, self.allowed, require=self.cfg.require_citations)
-            cite_failed = not verdict.ok
-            # 인용과 별개로 문장 형태 위반(종결어미, 대화체, 프롬프트 누설)도 반려 사유다.
-            problems = lint(text, self.symbols)
-            if problems:
-                verdict.ok = False
-                verdict.notes.extend(describe(problems))
-            if sec.get("semantic_review"):
-                findings = semantic_review(text, self.model, set(extract_citations(facts)))
-                if omitted:
-                    findings.append("설명 입력에서 근거 블록이 생략됐습니다: " + ", ".join(omitted))
-                if findings:
-                    verdict.ok = False
-                    verdict.notes.extend(findings)
-            if verdict.ok:
-                break
-            retry_note = ("\n\n## 이전 출력의 문제\n" + "\n".join(f"- {n}" for n in verdict.notes)
-                          + "\n위 문제를 고쳐서 다시 씁니다.")
-            user += retry_note
-            echo_source += retry_note
-            if cite_failed:
-                # 인용 검증 실패에만 인용 복사 지시를 붙인다. 린트만 실패했을 때는 문장 교정에 집중시킨다.
-                usable = list(dict.fromkeys(extract_citations(facts)))[:12]
-                cite_note = (" 사실 블록에 적힌 `파일:줄` 을 디렉터리까지 그대로 복사해서 인용합니다."
-                             + ("\n인용할 수 있는 위치 예: " + ", ".join(f"`{c}`" for c in usable) if usable else ""))
-                user += cite_note
-                echo_source += cite_note
-        self._record_review(tag, text, verdict, omitted)
-        return text, omitted, verdict
+    def _ask(self, tag, sec, title, blocks, existing):
+        return self.narrator.ask(tag, sec, title, blocks, existing)
 
     def _record_review(self, tag: str, text: str, verdict: Verdict, omitted: list[str], mode: str = "generated-prose") -> None:
         self.reviews[tag] = {"status": _status(verdict), "findings": verdict.notes,
@@ -532,56 +435,17 @@ class Generator:
 
     # ---- 사실에서 만드는 표와 목록 -------------------------------------------------
 
-    def _sorted_classes(self) -> list[ClassInfo]:
-        return sorted(self.model.classes.values(), key=lambda x: x.name)
+    def _sorted_classes(self, *args, **kwargs):
+        return self.facts._sorted_classes(*args, **kwargs)
 
-    def _package_table(self, pats: list[str]) -> str:
-        rows = ["| 패키지 | 클래스 수 | 대표 클래스 |", "|---|---|---|"]
-        for name in sorted(self.model.packages):
-            if not _pkg_selected(name, pats):
-                continue
-            p = self.model.packages[name]
-            # 익명 구조체의 libclang 이름에는 파싱한 기계의 절대 경로가 들어간다. 대표 클래스에서 뺀다.
-            named = [c for c in p.classes if not is_anonymous(c)]
-            reps = ", ".join(f"`{c}`" for c in named[:5]) or "(이름 있는 클래스 없음)"
-            rows.append(f"| `{name}` | {len(p.classes)} | {reps} |")
-        return "\n".join(rows)
+    def _package_table(self, *args, **kwargs):
+        return self.facts._package_table(*args, **kwargs)
 
-    def _package_deps_table(self, pats: list[str]) -> str:
-        # 패키지 표에 없는 이름은 의존 표에서도 뺀다. 두 표의 기준이 다르면 읽는 사람이
-        # 표에 없는 패키지를 근거 없이 추측하게 된다.
-        pkg_of = {name: c.package for name, c in self.model.classes.items() if c.package}
-        edges: Counter[tuple[str, str, str]] = Counter()
-        for r in self.model.relations:
-            s, t = pkg_of.get(r.source), pkg_of.get(r.target)
-            if s and t and s != t and _pkg_selected(s, pats) and _pkg_selected(t, pats):
-                edges[(s, t, r.type)] += 1
-        if not edges:
-            return ""
-        # 같은 방향의 상속과 필드 참조를 한 줄로 합친다. 종류마다 줄을 나누면 개요에서
-        # 읽어야 할 줄이 두 배가 되고, 어느 방향이 굵은지가 보이지 않는다.
-        pairs: dict[tuple[str, str], dict[str, int]] = {}
-        for (src, dst, typ), n in edges.items():
-            pairs.setdefault((src, dst), {"inheritance": 0, "association": 0})[typ] = n
-        ordered = sorted(pairs.items(), key=lambda kv: (-sum(kv[1].values()), kv[0]))
-        rows = ["| 방향 | 상속 | 필드 참조 |", "|---|---|---|"]
-        for (src, dst), counts in ordered[:_MAX_DEPS]:
-            rows.append(f"| `{src}` → `{dst}` | {counts['inheritance']} | {counts['association']} |")
-        if len(ordered) > _MAX_DEPS:
-            rows.append("")
-            rows.append(f"관계가 많은 순으로 {_MAX_DEPS} 개만 실었습니다. 나머지 {len(ordered) - _MAX_DEPS} 개 방향은"
-                        " `facts.json` 의 `relations` 에 있습니다.")
-        return "\n".join(rows)
+    def _package_deps_table(self, *args, **kwargs):
+        return self.facts._package_deps_table(*args, **kwargs)
 
-    def _entrypoint_table(self, pats: list[str]) -> str:
-        rows = ["| 함수 | 위치 | 설명 |", "|---|---|---|"]
-        for name in sorted(self.model.functions):
-            if not matches_symbol(name, pats):
-                continue
-            fn = self.model.functions[name]
-            loc = next((l for l in (fn.def_loc, fn.loc) if l), None)
-            rows.append(f"| `{name}()` | {f'`{loc.cite()}`' if loc else '위치 없음'} | {fn.brief or '확인 필요'} |")
-        return "\n".join(rows) if len(rows) > 2 else ""
+    def _entrypoint_table(self, *args, **kwargs):
+        return self.facts._entrypoint_table(*args, **kwargs)
 
     def _ordered_scenarios(self) -> list[tuple[str, Any]]:
         """scenarios.yaml 에 적은 순서대로 돌려준다.
@@ -603,53 +467,17 @@ class Generator:
 
     def _reading_order(self, scenario_id: str) -> str:
         sc = self.model.scenarios.get(scenario_id)
-        if not sc or not sc.messages:
+        if not sc:
             return ""
-        shown, hidden = self._visible_messages(sc)
-        seen: list[tuple[str, str]] = []
-        for m in shown:
-            if not m.loc:
-                continue
-            key = (m.loc.file, m.name)
-            if all(f != m.loc.file for f, _ in seen):
-                seen.append(key)
-            if len(seen) >= _MAX_READING:
-                break
-        if not seen:
-            return ""
-        lines = [f"{i}. `{f}` 에서 `{fn}()` 부분을 읽습니다." for i, (f, fn) in enumerate(seen, start=1)]
-        lines.append(f"\n이 순서는 `{sc.title}` 시나리오의 호출 경로에서 만들었습니다. "
-                     f"자세한 흐름은 시나리오 문서 [{sc.title}](scenarios/{sc.id}.md) 에서 확인하세요.")
-        if hidden:
-            lines.append(f"\n로깅과 접근자 호출 {hidden} 개는 `hide` 규칙에 따라 이 순서에서 뺐습니다.")
-        return "\n".join(lines)
+        # Call-site locations are not callee definitions. Start at the configured
+        # entry, then follow the scenario's curated boundaries instead of accessors.
+        return (f"1. 진입점 `{sc.entry}`의 입력 검사와 반환 조건을 확인합니다.\n"
+                f"2. [{sc.title}](scenarios/{sc.id}.md)에서 주요 호출과 추적 경계를 확인합니다.\n"
+                "3. 예약된 호출과 완료 통지를 구분하고, 실행 스레드는 연결 코드와 대조합니다.")
 
 
-    def _entity_files(self, sec: dict[str, Any]) -> set[str]:
-        """표에 file:line 이 없는 절(개요)에서도 근거 파일을 남기기 위해, 표에 오른 엔티티의 파일을 모은다."""
-        facts = sec.get("facts", {})
-        files: set[str] = set()
-        pkg_pats = facts.get("packages") or []
-        for name, p in self.model.packages.items():
-            if any(fnmatch.fnmatch(name, pat) for pat in pkg_pats):
-                for cname in p.classes:
-                    c = self.model.classes.get(cname)
-                    if c and c.loc:
-                        files.add(c.loc.file)
-        fn_pats = facts.get("functions") or []
-        # 패키지 색인은 고른 패키지의 함수만 싣는다. 싣지 않은 함수의 파일을 근거로 적지 않는다.
-        by_package = sec.get("kind") == "per-package" and bool(pkg_pats)
-        for name, fn in self.model.functions.items():
-            if matches_symbol(name, fn_pats):
-                locs = [l for l in (fn.def_loc, fn.loc) if l]
-                if by_package and not any(package_selected(package_of(l.file, self.cfg.package_depth), pkg_pats)
-                                          for l in locs):
-                    continue
-                files.update(l.file for l in locs)
-        sc = self.model.scenarios.get(str(facts.get("reading_order", "")))
-        if sc:
-            files.update(m.loc.file for m in sc.messages if m.loc)
-        return files
+    def _entity_files(self, *args, **kwargs):
+        return self.facts._entity_files(*args, **kwargs)
 
     def _diagram_ref(self, name: str | None) -> str:
         if not name:
@@ -674,7 +502,7 @@ class Generator:
         path = self.cfg.sdd_dir / sec.get("output", f"{sec['id']}.md")
         page = self._render(title=sec["title"], lead=sec.get("lead", ""), body=body,
                             routes=routes or _routes_from_config(sec) or
-                                   (None if sec.get('design_requirements') else _routes_from_headings(body)),
+                                   _routes_from_headings(body),
                             evidence=self._evidence_lines(blocks, tables, verdict, omitted, self._entity_files(sec)),
                             next_link=_next_of(sec), status=status, omitted=omitted, extra=extra, page_path=path)
         if generated_design.enabled(sec):
@@ -685,60 +513,17 @@ class Generator:
             generated_design.verify(self.model, sec, page)
         return self._write(path, page)
 
-    def _render(self, title: str, lead: str, body: str, routes: list[tuple[str, str]] | None, evidence: str,
-                next_link: tuple[str, str], status: str, omitted: list[str], extra: dict[str, str],
-                page_path: Path) -> str:
-        meta = {
-            "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
-            "source_commit": self.model.meta.get("source_commit", ""),
-            "status": status,
-            **extra,
-        }
-        method = extra.get("generation_method", "")
-        if method in ("facts-and-llm", "mixed"):
-            meta["agent"] = f"{self.cfg.agent.kind}/{self.cfg.agent.model}"
-        label, scope = generation_info(method)
-        evidence = f"    - 생성 방식: {label}\n    - 검증 범위: {scope}\n" + evidence
-        fm = "\n".join(f"{k}: {v}" for k, v in meta.items())
-        if omitted:
-            fm += "\nfacts_omitted:\n" + "\n".join(f"  - {o}" for o in omitted)
-        routes_md = ""
-        if routes:
-            headings = {slugify(h): h for h in re.findall(r"^## (.+)$", body, re.M)}
-            routes_md = "| 지금 확인할 내용 | 이동할 절 |\n|---|---|\n" + "\n".join(
-                f"| {q} | [{self._route_label(to, headings)}]({self._rel(to, page_path)}) |" for q, to in routes)
-        return self.page_tpl.format(frontmatter=fm, title=title, lead=lead or "이 절의 표부터 확인하세요.",
-                                    routes=routes_md, body=body.strip(), evidence=evidence,
-                                    next_title=next_link[0], next_link=self._rel(next_link[1], page_path))
+    def _render(self, *args, **kwargs):
+        return self.writer._render(*args, **kwargs)
 
-    def _rel(self, link: str, page_path: Path) -> str:
-        """설정과 코드의 링크는 sdd 루트 기준이다. 페이지가 하위 디렉터리에 있으면 그 페이지 기준으로 바꾼다."""
-        if link.startswith("#") or "://" in link:
-            return link
-        target, _, anchor = link.partition("#")
-        rel = os.path.relpath(self.cfg.sdd_dir / target, page_path.parent).replace("\\", "/")
-        return rel + (f"#{anchor}" if anchor else "")
+    def _rel(self, *args, **kwargs):
+        return self.writer._rel(*args, **kwargs)
 
-    def _route_label(self, to: str, headings: dict[str, str]) -> str:
-        if to.startswith("#"):
-            return headings.get(to[1:], to[1:].replace("-", " "))
-        name = to.split("#", 1)[0]
-        return self.page_titles.get(name) or self.page_titles.get(Path(name).name) or Path(name).stem
+    def _route_label(self, *args, **kwargs):
+        return self.writer._route_label(*args, **kwargs)
 
-    def _evidence_lines(self, blocks: list[Block], tables: list[str], verdict: Verdict, omitted: list[str],
-                        extra_files: set[str] | None = None) -> str:
-        text = "\n".join([b.text for b in blocks] + tables)
-        files = sorted({c.rsplit(":", 1)[0] for c in extract_citations(text)} | (extra_files or set()))
-        meta = self.model.meta
-        lines = [
-            "- 근거 파일: " + (", ".join(f"`{f}`" for f in files) if files else "(없음)"),
-            f"- 근거 수준: 코드 확인 (정적 분석, {meta.get('build_config', 'ndk-build')} 구성, commit `{meta.get('source_commit', '')[:10] or '?'}`)",
-            "- 자동 검사 (인용·문장 및 설정된 구조 검사): " + ("통과" if verdict.ok else "실패 (" + "; ".join(verdict.notes) + ")"),
-        ]
-        if omitted:
-            lines.append("- 입력 예산 때문에 제외된 사실: " + ", ".join(omitted))
-        lines.append(f"- 검토 상태 기록일: {dt.date.today().isoformat()} · 사람 검토 전")
-        return "\n".join("    " + l for l in lines)
+    def _evidence_lines(self, *args, **kwargs):
+        return self.writer._evidence_lines(*args, **kwargs)
 
     def _existing_blocks(self, sec: dict[str, Any]) -> dict[str, str]:
         """기존 페이지의 `## 제목` 블록을 제목별로 돌려준다 (절 안의 근거 노트 포함).
@@ -767,12 +552,8 @@ class Generator:
                 and not re.match(r"^\s*\d+\. ", l)]
         return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
 
-    @staticmethod
-    def _write(path: Path, text: str) -> Path:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        # 플랫폼과 무관하게 LF 로 쓴다. Windows 개발자와 Linux CI 가 같은 파일을 만들어야 diff 가 조용하다.
-        path.write_text(text.rstrip() + "\n", encoding="utf-8", newline="\n")
-        return path
+    def _write(self, path, text):
+        return self.writer._write(path, text)
 
 
 # ---- helpers -----------------------------------------------------------------
@@ -794,7 +575,8 @@ def _routes_from_config(sec: dict[str, Any]) -> list[tuple[str, str]] | None:
 
 
 def _routes_from_headings(body: str) -> list[tuple[str, str]] | None:
-    heads = re.findall(r"^## (.+)$", body, re.M)
+    heads = [h for h in re.findall(r"^## (.+)$", body, re.M)
+             if h not in ('소스 근거', '클래스 관계', '관련 클래스')][:6]
     if len(heads) < 2:
         return None
     return [(f"{h} 절을 확인합니다.", f"#{slugify(h)}") for h in heads]

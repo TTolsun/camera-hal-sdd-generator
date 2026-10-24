@@ -20,33 +20,6 @@ def enabled(section):
     return section.get('design_generation') == 'llm'
 
 
-def configuration_errors(section):
-    if section.get('design_generation') not in (None, 'llm'):
-        return ['design_generation은 llm이어야 합니다.']
-    if not enabled(section):
-        return []
-    errors = []
-    requirements = section.get('design_requirements', [])
-    topics = section.get('design_topics', [])
-    if section.get('kind', 'prose') != 'prose' or not requirements or not topics:
-        errors.append('LLM 설계 생성에는 prose, design_requirements와 design_topics가 필요합니다.')
-    ids = [r['id'] for r in requirements]
-    covered = []
-    for topic in topics:
-        covers = topic.get('covers')
-        if not isinstance(covers, list) or not covers or any(not isinstance(c, str) for c in covers):
-            errors.append(f"{topic['id']}: covers는 비어 있지 않은 문자열 목록이어야 합니다.")
-        else:
-            covered.extend(covers)
-        if 'statements' in topic:
-            errors.append(f"{topic['id']}: LLM 모드에서는 statements를 미리 작성할 수 없습니다.")
-        if any('sha256' in source for source in topic.get('sources', [])):
-            errors.append(f"{topic['id']}: LLM 모드의 근거 해시는 현재 커밋에서 수집합니다.")
-    if sorted(covered) != sorted(ids) or len(ids) != len(set(ids)):
-        errors.append('각 필수 질문은 정확히 한 주제의 covers에 연결해야 합니다.')
-    return errors
-
-
 def preflight(model, section):
     from .design_contracts import configuration_errors as validate_configuration
     errors = validate_configuration(section)
@@ -194,7 +167,8 @@ def generate(generator, section):
     if cfg.agent.kind == 'dry-run':
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
-    system = generator.system + (
+    from .prompting import compose_system_prompt
+    system = compose_system_prompt(cfg) + (
         '\n\n이 호출의 출력 형식은 구조화된 JSON입니다. 위의 Markdown 출력 및 파일:줄 인용 지시를 '
         '이 호출에서는 적용하지 않습니다. text에 한국어 문단을 쓰고 evidence에는 제공된 소스 키를 '
         '그대로, covers에는 제공된 질문 키를 그대로 복사합니다. id에 줄 번호나 접두사를 붙이지 마세요. '

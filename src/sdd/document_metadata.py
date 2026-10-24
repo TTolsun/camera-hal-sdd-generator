@@ -58,3 +58,16 @@ def manual_evidence_files(path: Path) -> list[str]:
     except yaml.YAMLError:
         return []
     return [str(f).replace("\\", "/") for f in (data.get("evidence_files") or [])]
+
+
+_FM = re.compile(r"^---\n(.*?)\n---\n", re.S)
+
+def split_frontmatter(text: str) -> tuple[dict, str]:
+    m = _FM.match(text)
+    if not m:
+        return {}, text
+    try:
+        meta = yaml.safe_load(m.group(1)) or {}
+    except yaml.YAMLError:
+        meta = {}
+    return meta, text[m.end():]

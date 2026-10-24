@@ -110,11 +110,26 @@ show_evidence: true
 
 각 필수 질문은 정확히 한 주제에 연결합니다. 소스 해시는 생성기가 수집하므로 설정에 고정하지 않습니다. `agent.kind`에는 실제 모델 연결(`ollama` 또는 `openai-compatible`)이 필요하며 `dry-run`으로 필수 답변을 대신할 수 없습니다. 모델 주소와 이름은 프로젝트 실행 환경에서 설정합니다.
 
-LLM은 `quote`(직접 근거로 선택한 원문 구절), `text`, `evidence`(소스 id), `covers`(질문 id), `kind`(`behavior` 또는 `limitation`)를 가진 설명 목록을 반환합니다. 원문 구절은 공백 차이를 제외하고 연결된 발췌 안에 실제로 있어야 합니다. 질문별 답변 누락·원문 불일치·근거 불일치·문장 및 구조 검사 실패·입력 예산 초과가 있으면 선택한 기존 원고를 덮어쓰기 전에 실패합니다. 확인 필요 문장만으로 질문에 답했다고 처리하지 않습니다. 질문 id나 원문 구절의 연결 검사는 자연어 답변의 정확성·충분성을 증명하지 않습니다.
+LLM은 `quote`(직접 근거로 선택한 원문 구절), `text`, `evidence`(소스 id), `covers`(질문 id), `kind`(`behavior` 또는 `limitation`)를 가진 설명 목록을 반환합니다. 원문 구절은 공백과 주석 줄 앞의 장식 문자 차이를 제외하고 연결된 발췌 안에 실제로 있어야 합니다. 질문별 답변 누락·원문 불일치·근거 불일치·문장 및 구조 검사 실패·입력 예산 초과가 있으면 선택한 기존 원고를 덮어쓰기 전에 실패합니다. 확인 필요 문장만으로 질문에 답했다고 처리하지 않습니다. 질문 id나 원문 구절의 연결 검사는 자연어 답변의 정확성·충분성을 증명하지 않습니다.
 
 원고 frontmatter의 `generated_design`에는 답변과 입력·본문 지문이 함께 보존됩니다. 사이트 빌드와 증분 이월에서도 이 기록을 다시 검사하므로 원고를 전달할 때 frontmatter를 유지해야 합니다. 이 모드의 소스 선택 파일 변경은 `watch`가 없어도 영향 분석에 포함됩니다. 근거·질문이 바뀌면 재생성하고, 그대로이면 재검증 후 이월합니다. 상세 문서 본문은 개요의 근거로 사용하지 않으므로 두 문서는 관련 원본 소스 변경으로 함께 선택되도록 설정합니다.
 
 Ollama 연결에서는 제공된 질문·소스 id만 반환하도록 JSON 스키마도 전달합니다. 일반 `openai-compatible` 게이트웨이에는 스키마 API를 요구하지 않으며 같은 프롬프트·응답 파서·검사를 적용합니다. 모델 출력 형식이 올바르더라도 설명의 의미 검토는 여전히 필요합니다.
+
+## 독자 프로필
+
+`reader_profile: vendor` 또는 `reader_profile: architecture`를 `prose` 섹션에 지정하면 공통 필수 질문을 검사합니다. 생략하면 기존 설정 동작을 유지합니다.
+
+| 프로필 | `design_requirements[].aspects`에 포함해야 하는 값 |
+|---|---|
+| `vendor` | `inputs`, `ownership`, `completion`, `failure`, `verification` |
+| `architecture` | `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
+
+각 질문에 `aspects: [ownership]`처럼 적용 항목을 적습니다. 한 질문이 여러 항목을 다룰 수 있습니다. 모든 항목이 선언되고, 모든 질문에 `covers`로 연결된 근거 있는 답변이 있어야 합니다. `limitation`만으로 답을 대신할 수 없습니다. 프로필 이름·항목 오류나 누락은 생성과 사이트 게시를 중단합니다.
+
+프로필을 사용하는 설명은 한 산문 문단을 600자·4문장 이내로 나눕니다. 표·번호 단계·코드 원문은 이 분량 검사에서 제외합니다. 조건과 예외를 삭제해 분량을 맞추지 않습니다. 이 기준은 긴 문단을 막는 편집 검사이며 이해도 판정이 아닙니다.
+
+[완성된 mini HAL 설정](../../examples/mini-hal/config/reader-sections.yaml)과 [사내 적용 절차·읽기 검증](../concepts/reader-quality.md)을 참고하세요. `show_evidence: true`이면 동일 페이지의 같은 발췌는 한 번만 싣고 주제별 설명에서 연결합니다.
 
 ## scenarios.yaml
 
