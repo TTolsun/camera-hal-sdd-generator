@@ -1,6 +1,31 @@
 /* No OMM runtime dependency: this viewer consumes SDD metadata and extracted diagrams. */
+
 (() => {
   'use strict';
+  // Evidence links resolve to deduplicated excerpts. Open the target on arrival;
+  // without JavaScript, the same anchor and native summary remain usable.
+  function revealEvidence() {
+    const id = location.hash.slice(1);
+    if (!/^source-[0-9a-f]{16}$/.test(id)) return;
+    const target = document.getElementById(id);
+    const anchor = target?.parentElement?.tagName === 'P' ? target.parentElement : target;
+    const panel = anchor?.nextElementSibling;
+    if (panel?.tagName === 'DETAILS') {
+      panel.open = true;
+      panel.querySelector('summary')?.focus({preventScroll: true});
+    }
+  }
+  window.addEventListener('hashchange', revealEvidence);
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[href^="#source-"]');
+    if (link && link.hash === location.hash) {
+      event.preventDefault();
+      revealEvidence();
+      document.getElementById(location.hash.slice(1))?.scrollIntoView({block: 'start'});
+    }
+  });
+  window.addEventListener('pageshow', revealEvidence);
+
   const config = JSON.parse(document.querySelector('#site-config').textContent);
   const english = config.language === 'en';
   const t = (ko, en) => english ? en : ko;
