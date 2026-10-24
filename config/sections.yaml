@@ -36,7 +36,7 @@ sections:
     next: {title: 시스템 개요, link: overview.md}
 
   - id: overview
-    group: For Users
+    group: For Developer
     title: 시스템 개요
     output: overview.md
     kind: prose
@@ -66,7 +66,7 @@ sections:
     next: {title: 컴포넌트 구조와 책임, link: components.md}
 
   - id: components
-    group: For Developers
+    group: For Developer
     title: 컴포넌트 구조와 책임
     output: components.md
     kind: per-package
@@ -84,7 +84,7 @@ sections:
     next: {title: 핵심 시나리오 시퀀스, link: scenarios/index.md}
 
   - id: scenarios
-    group: For Users
+    group: For Developer
     title: 핵심 시나리오
     output: scenarios/index.md
     kind: per-scenario
@@ -99,7 +99,7 @@ sections:
     next: {title: Feature flag 매트릭스, link: feature-flags.md}
 
   - id: feature-flags
-    group: For Developers
+    group: For Developer
     title: Feature flag 매트릭스
     output: feature-flags.md
     kind: table
@@ -111,7 +111,7 @@ sections:
     next: {title: 스레드와 큐 모델, link: threading.md}
 
   - id: threading
-    group: For Developers
+    group: For Developer
     title: 스레드와 큐 모델
     output: threading.md
     kind: prose
@@ -131,14 +131,14 @@ sections:
   # 코드로 확인한 동작(위 섹션)과 설계 결정·기기 관찰(아래 문서)을 구분한다 (style/README.md 5항).
 
   - id: constraints
-    group: For Developers
+    group: For Developer
     title: 변경 시 지켜야 할 제약
     output: constraints.md
     kind: manual
     next: {title: 설계 결정 기록, link: decisions.md}
 
   - id: decisions
-    group: For Developers
+    group: For Developer
     title: 설계 결정 기록
     output: decisions.md
     kind: manual

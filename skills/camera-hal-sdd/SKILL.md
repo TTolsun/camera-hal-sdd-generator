@@ -1,8 +1,8 @@
 ---
 name: camera-hal-sdd
-description: camera-hal-sdd-generator를 사내 Camera HAL에 처음 적용하거나 SDD를 갱신할 때 사용합니다. 제품 빌드 설정, 소스에 근거한 Vendor·아키텍처 계약 작성, 문서·사이트 검증과 변경 후 재검토를 수행합니다. 사람 승인이나 실기기 시험 결과를 대신 만들지 않습니다.
+description: camera-hal-sdd-generator를 사내 Camera HAL에 처음 적용하거나 SDD를 갱신할 때 사용합니다. 제품 빌드 설정, 소스에 근거한 Vendor·Developer 계약 작성, 문서·사이트 검증과 변경 후 재검토를 수행합니다. 사람 승인이나 실기기 시험 결과를 대신 만들지 않습니다.
 metadata:
-  version: "5"
+  version: "6"
   repository: camera-hal-sdd-generator
 ---
 
@@ -42,7 +42,9 @@ metadata:
 
 ## 계약을 작성할 때
 
-1. 제출·완료·정지 경로의 실제 정의와 호출자, 큐 소비자, 오류 처리를 찾습니다. `reader_profile: vendor`와 `reader_profile: architecture`를 유지하고 필수 질문을 실제 모듈에 연결합니다.
+독자는 **For Vendor(연동·구현 담당자)**와 **For Developer(신입·타팀 개발자)**입니다. Developer가 기존 HAL 구조를 안다고 가정하지 않습니다. 첫 파일·진입점 → 요청과 결과 흐름 → 증상별 코드 탐색 → 수정 후 확인 순서로 안내하고, 상세 수명·스레드 계약은 필요한 자리에서 연결합니다.
+
+1. 제출·완료·정지 경로의 실제 정의와 호출자, 큐 소비자, 오류 처리를 찾습니다. `reader_profile: vendor`와 `reader_profile: developer`를 유지하고 필수 질문을 실제 모듈에 연결합니다.
 2. 최초에는 선택자만 설정하고 `extract`로 발췌를 확보합니다. 발췌 원문을 읽은 뒤 주장과 `evidence`·`covers`·해시를 작성합니다. 새 해시를 얻었다는 이유만으로 이전 설명이 맞다고 판단하지 않습니다.
 3. 동일 계약의 상세 설명은 한 문서에 둡니다. 다른 페이지에는 독자에게 필요한 결론과 링크를 적습니다. 조건·예외·소유권·비동기 경계를 삭제해서 문장을 줄이지 않습니다.
 4. 소스로 확인한 동작과 실기기에서 확인할 항목을 나눕니다. `limitation`만으로 필수 질문에 답하지 않습니다. 의심스러운 구현도 실제대로 설명하고, 결함인지 결정해야 할 사항은 위치와 함께 남깁니다.

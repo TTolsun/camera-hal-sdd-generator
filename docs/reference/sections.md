@@ -133,12 +133,15 @@ Ollama 연결에서는 제공된 질문·소스 id와 실제 원문에서 추출
 
 ## 독자 프로필
 
-`reader_profile: vendor` 또는 `reader_profile: architecture`를 `prose` 섹션에 지정하면 공통 필수 질문을 검사합니다. 생략하면 기존 설정 동작을 유지합니다.
+`reader_profile: vendor` 또는 `reader_profile: developer`를 `prose` 섹션에 지정하면 공통 필수 질문을 검사합니다. 생략하면 기존 설정 동작을 유지합니다.
 
 | 프로필 | `design_requirements[].aspects`에 포함해야 하는 값 |
 |---|---|
 | `vendor` | `inputs`, `ownership`, `completion`, `failure`, `verification` |
-| `architecture` | `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
+| `developer` | `entry`, `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
+| `architecture` (기존 설정 호환) | `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
+
+`developer`는 신입·타팀 개발자를 위한 프로필입니다. `entry`는 실제 첫 파일·진입점과 읽는 순서, `verification`은 증상별 확인 코드와 수정 후 검증 조건을 다룹니다. `architecture`는 이전 설정을 계속 읽기 위해 지원하며 Developer 문서의 기본값이 아닙니다. 기존 설정을 전환할 때는 이름만 바꾸지 말고 `entry`의 근거 있는 답변을 추가하고 읽기 과제를 다시 검증하세요.
 
 각 질문에 `aspects: [ownership]`처럼 적용 항목을 적습니다. 한 질문이 여러 항목을 다룰 수 있습니다. 모든 항목이 선언되고, 모든 질문에 `covers`로 연결된 근거 있는 답변이 있어야 합니다. `limitation`만으로 답을 대신할 수 없습니다. 프로필 이름·항목 오류나 누락은 생성과 사이트 게시를 중단합니다.
 

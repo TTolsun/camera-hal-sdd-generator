@@ -4,7 +4,7 @@
 
 | 스킬 | 용도 |
 |---|---|
-| [camera-hal-sdd](camera-hal-sdd/SKILL.md) | 실제 제품 빌드를 설정하고 Vendor·아키텍처 계약을 작성한 뒤 SDD를 생성·검증·갱신합니다. |
+| [camera-hal-sdd](camera-hal-sdd/SKILL.md) | 실제 제품 빌드를 설정하고 Vendor·Developer 계약을 작성한 뒤 SDD를 생성·검증·갱신합니다. |
 
 ## 설치
 

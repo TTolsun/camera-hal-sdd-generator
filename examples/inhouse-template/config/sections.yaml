@@ -10,7 +10,7 @@ sections:
     title: 시스템 개요
     link: overview.md
 - id: vendor-contract
-  group: For Vendors
+  group: For Vendor
   title: 요청 연동과 구현 계약
   output: vendor-contract.md
   kind: prose
@@ -74,12 +74,12 @@ sections:
     sources: []
     statements: []
 - id: overview
-  group: For Architects
+  group: For Developer
   title: 시스템 개요
   output: overview.md
   kind: prose
-  lead: 책임 경계, 요청 흐름과 상태, 동기화 책임을 먼저 확인하세요.
-  reader: 이 HAL 을 처음 읽는 개발자
+  lead: 첫 파일과 진입점부터 요청과 결과를 따라가고, 수정·디버깅할 코드를 찾으세요.
+  reader: 이 HAL을 처음 읽는 신입·타팀 개발자
   answers:
   - 이 HAL 은 어떤 패키지로 나뉘고, 각 패키지는 무엇을 담당하는가?
   - 패키지 사이의 의존 방향은 어디에서 어디로 향하는가?
@@ -104,9 +104,13 @@ sections:
   next:
     title: 컴포넌트 구조와 책임
     link: components.md
-  reader_profile: architecture
+  reader_profile: developer
   show_evidence: true
   design_requirements:
+  - id: entry
+    question: 처음 읽을 파일과 진입점, 요청을 따라갈 순서는 무엇입니까?
+    aspects:
+    - entry
   - id: responsibility
     question: 컴포넌트의 책임은 어떻게 나뉩니까?
     aspects:
@@ -124,10 +128,15 @@ sections:
     aspects:
     - concurrency
   - id: verification
-    question: 정적 근거의 한계와 실행 확인 대상은 무엇입니까?
+    question: 증상별로 어느 코드부터 확인하고, 수정 후 어떤 조건을 검증해야 합니까?
     aspects:
     - verification
   design_topics:
+  - id: entry
+    title: 처음 읽을 코드와 순서
+    question: 처음 읽을 파일과 진입점, 요청을 따라갈 순서는 무엇입니까?
+    sources: []
+    statements: []
   - id: responsibility
     title: 컴포넌트 책임
     question: 컴포넌트의 책임은 어떻게 나뉩니까?
@@ -150,13 +159,13 @@ sections:
     statements: []
   - id: verification
     title: 정적 근거와 실행 확인
-    question: 정적 근거의 한계와 실행 확인 대상은 무엇입니까?
+    question: 증상별로 어느 코드부터 확인하고, 수정 후 어떤 조건을 검증해야 합니까?
     sources: []
     statements: []
   diagram:
     enabled: false
 - id: components
-  group: For Architects
+  group: For Developer
   title: 컴포넌트 구조와 책임
   output: components.md
   kind: per-package
@@ -188,7 +197,7 @@ sections:
     title: 핵심 시나리오 시퀀스
     link: scenarios/index.md
 - id: scenarios
-  group: For Architects
+  group: For Developer
   title: 핵심 시나리오
   output: scenarios/index.md
   kind: per-scenario
@@ -206,7 +215,7 @@ sections:
     title: Feature flag 매트릭스
     link: feature-flags.md
 - id: feature-flags
-  group: For Architects
+  group: For Developer
   title: Feature flag 매트릭스
   output: feature-flags.md
   kind: table
@@ -227,7 +236,7 @@ sections:
     title: 스레드와 큐 모델
     link: threading.md
 - id: threading
-  group: For Architects
+  group: For Developer
   title: 스레드와 큐 모델
   output: threading.md
   kind: prose
@@ -253,7 +262,7 @@ sections:
     title: 변경 시 지켜야 할 제약
     link: constraints.md
 - id: constraints
-  group: For Architects
+  group: For Developer
   title: 변경 시 지켜야 할 제약
   output: constraints.md
   kind: manual
@@ -261,7 +270,7 @@ sections:
     title: 설계 결정 기록
     link: decisions.md
 - id: decisions
-  group: For Architects
+  group: For Developer
   title: 설계 결정 기록
   output: decisions.md
   kind: manual
