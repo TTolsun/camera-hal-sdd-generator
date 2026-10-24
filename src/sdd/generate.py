@@ -75,7 +75,10 @@ class Generator:
             if generated_design.enabled(sec):
                 try:
                     section_diagram(self.cfg, self.model, sec)
-                    self.generated_designs[sec['id']] = generated_design.generate(self, sec)
+                    from .config import section_output
+                    previous_path = self.cfg.sdd_dir / section_output(sec)
+                    previous = previous_path.read_text(encoding='utf-8') if impact and previous_path.exists() else None
+                    self.generated_designs[sec['id']] = generated_design.generate(self, sec, previous)
                     reports[sec['id']] = self.generated_designs[sec['id']][2]
                 except (ValueError, AgentError) as exc:
                     reports[sec['id']] = {'status': 'incomplete', 'requirements': [],
@@ -508,6 +511,8 @@ class Generator:
         if generated_design.enabled(sec):
             from .export_html import _split
             artifact = dict(self.generated_designs[sec['id']][3])
+            agents = sorted(set(artifact['topic_agents'].values()))
+            page = re.sub(r'^agent:.*$', 'agent: ' + ', '.join(agents), page, count=1, flags=re.M)
             artifact['body_sha256'] = generated_design.digest(_split(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_design: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             generated_design.verify(self.model, sec, page)
