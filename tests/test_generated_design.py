@@ -178,3 +178,42 @@ def test_constrained_quote_choices_are_verbatim_source_spans():
     assert all(quote in quote_text(source) for quote in choices)
     schema = response_schema({'sources': [{'id': 'source'}], 'covers': ['question']}, choices)
     assert schema['properties']['statements']['items']['properties']['quote']['enum'] == choices
+
+
+@pytest.mark.parametrize('profile', ['architecture', 'vendor'])
+def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg, generated, profile):
+    from sdd.reader_profiles import PROFILES
+    section, model, save, base_agent = generated
+    section['reader_profile'] = profile
+    template = section['design_topics'][0]
+    section['design_topics'] = []
+    section['design_requirements'] = []
+    for aspect, question in PROFILES[profile].items():
+        section['design_topics'].append({**template, 'id': aspect, 'covers': [aspect]})
+        section['design_requirements'].append(dict(id=aspect, question=question, aspects=[aspect]))
+        model.evidence[f'device/{aspect}/stop'] = copy.deepcopy(model.evidence['device/stop/stop'])
+    save()
+
+    class ProfileAgent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            statement['covers'] = kw['response_schema']['properties']['statements']['items']['properties']['covers']['items']['enum']
+            if len(self.calls) == 1:
+                statement['text'] = '요청을 취소합니다. ' * 80
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+
+    agent = ProfileAgent()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert len(agent.calls) == len(PROFILES[profile]) + 1
+    assert '600자' in agent.calls[1]
+    assert verify(model, section, path.read_text(encoding='utf-8'))['status'] == 'documented'
+    export_site(tmp_cfg)
+    original = path.read_bytes()
+    section['design_requirements'][0]['aspects'] = []
+    save()
+    agent.calls.clear()
+    with pytest.raises(ValueError, match='필수 독자 질문'):
+        Generator(tmp_cfg, model, agent).run()
+    assert not agent.calls and path.read_bytes() == original
