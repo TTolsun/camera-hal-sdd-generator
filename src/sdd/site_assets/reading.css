@@ -24,7 +24,7 @@ dialog{color:var(--ink);background:#fff;border:1px solid var(--line);border-radi
 #diagram-dialog{width:96vw;height:90vh;max-width:1500px;padding:18px}#diagram-dialog[open]{display:flex;flex-direction:column}.diagram-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;margin-bottom:14px}.diagram-tools input{width:200px;padding:6px 9px}.diagram-tools output{min-width:42px;text-align:center}#node-count{margin-right:auto;color:var(--muted)}#diagram-viewport{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);background:#fafcfb}#diagram-canvas{min-width:100%;min-height:100%;width:max-content;padding:28px;display:flex;justify-content:center;align-items:center}#diagram-canvas svg{max-width:none!important;flex:none}.node.is-match rect,.node.is-match polygon,.node.is-match circle{stroke:#bb6500!important;stroke-width:3px!important;fill:#fff1ce!important}
 @media(min-width:761px){#menu-toggle{display:none}}
 @media(max-width:1150px){.layout{grid-template-columns:220px minmax(0,1fr)}.page-toc{display:none}.mobile-toc{display:block}main{padding:32px;max-width:784px}}
-@media(max-width:760px){.site-header{height:60px;padding:0 18px}.brand{font-size:15px;gap:8px}.brand-mark{font-size:23px}#search-open{width:auto;font-size:12px}#search-open kbd{display:none}#menu-toggle{font-size:12px}.layout{display:block}#sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:20px}body.js #sidebar:not(.is-open){display:none}.edition,.sidebar-note{display:none}main{padding:28px 20px}.breadcrumb{font-size:11px}h1{font-size:28px}h2{font-size:21px}table{min-width:500px}.page-state{margin-bottom:24px}.diagram-tools input{width:150px}.diagram-tools label{display:none}#diagram-dialog{padding:12px;max-height:94vh}.evidence dl{grid-template-columns:1fr;gap:3px}.evidence dd{margin-bottom:10px}}
+@media(max-width:760px){.site-header{height:60px;padding:0 18px}.brand{font-size:15px;gap:8px}.brand-mark{font-size:23px}#search-open{width:auto;font-size:12px}#search-open kbd{display:none}#menu-toggle{font-size:12px}.layout{display:block}#sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:20px}body.js #sidebar:not(.is-open){display:none}.edition,.sidebar-note{display:none}main{padding:28px 20px}.breadcrumb{font-size:11px}h1{font-size:28px}h2{font-size:21px}.page-state{margin-bottom:24px}.diagram-tools input{width:150px}.diagram-tools label{display:none}#diagram-dialog{padding:12px;max-height:94vh}.evidence dl{grid-template-columns:1fr;gap:3px}.evidence dd{margin-bottom:10px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 @media print{.site-header,#sidebar,.page-toc,.mobile-toc,.pagination,dialog,.diagram-hint{display:none!important}.layout{display:block}main{max-width:none;padding:0}.table-scroll{overflow:visible}table{min-width:0}details{display:block}footer{font-size:10px}}
 /* The native disclosure keeps language switching available without JavaScript. */
@@ -43,6 +43,15 @@ button.term{display:inline;font:inherit;color:inherit;background:none;border:0;b
 
 /* Reader navigation is a short choice table, including on narrow screens. */
 .reading-routes table{min-width:0;table-layout:fixed}.reading-routes td:first-child{min-width:0}.reading-routes th,.reading-routes td{overflow-wrap:anywhere}
+
+/* Phones read tables of three or more columns as one labelled block per row, without sideways scrolling. */
+@media screen and (max-width:760px){.table-scroll.stack{overflow:visible}.stack thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stack table,.stack tbody,.stack tr,.stack td{display:block;width:auto;min-width:0}.stack tr{border:1px solid var(--line);border-radius:6px;padding:4px 14px;margin:0 0 12px}
+.stack td,.stack td:first-child{border:0;padding:7px 0;min-width:0;overflow-wrap:anywhere}.stack td+td{border-top:1px solid var(--line)}
+.stack td::before{content:attr(data-label);display:block;font-size:11px;font-weight:650;color:var(--muted);line-height:1.5;margin-bottom:2px}.stack td[data-label=""]::before{content:none}}
+
+/* Page state badges are short words; the exact record stays in the page evidence. */
+.state-help{font-size:12px;color:var(--muted)}.state-help:hover{color:var(--accent)}
 
 /* Evidence belongs to the preceding paragraph; native disclosure works offline. */
 details.evidence-links{border:0;border-left:2px solid var(--line);border-radius:0;padding:0 12px;margin:-7px 0 20px;font-size:12px;color:var(--muted)}

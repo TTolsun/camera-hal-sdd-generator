@@ -451,3 +451,37 @@ def test_navigation_table_has_mobile_layout_without_changing_data_tables(tmp_cfg
     page = (out / 'device.html').read_text(encoding='utf-8')
     assert page.count('class="table-scroll reading-routes"') == 1
     assert page.count('class="table-scroll"') == 1
+
+
+def test_wide_tables_stack_with_column_labels_on_phones(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    with (tmp_cfg.sdd_dir / 'device.md').open('a', encoding='utf-8') as f:
+        f.write('\n| 클래스 | `prepare()`의 처리 | 책임 "주석" |\n|---|---|---|\n| A | b | c |\n| D | | f |\n')
+    out = export_site(tmp_cfg)
+    page = (out / 'device.html').read_text(encoding='utf-8')
+    assert page.count('class="table-scroll stack"') == 1
+    assert '<td data-label="클래스">A</td>' in page
+    assert '<td data-label="prepare()의 처리">b</td>' in page
+    assert '<td data-label="책임 &quot;주석&quot;">c</td>' in page
+    assert '<td data-label="prepare()의 처리"></td>' in page
+    css = (out / 'assets/reading.css').read_text(encoding='utf-8')
+    assert 'table{min-width:500px}' not in css and '.stack td::before{content:attr(data-label)' in css
+
+
+def test_page_state_uses_plain_words_and_keeps_status_code_in_evidence(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    path = tmp_cfg.sdd_dir / 'device.md'
+    path.write_text(path.read_text(encoding='utf-8').replace(
+        'status: needs-review', 'status: ok\ngeneration_method: source-bound-contract'), encoding='utf-8')
+    out = export_site(tmp_cfg)
+    page = (out / 'device.html').read_text(encoding='utf-8')
+    state = page.split('<div class="page-state">', 1)[1].split('</div>', 1)[0]
+    assert '<code>' not in state
+    assert '자동 검사 통과' in state and '작성: 코드 발췌와 대조한 설명' in state
+    assert 'href="#page-evidence"' in state
+    evidence = page.split('id="page-evidence"', 1)[1]
+    assert '<dt>자동 검사</dt><dd>통과 (<code>ok</code>).' in evidence
+    assert '소스 발췌에 연결한 설계 설명' in evidence
+    index = (out / 'index.html').read_text(encoding='utf-8')
+    assert '<code>ok</code>' not in index and '<code>needs-review</code>' not in index
+    assert '>인용 검사 확인 필요</td>' in index
