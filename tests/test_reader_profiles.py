@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_non_libcamera_reader_profiles_generate_and_preserve_outputs_on_failure(tmp_cfg):
     # Use the committed mini HAL, not fabricated evidence or libcamera fixtures.
+    tmp_cfg.raw["documentation"] = {"enabled": True}
     tmp_cfg.source_root = ROOT / 'examples/mini-hal'
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     sections = yaml.safe_load((tmp_cfg.source_root / 'config/reader-sections.yaml').read_text(encoding='utf-8'))
