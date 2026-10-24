@@ -6,6 +6,15 @@
 # 형식: ../../../docs/reference/glossary.md
 
 terms:
+  - term: fence
+    definition: 버퍼를 사용해도 되는 시점을 알리는 동기화 신호입니다. 요청에 유효한 fence가 연결돼 있으면 준비 단계에서 신호를 기다립니다. 요청 완료 신호와는 다릅니다.
+  - term: Pending
+    aliases: [RequestPending]
+    definition: 아직 완료 또는 취소로 바뀌지 않은 요청 상태입니다. 장치 처리가 시작됐다는 뜻은 아니며, 앞 요청이 이 상태이면 뒤 요청의 반환도 대기할 수 있습니다.
+  - term: 컨트롤 정보 맵
+    definition: 카메라에서 사용할 제어 항목과 범위를 나타내는 정보입니다. 요청의 컨트롤 목록은 해당 카메라의 정보 맵을 참조해야 합니다.
+  - term: 활성 스트림
+    definition: 현재 카메라 구성에 연결된 Stream입니다. 요청 버퍼가 다른 구성의 스트림을 가리키면 제출 검사에서 거절됩니다.
   - term: IPA
     full: Image Processing Algorithms
     definition: >-

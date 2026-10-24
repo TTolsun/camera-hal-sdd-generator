@@ -128,7 +128,7 @@ sections:
     aspects:
     - concurrency
   - id: verification
-    question: 증상별로 어느 코드부터 확인하고, 수정 후 어떤 조건을 검증해야 합니까?
+    question: 구성 실패·완료 누락·정지 문제별로 처음 볼 파일·함수, 관측할 값과 그에 따른 다음 분기, 수정 후 확인 조건은 무엇입니까? 조사 계획과 실제 실행 결과를 구분하세요.
     aspects:
     - verification
   design_topics:
@@ -159,7 +159,7 @@ sections:
     statements: []
   - id: verification
     title: 정적 근거와 실행 확인
-    question: 증상별로 어느 코드부터 확인하고, 수정 후 어떤 조건을 검증해야 합니까?
+    question: 구성 실패·완료 누락·정지 문제별로 처음 볼 파일·함수, 관측할 값과 그에 따른 다음 분기, 수정 후 확인 조건은 무엇입니까? 조사 계획과 실제 실행 결과를 구분하세요.
     sources: []
     statements: []
   diagram:

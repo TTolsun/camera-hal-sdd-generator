@@ -157,7 +157,7 @@ class Generator:
         if facts.get("reading_order"):
             ro = self._reading_order(facts["reading_order"])
             if ro:
-                tables.append("## 코드를 처음 읽는 순서\n\n" + ro)
+                tables.append("## 선택한 시나리오의 코드 읽기 순서\n\n" + ro)
 
         if sec.get("design_topics"):
             parts, omitted, verdict = [], [], Verdict(ok=True)
