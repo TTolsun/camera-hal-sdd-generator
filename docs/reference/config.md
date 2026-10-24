@@ -41,6 +41,7 @@
 | `paths.sections_file` | `config/sections.yaml` | 문서 정의. [sections.yaml 참조](sections.md). |
 | `paths.scenarios_file` | `config/scenarios.yaml` | 시나리오 정의. [scenarios.yaml 참조](sections.md#scenariosyaml). |
 | `paths.prompts`, `paths.templates`, `paths.style` | 설정 디렉터리의 `prompts`, `templates`, `style` | 지시문, 페이지 뼈대, 집필 규칙. **설정 디렉터리를 생성기 저장소 밖에 두면 반드시 생성기 저장소의 것을 가리키게 적습니다.** 적지 않으면 생성할 때 파일을 찾지 못합니다. |
+| `paths.glossary_file` | 설정 디렉터리의 `config/glossary.yaml` | 용어집. [glossary.yaml 참조](glossary.md). |
 | `paths.clang_uml_file` | 설정 디렉터리의 `config/clang-uml.yaml` | clang-uml을 쓸 때의 기본 설정. |
 
 상태 파일(`update-state.json`, `impact.json`, `coverage-triage.json` 등)은 설정 디렉터리의 `build/`에 생깁니다. 목록은 [명령 참조](cli.md#build에-생기는-파일)에 있습니다.
@@ -123,6 +124,7 @@
 | `mermaid_dir` | 없음 | `sdd fetch-mermaid`로 준비한 사본. 지정하면 사이트에 동봉해 CDN 없이 그립니다. 사내 사이트의 기본 설정입니다. |
 | `require_approval` | `false` | 사람 승인 없는 원고가 있으면 게시를 중단합니다. |
 | `nav_groups` | `[]` | 왼쪽 메뉴 그룹 순서. |
+| `undefined_terms` | 용어집이 있으면 `fail`, 없으면 `warn` | 뜻을 적지 않은 약어의 처리. `fail`, `warn`, `off`. [약어 검사](glossary.md#약어-검사). |
 | `english_catalog` | 없음 | 영어판 번역 목록. 공개 libcamera에서만 씁니다. |
 
 ## update
