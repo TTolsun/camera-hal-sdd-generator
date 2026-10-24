@@ -6,6 +6,13 @@
 # 형식: ../../../docs/reference/glossary.md
 
 terms:
+  - term: EGL
+    definition: 그래픽 API와 운영 환경의 디스플레이·이미지·버퍼를 연결하는 인터페이스입니다. 이 문서에서는 공유 버퍼를 그래픽 이미지로 가져오는 경계를 다룹니다.
+  - term: DRM
+    full: Direct Rendering Manager
+    definition: Linux 그래픽 장치를 관리하는 커널 하위 시스템입니다. DRM 픽셀 형식은 버퍼 안의 채널 배치를 식별합니다.
+  - term: GL
+    definition: OpenGL 계열 그래픽 API의 식별자에 쓰이는 접두사입니다. 이 문서의 GL 형식은 텍스처의 채널 구성을 나타냅니다.
   - term: fence
     definition: 버퍼를 사용해도 되는 시점을 알리는 동기화 신호입니다. 요청에 유효한 fence가 연결돼 있으면 준비 단계에서 신호를 기다립니다. 요청 완료 신호와는 다릅니다.
   - term: Pending

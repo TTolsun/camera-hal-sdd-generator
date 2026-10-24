@@ -95,6 +95,92 @@ def test_response_bundle_generates_then_rejects_changed_source(tmp_cfg, generate
         export_site(tmp_cfg)
 
 
+def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    topic = section['design_topics'][0]
+    second = dict(id='drain', file='device.cpp', start='void drain()', end='}')
+    topic['sources'].append(second)
+    source = 'void drain() { drainQueue(); }'
+    model.evidence['device/stop/drain'] = dict(selector=second, commit='a' * 40, file='device.cpp',
+        line=20, end_line=20, text=source, sha256=hashlib.sha256(source.encode()).hexdigest(), status='available')
+    topic['parts'] = [dict(id='cancel', question='취소 책임은 무엇입니까?', sources=['stop']),
+                      dict(id='drain', question='비우는 책임은 무엇입니까?', sources=['drain'])]
+    save()
+    class PartAgent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            assert '대기 요청은 어떻게 반환됩니까?' not in user
+            assert kw['response_schema']['properties']['statements']['maxItems'] == 2
+            statement = copy.deepcopy(base_agent.statement)
+            if 'drainQueue' in user:
+                assert 'cancelPending' not in user
+                statement.update(quote=source, evidence=['drain'],
+                    text='`drain()`은 대기 큐를 비우는 함수를 호출합니다. 큐를 비우는 동작의 세부 조건은 호출된 함수의 구현에서 확인해야 합니다.')
+            else:
+                assert 'drainQueue' not in user
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+    agent = PartAgent()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    text = path.read_text(encoding='utf-8')
+    assert len(agent.calls) == 2 and 'drainQueue' in text and 'cancelPending' in text
+    assert verify(model, section, text)['human_review'] == 'pending'
+    original = path.read_bytes()
+    topic['parts'][1]['sources'] = ['missing']
+    save()
+    with pytest.raises(ValueError, match='parts'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original and len(agent.calls) == 2
+
+
+def test_impact_reuses_only_unchanged_topics_and_preserves_origin(tmp_cfg, generated):
+    from sdd.impact import ImpactReport
+    from sdd.export_html import _split
+    section, model, save, agent = generated
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    first = _split(path.read_text(encoding='utf-8'))[0]
+    report = ImpactReport(base='a' * 40, head='b' * 40, sections=['device'])
+    tmp_cfg.agent.model = 'new-model'
+    agent.calls.clear()
+    Generator(tmp_cfg, model, agent).run(impact=report)
+    assert not agent.calls
+    meta = _split(path.read_text(encoding='utf-8'))[0]
+    assert meta['agent'] == first['agent']
+    assert meta['generated_design']['reused_topics'] == ['stop']
+    section['design_topics'][0]['question'] += ' 반환 조건도 설명하세요.'
+    save()
+    Generator(tmp_cfg, model, agent).run(impact=report)
+    assert len(agent.calls) == 1
+    assert _split(path.read_text(encoding='utf-8'))[0]['generated_design']['generated_topics'] == ['stop']
+    record = model.evidence['device/stop/stop']
+    record['text'] += ' // updated source'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    save()
+    Generator(tmp_cfg, model, agent).run(impact=report)
+    assert len(agent.calls) == 2
+    # Explicit generation still requests a new answer, even without source changes.
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 3
+
+
+def test_legacy_reuse_requires_full_old_fingerprint_and_intact_body(tmp_cfg, generated):
+    from sdd.design_reuse import reusable, topic_inputs
+    from sdd.export_html import _split
+    section, model, save, agent = generated
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    meta, body = _split(path.read_text(encoding='utf-8'))
+    artifact = meta['generated_design']
+    for key in ('topic_inputs', 'topic_agents', 'reused_topics', 'generated_topics'):
+        artifact.pop(key)
+    legacy = '---\n' + '\n'.join(f'{k}: {json.dumps(v, ensure_ascii=False) if k == "generated_design" else v}'
+                                for k, v in meta.items()) + '\n---\n' + body
+    inputs = topic_inputs(model, section, 'policy')
+    assert reusable(model, section, legacy, inputs)[0]
+    assert not reusable(model, section, legacy + 'tampered', inputs)[0]
+    section['design_topics'][0]['question'] += ' changed'
+    assert not reusable(model, section, legacy, topic_inputs(model, section, 'policy'))[0]
+
+
 @pytest.mark.parametrize('extension', ['frag', 'vert', 'comp'])
 def test_generated_shader_explanation_is_cited_and_exported(tmp_cfg, generated, extension):
     from sdd.validate import check

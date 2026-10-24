@@ -13,6 +13,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description='Prepare an English catalog for translation review')
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--translate', action='store_true', help='Translate new text with the configured agent; human review stays pending')
     args = parser.parse_args()
     cfg = copy.deepcopy(load(args.config))
     cfg.raw.setdefault('site', {}).pop('english_catalog', None)
@@ -33,6 +34,9 @@ def main() -> None:
                 units.update(v.strip() for v in [item['term'], item['definition'], *item['names']] if KOREAN.search(v))
     catalog = {'schema': 1, 'review_status': 'human-review-pending', 'pages': pages,
                'strings': {key: previous.get('strings', {}).get(key, '') for key in sorted(units)}}
+    if args.translate:
+        from .translation import translate_missing
+        catalog = translate_missing(cfg, catalog)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(f'Prepared {len(pages)} pages and {len(units)} strings. Review all changed source context before publishing.')

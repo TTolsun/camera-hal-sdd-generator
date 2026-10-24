@@ -44,6 +44,28 @@ def _seed_baseline(cfg, sha):
     KnowledgeModel(meta={"source_commit": sha}).save(cfg.facts_path)
 
 
+@pytest.mark.parametrize('mode', ['valid', 'stale', 'missing', 'failure'])
+def test_external_extraction_stages_and_checks_commit(tmp_cfg, source_repo, mode):
+    import sys
+    _seed_baseline(tmp_cfg, source_repo[0])
+    original = tmp_cfg.facts_path.read_bytes()
+    code = "import os,json,pathlib; p=pathlib.Path(os.environ['SDD_FACTS_OUTPUT']); "
+    if mode == 'failure':
+        code += "p.write_text('partial'); raise SystemExit(1)"
+    elif mode == 'missing':
+        code += 'pass'
+    else:
+        commit = "os.environ['SDD_SOURCE_COMMIT']" if mode == 'valid' else repr(source_repo[0])
+        code += f"p.write_text(json.dumps({{'meta':{{'source_commit':{commit}}}}}))"
+    tmp_cfg.raw['update'] = {'extract_cmd': [sys.executable, '-c', code]}
+    if mode == 'valid':
+        assert update.Steps().extract(tmp_cfg).meta['source_commit'] == source_repo[-1]
+    else:
+        with pytest.raises((RuntimeError, subprocess.CalledProcessError)):
+            update.Steps().extract(tmp_cfg)
+        assert tmp_cfg.facts_path.read_bytes() == original
+
+
 def test_document_health_failure_retries_same_commit_without_advancing_baseline(tmp_cfg, source_repo):
     import yaml
     from sdd import document_health
