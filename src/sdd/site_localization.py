@@ -53,7 +53,7 @@ class DisplayText(HTMLParser):
             for name, value in node['attrs']:
                 if name in ATTRIBUTES and value:
                     translated = self.translate(value)
-                    raw = re.sub(rf'({name}\s*=\s*)([\"\']).*?\2',
+                    raw = re.sub(rf'((?<![\w-]){name}\s*=\s*)([\"\']).*?\2',
                                  lambda m: m[1] + '"' + html.escape(translated, quote=True) + '"', raw)
             rendered = [render(c) for c in children]
             # Inline elements become opaque placeholders, so translators can move

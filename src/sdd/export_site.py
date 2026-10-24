@@ -83,9 +83,10 @@ def _check(meta: dict) -> tuple[str, str, str]:
     """자동 검사의 이름, 결과, 확인 범위. 상단에는 쉬운 말만 쓰고 상태 코드는 생성 근거에 둔다."""
     status = str(meta.get("status", "unrecorded"))
     if meta.get("semantic_review") or meta.get("generation_method"):
-        name, scope = "자동 검사", "인용한 코드 위치가 분석 결과에 있는지와 문장 형식을 확인했습니다."
+        # 검사 항목은 생성 방식마다 다르므로 바로 위의 검증 범위에 맡기고 여기서는 반복하지 않는다.
+        name, scope = "자동 검사", "검사한 항목은 검증 범위에 적혀 있습니다."
     else:
-        name, scope = "인용 검사", "인용한 코드 위치가 분석 결과에 있는지 확인했습니다."
+        name, scope = "인용 검사", "인용한 코드 위치가 분석 결과에 있는지만 확인했습니다."
     result = {"ok": "통과", "needs-review": "확인 필요"}.get(status, "미기록")
     return name, result, scope + " 설명 내용이 맞는지는 사람이 확인합니다."
 
@@ -272,11 +273,11 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
             texts["index.md"] = (cfg.root / str(intro)).read_text(encoding="utf-8")
         else:
             texts["index.md"] = "# 문서 안내\n\n코드에서 추출한 구조와 문장별 근거를 함께 확인하세요.\n"
-        texts["index.md"] += "\n## 문서 목록\n\n| 문서 | 자동 검사 | 검토 상태 |\n|---|---|---|\n"
+        texts["index.md"] += "\n## 문서 목록\n\n| 문서 | 검사 결과 | 검토 상태 |\n|---|---|---|\n"
         for _, name, rel in entries:
-            result = _check(_split(texts[rel])[0])[1]
+            check_name, result, _ = _check(_split(texts[rel])[0])
             label = _approval_label(approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))
-            texts["index.md"] += f"| [{name}]({rel}) | {result} | {label} |\n"
+            texts["index.md"] += f"| [{name}]({rel}) | {check_name} {result} | {label} |\n"
         entries.insert(0, ("시작하기", "문서 안내", "index.md"))
         approval_states["index.md"] = "unreviewed"
     # 용어집은 표시용이다. 원고를 바꾸지 않고, 뜻이 없는 약어가 있으면 게시 전에 멈춘다.
