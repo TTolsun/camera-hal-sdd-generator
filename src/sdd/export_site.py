@@ -14,6 +14,7 @@ from urllib.parse import quote, urlsplit
 import markdown
 
 from . import glossary
+from .evidence_navigation import compact_evidence
 from .config import Config, section_output
 from .diagrams import section_diagram, diagram_block
 from .document_metadata import generation_info
@@ -125,6 +126,9 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
             return f'<a class="citation" href="{html.escape(url, quote=True)}">{match[0]}</a>'
 
         rendered = re.sub(r"<code>([^<>]+:\d+)</code>", citation, rendered)
+    valid = model.citations() if model and commit == model.meta.get("source_commit") else set()
+    rendered = compact_evidence(rendered, valid)
+
     def table_wrapper(match: re.Match) -> str:
         table = match[0]
         # Navigation choices must remain visible without horizontal scrolling.
