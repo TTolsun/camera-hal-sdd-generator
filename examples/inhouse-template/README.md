@@ -1,5 +1,7 @@
 # 사내 HAL 설정 템플릿
 
+[반입 패키지 시작 안내](../../docs/inhouse/package.md)에서 시작 프롬프트·실행 순서·합격 기준·복구 절차를 함께 찾을 수 있습니다.
+
 **이 디렉터리를 생성기 저장소 옆에 `hal-sdd-project/`로 복사하고, 파일 안의 `<...>`를 채우세요.** 그다음 생성기 저장소의 `docs/inhouse/02-first-run.md`("4. 실행하기")에 있는 명령을 순서대로 실행합니다. 설정 뒤에는 실제 소스를 대조하여 설계 계약을 작성해야 합니다. 에이전트에게 맡길 때는 [전달용 지시문](../../docs/inhouse/agent.md#전달할-지시문)과 [계약 작성 절차](../../docs/inhouse/contract-authoring.md)를 사용하세요.
 
 | 파일 | 채울 것 |
@@ -7,6 +9,7 @@
 | `sdd.yaml` | `source_url`(코드 열람 주소), 필요하면 `ndk_build.args`, 모델을 쓸 때 `agent` |
 | `config/scenarios.yaml` | `<namespace>`와 실제 시그니처, 대조한 정의 위치 |
 | `config/glossary.yaml` | 사내 약어의 뜻. `export-site`가 뜻이 없는 약어를 알려 줍니다. |
+| `handoff.md` | 단계별 완료·실패·재개 명령과 증거 경로 |
 | `config/sections.yaml` | `vendor-contract`·`overview`의 소스 근거와 답변, 사내 클래스 패턴 |
 
 이 템플릿이 기본으로 켜 둔 것:
@@ -25,6 +28,6 @@ NDK-build가 아닌 제품의 설정은 [환경별 선택](../../docs/inhouse/ag
 
 ## 문서 품질을 옮기는 방법
 
-Vendor와 아키텍처 독자 프로필은 기본으로 필수입니다. 빈 `sources`·`statements`를 실제 소스와 대조해 채우기 전에는 생성이 실패합니다. 클래스 색인만으로 설계 문서가 완성된 것으로 처리하지 않습니다.
+Vendor와 신입·타팀 Developer 독자 프로필은 기본으로 필수입니다. 빈 `sources`·`statements`를 실제 소스와 대조해 채우기 전에는 생성이 실패합니다. 클래스 색인만으로 설계 문서가 완성된 것으로 처리하지 않습니다.
 
 [공통 품질 기준과 읽기 검증](../../docs/concepts/reader-quality.md), [완성된 작은 HAL 예제](../mini-hal/config/reader-sections.yaml)를 따라 작성하세요. 소스 근거 고정과 필수 질문 검사는 libcamera와 같은 생성기를 사용합니다. 실제 사내 HAL의 동작과 설명은 사내 독자가 별도로 검토해야 합니다.

@@ -1,6 +1,6 @@
 sections:
 - id: vendor-overview
-  group: For Vendors
+  group: For Vendor
   title: 하드웨어 지원 구조와 구현 개요
   output: vendor-overview.md
   kind: prose
@@ -122,7 +122,7 @@ sections:
       start: \brief Signal request completion
       end: void PipelineHandler::completeRequest
 - id: request-lifecycle
-  group: For Vendors
+  group: For Vendor
   title: 요청 처리와 문제 진단
   output: request-lifecycle.md
   kind: prose
@@ -308,7 +308,7 @@ sections:
   reader_profile: vendor
   design_generation: llm
 - id: pipeline-handler
-  group: For Vendors
+  group: For Vendor
   title: Pipeline Handler
   output: pipeline-handler.md
   diagram:
@@ -431,7 +431,7 @@ sections:
   reader_profile: vendor
   design_generation: llm
 - id: ipa
-  group: For Vendors
+  group: For Vendor
   title: IPA 관리와 구현 진입점
   output: ipa.md
   kind: prose
@@ -649,7 +649,7 @@ sections:
   show_evidence: true
   design_generation: llm
 - id: ipu3-lsc
-  group: For Vendors
+  group: For Vendor
   title: IPU3 LSC와 상태 연결
   output: ipu3-lsc.md
   kind: prose
@@ -681,7 +681,7 @@ sections:
     link: ipu3-lsc-flow.md
   narration: facts
 - id: ipu3-lsc-flow
-  group: For Vendors
+  group: For Vendor
   title: IPU3 LSC의 설정과 프레임 처리
   output: ipu3-lsc-flow.md
   kind: prose
@@ -782,7 +782,7 @@ sections:
   show_evidence: true
   design_generation: llm
 - id: rkisp1-dewarp
-  group: For Vendors
+  group: For Vendor
   title: RKISP1 카메라별 왜곡 보정
   output: rkisp1-dewarp.md
   kind: prose
@@ -868,12 +868,12 @@ sections:
   design_generation: llm
   semantic_review: true
 - id: overview
-  group: For Architects
+  group: For Developer
   title: 시스템 개요
   output: overview.md
   kind: prose
-  lead: 카메라 탐색, 요청 생성과 완료의 책임을 구분한 뒤 수정할 패키지를 찾으세요.
-  reader: 책임 경계와 변경 영향을 판단하는 아키텍처 개발자
+  lead: src/libcamera/camera_manager.cpp의 CameraManager에서 시작해 요청 제출과 완료를 따라가세요.
+  reader: libcamera를 처음 읽는 신입·타팀 개발자
   answers:
   - 카메라 탐색과 요청 생성은 누가 담당하는가?
   - 캡처를 시작하기 위한 상태와 API 순서는 무엇인가?
@@ -889,10 +889,14 @@ sections:
     impact_classes: []
     reading_order: queue_request
   routes:
-  - q: 수정할 책임 경계를 찾습니다.
-    to: '#컴포넌트별-책임'
+  - q: 처음 읽을 파일과 진입점을 찾습니다.
+    to: '#탐색과-파이프라인-선택'
   - q: 요청과 결과가 지나는 경계를 확인합니다.
     to: '#요청-제출과-완료'
+  - q: 완료가 오지 않는 요청을 조사합니다.
+    to: request-lifecycle.md
+  - q: 수정 전에 상태와 종료 순서를 확인합니다.
+    to: '#캡처-세션의-상태와-자원'
   - q: 전체 클래스와 패키지를 찾습니다.
     to: component-index.md
   watch:
@@ -905,111 +909,231 @@ sections:
     title: 카메라와 요청 모델
     link: camera-model.md
   design_topics:
+  - id: discovery
+    title: 탐색과 파이프라인 선택
+    question: 처음 읽는 개발자에게 CameraManager의 단일 인스턴스와 진입점 역할, start() 성공 후 장치 접근 순서, cameras()와 get()의 실행 상태 조건을 설명하세요.
+      PipelineHandler::match()의 장치 확보·카메라 생성·등록 책임도 구분하세요. 네 개의 짧은 문단으로 설명하고 실제 소스의 API 이름과 조건을 유지하세요.
+    covers: &ov_id001
+    - discovery
+    sources:
+    - id: manager
+      file: src/libcamera/camera_manager.cpp
+      start: The camera manager is the entry point to libcamera.
+      end: The manager is initially stopped,
+      sha256: 6c52c603a60f0faf8c931e6c1691d951484c4915ef9ab8ac67cc65d89acbb550
+    - id: start
+      file: src/libcamera/camera_manager.cpp
+      start: \brief Start the camera manager
+      end: int CameraManager::start()
+      sha256: 5c647185035857e55de76a49cffad27bfac087260af8577a43cc2611196e3c17
+    - id: access
+      file: src/libcamera/camera_manager.cpp
+      start: \fn CameraManager::cameras()
+      end: std::shared_ptr<Camera> CameraManager::get(std::string_view id)
+      sha256: 756e463ef09b825d17af3fc8b7d9912349d46cc84446a0e0c3e9c48fb22d56b6
+    - id: match
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::match(DeviceEnumerator *enumerator)
+      end: \brief Search and acquire a MediaDevice
+      sha256: 7dde6563cf6bda32f38f4c1fb3ef0443502432236a0222d4f811b3fa71f3fc05
+    statements:
+    - text: src/libcamera/camera_manager.cpp의 `CameraManager`부터 읽으세요. 이 객체는 장치를 탐색하고 응용 프로그램이 카메라에 접근하는 진입점입니다.
+        동시에 존재하는 인스턴스는 하나여야 합니다. 기존 인스턴스를 삭제하지 않고 두 번째를 만들면 동작이 정의되지 않습니다.
+      evidence:
+      - manager
+      covers: *ov_id001
+    - text: '`CameraManager::start()`가 성공하면 시스템의 카메라에 접근할 수 있습니다. 성공은 0, 실패는 음수 오류 코드로 반환됩니다. 카메라 관리자가 정지하거나 장치
+        연결이 끊어지면 이 접근 조건이 유지되지 않습니다.'
+      evidence:
+      - start
+      covers: *ov_id001
+    - text: 카메라 관리자가 실행 중일 때 `cameras()`로 목록을 얻거나 `get()`으로 ID에 해당하는 카메라를 찾습니다. `get()`은 찾지 못하면 null 포인터를 반환합니다.
+        카메라 관리자가 실행 중인지 보장하는 책임은 호출자에게 있습니다.
+      evidence:
+      - access
+      covers: *ov_id001
+    - text: 장치가 카메라로 등록되는 쪽은 src/libcamera/pipeline_handler.cpp의 `PipelineHandler::match()`입니다. 이 함수는 한 파이프라인에 필요한
+        장치를 확보하고 카메라 객체를 만들어 관리자에 등록합니다. 필요한 장치가 모두 발견되지 않으면 장치를 확보하지 않거나 이미 확보한 장치를 해제하고 false를 반환합니다. 구현 상세는 [Pipeline Handler](pipeline-handler.md#장치-매칭과-객체-수명)를
+        확인하세요.
+      evidence:
+      - match
+      covers: *ov_id001
   - id: responsibility
     title: 컴포넌트별 책임
     question: Camera가 공개하는 기능과 객체 수명 관리 방식을 설명하세요.
-    covers:
+    covers: &ov_id002
     - responsibility
     sources:
     - id: camera
       file: src/libcamera/camera.cpp
       start: The Camera class models a camera
       end: \section camera_operation
-  - id: discovery
-    title: 탐색과 파이프라인 선택
-    question: CameraManager의 장치 탐색 역할과 PipelineHandler::match()의 장치 확보·카메라 생성·등록 책임을 구분해 설명하세요.
-    covers:
-    - discovery
-    sources:
-    - id: manager
-      file: src/libcamera/camera_manager.cpp
-      start: The camera manager is the entry point to libcamera.
-      end: To interact with libcamera,
-    - id: match
-      file: src/libcamera/pipeline_handler.cpp
-      start: \fn PipelineHandler::match(DeviceEnumerator *enumerator)
-      end: \brief Search and acquire a MediaDevice
+      sha256: e77cee469b7c57430e4bd4b0f08493289c46b57549873521c476df388d591dc2
+    statements:
+    - text: '`Camera`는 영상 입력 하나에서 하나 이상의 영상 스트림을 만드는 카메라를 나타냅니다. 응용 프로그램은 이 객체를 통해 장치를 구성·제어하고 영상을 캡처합니다.'
+      evidence:
+      - camera
+      covers: *ov_id002
+    - text: 카메라 객체는 `create()`로 만들며 `std::shared_ptr`로 수명을 관리합니다. 생성자와 소멸자가 비공개이므로 직접 만들거나 삭제하지 않습니다. 요청·버퍼와 다른
+        소유권 규칙은 [카메라와 요청 모델](camera-model.md#소유권과-재사용)에서 비교하세요.
+      evidence:
+      - camera
+      covers: *ov_id002
   - id: creation
     title: 요청 생성과 소유권
     question: Camera::createRequest()의 입력, 허용 상태와 반환된 요청의 소유권·재사용 계약을 설명하세요.
-    covers:
+    covers: &ov_id003
     - creation
     sources:
     - id: create
       file: src/libcamera/camera.cpp
       start: \brief Create a request object for the camera
       end: std::unique_ptr<Request> Camera::createRequest
+      sha256: e71b8c0bea6263314881525ebf4714628591079745c9453624d3f4c3dffe31d0
+    statements:
+    - text: '`Camera::createRequest()`는 `Configured` 또는 `Running` 상태에서 호출할 수 있습니다. 빈 요청을 반환하며, 응용 프로그램이 여기에 버퍼와
+        파라미터를 연결합니다. 오류가 나면 null 포인터를 반환합니다.'
+      evidence:
+      - create
+      covers: *ov_id003
+    - text: 반환된 요청의 소유권은 호출자에게 넘어갑니다. 호출자는 완료 핸들러에서 삭제하거나 `Request::reuse()`로 상태를 초기화한 뒤 다시 사용할 수 있습니다. `cookie`는
+        완료 처리에서 외부 자원과 요청을 연결하는 데 쓸 수 있는 호출자 값이며, libcamera는 그 의미를 해석하지 않습니다.
+      evidence:
+      - create
+      covers: *ov_id003
   - id: lifecycle
     title: 캡처 세션의 상태와 자원
     question: 캡처 준비 순서, 시작 이후 요청 처리, 정지와 최종 해제, 해제 전 반복 시작·정지와 재설정을 설명하세요. 최종 해제 단계를 빠뜨리지 마세요.
-    covers:
+    covers: &ov_id004
     - lifecycle
     sources:
     - id: state
       file: src/libcamera/camera.cpp
       start: \section camera_operation
       end: Functions that affect the camera state
+      sha256: 73164878543e86e16cf4e3197648ec4e79819beaad2f1c8754260715f65b8333
+    statements:
+    - text: 캡처 준비는 카메라 획득 → 구성 → 시작 순서입니다. 시작한 카메라는 정지할 때까지 요청을 처리할 수 있습니다. 사용을 마치면 카메라를 해제해야 합니다.
+      evidence:
+      - state
+      covers: *ov_id004
+    - text: 카메라를 해제하기 전에는 시작과 정지를 반복하고 재구성할 수 있습니다. 정지와 최종 해제를 같은 단계로 취급하지 마세요. 상태별 API와 종료 계약은 [카메라와 요청 모델](camera-model.md)에서
+        확인합니다.
+      evidence:
+      - state
+      covers: *ov_id004
   - id: request
     title: 요청 제출과 완료
     question: Camera::queueRequest()의 버퍼 입력 조건, requestCompleted 완료 알림, Running 상태 조건을 설명하세요. 각 문단에서 함수나 신호 이름을
       밝혀 주세요. fill it with buffers의 it은 요청 객체이며 버퍼 안의 픽셀 데이터를 채우라는 뜻이 아닙니다. 허용 상태는 실제 카메라 상태에 관한 조건이며 호출자가 상태를 미리
       확인했는지와는 다릅니다. 확인을 권하는 조언은 쓰지 마세요.
-    covers:
+    covers: &ov_id005
     - request
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
       start: \brief Queue a request to the camera
       end: int Camera::queueRequest
+      sha256: b24af43d2f808f81b527cf4ee8915451be675f43f877bac5e6edfe69ff3739d6
+    statements:
+    - text: '`Camera::queueRequest()`로 요청을 보내려면 카메라가 `Running` 상태여야 합니다. 요청에는 캡처 버퍼가 하나 이상 연결돼 있어야 합니다. 버퍼가 없는 요청은
+        큐에 들어가지 않고 거절됩니다.'
+      evidence:
+      - queue
+      covers: *ov_id005
+    - text: '`queueRequest()`의 0 반환은 제출 성공이고, 촬영 완료는 `requestCompleted` 신호로 따로 통지됩니다. 음수 반환과 제출 후 완료 누락은 확인할 위치가
+        다릅니다. [실패 위치별 확인 순서](request-lifecycle.md#실패-위치별-확인-순서)에서 관찰한 결과에 맞는 코드를 찾으세요.'
+      evidence:
+      - queue
+      covers: *ov_id005
   - id: completion
     title: 버퍼 완료와 요청 완료
     question: PipelineHandler::completeBuffer()의 알림과 추적 역할, 마지막 버퍼 완료 뒤에도 completeRequest()를 명시적으로 호출해야 하는 계약을 함수
       이름을 사용하여 설명하세요.
-    covers:
+    covers: &ov_id006
     - completion
     sources:
     - id: buffer
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
       end: bool PipelineHandler::completeBuffer
+      sha256: 49b0139e3f0f620c0a3c044caf699179753dddf1b896d48de417c338bbae6a22
+    statements:
+    - text: '`PipelineHandler::completeBuffer()`는 버퍼 완료를 알리고 요청 내부의 버퍼 추적 상태를 갱신합니다. 마지막 버퍼가 끝나도 요청이 자동으로 완료되지는
+        않습니다. 파이프라인은 `completeRequest()`를 명시적으로 호출해야 합니다.'
+      evidence:
+      - buffer
+      covers: *ov_id006
+    - text: 완료가 오지 않는 요청을 조사할 때는 버퍼 완료와 요청 완료를 각각 확인하세요. 두 호출의 구현 계약은 [Pipeline Handler](pipeline-handler.md)에서
+        확인합니다.
+      evidence:
+      - buffer
+      covers: *ov_id006
   - id: boundary
     title: 스레드 경계와 동기화
     question: Camera 상태를 바꾸는 함수의 동기화 책임과 PipelineHandler::completeRequest()의 실행 스레드 계약을 구분하여 설명하세요. 이 계약을 모든 콜백에
       확대하지 마세요.
-    covers:
+    covers: &ov_id007
     - boundary
     sources:
     - id: synchronization
       file: src/libcamera/camera.cpp
       start: Functions that affect the camera state
       end: \subsection Camera States
+      sha256: 943831ed5cf08179455c41bd83a649d74d2a4a2d53f153cfa83dbeff179c2bf6
     - id: completion
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Signal request completion
       end: void PipelineHandler::completeRequest
+      sha256: 25903b4c6a305017b96bfe9117fe2b7b917b51fbeb2fd21139700b1fbf6a4fe2
+    statements:
+    - text: 카메라 상태를 바꾸는 함수들은 일반적으로 `Camera`가 서로 동기화해 주지 않습니다. 필요한 동기화는 호출자가 보장해야 합니다. 상태 변경 경로를 수정할 때는 함수 하나뿐 아니라
+        함께 호출되는 상태 변경 함수도 확인하세요.
+      evidence:
+      - synchronization
+      covers: *ov_id007
+    - text: '`PipelineHandler::completeRequest()`는 `CameraManager` 스레드에서 호출해야 합니다. 반환 후에는 파이프라인이 해당 요청에 접근하면 안 됩니다.
+        이 스레드 계약을 모든 콜백에 확대해서 적용하지 마세요.'
+      evidence:
+      - completion
+      covers: *ov_id007
   - id: verification
     title: 정적 근거의 확인 범위
     question: Camera::start()의 허용 상태와 호출자 동기화 계약을 behavior로 설명하고, 별도 limitation에서 Camera 클래스 주석의 시작 타이밍 문서화 TODO만
       설명하세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.
-    covers:
+    covers: &ov_id008
     - verification
     sources:
     - id: start
       file: src/libcamera/camera.cpp
       start: \brief Start capture from camera
       end: int Camera::start
+      sha256: 3b6dec3d3372dc891ac15cca8f5c578ab56f76a0321a113a64f10a25f830283d
     - id: timing
       file: src/libcamera/camera.cpp
       start: \todo Add documentation for camera start timings.
       end: The Camera class models a camera
+      sha256: fe1cde84836279cf75402cca5392d528cc43c3eff36066e3beb4822b75329a46
+    statements:
+    - text: 캡처 시작 경로를 수정했다면 `Camera::start()`의 입력 상태와 호출자 동기화를 먼저 대조하세요. 이 함수는 `Configured` 상태에서만 호출할 수 있고, 다른 상태
+        변경 함수와의 동기화는 호출자 책임입니다. 실제 장치에서 이 조건을 만족하는지는 별도 실행 확인이 필요합니다.
+      evidence:
+      - start
+      covers: *ov_id008
+    - text: Camera 클래스 주석에는 시작 타이밍과 시작 시 파이프라인의 역할에 관한 문서화 TODO가 남아 있습니다. 이 발췌만으로 시작 지연이나 성능 예산을 확정할 수 없습니다.
+      evidence:
+      - timing
+      covers: *ov_id008
+      kind: limitation
   design_requirements:
   - id: responsibility
     question: Camera는 어떤 공개 기능과 객체 수명 계약을 제공합니까?
     aspects:
     - responsibility
   - id: discovery
-    question: 장치 탐색과 파이프라인 매칭·카메라 등록은 누가 담당합니까?
+    question: 어느 파일과 진입점부터 읽고, 장치 탐색과 카메라 접근은 어떤 순서로 이어집니까?
     aspects:
+    - entry
     - boundaries
   - id: creation
     question: 요청 생성의 조건과 소유권·재사용 계약은 무엇입니까?
@@ -1036,11 +1160,11 @@ sections:
     aspects:
     - verification
   show_evidence: true
-  reader_profile: architecture
-  design_generation: llm
+  reader_profile: developer
   semantic_review: true
+  narration: facts
 - id: camera-model
-  group: For Architects
+  group: For Developer
   title: 카메라와 요청 모델
   output: camera-model.md
   kind: prose
@@ -1218,7 +1342,7 @@ sections:
   show_evidence: true
   design_generation: llm
 - id: scenarios
-  group: For Architects
+  group: For Developer
   title: 핵심 시나리오
   output: scenarios/index.md
   kind: per-scenario
@@ -1236,7 +1360,7 @@ sections:
     title: 요청 처리와 문제 진단
     link: request-lifecycle.md
 - id: component-index
-  group: For Architects
+  group: For Developer
   title: 구성 요소 색인
   output: component-index.md
   kind: per-package

@@ -3,7 +3,7 @@ sections:
   title: Vendor 구현 계약
   kind: prose
   output: vendor-contract.md
-  group: For Vendors
+  group: For Vendor
   reader_profile: vendor
   lead: 이 작은 HAL의 실제 구현과 남아 있는 수명 제약을 확인하세요.
   narration: facts
@@ -44,8 +44,8 @@ sections:
       end: '}  // namespace halcam'
       sha256: 7d9a81a09adcd15ccb946a7ffdb74417ecff5ed5f512c9c81fd7d9978094295e
     statements:
-    - text: 콜백을 initialize()로 등록한 뒤 configureStreams()를 호출합니다. null 구성과 0개 또는 MAX_PIPES 초과 스트림은 거절합니다.
-        USE_DUAL_CAMERA 구성에서는 홀수 스트림 수도 거절합니다.
+    - text: 콜백을 initialize()로 등록한 뒤 configureStreams()를 호출합니다. null 구성과 0개 또는 MAX_PIPES 초과 스트림은 거절합니다. USE_DUAL_CAMERA
+        구성에서는 홀수 스트림 수도 거절합니다.
       covers:
       - inputs
       evidence:
@@ -61,7 +61,7 @@ sections:
       end: '}  // namespace halcam'
       sha256: 2e5518f45bdc653e2cce8c3bb1263a9064eb6da2bb02feb22fc0ab4bd0db083a
     statements:
-    - text: 프레임 소유권과 작업 스레드의 포인터 관계는 [아키텍처 계약](architecture-contract.md#자원-수명)에서 확인합니다. 요청 제출자는 고유한 frame_number를
+    - text: 프레임 소유권과 작업 스레드의 포인터 관계는 [개발자 안내](architecture-contract.md#자원-수명)에서 확인합니다. 요청 제출자는 고유한 frame_number를
         전달해야 기존 inFlight_ 항목을 덮어쓰지 않습니다.
       covers:
       - ownership
@@ -74,8 +74,8 @@ sections:
     - *id001
     - *id002
     statements:
-    - text: submit()의 0 반환은 큐 등록 성공입니다. 결과 콜백은 runPipes()가 0을 반환할 때 호출합니다. flush()는 drain()을 호출하지만, 이
-        예제의 drain()은 완료를 기다리지 않고 inFlight_를 지웁니다.
+    - text: submit()의 0 반환은 큐 등록 성공입니다. 결과 콜백은 runPipes()가 0을 반환할 때 호출합니다. flush()는 drain()을 호출하지만, 이 예제의 drain()은
+        완료를 기다리지 않고 inFlight_를 지웁니다.
       covers:
       - completion
       evidence:
@@ -87,8 +87,8 @@ sections:
     sources:
     - *id002
     statements:
-    - text: enqueue() 실패는 -1로 반환되지만 이미 등록된 inFlight_ 항목은 그 자리에서 제거하지 않습니다. runPipes() 실패 시에는 결과 콜백 없이
-        onFrameDone()으로 항목을 지웁니다. 오류 알림을 완성한 제품 구현으로 사용할 수 없습니다.
+    - text: enqueue() 실패는 -1로 반환되지만 이미 등록된 inFlight_ 항목은 그 자리에서 제거하지 않습니다. runPipes() 실패 시에는 결과 콜백 없이 onFrameDone()으로
+        항목을 지웁니다. 오류 알림을 완성한 제품 구현으로 사용할 수 없습니다.
       covers:
       - failure
       evidence:
@@ -105,8 +105,8 @@ sections:
       end: '}  // namespace halcam'
       sha256: 2a2fd50d3f77d29e97c6306058935c854e998f2139abf77f2220eac52bc6c166
     statements:
-    - text: 이 예제는 정적 문서 파이프라인 검증용입니다. 큐 거절과 파이프 오류에서 요청이 정리되는지, flush()와 close() 중 작업 포인터가 유효한지는 별도 실행
-        검증 대상입니다. 소스에는 대기 없이 프레임을 지우는 경로가 있습니다.
+    - text: 이 예제는 정적 문서 파이프라인 검증용입니다. 큐 거절과 파이프 오류에서 요청이 정리되는지, flush()와 close() 중 작업 포인터가 유효한지는 별도 실행 검증 대상입니다.
+        소스에는 대기 없이 프레임을 지우는 경로가 있습니다.
       covers:
       - verification
       evidence:
@@ -116,13 +116,14 @@ sections:
   next:
     title: 다른 독자의 계약
     link: architecture-contract.md
+# 출력 경로는 기존 링크를 위해 유지합니다. 독자는 신입·타팀 개발자입니다.
 - id: architecture-contract
-  title: 아키텍처 계약
+  title: 처음 읽는 개발자 안내
   kind: prose
   output: architecture-contract.md
-  group: For Architects
-  reader_profile: architecture
-  lead: 이 작은 HAL의 실제 구현과 남아 있는 수명 제약을 확인하세요.
+  group: For Developer
+  reader_profile: developer
+  lead: CameraModule.cpp에서 시작해 요청 제출과 결과 콜백을 따라가세요.
   narration: facts
   facts:
     classes: []
@@ -130,6 +131,10 @@ sections:
     enabled: false
   show_evidence: true
   design_requirements:
+  - id: entry
+    question: 처음 읽을 파일과 진입점, 요청을 따라갈 순서는 무엇입니까?
+    aspects:
+    - entry
   - id: responsibility
     question: 컴포넌트의 책임은 어떻게 나뉩니까?
     aspects:
@@ -151,6 +156,44 @@ sections:
     aspects:
     - verification
   design_topics:
+  - id: entry
+    title: 처음 읽을 코드와 순서
+    question: 처음 읽을 파일과 진입점, 요청을 따라갈 순서는 무엇입니까?
+    sources:
+    - id: module
+      file: src/module/CameraModule.cpp
+      start: // HAL module entry points.
+      end: '    return ret;'
+      sha256: 9459549a21f00a638a0a90a0c5ce2e12e6e6f48671cc6c11a965bbef545be179
+    - id: device
+      file: src/device/CameraDevice.cpp
+      start: '#include "device/CameraDevice.h"'
+      end: '}  // namespace halcam'
+      sha256: 7d9a81a09adcd15ccb946a7ffdb74417ecff5ed5f512c9c81fd7d9978094295e
+    - id: requests
+      file: src/device/RequestManager.cpp
+      start: '#include "device/RequestManager.h"'
+      end: '}  // namespace halcam'
+      sha256: 2e5518f45bdc653e2cce8c3bb1263a9064eb6da2bb02feb22fc0ab4bd0db083a
+    statements:
+    - text: src/module/CameraModule.cpp에서 camera_device_open()을 먼저 읽으세요. 이
+        함수는 CameraDevice를 만들고 호출자에게 넘기며, 호출자는 camera_device_close()로 닫고 삭제합니다.
+      covers:
+      - entry
+      evidence:
+      - module
+    - text: 다음은 src/device/CameraDevice.cpp입니다. initialize()로 콜백을 등록하고 configureStreams()로 구성한 뒤 processCaptureRequest()에서
+        요청이 어디로 전달되는지 확인하세요. 콜백은 결과를 알리기 위해 등록한 함수를 호출하는 방식입니다.
+      covers:
+      - entry
+      evidence:
+      - device
+    - text: src/device/RequestManager.cpp의 submit() → onFrame() → sendResult()를 이어서 읽으세요. submit()은 큐 등록 결과를 반환하고,
+        sendResult()는 process_capture_result를 호출합니다. 두 경로 사이에는 작업 스레드가 있으므로 함수 목록을 동기 호출 순서로 읽지 마세요.
+      covers:
+      - entry
+      evidence:
+      - requests
   - id: responsibility
     title: 책임 분리
     sources:
@@ -158,8 +201,8 @@ sections:
     - *id002
     - *id003
     statements:
-    - text: CameraDevice는 구성 상태와 진입 조건을 확인합니다. RequestManager는 프레임 생성, 큐 전달과 결과 콜백을 연결합니다. PipeThread는
-        작업 큐와 작업 스레드를 관리합니다.
+    - text: CameraDevice는 구성 상태와 진입 조건을 확인합니다. RequestManager는 프레임 생성, 큐 전달과 결과 콜백을 연결합니다. PipeThread는 작업 큐와 작업
+        스레드를 관리합니다.
       covers:
       - responsibility
       evidence:
@@ -174,8 +217,8 @@ sections:
     - *id002
     - *id003
     statements:
-    - text: processCaptureRequest()는 submit()의 반환값을 호출자에게 돌려줍니다. submit()은 프레임 포인터를 작업 큐에 넘깁니다. 작업 스레드의
-        handler_가 onFrame()을 실행하므로 결과 콜백은 제출 함수의 반환과 별개입니다.
+    - text: processCaptureRequest()는 submit()의 반환값을 호출자에게 돌려줍니다. submit()은 프레임 포인터를 작업 큐에 넘깁니다. 작업 스레드의 handler_가
+        onFrame()을 실행하므로 결과 콜백은 제출 함수의 반환과 별개입니다.
       covers:
       - boundaries
       evidence:
@@ -189,8 +232,8 @@ sections:
     - *id002
     - *id003
     statements:
-    - text: inFlight_는 unique_ptr로 프레임을 소유하고 작업 큐는 원시 포인터를 보관합니다. onFrameDone()은 해당 프레임을 지웁니다. drain()도
-        컨테이너를 즉시 지우므로 큐에 남거나 실행 중인 포인터의 수명을 보장하지 못합니다.
+    - text: inFlight_는 unique_ptr로 프레임을 소유하고 작업 큐는 원시 포인터를 보관합니다. onFrameDone()은 해당 프레임을 지웁니다. drain()도 컨테이너를 즉시
+        지우므로 큐에 남거나 실행 중인 포인터의 수명을 보장하지 못합니다.
       covers:
       - lifecycle
       evidence:
@@ -203,8 +246,8 @@ sections:
     - *id003
     - *id002
     statements:
-    - text: PipeThread는 큐를 잠근 상태에서 포인터를 꺼낸 뒤 잠금 밖에서 handler_를 호출합니다. RequestManager의 잠금은 별도로 inFlight_를
-        보호합니다. 두 잠금이 프레임의 전체 사용 기간을 함께 보호하지는 않습니다.
+    - text: PipeThread는 큐를 잠근 상태에서 포인터를 꺼낸 뒤 잠금 밖에서 handler_를 호출합니다. RequestManager의 잠금은 별도로 inFlight_를 보호합니다. 두
+        잠금이 프레임의 전체 사용 기간을 함께 보호하지는 않습니다.
       covers:
       - concurrency
       evidence:
@@ -217,8 +260,14 @@ sections:
     - *id002
     - *id003
     statements:
-    - text: 종료 시 먼저 drain()하고 그다음 thread_.stop()을 호출하는 순서를 검토해야 합니다. stop()은 작업 스레드를 join하지만 이미 삭제된 프레임을
-        복원하지 못합니다. 실제 HAL 적용 전 종료·재구성·오류 경로의 수명 동기화를 구현하고 실행 검증해야 합니다.
+    - text: 완료 통지가 없으면 RequestManager.cpp의 submit()에서 enqueue() 반환값을 확인한 뒤 onFrame()의 runPipes() 반환 분기와 sendResult()를
+        확인하세요. 파이프 실행이 실패하면 sendResult()를 호출하지 않고 onFrameDone()으로 이동합니다. 이는 확인할 코드 위치이며 실행 시험 결과가 아닙니다.
+      covers:
+      - verification
+      evidence:
+      - requests
+    - text: 종료 시 먼저 drain()하고 그다음 thread_.stop()을 호출하는 순서를 검토해야 합니다. stop()은 작업 스레드를 join하지만 이미 삭제된 프레임을 복원하지 못합니다.
+        실제 HAL 적용 전 종료·재구성·오류 경로의 수명 동기화를 구현하고 실행 검증해야 합니다.
       covers:
       - verification
       evidence:
@@ -228,3 +277,4 @@ sections:
   next:
     title: 다른 독자의 계약
     link: vendor-contract.md
+  reader: 신입·타팀 개발자

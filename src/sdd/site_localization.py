@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 KOREAN = re.compile(r"[가-힣]")
-ATTRIBUTES = {"aria-label", "placeholder", "title"}
+ATTRIBUTES = {"aria-label", "data-label", "placeholder", "title"}
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 
 
@@ -53,7 +53,7 @@ class DisplayText(HTMLParser):
             for name, value in node['attrs']:
                 if name in ATTRIBUTES and value:
                     translated = self.translate(value)
-                    raw = re.sub(rf'({name}\s*=\s*)([\"\']).*?\2',
+                    raw = re.sub(rf'((?<![\w-]){name}\s*=\s*)([\"\']).*?\2',
                                  lambda m: m[1] + '"' + html.escape(translated, quote=True) + '"', raw)
             rendered = [render(c) for c in children]
             # Inline elements become opaque placeholders, so translators can move
