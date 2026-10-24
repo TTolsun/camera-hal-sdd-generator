@@ -4,7 +4,7 @@
 
 최종 적용 대상은 사내 Camera HAL입니다. libcamera는 공개 테스트 대상이며, 예제의 빌드·호스팅 환경을 사내 운영의 필수 조건으로 만들지 않습니다. 구체적인 작업 기준은 [AGENTS.md](AGENTS.md)에 기록합니다.
 
-독자는 **For Vendor(연동·구현 담당자)**와 **For Developer(신입·타팀 개발자)**로 나눕니다. Developer의 첫 진입점과 읽는 순서, 수정·디버깅 과제는 [독자별 품질](docs/concepts/reader-quality.md)을 따릅니다.
+독자는 **For Vendor(기술 채택·연동·구현 담당자)**와 **For Developer(신입·타팀 개발자)**로 나눕니다. Vendor 개요는 기능·근거가 있는 강점·연동 순서·지원 조건과 제약을 먼저 설명하고 상세 계약으로 연결합니다. Developer의 첫 진입점과 읽는 순서, 수정·디버깅 과제는 [독자별 품질](docs/concepts/reader-quality.md)을 따릅니다.
 
 1. 구조는 `facts.json`에서만 가져옵니다. `src/sdd/diagrams.py`가 Markdown 생성과 사이트 빌드에서 사용하는 공통 Mermaid 규칙입니다. LLM에는 배치나 화살표 생성을 맡기지 않습니다.
 2. 프로젝트 차이는 `sdd.yaml`의 `diagrams`와 `site`, `sections.yaml`의 클래스 선택·절별 `diagram` 설정으로 표현합니다. libcamera 네임스페이스를 공통 코드에 하드코딩하지 않습니다.

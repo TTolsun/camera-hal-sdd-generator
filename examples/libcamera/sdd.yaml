@@ -46,6 +46,11 @@ review:
 documentation:
   enabled: true
   pages:
+    # Vendor 채택 질문 네 개를 보강한 개요. 기존 구현 계약을 보존하되
+    # 산문은 8,500자로 제한한다. 검토 근거: docs/libcamera/records/vendor-adoption.md
+    vendor-overview.md:
+      max_growth_ratio: 1.7
+      max_chars: 8500
     # 빌드한 모든 패키지의 클래스 표라서 크다. 산문이 아니라 표이므로 전체 분량 한도만 넓힌다.
     component-index.md:
       max_markdown_chars: 250000

@@ -1,11 +1,11 @@
 sections:
 - id: vendor-overview
   group: For Vendor
-  title: 하드웨어 지원 구조와 구현 개요
+  title: 기능·강점과 Vendor 연동 안내
   output: vendor-overview.md
   kind: prose
-  lead: 하드웨어를 연결할 위치와 구현 책임을 확인한 뒤 설정·요청·알고리즘·종료 코드를 읽으세요.
-  reader: 새 하드웨어 지원을 추가하거나 기존 파이프라인과 영상 처리 알고리즘을 수정하는 개발자
+  lead: 제공 기능과 설계 강점, 지원 조건을 확인하고 연동 순서와 구현 책임을 정하세요.
+  reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
   design_generation: llm
   semantic_review: true
   show_evidence: true
@@ -20,16 +20,20 @@ sections:
   diagram:
     max_nodes: 24
   routes:
+  - q: 제공 기능과 지원 범위를 확인합니다.
+    to: '#제공-기능과-지원-범위'
+  - q: 공통 구현의 강점과 조건을 확인합니다.
+    to: '#구현-근거로-보는-강점'
+  - q: 연동 순서와 책임을 정합니다.
+    to: '#연동-순서와-책임'
+  - q: 지원 조건과 제약을 확인합니다.
+    to: '#지원-조건과-제약'
   - q: 장치 연동과 파이프라인 구현을 시작합니다.
     to: pipeline-handler.md
   - q: 알고리즘의 모듈 선택과 실행 경계를 확인합니다.
     to: ipa.md
   - q: 요청 정체와 버퍼 재사용 문제를 진단합니다.
     to: request-lifecycle.md
-  - q: IPU3 렌즈 음영 보정의 구현 사례를 읽습니다.
-    to: ipu3-lsc-flow.md
-  - q: RKISP1 카메라별 왜곡 보정의 구현 사례를 읽습니다.
-    to: rkisp1-dewarp.md
   watch:
   - src/libcamera/pipeline/**
   - src/libcamera/pipeline_handler.cpp
@@ -38,23 +42,111 @@ sections:
   - src/ipa/**
   - include/libcamera/ipa/**
   - include/libcamera/internal/ipa_manager.h
+  - src/libcamera/camera.cpp
   next:
     title: Pipeline Handler
     link: pipeline-handler.md
   design_requirements:
+  - id: capabilities
+    question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
+    aspects:
+    - capabilities
+  - id: benefits
+    question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
+    aspects:
+    - benefits
+  - id: integration
+    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    aspects:
+    - integration
+  - id: constraints
+    question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
+    aspects:
+    - constraints
   - id: boundary
     question: 하드웨어의 장치 매칭과 카메라 등록은 누가 구현합니까?
+    aspects:
+    - inputs
   - id: configuration
     question: 스트림 구성 구현은 어떤 입력과 출력 계약을 지킵니까?
+    aspects:
+    - inputs
   - id: request
     question: 공통 큐와 하드웨어 구현은 요청 처리 책임을 어떻게 나눕니까?
+    aspects:
+    - completion
   - id: algorithm
     question: IPA 모듈과 실행 방식은 어떻게 선택되며 언제 생성에 실패합니까?
+    aspects:
+    - failure
   - id: shutdown
     question: 정지 시 공통 코드와 하드웨어 구현은 무엇을 끝내야 합니까?
+    aspects:
+    - completion
+    - failure
   - id: validation
     question: 코드 계약과 별도 실행 검증 항목은 무엇입니까?
+    aspects:
+    - ownership
+    - verification
   design_topics:
+  - id: capabilities
+    title: 제공 기능과 지원 범위
+    question: Camera가 하나의 이미지 소스에서 하나 이상의 스트림을 제공하는 기능을 설명하세요. 하드웨어 지원은 장치별 PipelineHandler 구현과 등록에 달려 있습니다. 지원
+      기종이나 성능 수치를 추정하지 마세요.
+    covers:
+    - capabilities
+    sources:
+    - &id001
+      id: camera
+      file: src/libcamera/camera.cpp
+      start: '\class Camera
+
+        '
+      end: \subsection Camera States
+    - id: handler
+      file: src/libcamera/pipeline_handler.cpp
+      start: \file pipeline_handler.h
+      end: using namespace std::chrono_literals;
+  - id: benefits
+    title: 구현 근거로 보는 강점
+    question: PipelineHandler::queueRequest의 공통 구현과 계약이 제공하는 이점을 설명하세요. 준비 대기, 제출 순서, maxQueuedRequestsDevice_ 한도,
+      준비 실패·장치 제출 실패 시 취소와 정지 시 요청 추적을 다루세요. 장치 구현자의 completeRequest 통지 책임은 유지하며 처리 속도나 개발 기간 절감량을 추정하지 마세요.
+    covers:
+    - benefits
+    sources:
+    - id: queue
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::queueRequest()
+      end: void PipelineHandler::queueRequest(Request *request)
+  - id: integration
+    title: 연동 순서와 책임
+    question: 애플리케이션 연동은 acquire, configure, start, 요청 처리, stop, release 순서로 설명하세요. 하드웨어 구현자는 match에서 장치를 확보하고 Camera를
+      등록하는 별도 책임이 있습니다. match 성공·실패 계약을 지키고 상태 변경 함수의 동기화 책임이 호출자에게 있음을 설명하세요. 상세 함수 구현을 모두 반복하지 마세요.
+    covers:
+    - integration
+    sources:
+    - *id001
+    - id: handler
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::match(DeviceEnumerator *enumerator)
+      end: \brief Search and acquire a MediaDevice
+  - id: constraints
+    title: 지원 조건과 제약
+    question: CameraConfiguration::validate의 Invalid·Adjusted·Valid를 구분하고 Adjusted이면 스트림 파라미터 변경이나 스트림 삭제가 가능해 호출자가
+      다시 확인해야 함을 설명하세요. generateConfiguration의 roles와 하드웨어 지원 한계, configure의 검증된 입력과 실패 계약을 설명하세요. 특정 해상도·동시 스트림
+      수·성능을 보장하지 마세요.
+    covers:
+    - constraints
+    sources:
+    - id: validate
+      file: src/libcamera/camera.cpp
+      start: \fn CameraConfiguration::validate()
+      end: \brief Retrieve a reference to a stream configuration
+    - id: configuration
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::generateConfiguration()
+      end: \fn PipelineHandler::exportFrameBuffers()
   - id: boundary
     title: 하드웨어와 공통 계층의 경계
     question: 새 하드웨어의 match() 구현자가 장치 매칭 성공과 실패 때 각각 수행할 일과 카메라 등록 책임을 설명하세요. 객체 생성자나 다른 함수의 역할은 추정하지 마세요.
@@ -67,8 +159,8 @@ sections:
       end: \brief Search and acquire a MediaDevice
   - id: configuration
     title: 구현할 설정 인터페이스
-    question: 하드웨어 구현자가 generateConfiguration()과 configure()를 구현할 때 각각 받는 입력, 만들어야 할 출력과 실패 반환값을 설명하세요. 호출자의 API 사용 절차와 구현자의
-      의무를 구분하세요.
+    question: 하드웨어 구현자가 generateConfiguration()과 configure()를 구현할 때 각각 받는 입력, 만들어야 할 출력과 실패 반환값을 설명하세요. 호출자의 API
+      사용 절차와 구현자의 의무를 구분하세요.
     covers:
     - configuration
     sources:
@@ -112,7 +204,8 @@ sections:
       end: \brief Determine if the camera has any requests pending
   - id: validation
     title: 구현 뒤 확인할 계약과 실행 한계
-    question: completeRequest가 반환된 뒤 요청 접근 금지와 애플리케이션 반환 순서를 각각 설명하세요. 이 계약을 구현 뒤 확인할 기준으로 제시하고 실제 실행을 검증했다고 주장하지 마세요.
+    question: completeRequest가 반환된 뒤 요청 접근 금지와 애플리케이션 반환 순서를 각각 설명하세요. 이 계약을 구현 뒤 확인할 기준으로 제시하고 실제 실행을 검증했다고 주장하지
+      마세요.
     covers:
     - validation
     sources:
@@ -120,6 +213,7 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Signal request completion
       end: void PipelineHandler::completeRequest
+  reader_profile: vendor-overview
 - id: request-lifecycle
   group: For Vendor
   title: 요청 처리와 문제 진단
