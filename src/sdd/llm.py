@@ -84,7 +84,11 @@ class Agent:
             body['format'] = response_schema
         data = self._post(f"{self.cfg.base_url}/api/chat", body)
         try:
-            return str(data["message"]["content"]).strip()
+            content = str(data["message"]["content"]).strip()
+            if not content and data.get('done_reason') == 'length':
+                raise AgentError('Ollama가 출력 토큰 한도에 도달해 답변을 만들지 못했습니다. '
+                                 'max_output_tokens 또는 모델·추론 설정을 확인하세요.')
+            return content
         except (KeyError, TypeError) as e:
             raise AgentError(f"ollama 응답 형식이 예상과 다릅니다: {data}") from e
 

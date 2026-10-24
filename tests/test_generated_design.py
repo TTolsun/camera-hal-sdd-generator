@@ -161,11 +161,32 @@ def test_passage_selection_resolves_real_quote_and_source(tmp_cfg, generated):
     assert path.read_bytes() == original
 
 
+def test_exhausted_thinking_budget_preserves_manuscript(tmp_cfg, generated, monkeypatch):
+    from sdd.llm import Agent
+    section, model, save, fake = generated
+    path = Generator(tmp_cfg, model, fake).run()[0]
+    original = path.read_bytes()
+    agent = Agent(tmp_cfg.agent)
+    calls = []
+    def exhausted(url, body):
+        calls.append(body)
+        return {'message': {'content': ''}, 'done_reason': 'length'}
+    monkeypatch.setattr(agent, '_post', exhausted)
+    with pytest.raises(ValueError, match='출력 토큰 한도'):
+        Generator(tmp_cfg, model, agent).run()
+    assert len(calls) == 1
+    assert path.read_bytes() == original
+
+
 def test_passages_keep_context_and_reject_forged_source():
     from sdd.generated_design import source_passages, resolve_passages, quote_text
     source = 'if (!ready) {\n  return;\n}\n\n* Continue processing.\n*\nfinish();'
     annotated, passages = source_passages({'code': source})
     assert quote_text('\n\n'.join(item['text'] for item in annotated['code'])) == quote_text(source)
+    code = 'result = value\n    * scale;'
+    preserved, code_passages = source_passages({'expression': code})
+    assert preserved['expression'][0]['text'] == code
+    assert code_passages['expression:0'] == ('expression', code)
     key = next(iter(passages))
     with pytest.raises(ValueError, match='함께 쓸 수'):
         resolve_passages([dict(quote_id=key, text='설명합니다.', covers=['q'], kind='behavior', evidence=['forged'])], passages)

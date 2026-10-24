@@ -61,14 +61,16 @@ def source_passages(sources):
     """Send each source once, with stable local IDs for verbatim paragraphs."""
     annotated, passages = {}, {}
     for source_id, text in sources.items():
-        chunks = re.split(r'\n\s*\n', re.sub(r'^\s*\*(?: |$)', '', text, flags=re.M))
+        # Keep the original code, including leading multiplication/dereference
+        # operators. Comment decoration is normalized only for quote comparison.
+        chunks = re.split(r'\n\s*\n', text)
         annotated[source_id] = []
         for index, chunk in enumerate(chunks):
             item = {'text': chunk}
             if len(quote_text(chunk)) >= 12:
                 key = f'{source_id}:{index}'
                 item['quote_id'] = key
-                passages[key] = (source_id, quote_text(chunk))
+                passages[key] = (source_id, chunk.strip())
             annotated[source_id].append(item)
     return annotated, passages
 
@@ -212,22 +214,14 @@ def generate(generator, section):
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
     from .prompting import compose_system_prompt
     system = compose_system_prompt(cfg) + (
-        '\n\n이 호출의 출력 형식은 구조화된 JSON입니다. 위의 두 문단 분량 제한, Markdown 출력 및 파일:줄 인용 지시를 '
-        '이 호출에서는 적용하지 않습니다. text에 한국어 문단을 쓰고 quote_id에는 제공된 구절 키를 '
-        '그대로, covers에는 제공된 질문 키를 그대로 복사합니다. id에 줄 번호나 접두사를 붙이지 마세요. '
-        '인용·제목·링크는 생성기가 연결합니다. kind는 behavior 또는 limitation 중 하나입니다. '
-        '소스에 명시된 반환 조건과 실행 문맥은 behavior입니다. limitation에는 별도로 검증할 항목만 씁니다. '
-        '조건문의 true/false 분기와 각각의 반환값을 먼저 대조하고 설명하세요. '
-        '프레임워크를 호출하는 쪽과 인터페이스를 구현하는 쪽의 책임을 구분하세요. '
-        '함수 전체의 코드 근거가 없으면 추가 검증 유무·소유권·즉시 실행·스레드 보장을 추정하지 마세요. '
-        '각 설명마다 먼저 직접 근거인 영어 주석이나 코드 구절의 quote_id를 선택하고, '
-            'text에는 선택한 quote의 조건과 예외를 빠짐없이 한국어로 옮기세요. 코드 구절은 발췌 전체의 제어 흐름 안에서 해석하세요. '
-        'before와after, must와must not, null 반환과 프록시 선택을 바꾸지 마세요. '
-            'quote 밖의 추론이나 일반적인 위험 설명을 덧붙이지 마세요. '
-            '소스의 접근 금지를 메모리 해제 의무로, 함수 선언을 실행 결과 보장으로 바꾸지 마세요. '
-            '개발자에게 추가 행동을 권하거나 원문에 없는 이유를 설명하지 마세요. '
-            'may/can은 가능성이나 허용이며 의무가 아닙니다. shall/must는 의무입니다. '
-            'break는 반복 중단이며 요청 취소나 큐 제거가 아닙니다. 함수 인자를 실행 지연으로 추측하지 마세요.'
+        '\n\nFor this call, override earlier Markdown, citation and two-paragraph instructions. '
+        'Return structured JSON, with Korean text and the provided quote_id and requirement IDs. '
+        'The generator supplies citations, headings and diagrams. '
+        'Describe only source-supported behavior; preserve conditions, exceptions, ordering and may/must distinctions. '
+        'Name the responsible function or caller. Distinguish API obligations from observed implementation behavior. '
+        'Read code in its enclosing control flow: break is not cancellation, and assertions do not guarantee future behavior. '
+        'Do not invent advice, rationale, timing, ownership or thread guarantees. '
+        'Use a short analysis focused on the question, then produce the answer.'
     )
     answers = {}
     for topic in section['design_topics']:
