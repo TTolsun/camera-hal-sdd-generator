@@ -26,10 +26,12 @@ HEADING = "이 문서의 용어"
 # 펼쳐서 보여 줄 용어 수. 나머지는 접는다. 펼친 표가 길면 문서의 요약 다음에 본문이 한 화면 넘게 밀린다.
 OPEN_LIMIT = 5
 # 코드가 아닌 본문에서 약어로 보는 단어. 대문자로 시작하고 대문자·숫자만 이어진다(IPA, IPU3, RKISP1).
-# 경계는 영숫자만 본다. 한국어 조사가 붙은 "IPA는" 도 약어로 찾고, 클래스 이름(IPAManager)과
-# 식별자·경로의 일부(V4L2_CID, .YAML)는 뺀다.
+# 경계는 영숫자만 본다. 한국어 조사나 하이픈이 붙은 "IPA는", "LSC-보정" 도 약어로 찾고,
+# 클래스 이름(IPAManager)과 식별자·경로의 일부(V4L2_CID, .YAML, Mali-C55)는 뺀다.
 ASCII_WORD = "A-Za-z0-9_"
-ACRONYM = re.compile(rf"(?<![{ASCII_WORD}.-])[A-Z][A-Z0-9]+(?![{ASCII_WORD}-])")
+BEFORE = r"(?<![A-Za-z0-9_.])(?<![A-Za-z0-9]-)"
+AFTER = r"(?![A-Za-z0-9_]|-[A-Za-z0-9])"
+ACRONYM = re.compile(rf"{BEFORE}[A-Z][A-Z0-9]+{AFTER}")
 
 
 @dataclass
@@ -84,10 +86,14 @@ def load(cfg: Config) -> Glossary:
 
 
 def prose(markdown: str) -> str:
-    """코드 블록, 들여쓴 발췌, 인라인 코드, 링크 주소, HTML 주석을 뺀 본문."""
+    """코드 블록, 들여쓴 발췌, 인라인 코드, 링크 주소, HTML 주석을 뺀 본문.
+
+    들여쓴 줄은 소스 발췌로 보고 빼지만, 들여쓴 목록 항목(하위 목록)은 본문이라서 남긴다.
+    """
     text = re.sub(r"^---\n.*?\n---\n", "", markdown, count=1, flags=re.S)
     text = re.sub(r"^([ \t]*)(```|~~~).*?^\1\2[^\n]*$", "", text, flags=re.S | re.M)
-    text = "\n".join(line for line in text.splitlines() if not re.match(r"( {4}|\t)", line))
+    text = "\n".join(line for line in text.splitlines()
+                     if not re.match(r"( {4}|\t)", line) or re.match(r"\s*([-*+]|\d+\.)\s+\S", line))
     text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
     text = re.sub(r"`[^`\n]*`", " ", text)
     text = re.sub(r"\]\([^)]*\)", "]", text)
@@ -95,7 +101,7 @@ def prose(markdown: str) -> str:
 
 
 def _first(text: str, name: str) -> int | None:
-    match = re.search(rf"(?<![{ASCII_WORD}-]){re.escape(name)}(?![{ASCII_WORD}-])", text)
+    match = re.search(rf"{BEFORE}{re.escape(name)}{AFTER}", text)
     return match.start() if match else None
 
 
@@ -142,7 +148,8 @@ def block(terms: list[Term], glossary_href: str, open_limit: int = OPEN_LIMIT) -
     text = _items(terms[:open_limit])
     rest = terms[open_limit:]
     if rest:
-        text += (f'\n??? note "나머지 용어 {len(rest)}개 펼치기"\n\n'
+        # 접힌 용어 수를 제목에 넣지 않는다. 수가 바뀔 때마다 영어판 번역 문자열이 새로 생긴다.
+        text += ('\n??? note "나머지 용어 펼치기"\n\n'
                  + "".join("    " + line + "\n" for line in _items(rest).splitlines()))
     return (f"## {HEADING}\n\n{text}\n"
             f"다른 용어는 [용어집]({glossary_href})에서 찾을 수 있습니다.\n\n")
@@ -153,7 +160,8 @@ def insert(body: str, section: str) -> str:
     if not section:
         return body
     match = re.search(r"\S.*?(?:\n[ \t]*\n|\Z)", body, re.S)
-    if match is None or match[0].lstrip().startswith("#"):
+    # 제목·코드 블록·HTML 블록으로 시작하면 빈 줄이 블록 안에 있을 수 있으므로 맨 앞에 넣는다.
+    if match is None or match[0].lstrip().startswith(("#", "```", "~~~", "<", "???")):
         return section + body
     return body[:match.end()] + ("\n" if not match[0].endswith("\n\n") else "") + section + body[match.end():]
 
@@ -166,7 +174,11 @@ def page(glossary: Glossary) -> str:
 
 def enforce(cfg: Config, glossary: Glossary, pages: dict[str, str]) -> None:
     """뜻이 없는 약어를 알린다. 용어집 파일이 있으면 기본으로 게시를 중단한다."""
-    policy = str((cfg.raw.get("site") or {}).get("undefined_terms") or ("fail" if glossary.configured else "warn"))
+    policy = (cfg.raw.get("site") or {}).get("undefined_terms")
+    if policy is None:
+        policy = "fail" if glossary.configured else "warn"
+    # YAML 은 따옴표 없는 off 를 false 로 읽는다. 끄려던 설정이 기본값(fail)으로 바뀌지 않게 한다.
+    policy = "off" if policy is False else str(policy)
     if policy not in {"fail", "warn", "off"}:
         raise RuntimeError(f"site.undefined_terms 는 fail, warn, off 중 하나여야 합니다: {policy}")
     missing = undefined(glossary, pages) if policy != "off" else {}

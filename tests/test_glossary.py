@@ -89,7 +89,7 @@ def test_약어_검사는_코드_발췌와_식별자를_뺀다():
 def test_먼저_나온_용어는_펼치고_나머지만_접는다():
     terms = [glossary.Term(f"T{i}", "뜻입니다.") for i in range(glossary.OPEN_LIMIT + 2)]
     text = glossary.block(terms, "glossary.md")
-    shown, folded = text.split('??? note "나머지 용어 2개 펼치기"')
+    shown, folded = text.split('??? note "나머지 용어 펼치기"')
     assert "- **T0**: " in shown and f"- **T{glossary.OPEN_LIMIT - 1}**: " in shown
     assert f"    - **T{glossary.OPEN_LIMIT}**: " in folded
     assert "???" not in glossary.block(terms[:glossary.OPEN_LIMIT], "glossary.md")
@@ -107,6 +107,26 @@ def test_요약_문단_뒤에_넣는다():
     body = "\n**요약입니다.**\n\n## 본문\n\n내용\n"
     assert glossary.insert(body, "## 용어\n\n").index("## 용어") > body.index("요약")
     assert glossary.insert("## 본문\n", "## 용어\n\n").startswith("## 용어")
+
+
+@pytest.mark.parametrize("body", ["```cpp\na();\n\nb();\n```\n\n문단\n", "<div>\n\n안\n</div>\n"])
+def test_코드나_HTML_블록으로_시작하면_블록을_자르지_않는다(body):
+    assert glossary.insert(body, "## 용어\n\n") == "## 용어\n\n" + body
+
+
+def test_하이픈이_붙은_약어와_하위_목록도_검사한다():
+    g = glossary.Glossary([], set(), True)
+    text = "LSC-보정을 씁니다. Mali-C55 와 IPA-v2 는 이름입니다.\n\n- 상위\n    - ISP 하위 항목\n"
+    assert glossary.undefined(g, {"a.md": text}) == {"ISP": ["a.md"], "LSC": ["a.md"]}
+
+
+def test_따옴표_없는_off_는_검사를_끈다(tmp_cfg, sample_model):
+    import yaml
+    prepare(tmp_cfg, sample_model)
+    write_glossary(tmp_cfg, GLOSSARY)
+    add_prose(tmp_cfg, "LSC를 씁니다.")
+    tmp_cfg.raw["site"]["undefined_terms"] = yaml.safe_load("v: off")["v"]
+    assert export_site(tmp_cfg).is_dir()
 
 
 @pytest.mark.parametrize("text, message", [

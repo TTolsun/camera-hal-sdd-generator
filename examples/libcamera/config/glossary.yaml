@@ -102,6 +102,12 @@ terms:
     definition: >-
       운영체제가 제조사마다 다른 하드웨어를 같은 인터페이스로 다루게 하는 계층입니다.
       이 프로젝트의 최종 적용 대상은 사내 Android Camera HAL입니다.
+  - term: errno
+    definition: >-
+      Linux 함수가 실패 원인을 알리는 표준 오류 번호입니다. libcamera 함수는 이 값을 음수로 돌려줍니다.
+      예를 들어 -ENODEV는 장치 없음, -EACCES는 접근 거부, -EINVAL은 잘못된 인자, -ENOMEM은 메모리 부족,
+      -EXDEV는 다른 객체에 속한 자원을 뜻합니다.
+    aliases: [EACCES, EINVAL, ENODEV, ENOMEM, EXDEV]
   - term: ASSERT
     definition: libcamera의 디버그 검사 매크로입니다. 디버그 빌드에서 조건이 거짓이면 치명적 로그를 남기고 실행을 중단합니다.
   - term: WSL2
