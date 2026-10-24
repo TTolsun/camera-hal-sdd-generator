@@ -80,18 +80,18 @@ sections:
       end: \fn PipelineHandler::exportFrameBuffers()
   - id: request
     title: 요청을 장치에 전달하고 반환하기
-    question: 공통 큐가 처리하는 일과 queueRequestDevice 구현자가 처리하는 일을 구분하고 버퍼 완료와 요청 완료의 차이 및 완료 뒤 접근 금지를 설명하세요.
+    question: queueRequestDevice 구현자가 버퍼와 파라미터에 대해 지킬 계약과 completeBuffer에서 버퍼 완료와 요청 완료를 구분하는 계약을 설명하세요.
     covers:
     - request
     sources:
     - id: queue
       file: src/libcamera/pipeline_handler.cpp
-      start: \fn PipelineHandler::registerRequest()
+      start: \fn PipelineHandler::queueRequestDevice()
       end: \brief Complete a buffer for a request
     - id: completion
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
-      end: \brief Retrieve the absolute path to a platform configuration file
+      end: bool PipelineHandler::completeBuffer
   - id: algorithm
     title: IPA 모듈 선택과 실패 조건
     question: createIPA()의 모듈 검색, 서명 판정, 생성된 프록시 유효성 검사를 각각 설명하세요. nullptr를 반환하는 분기와 실행 방식을 선택하는 분기를 구분하세요.
