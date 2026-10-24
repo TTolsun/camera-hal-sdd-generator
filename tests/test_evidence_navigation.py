@@ -15,7 +15,11 @@ def test_grouped_disclosures_preserve_all_destinations_and_claim_association():
               '<a href="#source-8888888888888888">src/a.cpp:8</a></p>')
     result = compact_evidence(source, {'src/a.cpp:1', 'src/a.cpp:8'})
     assert result.startswith('<p>Keep this claim and <code>identifier</code>.</p><details')
-    assert Counter(re.findall('href="([^"]+)"', result)) == Counter(re.findall('href="([^"]+)"', source))
+    expected = Counter(re.findall('href="([^"]+)"', source))
+    expected.update(['#source-1111111111111111', '#source-8888888888888888'])
+    assert Counter(re.findall('href="([^"]+)"', result)) == expected
+    assert result.index('href="#source-1111111111111111"') < result.index('href="https://example/commit/a#L1"')
+    assert '발췌</a>' in result and '전체 소스 <code>L1</code>' in result
     assert result.count('<code>src/a.cpp</code>') == 2  # once in each independent scope
     assert result.count('aria-label="src/a.cpp:1"') == 2
     assert '<summary>문단 근거 <span>2</span>개</summary>' in result
@@ -46,6 +50,16 @@ def test_unknown_inline_standalone_and_example_code_remain_visible():
               '<p>근거 원문: <a href="#source-1111111111111111">a.cpp:1</a> explanation</p>')
     assert compact_evidence(source, {'a.cpp:1', 'a.cpp:2', 'a.cpp:3'}) == source
     assert compact_evidence(source, set()) == source
+
+
+def test_host_citation_keeps_destination_when_local_excerpt_is_ambiguous():
+    source = ('<p>Claim. <a class="citation" href="https://host/a#L1"><code>a.cpp:1</code></a></p>'
+              '<p>근거 원문: <a href="#source-1111111111111111">a.cpp:1</a> · '
+              '<a href="#source-2222222222222222">a.cpp:1</a></p>')
+    result = compact_evidence(source, {'a.cpp:1'})
+    assert result.count('href="#source-1111111111111111"') == 1
+    assert 'href="https://host/a#L1"' in result
+    assert '발췌</a>' not in result
 
 
 def test_renderer_requires_matching_commit_and_keeps_local_anchors(sample_model):

@@ -17,7 +17,7 @@ _ITEMS = re.compile(_ITEM)
 _LOCAL = re.compile(r'<a href="(#source-[0-9a-f]{16})">([^<>]+:\d+)</a>')
 
 
-def _panel(refs: list[tuple[str, str]], scope: str) -> str:
+def _panel(refs: list[tuple[str, str]], scope: str, destinations=None) -> str:
     groups = defaultdict(list)
     for cite, element in refs:
         file, line = cite.rsplit(':', 1)
@@ -29,6 +29,14 @@ def _panel(refs: list[tuple[str, str]], scope: str) -> str:
             element = re.sub(r'>.*</a>$', '>' + label + '</a>', element, flags=re.S)
         else:
             element = '<span title="' + html.escape(cite, quote=True) + '">' + label + '</span>'
+        local = (destinations or {}).get(cite, set())
+        if len(local) == 1 and 'class="citation"' in element:
+            # Keep the pinned host link, but make the in-document excerpt the
+            # first action. Do not choose between ambiguous excerpts.
+            element = element.replace(label, '전체 소스 ' + label)
+            element = ('<a href="' + next(iter(local)) + '" aria-label="'
+                       + html.escape(cite, quote=True) + ' 발췌">' + label
+                       + ' 발췌</a> · ' + element)
         groups[file].append(element)
     rows = ''.join('<li><code>' + html.escape(file) + '</code><span class="evidence-lines">'
                    + ' · '.join(items) + '</span></li>' for file, items in groups.items())
@@ -73,7 +81,7 @@ def compact_evidence(document: str, valid: set[str]) -> str:
             if not item.startswith('<a ') and len(local) == 1:
                 item = f'<a href="{next(iter(local))}">{item}</a>'
             refs.append((cite, item))
-        return '<p>' + body[:suffix.start()] + '</p>' + _panel(refs, 'paragraph')
+        return '<p>' + body[:suffix.start()] + '</p>' + _panel(refs, 'paragraph', destinations)
 
     # Never interpret example HTML inside code blocks as document navigation.
     chunks = re.split(r'(<pre\b[^>]*>.*?</pre>)', document, flags=re.S)
