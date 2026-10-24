@@ -233,6 +233,15 @@ def generate(generator, section):
                 candidate = {topic['id']: data['statements']}
                 subset = {**section, 'design_topics': [topic], 'design_requirements': [
                     r for r in section['design_requirements'] if r['id'] in topic['covers']]}
+                # A topic covers only part of a reader profile. Check its prose
+                # against the full section's requirements; coverage is checked
+                # before calls and again after assembling every topic.
+                from .reader_profiles import profile_errors
+                errors = profile_errors({**section, 'design_topics': [
+                    {**topic, 'statements': data['statements']}]})
+                if errors:
+                    raise ValueError(' / '.join(errors))
+                subset.pop('reader_profile', None)
                 validate_answers(model, subset, candidate)
                 answers.update(candidate)
                 break
