@@ -23,7 +23,7 @@
     "vendor-overview.html": "c18a4cf214176091077d2f959b083290931f96c348d39adf62e4d3bc500c81a7"
   },
   "strings": {
-    "\"자동 검사 통과\"는 인용한 코드 위치와 문장 형식을 기계로 확인했다는 뜻이며, 사람의 내용 승인이 아닙니다. 문서 상단에 검토 상태를, 아래 생성 근거에 분석 커밋과 자동 검사 결과를 표시합니다. 코드 발췌와 대조한 설명도 내용이 맞는지 사람이 검토해야 합니다.": "\"Automatic checks passed\" means a machine checked the cited code locations and the sentence form; it is not human approval of the content. Each document shows its review state at the top, and its analysis commit and automatic check result in the generation evidence at the bottom. Explanations checked against code excerpts still need a person to confirm that they are correct.",
+    "\"자동 검사 통과\"는 인용한 코드 위치와 문장 형식을 기계로 확인했다는 뜻이며, 사람의 내용 승인이 아닙니다. 문서 상단에 검토 상태를, 아래 생성 근거에 분석 커밋과 자동 검사 결과를 표시합니다. 코드 발췌와 대조한 설명도 내용이 맞는지 사람이 검토해야 합니다.": "\"Automatic checks passed\" means a machine checked the cited code locations and the sentence form; it is not human approval of the content. Each document shows its review status at the top, and its analysis commit and automatic check result in the generation evidence at the bottom. Explanations checked against code excerpts still need a person to confirm that they are correct.",
     "Arm Mali-C55 카메라 ISP입니다. libcamera에는 이 장치용 Pipeline Handler와 IPA가 있습니다.": "The Arm Mali-C55 camera ISP. libcamera has a Pipeline Handler and an IPA for it.",
     "CameraManager, Camera, Request의 책임과 객체 수명은 어떻게 나뉩니까?": "How are responsibilities and object lifetimes divided among CameraManager, Camera and Request?",
     "Camera는 어떤 공개 기능과 객체 수명 계약을 제공합니까?": "What public interfaces and object lifetime contracts does Camera provide?",
@@ -932,7 +932,7 @@
     "클래스와 관계를 facts에서 구성합니다. 실행 동작을 검증하지 않습니다.": "Builds classes and relationships from facts. It does not validate runtime behavior.",
     "클래스의 책임, 요청과 버퍼의 수명, 상태 전이와 종료·동기화 계약을 코드 근거로 확인하세요.": "Check class responsibilities, request and buffer lifetimes, state transitions, and shutdown/synchronization contracts against code evidence.",
     "탐색과 파이프라인 선택": "Discovery and pipeline selection",
-    "통과 ({{1}}). 검사한 항목은 검증 범위에 적혀 있습니다. 설명 내용이 맞는지는 사람이 확인합니다.": "Passed ({{1}}). The checked items are listed under validation scope. A person confirms whether the explanation is correct.",
+    "통과 ({{1}}). 검사한 항목은 검증 범위에 적혀 있습니다. 설명 내용이 맞는지는 사람이 확인합니다.": "Passed ({{1}}). The checked items are listed under Validation scope. Whether the explanation is correct still needs a person to confirm.",
     "튜닝 입력의 기본값과 오류": "Tuning input defaults and errors",
     "튜닝 입력의 기본값과 오류 절을 확인합니다.": "See Tuning input defaults and errors.",
     "튜닝 파일": "Tuning file",
