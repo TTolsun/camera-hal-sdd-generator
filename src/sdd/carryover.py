@@ -70,7 +70,14 @@ def carry_forward(cfg: Config, model: KnowledgeModel,
         sec = sections.get(meta.get("section", ""), {})
         if sec.get("design_requirements") or sec.get("reader_profile"):
             from .design_contracts import audit
-            invalid.extend(audit(model, sec)["findings"])
+            from . import generated_design
+            if generated_design.enabled(sec):
+                try:
+                    generated_design.verify(model, sec, text)
+                except ValueError as exc:
+                    invalid.append(str(exc))
+            else:
+                invalid.extend(audit(model, sec)["findings"])
         if meta.get("scenario_fingerprint"):
             from .scenario_document import fingerprint as scenario_fingerprint
             sid = meta.get("scenario_id", "")

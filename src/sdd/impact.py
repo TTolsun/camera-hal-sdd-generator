@@ -68,7 +68,7 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
         hits = [f for f in files if f not in unbuilt and match_any(f, sec.get("watch", []) or [])]
         if hits:
             report.sections.setdefault(sec["id"], []).append(f"watch 일치: {', '.join(hits[:5])}")
-        # Authored contracts depend on source excerpts even without selected
+        # Authored and model-generated contracts depend on excerpts without selected
         # symbols or watch globs. Explicit evidence can also be outside the
         # compile DB (for example build configuration or interface headers).
         evidence_files = {PurePosixPath(source["file"]).as_posix() for topic in sec.get("design_topics", [])

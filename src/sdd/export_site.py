@@ -295,7 +295,11 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
                 from .design_contracts import enforce
                 if model is None:
                     raise RuntimeError("facts.json is required to verify design requirements")
-                enforce(model, section)
+                from . import generated_design
+                if generated_design.enabled(section):
+                    generated_design.verify(model, section, texts[rel])
+                else:
+                    enforce(model, section)
             from .evidence import fingerprint, requires_fingerprint
             if requires_fingerprint(section) or meta.get("evidence_fingerprint"):
                 if model is None or meta.get("evidence_fingerprint") != fingerprint(model, section):
