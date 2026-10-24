@@ -1,5 +1,7 @@
 # camera-hal-sdd-generator
 
+사내에 전달하려면 [반입 패키지 시작 안내](docs/inhouse/package.md)를 여세요. 시작 프롬프트, 실행 순서, 품질 합격 기준과 복구 절차를 한 곳에 모았습니다.
+
 **사내 Camera HAL에 처음 적용한다면 [1단계: 준비물](docs/inhouse/01-prepare.md)을 여세요.** 전체 문서 지도는 [docs/README.md](docs/README.md)에 있습니다.
 
 C++ Camera HAL 소스에서 검토용 설계 문서(SDD)를 만들고, 새 커밋이 올라올 때마다 바뀐 부분만 다시 만드는 생성기입니다.
