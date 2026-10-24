@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 KOREAN = re.compile(r"[가-힣]")
-ATTRIBUTES = {"aria-label", "placeholder", "title"}
+ATTRIBUTES = {"aria-label", "data-label", "placeholder", "title"}
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 
 

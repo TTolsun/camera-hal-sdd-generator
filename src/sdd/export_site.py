@@ -17,7 +17,7 @@ from . import glossary
 from .evidence_navigation import compact_evidence
 from .config import Config, section_output
 from .diagrams import section_diagram, diagram_block
-from .document_metadata import generation_info
+from .document_metadata import generation_info, reader_label
 from .export_html import _mermaid_fence, _nav_entries, _split, _title_of_text
 from .facts.model import KnowledgeModel
 
@@ -79,12 +79,21 @@ def _approval_label(state: str, entry: dict | None) -> str:
     return "사람 검토 전"
 
 
-def _status(meta: dict, approval: str = "unreviewed", approval_entry: dict | None = None) -> str:
+def _check(meta: dict) -> tuple[str, str, str]:
+    """자동 검사의 이름, 결과, 확인 범위. 상단에는 쉬운 말만 쓰고 상태 코드는 생성 근거에 둔다."""
     status = str(meta.get("status", "unrecorded"))
-    check_name = "자동 검사" if meta.get("semantic_review") or meta.get("generation_method") else "인용 검사"
-    label = {"ok": f"{check_name} 통과", "needs-review": f"{check_name} 확인 필요"}.get(status, f"{check_name} 미기록")
+    if meta.get("semantic_review") or meta.get("generation_method"):
+        name, scope = "자동 검사", "인용한 코드 위치가 분석 결과에 있는지와 문장 형식을 확인했습니다."
+    else:
+        name, scope = "인용 검사", "인용한 코드 위치가 분석 결과에 있는지 확인했습니다."
+    result = {"ok": "통과", "needs-review": "확인 필요"}.get(status, "미기록")
+    return name, result, scope + " 설명 내용이 맞는지는 사람이 확인합니다."
+
+
+def _status(meta: dict, approval: str = "unreviewed", approval_entry: dict | None = None) -> str:
+    name, result, _ = _check(meta)
     return (f'<span class="review-state">{html.escape(_approval_label(approval, approval_entry))}</span>'
-            f'<span>{label} · <code>{html.escape(status)}</code></span>')
+            f'<span>{name} {result}</span>')
 
 
 def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
@@ -133,7 +142,22 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
         table = match[0]
         # Navigation choices must remain visible without horizontal scrolling.
         routes = any(f'<th>{heading}</th>' in table for heading in ('지금 확인할 내용', '시작할 문서'))
-        classes = 'table-scroll reading-routes' if routes else 'table-scroll'
+        head = re.search(r"<thead>(.*?)</thead>", table, re.S)
+        labels = [html.escape(html.unescape(re.sub(r"<[^>]+>", "", cell)).strip(), quote=True)
+                  for cell in re.findall(r"<th[^>]*>(.*?)</th>", head[1], re.S)] if head else []
+        if routes:
+            classes = 'table-scroll reading-routes'
+        elif len(labels) >= 3:
+            # 휴대폰에서는 세 열 이상 표를 행마다 열 이름이 붙은 묶음으로 쌓아, 가로로 밀지 않고 읽게 한다(reading.css).
+            classes = 'table-scroll stack'
+
+            def row(match: re.Match) -> str:
+                cells = iter(labels)
+                return re.sub(r"<td(?=[\s>])", lambda _: f'<td data-label="{next(cells, "")}"', match[0])
+
+            table = re.sub(r"<tr>.*?</tr>", row, table, flags=re.S)
+        else:
+            classes = 'table-scroll'
         return f'<div class="{classes}" tabindex="0" role="region" aria-label="표">{table}</div>'
 
     rendered = re.sub(r"<table>.*?</table>", table_wrapper, rendered, flags=re.S)
@@ -250,9 +274,9 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
             texts["index.md"] = "# 문서 안내\n\n코드에서 추출한 구조와 문장별 근거를 함께 확인하세요.\n"
         texts["index.md"] += "\n## 문서 목록\n\n| 문서 | 자동 검사 | 검토 상태 |\n|---|---|---|\n"
         for _, name, rel in entries:
-            status = _split(texts[rel])[0].get("status", "unrecorded")
+            result = _check(_split(texts[rel])[0])[1]
             label = _approval_label(approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))
-            texts["index.md"] += f"| [{name}]({rel}) | `{status}` | {label} |\n"
+            texts["index.md"] += f"| [{name}]({rel}) | {result} | {label} |\n"
         entries.insert(0, ("시작하기", "문서 안내", "index.md"))
         approval_states["index.md"] = "unreviewed"
     # 용어집은 표시용이다. 원고를 바꾸지 않고, 뜻이 없는 약어가 있으면 게시 전에 멈춘다.
@@ -414,6 +438,9 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         if meta:
             info.append(f'<dt>생성 방식</dt><dd>{html.escape(method_label)}</dd>')
             info.append(f'<dt>검증 범위</dt><dd>{html.escape(method_scope)}</dd>')
+            check_name, check_result, check_scope = _check(meta)
+            info.append(f'<dt>{check_name}</dt><dd>{check_result} (<code>{html.escape(str(meta.get("status", "unrecorded")))}</code>). '
+                        f'{html.escape(check_scope)}</dd>')
         for key, label in [("source_commit", "분석 기준 커밋"), ("generated_at", "문서 생성 시각"), ("agent", "문장 생성 모델")]:
             if meta.get(key):
                 info.append(f'<dt>{label}</dt><dd><code>{html.escape(str(meta[key]))}</code></dd>')
@@ -430,7 +457,9 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         status = (_status(meta, approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))
                   if meta else '<span class="review-state">검토용 문서</span>')
         if meta:
-            status += f'<span class="generation-method">{html.escape(method_label)}</span>'
+            # 배지는 처음 읽는 사람용 짧은 말이다. 정확한 기록 문구와 상태 코드는 아래 생성 근거에 있다.
+            status += (f'<span class="generation-method">작성: {html.escape(reader_label(str(meta.get("generation_method", ""))))}</span>'
+                       '<a class="state-help" href="#page-evidence">상태 설명 ↓</a>')
         page_config = {"root": root, "mermaid": mermaid_src}
         if glossary.PAGE in rendered_pages and rel != glossary.PAGE:
             page_config["terms"] = terms_version  # 본문의 첫 용어에 밑줄과 뜻 상자를 붙인다(site.js)

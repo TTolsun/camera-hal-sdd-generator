@@ -125,3 +125,13 @@ def test_diagram_translation_preserves_topology():
     assert 'a["상속"]' in en
     assert 'a -.->|inheritance| b' in en
     assert '"stop() · dispatched method; execution order not established statically"' in en
+
+
+def test_stacked_table_column_labels_are_translated():
+    text = '<table><tbody><tr><td data-label="책임 &quot;주석&quot;">값</td><td data-label="">x</td></tr></tbody></table>'
+    strings = {'책임 "주석"': 'Role "comment"', '값': 'value'}
+    parser = DisplayText(lambda s: strings[s])
+    parser.feed(text)
+    result = ''.join(parser.output)
+    assert '<td data-label="Role &quot;comment&quot;">value</td>' in result
+    assert '<td data-label="">x</td>' in result
