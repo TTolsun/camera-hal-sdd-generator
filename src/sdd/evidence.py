@@ -77,7 +77,9 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
                     line = text[:begin].count("\n") + 1
                     record.update(status="available", file=file, line=line,
                                   end_line=line + excerpt.count("\n"), text=excerpt,
-                                  sha256=hashlib.sha256(excerpt.encode()).hexdigest())
+                                  sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+                                  # 발췌 밖에 공백뿐이면 파일 전체를 고정한 근거다. 범위 검사가 이 표시를 쓴다.
+                                  whole_file=not text[:begin].strip() and not text[finish:].strip())
                     if source.get("sha256") and record["sha256"] != source["sha256"]:
                         record.update(status="needs-review", reason="근거 본문이 변경됐습니다. 연결된 설계 설명을 재검토하세요.")
                 except (OSError, ValueError) as exc:
@@ -144,7 +146,8 @@ def fingerprint(model: KnowledgeModel, sec: dict) -> str:
             "functions": {n: v for n, v in serialized["functions"].items()
                           if matches_symbol(n, sec.get("facts", {}).get("functions", []))},
             "relations": sorted((r.source, r.target, r.type) for r in model.relations if r.source in names),
-            "evidence": {k: {f: v for f, v in r.items() if f != "commit"}
+            # whole_file 은 범위 검사용 표시다. 원고의 입력이 아니므로 넣지 않는다(넣으면 생성기만 올려도 지문이 바뀐다).
+            "evidence": {k: {f: v for f, v in r.items() if f not in ("commit", "whole_file")}
                          for k, r in model.evidence.items() if k.startswith(sec["id"] + "/")}}
     facts = sec.get("facts", {})
     if facts.get("packages") or sec.get("kind") == "per-package":
