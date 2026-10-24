@@ -19,6 +19,19 @@ GENERATION_METHODS = {
 }
 
 
+# 사이트 상단 배지에 쓰는 짧은 표현이다. 원고에 기록되는 위 문구는 바꾸지 않는다(원고 해시와 승인이 바뀐다).
+READER_LABELS = {
+    "source-bound-contract": "코드 발췌와 대조한 설명",
+    "extracted-structure": "코드에서 추출한 구조",
+    "extracted-scenario": "코드에서 추출한 호출 흐름",
+    "facts-and-llm": "추출한 구조와 모델이 쓴 초안",
+    "mixed": "코드 대조 설명과 모델이 쓴 초안",
+    "deterministic": "코드와 설정에서 만든 목록",
+    "manual": "사람이 쓴 문서",
+    "dry-run": "점검용 초안",
+}
+
+
 def generation_method(section: dict, agent_kind: str) -> str:
     kind = section.get("kind", "prose")
     if kind == "manual":
@@ -43,6 +56,10 @@ def generation_method(section: dict, agent_kind: str) -> str:
 
 def generation_info(method: str) -> tuple[str, str]:
     return GENERATION_METHODS.get(method, ("생성 방식 미기록", "기존 원고에 생성 방식이 기록되지 않았습니다. 다시 생성하면 표시됩니다."))
+
+
+def reader_label(method: str) -> str:
+    return READER_LABELS.get(method, "작성 방식 미기록")
 
 
 def manual_evidence_files(path: Path) -> list[str]:
