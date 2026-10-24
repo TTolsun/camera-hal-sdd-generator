@@ -45,7 +45,7 @@
 1. 제품의 compile DB와 생성 헤더를 준비합니다. NDK-build이면 `uv run sdd --config <CFG> compdb`를 먼저 실행합니다. 다른 빌드에서는 위에서 확인한 DB 생성 명령을 실행합니다.
 2. `uv run sdd --config <CFG> doctor`로 환경을 확인합니다. 시나리오는 실제 정의의 완전한 시그니처를 사용합니다. [진입점 규칙](../reference/sections.md#hal3-진입점-작성-규칙)에 따라 큐 소비 함수와 콜백 경계를 구분합니다.
 3. `uv run sdd --config <CFG> extract`로 사실을 추출합니다. 파싱 오류·진입점 누락이 없고, compile DB의 TU와 주요 모듈이 실제 빌드 범위에 맞는지 확인합니다. 클래스 수가 많다는 사실만으로 완전성을 판단하지 않습니다.
-4. [소스에서 계약 작성하기](contract-authoring.md)를 수행합니다. Vendor·아키텍처의 필수 질문에 답하고, 발췌·해시·`covers`를 연결합니다. `components` 색인은 유지하되 계약 설명을 대신하게 하지 않습니다.
+4. [소스에서 계약 작성하기](contract-authoring.md)를 수행합니다. Vendor·Developer의 필수 질문에 답하고, 발췌·해시·`covers`를 연결합니다. `components` 색인은 유지하되 계약 설명을 대신하게 하지 않습니다.
 5. `config/glossary.yaml`에 약어의 뜻과 문맥을 채우고 `generate`를 실행합니다. 근거가 부족한 필수 질문이 있으면 관련 구현과 테스트를 더 조사합니다. 여전히 모르면 해당 질문과 막힌 이유를 남기고 생성 완료로 처리하지 않습니다.
 
 **완료 증거:** facts의 `meta.source_commit`, 추출 범위, 두 프로필의 질문별 답변, 발췌 위치·해시, `build/design-review.json`입니다. 전부 `documented`여도 의미가 맞다는 승인으로 간주하지 않습니다.

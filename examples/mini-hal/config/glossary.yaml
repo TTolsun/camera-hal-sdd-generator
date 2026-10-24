@@ -1,0 +1,5 @@
+terms:
+  - term: HAL
+    full: Hardware Abstraction Layer
+    definition: 프레임워크와 하드웨어 구현을 연결하는 계층입니다. 이 예제에서는 카메라 장치의 구성과 요청 처리를 연결합니다.
+common: []

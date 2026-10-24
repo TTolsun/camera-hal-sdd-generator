@@ -1,4 +1,4 @@
-"""Portable, evidence-bound minimums for the two SDD reader roles."""
+"""Portable, evidence-bound minimums for SDD readers, including the legacy architecture profile."""
 
 import re
 
@@ -10,6 +10,14 @@ PROFILES = {
         'completion': '제출과 완료, 정지를 어떻게 구분합니까?',
         'failure': '실패를 어떻게 구분하고 처리합니까?',
         'verification': '어떤 조건을 실행에서 확인해야 합니까?',
+    },
+    'developer': {
+        'entry': '처음 읽을 파일과 진입점, 요청을 따라갈 순서는 무엇입니까?',
+        'responsibility': '각 컴포넌트는 무엇을 담당합니까?',
+        'boundaries': '요청과 결과는 어느 호출·큐·콜백을 통과합니까?',
+        'lifecycle': '상태와 자원 수명은 어떻게 변합니까?',
+        'concurrency': '호출 스레드와 작업 스레드, 잠금은 어떻게 구분합니까?',
+        'verification': '수정·디버깅할 코드와 확인 조건, 정적 근거의 한계는 무엇입니까?',
     },
     'architecture': {
         'responsibility': '컴포넌트의 책임은 어떻게 나뉩니까?',
@@ -26,7 +34,7 @@ def profile_errors(section):
     if profile is None:
         return []
     if not isinstance(profile, str) or profile not in PROFILES:
-        return ['reader_profile은 vendor 또는 architecture여야 합니다.']
+        return ['reader_profile은 vendor, developer 또는 architecture여야 합니다.']
     requirements = section.get('design_requirements', [])
     found = set()
     for requirement in requirements:

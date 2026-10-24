@@ -66,7 +66,7 @@ def test_inhouse_template_cannot_silently_publish_empty_contracts(tmp_cfg):
     from sdd.design_contracts import audit
     sections = yaml.safe_load((ROOT / 'examples/inhouse-template/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     profiles = [s for s in sections if s.get('reader_profile')]
-    assert {s['reader_profile'] for s in profiles} == set(PROFILES)
+    assert {s['reader_profile'] for s in profiles} == {'vendor', 'developer'}
     for sec in profiles:
         assert configuration_errors(sec) == []
         assert audit(KnowledgeModel(), sec)['status'] == 'incomplete'
@@ -81,3 +81,11 @@ def test_reader_profile_rejects_dense_prose_but_preserves_structured_detail():
     assert not configuration_errors(section)
     answer['text'] = '| 조건 | 설명 |\n|---|---|\n' + '| 상태 | 조건과 예외를 확인합니다. |\n' * 30
     assert not configuration_errors(section)
+
+
+def test_developer_rejects_architecture_only_question_set():
+    section = {'reader_profile': 'developer', 'design_requirements': [
+        dict(id=k, aspects=[k]) for k in PROFILES['architecture']]}
+    assert any('developer/entry' in e for e in configuration_errors(section))
+    section['reader_profile'] = 'architecture'
+    assert configuration_errors(section) == []  # Saved legacy configs remain supported.

@@ -20,6 +20,7 @@ paths:
   # 섹션, 프롬프트, 뼈대, 집필 규칙은 저장소 것을 그대로 쓴다. 시나리오 진입점만 예제 코드에 맞춘다.
   sections_file: ../../config/sections.yaml
   scenarios_file: ./config/scenarios.yaml
+  glossary_file: ./config/glossary.yaml
   clang_uml_file: ../../config/clang-uml.yaml
   prompts: ../../prompts
   templates: ../../templates
@@ -46,7 +47,7 @@ site:
   enabled: true
   title: mini-hal 설계 문서 (예제)
   # 왼쪽 메뉴의 그룹 순서. sections.yaml 의 group 값과 맞춘다.
-  nav_groups: ["시작하기", "For Users", "For Developers"]
+  nav_groups: ["시작하기", "For Developer"]
 
 diagrams:
   enabled: true
