@@ -97,3 +97,28 @@ def test_커밋_자신의_버전_문자열과_생성된_TU_의_내용은_지문�
     b = units("18b1542f5540" + "0" * 28, 179, 'const char *v = "v0.7.2+179-18b1542f 01:20:02";\n')
     assert a == b
     assert units("18b1542f5540" + "0" * 28, 179, "")["app.cpp"] == a["app.cpp"]
+
+
+def test_다시_구성하지_않아_남은_예전_커밋의_버전_문자열도_가린다(tmp_cfg):
+    from sdd.extract import _compile_units
+    root = tmp_cfg.source_root
+
+    def git(*args):
+        return subprocess.check_output(["git", "-C", str(root), *args], encoding="utf-8").strip()
+
+    git("init", "-q")
+    shas = []
+    for i in range(2):
+        (root / "app.cpp").write_text(f"int x = {i};\n", encoding="utf-8")
+        git("add", "app.cpp")
+        git("-c", "user.name=T", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", f"c{i}")
+        shas.append(git("rev-parse", "HEAD"))
+
+    def units(version_commit, distance, head):
+        entries = [{"directory": str(root), "file": "app.cpp",
+                    "arguments": ["c++", f'-DVERSION="0.7.2+{distance}-{version_commit[:8]}"', "-c", "app.cpp"]}]
+        return _compile_units(tmp_cfg, entries, ["app.cpp"], head)["app.cpp"]
+
+    # Meson 은 다시 구성할 때만 VERSION 을 정하므로, 두 번째 커밋의 DB 에 첫 커밋의 ID 가 남을 수 있다.
+    assert units(shas[0], 10, shas[1]) == units(shas[1], 11, shas[1])
+    assert units("abcdef12", 10, shas[1]) != units(shas[1], 11, shas[1])     # 커밋이 아닌 16진 문자열은 그대로
