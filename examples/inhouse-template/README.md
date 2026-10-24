@@ -7,6 +7,7 @@
 | `sdd.yaml` | `source_url`(코드 열람 주소), 필요하면 `ndk_build.args`, 모델을 쓸 때 `agent` |
 | `config/scenarios.yaml` | `<namespace>`와 실제 시그니처, 대조한 정의 위치 |
 | `config/sections.yaml` | `overview`·`threading`의 클래스 패턴을 사내 이름으로 (그대로 두어도 동작합니다) |
+| `config/glossary.yaml` | 사내 약어(칩·블록·모듈 이름)의 뜻. `export-site`가 뜻이 없는 약어를 알려 줍니다 |
 
 이 템플릿이 기본으로 켜 둔 것:
 

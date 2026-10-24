@@ -12,6 +12,7 @@ from urllib.parse import quote, urlsplit
 
 import markdown
 
+from . import glossary
 from .config import Config, section_output
 from .diagrams import section_diagram, diagram_block
 from .document_metadata import generation_info
@@ -242,6 +243,16 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
             texts["index.md"] += f"| [{name}]({rel}) | `{status}` | {label} |\n"
         entries.insert(0, ("시작하기", "문서 안내", "index.md"))
         approval_states["index.md"] = "unreviewed"
+    # 용어집은 표시용이다. 원고를 바꾸지 않고, 뜻이 없는 약어가 있으면 게시 전에 멈춘다.
+    terms = glossary.load(cfg)
+    if terms.terms and glossary.PAGE not in texts:
+        texts[glossary.PAGE] = glossary.page(terms)
+        after = next((i + 1 for i, e in enumerate(entries) if e[2] == "index.md"), 0)
+        entries.insert(after, (entries[after - 1][0] if after else "시작하기", "용어집", glossary.PAGE))
+        approval_states[glossary.PAGE] = "unreviewed"
+    # 패키지 색인의 설명 열은 소스 주석을 그대로 옮긴 것이라 약어 검사에서 뺀다.
+    glossary.enforce(cfg, terms, {rel: text for rel, text in texts.items()
+                                  if sections.get(rel, {}).get("kind") != "per-package"})
     model = KnowledgeModel.load(cfg.facts_path) if cfg.facts_path.exists() else None
     if model is None and any(s.get("kind", "prose") == "prose" and s.get("facts", {}).get("classes")
                             and {**(cfg.raw.get("diagrams") or {}), **(s.get("diagram") or {})}.get("enabled", False)
@@ -301,6 +312,9 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
                     body = parts[1] + parts[3] + block + parts[2] + marker + after
                 else:
                     body = before + block + marker + after
+        if rel != glossary.PAGE and glossary.PAGE in texts:
+            body = glossary.insert(body, glossary.block(glossary.used_terms(terms, texts[rel]),
+                                                        posixpath.relpath(glossary.PAGE, posixpath.dirname(rel) or ".")))
         content, toc, tokens = _render(body, rel, known, model, source_url, str(meta.get("source_commit", "")),
                                        link_template)
         rendered_pages[rel] = (page_title, meta, content, toc)
