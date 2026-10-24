@@ -53,7 +53,10 @@
       return title === query || title.startsWith(`${query} (`) || title.startsWith(`${query} ·`) ? 0
         : title.startsWith(query) ? 1 : 2;
     };
-    const matches = index.filter(item => `${item.title} ${item.page}`.toLocaleLowerCase().includes(query))
+    // Glossary terms match on their own names only; otherwise "용어" would list every term
+    // because they all belong to the glossary page.
+    const text = item => item.url.includes('#term-') ? item.title : `${item.title} ${item.page}`;
+    const matches = index.filter(item => text(item).toLocaleLowerCase().includes(query))
       .map((item, order) => ({item, order, rank: query ? rank(item) : 2}))
       .sort((a, b) => a.rank - b.rank || a.order - b.order).map(({item}) => item);
     results.replaceChildren();
@@ -242,13 +245,14 @@
       current = null;
       pinned = false;
     }
-    function show(button, pin) {
+    function show(button, pin, fromKeyboard) {
       clearTimeout(hideTimer);
       const item = button.term;
       if (!popover) {
         popover = document.createElement('div');
         popover.id = 'term-popover';
         popover.setAttribute('role', 'dialog');
+        popover.tabIndex = -1;
         popover.hidden = true;
         popover.addEventListener('mouseenter', () => clearTimeout(hideTimer));
         popover.addEventListener('mouseleave', () => { if (!pinned) hideTimer = setTimeout(() => hide(false), 200); });
@@ -270,17 +274,25 @@
       const width = Math.min(360, document.documentElement.clientWidth - 32);
       popover.style.width = `${width}px`;
       popover.style.left = `${Math.max(16, Math.min(box.left, document.documentElement.clientWidth - width - 16)) + scrollX}px`;
-      popover.style.top = `${box.bottom + scrollY + 8}px`;
+      // Open below the term; near the bottom of a phone screen, open above it instead.
+      const height = popover.offsetHeight;
+      const above = box.bottom + 8 + height > innerHeight && box.top - 8 - height >= 0;
+      popover.style.top = `${(above ? box.top - 8 - height : box.bottom + 8) + scrollY}px`;
+      // From the keyboard, move focus into the box so its glossary link is the next Tab stop.
+      if (fromKeyboard) popover.focus();
     }
-    fetch(new URL('assets/glossary.json', root)).then(response => response.ok ? response.json() : []).then(items => {
+    // The URL carries the data's hash, so a new deploy never shows cached definitions.
+    fetch(new URL(`assets/glossary.json?v=${encodeURIComponent(config.terms)}`, root)).then(response => response.ok ? response.json() : []).then(items => {
       const names = items.flatMap(item => item.names.map(name => ({item, name})))
         .sort((a, b) => b.name.length - a.name.length);
       if (!names.length) return;
-      // Acronyms match exactly; other names ignore case. Only ASCII letters and digits are word
-      // characters, so Korean particles after a term ("IPA는") still match.
+      // Acronyms match exactly; other names ignore case. The boundaries are the ones the generator
+      // uses to find terms (glossary.py BEFORE/AFTER): only ASCII letters and digits are word
+      // characters, so "IPA는" and "LSC-보정" match while "file.IPA" and "Mali-C55" do not.
       const pattern = new RegExp(names.map(({name}) => {
         const exact = name === name.toUpperCase();
-        return `(?<![A-Za-z0-9_])${exact ? escape(name) : escape(name).replace(/[A-Za-z]/g, c => `[${c.toLowerCase()}${c.toUpperCase()}]`)}(?![A-Za-z0-9_])`;
+        const body = exact ? escape(name) : escape(name).replace(/[A-Za-z]/g, c => `[${c.toLowerCase()}${c.toUpperCase()}]`);
+        return `(?<![A-Za-z0-9_.])(?<![A-Za-z0-9]-)${body}(?![A-Za-z0-9_]|-[A-Za-z0-9])`;
       }).join('|'), 'g');
       const lookup = new Map(names.map(({item, name}) => [name.toLowerCase(), item]));
       const seen = new Set();
@@ -302,8 +314,8 @@
           button.setAttribute('aria-expanded', 'false');
           button.setAttribute('aria-controls', 'term-popover');
           button.addEventListener('click', event => {
-            event.stopPropagation();
-            if (current === button && pinned) hide(false); else show(button, true);
+            // event.detail is 0 for Enter/Space activation.
+            if (current === button && pinned) hide(false); else show(button, true, event.detail === 0);
           });
           button.addEventListener('mouseenter', () => { if (matchMedia('(hover: hover)').matches && !pinned) show(button, false); });
           button.addEventListener('mouseleave', () => { if (!pinned) hideTimer = setTimeout(() => hide(false), 200); });
@@ -311,8 +323,14 @@
           pattern.lastIndex = 0;
         }
       }
-    }).catch(() => {});
-    document.addEventListener('click', event => { if (popover && !popover.contains(event.target)) hide(false); });
+    }).catch(error => {
+      // Older browsers without regex lookbehind land here; the folded list and glossary still work.
+      console.warn('Glossary term highlighting is unavailable:', error);
+    });
+    // pointerdown also fires for taps on plain text in iOS Safari, where click on document may not.
+    document.addEventListener('pointerdown', event => {
+      if (popover && !popover.contains(event.target) && !event.target.closest?.('button.term')) hide(false);
+    });
     document.addEventListener('keydown', event => { if (event.key === 'Escape' && popover && !popover.hidden) hide(true); });
   }
 })();

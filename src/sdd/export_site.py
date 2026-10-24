@@ -339,7 +339,17 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     shutil.copytree(ASSETS, out / "assets", dirs_exist_ok=True)
     # 화면 자산이 바뀌면 주소도 바뀌게 한다. 그렇지 않으면 배포 직후 브라우저가 캐시한 예전 CSS·JS 로
     # 새 HTML 을 그려서, 새 기능이 깨진 모양으로 보인다.
-    asset_version = hashlib.sha256(b"".join(p.read_bytes() for p in sorted(ASSETS.iterdir()) if p.is_file())).hexdigest()[:10]
+    # 줄바꿈을 LF 로 맞춰 해시한다. 같은 커밋이면 Windows 작업 폴더(CRLF)에서도 같은 주소가 나온다.
+    def _digest(parts: list[tuple[str, bytes]]) -> str:
+        h = hashlib.sha256()
+        for name, data in parts:
+            h.update(name.encode() + b"\0" + data.replace(b"\r\n", b"\n") + b"\0")
+        return h.hexdigest()[:10]
+
+    asset_version = _digest([(p.name, p.read_bytes()) for p in sorted(ASSETS.iterdir()) if p.is_file()])
+    # 용어 자료도 같은 이유로 주소에 해시를 붙인다. 영어판은 번역한 자료의 해시를 site_localization 이 붙인다
+    # (번역 목록에는 이 페이지의 해시가 들어가므로, 여기서 번역 목록을 해시에 넣으면 순환한다).
+    terms_version = _digest([("glossary", json.dumps(glossary.data(terms), ensure_ascii=False).encode())])
     if mermaid_dir:
         # Mermaid ESM 은 본체 옆 chunks/ 를 상대 경로로 불러오므로 디렉터리째 사이트에 담는다.
         # 그래야 CDN 없는 사내망·오프라인 열람에서도 그림이 뜬다. `sdd fetch-mermaid` 가 이 구조를 만든다.
@@ -415,7 +425,7 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
             status += f'<span class="generation-method">{html.escape(method_label)}</span>'
         page_config = {"root": root, "mermaid": mermaid_src}
         if glossary.PAGE in rendered_pages and rel != glossary.PAGE:
-            page_config["terms"] = True  # 본문의 첫 용어에 밑줄과 뜻 상자를 붙인다(site.js)
+            page_config["terms"] = terms_version  # 본문의 첫 용어에 밑줄과 뜻 상자를 붙인다(site.js)
         config_json = json.dumps(page_config, ensure_ascii=False).replace("<", "\\u003c")
         doc = f'''<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

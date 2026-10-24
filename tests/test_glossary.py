@@ -43,12 +43,14 @@ def test_문서에_쓰인_용어만_처음_나온_차례로_표에_넣는다(tmp
     assert '<details class="page-terms">' in doc
     assert "<summary>이 문서의 용어: 파이프라인 핸들러, IPA</summary>" in doc
     assert 'id="이-문서의-용어"' not in doc
-    assert 'href="glossary.html"' in doc and '"terms": true' in doc
+    assert 'href="glossary.html"' in doc
+    import re
+    assert re.search(r'"terms": "[0-9a-f]{10}"', doc)  # 용어 자료 주소의 해시
     nested = (out / "nested/detail.html").read_text(encoding="utf-8")
     assert "이 문서의 용어" not in nested
     page = (out / "glossary.html").read_text(encoding="utf-8")
     assert "화질 알고리즘 모듈입니다." in page and "장치별 처리 구성 요소입니다." in page
-    assert '"terms": true' not in page
+    assert '"terms"' not in page
     assert 'href="glossary.html"' in (out / "index.html").read_text(encoding="utf-8")
     # 표시용이다. 원고와 Markdown 원문 내려받기는 바뀌지 않는다.
     assert all(p.read_bytes() == original for p, original in originals.items())
@@ -204,3 +206,12 @@ def test_영어판_뜻_상자_자료도_번역한다(tmp_cfg, sample_model):
     # 주소(id)는 한국어 용어집과 같아야 하므로 번역하지 않는다.
     assert all(not re.search("[가-힣]", json.dumps({**item, "id": ""}, ensure_ascii=False)) for item in data)
     assert any(item["term"] == "IPA" for item in data)
+    ko = re.search(r'"terms": "([0-9a-f]+)"', (out / "device.html").read_text(encoding="utf-8"))[1]
+    en = re.search(r'"terms": "([0-9a-f]+)"', (out / "en/device.html").read_text(encoding="utf-8"))[1]
+    assert ko != en  # 영어판은 번역한 자료의 해시를 쓴다
+    # 두 용어가 같은 영어 이름으로 번역되면 영어 뜻 상자가 틀린 뜻을 보이므로 게시를 멈춘다.
+    catalog = json.loads((tmp_cfg.root / "english.json").read_text(encoding="utf-8"))
+    catalog["strings"]["파이프라인 핸들러"] = "IPA"
+    (tmp_cfg.root / "english.json").write_text(json.dumps(catalog), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="shared by two terms"):
+        export_site(tmp_cfg)

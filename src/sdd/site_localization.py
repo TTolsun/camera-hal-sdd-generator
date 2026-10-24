@@ -157,6 +157,23 @@ def localize_site(cfg, out: Path) -> None:
     expected = {p.relative_to(out).as_posix(): source_hash(p.read_text(encoding='utf-8')) for p in pages}
     if catalog.get('pages') != expected:
         raise RuntimeError('English catalog source hashes changed; review translations before publishing')
+    english_terms, terms_version = None, None
+    terms_path = out / 'assets/glossary.json'
+    if terms_path.exists():
+        # The in-page term popover reads names and definitions from this file, not from the HTML.
+        terms = json.loads(terms_path.read_text(encoding='utf-8'))
+        owners = {}
+        for item in terms:
+            item.update(term=translate(item['term']), definition=translate(item['definition']),
+                        names=[translate(name) for name in item['names']])
+            for name in item['names']:
+                # Two terms with one English name would show the wrong meaning in the English popover.
+                other = owners.setdefault(name.casefold(), item['id'])
+                if other != item['id']:
+                    raise RuntimeError(f'English glossary name is shared by two terms: {name} ({other}, {item["id"]})')
+        english_terms = json.dumps(terms, ensure_ascii=False)
+        # English pages fetch the translated data under their own hash, like the Korean pages do.
+        terms_version = hashlib.sha256(english_terms.encode('utf-8')).hexdigest()[:10]
     for path in pages:
         rel = path.relative_to(out).as_posix()
         original = path.read_text(encoding='utf-8')
@@ -181,6 +198,8 @@ def localize_site(cfg, out: Path) -> None:
         def config(match):
             data = json.loads(match[1])
             data['language'] = 'en'
+            if 'terms' in data and terms_version:
+                data['terms'] = terms_version
             if not urlsplit(data['mermaid']).scheme and not data['mermaid'].startswith('/'):
                 data['mermaid'] = '../' + data['mermaid']
             return '<script id="site-config" type="application/json">' + json.dumps(data, ensure_ascii=False).replace('<', '\\u003c') + '</script>'
@@ -197,14 +216,8 @@ def localize_site(cfg, out: Path) -> None:
     dest = out / 'en/assets/search.json'
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(search, ensure_ascii=False), encoding='utf-8')
-    terms_path = out / 'assets/glossary.json'
-    if terms_path.exists():
-        # The in-page term popover reads names and definitions from this file, not from the HTML.
-        terms = json.loads(terms_path.read_text(encoding='utf-8'))
-        for item in terms:
-            item.update(term=translate(item['term']), definition=translate(item['definition']),
-                        names=[translate(name) for name in item['names']])
-        (out / 'en/assets/glossary.json').write_text(json.dumps(terms, ensure_ascii=False), encoding='utf-8')
+    if english_terms is not None:
+        (out / 'en/assets/glossary.json').write_text(english_terms, encoding='utf-8')
     for source in sorted(out.rglob('*.mmd')):
         dest = out / 'en' / source.relative_to(out)
         dest.parent.mkdir(parents=True, exist_ok=True)
