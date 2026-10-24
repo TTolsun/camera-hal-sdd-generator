@@ -99,7 +99,8 @@ def materialize(model, section, answers):
             original = [quote_text(model.evidence.get(f"{section['id']}/{topic['id']}/{ref}", {}).get('text', ''))
                         for ref in st['evidence']]
             if not any(quote_text(quote) in source for source in original):
-                raise ValueError('quote가 연결된 소스 발췌의 실제 원문과 일치하지 않습니다.')
+                raise ValueError('quote가 연결된 소스 발췌의 실제 원문과 일치하지 않습니다: '
+                                 + repr(quote) + '. 문장 부호·대소문자·코드를 바꾸거나 생략하지 마세요.')
             if st.get('kind', 'behavior') == 'behavior' and only_uncertainty(st['text']):
                 raise ValueError('확인 필요 문장만으로 필수 질문의 답변을 대신할 수 없습니다.')
             if extract_citations(st['text']):
