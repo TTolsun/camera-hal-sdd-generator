@@ -150,3 +150,12 @@ def test_structured_transport_preserves_generic_gateway_compatibility(tmp_cfg, m
     agent.chat('system', 'user', response_schema=schema)
     assert (calls[0].get('format') == schema) == (kind == 'ollama')
     assert 'response_format' not in calls[0]
+
+
+def test_code_typography_uses_source_identifiers_without_rewriting_claims():
+    from sdd.facts.model import ClassInfo
+    from sdd.generated_design import normalize_answer
+    model = KnowledgeModel(classes={name: ClassInfo(name=name) for name in ['Camera', 'Device', 'DeviceEnumerator']})
+    statements = [{'text': 'Camera::start()와 `Camera`를 확인합니다. Device Enumerator는 장치를 찾습니다.'}]
+    normalize_answer(model, statements, ['class Camera {}; class DeviceEnumerator {};'])
+    assert statements[0]['text'] == '`Camera::start()`와 `Camera`를 확인합니다. Device Enumerator는 장치를 찾습니다.'

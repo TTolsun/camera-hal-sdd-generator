@@ -131,6 +131,31 @@ def materialize(model, section, answers):
     return pinned, resolved
 
 
+def source_names(model, records):
+    """Only mark identifiers that actually occur in this topic's input excerpts."""
+    names = known_names(model)
+    names |= {name.rsplit('::', 1)[-1] for name in names}
+    tokens = set(re.findall(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*', '\n'.join(records)))
+    tokens |= {name.split('::', 1)[0] for name in tokens}
+    return names & tokens
+
+
+def normalize_answer(model, statements, sources):
+    """Apply code typography without adding facts or rewriting model sentences."""
+    if not isinstance(statements, list):
+        return
+    names = source_names(model, sources)
+    token = re.compile(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*(?:\(\))?')
+    def mark(match):
+        word = match[0]
+        name = word.removesuffix('()')
+        return f'`{word}`' if name in names or name.split('::', 1)[0] in names else word
+    for statement in statements:
+        if isinstance(statement, dict) and isinstance(statement.get('text'), str):
+            parts = re.split(r'(`[^`]*`)', statement['text'])
+            statement['text'] = ''.join(part if i % 2 else token.sub(mark, part) for i, part in enumerate(parts))
+
+
 def validate_answers(model, section, answers):
     from .design_contracts import enforce
     preflight(model, section)
@@ -141,8 +166,7 @@ def validate_answers(model, section, answers):
         blocks, _ = topic_blocks(pinned, section['id'], topic)
         allowed = set(extract_citations('\n'.join(b.text for b in blocks)))
         findings = check(text, allowed, require=True).notes
-        names = known_names(model)
-        names |= {name.rsplit('::', 1)[-1] for name in names}
+        names = source_names(model, [b.text for b in blocks])
         findings += describe(lint(text, names))
         findings += semantic_review(text, model, allowed)
         if findings:
@@ -161,7 +185,11 @@ def generate(generator, section):
         '\n\n이 호출의 출력 형식은 구조화된 JSON입니다. 위의 Markdown 출력 및 파일:줄 인용 지시를 '
         '이 호출에서는 적용하지 않습니다. text에 한국어 문단을 쓰고 evidence에는 제공된 소스 키를 '
         '그대로, covers에는 제공된 질문 키를 그대로 복사합니다. id에 줄 번호나 접두사를 붙이지 마세요. '
-        '인용·제목·링크는 생성기가 연결합니다. kind는 behavior 또는 limitation 중 하나입니다.'
+        '인용·제목·링크는 생성기가 연결합니다. kind는 behavior 또는 limitation 중 하나입니다. '
+        '소스에 명시된 반환 조건과 실행 문맥은 behavior입니다. limitation에는 별도로 검증할 항목만 씁니다. '
+        '조건문의 true/false 분기와 각각의 반환값을 먼저 대조하고 설명하세요. '
+        '프레임워크를 호출하는 쪽과 인터페이스를 구현하는 쪽의 책임을 구분하세요. '
+        '함수 전체의 코드 근거가 없으면 추가 검증 유무·소유권·즉시 실행·스레드 보장을 추정하지 마세요.'
     )
     answers = {}
     for topic in section['design_topics']:
@@ -174,7 +202,7 @@ def generate(generator, section):
             '각 필수 질문에 behavior 설명이 있어야 합니다. 답을 찾을 수 없으면 빈 statements로 반환하세요. '
             '실기기·스레드·성능 등 추가 확인은 limitation으로 분리하세요. '
             '클래스·함수 이름은 백틱으로 감싸세요. 링크, 인용 위치, 표, 제목, 그림은 생성기가 만듭니다. '
-            '설명은 주제당 2~4개의 짧은 문단으로 작성하고 각 text는 줄바꿈 없는 한 문단으로 쓰세요. '
+            '설명은 주제당 2~3개의 짧은 문단으로 작성하고 각 text는 줄바꿈 없는 한 문단으로 쓰세요. '
             'JSON 객체만 반환하세요: {"statements":[{"text":"설명합니다.",'
             '"evidence":["소스 id"],"covers":["질문 id"],"kind":"behavior 또는 limitation"}]}\n'
         )
@@ -194,6 +222,7 @@ def generate(generator, section):
                 data = json.loads(cleaned)
                 if not isinstance(data, dict) or set(data) != {'statements'}:
                     raise ValueError('statements만 가진 JSON 객체가 필요합니다.')
+                normalize_answer(model, data['statements'], sources.values())
                 candidate = {topic['id']: data['statements']}
                 subset = {**section, 'design_topics': [topic], 'design_requirements': [
                     r for r in section['design_requirements'] if r['id'] in topic['covers']]}
