@@ -35,9 +35,9 @@ def test_bilingual_routes_search_sources_and_repeatability(tmp_cfg, sample_model
     assert '<html lang="en">' in en
     assert 'href="../../nested/detail.html"' in en
     assert 'href="../device.html#evidence"' in en
-    assert 'href="../../assets/reading.css"' in en
+    assert 'href="../../assets/reading.css?v=' in en
     assert 'href="../../nested/detail.md"' in en
-    assert 'src="../../assets/site.js"' in en
+    assert 'src="../../assets/site.js?v=' in en
     assert 'human review pending' in en
     assert 'class="language-selector"' in en
     assert 'href="en/device.html"' in (out / 'device.html').read_text(encoding='utf-8')

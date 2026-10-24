@@ -27,6 +27,10 @@ def main() -> None:
             units.update(display_strings(document))
         for entry in json.loads((out / 'assets/search.json').read_text(encoding='utf-8')):
             units.update(entry[k].strip() for k in ('title', 'page') if KOREAN.search(entry[k]))
+        if (out / 'assets/glossary.json').exists():
+            # The in-page term popover reads these names and definitions, so they need translations too.
+            for item in json.loads((out / 'assets/glossary.json').read_text(encoding='utf-8')):
+                units.update(v.strip() for v in [item['term'], item['definition'], *item['names']] if KOREAN.search(v))
     catalog = {'schema': 1, 'review_status': 'human-review-pending', 'pages': pages,
                'strings': {key: previous.get('strings', {}).get(key, '') for key in sorted(units)}}
     args.out.parent.mkdir(parents=True, exist_ok=True)

@@ -1,8 +1,8 @@
 """프로젝트 용어집. 문서에 쓰인 용어의 뜻을 보여 주고, 뜻을 적지 않은 약어의 게시를 막는다.
 
 용어집은 표시용 설정이다. 원고(Markdown)와 인용 검사, 사람 승인 상태를 바꾸지 않으므로
-용어를 고쳐도 원고를 다시 생성하지 않는다. 사이트를 만들 때 문서마다 "이 문서의 용어" 표를
-넣고, 전체 용어를 모은 용어집 페이지를 만든다.
+용어를 고쳐도 원고를 다시 생성하지 않는다. 사이트를 만들 때 문서마다 요약 아래에 "이 문서의 용어" 를
+한 줄로 접어 넣고, 전체 용어를 모은 용어집 페이지와 검색 항목, 본문 뜻 상자용 자료를 만든다.
 
 약어 검사는 코드가 아닌 본문에서 대문자 2자 이상으로 된 단어(IPA, IPU3, LSC)를 찾는다.
 용어집의 `terms` 나 `common` 에 없는 약어가 있으면 문서를 처음 읽는 사람이 뜻을 알 수 없으므로
@@ -23,8 +23,8 @@ from .config import Config
 
 PAGE = "glossary.md"
 HEADING = "이 문서의 용어"
-# 펼쳐서 보여 줄 용어 수. 나머지는 접는다. 펼친 표가 길면 문서의 요약 다음에 본문이 한 화면 넘게 밀린다.
-OPEN_LIMIT = 5
+# 접힌 용어 목록의 제목 줄에 보여 줄 이름 수. 더 많으면 "외 N개" 로 줄인다.
+SHOWN = 4
 # 코드가 아닌 본문에서 약어로 보는 단어. 대문자로 시작하고 대문자·숫자만 이어진다(IPA, IPU3, RKISP1).
 # 경계는 영숫자만 본다. 한국어 조사나 하이픈이 붙은 "IPA는", "LSC-보정" 도 약어로 찾고,
 # 클래스 이름(IPAManager)과 식별자·경로의 일부(V4L2_CID, .YAML, Mali-C55)는 뺀다.
@@ -78,6 +78,12 @@ def load(cfg: Config) -> Glossary:
                 raise RuntimeError(f"{path.name}: '{name}' 이 '{seen[name]}' 와 '{term}' 에 중복되었습니다")
             seen[name] = term
         terms.append(entry)
+    anchors: dict[str, str] = {}
+    for entry in terms:
+        if anchor(entry) in anchors:
+            raise RuntimeError(f"{path.name}: '{anchors[anchor(entry)]}' 와 '{entry.term}' 의 용어집 주소가 같습니다 "
+                               "(대소문자·기호만 다른 용어)")
+        anchors[anchor(entry)] = entry.term
     common = {str(c).strip() for c in (data.get("common", []) or []) if str(c).strip()}
     overlap = sorted(common & set(seen))
     if overlap:
@@ -129,30 +135,35 @@ def undefined(glossary: Glossary, pages: dict[str, str]) -> dict[str, list[str]]
 
 def _plain(text: str) -> str:
     """용어집의 글을 Markdown 문법이 아닌 글자 그대로 보여 준다. UQ<m, n> 이 태그로 사라지지 않게 한다."""
-    return re.sub(r"([\\`*_\[\]])", r"\\\1", html.escape(text, quote=False))
+    return re.sub(r"([\\`*_\[\]{}])", r"\\\1", html.escape(text, quote=False))
 
 
-def _items(terms: list[Term]) -> str:
+def anchor(term: Term) -> str:
+    """용어집 페이지에서 그 용어로 바로 가는 앵커. 검색 결과와 본문의 뜻 상자가 이 주소를 쓴다."""
+    return "term-" + (re.sub(r"[^\w]+", "-", term.term.casefold()).strip("-") or "x")
+
+
+def _items(terms: list[Term], anchors: bool = False) -> str:
     """표 대신 목록으로 쓴다. 휴대폰 화면에서도 뜻이 가로 스크롤 없이 줄바꿈된다."""
-    return "".join(f"- **{_plain(t.term)}**" + (f" ({_plain(t.full)})" if t.full else "")
+    return "".join(f"- **{_plain(t.term)}**" + (f"{{: #{anchor(t)} }}" if anchors else "")
+                   + (f" ({_plain(t.full)})" if t.full else "")
                    + f": {_plain(t.definition)}\n" for t in terms)
 
 
-def block(terms: list[Term], glossary_href: str, open_limit: int = OPEN_LIMIT) -> str:
-    """용어 목록. 먼저 나온 용어는 펼쳐 두고, 나머지는 접어서 본문의 첫 화면을 가리지 않게 한다.
+def block(terms: list[Term], glossary_href: str, shown: int = SHOWN) -> str:
+    """요약 아래에 한 줄로 접어 두는 용어 목록.
 
-    문서의 주제어(IPA 문서의 IPA)는 본문에 먼저 나오므로 접힌 쪽에 숨지 않는다.
+    펼친 목록은 휴대폰에서 한 화면을 넘게 차지해 본문을 밀어낸다. 그래서 제목 줄에 앞의 몇 개
+    이름만 보여 주고, 뜻은 누르면 펼친다. 본문에서 처음 나온 용어에는 사이트 스크립트가 밑줄과
+    뜻 상자를 붙이므로, 읽다가 만난 용어의 뜻은 그 자리에서 볼 수 있다.
     """
     if not terms:
         return ""
-    text = _items(terms[:open_limit])
-    rest = terms[open_limit:]
-    if rest:
-        # 접힌 용어 수를 제목에 넣지 않는다. 수가 바뀔 때마다 영어판 번역 문자열이 새로 생긴다.
-        text += ('\n??? note "나머지 용어 펼치기"\n\n'
-                 + "".join("    " + line + "\n" for line in _items(rest).splitlines()))
-    return (f"## {HEADING}\n\n{text}\n"
-            f"다른 용어는 [용어집]({glossary_href})에서 찾을 수 있습니다.\n\n")
+    names = ", ".join(t.term for t in terms[:shown])
+    rest = f" 외 {len(terms) - shown}개" if len(terms) > shown else ""
+    title = f"{HEADING}: {names}{rest}".replace('"', "'")
+    inner = _items(terms) + f"\n다른 용어는 [용어집]({glossary_href})에서 찾을 수 있습니다.\n"
+    return f'??? page-terms "{title}"\n\n' + "".join(("    " + line) if line else "" for line in inner.splitlines(True)) + "\n"
 
 
 def insert(body: str, section: str) -> str:
@@ -166,10 +177,51 @@ def insert(body: str, section: str) -> str:
     return body[:match.end()] + ("\n" if not match[0].endswith("\n\n") else "") + section + body[match.end():]
 
 
+def _group(term: Term) -> str:
+    """용어집 바로가기의 묶음. 영문은 첫 글자, 한글은 첫 자음, 숫자는 0–9."""
+    first = term.term[0]
+    if "가" <= first <= "힣":
+        return "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"[(ord(first) - ord("가")) // 588]
+    if first.isdigit():
+        return "0–9"
+    return first.upper()
+
+
 def page(glossary: Glossary) -> str:
+    """전체 용어집. 맨 위의 바로가기가 각 묶음의 첫 용어로 이동한다.
+
+    묶음마다 제목을 달면 한두 개짜리 묶음이 많아 페이지가 제목으로 길어진다. 그래서 목록은
+    하나로 두고, 바로가기만 묶음 단위로 만든다.
+    """
+    def order(t: Term) -> tuple[int, str]:
+        # 숫자, 영문, 한글 순서. 같은 묶음 안에서는 대소문자를 구분하지 않고 정렬한다.
+        group = _group(t)
+        return (0 if group == "0–9" else 2 if "ㄱ" <= group <= "ㅎ" else 1, t.term.casefold())
+
+    terms = sorted(glossary.terms, key=order)
+    firsts: dict[str, Term] = {}
+    for t in terms:
+        firsts.setdefault(_group(t), t)
+    jump = " · ".join(f"[{g}](#{anchor(t)})" for g, t in firsts.items())
     return ("# 용어집\n\n**문서에 나오는 약어와 분야 용어의 뜻을 모았습니다.**\n\n"
-            "각 문서의 첫머리에도 그 문서에 쓰인 용어만 따로 보여 줍니다.\n\n"
-            + _items(sorted(glossary.terms, key=lambda t: t.term.casefold())))
+            "본문에서 밑줄이 그어진 용어를 누르면 그 자리에서 뜻을 볼 수 있습니다. "
+            "문서 찾기에서 용어 이름으로 검색할 수도 있습니다.\n\n"
+            f"바로가기: {jump}\n\n{_items(terms, anchors=True)}")
+
+
+def search_entries(glossary: Glossary, page_title: str) -> list[dict]:
+    """문서 찾기에 넣을 용어 항목. 누르면 용어집의 그 용어로 이동한다."""
+    url = PAGE.removesuffix(".md") + ".html#"
+    # 다른 표기(파이프라인 핸들러)로 찾아도 나오도록 제목 뒤에 붙인다.
+    return [{"title": t.term + (f" ({t.full})" if t.full else "") + (f" · {', '.join(t.aliases)}" if t.aliases else ""),
+             "page": page_title, "url": url + anchor(t)}
+            for t in glossary.terms]
+
+
+def data(glossary: Glossary) -> list[dict]:
+    """사이트 스크립트가 본문 용어에 밑줄과 뜻 상자를 붙일 때 읽는 자료(assets/glossary.json)."""
+    return [{"id": anchor(t), "term": t.term, "names": t.names(), "definition": t.definition}
+            for t in glossary.terms]
 
 
 def enforce(cfg: Config, glossary: Glossary, pages: dict[str, str]) -> None:
