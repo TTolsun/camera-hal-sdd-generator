@@ -15,6 +15,8 @@ PREFIX = "camera-hal-sdd-generator/"
 
 def selected(name):
     parts = PurePosixPath(name).parts
+    if name.startswith("examples/libcamera/validation/") and len(parts) > 5:
+        return False  # historical raw model responses/prompts are not onboarding inputs
     return (name in ROOT_FILES or len(parts) > 1 and parts[0] in DIRECTORIES) and not any(
         part in {".git", ".venv", "__pycache__", "build", "site", "sdd.local.yaml", ".env", "CLAUDE.md", "AGENTS.md"}
         or part.endswith((".pyc", ".local.yaml")) for part in parts)
@@ -59,7 +61,7 @@ def build(repo, output, ref="HEAD"):
     files["requirements-inhouse.txt"] = requirements(files["uv.lock"])
     manifest = {"schema": 1, "source_commit": revision, "entry": "START_HERE.md",
                 "scope": "Public generator source, guides, skill and templates; no internal inputs or execution outputs.",
-                "excluded": ["Git history/remotes", "local configuration", "generated documents/facts/logs", "public deployment agent instructions", "Python wheels", "product toolchain", "Mermaid distribution"],
+                "excluded": ["Git history/remotes", "local configuration", "generated documents/facts/logs", "historical raw model responses/prompts", "public deployment agent instructions", "Python wheels", "product toolchain", "Mermaid distribution"],
                 "generated": {"AGENTS.md": "docs/inhouse/import-agent.md", "START_HERE.md": "tools/build_inhouse_package.py", "requirements-inhouse.txt": "uv.lock runtime/dev dependency closure"},
                 "files": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())}}
     files["IMPORT-MANIFEST.json"] = (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode()

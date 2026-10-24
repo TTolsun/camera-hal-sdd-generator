@@ -39,6 +39,8 @@ def kit_repo(tmp_path):
         "examples/inhouse-template/sdd.local.yaml": "SECRET",
         "examples/inhouse-template/.env": "SECRET",
         "sdd/generated.md": "GENERATED OUTPUT",
+        "examples/libcamera/validation/run/model/repeat/response.md": "HISTORICAL RAW",
+        "examples/libcamera/validation/run/result.json": "{}",
     }
     for tool in ("verify_import.py", "run_sdd.py"):
         files[f"tools/{tool}"] = (ROOT / "tools" / tool).read_text(encoding="utf-8")
@@ -65,7 +67,7 @@ def test_package_is_committed_allowlisted_deterministic_and_relocatable(kit_repo
     with zipfile.ZipFile(first) as archive:
         names = archive.namelist()
         assert all(n.startswith(builder.PREFIX) for n in names)
-        assert not any("private-notes" in n or "sdd.local" in n or "/.env" in n or "/build/" in n or "CLAUDE.md" in n for n in names)
+        assert not any("private-notes" in n or "sdd.local" in n or "/.env" in n or "/build/" in n or "CLAUDE.md" in n or "response.md" in n for n in names)
         archive.extractall(moved)
     root = moved / "camera-hal-sdd-generator"
     assert (root / "AGENTS.md").read_text() == "Internal destinations only."
