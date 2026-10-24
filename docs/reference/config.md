@@ -116,7 +116,7 @@
 |---|---|---|
 | `enabled` | `false` | `generate`·`run` 뒤에 사이트 빌드·검증까지 이어서 합니다. |
 | `title` | `Camera HAL SDD` | 사이트 이름. |
-| `intro` | 없음 | 첫 페이지 안내 Markdown. |
+| `intro` | 없음 | 설정 파일의 디렉터리를 기준으로 한 첫 페이지 안내 Markdown **파일 경로**입니다(예: `intro.md`). 본문 문자열을 넣지 않습니다. |
 | `source_url` | 없음 | 인용을 코드로 연결할 저장소 주소. |
 | `source_link` | `github` | `github` 또는 `gitiles`. |
 | `source_link_template` | 없음 | 그 밖의 코드 열람 도구. 자리표시자 `{url}` `{commit}` `{file}` `{line}`. |

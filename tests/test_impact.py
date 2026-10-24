@@ -1,3 +1,6 @@
+import pytest
+import yaml
+
 from sdd.impact import compute
 from sdd.matching import glob_to_regex, match_any
 
@@ -37,3 +40,20 @@ def test_impact_classes_override_keeps_overview_out_of_symbol_rule(tmp_cfg, samp
     report = compute(tmp_cfg, sample_model, ["pipeline/FrameFactory.cpp"], base="a", head="b")
     assert "overview" not in report.sections
     assert "components" in report.sections
+
+
+@pytest.mark.parametrize("source_file", ["pipeline/Pipe.cpp", "config/tuning.yaml", "include/removed.h"])
+@pytest.mark.parametrize("prefix", ["", "./"])
+def test_contract_source_change_selects_page_without_watch_or_symbols(tmp_cfg, sample_model, source_file, prefix):
+    # A prose contract can reference files outside Clang's parsed-file inventory.
+    sample_model.meta["parsed_files"] = ["device/CameraDevice.cpp"]
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({"sections": [
+        {"id": "contract", "kind": "prose", "facts": {}, "watch": ["unrelated/**"],
+         "design_topics": [{"id": "lifecycle", "sources": [{"id": "impl", "file": prefix + source_file}]}]},
+        {"id": "other", "kind": "prose", "facts": {},
+         "design_topics": [{"id": "other", "sources": [{"id": "impl", "file": "other.cpp"}]}]},
+    ]}), encoding="utf-8")
+    report = compute(tmp_cfg, sample_model, [source_file], base="a", head="b", non_semantic={})
+    assert set(report.sections) == {"contract"}
+    assert report.sections["contract"] == [f"설계 근거 파일 변경: {source_file}"]
+    assert report.base == "a" and report.head == "b"
