@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -81,6 +83,7 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
             raise RuntimeError(f"시나리오 진입점 {stats['missing_entries']}개를 찾지 못했습니다. "
                                "scenarios.yaml을 실제 정의와 대조하세요. 기존 facts는 보존합니다.")
 
+    model.meta["compile_units"] = _compile_units(cfg, entries, model.meta.get("parsed_files"))
     flags.collect(model, cfg, entries)
     from .evidence import collect as collect_evidence
     collect_evidence(cfg, model)
@@ -92,6 +95,34 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
     model.meta["defines"] = len(model.defines)
     model.save(cfg.facts_path)
     return model
+
+
+def _compile_units(cfg: Config, entries: list[dict], parsed: list[str] | None) -> dict[str, str]:
+    """분석한 빌드의 지문: TU 별 컴파일 인자, 그리고 Git 이 추적하지 않는(빌드가 만든) 입력 파일의 내용.
+
+    빌드 파일 변경이 문서에 주는 영향은 이 지문의 변화로 모두 드러난다. 범위 검사가 이전 facts 와 비교한다.
+    """
+    roots = _roots(cfg)
+    units: dict[str, list[str]] = {}
+    for entry, path in zip(entries, compdb.translation_units(entries)):
+        rel = comments.root_relative(str(path), roots)
+        if rel:
+            argv = json.dumps(compdb._argv(entry), ensure_ascii=False)
+            units.setdefault(rel, []).append(hashlib.sha256(argv.encode("utf-8")).hexdigest())
+    out = {rel: hashlib.sha256("\n".join(sorted(h)).encode()).hexdigest()[:16] for rel, h in units.items()}
+    try:
+        tracked = set(subprocess.run(["git", "ls-files", "-z"], cwd=cfg.source_root, capture_output=True,
+                                     check=True).stdout.decode("utf-8", "replace").split("\0"))
+    except (OSError, subprocess.CalledProcessError):
+        return out
+    for rel in parsed or []:
+        if rel not in tracked:
+            try:
+                data = (cfg.source_root / rel).read_bytes()
+            except OSError:
+                continue
+            out[f"generated:{rel}"] = hashlib.sha256(data).hexdigest()[:16]
+    return out
 
 
 def _roots(cfg: Config) -> tuple[str, ...]:

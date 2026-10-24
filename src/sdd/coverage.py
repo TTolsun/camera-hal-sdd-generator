@@ -73,6 +73,38 @@ def outside_build(files: list[str], model: KnowledgeModel, base_model: Knowledge
             if Path(f).suffix.lower() in CXX_SUFFIXES and f not in head and f not in base}
 
 
+BUILD_VISIBLE = "build-change-visible-in-analyzed-build"
+_BUILD_FILE_NAMES = {"meson.build", "meson.options", "meson_options.txt", "Android.mk", "Application.mk",
+                     "Android.bp", "CMakeLists.txt", "Makefile", "BUILD", "BUILD.bazel"}
+_BUILD_SUFFIXES = {".mk", ".cmake", ".bp", ".gn", ".gni"}
+
+
+def is_build_file(path: str) -> bool:
+    p = Path(path)
+    return p.name in _BUILD_FILE_NAMES or p.suffix.lower() in _BUILD_SUFFIXES
+
+
+def build_change_visible(files: list[str], model: KnowledgeModel, base_model: KnowledgeModel | None) -> bool:
+    """이번 변경에서 빌드 파일이 바꾼 것이 분석한 빌드 안에서 모두 드러나는지.
+
+    빌드 파일 한 줄이 무엇을 바꾸는지는 내용으로 알 수 없지만, 문서에 주는 영향은 분석한 빌드의 변화가
+    전부다. 다음을 모두 만족하면 그 변화가 이미 범위 검사를 받는다.
+      - 새로 생기거나 빠진 TU 와 읽은 파일이 모두 이번 커밋에서 바뀐 파일이다(그 파일이 따로 검사된다).
+      - 양쪽에 있는 TU 의 컴파일 인자(-D, -I 등)와 빌드가 만든 입력 파일의 내용이 같다.
+    이전·현재 facts 중 한쪽이라도 기록이 없으면 판단하지 않는다.
+    """
+    if base_model is None:
+        return False
+    head_units, base_units = model.meta.get("compile_units"), base_model.meta.get("compile_units")
+    head_read, base_read = model.meta.get("parsed_files"), base_model.meta.get("parsed_files")
+    if head_units is None or base_units is None or head_read is None or base_read is None:
+        return False
+    delta = (set(head_units) ^ set(base_units)) | (set(head_read) ^ set(base_read))
+    if not delta <= set(files):
+        return False
+    return all(head_units[k] == base_units[k] for k in set(head_units) & set(base_units))
+
+
 PINNED_EVIDENCE = "pinned-design-evidence"
 
 
@@ -108,6 +140,7 @@ def audit(model: KnowledgeModel, files: list[str],
     non_semantic = non_semantic or {}
     outside = outside_build(files, model, base_model)
     pinned = pinned_files(model, impacted_sections)
+    build_visible = build_change_visible(files, model, base_model)
     ignored = sorted(f for f in set(files) if match_any(f, excluded))
     active = set(files) - set(ignored)
     # Inspect both sides so deleted declarations and renamed paths cannot disappear.
@@ -171,6 +204,12 @@ def audit(model: KnowledgeModel, files: list[str],
                                "files": [file], "classification": OUTSIDE_BUILD})
             file_items.append({"file": file, "watch_sections": watch, "manual_review_sections": manual,
                                "status": "outside-build"})
+            continue
+        if not related and build_visible and is_build_file(file) and not manual:
+            classified.append({"reason": "no-extracted-entity", "kind": "file", "name": file, "files": [file],
+                               "classification": BUILD_VISIBLE})
+            file_items.append({"file": file, "watch_sections": watch, "manual_review_sections": manual,
+                               "status": "build-visible"})
             continue
         if not related and file in pinned:
             classified.append({"reason": "no-extracted-entity", "kind": "file", "name": file, "files": [file],
