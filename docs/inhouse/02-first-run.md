@@ -32,11 +32,13 @@ workspace/
 30분 이상 걸립니다. 사내 네임스페이스와 진입점 수에 따라 늘어납니다.
 
 1. `config/scenarios.yaml`의 `<namespace>`와 시그니처를 실제 정의로 바꿉니다. 규칙은 [HAL3 진입점 작성 규칙](../reference/sections.md#hal3-진입점-작성-규칙)에 있습니다.
-2. `config/sections.yaml`의 `overview`·`threading` 클래스 패턴을 사내 이름에 맞춥니다. 그대로 두어도 동작합니다.
-3. `config/glossary.yaml`에 사내 약어(칩·블록·모듈 이름)의 뜻을 적습니다. 미리 다 채우지 않아도 됩니다. 4단계의 `export-site`가 뜻이 없는 약어와 문서를 알려 주고 게시를 멈추므로, 그 목록을 채웁니다. 형식은 [glossary.yaml 참조](../reference/glossary.md)에 있습니다.
+2. `config/sections.yaml`의 클래스 패턴을 사내 이름에 맞추고, `vendor-contract`·`overview`의 필수 질문에 소스 근거와 답변을 작성합니다. 빈 계약으로는 생성할 수 없습니다. [공통 품질 기준](../concepts/reader-quality.md)의 순서를 따릅니다.
+3. `config/glossary.yaml`에 사내 약어의 뜻을 적습니다. `export-site`는 뜻이 없는 약어를 알려 주고 게시를 멈춥니다. 형식은 [glossary.yaml 참조](../reference/glossary.md)에 있습니다.
 4. `components` 섹션은 **구성 요소 색인**으로 켜 두었습니다(`narration: facts`, 클래스·함수 `'*'`). 빌드한 모든 코드가 한 문서에 실리므로, 문서가 다루지 않는 코드가 바뀔 때마다 갱신이 멈추는 일이 크게 줄어듭니다. 끄지 않습니다.
 
 ## 4. 실행하기
+
+`extract` 후에는 발췌 원문을 확인하고 해시와 답변을 채운 뒤 `generate`를 실행합니다. 첫 설정만으로 계약의 의미를 자동 완성하지 않습니다.
 
 20~40분 정도 걸립니다.
 
@@ -78,7 +80,6 @@ uv run sdd --config ../hal-sdd-project/sdd.yaml verify-site
 | `doctor` | 모든 줄이 `[OK]`(clang-uml은 `..`이어도 됩니다) | [문제 해결](troubleshooting.md) |
 | `extract` | `파싱 오류 0 개`, `진입점 못 찾음 0 개`, 클래스 수가 HAL 규모와 비슷함 | [문제 해결](troubleshooting.md) |
 | `generate` | 원고마다 `status: ok` 또는 `needs-review` | `needs-review`는 [4단계](04-review.md)에서 처리합니다. |
-| `export-site` | `뜻을 적지 않은 약어` 오류가 없음 | 나온 약어를 `config/glossary.yaml`에 추가합니다. [약어 검사](../reference/glossary.md#검사가-실패하면) |
 | `verify-site` | `broken_links: 0` | 링크가 깨진 채 게시하지 않습니다. |
 
 결과는 `hal-sdd-project/build/site/index.html`에서 엽니다. 공개 CDN(`site.mermaid` 기본값)은 사내 문서 사이트에서 외부 코드를 실행하게 하므로, 보안 승인을 받은 경우에만 씁니다.

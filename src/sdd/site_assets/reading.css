@@ -40,3 +40,6 @@ details.page-terms{margin:18px 0 26px;padding:10px 14px;background:var(--soft);f
 button.term{display:inline;font:inherit;color:inherit;background:none;border:0;border-radius:0;padding:0;margin:0;cursor:help;text-decoration:underline dotted #6f8b80;text-decoration-thickness:1.5px;text-underline-offset:4px}button.term:hover,button.term[aria-expanded=true]{background:#edf5f1;text-decoration-color:var(--accent)}
 #term-popover{position:absolute;z-index:40;background:#fff;border:1px solid #cbd8d2;border-radius:6px;padding:12px 15px;box-shadow:0 8px 22px #17201e26;font-size:14px;line-height:1.7}#term-popover p{margin:4px 0 8px}#term-popover a{font-size:13px}
 @media print{button.term{text-decoration:none}#term-popover{display:none}}
+
+/* Reader navigation is a short choice table, including on narrow screens. */
+.reading-routes table{min-width:0;table-layout:fixed}.reading-routes td:first-child{min-width:0}.reading-routes th,.reading-routes td{overflow-wrap:anywhere}

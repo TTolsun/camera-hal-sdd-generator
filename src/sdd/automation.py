@@ -15,14 +15,9 @@ from . import approvals, source_git, update
 from .export_site import export_site
 from .facts.model import KnowledgeModel
 from .locking import locked
+from .state_io import save
 from .site_build import MANIFEST, verify_site
 
-
-def save(path, data):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    temporary.replace(path)
 
 
 def cron(cfg, config_path):

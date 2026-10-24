@@ -10,7 +10,7 @@ import yaml
 
 from . import evidence
 from .design_contracts import enforce
-from .generate import compose_system_prompt
+from .prompting import compose_system_prompt
 
 
 def revise(cfg, model, report, options):

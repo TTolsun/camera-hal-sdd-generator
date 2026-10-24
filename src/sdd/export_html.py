@@ -17,7 +17,7 @@ import yaml
 
 from .config import Config
 
-_FM = re.compile(r"^---\n(.*?)\n---\n", re.S)
+from .document_metadata import split_frontmatter as _split
 _MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
 
 _CSS = """
@@ -106,16 +106,6 @@ def _title_of(path: Path) -> str:
     m = re.search(r"^# (.+)$", text, re.M)
     return m.group(1).strip() if m else path.stem
 
-
-def _split(text: str) -> tuple[dict[str, Any], str]:
-    m = _FM.match(text)
-    if not m:
-        return {}, text
-    try:
-        meta = yaml.safe_load(m.group(1)) or {}
-    except yaml.YAMLError:
-        meta = {}
-    return meta, text[m.end():]
 
 
 def render_page(rel: str, text: str, known: set[str]) -> str:

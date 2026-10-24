@@ -84,7 +84,8 @@ def test_dry_run_generates_all_pages_with_frame(tmp_cfg, sample_model):
     assert overview.index("**수정할 기능이") < overview.index("| 지금 확인할 내용 | 이동할 절 |")
     assert "## 패키지별 역할" in overview and "| `device` | 1 |" in overview
     assert "## 코드를 처음 읽는 순서" in overview
-    assert "1. `device/CameraDevice.cpp` 에서 `createFrame()` 부분을 읽습니다." in overview
+    assert "1. 진입점 `CameraDevice::processCaptureRequest" in overview
+    assert "`createFrame()` 부분을 읽습니다." not in overview
     assert '??? note "근거와 검토 정보"' in overview
     assert "- 근거 파일: `device/CameraDevice.cpp`" in overview
     assert overview.rstrip().endswith("다음 단계: [컴포넌트 구조와 책임](components.md)")
