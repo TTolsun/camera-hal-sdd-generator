@@ -156,10 +156,10 @@ Meson 설정만으로 멈추지 않고 빌드까지 수행하는 이유는 분�
 
    현재 파서는 compile DB의 `directory`로 작업 디렉터리를 자동 변경하지 않습니다. 준비 스크립트는 include 경로를 절대 경로로 바꾸고, 각 명령에 `-working-directory`와 `-resource-dir`를 추가합니다. 파싱뿐 아니라 AST의 헤더 위치를 판별할 때도 올바른 경로가 필요하기 때문입니다. 이 절차로 `stddef.h` 누락과 핵심 헤더 제외 문제를 보완합니다. 이 스크립트는 Linux의 Clang 빌드를 대상으로 합니다. `--skip-clang-uml`은 libclang 호출 그래프도 생략하므로 사용하지 않습니다. 예제의 `tools.clang_uml: none`이 libclang 대체 경로를 선택합니다.
 
-3. 앞 단계의 `verify_facts.py`가 성공하고 파싱 오류가 없는지 확인한 후 dry-run 문서를 생성합니다. 이 검사는 핵심 클래스의 존재, 페이지별 사실 선택, SHA 일치, 실제 파일의 인용 위치를 확인합니다. `facts-verification.json`의 `ok`가 false이면 LLM 생성으로 넘어가지 않습니다.
+3. 앞 단계의 `verify_facts.py`가 성공하고 파싱 오류가 없는지 확인합니다. 이 검사는 핵심 클래스의 존재, 페이지별 사실 선택, SHA 일치, 실제 파일의 인용 위치를 확인합니다. `facts-verification.json`의 `ok`가 false이면 LLM 생성으로 넘어가지 않습니다. 모델 없이 일부 문서만 확인하려면 `sdd.local.yaml`에 `site.enabled: false`를 설정하고 아래처럼 섹션을 선택합니다.
 
    ```bash
-   "$SDD_PYTHON" -m sdd.cli --config "$SDD_CONFIG" generate
+   "$SDD_PYTHON" -m sdd.cli --config "$SDD_CONFIG" generate --sections overview,pipeline-handler,ipa
    "$SDD_PYTHON" -m sdd.cli --config "$SDD_CONFIG" export-html \
      --title "libcamera 설계 문서 검증" \
      --out "$SDD_ROOT/examples/libcamera/build/sdd.html"
@@ -176,7 +176,7 @@ Meson 설정만으로 멈추지 않고 빌드까지 수행하는 이유는 분�
      base_url: http://localhost:11434
    ```
 
-   설치된 모델 이름에 맞춰 값을 변경하고 `generate`와 `export-html`을 다시 실행합니다. 주소는 **파이프라인을 실행하는 Linux에서 접속 가능한 주소**여야 합니다. Windows에서 Ollama를 실행한다면 `localhost`로 접근 가능한지 별도로 확인합니다. 위 설정 파일은 Git에서 제외됩니다.
+   설치된 모델 이름에 맞춰 값을 변경하고 `generate`를 섹션 제한 없이 실행합니다. Vendor의 **하드웨어 지원 구조와 구현 개요**는 실제 LLM이 필수 질문에 답하므로 `dry-run`에서는 전체 생성이 실패합니다. 자동 검사 실패 시 기존 원고를 보존하며, 모델 출력의 의미는 별도 검토해야 합니다. 번역 카탈로그를 갱신한 뒤 `site.enabled: true`로 사이트 생성도 연결합니다. 주소는 **파이프라인을 실행하는 Linux에서 접속 가능한 주소**여야 합니다. Windows에서 Ollama를 실행한다면 `localhost`로 접근 가능한지 별도로 확인합니다. 위 설정 파일은 Git에서 제외됩니다.
 
 ### 3-2. 생성 직후 확인할 항목
 

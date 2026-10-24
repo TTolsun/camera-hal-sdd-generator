@@ -68,6 +68,13 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
         hits = [f for f in files if f not in unbuilt and match_any(f, sec.get("watch", []) or [])]
         if hits:
             report.sections.setdefault(sec["id"], []).append(f"watch 일치: {', '.join(hits[:5])}")
+        # Source selectors are dependencies even for files outside compile DB
+        # (configuration, documentation, build rules). Do not rely on duplicate watch rules.
+        evidence_files = ({source['file'] for topic in sec.get('design_topics', []) for source in topic.get('sources', [])}
+                          if sec.get('design_generation') == 'llm' else set())
+        changed_evidence = sorted(fileset & evidence_files)
+        if changed_evidence:
+            report.sections.setdefault(sec['id'], []).append('설계 근거 파일 변경: ' + ', '.join(changed_evidence[:5]))
 
     # 2. 심볼 규칙
     changed_classes = model.classes_in_files(fileset)

@@ -1,4 +1,125 @@
 sections:
+- id: vendor-overview
+  group: For Vendors
+  title: 하드웨어 지원 구조와 구현 개요
+  output: vendor-overview.md
+  kind: prose
+  lead: 하드웨어를 연결할 위치와 구현 책임을 확인한 뒤 설정·요청·알고리즘·종료 코드를 읽으세요.
+  reader: 새 하드웨어 지원을 추가하거나 기존 파이프라인과 영상 처리 알고리즘을 수정하는 개발자
+  design_generation: llm
+  semantic_review: true
+  show_evidence: true
+  facts:
+    classes:
+    - libcamera::PipelineHandler
+    - libcamera::PipelineHandlerIPU3
+    - libcamera::PipelineHandlerRkISP1
+    - libcamera::Camera
+    - libcamera::IPAManager
+    class_table: false
+  diagram:
+    max_nodes: 24
+  routes:
+  - q: 장치 연동과 파이프라인 구현을 시작합니다.
+    to: pipeline-handler.md
+  - q: 알고리즘의 모듈 선택과 실행 경계를 확인합니다.
+    to: ipa.md
+  - q: 요청 정체와 버퍼 재사용 문제를 진단합니다.
+    to: request-lifecycle.md
+  - q: IPU3 렌즈 음영 보정의 구현 사례를 읽습니다.
+    to: ipu3-lsc-flow.md
+  - q: RKISP1 카메라별 왜곡 보정의 구현 사례를 읽습니다.
+    to: rkisp1-dewarp.md
+  watch:
+  - src/libcamera/pipeline/**
+  - src/libcamera/pipeline_handler.cpp
+  - include/libcamera/internal/pipeline_handler.h
+  - src/libcamera/camera_manager.cpp
+  - src/ipa/**
+  - include/libcamera/ipa/**
+  - include/libcamera/internal/ipa_manager.h
+  next:
+    title: Pipeline Handler
+    link: pipeline-handler.md
+  design_requirements:
+  - id: boundary
+    question: 하드웨어의 장치 매칭과 카메라 등록은 누가 구현합니까?
+  - id: configuration
+    question: 스트림 구성 구현은 어떤 입력과 출력 계약을 지킵니까?
+  - id: request
+    question: 공통 큐와 하드웨어 구현은 요청 처리 책임을 어떻게 나눕니까?
+  - id: algorithm
+    question: IPA 모듈과 실행 방식은 어떻게 선택되며 언제 생성에 실패합니까?
+  - id: shutdown
+    question: 정지 시 공통 코드와 하드웨어 구현은 무엇을 끝내야 합니까?
+  - id: validation
+    question: 코드 계약과 별도 실행 검증 항목은 무엇입니까?
+  design_topics:
+  - id: boundary
+    title: 하드웨어와 공통 계층의 경계
+    question: 새 하드웨어의 match() 구현자가 장치 매칭 성공과 실패 때 각각 수행할 일과 카메라 등록 책임을 설명하세요. 객체 생성자나 다른 함수의 역할은 추정하지 마세요.
+    covers:
+    - boundary
+    sources:
+    - id: handler
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::match(DeviceEnumerator *enumerator)
+      end: \brief Search and acquire a MediaDevice
+  - id: configuration
+    title: 구현할 설정 인터페이스
+    question: 하드웨어 구현자가 generateConfiguration()과 configure()를 구현할 때 각각 받는 입력, 만들어야 할 출력과 실패 반환값을 설명하세요. 호출자의 API
+      사용 절차와 구현자의 의무를 구분하세요.
+    covers:
+    - configuration
+    sources:
+    - id: configuration
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::generateConfiguration()
+      end: \fn PipelineHandler::exportFrameBuffers()
+  - id: request
+    title: 요청을 장치에 전달하고 반환하기
+    question: queueRequestDevice 구현자가 버퍼와 파라미터에 대해 지킬 계약과 completeBuffer에서 버퍼 완료와 요청 완료를 구분하는 계약을 설명하세요.
+    covers:
+    - request
+    sources:
+    - id: queue
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::queueRequestDevice()
+      end: \brief Complete a buffer for a request
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: bool PipelineHandler::completeBuffer
+  - id: algorithm
+    title: IPA 모듈 선택과 실패 조건
+    question: createIPA()의 모듈 검색, 서명 판정, 생성된 프록시 유효성 검사를 각각 설명하세요. nullptr를 반환하는 분기와 실행 방식을 선택하는 분기를 구분하세요.
+    covers:
+    - algorithm
+    sources:
+    - id: selection
+      file: include/libcamera/internal/ipa_manager.h
+      start: template<typename T>
+      end: "return proxy;\n\t}"
+  - id: shutdown
+    title: 정지와 오류 처리의 책임
+    question: 공통 stop과 하드웨어별 stopDevice의 책임을 나누고 대기 요청과 장치 요청이 종료되는 조건을 설명하세요.
+    covers:
+    - shutdown
+    sources:
+    - id: stop
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Stop capturing from all running streams and cancel pending requests
+      end: \brief Determine if the camera has any requests pending
+  - id: validation
+    title: 구현 뒤 확인할 계약과 실행 한계
+    question: completeRequest가 반환된 뒤 요청 접근 금지와 애플리케이션 반환 순서를 각각 설명하세요. 이 계약을 구현 뒤 확인할 기준으로 제시하고 실제 실행을 검증했다고 주장하지 마세요.
+    covers:
+    - validation
+    sources:
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Signal request completion
+      end: void PipelineHandler::completeRequest
 - id: request-lifecycle
   group: For Vendors
   title: 요청 처리와 문제 진단

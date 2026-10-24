@@ -8,7 +8,7 @@ from .semantic import known_names, normalize_symbols, review as semantic_review
 from .prompting import compose_system_prompt
 
 class ChatPort(Protocol):
-    def chat(self, system: str, user: str, tag: str = "prompt") -> str: ...
+    def chat(self, system: str, user: str, tag: str = "prompt", response_schema: dict | None = None) -> str: ...
 
 class Narrator:
     def __init__(self, cfg, model, agent: ChatPort, record):
