@@ -35,10 +35,13 @@ agent:
   num_ctx: 16384
   timeout_sec: 600
   full_style_guides: false
+  # 상세 질문의 여러 조건을 담은 JSON 답변을 수용한다.
+  max_output_tokens: 4000
 
 review:
   require_citations: true
   max_retries: 1
+  design_revision: true
 
 documentation:
   enabled: true

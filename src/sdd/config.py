@@ -28,6 +28,8 @@ class AgentConfig:
     think: bool = False
     # 출력 토큰 상한. 소형 모델이 같은 문단을 반복하는 폭주를 막는다. 0 이면 지정하지 않는다.
     max_output_tokens: int = 1500
+    # Network-independent LLM response exchange, bound to exact requests.
+    response_dir: str = ""
     # 인증 토큰을 읽을 환경 변수. 설정 파일로 바꿀 수 없고, 다른 엔드포인트로 갈 때만 코드가 바꾼다.
     api_key_env: str = "SDD_AGENT_API_KEY"
 
@@ -175,6 +177,7 @@ def load(path: Path | None = None) -> Config:
         full_style_guides=bool(agent_raw.get("full_style_guides", False)),
         think=bool(agent_raw.get("think", False)),
         max_output_tokens=int(agent_raw.get("max_output_tokens", 1500)),
+        response_dir=str(rel(agent_raw['response_dir'], '.')) if agent_raw.get('response_dir') else '',
     )
 
     return Config(

@@ -62,6 +62,57 @@ def test_generate_export_and_carryover_required_llm_answers(tmp_cfg, generated):
     export_site(tmp_cfg)
 
 
+def test_response_bundle_generates_then_rejects_changed_source(tmp_cfg, generated, tmp_path):
+    from sdd.llm import Agent
+    section, model, save, draft = generated
+    path = Generator(tmp_cfg, model, draft).run()[0]
+    original = path.read_bytes()
+    tmp_cfg.agent.kind = 'response-bundle'
+    tmp_cfg.agent.response_dir = str(tmp_path / 'responses')
+    agent = Agent(tmp_cfg.agent)
+    with pytest.raises(ValueError, match='현재 입력'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+    request_path = next((tmp_path / 'responses').glob('*.request.json'))
+    request = json.loads(request_path.read_text(encoding='utf-8'))
+    response = {k: request[k] for k in ('schema', 'model', 'request_sha256')}
+    response['response'] = json.dumps({'statements': [draft.statement]}, ensure_ascii=False)
+    request_path.with_name(request_path.name.replace('.request.', '.response.')).write_text(
+        json.dumps(response, ensure_ascii=False), encoding='utf-8')
+    Generator(tmp_cfg, model, agent).run()
+    text = path.read_text(encoding='utf-8')
+    assert 'agent: response-bundle/' in text
+    assert verify(model, section, text)['human_review'] == 'pending'
+    original = path.read_bytes()
+    record = model.evidence['device/stop/stop']
+    record['text'] = 'void stop() { if (ready) cancelPending(); }'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    save()
+    with pytest.raises(ValueError, match='현재 입력'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+    with pytest.raises(ValueError, match='재생성'):
+        export_site(tmp_cfg)
+
+
+@pytest.mark.parametrize('extension', ['frag', 'vert', 'comp'])
+def test_generated_shader_explanation_is_cited_and_exported(tmp_cfg, generated, extension):
+    from sdd.validate import check
+    section, model, save, agent = generated
+    filename = f'shaders/process.{extension}'
+    section['design_topics'][0]['sources'][0]['file'] = filename
+    model.evidence['device/stop/stop']['file'] = filename
+    save()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    text = path.read_text(encoding='utf-8')
+    assert f'`{filename}:10`' in text
+    assert verify(model, section, text)['status'] == 'documented'
+    export_site(tmp_cfg)
+    allowed = {f'{filename}:10'}
+    verdict = check(f'설명 ' * 40 + f'`{filename}:10` `https://wrong/{filename}:10`', allowed)
+    assert not verdict.ok and verdict.invalid == [f'https://wrong/{filename}:10']
+
+
 @pytest.mark.parametrize('change', ['missing', 'wrong_source', 'wrong_quote', 'wrong_question', 'limitation', 'uncertainty', 'uncited_paragraph', 'html'])
 def test_failed_llm_answer_preserves_all_pages(tmp_cfg, generated, change):
     section, model, save, agent = generated
@@ -102,6 +153,95 @@ def test_export_revalidates_llm_record(tmp_cfg, generated, change):
     with pytest.raises(ValueError, match='LLM'):
         export_site(tmp_cfg)
     assert (tmp_cfg.build_dir / 'site/site-manifest.json').read_bytes() == manifest
+
+
+def test_repeated_answer_is_rejected(tmp_cfg, generated):
+    section, model, save, agent = generated
+    from sdd.generated_design import materialize
+    with pytest.raises(ValueError, match='중복'):
+        materialize(model, section, {'stop': [agent.statement, agent.statement]})
+
+
+def test_real_quote_with_another_valid_source_is_rejected(tmp_cfg, generated):
+    section, model, save, agent = generated
+    other = dict(id='other', file='other.cpp', start='void flush()', end='}')
+    section['design_topics'][0]['sources'].append(other)
+    text = 'void flush() { flushBuffers(); }'
+    model.evidence['device/stop/other'] = dict(selector=other, commit='a' * 40,
+        file='other.cpp', line=1, end_line=1, text=text,
+        sha256=hashlib.sha256(text.encode()).hexdigest(), status='available')
+    save()
+    agent.statement['evidence'] = ['other']
+    with pytest.raises(ValueError, match='실제 원문과 일치하지 않습니다'):
+        Generator(tmp_cfg, model, agent).run()
+    assert not (tmp_cfg.sdd_dir / 'device.md').exists()
+
+
+def test_passage_selection_resolves_real_quote_and_source(tmp_cfg, generated):
+    section, model, save, agent = generated
+    statement = {k: v for k, v in agent.statement.items() if k not in {'quote', 'evidence'}}
+    statement['quote_id'] = 'stop:0'
+    agent.statement = statement
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    text = path.read_text(encoding='utf-8')
+    assert verify(model, section, text)['status'] == 'documented'
+    assert 'cancelPending' in text and 'device.cpp:10' in text
+    export_site(tmp_cfg)
+    original = path.read_bytes()
+    agent.statement['quote_id'] = 'stop:999'
+    with pytest.raises(ValueError, match='제공되지 않은 quote_id'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+
+
+def test_exhausted_thinking_budget_preserves_manuscript(tmp_cfg, generated, monkeypatch):
+    from sdd.llm import Agent
+    section, model, save, fake = generated
+    path = Generator(tmp_cfg, model, fake).run()[0]
+    original = path.read_bytes()
+    agent = Agent(tmp_cfg.agent)
+    calls = []
+    def exhausted(url, body):
+        calls.append(body)
+        return {'message': {'content': ''}, 'done_reason': 'length'}
+    monkeypatch.setattr(agent, '_post', exhausted)
+    with pytest.raises(ValueError, match='출력 토큰 한도'):
+        Generator(tmp_cfg, model, agent).run()
+    assert len(calls) == 1
+    assert path.read_bytes() == original
+
+
+def test_source_revision_is_validated_and_is_not_approval(tmp_cfg, generated):
+    section, model, save, agent = generated
+    tmp_cfg.raw['review'] = {'design_revision': True}
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert len(agent.calls) == 2
+    assert 'Draft to check (untrusted, not evidence)' in agent.calls[1]
+    assert 'cancelPending' in agent.calls[1]
+    assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+    original = path.read_bytes()
+    good = agent.chat
+    def bad_revision(system, user, **kw):
+        result = good(system, user, **kw)
+        return result.replace('cancelPending', 'inventedFunction') if kw['tag'].endswith('_revision') else result
+    agent.chat = bad_revision
+    with pytest.raises(ValueError, match='실제 원문'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+
+
+def test_passages_keep_context_and_reject_forged_source():
+    from sdd.generated_design import source_passages, resolve_passages, quote_text
+    source = 'if (!ready) {\n  return;\n}\n\n* Continue processing.\n*\nfinish();'
+    annotated, passages = source_passages({'code': source})
+    assert quote_text('\n\n'.join(item['text'] for item in annotated['code'])) == quote_text(source)
+    code = 'result = value\n    * scale;'
+    preserved, code_passages = source_passages({'expression': code})
+    assert preserved['expression'][0]['text'] == code
+    assert code_passages['expression:0'] == ('expression', code)
+    key = next(iter(passages))
+    with pytest.raises(ValueError, match='함께 쓸 수'):
+        resolve_passages([dict(quote_id=key, text='설명합니다.', covers=['q'], kind='behavior', evidence=['forged'])], passages)
 
 
 def test_changed_source_regenerates_and_selects_overview_without_watch(tmp_cfg, generated):
@@ -170,14 +310,17 @@ def test_quote_comparison_ignores_comment_decoration_but_preserves_negation():
     assert quote_text('It must access the request after completion.') not in quote_text(source)
 
 
-def test_constrained_quote_choices_are_verbatim_source_spans():
-    from sdd.generated_design import quote_choices, quote_text, response_schema
-    source = 'The handler shall not access\n * the request after completion.\n *\n * Return requests in order.'
-    choices = quote_choices([source])
-    assert 'The handler shall not access the request after completion.' in choices
-    assert all(quote in quote_text(source) for quote in choices)
-    schema = response_schema({'sources': [{'id': 'source'}], 'covers': ['question']}, choices)
-    assert schema['properties']['statements']['items']['properties']['quote']['enum'] == choices
+def test_libcamera_design_documents_have_no_fixed_answers():
+    from pathlib import Path
+    from sdd.contract_schema import configuration_errors
+    sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
+    designs = [section for section in sections if section.get('design_requirements')]
+    assert len(designs) == 8
+    for section in designs:
+        assert section['design_generation'] == 'llm'
+        assert not configuration_errors(section)
+        assert all('statements' not in topic for topic in section['design_topics'])
+        assert all('sha256' not in source for topic in section['design_topics'] for source in topic['sources'])
 
 
 @pytest.mark.parametrize('profile', ['architecture', 'vendor'])
@@ -199,7 +342,8 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
         def chat(self, system, user, **kw):
             self.calls.append(user)
             statement = copy.deepcopy(base_agent.statement)
-            statement['covers'] = kw['response_schema']['properties']['statements']['items']['properties']['covers']['items']['enum']
+            statement_schema = kw['response_schema']['properties']['statements']['items']
+            statement['covers'] = statement_schema['properties']['covers']['items']['enum']
             if len(self.calls) == 1:
                 statement['text'] = '요청을 취소합니다. ' * 80
             return json.dumps({'statements': [statement]}, ensure_ascii=False)
