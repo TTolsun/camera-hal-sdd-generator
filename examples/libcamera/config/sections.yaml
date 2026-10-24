@@ -1362,6 +1362,11 @@ sections:
       start: '/* SPDX-License-Identifier: BSD-2-Clause */'
       end: "gl_FragColor = vec4(rgb, 1.0);\n#endif\n}"
       sha256: d9a997545388c652dc1c3939d88c0cad5df251642b1775f7cc62e4388c7986bf
+    - id: softisp-interface
+      file: include/libcamera/ipa/softisp.mojom
+      start: '/* SPDX-License-Identifier: LGPL-2.1-or-later */'
+      end: "metadataReady(uint32 frame, libcamera.ControlList metadata);\n};"
+      sha256: dedbfb928f4f1cdb8e174d8104cb8cbd575fd543e9b620240984c3af4cddecdb
     statements:
     - text: 소프트웨어 ISP의 두 bayer 프래그먼트 셰이더는 `APPLY_LSC`가 정의되어 컴파일될 때만 `lsc_tex` 텍스처를 선언하고 렌즈 음영 보정을 적용합니다.
         보정은 블랙 레벨을 뺀 직후, AWB 게인을 곱하기 전에 RGB 값에 텍스처의 RGB 값을 곱하는 방식입니다.
@@ -1377,10 +1382,16 @@ sections:
       - unpacked-shader
       covers:
       - softisp-lsc
-    - text: '`APPLY_LSC` 정의 여부, `lsc_tex`에 올리는 표와 색온도에 따른 표 선택은 셰이더 밖의 디베이어 구현과 IPA가 정하므로 이 발췌로는 확인할 수 없습니다.'
+    - text: 소프트웨어 ISP IPA 인터페이스의 `init()`는 `ret`과 `ipaControls` 외에 `ccmEnabled`와 `lscEnabled` 두 플래그를 결과로 돌려줍니다.
+      evidence:
+      - softisp-interface
+      covers:
+      - softisp-lsc
+    - text: '`lscEnabled` 값이 셰이더의 `APPLY_LSC` 컴파일로 이어지는 경로, `lsc_tex`에 올리는 표와 색온도에 따른 표 선택은 디베이어 구현과 IPA에서 확인해야 하며 이 발췌로는 확인할 수 없습니다.'
       evidence:
       - packed-shader
       - unpacked-shader
+      - softisp-interface
       kind: limitation
       covers:
       - softisp-lsc
