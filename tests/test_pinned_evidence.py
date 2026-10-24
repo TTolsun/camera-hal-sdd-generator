@@ -55,6 +55,19 @@ def test_파일_전체를_현재_해시로_고정한_근거는_변경을_자동_
     assert "설계 근거가 파일 전체를 고정함" in review_markdown(report)
 
 
+def test_범위_검사용_표시는_원고_지문을_바꾸지_않는다(tmp_cfg):
+    from sdd.evidence import fingerprint
+    root = tmp_cfg.source_root
+    _git(root, "init", "-q")
+    head = _commit(root, TEXT)
+    _setup(tmp_cfg, "# header", "...")
+    model = _model(tmp_cfg, head)
+    sec = tmp_cfg.sections()[0]
+    before = fingerprint(model, sec)
+    del model.evidence["ipa/t/tuning"]["whole_file"]       # 이 표시가 없던 생성기로 만든 원고
+    assert fingerprint(model, sec) == before
+
+
 def test_일부만_발췌했거나_해시가_없거나_어긋나거나_문서를_다시_만들지_않으면_검토로_남긴다(tmp_cfg):
     root = tmp_cfg.source_root
     _git(root, "init", "-q")
