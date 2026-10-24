@@ -32,10 +32,12 @@ workspace/
 30분 이상 걸립니다. 사내 네임스페이스와 진입점 수에 따라 늘어납니다.
 
 1. `config/scenarios.yaml`의 `<namespace>`와 시그니처를 실제 정의로 바꿉니다. 규칙은 [HAL3 진입점 작성 규칙](../reference/sections.md#hal3-진입점-작성-규칙)에 있습니다.
-2. `config/sections.yaml`의 `overview`·`threading` 클래스 패턴을 사내 이름에 맞춥니다. 그대로 두어도 동작합니다.
+2. `config/sections.yaml`의 클래스 패턴을 사내 이름에 맞추고, `vendor-contract`·`overview`의 필수 질문에 소스 근거와 답변을 작성합니다. 빈 계약으로는 생성할 수 없습니다. [공통 품질 기준](../concepts/reader-quality.md)의 순서를 따릅니다.
 3. `components` 섹션은 **구성 요소 색인**으로 켜 두었습니다(`narration: facts`, 클래스·함수 `'*'`). 빌드한 모든 코드가 한 문서에 실리므로, 문서가 다루지 않는 코드가 바뀔 때마다 갱신이 멈추는 일이 크게 줄어듭니다. 끄지 않습니다.
 
 ## 4. 실행하기
+
+`extract` 후에는 발췌 원문을 확인하고 해시와 답변을 채운 뒤 `generate`를 실행합니다. 첫 설정만으로 계약의 의미를 자동 완성하지 않습니다.
 
 20~40분 정도 걸립니다.
 

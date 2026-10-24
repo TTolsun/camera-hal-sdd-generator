@@ -123,7 +123,14 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
             return f'<a class="citation" href="{html.escape(url, quote=True)}">{match[0]}</a>'
 
         rendered = re.sub(r"<code>([^<>]+:\d+)</code>", citation, rendered)
-    rendered = re.sub(r"(<table>.*?</table>)", r'<div class="table-scroll" tabindex="0" role="region" aria-label="표">\1</div>', rendered, flags=re.S)
+    def table_wrapper(match: re.Match) -> str:
+        table = match[0]
+        # Navigation choices must remain visible without horizontal scrolling.
+        routes = any(f'<th>{heading}</th>' in table for heading in ('지금 확인할 내용', '시작할 문서'))
+        classes = 'table-scroll reading-routes' if routes else 'table-scroll'
+        return f'<div class="{classes}" tabindex="0" role="region" aria-label="표">{table}</div>'
+
+    rendered = re.sub(r"<table>.*?</table>", table_wrapper, rendered, flags=re.S)
     return rendered, md.toc, md.toc_tokens
 
 
@@ -273,7 +280,7 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         body = re.sub(r"^\s*# .+\n", "", body, count=1)
         section = sections.get(rel, {})
         if section and section.get("kind") != "manual":
-            if section.get("design_requirements"):
+            if section.get("design_requirements") or section.get("reader_profile"):
                 from .design_contracts import enforce
                 if model is None:
                     raise RuntimeError("facts.json is required to verify design requirements")
@@ -356,9 +363,16 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         previous_next = []
         for offset, label in [(-1, "이전"), (1, "다음")]:
             other = index + offset
+            fragment = ''
+            if offset == 1 and sections.get(rel, {}).get('next', {}).get('link'):
+                destination, _, requested_fragment = sections[rel]['next']['link'].partition('#')
+                selected = next((i for i, entry in enumerate(entries) if entry[2] == (destination or rel)), None)
+                if selected is not None:
+                    other, fragment = selected, requested_fragment
             if 0 <= other < len(entries):
                 _, dest_title, dest_rel = entries[other]
-                previous_next.append(f'<a class="{"previous" if offset < 0 else "next"}" href="{_href(_html_path(dest_rel), current)}"><small>{label}</small>{html.escape(dest_title)} {"←" if offset < 0 else "→"}</a>')
+                destination_href = _href(_html_path(dest_rel), current) + ('#' + quote(fragment) if fragment else '')
+                previous_next.append(f'<a class="{"previous" if offset < 0 else "next"}" href="{destination_href}"><small>{label}</small>{html.escape(dest_title)} {"←" if offset < 0 else "→"}</a>')
         info = []
         method_label, method_scope = generation_info(str(meta.get("generation_method", "")))
         if meta:

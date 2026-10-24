@@ -85,6 +85,21 @@ design_topics:
 
 해시를 기록하는 절차는 [사람이 할 일](../inhouse/04-review.md#설계-설명을-쓰거나-다시-검토하기)에 있습니다.
 
+## 독자 프로필
+
+`reader_profile: vendor` 또는 `reader_profile: architecture`를 `prose` 섹션에 지정하면 공통 필수 질문을 검사합니다. 생략하면 기존 설정 동작을 유지합니다.
+
+| 프로필 | `design_requirements[].aspects`에 포함해야 하는 값 |
+|---|---|
+| `vendor` | `inputs`, `ownership`, `completion`, `failure`, `verification` |
+| `architecture` | `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
+
+각 질문에 `aspects: [ownership]`처럼 적용 항목을 적습니다. 한 질문이 여러 항목을 다룰 수 있습니다. 모든 항목이 선언되고, 모든 질문에 `covers`로 연결된 근거 있는 답변이 있어야 합니다. `limitation`만으로 답을 대신할 수 없습니다. 프로필 이름·항목 오류나 누락은 생성과 사이트 게시를 중단합니다.
+
+프로필을 사용하는 설명은 한 산문 문단을 600자·4문장 이내로 나눕니다. 표·번호 단계·코드 원문은 이 분량 검사에서 제외합니다. 조건과 예외를 삭제해 분량을 맞추지 않습니다. 이 기준은 긴 문단을 막는 편집 검사이며 이해도 판정이 아닙니다.
+
+[완성된 mini HAL 설정](../../examples/mini-hal/config/reader-sections.yaml)과 [사내 적용 절차·읽기 검증](../concepts/reader-quality.md)을 참고하세요. `show_evidence: true`이면 동일 페이지의 같은 발췌는 한 번만 싣고 주제별 설명에서 연결합니다.
+
 ## scenarios.yaml
 
 ```yaml

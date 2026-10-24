@@ -18,7 +18,7 @@ from .budget import fit
 from .config import load
 from .evidence import collect, topic_blocks
 from .facts.model import KnowledgeModel
-from .generate import Generator
+from .narration import Narrator
 from .llm import Agent, AgentError
 
 
@@ -28,12 +28,6 @@ def digest(value: str) -> str:
 
 def write_json(path: Path, value) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
-
-class EvaluationGenerator(Generator):
-    def _record_review(self, tag, text, verdict, omitted, mode="generated-prose"):
-        # The experiment must not overwrite production review records.
-        pass
 
 
 class RecordingAgent(Agent):
@@ -79,7 +73,7 @@ def run(config: Path, models: list[str], cases: list[str], out: Path, repeats: i
     collect(cfg, model)
     sections = {s["id"]: s for s in cfg.sections()}
     selected = []
-    probe = EvaluationGenerator(cfg, model, Agent(cfg.agent))
+    probe = Narrator(cfg, model, Agent(cfg.agent), lambda *args: None)
     for case in cases:
         if not re.fullmatch(r"[\w-]+/[\w-]+", case):
             raise ValueError(f"Expected section/topic: {case}")
@@ -128,13 +122,13 @@ def run(config: Path, models: list[str], cases: list[str], out: Path, repeats: i
                 sample = out / f"model-{index + 1}" / f"repeat-{repeat + 1}" / case.replace("/", "--")
                 sample.mkdir(parents=True)
                 agent = RecordingAgent(candidate, sample, expected)
-                gen = EvaluationGenerator(cfg, model, agent)
+                gen = Narrator(cfg, model, agent, lambda *args: None)
                 started = time.monotonic()
                 item = {"model": name, "repeat": repeat + 1, "case": case,
                         "path": sample.relative_to(out).as_posix()}
                 print(f"{name} repeat={repeat + 1} {case}", flush=True)
                 try:
-                    text, omitted, verdict = gen._ask(case.replace("/", "--"), sec, title, blocks, "")
+                    text, omitted, verdict = gen.ask(case.replace("/", "--"), sec, title, blocks, "")
                     (sample / "processed.md").write_text(text + "\n", encoding="utf-8")
                     item.update(verdict=asdict(verdict), omitted=omitted)
                     reason = agent.response.get("done_reason")

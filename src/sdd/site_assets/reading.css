@@ -35,3 +35,6 @@ dialog{color:var(--ink);background:#fff;border:1px solid var(--line);border-radi
 .language-selector [aria-current] { font-weight: 700; background: #edf5f1; }
 .translation-note { font-size: 13px; color: #52635c; border-left: 3px solid #8ba99e; padding-left: 12px; }
 @media(max-width:760px){.site-header{height:auto;min-height:60px;flex-wrap:wrap;padding:10px 18px;gap:8px}.brand{flex:1 1 100%}.header-actions{margin-left:auto}.language-selector{font-size:12px}}
+
+/* Reader navigation is a short choice table, including on narrow screens. */
+.reading-routes table{min-width:0;table-layout:fixed}.reading-routes td:first-child{min-width:0}.reading-routes th,.reading-routes td{overflow-wrap:anywhere}
