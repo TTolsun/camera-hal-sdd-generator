@@ -84,7 +84,7 @@ def response_schema(topic):
         return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'evidence', 'covers', 'kind'], 'properties': {
-                     'text': {'type': 'string'},
+                     'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]<>\\]*$'},
                      'evidence': ids([s['id'] for s in topic['sources']]),
                      'covers': ids(topic['covers']),
                      'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
