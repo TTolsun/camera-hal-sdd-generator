@@ -32,7 +32,7 @@ def generated(tmp_cfg):
     save()
     tmp_cfg.agent.kind = 'ollama'
     tmp_cfg.agent.max_input_chars = 18000
-    statement = dict(text='`stop()`은 종료 시 대기 중인 요청을 취소하는 함수를 호출합니다. 구현자는 이 종료 진입점에서 요청 취소 처리가 시작된다는 점을 확인하고 해당 처리 함수의 구현을 함께 읽어야 합니다.', evidence=['stop'], covers=['shutdown'], kind='behavior')
+    statement = dict(quote=text, text='`stop()`은 종료 시 대기 중인 요청을 취소하는 함수를 호출합니다. 구현자는 이 종료 진입점에서 요청 취소 처리가 시작된다는 점을 확인하고 해당 처리 함수의 구현을 함께 읽어야 합니다.', evidence=['stop'], covers=['shutdown'], kind='behavior')
     class Agent:
         def __init__(self):
             self.calls = []
@@ -62,13 +62,14 @@ def test_generate_export_and_carryover_required_llm_answers(tmp_cfg, generated):
     export_site(tmp_cfg)
 
 
-@pytest.mark.parametrize('change', ['missing', 'wrong_source', 'wrong_question', 'limitation', 'uncertainty', 'uncited_paragraph', 'html'])
+@pytest.mark.parametrize('change', ['missing', 'wrong_source', 'wrong_quote', 'wrong_question', 'limitation', 'uncertainty', 'uncited_paragraph', 'html'])
 def test_failed_llm_answer_preserves_all_pages(tmp_cfg, generated, change):
     section, model, save, agent = generated
     path = Generator(tmp_cfg, model, agent).run()[0]
     original = path.read_bytes()
     if change == 'missing': agent.statement['text'] = ''
     if change == 'wrong_source': agent.statement['evidence'] = ['not-supplied']
+    if change == 'wrong_quote': agent.statement['quote'] = 'This text is not in the source.'
     if change == 'wrong_question': agent.statement['covers'] = ['unknown']
     if change == 'limitation': agent.statement['kind'] = 'limitation'
     if change == 'uncertainty': agent.statement['text'] = '해당 구현의 종료 동작과 취소 처리 조건은 이 발췌만으로 확인할 수 없습니다.'
@@ -116,6 +117,7 @@ def test_changed_source_regenerates_and_selects_overview_without_watch(tmp_cfg, 
     assert 'device' in report.sections
     assert not carry_forward(tmp_cfg, model, [])[0]
     agent.statement['text'] = '`stop()`은 종료 시 대기 중인 작업을 마치는 함수를 호출합니다. 구현자는 이 종료 진입점에서 작업 마무리 처리가 시작된다는 점을 확인하고 해당 처리 함수의 구현을 함께 읽어야 합니다.'
+    agent.statement['quote'] = record['text']
     Generator(tmp_cfg, model, agent).run(impact=report)
     assert before != fingerprint(model, section)
     assert 'drain' in agent.calls[-1] and 'cancelPending' not in agent.calls[-1]
@@ -159,3 +161,10 @@ def test_code_typography_uses_source_identifiers_without_rewriting_claims():
     statements = [{'text': 'Camera::start()와 `Camera`를 확인합니다. Device Enumerator는 장치를 찾습니다.'}]
     normalize_answer(model, statements, ['class Camera {}; class DeviceEnumerator {};'])
     assert statements[0]['text'] == '`Camera::start()`와 `Camera`를 확인합니다. Device Enumerator는 장치를 찾습니다.'
+
+
+def test_quote_comparison_ignores_comment_decoration_but_preserves_negation():
+    from sdd.generated_design import quote_text
+    source = 'It must not access\n * the request after completion.'
+    assert quote_text(source) == quote_text('It must not access the request after completion.')
+    assert quote_text('It must access the request after completion.') not in quote_text(source)

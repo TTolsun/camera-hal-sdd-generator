@@ -79,11 +79,17 @@ def digest(text):
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
 
+def quote_text(text):
+    """Ignore whitespace and Doxygen line decoration, retaining source words."""
+    return ' '.join(re.sub(r'^\s*\*(?: |$)', '', text, flags=re.M).split())
+
+
 def response_schema(topic):
     def ids(values):
         return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
     statement = {'type': 'object', 'additionalProperties': False,
-                 'required': ['text', 'evidence', 'covers', 'kind'], 'properties': {
+                 'required': ['quote', 'text', 'evidence', 'covers', 'kind'], 'properties': {
+                     'quote': {'type': 'string'},
                      'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]<>\\]*$'},
                      'evidence': ids([s['id'] for s in topic['sources']]),
                      'covers': ids(topic['covers']),
@@ -105,7 +111,7 @@ def materialize(model, section, answers):
         if not isinstance(statements, list) or not statements:
             raise ValueError(f"{topic['id']}: 생성된 설명이 없습니다.")
         for st in statements:
-            if not isinstance(st, dict) or set(st) - {'text', 'evidence', 'covers', 'kind'}:
+            if not isinstance(st, dict) or set(st) - {'quote', 'text', 'evidence', 'covers', 'kind'}:
                 raise ValueError('LLM 설명의 필드가 올바르지 않습니다.')
             for field in ('evidence', 'covers'):
                 if not isinstance(st.get(field), list) or not st[field] or any(not isinstance(v, str) for v in st[field]):
@@ -114,6 +120,13 @@ def materialize(model, section, answers):
                 raise ValueError(f"{topic['id']}: 다른 주제의 질문에 답할 수 없습니다.")
             if not isinstance(st.get('text'), str) or not st['text'].strip():
                 raise ValueError('LLM 설명이 비었습니다.')
+            quote = st.get('quote')
+            if not isinstance(quote, str) or len(quote.strip()) < 12:
+                raise ValueError('각 설명에는 직접 근거로 삼은 원문 구절 quote가 필요합니다.')
+            original = [quote_text(model.evidence.get(f"{section['id']}/{topic['id']}/{ref}", {}).get('text', ''))
+                        for ref in st['evidence']]
+            if not any(quote_text(quote) in source for source in original):
+                raise ValueError('quote가 연결된 소스 발췌의 실제 원문과 일치하지 않습니다.')
             if st.get('kind', 'behavior') == 'behavior' and only_uncertainty(st['text']):
                 raise ValueError('확인 필요 문장만으로 필수 질문의 답변을 대신할 수 없습니다.')
             if extract_citations(st['text']):
@@ -189,7 +202,11 @@ def generate(generator, section):
         '소스에 명시된 반환 조건과 실행 문맥은 behavior입니다. limitation에는 별도로 검증할 항목만 씁니다. '
         '조건문의 true/false 분기와 각각의 반환값을 먼저 대조하고 설명하세요. '
         '프레임워크를 호출하는 쪽과 인터페이스를 구현하는 쪽의 책임을 구분하세요. '
-        '함수 전체의 코드 근거가 없으면 추가 검증 유무·소유권·즉시 실행·스레드 보장을 추정하지 마세요.'
+        '함수 전체의 코드 근거가 없으면 추가 검증 유무·소유권·즉시 실행·스레드 보장을 추정하지 마세요. '
+        '각 설명마다 먼저 직접 근거인 영어 주석이나 코드 구절을 quote에 원문 그대로 복사하고, '
+        'text에는 그 구절이 말하는 구현 책임과 조건만 한국어로 설명하세요. '
+        'before와after, must와must not, null 반환과 프록시 선택을 바꾸지 마세요. '
+        'quote 밖의 추론이나 일반적인 위험 설명을 덧붙이지 마세요.'
     )
     answers = {}
     for topic in section['design_topics']:
@@ -203,10 +220,10 @@ def generate(generator, section):
             '실기기·스레드·성능 등 추가 확인은 limitation으로 분리하세요. '
             '클래스·함수 이름은 백틱으로 감싸세요. 링크, 인용 위치, 표, 제목, 그림은 생성기가 만듭니다. '
             '설명은 주제당 2~3개의 짧은 문단으로 작성하고 각 text는 줄바꿈 없는 한 문단으로 쓰세요. '
-            'JSON 객체만 반환하세요: {"statements":[{"text":"설명합니다.",'
+            'JSON 객체만 반환하세요: {"statements":[{"quote":"소스의 실제 원문 구절", "text":"설명합니다.",'
             '"evidence":["소스 id"],"covers":["질문 id"],"kind":"behavior 또는 limitation"}]}\n'
         )
-        example = {'statements': [{'text': '여기에 근거로 확인한 설명을 씁니다.',
+        example = {'statements': [{'quote': '선택한 소스에서 문장을 그대로 복사합니다.', 'text': '여기에 그 구절이 말하는 책임과 조건을 설명합니다.',
                                   'evidence': [next(iter(sources))], 'covers': topic['covers'], 'kind': 'behavior'}]}
         user = instruction + json.dumps(request, ensure_ascii=False) + '\n출력 형식 예시(본문은 새로 작성): ' + json.dumps(example, ensure_ascii=False)
         last = None

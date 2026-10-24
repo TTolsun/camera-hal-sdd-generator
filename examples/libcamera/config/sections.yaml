@@ -984,7 +984,7 @@ sections:
     - id: selection
       file: include/libcamera/internal/ipa_manager.h
       start: template<typename T>
-      end: '#if HAVE_IPA_PUBKEY'
+      end: "return proxy;\n\t}"
   - id: interface
     title: 프레임 입력과 알고리즘 결과
     question: IPU3와 RKISP1 인터페이스를 구현 사례로 요청·통계 입력과 파라미터·메타데이터 결과를 설명하세요. 메서드별 인자를 섞거나 선언만으로 이벤트 도착 순서를 추정하지 마세요.
