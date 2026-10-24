@@ -1,0 +1,47 @@
+# 사내 Camera HAL 문서의 용어집.
+# 사이트를 만들 때 문서마다 그 문서에 쓰인 용어의 표를 넣고, 전체를 모은 용어집 페이지를 만든다.
+# 본문(코드 밖)에 뜻을 적지 않은 약어가 있으면 export-site 가 실패하고 약어와 문서를 알려 준다.
+# 그 목록을 보고 사내 약어(칩 이름, 블록 이름, 내부 모듈 이름)의 뜻을 아래에 추가한다.
+#   terms  : 처음 읽는 사람에게 뜻을 알려야 하는 용어. definition 은 한두 문장으로 쓴다.
+#   common : 설명 없이 써도 되는 일반 약어. 분야 용어는 여기에 넣지 않는다.
+# 형식: camera-hal-sdd-generator/docs/reference/glossary.md
+#
+# 사내 약어 예시 (주석을 풀고 채운다):
+#  - term: <사내 약어>
+#    full: <풀어 쓴 이름>
+#    definition: <무엇이고, 이 HAL에서 어떤 역할을 하는지 한두 문장>
+
+terms:
+  - term: HAL
+    full: Hardware Abstraction Layer
+    definition: >-
+      Android 프레임워크가 제조사마다 다른 카메라 하드웨어를 같은 인터페이스로 다루게 하는 계층입니다.
+      이 문서가 설명하는 사내 코드가 여기에 해당합니다.
+  - term: ISP
+    full: Image Signal Processor
+    definition: 센서가 출력한 원시 데이터를 영상으로 바꾸는 처리 장치입니다. 블랙 레벨, 렌즈 음영, 화이트 밸런스, 디모자이크 등을 수행합니다.
+  - term: 3A
+    definition: 자동 노출(AE), 자동 화이트 밸런스(AWB), 자동 초점(AF)을 함께 부르는 말입니다.
+  - term: AE
+    full: Auto Exposure
+    definition: 장면 밝기에 맞춰 노출 시간과 게인을 정하는 알고리즘입니다.
+  - term: AWB
+    full: Auto White Balance
+    definition: 조명의 색온도를 추정하고 R·G·B 채널별 게인을 정하는 알고리즘입니다.
+  - term: AF
+    full: Auto Focus
+    definition: 렌즈 위치를 움직여 초점을 맞추는 알고리즘입니다.
+  - term: capture request
+    definition: >-
+      프레임워크가 프레임 하나를 요청하며 HAL에 넘기는 단위입니다. 출력 버퍼와 그 프레임에 적용할 설정(metadata)을 담습니다.
+    aliases: [캡처 요청]
+  - term: metadata
+    definition: 요청에 담긴 촬영 설정과 결과에 담긴 실제 촬영 정보를 키와 값으로 나타낸 자료입니다.
+    aliases: [메타데이터]
+  - term: NDK
+    full: Native Development Kit
+    definition: Android에서 C/C++ 코드를 빌드하는 도구 모음입니다. 이 생성기는 NDK 빌드 설정으로 compile DB를 만듭니다.
+  - term: DB
+    definition: 이 문서에서는 소스 파일별 컴파일 명령을 모은 compile_commands.json(compile DB)을 뜻합니다.
+
+common: [API, CPU, GPU, ID, LLM, RGB, TODO, USB, YAML]
