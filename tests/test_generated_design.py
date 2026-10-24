@@ -323,7 +323,7 @@ def test_libcamera_design_documents_have_no_fixed_answers():
         assert all('sha256' not in source for topic in section['design_topics'] for source in topic['sources'])
 
 
-@pytest.mark.parametrize('profile', ['architecture', 'vendor'])
+@pytest.mark.parametrize('profile', ['architecture', 'vendor', 'vendor-overview'])
 def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg, generated, profile):
     from sdd.reader_profiles import PROFILES
     section, model, save, base_agent = generated
@@ -340,6 +340,9 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
     class ProfileAgent:
         calls = []
         def chat(self, system, user, **kw):
+            if profile == 'vendor-overview':
+                assert 'source-backed benefits' in system
+                assert 'performance numbers' in system
             self.calls.append(user)
             statement = copy.deepcopy(base_agent.statement)
             statement_schema = kw['response_schema']['properties']['statements']['items']

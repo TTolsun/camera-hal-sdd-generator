@@ -28,13 +28,23 @@ PROFILES = {
     },
 }
 
+# Keep implementation contracts useful as detail pages. The entry page must
+# additionally answer adoption questions, without repeating them on every page.
+PROFILES['vendor-overview'] = {
+    'capabilities': '어떤 기능을 제공하며 어디까지 지원합니까?',
+    'benefits': '구현 근거로 설명할 수 있는 강점과 그 조건은 무엇입니까?',
+    'integration': '연동 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?',
+    'constraints': '지원 전제, 미지원 범위와 별도 검증할 제약은 무엇입니까?',
+    **PROFILES['vendor'],
+}
+
 
 def profile_errors(section):
     profile = section.get('reader_profile')
     if profile is None:
         return []
     if not isinstance(profile, str) or profile not in PROFILES:
-        return ['reader_profile은 vendor, developer 또는 architecture여야 합니다.']
+        return ['reader_profile은 ' + ', '.join(PROFILES) + ' 중 하나여야 합니다.']
     requirements = section.get('design_requirements', [])
     found = set()
     for requirement in requirements:

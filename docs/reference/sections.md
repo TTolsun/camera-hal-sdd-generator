@@ -135,13 +135,18 @@ Ollama 연결에서는 JSON 구조와 제공된 질문·구절 id를 제한하�
 
 ## 독자 프로필
 
-`reader_profile: vendor` 또는 `reader_profile: developer`를 `prose` 섹션에 지정하면 공통 필수 질문을 검사합니다. 생략하면 기존 설정 동작을 유지합니다.
+`reader_profile: vendor-overview`, `reader_profile: vendor` 또는 `reader_profile: developer`를 `prose` 섹션에 지정하면 공통 필수 질문을 검사합니다. 생략하면 기존 설정 동작을 유지합니다.
 
 | 프로필 | `design_requirements[].aspects`에 포함해야 하는 값 |
 |---|---|
-| `vendor` | `inputs`, `ownership`, `completion`, `failure`, `verification` |
+| `vendor-overview` | `capabilities`, `benefits`, `integration`, `constraints`, `inputs`, `ownership`, `completion`, `failure`, `verification` |
+| `vendor` (상세 구현 계약) | `inputs`, `ownership`, `completion`, `failure`, `verification` |
 | `developer` | `entry`, `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
 | `architecture` (기존 설정 호환) | `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
+
+`vendor-overview`는 기술 채택과 연동 범위를 판단하는 첫 문서입니다. 기능, 구현 근거가 있는 강점, 연동 순서와 책임, 지원 조건·미지원 범위를 설명합니다. `vendor`는 기존 상세 구현 계약을 위한 프로필로 유지합니다. 기존 개요를 전환할 때는 네 관점의 질문·답변·근거를 추가하고 원고를 재생성하세요. 상세 페이지에 같은 소개를 반복할 필요는 없습니다.
+
+LLM 개요 생성에는 강점을 구체적 구현과 조건에 연결하고, 근거 없는 경쟁 우위·성능 수치·지원 기종·제품 완성도를 만들지 않도록 하는 공통 지침을 추가합니다. 자동 검사는 질문과 근거 연결을 확인하며 실제 강점이나 제품 성능을 인증하지 않습니다.
 
 `developer`는 신입·타팀 개발자를 위한 프로필입니다. `entry`는 실제 첫 파일·진입점과 읽는 순서, `verification`은 증상별 확인 코드와 수정 후 검증 조건을 다룹니다. `architecture`는 이전 설정을 계속 읽기 위해 지원하며 Developer 문서의 기본값이 아닙니다. 기존 설정을 전환할 때는 이름만 바꾸지 말고 `entry`의 근거 있는 답변을 추가하고 읽기 과제를 다시 검증하세요.
 

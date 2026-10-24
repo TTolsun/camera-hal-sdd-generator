@@ -28,6 +28,6 @@ NDK-build가 아닌 제품의 설정은 [환경별 선택](../../docs/inhouse/ag
 
 ## 문서 품질을 옮기는 방법
 
-Vendor와 신입·타팀 Developer 독자 프로필은 기본으로 필수입니다. 빈 `sources`·`statements`를 실제 소스와 대조해 채우기 전에는 생성이 실패합니다. 클래스 색인만으로 설계 문서가 완성된 것으로 처리하지 않습니다.
+Vendor 개요(`vendor-overview`)와 신입·타팀 Developer(`developer`) 독자 프로필은 기본으로 필수입니다. Vendor 개요의 기능·강점·연동 순서·지원 제약과 기존 입력·소유권·완료·실패·검증 질문을 실제 HAL 근거로 채웁니다. 상세 문서는 `vendor` 프로필로 나눌 수 있습니다. 빈 `sources`·`statements`를 실제 소스와 대조해 채우기 전에는 생성이 실패합니다. 클래스 색인만으로 설계 문서가 완성된 것으로 처리하지 않습니다.
 
 [공통 품질 기준과 읽기 검증](../../docs/concepts/reader-quality.md), [완성된 작은 HAL 예제](../mini-hal/config/reader-sections.yaml)를 따라 작성하세요. 소스 근거 고정과 필수 질문 검사는 libcamera와 같은 생성기를 사용합니다. 실제 사내 HAL의 동작과 설명은 사내 독자가 별도로 검토해야 합니다.

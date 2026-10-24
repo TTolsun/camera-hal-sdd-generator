@@ -229,6 +229,14 @@ def generate(generator, section):
         'Do not invent advice, rationale, timing, ownership or thread guarantees. '
         'Use a short analysis focused on the question, then produce the answer.'
     )
+    if section.get('reader_profile') == 'vendor-overview':
+        system += (
+            '\nThis is a vendor adoption and integration overview. Explain supported capabilities, '
+            'source-backed benefits, integration responsibilities and constraints. '
+            'Tie each benefit to a concrete mechanism and its conditions; do not invent competitive '
+            'superiority, performance numbers, device support or production readiness. '
+            'Distinguish a source contract from a measured result and from a vendor obligation.'
+        )
     answers = {}
     for topic in section['design_topics']:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}

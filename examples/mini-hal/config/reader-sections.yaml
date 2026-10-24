@@ -1,11 +1,11 @@
 sections:
 - id: vendor-contract
-  title: Vendor 구현 계약
+  title: 기능·강점과 Vendor 연동 안내
   kind: prose
   output: vendor-contract.md
   group: For Vendor
-  reader_profile: vendor
-  lead: 이 작은 HAL의 실제 구현과 남아 있는 수명 제약을 확인하세요.
+  reader_profile: vendor-overview
+  lead: 제공 기능과 설계 강점, 지원 조건을 확인하고 연동 순서와 구현 책임을 정하세요.
   narration: facts
   facts:
     classes: []
@@ -13,6 +13,22 @@ sections:
     enabled: false
   show_evidence: true
   design_requirements:
+  - id: capabilities
+    question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
+    aspects:
+    - capabilities
+  - id: benefits
+    question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
+    aspects:
+    - benefits
+  - id: integration
+    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    aspects:
+    - integration
+  - id: constraints
+    question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
+    aspects:
+    - constraints
   - id: inputs
     question: 입력 조건과 구현 책임은 무엇입니까?
     aspects:
@@ -34,8 +50,9 @@ sections:
     aspects:
     - verification
   design_topics:
-  - id: inputs
-    title: 입력 조건
+  - id: capabilities
+    title: 제공 기능과 지원 범위
+    question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
     sources:
     - &id001
       id: device
@@ -43,6 +60,64 @@ sections:
       start: '#include "device/CameraDevice.h"'
       end: '}  // namespace halcam'
       sha256: 7d9a81a09adcd15ccb946a7ffdb74417ecff5ed5f512c9c81fd7d9978094295e
+    statements:
+    - text: initialize()로 콜백을 등록하고 configureStreams()로 스트림을 구성한 뒤 요청을 제출하는 작은 HAL 예제입니다. 실제 제품의 지원 기종이나 촬영 성능을 입증하는
+        예제는 아닙니다.
+      covers:
+      - capabilities
+      evidence:
+      - device
+  - id: benefits
+    title: 구현 근거로 보는 강점
+    question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
+    sources:
+    - *id001
+    - &id002
+      id: requests
+      file: src/device/RequestManager.cpp
+      start: '#include "device/RequestManager.h"'
+      end: '}  // namespace halcam'
+      sha256: 2e5518f45bdc653e2cce8c3bb1263a9064eb6da2bb02feb22fc0ab4bd0db083a
+    statements:
+    - text: RequestManager는 submit()에서 프레임 등록과 작업 큐 전달을 맡고, 성공한 runPipes()의 결과를 콜백으로 전달합니다. 요청 관리와 파이프 작업을 나누어 읽을
+        수 있는 구조이지만, 실패와 종료 시 자원 정리는 완성되어 있지 않습니다.
+      covers:
+      - benefits
+      evidence:
+      - device
+      - requests
+  - id: integration
+    title: 연동 순서와 책임
+    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    sources:
+    - *id001
+    - *id002
+    statements:
+    - text: 연동 호출자는 initialize()로 콜백을 등록하고 configureStreams()로 스트림을 설정한 뒤 processCaptureRequest()로 요청을 전달합니다. 호출자는
+        고유한 frame_number를 제공하고, 구현 담당자는 큐 거절·파이프 실패·종료 중 요청 정리를 보완해야 합니다.
+      covers:
+      - integration
+      evidence:
+      - device
+      - requests
+  - id: constraints
+    title: 지원 조건과 제약
+    question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
+    sources:
+    - *id001
+    - *id002
+    statements:
+    - text: configureStreams()는 null 구성과 0개 또는 MAX_PIPES 초과 스트림을 거절하며, USE_DUAL_CAMERA에서는 홀수 스트림도 거절합니다. drain()이
+        작업 완료를 기다리지 않고 inFlight_를 지우므로 종료 시 포인터 수명을 보장하는 제품 구현으로 사용할 수 없습니다.
+      covers:
+      - constraints
+      evidence:
+      - device
+      - requests
+  - id: inputs
+    title: 입력 조건
+    sources:
+    - *id001
     statements:
     - text: 콜백을 initialize()로 등록한 뒤 configureStreams()를 호출합니다. null 구성과 0개 또는 MAX_PIPES 초과 스트림은 거절합니다. USE_DUAL_CAMERA
         구성에서는 홀수 스트림 수도 거절합니다.
@@ -54,12 +129,7 @@ sections:
   - id: ownership
     title: 프레임 소유권
     sources:
-    - &id002
-      id: requests
-      file: src/device/RequestManager.cpp
-      start: '#include "device/RequestManager.h"'
-      end: '}  // namespace halcam'
-      sha256: 2e5518f45bdc653e2cce8c3bb1263a9064eb6da2bb02feb22fc0ab4bd0db083a
+    - *id002
     statements:
     - text: 프레임 소유권과 작업 스레드의 포인터 관계는 [개발자 안내](architecture-contract.md#자원-수명)에서 확인합니다. 요청 제출자는 고유한 frame_number를
         전달해야 기존 inFlight_ 항목을 덮어쓰지 않습니다.
@@ -116,6 +186,7 @@ sections:
   next:
     title: 다른 독자의 계약
     link: architecture-contract.md
+  reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
 # 출력 경로는 기존 링크를 위해 유지합니다. 독자는 신입·타팀 개발자입니다.
 - id: architecture-contract
   title: 처음 읽는 개발자 안내

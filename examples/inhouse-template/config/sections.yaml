@@ -11,11 +11,11 @@ sections:
     link: overview.md
 - id: vendor-contract
   group: For Vendor
-  title: 요청 연동과 구현 계약
+  title: 기능·강점과 Vendor 연동 안내
   output: vendor-contract.md
   kind: prose
-  lead: 입력 조건, 요청과 버퍼의 수명, 완료와 실패 처리부터 확인하세요.
-  reader: HAL을 연동하거나 장치 구현을 수정하는 Vendor 개발자
+  lead: 제공 기능과 설계 강점, 지원 조건을 확인하고 연동 순서와 구현 책임을 정하세요.
+  reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
   facts:
     classes: []
   watch:
@@ -24,9 +24,25 @@ sections:
   next:
     title: 시스템 개요
     link: overview.md
-  reader_profile: vendor
+  reader_profile: vendor-overview
   show_evidence: true
   design_requirements:
+  - id: capabilities
+    question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
+    aspects:
+    - capabilities
+  - id: benefits
+    question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
+    aspects:
+    - benefits
+  - id: integration
+    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    aspects:
+    - integration
+  - id: constraints
+    question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
+    aspects:
+    - constraints
   - id: inputs
     question: 입력 조건과 구현 책임은 무엇입니까?
     aspects:
@@ -48,6 +64,26 @@ sections:
     aspects:
     - verification
   design_topics:
+  - id: capabilities
+    title: 제공 기능과 지원 범위
+    question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
+    sources: []
+    statements: []
+  - id: benefits
+    title: 구현 근거로 보는 강점
+    question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
+    sources: []
+    statements: []
+  - id: integration
+    title: 연동 순서와 책임
+    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    sources: []
+    statements: []
+  - id: constraints
+    title: 지원 조건과 제약
+    question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
+    sources: []
+    statements: []
   - id: inputs
     title: 입력 조건과 구현 책임
     question: 입력 조건과 구현 책임은 무엇입니까?
