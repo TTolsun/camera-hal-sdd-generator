@@ -29,17 +29,20 @@ class Agent:
         self.dump_dir = dump_dir
         self._counter = 0
 
-    def chat(self, system: str, user: str, tag: str = "prompt") -> str:
+    def chat(self, system: str, user: str, tag: str = "prompt", response_schema: dict | None = None) -> str:
         self._counter += 1
         if self.dump_dir:
             self.dump_dir.mkdir(parents=True, exist_ok=True)
             (self.dump_dir / f"{self._counter:03d}_{tag}.md").write_text(
                 f"<!-- system -->\n{system}\n\n<!-- user -->\n{user}\n", encoding="utf-8")
+            if response_schema and self.cfg.kind == 'ollama':
+                (self.dump_dir / f"{self._counter:03d}_{tag}.schema.json").write_text(
+                    json.dumps(response_schema, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         kind = self.cfg.kind
         if kind == "dry-run":
             return f"(dry-run) {tag}: LLM 을 호출하지 않았습니다. 프롬프트는 build/prompts/ 에 기록했습니다."
         if kind == "ollama":
-            text = self._ollama(system, user)
+            text = self._ollama(system, user, response_schema) if response_schema else self._ollama(system, user)
         elif kind == "openai-compatible":
             text = self._openai(system, user)
         else:
@@ -64,7 +67,7 @@ class Agent:
 
     # ---- transports ------------------------------------------------------
 
-    def _ollama(self, system: str, user: str) -> str:
+    def _ollama(self, system: str, user: str, response_schema: dict | None = None) -> str:
         body: dict = {
             "model": self.cfg.model,
             "stream": False,
@@ -77,6 +80,8 @@ class Agent:
             body["options"]["num_ctx"] = self.cfg.num_ctx
         if self.cfg.max_output_tokens:
             body["options"]["num_predict"] = self.cfg.max_output_tokens
+        if response_schema:
+            body['format'] = response_schema
         data = self._post(f"{self.cfg.base_url}/api/chat", body)
         try:
             return str(data["message"]["content"]).strip()

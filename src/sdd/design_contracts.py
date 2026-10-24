@@ -36,13 +36,17 @@ def configuration_errors(section: dict) -> list[str]:
                 values = st.get(field, [])
                 if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
                     errors.append(f"{topic['id']}/{field}는 문자열 목록이어야 합니다.")
-    return errors
+    from .generated_design import configuration_errors as generated_errors
+    return errors + generated_errors(section)
 
 
 def audit(model: KnowledgeModel, section: dict) -> dict:
     errors = configuration_errors(section)
     if errors:
         return {"status": "incomplete", "requirements": [], "findings": errors, "human_review": "pending"}
+    if section.get('design_generation') == 'llm':
+        return {"status": "incomplete", "requirements": [],
+                "findings": ["LLM 설계 답변은 생성된 원고 기록과 함께 검증해야 합니다."], "human_review": "pending"}
     requirements = section.get("design_requirements", [])
     topics = section.get("design_topics", [])
     findings: list[str] = []
