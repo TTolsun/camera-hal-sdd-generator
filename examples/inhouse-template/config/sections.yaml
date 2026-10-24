@@ -49,27 +49,27 @@ sections:
     - verification
   design_topics:
   - id: inputs
-    title: 입력 조건과 구현 책임은 무엇입니까
+    title: 입력 조건과 구현 책임
     question: 입력 조건과 구현 책임은 무엇입니까?
     sources: []
     statements: []
   - id: ownership
-    title: 요청과 버퍼를 누가 유지하고 반환합니까
+    title: 요청과 버퍼 수명
     question: 요청과 버퍼를 누가 유지하고 반환합니까?
     sources: []
     statements: []
   - id: completion
-    title: 제출과 완료, 정지를 어떻게 구분합니까
+    title: 제출·완료·정지
     question: 제출과 완료, 정지를 어떻게 구분합니까?
     sources: []
     statements: []
   - id: failure
-    title: 실패를 어떻게 구분하고 처리합니까
+    title: 실패 처리
     question: 실패를 어떻게 구분하고 처리합니까?
     sources: []
     statements: []
   - id: verification
-    title: 어떤 조건을 실행에서 확인해야 합니까
+    title: 실행 확인
     question: 어떤 조건을 실행에서 확인해야 합니까?
     sources: []
     statements: []
@@ -129,27 +129,27 @@ sections:
     - verification
   design_topics:
   - id: responsibility
-    title: 컴포넌트의 책임은 어떻게 나뉩니까
+    title: 컴포넌트 책임
     question: 컴포넌트의 책임은 어떻게 나뉩니까?
     sources: []
     statements: []
   - id: boundaries
-    title: 제어와 데이터는 어떤 경계를 통과합니까
+    title: 제어·데이터 경계
     question: 제어와 데이터는 어떤 경계를 통과합니까?
     sources: []
     statements: []
   - id: lifecycle
-    title: 상태와 자원 수명은 어떻게 변합니까
+    title: 상태·자원 수명
     question: 상태와 자원 수명은 어떻게 변합니까?
     sources: []
     statements: []
   - id: concurrency
-    title: 스레드와 동기화 책임은 어디에 있습니까
+    title: 동기화 책임
     question: 스레드와 동기화 책임은 어디에 있습니까?
     sources: []
     statements: []
   - id: verification
-    title: 정적 근거의 한계와 실행 확인 대상은 무엇입니까
+    title: 정적 근거와 실행 확인
     question: 정적 근거의 한계와 실행 확인 대상은 무엇입니까?
     sources: []
     statements: []

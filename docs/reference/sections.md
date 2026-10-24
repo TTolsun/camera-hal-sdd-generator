@@ -39,7 +39,7 @@
 | `facts.impact_functions` | 다시 만들 계기로 볼 자유 함수. 생략하면 `facts.functions`. 선언이나 정의가 있는 파일이 바뀌면 절을 다시 만듭니다. |
 | `facts.defines` | `table` 종류의 표시용 값. 현재 생성기는 compile DB의 `-D`를 모두 싣습니다. |
 | `facts.reading_order` | 개요의 "코드를 처음 읽는 순서"에 쓸 시나리오 id. |
-| `watch` | 이 경로가 바뀌면 다시 만듭니다(소스 루트 상대 glob, `**` 지원). |
+| `watch` | 추가로 감시할 경로입니다(소스 루트 상대 glob, `**` 지원). `design_topics.sources[].file`은 별도 watch 없이도 변경 시 해당 문서를 다시 만듭니다. |
 | `diagram` | 이 섹션만의 그림 설정. 예: `{max_nodes: 24}`. 키는 [diagrams](config.md#diagrams)와 같습니다. |
 | `answers` | 모델 설명이 답해야 할 질문 목록. |
 | `semantic_review` | `true`이면 모델 설명의 구조 주장(상속·필드)을 facts와 대조합니다. |

@@ -1,7 +1,7 @@
 """변경 영향 매핑: git diff -> 변경 파일/심볼 -> 재생성할 SDD 섹션과 시나리오.
 
-두 단계로 잡는다.
-1. 경로 규칙: sections.yaml 의 watch glob 에 변경 파일이 걸리면 그 섹션.
+경로와 근거, 심볼 규칙으로 잡는다.
+1. 경로·근거 규칙: watch glob 또는 design_topics의 소스 파일이 바뀌면 그 섹션.
 2. 심볼 규칙: 변경 파일에 정의된 클래스가 속한 패키지, 변경 파일을 지나는 시나리오.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from . import source_git
@@ -68,6 +68,14 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
         hits = [f for f in files if f not in unbuilt and match_any(f, sec.get("watch", []) or [])]
         if hits:
             report.sections.setdefault(sec["id"], []).append(f"watch 일치: {', '.join(hits[:5])}")
+        # Authored contracts depend on source excerpts even without selected
+        # symbols or watch globs. Explicit evidence can also be outside the
+        # compile DB (for example build configuration or interface headers).
+        evidence_files = {PurePosixPath(source["file"]).as_posix() for topic in sec.get("design_topics", [])
+                          for source in topic.get("sources", []) if isinstance(source.get("file"), str)}
+        evidence_hits = sorted(fileset.intersection(evidence_files))
+        if evidence_hits:
+            report.sections.setdefault(sec["id"], []).append(f"설계 근거 파일 변경: {', '.join(evidence_hits[:5])}")
 
     # 2. 심볼 규칙
     changed_classes = model.classes_in_files(fileset)

@@ -4,6 +4,7 @@ import subprocess
 
 import yaml
 
+from sdd.coverage import audit
 from sdd.evidence import collect
 from sdd.facts.model import KnowledgeModel
 from sdd.impact import compute
@@ -86,4 +87,9 @@ def test_일부만_발췌했거나_해시가_없거나_어긋나거나_문서를
     assert findings("# header", "...", "0" * 64) == ["data/tuning.yaml"]               # 고정한 내용과 다름
     _setup(tmp_cfg, "# header", "...")
     whole_sha = _model(tmp_cfg, head).evidence["ipa/t/tuning"]["sha256"]
-    assert findings("# header", "...", whole_sha, watch=()) == ["data/tuning.yaml"]     # 문서를 다시 만들지 않음
+    assert findings("# header", "...", whole_sha, watch=()) == []  # 명시한 근거는 watch 없이 재생성 대상
+    # Coverage must still reject a caller that does not regenerate the owner.
+    model = _model(tmp_cfg, head)
+    result = audit(model, ["data/tuning.yaml"], KnowledgeModel(), sections=tmp_cfg.sections(),
+                   excluded=[], manual_evidence={}, impacted_sections=set(), non_semantic={})
+    assert [f["name"] for f in result["findings"]] == ["data/tuning.yaml"]
