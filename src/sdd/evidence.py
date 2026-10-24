@@ -26,12 +26,12 @@ _PRESENTATION_KEYS = ("group", "routes", "next", "watch")
 
 
 def requires_fingerprint(section: dict) -> bool:
-    return bool(section.get("semantic_review") or section.get("design_topics") or section.get("design_requirements")
+    return bool(section.get("semantic_review") or section.get("design_topics") or section.get("design_requirements") or section.get("reader_profile")
                 or section.get("narration") == "facts")
 
 
 def collect(cfg: Config, model: KnowledgeModel) -> None:
-    from .design_contracts import configuration_errors
+    from .contract_schema import configuration_errors
 
     sections = cfg.sections()
     # Fail before Git reads or replacing evidence, including the CLI path that

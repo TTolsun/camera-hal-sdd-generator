@@ -68,7 +68,7 @@ def carry_forward(cfg: Config, model: KnowledgeModel,
         body = text[m.end():]
         invalid = sorted({c for c in extract_citations(body) if c not in allowed})
         sec = sections.get(meta.get("section", ""), {})
-        if sec.get("design_requirements"):
+        if sec.get("design_requirements") or sec.get("reader_profile"):
             from .design_contracts import audit
             invalid.extend(audit(model, sec)["findings"])
         if meta.get("scenario_fingerprint"):

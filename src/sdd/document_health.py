@@ -13,7 +13,7 @@ from collections import defaultdict
 from pathlib import PurePosixPath
 
 from .config import section_output
-from .export_html import _split
+from .document_metadata import split_frontmatter as _split
 from .facts.model import KnowledgeModel
 
 
