@@ -104,17 +104,22 @@ def _compile_units(cfg: Config, entries: list[dict], parsed: list[str] | None,
     """분석한 빌드의 지문: TU 별 컴파일 인자, 그리고 Git 이 추적하지 않는(빌드가 만든) 헤더의 내용.
 
     빌드 파일 변경이 문서에 주는 영향은 이 지문의 변화로 모두 드러난다. 범위 검사가 이전 facts 와 비교한다.
-    - 추출한 커밋 자신의 ID 와 describe 거리(-DVERSION="0.7.2+178-dfc7c9a4")는 커밋마다 달라지므로 가린다.
+    - 커밋 ID 와 describe 거리(-DVERSION="0.7.2+178-dfc7c9a4")는 가린다. Meson 처럼 다시 구성할 때만 값을
+      정하는 빌드는 예전 커밋의 ID 를 그대로 두므로, 추출한 커밋뿐 아니라 이 저장소의 어떤 커밋 ID 든 가린다.
     - 빌드가 만든 소스 파일(TU)의 내용은 비교하지 않는다. 다른 TU 에 포함되지 않으므로 다른 파일의 동작을
       바꾸지 않고, 버전·빌드 시각 문자열 때문에 커밋마다 달라진다. 그 TU 의 컴파일 인자는 비교한다.
     """
     roots = _roots(cfg)
-    units: dict[str, list[str]] = {}
+    argvs: list[tuple[str, str]] = []
     for entry, path in zip(entries, compdb.translation_units(entries)):
         rel = comments.root_relative(str(path), roots)
         if rel:
-            argv = _without_commit_id(json.dumps(compdb._argv(entry), ensure_ascii=False), commit)
-            units.setdefault(rel, []).append(hashlib.sha256(argv.encode("utf-8")).hexdigest())
+            argvs.append((rel, json.dumps(compdb._argv(entry), ensure_ascii=False)))
+    commits = _commit_ids(cfg, [a for _, a in argvs], commit)
+    units: dict[str, list[str]] = {}
+    for rel, argv in argvs:
+        argv = _without_commit_id(argv, commits)
+        units.setdefault(rel, []).append(hashlib.sha256(argv.encode("utf-8")).hexdigest())
     out = {rel: hashlib.sha256("\n".join(sorted(h)).encode()).hexdigest()[:16] for rel, h in units.items()}
     try:
         tracked = set(subprocess.run(["git", "ls-files", "-z"], cwd=cfg.source_root, capture_output=True,
@@ -127,15 +132,37 @@ def _compile_units(cfg: Config, entries: list[dict], parsed: list[str] | None,
                 text = (cfg.source_root / rel).read_bytes().decode("utf-8", "replace")
             except OSError:
                 continue
-            out[f"generated:{rel}"] = hashlib.sha256(_without_commit_id(text, commit).encode()).hexdigest()[:16]
+            text = _without_commit_id(text, commits | _commit_ids(cfg, [text], commit))
+            out[f"generated:{rel}"] = hashlib.sha256(text.encode()).hexdigest()[:16]
     return out
 
 
-def _without_commit_id(text: str, commit: str) -> str:
-    """추출한 커밋의 축약 ID(7자 이상)와 그 앞의 describe 거리를 고정 문자열로 바꾼다."""
-    if not commit:
+_HEX = re.compile(r"[0-9a-f]{7,40}")
+
+
+def _commit_ids(cfg: Config, texts: list[str], commit: str = "") -> set[str]:
+    """texts 안의 7~40자 16진 문자열 가운데 이 저장소의 커밋을 가리키는 것."""
+    candidates = sorted({m.group(0) for t in texts for m in _HEX.finditer(t)})
+    found = {c for c in candidates if commit and commit.startswith(c)}
+    rest = [c for c in candidates if c not in found]
+    if not rest:
+        return found
+    try:
+        res = subprocess.run(["git", "cat-file", "--batch-check"], cwd=cfg.source_root, input="\n".join(rest) + "\n",
+                             capture_output=True, encoding="utf-8", check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return found
+    for token, line in zip(rest, res.stdout.splitlines()):
+        if line.split()[1:2] == ["commit"]:
+            found.add(token)
+    return found
+
+
+def _without_commit_id(text: str, commits: set[str]) -> str:
+    """커밋 ID 와 그 앞의 describe 거리를 고정 문자열로 바꾼다."""
+    if not commits:
         return text
-    text = re.sub(r"[0-9a-f]{7,40}", lambda m: "<commit>" if commit.startswith(m.group(0)) else m.group(0), text)
+    text = _HEX.sub(lambda m: "<commit>" if m.group(0) in commits else m.group(0), text)
     return re.sub(r"\d+-g?<commit>", "N-<commit>", text)
 
 
