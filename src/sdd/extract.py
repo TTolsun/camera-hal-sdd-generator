@@ -6,6 +6,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -83,7 +84,8 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
             raise RuntimeError(f"시나리오 진입점 {stats['missing_entries']}개를 찾지 못했습니다. "
                                "scenarios.yaml을 실제 정의와 대조하세요. 기존 facts는 보존합니다.")
 
-    model.meta["compile_units"] = _compile_units(cfg, entries, model.meta.get("parsed_files"))
+    model.meta["compile_units"] = _compile_units(cfg, entries, model.meta.get("parsed_files"),
+                                                 str(model.meta.get("source_commit", "")))
     flags.collect(model, cfg, entries)
     from .evidence import collect as collect_evidence
     collect_evidence(cfg, model)
@@ -97,17 +99,21 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
     return model
 
 
-def _compile_units(cfg: Config, entries: list[dict], parsed: list[str] | None) -> dict[str, str]:
-    """분석한 빌드의 지문: TU 별 컴파일 인자, 그리고 Git 이 추적하지 않는(빌드가 만든) 입력 파일의 내용.
+def _compile_units(cfg: Config, entries: list[dict], parsed: list[str] | None,
+                   commit: str = "") -> dict[str, str]:
+    """분석한 빌드의 지문: TU 별 컴파일 인자, 그리고 Git 이 추적하지 않는(빌드가 만든) 헤더의 내용.
 
     빌드 파일 변경이 문서에 주는 영향은 이 지문의 변화로 모두 드러난다. 범위 검사가 이전 facts 와 비교한다.
+    - 추출한 커밋 자신의 ID 와 describe 거리(-DVERSION="0.7.2+178-dfc7c9a4")는 커밋마다 달라지므로 가린다.
+    - 빌드가 만든 소스 파일(TU)의 내용은 비교하지 않는다. 다른 TU 에 포함되지 않으므로 다른 파일의 동작을
+      바꾸지 않고, 버전·빌드 시각 문자열 때문에 커밋마다 달라진다. 그 TU 의 컴파일 인자는 비교한다.
     """
     roots = _roots(cfg)
     units: dict[str, list[str]] = {}
     for entry, path in zip(entries, compdb.translation_units(entries)):
         rel = comments.root_relative(str(path), roots)
         if rel:
-            argv = json.dumps(compdb._argv(entry), ensure_ascii=False)
+            argv = _without_commit_id(json.dumps(compdb._argv(entry), ensure_ascii=False), commit)
             units.setdefault(rel, []).append(hashlib.sha256(argv.encode("utf-8")).hexdigest())
     out = {rel: hashlib.sha256("\n".join(sorted(h)).encode()).hexdigest()[:16] for rel, h in units.items()}
     try:
@@ -116,13 +122,21 @@ def _compile_units(cfg: Config, entries: list[dict], parsed: list[str] | None) -
     except (OSError, subprocess.CalledProcessError):
         return out
     for rel in parsed or []:
-        if rel not in tracked:
+        if rel not in tracked and rel not in units:
             try:
-                data = (cfg.source_root / rel).read_bytes()
+                text = (cfg.source_root / rel).read_bytes().decode("utf-8", "replace")
             except OSError:
                 continue
-            out[f"generated:{rel}"] = hashlib.sha256(data).hexdigest()[:16]
+            out[f"generated:{rel}"] = hashlib.sha256(_without_commit_id(text, commit).encode()).hexdigest()[:16]
     return out
+
+
+def _without_commit_id(text: str, commit: str) -> str:
+    """추출한 커밋의 축약 ID(7자 이상)와 그 앞의 describe 거리를 고정 문자열로 바꾼다."""
+    if not commit:
+        return text
+    text = re.sub(r"[0-9a-f]{7,40}", lambda m: "<commit>" if commit.startswith(m.group(0)) else m.group(0), text)
+    return re.sub(r"\d+-g?<commit>", "N-<commit>", text)
 
 
 def _roots(cfg: Config) -> tuple[str, ...]:

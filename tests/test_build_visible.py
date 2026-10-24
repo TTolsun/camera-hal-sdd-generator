@@ -77,3 +77,23 @@ def test_추출이_TU_인자와_빌드가_만든_입력의_지문을_남긴다(t
     (root / "gen.h").write_text("#define A 2\n", encoding="utf-8")
     second = _compile_units(tmp_cfg, entries, ["dev.cpp", "gen.h"])
     assert first["dev.cpp"] != second["dev.cpp"] and first["generated:gen.h"] != second["generated:gen.h"]
+
+
+def test_커밋_자신의_버전_문자열과_생성된_TU_의_내용은_지문에_넣지_않는다(tmp_cfg):
+    from sdd.extract import _compile_units
+    root = tmp_cfg.source_root
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    (root / "app.cpp").write_text("int x;\n", encoding="utf-8")
+    subprocess.run(["git", "add", "app.cpp"], cwd=root, check=True)
+
+    def units(commit, version, generated_body):
+        (root / "version.cpp").write_text(generated_body, encoding="utf-8")   # 빌드가 만든 TU
+        entries = [{"directory": str(root), "file": "app.cpp",
+                    "arguments": ["c++", f'-DVERSION="0.7.2+{version}-{commit[:8]}"', "-c", "app.cpp"]},
+                   {"directory": str(root), "file": "version.cpp", "arguments": ["c++", "-c", "version.cpp"]}]
+        return _compile_units(tmp_cfg, entries, ["app.cpp", "version.cpp"], commit)
+
+    a = units("dfc7c9a4b601" + "0" * 28, 178, 'const char *v = "v0.7.2+178-dfc7c9a4 01:14:50";\n')
+    b = units("18b1542f5540" + "0" * 28, 179, 'const char *v = "v0.7.2+179-18b1542f 01:20:02";\n')
+    assert a == b
+    assert units("18b1542f5540" + "0" * 28, 179, "")["app.cpp"] == a["app.cpp"]
