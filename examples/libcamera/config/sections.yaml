@@ -1080,6 +1080,7 @@ sections:
   - meson_options.txt
   - utils/codegen/ipc/**
   - src/libcamera/ipc_pipe*
+  - src/libcamera/shaders/**
   next:
     title: IPU3 LSC와 상태 연결
     link: ipu3-lsc.md
@@ -1347,6 +1348,42 @@ sections:
       kind: limitation
       covers:
       - tuning
+  - id: softisp-lsc
+    title: 소프트웨어 ISP 셰이더의 렌즈 음영 보정
+    question: 소프트웨어 ISP의 GPU 셰이더는 렌즈 음영 보정을 어느 단계에 적용합니까?
+    sources:
+    - id: packed-shader
+      file: src/libcamera/shaders/bayer_1x_packed.frag
+      start: '/* SPDX-License-Identifier: BSD-2-Clause */'
+      end: "gl_FragColor = vec4(rgb, 1.0);\n#endif\n}"
+      sha256: df7b18b27b09dcf85bb35de49ff65c23e5e628bbf2050d30ad648d5ea5ea814c
+    - id: unpacked-shader
+      file: src/libcamera/shaders/bayer_unpacked.frag
+      start: '/* SPDX-License-Identifier: BSD-2-Clause */'
+      end: "gl_FragColor = vec4(rgb, 1.0);\n#endif\n}"
+      sha256: d9a997545388c652dc1c3939d88c0cad5df251642b1775f7cc62e4388c7986bf
+    statements:
+    - text: 소프트웨어 ISP의 두 bayer 프래그먼트 셰이더는 `APPLY_LSC`가 정의되어 컴파일될 때만 `lsc_tex` 텍스처를 선언하고 렌즈 음영 보정을 적용합니다.
+        보정은 블랙 레벨을 뺀 직후, AWB 게인을 곱하기 전에 RGB 값에 텍스처의 RGB 값을 곱하는 방식입니다.
+      evidence:
+      - packed-shader
+      - unpacked-shader
+      covers:
+      - softisp-lsc
+    - text: '`bayer_1x_packed.frag`의 주석은 텍스처 값이 UQ<2, 6> 형식이므로 4.0을 곱해 원래의 부동소수점 값으로 되돌린다고 설명합니다.
+        텍스처 좌표는 packed 셰이더가 `textureOut`을, unpacked 셰이더가 `center.xy`를 씁니다.'
+      evidence:
+      - packed-shader
+      - unpacked-shader
+      covers:
+      - softisp-lsc
+    - text: '`APPLY_LSC` 정의 여부, `lsc_tex`에 올리는 표와 색온도에 따른 표 선택은 셰이더 밖의 디베이어 구현과 IPA가 정하므로 이 발췌로는 확인할 수 없습니다.'
+      evidence:
+      - packed-shader
+      - unpacked-shader
+      kind: limitation
+      covers:
+      - softisp-lsc
   design_requirements:
   - id: selection
     question: 어떤 IPA 모듈과 실행 방식이 선택됩니까?
@@ -1360,6 +1397,8 @@ sections:
     question: 모듈 생성과 IPC 오류는 어떻게 관찰됩니까?
   - id: tuning
     question: 센서별 튜닝 파일이 없으면 어떤 파일과 알고리즘이 쓰입니까?
+  - id: softisp-lsc
+    question: 소프트웨어 ISP의 GPU 셰이더는 렌즈 음영 보정을 어느 단계에 적용합니까?
   show_evidence: true
 - id: ipu3-lsc
   group: For Vendors
