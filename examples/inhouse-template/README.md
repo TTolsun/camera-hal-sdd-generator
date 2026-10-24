@@ -1,6 +1,6 @@
 # 사내 HAL 설정 템플릿
 
-**이 디렉터리를 생성기 저장소 옆에 `hal-sdd-project/`로 복사하고, 파일 안의 `<...>`를 채우세요.** 그다음 생성기 저장소의 `docs/inhouse/02-first-run.md`("4. 실행하기")에 있는 명령을 순서대로 실행합니다. 설정 뒤에는 실제 소스를 대조하여 설계 계약을 작성해야 합니다.
+**이 디렉터리를 생성기 저장소 옆에 `hal-sdd-project/`로 복사하고, 파일 안의 `<...>`를 채우세요.** 그다음 생성기 저장소의 `docs/inhouse/02-first-run.md`("4. 실행하기")에 있는 명령을 순서대로 실행합니다. 설정 뒤에는 실제 소스를 대조하여 설계 계약을 작성해야 합니다. 에이전트에게 맡길 때는 [전달용 지시문](../../docs/inhouse/agent.md#전달할-지시문)과 [계약 작성 절차](../../docs/inhouse/contract-authoring.md)를 사용하세요.
 
 | 파일 | 채울 것 |
 |---|---|
@@ -14,6 +14,8 @@
 1. **ndk-build compile DB 자동 정규화**와 커밋마다 DB 재생성(`ndk_build`의 `project_dir`·`args`를 그대로 씁니다).
 2. **구성 요소 색인**(`components` 섹션): 빌드한 모든 클래스·함수를 모델 없이 표로 싣습니다.
 3. **Mermaid 동봉**. 사람 승인 없는 문서의 게시 차단(`site.require_approval`)은 첫 실행 뒤 게시 전에 켭니다.
+
+NDK-build가 아닌 제품의 설정은 [환경별 선택](../../docs/inhouse/agent.md#1-환경과-데이터-경계)을 따릅니다.
 
 모델은 `dry-run`으로 시작합니다. 사내 모델 연결과 LLM 판정은 생성기 저장소의 `docs/inhouse/03-update-system.md`에서 켭니다.
 

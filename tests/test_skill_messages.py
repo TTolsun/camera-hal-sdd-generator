@@ -5,6 +5,7 @@
 """
 
 from pathlib import Path
+import re
 
 import pytest
 
@@ -12,6 +13,31 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "src" / "sdd").rglob("*.py"))
 SKILL = (ROOT / "skills" / "camera-hal-sdd" / "SKILL.md").read_text(encoding="utf-8")
 GUIDE = "\n".join(p.read_text(encoding="utf-8") for p in sorted((ROOT / "docs" / "inhouse").glob("*.md")))
+
+def skill_resources():
+    """Follow local Markdown references so routing does not require duplicated manuals."""
+    pending = [ROOT / "skills/camera-hal-sdd/SKILL.md"]
+    seen = set()
+    texts = []
+    while pending:
+        path = pending.pop().resolve()
+        if path in seen:
+            continue
+        seen.add(path)
+        text = path.read_text(encoding="utf-8")
+        texts.append(text)
+        for link in re.findall(r"\]\(([^)\s]+)\)", text):
+            file = link.partition("#")[0]
+            if not file or re.match(r"^[a-z]+:", file):
+                continue
+            target = (path.parent / file).resolve()
+            if target.is_relative_to(ROOT) and target.suffix == ".md":
+                assert target.exists(), f"Missing skill reference: {target}"
+                pending.append(target)
+    return "\n".join(texts)
+
+
+RESOURCES = skill_resources()
 
 QUOTED = [
     "파싱 오류",
@@ -32,7 +58,7 @@ QUOTED = [
 
 @pytest.mark.parametrize("text", QUOTED)
 def test_스킬이_인용한_문구가_코드에_있다(text):
-    assert text in SKILL, f"스킬에서 빠진 문구: {text}"
+    assert text in RESOURCES, f"스킬과 연결된 참조에서 빠진 문구: {text}"
     assert text in SOURCE, f"코드에서 바뀐 문구: {text}. skills/ 와 docs/inhouse/troubleshooting.md 를 함께 고치세요."
 
 
@@ -40,7 +66,7 @@ def test_가이드가_스킬과_같은_설정_키를_쓴다():
     for key in ("source.ndk_build.clang", "update.compdb_cmd", ".git/info/exclude", "build/compdb/compile_commands.json"):
         assert key in GUIDE
     for key in ("source.ndk_build.clang", ".git/info/exclude"):
-        assert key in SKILL
+        assert key in RESOURCES
 
 
 def test_스킬_frontmatter_가_Agent_Skills_형식이다():

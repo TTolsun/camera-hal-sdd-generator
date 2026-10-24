@@ -70,6 +70,18 @@ def test_duplicate_prose_but_not_tables_or_evidence(tmp_cfg, sample_model):
     assert health.audit(tmp_cfg)["status"] == "ok"
 
 
+def test_shared_source_navigation_is_not_duplicate_prose(tmp_cfg, sample_model):
+    setup(tmp_cfg, sample_model)
+    links = " · ".join(f"[src/module/Component{i}.cpp:12](#source-{i:016x})" for i in range(4))
+    navigation = "근거 원문: " + links
+    page(tmp_cfg, body="First contract.\n\n" + navigation + "\n\nSecond contract.\n\n" + navigation)
+    assert health.audit(tmp_cfg)["status"] == "ok"
+    # A real repeated explanation remains a failure even with the same prefix/links.
+    paragraph = navigation + " The owner must retain the buffer until completion."
+    page(tmp_cfg, body=paragraph + "\n\n" + paragraph)
+    assert "duplicate-prose" in rules(health.audit(tmp_cfg))
+
+
 def test_same_page_repetition_and_table_size(tmp_cfg, sample_model):
     setup(tmp_cfg, sample_model)
     block = "Repeated technical paragraph. " * 8

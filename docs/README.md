@@ -4,8 +4,8 @@
 
 | 나는 | 읽는 순서 |
 |---|---|
-| **사내 운영자** (HAL에 적용하고 매일 돌린다) | [사내 설정 템플릿](../examples/inhouse-template/)을 복사한 뒤 [1. 준비물](inhouse/01-prepare.md) → [2. 첫 실행](inhouse/02-first-run.md) → [3. 갱신 시스템](inhouse/03-update-system.md) → [4. 사람 검토](inhouse/04-review.md). 막히면 [문제 해결](inhouse/troubleshooting.md) |
-| **사내 에이전트를 쓰는 사람** | [에이전트에게 맡기기](inhouse/agent.md) → [SDD 생성 스킬](../skills/camera-hal-sdd/SKILL.md) |
+| **사내 운영자** (HAL에 적용하고 갱신한다) | [사내 설정 템플릿](../examples/inhouse-template/)을 복사한 뒤 [1. 준비물](inhouse/01-prepare.md) → [2. 첫 실행](inhouse/02-first-run.md) → [3. 갱신 시스템](inhouse/03-update-system.md) → [4. 사람 검토](inhouse/04-review.md). 막히면 [문제 해결](inhouse/troubleshooting.md) |
+| **사내 에이전트를 쓰는 사람** | [에이전트에게 맡기기](inhouse/agent.md) → [소스에서 계약 작성하기](inhouse/contract-authoring.md) → [SDD 생성 스킬](../skills/camera-hal-sdd/SKILL.md) |
 | **설정 키·명령을 찾는 사람** | [sdd.yaml](reference/config.md), [sections.yaml·scenarios.yaml](reference/sections.md), [glossary.yaml](reference/glossary.md), [명령·종료 코드·상태 파일](reference/cli.md) |
 | **동작 원리가 궁금한 사람** | [범위 검사](concepts/coverage.md), [설계 근거](concepts/design-evidence.md), [독자별 품질](concepts/reader-quality.md), [문서 수명주기](concepts/document-lifecycle.md), [사이트](concepts/site.md), [sdd automate](concepts/automation.md) |
 | **생성기를 고치는 사람** | [책임 분리](concepts/code-structure.md), [파이프라인 설계](concepts/pipeline-design.md), [디자인 계약](../DESIGN.md) |

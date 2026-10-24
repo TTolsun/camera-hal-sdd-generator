@@ -31,6 +31,8 @@ from .fact_presenter import FactPresenter
 from .markdown_text import slugify
 from .prompting import style_rules, compose_system_prompt
 from .validate import Verdict, extract_citations
+from .llm import AgentError
+from . import generated_design
 from .evidence import contract_text, fingerprint, requires_fingerprint, topic_blocks
 from .semantic import relation_facts, structural_text
 
@@ -44,6 +46,7 @@ class Generator:
         self.agent = agent
         self.allowed = model.citations()
         self.reviews: dict[str, dict] = {}
+        self.generated_designs: dict[str, tuple] = {}
         # routes 표의 링크 글자: 페이지 링크는 섹션 제목, 앵커 링크는 본문의 ## 제목 원문을 쓴다.
         self.page_titles = {sec.get("output", f"{sec['id']}.md"): sec["title"] for sec in cfg.sections()}
         self.page_titles.update({f"{sid}.md": sc.title for sid, sc in model.scenarios.items()})
@@ -61,9 +64,22 @@ class Generator:
     def run(self, section_ids: list[str] | None = None, impact: ImpactReport | None = None) -> list[Path]:
         written: list[Path] = []
         # Validate every selected contract before replacing any manuscript.
-        reports = {s['id']: audit_design(self.model, s) for s in self.cfg.sections()
-                   if (s.get('design_requirements') or s.get('reader_profile')) and (not section_ids or s['id'] in section_ids)
-                   and (not impact or s['id'] in impact.sections)}
+        selected = [s for s in self.cfg.sections()
+                    if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)]
+        reports = {s['id']: audit_design(self.model, s) for s in selected
+                   if (s.get('design_requirements') or s.get('reader_profile')) and not generated_design.enabled(s)}
+        # Generate and validate every required LLM answer before replacing any page.
+        # Failed responses remain in the agent's prompt logs; old manuscripts survive.
+        self.generated_designs = {}
+        for sec in selected:
+            if generated_design.enabled(sec):
+                try:
+                    section_diagram(self.cfg, self.model, sec)
+                    self.generated_designs[sec['id']] = generated_design.generate(self, sec)
+                    reports[sec['id']] = self.generated_designs[sec['id']][2]
+                except (ValueError, AgentError) as exc:
+                    reports[sec['id']] = {'status': 'incomplete', 'requirements': [],
+                                          'findings': [str(exc)], 'human_review': 'pending'}
         if reports:
             self.cfg.build_dir.mkdir(parents=True, exist_ok=True)
             (self.cfg.build_dir / 'design-review.json').write_text(json.dumps(
@@ -101,6 +117,10 @@ class Generator:
     # ---- 종류별 --------------------------------------------------------------
 
     def _prose(self, sec: dict[str, Any]) -> Path:
+        original = sec
+        evidence_model = self.model
+        if generated_design.enabled(sec):
+            evidence_model, sec, _, _ = self.generated_designs[sec['id']]
         # Validate diagram policy before spending a model call. Structure is never LLM output.
         diagram = diagram_block(section_diagram(self.cfg, self.model, sec))
         facts = sec.get("facts", {})
@@ -143,7 +163,7 @@ class Generator:
             parts, omitted, verdict = [], [], Verdict(ok=True)
             sources = SourceDetails()
             for topic in sec["design_topics"]:
-                evidence, gaps = topic_blocks(self.model, sec["id"], topic)
+                evidence, gaps = topic_blocks(evidence_model, sec["id"], topic)
                 topic_sec = {**sec, "answers": [topic["question"]], "semantic_review": True}
                 tag = f"{sec['id']}_{topic['id']}"
                 if gaps:
@@ -151,12 +171,13 @@ class Generator:
                     missing, current = [], Verdict(ok=False, notes=gaps)
                     self._record_review(tag, text, current, missing)
                 elif "statements" in topic:
-                    text, gaps = contract_text(self.model, sec["id"], topic)
+                    text, gaps = contract_text(evidence_model, sec["id"], topic)
                     missing, current = [], Verdict(ok=not gaps, notes=gaps)
-                    self._record_review(tag, text, current, missing, mode="source-bound-contract")
+                    self._record_review(tag, text, current, missing,
+                                        mode="generated-prose" if generated_design.enabled(original) else "source-bound-contract")
                 else:
                     text, missing, current = self._ask(tag, topic_sec, topic["title"], evidence, "")
-                detail = sources.links(self.model, sec['id'], topic) if sec.get('show_evidence') and current.ok else ''
+                detail = sources.links(evidence_model, sec['id'], topic) if sec.get('show_evidence') and current.ok else ''
                 parts.append(f"## {topic['title']}\n\n{text}" + (f"\n\n{detail}" if detail else ''))
                 blocks += evidence
                 omitted += missing
@@ -164,7 +185,7 @@ class Generator:
                     verdict.ok = False
                     verdict.notes += current.notes
             if sec.get('design_requirements'):
-                parts.append(coverage_table(self.model, sec))
+                parts.append(coverage_table(evidence_model, sec))
             if sources.records:
                 parts.append(sources.render())
             prose = "\n\n".join(parts)
@@ -184,7 +205,7 @@ class Generator:
                            + ([diagram] if diagram else []) + tables)
         if sec.get("needs_human"):
             body += "\n\n확인 필요: 이 절의 내용은 정적 분석 결과입니다. 콜백 실행 스레드와 종료 순서는 코드를 직접 실행해서 확인해야 합니다."
-        return self._write_section(sec, body, blocks, tables, verdict, omitted)
+        return self._write_section(original, body, blocks, tables, verdict, omitted)
 
     def _per_package(self, sec: dict[str, Any], impact: ImpactReport | None) -> Path:
         parts: list[str] = []
@@ -484,6 +505,12 @@ class Generator:
                                    _routes_from_headings(body),
                             evidence=self._evidence_lines(blocks, tables, verdict, omitted, self._entity_files(sec)),
                             next_link=_next_of(sec), status=status, omitted=omitted, extra=extra, page_path=path)
+        if generated_design.enabled(sec):
+            from .export_html import _split
+            artifact = dict(self.generated_designs[sec['id']][3])
+            artifact['body_sha256'] = generated_design.digest(_split(page)[1].strip())
+            page = page.replace('\n---\n', '\ngenerated_design: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
+            generated_design.verify(self.model, sec, page)
         return self._write(path, page)
 
     def _render(self, *args, **kwargs):
