@@ -197,6 +197,14 @@ def localize_site(cfg, out: Path) -> None:
     dest = out / 'en/assets/search.json'
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(search, ensure_ascii=False), encoding='utf-8')
+    terms_path = out / 'assets/glossary.json'
+    if terms_path.exists():
+        # The in-page term popover reads names and definitions from this file, not from the HTML.
+        terms = json.loads(terms_path.read_text(encoding='utf-8'))
+        for item in terms:
+            item.update(term=translate(item['term']), definition=translate(item['definition']),
+                        names=[translate(name) for name in item['names']])
+        (out / 'en/assets/glossary.json').write_text(json.dumps(terms, ensure_ascii=False), encoding='utf-8')
     for source in sorted(out.rglob('*.mmd')):
         dest = out / 'en' / source.relative_to(out)
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -227,6 +235,9 @@ def main() -> None:
             units.update(display_strings(document))
         for entry in json.loads((out / 'assets/search.json').read_text(encoding='utf-8')):
             units.update(entry[k].strip() for k in ('title', 'page') if KOREAN.search(entry[k]))
+        if (out / 'assets/glossary.json').exists():
+            for item in json.loads((out / 'assets/glossary.json').read_text(encoding='utf-8')):
+                units.update(v.strip() for v in [item['term'], item['definition'], *item['names']] if KOREAN.search(v))
     catalog = {'schema': 1, 'review_status': 'human-review-pending', 'pages': pages,
                'strings': {key: previous.get('strings', {}).get(key, '') for key in sorted(units)}}
     args.out.parent.mkdir(parents=True, exist_ok=True)

@@ -46,7 +46,16 @@
   function search() {
     if (!index) return;
     const query = searchInput.value.trim().toLocaleLowerCase();
-    const matches = index.filter(item => `${item.title} ${item.page}`.toLocaleLowerCase().includes(query));
+    // A title that is the query itself (a glossary term such as "IPA (Image ...)") comes first,
+    // then titles that start with it; otherwise the index order (reading order) is kept.
+    const rank = item => {
+      const title = item.title.toLocaleLowerCase();
+      return title === query || title.startsWith(`${query} (`) || title.startsWith(`${query} ·`) ? 0
+        : title.startsWith(query) ? 1 : 2;
+    };
+    const matches = index.filter(item => `${item.title} ${item.page}`.toLocaleLowerCase().includes(query))
+      .map((item, order) => ({item, order, rank: query ? rank(item) : 2}))
+      .sort((a, b) => a.rank - b.rank || a.order - b.order).map(({item}) => item);
     results.replaceChildren();
     matches.forEach(item => {
       const li = document.createElement('li');
@@ -60,7 +69,7 @@
       li.append(a);
       results.append(li);
     });
-    count.textContent = t(`${matches.length}개 결과 · 문서 제목과 절 제목을 검색합니다.`, `${matches.length} results · Searching document and section titles.`);
+    count.textContent = t(`${matches.length}개 결과 · 문서 제목, 절 제목과 용어를 검색합니다.`, `${matches.length} results · Searching document titles, section titles and terms.`);
   }
   async function openSearch() {
     if (document.querySelector('dialog[open]')) return;
@@ -211,5 +220,99 @@
           textContent: t('Mermaid를 불러오지 못해 원문을 표시합니다. 사내망에서는 로컬 Mermaid 경로를 설정하세요.', 'Could not load Mermaid; showing the source. Configure a local Mermaid path for an internal network.')}));
       });
     });
+  }
+
+  /* Terms: underline the first use of each glossary term in the article and show its meaning
+     in place. The HTML stays unchanged, so pages and translations keep their source hashes;
+     without JavaScript the folded term list and the glossary page still work. */
+  const article = document.querySelector('article');
+  if (config.terms && article) {
+    const SKIP = 'code, pre, a, h1, h2, h3, h4, h5, h6, summary, details, .mermaid, button, script, style';
+    const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let popover = null;
+    let current = null;
+    let pinned = false;
+    let hideTimer = 0;
+    function hide(restoreFocus) {
+      clearTimeout(hideTimer);
+      if (!popover || popover.hidden) return;
+      popover.hidden = true;
+      current?.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) current?.focus();
+      current = null;
+      pinned = false;
+    }
+    function show(button, pin) {
+      clearTimeout(hideTimer);
+      const item = button.term;
+      if (!popover) {
+        popover = document.createElement('div');
+        popover.id = 'term-popover';
+        popover.setAttribute('role', 'dialog');
+        popover.hidden = true;
+        popover.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+        popover.addEventListener('mouseleave', () => { if (!pinned) hideTimer = setTimeout(() => hide(false), 200); });
+        document.body.append(popover);
+      }
+      if (current && current !== button) current.setAttribute('aria-expanded', 'false');
+      current = button;
+      pinned = pin || pinned;
+      const title = Object.assign(document.createElement('strong'), {textContent: item.term});
+      const text = Object.assign(document.createElement('p'), {textContent: item.definition});
+      const more = Object.assign(document.createElement('a'), {
+        href: new URL(`glossary.html#${encodeURIComponent(item.id)}`, root).href,
+        textContent: t('용어집에서 보기', 'Open in glossary')});
+      popover.replaceChildren(title, text, more);
+      popover.setAttribute('aria-label', item.term);
+      popover.hidden = false;
+      button.setAttribute('aria-expanded', 'true');
+      const box = button.getBoundingClientRect();
+      const width = Math.min(360, document.documentElement.clientWidth - 32);
+      popover.style.width = `${width}px`;
+      popover.style.left = `${Math.max(16, Math.min(box.left, document.documentElement.clientWidth - width - 16)) + scrollX}px`;
+      popover.style.top = `${box.bottom + scrollY + 8}px`;
+    }
+    fetch(new URL('assets/glossary.json', root)).then(response => response.ok ? response.json() : []).then(items => {
+      const names = items.flatMap(item => item.names.map(name => ({item, name})))
+        .sort((a, b) => b.name.length - a.name.length);
+      if (!names.length) return;
+      // Acronyms match exactly; other names ignore case. Only ASCII letters and digits are word
+      // characters, so Korean particles after a term ("IPA는") still match.
+      const pattern = new RegExp(names.map(({name}) => {
+        const exact = name === name.toUpperCase();
+        return `(?<![A-Za-z0-9_])${exact ? escape(name) : escape(name).replace(/[A-Za-z]/g, c => `[${c.toLowerCase()}${c.toUpperCase()}]`)}(?![A-Za-z0-9_])`;
+      }).join('|'), 'g');
+      const lookup = new Map(names.map(({item, name}) => [name.toLowerCase(), item]));
+      const seen = new Set();
+      const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT, {
+        acceptNode: node => node.parentElement.closest(SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT});
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (let node of nodes) {
+        pattern.lastIndex = 0;
+        let match;
+        while ((match = pattern.exec(node.data))) {
+          const item = lookup.get(match[0].toLowerCase());
+          if (!item || seen.has(item.id)) continue;
+          seen.add(item.id);
+          const rest = node.splitText(match.index);
+          node = rest.splitText(match[0].length);
+          const button = Object.assign(document.createElement('button'), {type: 'button', className: 'term', textContent: rest.data});
+          button.term = item;
+          button.setAttribute('aria-expanded', 'false');
+          button.setAttribute('aria-controls', 'term-popover');
+          button.addEventListener('click', event => {
+            event.stopPropagation();
+            if (current === button && pinned) hide(false); else show(button, true);
+          });
+          button.addEventListener('mouseenter', () => { if (matchMedia('(hover: hover)').matches && !pinned) show(button, false); });
+          button.addEventListener('mouseleave', () => { if (!pinned) hideTimer = setTimeout(() => hide(false), 200); });
+          rest.replaceWith(button);
+          pattern.lastIndex = 0;
+        }
+      }
+    }).catch(() => {});
+    document.addEventListener('click', event => { if (popover && !popover.contains(event.target)) hide(false); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && popover && !popover.hidden) hide(true); });
   }
 })();
