@@ -168,3 +168,13 @@ def test_quote_comparison_ignores_comment_decoration_but_preserves_negation():
     source = 'It must not access\n * the request after completion.'
     assert quote_text(source) == quote_text('It must not access the request after completion.')
     assert quote_text('It must access the request after completion.') not in quote_text(source)
+
+
+def test_constrained_quote_choices_are_verbatim_source_spans():
+    from sdd.generated_design import quote_choices, quote_text, response_schema
+    source = 'The handler shall not access\n * the request after completion.\n *\n * Return requests in order.'
+    choices = quote_choices([source])
+    assert 'The handler shall not access the request after completion.' in choices
+    assert all(quote in quote_text(source) for quote in choices)
+    schema = response_schema({'sources': [{'id': 'source'}], 'covers': ['question']}, choices)
+    assert schema['properties']['statements']['items']['properties']['quote']['enum'] == choices
