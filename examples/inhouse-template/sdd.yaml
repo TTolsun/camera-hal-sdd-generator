@@ -35,6 +35,8 @@ agent:
   # 처음에는 dry-run 으로 흐름만 확인한다. 사내 모델을 쓸 때 openai-compatible 로 바꾼다.
   # 토큰은 설정에 적지 않고 환경 변수 SDD_AGENT_API_KEY 로 넘긴다.
   kind: dry-run
+  max_input_chars: 30000
+  max_output_tokens: 6000
   # base_url: https://<사내 엔드포인트>
   # model: <모델 이름>
 
@@ -51,6 +53,10 @@ documentation:
 diagrams:
   enabled: true
   max_nodes: 16
+
+visuals:
+  file: config/visuals.yaml
+  max_nodes: 8
 
 site:
   enabled: false              # 첫 실행에서는 생성과 사이트 빌드를 나눠 확인한다

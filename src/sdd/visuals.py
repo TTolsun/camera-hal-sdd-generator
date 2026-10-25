@@ -71,9 +71,16 @@ def _records(model, section, item):
     return records
 
 
-def render(cfg, model, section):
+def render(cfg, model, section, artifact=None):
     """Return validated (definition, Markdown, Mermaid) tuples."""
     values = definitions(cfg, section)
+    if any(v.get('generation') == 'llm' for v in values):
+        from .generated_visuals import resolve
+        values = resolve(cfg, model, section, artifact)
+    return render_values(cfg, model, section, values)
+
+
+def render_values(cfg, model, section, values):
     if not values:
         return []
     if model is None:
@@ -91,7 +98,7 @@ def render(cfg, model, section):
         if ident in seen:
             raise ValueError('Duplicate visual ID')
         seen.add(ident)
-        if set(visual) - {'id', 'topic', 'kind', 'title', 'question', 'nodes', 'edges'}:
+        if set(visual) - {'id', 'topic', 'kind', 'title', 'question', 'nodes', 'edges', 'producer'}:
             raise ValueError('Unknown visual setting')
         if visual.get('kind') not in {'state', 'flow', 'ownership', 'decision'} or visual.get('topic') not in topics:
             raise ValueError('Visual kind or topic is invalid')
@@ -147,6 +154,10 @@ def render(cfg, model, section):
         download = PurePosixPath(section_output(section)).stem + '.' + ident + '.mmd'
         block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n{question}\n\n'
                  f'```mermaid\n{source}\n```\n\n[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
+        if visual.get('producer'):
+            producer = _text(visual['producer'], 'producer')
+            block = block.replace(question + '\n\n', question + '\n\nLLM 그림 초안 · 사람 검토 전\n\n작성 모델: `'
+                                  + html.escape(producer) + '`\n\n', 1)
         result.append((visual, block, source))
     return result
 

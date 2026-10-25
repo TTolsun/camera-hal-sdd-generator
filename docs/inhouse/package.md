@@ -14,6 +14,8 @@
 
 ## 반입 확인과 설치
 
+이번 main에는 [LLM 그림 자동화](../concepts/site.md#사내-llm으로-초안-자동-생성하기)가 포함됩니다. 아래 고정 릴리스는 이전 검증본이므로 새 기능을 반입할 때는 [패키지 재생성](#패키지-재생성) 절차로 최신 검증 커밋의 ZIP을 만드세요. `src/sdd/generated_visuals.py`, `examples/inhouse-template/config/visuals.yaml`, `tools/evaluate_visuals.py`가 manifest에 포함돼야 합니다. 반입본에서 실제 승인 모델로 재시험하기 전에는 사내 모델 검증 완료로 기록하지 않습니다.
+
 ### GitHub에서 받기
 
 검증 버전은 `3066527e44f5ee843acb0f192cc7505afdc16c9e`이며, 이동하는 main 대신 `inhouse-2026-10-24` 릴리스에 고정했습니다. 아래 네 파일을 같은 폴더에 받으세요. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
