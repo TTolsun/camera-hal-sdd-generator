@@ -1,7 +1,28 @@
 """Catalog preparation composition root."""
 from pathlib import Path
 import json
+import html
+import re
 from .site_localization import source_hash, display_strings, KOREAN
+
+
+def diagram_translations(directory):
+    """Keep visible labels consistent with the graph's declared English edition."""
+    values = {}
+    def unwrap(value):
+        return html.unescape(value.replace('<br/>', '')).strip()
+    for path in sorted(directory.rglob('*.mmd')):
+        for raw in re.findall(r'^%% sdd:translations (.+)$', path.read_text(encoding='utf-8'), re.M):
+            for source, translated in json.loads(raw).items():
+                source, translated = unwrap(source), unwrap(translated)
+                if not KOREAN.search(source):
+                    continue
+                if not translated or KOREAN.search(translated):
+                    raise ValueError('Diagram label needs an English translation')
+                if source in values and values[source] != translated:
+                    raise ValueError('Conflicting English translations for the same diagram label')
+                values[source] = translated
+    return values
 
 def main() -> None:
     """Explicit catalog refresh; new strings remain empty until translated."""
@@ -21,6 +42,7 @@ def main() -> None:
     cfg.build_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.translation-', dir=cfg.build_dir) as temporary:
         out = _render_site(cfg, Path(temporary))
+        declared_labels = diagram_translations(out)
         pages, units = {}, set()
         for path in sorted(out.rglob('*.html')):
             document = path.read_text(encoding='utf-8')
@@ -33,7 +55,7 @@ def main() -> None:
             for item in json.loads((out / 'assets/glossary.json').read_text(encoding='utf-8')):
                 units.update(v.strip() for v in [item['term'], item['definition'], *item['names']] if KOREAN.search(v))
     catalog = {'schema': 1, 'review_status': 'human-review-pending', 'pages': pages,
-               'strings': {key: previous.get('strings', {}).get(key, '') for key in sorted(units)}}
+               'strings': {key: declared_labels.get(key, previous.get('strings', {}).get(key, '')) for key in sorted(units)}}
     if args.translate:
         from .translation import translate_missing
         catalog = translate_missing(cfg, catalog)

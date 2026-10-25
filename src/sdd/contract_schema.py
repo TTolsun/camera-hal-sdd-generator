@@ -24,6 +24,11 @@ def configuration_errors(section: dict) -> list[str]:
             for field in ('file', 'start', 'end'):
                 if not isinstance(source.get(field), str) or not source[field].strip():
                     errors.append(f"{topic['id']}/{source['id']}: {field}는 비어 있지 않은 문자열이어야 합니다.")
+            if 'scope' in source:
+                scope = source['scope']
+                if (not isinstance(scope, dict) or set(scope) != {'start', 'end'}
+                        or any(not isinstance(v, str) or not v.strip() for v in scope.values())):
+                    errors.append(f"{topic['id']}/{source['id']}: scope에는 비어 있지 않은 start와 end 문자열이 필요합니다.")
         for st in topic.get('statements', []):
             for field in ('covers', 'evidence'):
                 values = st.get(field, [])
