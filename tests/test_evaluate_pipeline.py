@@ -100,3 +100,68 @@ def test_trial_validates_output_paths_before_writing_even_without_lifecycle_poli
     assert report['stages'][-1]['status'] == 'failed'
     assert report['results'] == [] and not (out / 'manuscripts').exists()
     assert sentinel.read_text(encoding='utf-8') == 'keep'
+
+
+def model_config(tmp_cfg, monkeypatch):
+    from sdd.llm import Agent
+    cfg = configure(tmp_cfg)
+    cfg.agent.max_input_chars = 20000
+    section = {'id': 'entry', 'title': '시작', 'kind': 'prose', 'output': 'overview.md',
+               'design_generation': 'llm', 'facts': {'classes': []}, 'diagram': {'enabled': False},
+               'design_requirements': [{'id': 'start', 'question': '처음 동작은 무엇입니까?'}],
+               'design_topics': [{'id': 'start', 'title': '진입점', 'question': '초기화를 설명하세요.',
+                   'covers': ['start'], 'sources': [{'id': 'device', 'file': 'src/device/CameraDevice.cpp',
+                     'start': '#include "device/CameraDevice.h"', 'end': '}  // namespace halcam'}]}]}
+    cfg.sections_file.write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
+    calls = []
+    def post(self, url, body):
+        calls.append(body)
+        user = body['messages'][1]['content']
+        payload, _ = json.JSONDecoder().raw_decode(user[user.index('{'):])
+        quote_id = next(b['quote_id'] for b in payload['sources']['device'] if 'quote_id' in b)
+        return {'done_reason': 'stop', 'message': {'content': json.dumps({'statements': [{
+            'text': 'initialize()에서 콜백을 등록합니다.', 'quote_id': quote_id,
+            'covers': ['start'], 'kind': 'behavior'}]}, ensure_ascii=False)}}
+    monkeypatch.setattr(Agent, '_post', post)
+    return cfg, calls
+
+
+def test_repair_preserves_http_provenance_and_regenerates_changed_questions(tmp_cfg, tmp_path, monkeypatch):
+    cfg, calls = model_config(tmp_cfg, monkeypatch)
+    first = tmp_path / 'first'
+    assert evaluate(cfg, first)['stages'][-1]['stage'] == 'repeat-site'
+    assert len(calls) == 1
+    second = tmp_path / 'second'
+    report = evaluate(cfg, second, previous=first)
+    assert report['mode'] == 'repair' and len(calls) == 1
+    assert all(row['status'] == 'passed' for row in report['stages'])
+    assert report['human_approval'] == 'pending' and report['publishable'] is False
+    data = yaml.safe_load(cfg.sections_file.read_text(encoding='utf-8'))
+    data['sections'][0]['design_topics'][0]['question'] = '초기화 함수가 무엇을 하는지 설명하세요.'
+    cfg.sections_file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    third = evaluate(cfg, tmp_path / 'third', previous=second)
+    assert all(row['status'] == 'passed' for row in third['stages']) and len(calls) == 2
+
+
+@pytest.mark.parametrize('change', ['manuscript', 'response', 'source', 'model', 'incomplete'])
+def test_repair_refuses_tampered_mismatched_or_incomplete_trials(tmp_cfg, tmp_path, monkeypatch, change):
+    cfg, calls = model_config(tmp_cfg, monkeypatch)
+    first = tmp_path / 'first'
+    original = evaluate(cfg, first)
+    if change == 'manuscript':
+        with (first / 'manuscripts/overview.md').open('a', encoding='utf-8') as stream:
+            stream.write('Modified outside generation.')
+    elif change == 'response':
+        next((first / 'build/prompts/calls').rglob('*.response.txt')).write_text('Changed response.', encoding='utf-8')
+    else:
+        if change == 'source':
+            original['source_commit'] = 'a' * 40
+        elif change == 'model':
+            original['model'] = 'another-model'
+        else:
+            original['results'] = []
+        (first / 'evaluation.json').write_text(json.dumps(original), encoding='utf-8')
+    report = evaluate(cfg, tmp_path / 'repair', previous=first)
+    assert report['stages'][-1]['stage'] == 'resume-input'
+    assert report['stages'][-1]['status'] == 'failed' and len(calls) == 1
+    assert not (tmp_path / 'repair/site').exists()

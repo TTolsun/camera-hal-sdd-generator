@@ -10,6 +10,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import time
 from dataclasses import asdict
 import yaml
@@ -24,7 +25,7 @@ from .llm import Agent
 from .site_build import verify_site
 
 
-def evaluate(cfg, out: Path, *, translate: bool = False):
+def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None = None):
     if cfg.agent.kind not in ('ollama', 'openai-compatible'):
         raise ValueError('전체 생성 시험에는 실제 ollama 또는 openai-compatible 연결이 필요합니다.')
     out = out.resolve()
@@ -32,6 +33,10 @@ def evaluate(cfg, out: Path, *, translate: bool = False):
     if (out.exists() or any(p.resolve().is_relative_to(out) for p in protected)
             or any(out.is_relative_to(p.resolve()) for p in protected[1:])):
         raise ValueError('시험 출력에는 기존 입력·원고를 포함하지 않는 새 디렉터리가 필요합니다.')
+    if previous:
+        previous = previous.resolve()
+        if previous.is_symlink() or out.is_relative_to(previous) or previous.is_relative_to(out):
+            raise ValueError('재개 시험은 이전 시험과 분리된 새 디렉터리가 필요합니다.')
     out.mkdir(parents=True)
     trial = copy.deepcopy(cfg)
     trial.paths.update(sections_file=cfg.sections_file, scenarios_file=cfg.scenarios_file,
@@ -69,6 +74,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False):
                      ('max_input_chars', 'num_ctx', 'max_output_tokens', 'temperature', 'think')},
         'results': [], 'stages': [], 'semantic_review': 'pending',
         'human_approval': 'pending', 'publishable': False,
+        'mode': 'repair' if previous else 'fresh',
     }
 
     def save():
@@ -120,16 +126,65 @@ def evaluate(cfg, out: Path, *, translate: bool = False):
 
     if not stage('evidence', evidence):
         return report
+    if previous:
+        def resume():
+            from .export_html import _split
+            old_bytes = (previous / 'evaluation.json').read_bytes()
+            old = json.loads(old_bytes)
+            expected = {s['id'] for s in trial.sections()}
+            if (old.get('schema') != 1 or old.get('source_commit') != model.meta['source_commit']
+                    or old.get('provider') != trial.agent.kind or old.get('model') != trial.agent.model
+                    or {row['section'] for row in old.get('results', [])} != expected):
+                raise ValueError('같은 소스·모델의 모든 섹션 결과가 기록된 이전 시험만 재개할 수 있습니다.')
+            for row in old['results']:
+                if row['automatic_checks'] != 'passed':
+                    continue
+                for item in row['manuscripts']:
+                    source = (previous / item['path']).resolve()
+                    if (not source.is_relative_to((previous / 'manuscripts').resolve())
+                            or hashlib.sha256(source.read_bytes()).hexdigest() != item['sha256']):
+                        raise ValueError('이전 시험 원고가 기록된 해시와 다릅니다.')
+                    meta, _ = _split(source.read_text(encoding='utf-8'))
+                    if meta.get('generated_design') and any(
+                            value != f'{trial.agent.kind}/{trial.agent.model}'
+                            for value in meta['generated_design'].get('topic_agents', {}).values()):
+                        raise ValueError('이전 원고의 모델 작성자가 시험 설정과 다릅니다.')
+            from .provenance import verify_calls
+            prior_authorship = verify_calls(model, previous / 'manuscripts', previous / 'build/prompts/calls',
+                                             provider=trial.agent.kind, model_name=trial.agent.model,
+                                             allow_reused=True)
+            for name, destination in [('manuscripts', trial.sdd_dir),
+                                      ('build/prompts/calls', trial.build_dir / 'prompts/calls')]:
+                source = previous / name
+                if source.exists():
+                    if source.is_symlink() or any(p.is_symlink() for p in source.rglob('*')):
+                        raise ValueError('재개 입력에는 심볼릭 링크를 사용할 수 없습니다.')
+                    shutil.copytree(source, destination, dirs_exist_ok=True)
+            report['continued_from_sha256'] = hashlib.sha256(old_bytes).hexdigest()
+            return {'previous_results': len(old['results']), 'source_commit': old['source_commit'],
+                    'previous_authorship': prior_authorship}
+        if not stage('resume-input', resume):
+            return report
     agent = Agent(trial.agent, trial.build_dir / 'prompts')
     for section in trial.sections():
         sid = section['id']
 
         def generate():
-            paths = Generator(trial, model, agent).run([sid])
+            impact = None
+            if previous:
+                from .impact import ImpactReport
+                impact = ImpactReport(base=model.meta['source_commit'], head=model.meta['source_commit'], sections=[sid])
+            paths = Generator(trial, model, agent).run([sid], **({'impact': impact} if impact else {}))
             row = {'section': sid, 'automatic_checks': 'passed',
                    'llm_required': section.get('design_generation') == 'llm',
                    'manuscripts': [{'path': p.relative_to(out).as_posix(),
                                     'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths]}
+            if row['llm_required']:
+                from .export_html import _split
+                meta, _ = _split(paths[0].read_text(encoding='utf-8'))
+                artifact = meta['generated_design']
+                row['generated_topics'] = artifact['generated_topics']
+                row['retained_topics'] = artifact['reused_topics']
             report['results'].append(row)
 
         if not stage('generate/' + sid, generate):
@@ -141,7 +196,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False):
     def provenance():
         from .provenance import verify_calls
         return verify_calls(model, trial.sdd_dir, trial.build_dir / 'prompts/calls',
-                            provider=trial.agent.kind, model_name=trial.agent.model)
+                            provider=trial.agent.kind, model_name=trial.agent.model, allow_reused=bool(previous))
     if not stage('model-provenance', provenance):
         return report
     if not stage('audit-docs', lambda: enforce(trial, model)):
@@ -182,8 +237,9 @@ def main():
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--translate', action='store_true')
+    parser.add_argument('--continue-from', type=Path, help='Repair a completed generation trial in a new directory')
     args = parser.parse_args()
-    report = evaluate(load(args.config), args.out, translate=args.translate)
+    report = evaluate(load(args.config), args.out, translate=args.translate, previous=args.continue_from)
     success = report['stages'][-1]['stage'] == 'repeat-site' and report['stages'][-1]['status'] == 'passed'
     raise SystemExit(0 if success else 1)
 

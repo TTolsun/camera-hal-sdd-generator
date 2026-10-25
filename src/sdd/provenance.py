@@ -10,7 +10,8 @@ from .export_html import _split
 from .generated_design import normalize_answer, resolve_passages
 
 
-def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_name: str) -> dict:
+def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_name: str,
+                 allow_reused: bool = False) -> dict:
     responses = []
     for receipt_path in sorted(calls.rglob('*.receipt.json')):
         prefix = receipt_path.name.removesuffix('.receipt.json')
@@ -46,7 +47,7 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
         artifact = metadata.get('generated_design')
         if not artifact:
             continue
-        if artifact.get('reused_topics'):
+        if artifact.get('reused_topics') and not allow_reused:
             raise ValueError('A full fresh-model trial cannot reuse previous topic answers.')
         sid = metadata.get('section')
         if not sid:
@@ -63,6 +64,7 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
                     raise ValueError(f'No matching HTTP model response for {sid}/{tid}')
                 statements += 1
     return {'documents': documents, 'topics': topics, 'statements': statements,
+            'previous_http_answers_allowed': allow_reused,
             'verified_http_calls': len(list(calls.rglob('*.receipt.json'))),
             'scope': 'Exact request/response hashes and model authorship; not semantic or human approval.'}
 
@@ -76,9 +78,10 @@ def main():
     parser.add_argument('--calls', type=Path, required=True)
     parser.add_argument('--provider', choices=('ollama', 'openai-compatible'), required=True)
     parser.add_argument('--model', required=True)
+    parser.add_argument('--allow-reused', action='store_true', help='Also verify retained answers against archived HTTP calls')
     args = parser.parse_args()
     report = verify_calls(KnowledgeModel.load(args.facts), args.manuscripts, args.calls,
-                          provider=args.provider, model_name=args.model)
+                          provider=args.provider, model_name=args.model, allow_reused=args.allow_reused)
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
 
