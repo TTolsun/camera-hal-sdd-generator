@@ -64,28 +64,16 @@ def main():
     project = out / 'project'
     project.mkdir()
     section = {'id': 'completion-demo', 'title': '공개 mini HAL의 완료 분기', 'output': 'completion.md',
-               'kind': 'prose', 'show_evidence': True, 'design_generation': 'llm', 'diagram': {'enabled': False},
+               'kind': 'prose', 'show_evidence': True, 'narration': 'facts', 'diagram': {'enabled': False},
                'lead': '파이프 반환 조건과 완료 정리를 소스와 함께 확인하세요.', 'watch': ['src/device/RequestManager.cpp'],
-               'design_requirements': [{'id': 'completion', 'question': 'runPipes의 결과별 sendResult와 onFrameDone 호출은 어떻게 다릅니까?'}],
                'design_topics': [{'id': 'completion', 'title': '결과 전송과 프레임 정리',
+                                 'narration': 'facts',
                                  'question': 'RequestManager::onFrame에서 runPipes 반환값에 따른 sendResult 조건과 onFrameDone 호출을 설명하세요. if 블록 안팎을 구분하고 실패 시 정리도 설명하세요. 실행 스레드나 성공 보장을 추정하지 마세요.',
-                                 'answer_contract': {'basis': 'implementation',
-                                     'required_terms': [['runPipes'], ['sendResult'], ['onFrameDone'], ['항상', '조건과 무관', '성공 여부와 관계없이', '실패 시에도', '실패하더라도']],
-                                     'reject_patterns': [{'pattern': 'onFrameDone[^.!?]*(?:성공[^.!?]*때만|성공한 경우에만)',
-                                                          'message': 'onFrameDone은 if 블록 밖입니다. 성공 때만 호출된다고 쓰면 안 됩니다.'}]},
-                                 'covers': ['completion'], 'sources': [{'id': 'on-frame', 'file': 'src/device/RequestManager.cpp',
+                                 'sources': [{'id': 'on-frame', 'file': 'src/device/RequestManager.cpp',
                                      'start': 'void RequestManager::onFrame(Frame &frame)', 'end': '\nvoid RequestManager::sendResult'}]}],
                'next': {'title': '완료 분기', 'link': 'completion.md'}}
-    (project / 'sections.yaml').write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
     # Isolate the requested graph subsystem. Natural-language Qwen answers are
     # evaluated elsewhere; source questions do not claim behavioral coverage.
-    section.pop('design_generation')
-    section.pop('design_requirements')
-    section['narration'] = 'facts'
-    topic = section['design_topics'][0]
-    topic.pop('answer_contract')
-    topic.pop('covers')
-    topic['narration'] = 'facts'
     report['prose_mode'] = 'source-question view; no generated behavioral answer and no prose substitute'
     (project / 'sections.yaml').write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
     shutil.copyfile(ROOT / 'examples/mini-hal/config/visual-questions.yaml', project / 'visuals.yaml')
@@ -107,6 +95,11 @@ def main():
         manuscript = cfg.sdd_dir / 'completion.md'
         meta, body = _split(manuscript.read_text(encoding='utf-8'))
         rec = meta['generated_visuals']['records']['completion-branches']
+        symbols = {node['id']: node['symbol'] for node in rec['draft']['nodes']}
+        branches = {(symbols[edge['from']], symbols[edge['to']], edge['condition_ref']) for edge in rec['draft']['edges']}
+        assert ('runPipes', 'sendResult', 'c0:true') in branches
+        assert branches & {('runPipes', 'onFrameDone', 'always'), ('runPipes', 'onFrameDone', 'c0:false')}
+        assert not any(target == 'sendResult' and condition != 'c0:true' for _, target, condition in branches)
         assert any(guard in ''.join(e['label'].split()) for e in rec['graph']['edges']), rec['graph']
         assert len(rec['graph']['nodes']) >= 2 and len(rec['graph']['edges']) >= 1
         site = cfg.build_dir / 'site'
@@ -157,7 +150,8 @@ def main():
         assert len(graph_calls) >= 2
         assert report['before']['draft'] in graph_drafts and report['after']['draft'] in graph_drafts
         report.update(status='passed', graph_http_calls=len(graph_calls), total_http_calls=len(receipts),
-                      repeat_build_identical=True, stale_export_preserved=True, receipts=receipts)
+                      repeat_build_identical=True, stale_export_preserved=True,
+                      fixture_branch_checks='Result send requires true guard; frame cleanup also reached outside true guard', receipts=receipts)
     except Exception as exc:
         report.update(status='failed', error=str(exc))
         raise

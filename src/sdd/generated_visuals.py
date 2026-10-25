@@ -22,7 +22,7 @@ two nodes and one edge. Each node needs a code symbol copied verbatim from its c
 passages. Each edge must cite passages containing BOTH endpoint symbols and directly
 supporting that relationship and direction. Do not infer execution order, thread safety,
 ownership transfer or state transitions from a flat call list or mere co-occurrence.
-Preserve guards, failure cases and may/must distinctions. Use short clear Korean labels
+Preserve guards, failure cases and may/must distinctions in BOTH languages. Use clear Korean labels
 and corresponding English label_en; preserve code identifiers. Node IDs are lowercase
 identifiers. Use shape decision only for a source-supported branch. If evidence cannot
 answer the question, return empty nodes and edges; the generator will block publication.
@@ -34,6 +34,12 @@ The generator expands the condition ID to the exact source expression. Do NOT
 put comparisons or guard expressions in labels. Cover all required_symbols as
 distinct nodes when supplied; do not replace requested calls with invented states.
 Use only supplied quote_ids. Never invent IDs.'''
+
+POLICY += '''\nAnswer the WHOLE question in node/edge labels, including requested caller duties.
+The optional answer_contract is a mandatory minimum coverage check on Korean labels.
+Include a required term from EVERY alternative group naturally; do not merely name a status.
+English labels must preserve the Korean meaning, especially possibilities and obligations.
+answer_contract_en applies its required_terms and reject_patterns to English labels.'''
 
 
 def digest(value):
@@ -69,15 +75,32 @@ def plans(cfg, section):
     return [v for v in definitions(cfg, section) if v.get('generation') == 'llm']
 
 
+def node_limit(cfg, plan):
+    ceiling = cfg.raw['visuals'].get('max_nodes', 12)
+    limit = plan.get('max_nodes', ceiling)
+    if any(isinstance(v, bool) or not isinstance(v, int) or v < 2 for v in (limit, ceiling)) or limit > ceiling:
+        raise ValueError('LLM visual max_nodes must be at least two and within visuals.max_nodes')
+    return limit
+
+
 def inputs(cfg, model, section, plan):
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'required_symbols'}:
+    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'prompt'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
+    from .answer_contracts import configuration_errors
+    if errors := configuration_errors(plan):
+        raise ValueError(' / '.join(errors))
+    if 'answer_contract_en' in plan:
+        errors = configuration_errors({'answer_contract': plan['answer_contract_en']})
+        if errors or plan['answer_contract_en'].get('basis') == 'contract':
+            raise ValueError('English label checks require description, implementation or measurement basis: ' + ' / '.join(errors))
     _id(plan['id'])
     for key in ('title', 'question'):
         _text(plan[key], key)
+    if 'prompt' in plan:
+        _text(plan['prompt'], 'prompt')
     topics = {t['id']: t for t in section.get('design_topics', [])}
     if plan['topic'] not in topics or plan['kind'] not in {'state', 'flow', 'ownership', 'decision'}:
         raise ValueError('Invalid LLM visual topic or kind')
@@ -101,16 +124,19 @@ def inputs(cfg, model, section, plan):
     from .prompting import style_rules
     style = cfg.style_dir / 'README.md'
     system = POLICY + ('\n' + style_rules(style.read_text(encoding='utf-8')) if style.exists() else '')
-    limit = cfg.raw['visuals'].get('max_nodes', 12)
-    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 2:
-        raise ValueError('LLM visuals.max_nodes must be an integer of at least two')
+    limit = node_limit(cfg, plan)
+    if len(required_symbols) > limit:
+        raise ValueError('Visual required_symbols exceed the node limit')
     pin = digest({'plan': plan, 'policy': system, 'limit': limit,
                   'agent': {'kind': cfg.agent.kind, 'model': cfg.agent.model, 'base_url': cfg.agent.base_url},
                   'sources': {k: {f: r[f] for f in ('file', 'line', 'sha256', 'selector')} for k, r in records.items()}})
     return pin, records, passages, system, {'question': plan['question'], 'kind': plan['kind'],
+                                         'instructions': plan.get('prompt', ''),
                                          'max_nodes': limit, 'conditions': condition_catalog(passages),
                                          'allowed_symbols': source_symbols(passages),
                                          'required_symbols': required_symbols,
+                                         'answer_contract': plan.get('answer_contract'),
+                                         'answer_contract_en': plan.get('answer_contract_en'),
                                          'condition_choices': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages) for branch in ('true', 'false')],
                                          'sources': annotated}
 
@@ -136,10 +162,10 @@ def materialize(cfg, model, section, plan, draft, producer):
         raise ValueError('Visual draft needs only nodes and edges')
     if not all(isinstance(draft[k], list) for k in draft):
         raise ValueError('Visual nodes and edges must be lists')
-    limit = cfg.raw['visuals'].get('max_nodes', 12)
+    limit = node_limit(cfg, plan)
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols')} | {'nodes': [], 'edges': [], 'producer': producer}
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'prompt')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) or re.search(r'[<>=!]', item[k]) for k in ('label', 'label_en')):
@@ -188,6 +214,9 @@ def materialize(cfg, model, section, plan, draft, producer):
         graph['edges'].append(edge)
     if missing := set(plan.get('required_symbols', [])) - set(symbols.values()):
         raise ValueError('Visual is missing required question symbols: ' + ', '.join(sorted(missing)))
+    from .answer_contracts import check
+    check(plan.get('answer_contract'), [{'text': '\n'.join(item['label'] for item in graph['nodes'] + graph['edges'])}], plan['id'])
+    check(plan.get('answer_contract_en'), [{'text': '\n'.join(item['label_en'] for item in graph['nodes'] + graph['edges'])}], plan['id'] + '/en')
     render_values(cfg, model, section, [graph])
     return graph
 
@@ -200,6 +229,11 @@ def preflight(cfg, model, section):
     render_values(cfg, model, section, [v for v in values if v.get('generation') != 'llm'])
     for plan in plans(cfg, section):
         inputs(cfg, model, section, plan)
+
+
+def render(cfg, model, section, artifact=None):
+    values = resolve(cfg, model, section, artifact) if plans(cfg, section) else definitions(cfg, section)
+    return render_values(cfg, model, section, values)
 
 
 def generate(cfg, model, section, agent, previous=None):
@@ -242,7 +276,7 @@ def generate(cfg, model, section, agent, previous=None):
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
-                user = base + '\nRejected draft (not evidence):\n' + raw + '\nRepair: ' + last
+                user = 'The previous proposal was rejected. Produce a NEW graph correcting this error:\n' + last + '\n\n' + base
         else:
             raise ValueError(f"{section['id']}/{plan['id']}: LLM visual validation failed: {last}")
     return {'schema': 1, 'records': records} if records else None

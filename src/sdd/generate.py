@@ -230,7 +230,8 @@ class Generator:
             prose = f"## {sec.get('prose_heading', '구조 설명')}\n\n{text}"
         body = "\n\n".join([prose]
                            + ([diagram] if diagram else []) + tables)
-        from .visuals import render as render_visuals, place
+        from .visuals import place
+        from .generated_visuals import render as render_visuals
         body = place(body, render_visuals(self.cfg, self.model, original,
                                          self.generated_visuals.get(original['id'])), original)
         if sec.get("needs_human"):

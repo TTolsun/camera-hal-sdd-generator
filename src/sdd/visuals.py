@@ -71,12 +71,9 @@ def _records(model, section, item):
     return records
 
 
-def render(cfg, model, section, artifact=None):
+def render(cfg, model, section):
     """Return validated (definition, Markdown, Mermaid) tuples."""
     values = definitions(cfg, section)
-    if any(v.get('generation') == 'llm' for v in values):
-        from .generated_visuals import resolve
-        values = resolve(cfg, model, section, artifact)
     return render_values(cfg, model, section, values)
 
 

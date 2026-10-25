@@ -163,3 +163,47 @@ def test_source_question_view_places_actual_model_graph_without_claiming_answer(
     text = path.read_text(encoding='utf-8')
     assert topic['question'] in text and 'LLM 그림 초안' in text
     assert len(agent.calls) == 1
+    assert _split(text)[0]['generation_method'] == 'source-question'
+
+
+def test_compatible_gateway_uses_same_checks_without_ollama_schema(tmp_cfg, automatic):
+    _, model, _, agent = automatic
+    tmp_cfg.agent.kind = 'openai-compatible'
+    Generator(tmp_cfg, model, agent).run()
+    assert 'response_schema' not in agent.calls[0][2]
+
+
+def test_diagram_labels_must_cover_question_contract(tmp_cfg, automatic):
+    _, model, _, agent = automatic
+    file = tmp_cfg.root / 'visuals.yaml'
+    data = yaml.safe_load(file.read_text(encoding='utf-8'))
+    plan = data['sections']['device'][0]
+    plan['answer_contract'] = {'basis': 'description', 'required_terms': [['취소'], ['반환']]}
+    file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    with pytest.raises(ValueError, match='필수 용어 누락: 반환'):
+        Generator(tmp_cfg, model, agent).run()
+    agent.draft['edges'][0]['label'] = '대기 요청 취소 후 반환'
+    Generator(tmp_cfg, model, agent).run()
+
+
+def test_per_question_limit_cannot_exceed_project_ceiling(tmp_cfg, automatic):
+    _, model, _, agent = automatic
+    file = tmp_cfg.root / 'visuals.yaml'
+    data = yaml.safe_load(file.read_text(encoding='utf-8'))
+    data['sections']['device'][0]['max_nodes'] = 5
+    file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    with pytest.raises(ValueError, match='within visuals.max_nodes'):
+        Generator(tmp_cfg, model, agent).run()
+    assert not agent.calls
+
+
+def test_english_label_coverage_is_checked_separately(tmp_cfg, automatic):
+    _, model, _, agent = automatic
+    file = tmp_cfg.root / 'visuals.yaml'
+    data = yaml.safe_load(file.read_text(encoding='utf-8'))
+    data['sections']['device'][0]['answer_contract_en'] = {'basis': 'description', 'required_terms': [['may']]}
+    file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    with pytest.raises(ValueError, match='stop-flow/en'):
+        Generator(tmp_cfg, model, agent).run()
+    agent.draft['edges'][0]['label_en'] = 'Pending requests may be cancelled'
+    Generator(tmp_cfg, model, agent).run()

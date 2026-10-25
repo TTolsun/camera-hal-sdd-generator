@@ -929,61 +929,25 @@ sections:
     topic: constraints
     kind: decision
     title: validate() 결과별 호출자의 책임
-    question: Adjusted는 조정된 결과를 다시 확인해야 한다는 뜻입니다. 최종 configure()에는 완전히 유효한 입력이 필요합니다.
-    nodes:
-    - id: validate
-      label: CameraConfiguration::validate()
-      label_en: CameraConfiguration::validate()
-      evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
-        quote: This function adjusts the camera configuration to the closest valid
-    - id: invalid
-      label: 'Invalid: 조정 불가'
-      label_en: 'Invalid: cannot adjust'
-      evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
-        quote: The configuration is invalid and can't
-    - id: adjusted
-      label: 'Adjusted: 변경된 구성 확인'
-      label_en: 'Adjusted: inspect changed configuration'
-      evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
-        quote: "The caller shall check the\n * configuration carefully."
-    - id: valid
-      label: 'Valid: 입력이 이미 유효'
-      label_en: 'Valid: input already valid'
-      evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
-        quote: "The configuration was already valid and\n * hasn't been adjusted."
-    edges:
-    - from: validate
-      to: invalid
-      label: Invalid
-      label_en: Invalid
-      evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
-        quote: "The configuration is invalid and can't\n * be adjusted."
-    - from: validate
-      to: adjusted
-      label: Adjusted
-      label_en: Adjusted
-      evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
-        quote: "Parameters may have changed for any stream, and stream\n * configurations may have been removed."
-    - from: validate
-      to: valid
-      label: Valid
-      label_en: Valid
-      evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
-        quote: "The configuration was already valid and\n * hasn't been adjusted."
+    question: validate()의 Invalid·Adjusted·Valid는 무엇을 뜻하며, Adjusted이면 호출자는 무엇을 다시 확인해야 합니까?
+    prompt: 네 노드로 CameraConfiguration::validate와 Invalid·Adjusted·Valid를 하나씩 표시하세요. Adjusted의 파라미터 변경·스트림 삭제는 가능성이며, 호출자가 구성을 주의하여 재확인해야 함을 한국어와 영어 모두에 보존하세요. 영어 Adjusted 노드와 화살표 모두 may를 포함하세요. 원문에 없는 조건식이나 보장은 추가하지 마세요.
+    generation: llm
+    max_nodes: 4
+    required_symbols:
+    - CameraConfiguration::validate
+    - Invalid
+    - Adjusted
+    - Valid
+    answer_contract:
+      basis: description
+      required_terms:
+      - [확인, 재확인]
+      - [가능]
+    answer_contract_en:
+      basis: description
+      required_terms:
+      - [may]
+      - [caller]
   vendor-integration:
   - id: integration-stages
     topic: integration
