@@ -1527,13 +1527,16 @@ sections:
       sources:
       - buffer
     - id: request
-      question: 마지막 버퍼 완료와 요청 완료를 구분하고 파이프라인 핸들러가 completeRequest()를 호출해야 하는 계약을 한 문장으로 설명하세요.
+      question: 마지막 버퍼 완료 뒤에도 파이프라인 핸들러가 completeRequest()를 명시적으로 호출해야 하는 의무만 한 문장으로 설명하세요. 추가 작업의 이유나 호출 목적은 이 질문의 범위가 아닙니다.
       sources:
       - buffer
       answer_contract:
         basis: contract
         required_terms:
         - - completeRequest
+        reject_patterns:
+        - pattern: 기회|위해
+          message: 완료 호출 의무만 설명하고 추가 작업의 기회나 목적과 인과관계로 연결하지 마세요.
   - id: boundary
     title: 스레드 경계와 동기화
     question: Camera 상태를 바꾸는 함수의 동기화 책임과 PipelineHandler::completeRequest()의 실행 스레드 계약을 구분하여 설명하세요. 이 계약을 모든 콜백에 확대하지 마세요.
@@ -1550,9 +1553,14 @@ sections:
       end: void PipelineHandler::completeRequest
     parts:
     - id: state
-      question: Camera 상태를 바꾸는 함수들의 호출자 동기화 계약만 설명하세요. 두 문단 이내로 필요한 계약만 설명하고 소스에 없는 결과나 보장은 덧붙이지 마세요.
+      question: Camera 상태를 바꾸는 함수들을 호출할 때 필요한 동기화를 보장할 호출자의 의무만 한 문장으로 설명하세요.
       sources:
       - synchronization
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - 호출자
+        - - 동기화
     - id: complete
       question: PipelineHandler::completeRequest()의 실행 스레드 계약만 설명하세요. 다른 콜백이나 모든 메서드에 확대하지 마세요. 두 문단 이내로 필요한 계약만 설명하고 소스에
         없는 결과나 보장은 덧붙이지 마세요.

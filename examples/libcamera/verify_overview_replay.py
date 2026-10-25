@@ -25,6 +25,13 @@ def verify(root, *, complete=True):
     if complete:
         assert set(proof['stages']) == {'baseline', 'mutated', 'restored', 'published'}
         assert all(set(stage['pages']) == {'vendor-overview', 'overview'} for stage in proof['stages'].values())
+        source = proof['test_source']
+        assert source['official_tree'] == source['restored_tree']
+        for stage in ('mutated', 'restored'):
+            assert proof['stages'][stage]['source_commit'] == source['commits'][stage]
+        assert proof['stages']['baseline']['source_commit'] == proof['official_source_commit']
+        unchanged = proof['unchanged_source_check']
+        assert unchanged['llm_calls_before'] == unchanged['llm_calls_after']
     calls = proof['calls']
     for key, call in calls.items():
         receipt = call['receipt']
