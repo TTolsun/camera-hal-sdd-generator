@@ -132,5 +132,21 @@ terms:
   - term: OMM
     definition: 이 사이트의 읽기 화면 배치와 그림 확대·검색 규칙이 참고한 외부 문서 도구입니다. 실행기를 쓰지 않고 규칙만 적용했습니다.
 
+  - term: CCM
+    definition: CCM 은 libipa 라이브러리에서 사용하는 컬러 보정 행렬 알고리즘을 의미하며, 수동 또는 자동 방식으로 계산된 색 공간
+      변환 계수와 오프셋을 관리합니다.
+  - term: FBO
+    definition: FBO 는 OpenGL 에서 텍스처를 색상 애태치먼트로 연결하여 렌더링 타겟으로 사용하는 프레임 버퍼 객체입니다.
+  - term: EEXIST
+    definition: 버퍼에 아직 해제되지 않은 펜스가 남아있거나 동일한 스트림에 이미 버퍼가 등록되어 있을 때 -EEXIST 오류를 반환합니다.
+  - term: ETIMEDOUT
+    definition: 2 초 동안 응답이 도착하지 않으면 -ETIMEDOUT 코드를 반환합니다.
+  - term: GB
+    definition: '"gb"는 LUT 초기화 시 설정되는 색상 채널 키 중 하나로, 루프를 통해 해당 키에 저장된 값이 lut 구조체의 gb_and_b
+      배열의 gb 필드에 할당됩니다.'
+  - term: GR
+    definition: '"gr"는 LUT 초기화 시 설정되는 색상 채널 키 중 하나로, 루프를 통해 해당 키의 값이 lut 구조체의 r_and_gr
+      필드에 할당됩니다.'
+
 # 회사 이름(NXP)도 뜻을 풀 필요가 없으므로 여기에 둔다.
 common: [API, CPU, GPU, ID, LLM, NXP, RGB, TODO, USB, YAML]

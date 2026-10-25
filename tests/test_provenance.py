@@ -60,3 +60,18 @@ def test_tampered_or_imported_responses_cannot_establish_authorship(tmp_path, ch
         save()
     with pytest.raises(ValueError):
         verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')
+
+
+def test_part_identity_must_match_real_call_tag(tmp_path):
+    model, manuscripts, calls, artifact, save = setup(tmp_path)
+    artifact['answers']['stop'][0]['part_id'] = 'cancel'
+    receipt_path = calls / '001.receipt.json'
+    receipt = json.loads(receipt_path.read_text())
+    receipt['tag'] = 'device_stop_cancel_0'
+    receipt_path.write_text(json.dumps(receipt))
+    save()
+    assert verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')['statements'] == 1
+    artifact['answers']['stop'][0]['part_id'] = 'different'
+    save()
+    with pytest.raises(ValueError, match='No matching HTTP'):
+        verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')

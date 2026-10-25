@@ -46,6 +46,9 @@ def evaluate(cfg, out: Path, *, translate: bool = False):
     for key in ('intro', 'mermaid_dir'):
         if site.get(key):
             site[key] = str((cfg.root / site[key]).resolve())
+    visuals = trial.raw.get('visuals', {})
+    if visuals.get('file'):
+        visuals['file'] = str((cfg.root / visuals['file']).resolve())
     previous_catalog = cfg.raw.get('site', {}).get('english_catalog')
     if previous_catalog:
         site['english_catalog'] = str(out / 'english.json')

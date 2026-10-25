@@ -33,7 +33,7 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
                         for sid, blocks in sources.items() for item in blocks if item.get('quote_id')}
             data = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
             statements = resolve_passages(data['statements'], passages)
-            normalize_answer(model, statements, ['\n'.join(b['text'] for b in blocks) for blocks in sources.values()])
+            normalize_answer(model, statements, ['\n'.join(b['text'] for b in blocks) for blocks in sources.values()] + [payload.get('topic', '')])
         except (ValueError, KeyError, TypeError, AttributeError):
             continue  # Invalid retry responses cannot establish manuscript provenance.
         responses.append((receipt['tag'], statements))
@@ -51,9 +51,12 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
         documents += 1
         for tid, answers in artifact['answers'].items():
             topics += 1
-            possible = [answer for tag, result in responses if tag.startswith(f'{sid}_{tid}_') for answer in result]
             for answer in answers:
-                if answer not in possible:
+                part = answer.get('part_id')
+                tag_prefix = f'{sid}_{tid}_' + (part + '_' if part else '')
+                possible = [item for tag, result in responses if tag.startswith(tag_prefix) for item in result]
+                original = {key: value for key, value in answer.items() if key != 'part_id'}
+                if original not in possible:
                     raise ValueError(f'No matching HTTP model response for {sid}/{tid}')
                 statements += 1
     return {'documents': documents, 'topics': topics, 'statements': statements,
