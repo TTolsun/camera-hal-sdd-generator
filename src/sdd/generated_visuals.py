@@ -40,6 +40,11 @@ The optional answer_contract is a mandatory minimum coverage check on Korean lab
 Include a required term from EVERY alternative group naturally; do not merely name a status.
 English labels must preserve the Korean meaning, especially possibilities and obligations.
 answer_contract_en applies its required_terms and reject_patterns to English labels.'''
+POLICY += '''\nWhen node_bindings is supplied, nodes must be an OBJECT keyed by those IDs.
+Each value contains ONLY label, label_en, shape, quote_ids. The generator already
+binds the IDs to source symbols; never repeat id or symbol inside these values.
+Return EVERY bound node and use its exact ID in edges. You still propose all labels
+and connections from the evidence, never invent a relationship to connect nodes.'''
 
 
 def digest(value):
@@ -81,6 +86,26 @@ def node_limit(cfg, plan):
     if any(isinstance(v, bool) or not isinstance(v, int) or v < 2 for v in (limit, ceiling)) or limit > ceiling:
         raise ValueError('LLM visual max_nodes must be at least two and within visuals.max_nodes')
     return limit
+
+
+def bindings(symbols, limit):
+    return {f'n{i}': symbol for i, symbol in enumerate(symbols)} if symbols and len(symbols) == limit else {}
+
+
+def expand_draft(plan, draft, limit):
+    """Bind a fixed node object to configured source identifiers, retaining raw draft elsewhere."""
+    if isinstance(draft, dict) and isinstance(draft.get('nodes'), dict):
+        fixed = bindings(plan.get('required_symbols'), limit)
+        if not fixed or set(draft['nodes']) != set(fixed):
+            raise ValueError('Visual node bindings are missing or unknown')
+        nodes = []
+        for ident, symbol in fixed.items():
+            value = draft['nodes'][ident]
+            if not isinstance(value, dict) or set(value) != {'label', 'label_en', 'shape', 'quote_ids'}:
+                raise ValueError('Bound nodes contain only labels, shape and quote IDs')
+            nodes.append({'id': ident, 'symbol': symbol, **value})
+        return {**draft, 'nodes': nodes}
+    return draft
 
 
 def inputs(cfg, model, section, plan):
@@ -135,6 +160,7 @@ def inputs(cfg, model, section, plan):
                                          'max_nodes': limit, 'conditions': condition_catalog(passages),
                                          'allowed_symbols': source_symbols(passages),
                                          'required_symbols': required_symbols,
+                                         'node_bindings': bindings(required_symbols, limit),
                                          'answer_contract': plan.get('answer_contract'),
                                          'answer_contract_en': plan.get('answer_contract_en'),
                                          'condition_choices': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages) for branch in ('true', 'false')],
@@ -153,21 +179,18 @@ def schema(passages, limit, required_symbols=None):
                 'condition_ref': {'type': 'string', 'enum': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages) for branch in ('true', 'false')]},
                 'quote_ids': refs})
     nodes = {'type': 'array', 'minItems': 2, 'maxItems': limit, 'items': node}
-    if required_symbols and len(required_symbols) == limit:
-        # A full fixed-size symbol set can constrain each tuple position. The
-        # provider-independent validator still checks coverage after decoding.
-        nodes['prefixItems'] = []
-        for symbol in required_symbols:
-            item = copy.deepcopy(node)
-            item['properties']['symbol']['enum'] = [symbol]
-            nodes['prefixItems'].append(item)
-        nodes.update(minItems=limit)
+    if fixed := bindings(required_symbols, limit):
+        bound_node = obj({key: value for key, value in node['properties'].items() if key not in ('id', 'symbol')})
+        nodes = obj({ident: bound_node for ident in fixed})
+        for key in ('from', 'to'):
+            edge['properties'][key] = {'type': 'string', 'enum': list(fixed)}
     return obj({'nodes': nodes,
                 'edges': {'type': 'array', 'minItems': 1, 'maxItems': limit * 3, 'items': edge}})
 
 
 def materialize(cfg, model, section, plan, draft, producer):
     _, records, passages, _, _ = inputs(cfg, model, section, plan)
+    draft = expand_draft(plan, draft, node_limit(cfg, plan))
     if not isinstance(draft, dict) or set(draft) != {'nodes', 'edges'}:
         raise ValueError('Visual draft needs only nodes and edges')
     if not all(isinstance(draft[k], list) for k in draft):

@@ -209,8 +209,12 @@ def test_english_label_coverage_is_checked_separately(tmp_cfg, automatic):
     Generator(tmp_cfg, model, agent).run()
 
 
-def test_full_required_symbol_set_constrains_structured_tuple():
-    from sdd.generated_visuals import schema
+def test_full_required_symbol_set_uses_bound_object_supported_by_ollama():
+    from sdd.generated_visuals import schema, expand_draft
     nodes = schema({'code:0': ('code', 'stop(); cancel();')}, 2, ['stop', 'cancel'])['properties']['nodes']
-    assert isinstance(nodes['items'], dict) and nodes['minItems'] == 2
-    assert [p['properties']['symbol']['enum'] for p in nodes['prefixItems']] == [['stop'], ['cancel']]
+    assert nodes['type'] == 'object' and nodes['required'] == ['n0', 'n1']
+    value = dict(label='Stop', label_en='Stop', shape='box', quote_ids=['code:0'])
+    expanded = expand_draft({'required_symbols': ['stop', 'cancel']}, {'nodes': {'n0': value, 'n1': value}, 'edges': []}, 2)
+    assert [n['symbol'] for n in expanded['nodes']] == ['stop', 'cancel']
+    with pytest.raises(ValueError, match='missing or unknown'):
+        expand_draft({'required_symbols': ['stop', 'cancel']}, {'nodes': {'n0': value}}, 2)

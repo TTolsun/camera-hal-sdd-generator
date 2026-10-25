@@ -25,6 +25,7 @@ def main():
     from sdd.evidence import collect
     from sdd.facts.model import KnowledgeModel
     from sdd.export_html import _split
+    from sdd.generated_visuals import expand_draft
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True, help='New public-fixture output directory')
     parser.add_argument('--model', default='qwen3.5:9b')
@@ -95,8 +96,9 @@ def main():
         manuscript = cfg.sdd_dir / 'completion.md'
         meta, body = _split(manuscript.read_text(encoding='utf-8'))
         rec = meta['generated_visuals']['records']['completion-branches']
-        symbols = {node['id']: node['symbol'] for node in rec['draft']['nodes']}
-        branches = {(symbols[edge['from']], symbols[edge['to']], edge['condition_ref']) for edge in rec['draft']['edges']}
+        draft = expand_draft({'required_symbols': ['runPipes', 'sendResult', 'onFrameDone']}, rec['draft'], 3)
+        symbols = {node['id']: node['symbol'] for node in draft['nodes']}
+        branches = {(symbols[edge['from']], symbols[edge['to']], edge['condition_ref']) for edge in draft['edges']}
         assert ('runPipes', 'sendResult', 'c0:true') in branches
         assert branches & {('runPipes', 'onFrameDone', 'always'), ('runPipes', 'onFrameDone', 'c0:false')}
         assert not any(target == 'sendResult' and condition != 'c0:true' for _, target, condition in branches)
