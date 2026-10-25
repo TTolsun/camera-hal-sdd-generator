@@ -330,6 +330,36 @@ def test_passage_selection_resolves_real_quote_and_source(tmp_cfg, generated):
     assert path.read_bytes() == original
 
 
+def test_response_schema_preserves_cpp_operators_but_rejects_html(tmp_cfg, generated):
+    import re
+    from sdd.generated_design import response_schema, materialize
+    section, model, _, agent = generated
+    pattern = response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text']['pattern']
+    assert re.fullmatch(pattern, '`request->_d()->cancel()`과 `std::unique_ptr<Request>`를 사용합니다.')
+    agent.statement['text'] = '<script>alert(1)</script>'
+    with pytest.raises(ValueError, match='HTML'):
+        materialize(model, section, {'stop': [agent.statement]})
+
+
+def test_short_source_bound_answer_does_not_need_padding(tmp_cfg, generated):
+    from sdd.generated_design import validate_answers
+    section, model, _, agent = generated
+    agent.statement['text'] = '`stop()`은 대기 큐를 비웁니다.'
+    part = copy.deepcopy(section)
+    part['design_topics'][0]['_part_id'] = 'one-contract'
+    validate_answers(model, part, {'stop': [agent.statement]})
+    validate_answers(model, section, {'stop': [agent.statement]})
+
+
+def test_question_identifier_can_receive_code_typography():
+    from sdd.facts.model import ClassInfo
+    from sdd.generated_design import normalize_answer
+    model = KnowledgeModel(classes={'ns::Manager': ClassInfo('ns::Manager')})
+    statements = [{'text': 'Manager는 장치를 열거합니다.'}]
+    normalize_answer(model, statements, ['The manager enumerates devices.', 'Manager의 역할은 무엇입니까?'])
+    assert statements[0]['text'] == '`Manager`는 장치를 열거합니다.'
+
+
 def test_exhausted_thinking_budget_preserves_manuscript(tmp_cfg, generated, monkeypatch):
     from sdd.llm import Agent
     section, model, save, fake = generated
