@@ -101,6 +101,8 @@ python -m sdd.evaluate_pipeline --config project/sdd.yaml --continue-from build/
 python -m sdd.provenance --facts build/repaired-model-trial/facts/facts.json --manuscripts build/repaired-model-trial/manuscripts --calls build/repaired-model-trial/build/prompts/calls --provider ollama --model qwen3.5:9b --allow-reused
 ```
 
+실패한 문서의 개별 HTTP 답변도 복구할 수 있습니다. 같은 모델 설정·시스템 지시·질문·근거·응답 형식인 원응답을 현재 검사로 다시 검증하며, 필요한 근거 대조도 수행합니다. 필수 용어의 동의어나 오류 패턴만 바뀌었으면 새 기준을 그대로 적용합니다. 질문이나 근거가 달라졌거나 재검증에 실패하면 실제 모델을 다시 호출합니다. `replayed_units`에는 사용한 원응답·요청 해시와 영수증 위치를 기록합니다. 근거 대조 판정은 현재 요청 전체가 일치할 때만 재사용하며 사람 승인을 만들지 않습니다.
+
 `review.design_grounding: true`를 설정하면 생성 답변을 별도 모델 호출에서 소스와 대조하고, 지적이 남으면 `max_retries` 안에서 모델에 다시 요청합니다. 이 설정은 호출·입력 비용을 늘리며 모델 판정의 정확성도 별도로 검토해야 합니다. 판정이 누락되거나 근거 입력이 한도를 넘으면 통과시키지 않습니다. 미정의 용어·깨진 링크는 번역 전에 한국어 사이트 미리보기 단계에서 확인합니다.
 
 모델 판정 이유는 문단당 1~400자로 제한합니다. 길고 모순된 재고 문장을 정상 판정으로 사용하지 않습니다. Ollama 또는 호환 API가 출력 한도 도달을 알리면 JSON을 읽을 수 있더라도 부분 답변은 거부하며, HTTP 응답 기록은 진단을 위해 보존합니다.

@@ -237,6 +237,35 @@ def validate_answers(model, section, answers):
     return pinned, resolved, report
 
 
+def decode_unit(model, section, topic, raw, sources, passages):
+    cleaned = re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip())
+    data = json.loads(cleaned)
+    if not isinstance(data, dict) or set(data) != {'statements'}:
+        raise ValueError('statements만 가진 JSON 객체가 필요합니다.')
+    if ('_part_id' in topic and isinstance(data['statements'], list)
+            and len(data['statements']) > topic['_max_statements']):
+        raise ValueError(f"분할 질문은 {topic['_max_statements']}문단 이내로 답해야 합니다.")
+    data['statements'] = resolve_passages(data['statements'], passages)
+    if '_part_id' in topic:
+        for statement in data['statements']:
+            statement['part_id'] = topic['_part_id']
+    normalize_answer(model, data['statements'], [*sources.values(), topic['question']])
+    candidate = {topic['id']: data['statements']}
+    subset = {**section, 'design_topics': [topic], 'design_requirements': [
+        r for r in section['design_requirements'] if r['id'] in topic['covers']]}
+    # A topic covers only part of a reader profile. Check its prose
+    # against the full section's requirements; coverage is checked
+    # before calls and again after assembling every topic.
+    from .reader_profiles import profile_errors
+    errors = profile_errors({**section, 'design_topics': [
+        {**topic, 'statements': data['statements']}]})
+    if errors:
+        raise ValueError(' / '.join(errors))
+    subset.pop('reader_profile', None)
+    validate_answers(model, subset, candidate)
+    return candidate[topic['id']]
+
+
 def generate(generator, section, previous=None):
     model, cfg = generator.model, generator.cfg
     preflight(model, section)
@@ -306,6 +335,11 @@ def generate(generator, section, previous=None):
                 unit['answer_contract'] = part['answer_contract']
             unit.pop('parts')
             units.append(unit)
+    replayed = []
+    archive = None
+    if getattr(generator, 'replay_http', False):
+        from .design_replay import Archive
+        archive = Archive(cfg.build_dir / 'prompts/calls', cfg.agent)
     for topic in units:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
         source_files = {s['id']: s['file'] for s in topic['sources']}
@@ -334,6 +368,28 @@ def generate(generator, section, previous=None):
             'Return only a JSON object with a statements array. Return an empty array if the source cannot answer.\n'
         )
         base_user = instruction + json.dumps(request, ensure_ascii=False)
+        tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
+        schema = response_schema(topic, passages) if cfg.agent.kind in ('ollama', 'response-bundle') else None
+        retained = False
+        if archive:
+            import copy
+            for record in archive.candidates(system, base_user, schema, tag):
+                try:
+                    statements = decode_unit(model, section, topic, record['raw'], sources, passages)
+                    if grounding:
+                        from .grounding import review as check_grounding
+                        reviewer = copy.copy(generator)
+                        reviewer.agent = archive.reviewer(generator.agent)
+                        check_grounding(reviewer, topic, statements, sources, tag + '_replay', source_files=source_files)
+                    answers.setdefault(topic['id'], []).extend(statements)
+                    replayed.append({key: record[key] for key in ('receipt', 'request_sha256', 'response_sha256')} |
+                                    {'topic': topic['id'], 'part': topic.get('_part_id')})
+                    retained = True
+                    break
+                except (ValueError, TypeError, KeyError):
+                    continue  # Rejected old output does not consume a fresh retry.
+        if retained:
+            continue
         user = base_user
         last = None
         for attempt in range(cfg.max_retries + 1):
@@ -356,31 +412,7 @@ def generate(generator, section, previous=None):
                     raise ValueError(f"{section['id']}/{topic['id']}: 재검토 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
                 raw = generator.agent.chat(system, revision, tag=f"{tag}_{attempt}_revision", **options)
             try:
-                cleaned = re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip())
-                data = json.loads(cleaned)
-                if not isinstance(data, dict) or set(data) != {'statements'}:
-                    raise ValueError('statements만 가진 JSON 객체가 필요합니다.')
-                if ('_part_id' in topic and isinstance(data['statements'], list)
-                        and len(data['statements']) > topic['_max_statements']):
-                    raise ValueError(f"분할 질문은 {topic['_max_statements']}문단 이내로 답해야 합니다.")
-                data['statements'] = resolve_passages(data['statements'], passages)
-                if '_part_id' in topic:
-                    for statement in data['statements']:
-                        statement['part_id'] = topic['_part_id']
-                normalize_answer(model, data['statements'], [*sources.values(), topic['question']])
-                candidate = {topic['id']: data['statements']}
-                subset = {**section, 'design_topics': [topic], 'design_requirements': [
-                    r for r in section['design_requirements'] if r['id'] in topic['covers']]}
-                # A topic covers only part of a reader profile. Check its prose
-                # against the full section's requirements; coverage is checked
-                # before calls and again after assembling every topic.
-                from .reader_profiles import profile_errors
-                errors = profile_errors({**section, 'design_topics': [
-                    {**topic, 'statements': data['statements']}]})
-                if errors:
-                    raise ValueError(' / '.join(errors))
-                subset.pop('reader_profile', None)
-                validate_answers(model, subset, candidate)
+                candidate = {topic['id']: decode_unit(model, section, topic, raw, sources, passages)}
                 if grounding:
                     from .grounding import review as check_grounding
                     check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}',
@@ -398,7 +430,7 @@ def generate(generator, section, previous=None):
             raise ValueError(f"{section['id']}/{topic['id']}: LLM 답변 검증 실패: {last}")
     pinned, resolved, report = validate_answers(model, section, answers)
     artifact = {'schema': 1, 'input_fingerprint': fingerprint(model, section), 'answers': answers,
-                'topic_inputs': inputs, 'reused_topics': reused,
+                'topic_inputs': inputs, 'reused_topics': reused, 'replayed_units': replayed,
                 'generated_topics': [t['id'] for t in section['design_topics'] if t['id'] not in reused],
                 'topic_agents': {tid: origins.get(tid, f'{cfg.agent.kind}/{cfg.agent.model}') for tid in answers},
                 'grounding_review': 'passed' if grounding else 'not-run',

@@ -143,6 +143,26 @@ def test_repair_preserves_http_provenance_and_regenerates_changed_questions(tmp_
     assert all(row['status'] == 'passed' for row in third['stages']) and len(calls) == 2
 
 
+def test_failed_section_can_revalidate_real_http_units_on_repair(tmp_cfg, tmp_path, monkeypatch):
+    cfg, calls = model_config(tmp_cfg, monkeypatch)
+    original = Generator.run
+    def fail_after_generation(self, *args, **kwargs):
+        result = original(self, *args, **kwargs)
+        for path in result:
+            path.unlink()
+        raise ValueError('Simulated failure after a real HTTP answer')
+    monkeypatch.setattr(Generator, 'run', fail_after_generation)
+    first = tmp_path / 'first'
+    assert evaluate(cfg, first)['results'][0]['automatic_checks'] == 'failed'
+    assert len(calls) == 1
+    monkeypatch.setattr(Generator, 'run', original)
+    report = evaluate(cfg, tmp_path / 'repair', previous=first)
+    assert all(row['status'] == 'passed' for row in report['stages'])
+    assert len(calls) == 1
+    assert report['results'][0]['replayed_units'][0]['topic'] == 'start'
+    assert report['publishable'] is False and report['human_approval'] == 'pending'
+
+
 @pytest.mark.parametrize('change', ['manuscript', 'response', 'source', 'model', 'incomplete'])
 def test_repair_refuses_tampered_mismatched_or_incomplete_trials(tmp_cfg, tmp_path, monkeypatch, change):
     cfg, calls = model_config(tmp_cfg, monkeypatch)

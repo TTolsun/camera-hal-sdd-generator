@@ -47,7 +47,7 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
         artifact = metadata.get('generated_design')
         if not artifact:
             continue
-        if artifact.get('reused_topics') and not allow_reused:
+        if (artifact.get('reused_topics') or artifact.get('replayed_units')) and not allow_reused:
             raise ValueError('A full fresh-model trial cannot reuse previous topic answers.')
         sid = metadata.get('section')
         if not sid:
