@@ -54,10 +54,10 @@ libcamera의 모든 설계 이유를 코드에서 복원하는 것이 목표는 
 | 소스 | upstream libcamera의 전용 clone | 자동 checkout이 개인 작업에 영향을 주지 않게 합니다. |
 | 빌드 | Meson + Ninja + C++ 툴체인 | 실제 구성의 compile DB와 생성 헤더를 준비합니다. |
 | 문서 생성기 | 이 저장소 + Python 3.11 이상 + uv | 현재 의존성은 `uv.lock`으로 고정합니다. |
-| LLM | 첫 실행은 `dry-run`, 다음은 로컬 Ollama | 설치된 모델과 입력 예산을 기록합니다. |
+| LLM | 설계 설명은 로컬 Ollama | 설치된 모델과 입력 예산을 기록합니다. |
 | 결과 | 로컬 Markdown과 HTML | 리뷰 후 승인된 결과를 별도로 보관합니다. |
 
-GPU와 메모리 요구량은 선택한 모델과 컨텍스트에 따라 달라지므로 고정된 최소 사양을 제시하지 않습니다. 첫 실험에서 최대 메모리, 생성 시간, 입력 생략량을 측정합니다. 예제의 `qwen3.5:4b`는 기존 프로젝트 설정을 이어받은 값이며, libcamera에서 품질이 검증되었다는 뜻은 아닙니다.
+GPU와 메모리 요구량은 선택한 모델과 컨텍스트에 따라 달라지므로 고정된 최소 사양을 제시하지 않습니다. 첫 실험에서 최대 메모리, 생성 시간, 입력 생략량을 측정합니다. 예제는 `qwen3.5:9b`를 사용합니다. 실제 변경 전후 검증 범위와 한계는 [로컬 Qwen 갱신 검증](local-qwen-replay.md)에 기록합니다. 다른 함수의 설명 품질까지 일괄 보증하지 않습니다.
 
 Linux에서 다음과 같이 두 저장소를 나란히 둡니다. Windows의 가상환경이나 compile DB를 복사해서 Linux에서 재사용하지 않습니다.
 
@@ -156,7 +156,7 @@ Meson 설정만으로 멈추지 않고 빌드까지 수행하는 이유는 분�
 
    현재 파서는 compile DB의 `directory`로 작업 디렉터리를 자동 변경하지 않습니다. 준비 스크립트는 include 경로를 절대 경로로 바꾸고, 각 명령에 `-working-directory`와 `-resource-dir`를 추가합니다. 파싱뿐 아니라 AST의 헤더 위치를 판별할 때도 올바른 경로가 필요하기 때문입니다. 이 절차로 `stddef.h` 누락과 핵심 헤더 제외 문제를 보완합니다. 이 스크립트는 Linux의 Clang 빌드를 대상으로 합니다. `--skip-clang-uml`은 libclang 호출 그래프도 생략하므로 사용하지 않습니다. 예제의 `tools.clang_uml: none`이 libclang 대체 경로를 선택합니다.
 
-3. 앞 단계의 `verify_facts.py`가 성공하고 파싱 오류가 없는지 확인합니다. 이 검사는 핵심 클래스의 존재, 페이지별 사실 선택, SHA 일치, 실제 파일의 인용 위치를 확인합니다. `facts-verification.json`의 `ok`가 false이면 LLM 생성으로 넘어가지 않습니다. 모델 없이 일부 문서만 확인하려면 `sdd.local.yaml`에 `site.enabled: false`를 설정하고 아래처럼 섹션을 선택합니다.
+3. 앞 단계의 `verify_facts.py`가 성공하고 파싱 오류가 없는지 확인합니다. 이 검사는 핵심 클래스의 존재, 페이지별 사실 선택, SHA 일치, 실제 파일의 인용 위치를 확인합니다. `facts-verification.json`의 `ok`가 false이면 LLM 생성으로 넘어가지 않습니다. 아래 4단계의 Ollama 연결이 준비된 뒤 일부 문서부터 생성하려면 `sdd.local.yaml`에 `site.enabled: false`를 설정하고 아래처럼 섹션을 선택합니다. 이 세 섹션도 실제 LLM 응답이 필요합니다.
 
    ```bash
    "$SDD_PYTHON" -m sdd.cli --config "$SDD_CONFIG" generate --sections overview,pipeline-handler,ipa
@@ -165,18 +165,18 @@ Meson 설정만으로 멈추지 않고 빌드까지 수행하는 이유는 분�
      --out "$SDD_ROOT/examples/libcamera/build/sdd.html"
    ```
 
-   결과는 `examples/libcamera/build/facts/facts.json`, `build/prompts/`, `build/sdd/*.md`, `build/sdd.html`에 생깁니다. dry-run 결과는 문서 구조와 프롬프트 확인용입니다. LLM 서술 품질이나 인용 검증 합격으로 기록하지 않습니다.
+   결과는 `examples/libcamera/build/facts/facts.json`, `build/prompts/`, `build/sdd/*.md`, `build/sdd.html`에 생깁니다. 필수 설계 설명은 `dry-run`에서 생성되지 않습니다. 모델 없이 확인할 수 있는 범위는 앞 단계의 facts 추출·검증입니다.
 
 4. 로컬 Ollama 모델이 준비되면 `examples/libcamera/sdd.local.yaml`의 기존 `source` 설정을 유지하면서 `agent` 설정을 추가합니다.
 
    ```yaml
    agent:
      kind: ollama
-     model: qwen3.5:4b
+     model: qwen3.5:9b
      base_url: http://localhost:11434
    ```
 
-   설치된 모델 이름에 맞춰 값을 변경하고 `generate`를 섹션 제한 없이 실행합니다. Vendor의 **하드웨어 지원 구조와 구현 개요**는 실제 LLM이 필수 질문에 답하므로 `dry-run`에서는 전체 생성이 실패합니다. 자동 검사 실패 시 기존 원고를 보존하며, 모델 출력의 의미는 별도 검토해야 합니다. 번역 카탈로그를 갱신한 뒤 `site.enabled: true`로 사이트 생성도 연결합니다. 주소는 **파이프라인을 실행하는 Linux에서 접속 가능한 주소**여야 합니다. Windows에서 Ollama를 실행한다면 `localhost`로 접근 가능한지 별도로 확인합니다. 위 설정 파일은 Git에서 제외됩니다.
+   설치된 모델 이름에 맞춰 값을 변경하고 `generate`를 섹션 제한 없이 실행합니다. Vendor·Developer 개요와 상세 설계 문서는 실제 LLM이 필수 질문에 답하므로 `dry-run`에서는 전체 생성이 실패합니다. 자동 검사 실패 시 기존 원고를 보존하며, 모델 출력의 의미는 별도 검토해야 합니다. 번역 카탈로그를 갱신한 뒤 `site.enabled: true`로 사이트 생성도 연결합니다. 주소는 **파이프라인을 실행하는 Linux에서 접속 가능한 주소**여야 합니다. Windows에서 Ollama를 실행한다면 `localhost`로 접근 가능한지 별도로 확인합니다. 위 설정 파일은 Git에서 제외됩니다.
 
 ### 3-2. 생성 직후 확인할 항목
 
