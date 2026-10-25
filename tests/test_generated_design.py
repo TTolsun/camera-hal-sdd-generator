@@ -291,6 +291,17 @@ def test_response_schema_preserves_cpp_operators_but_rejects_html(tmp_cfg, gener
         materialize(model, section, {'stop': [agent.statement]})
 
 
+def test_short_part_answer_is_checked_again_as_complete_topic(tmp_cfg, generated):
+    from sdd.generated_design import validate_answers
+    section, model, _, agent = generated
+    agent.statement['text'] = '`stop()`은 대기 큐를 비웁니다.'
+    part = copy.deepcopy(section)
+    part['design_topics'][0]['_part_id'] = 'one-contract'
+    validate_answers(model, part, {'stop': [agent.statement]})
+    with pytest.raises(ValueError, match='너무 짧'):
+        validate_answers(model, section, {'stop': [agent.statement]})
+
+
 def test_exhausted_thinking_budget_preserves_manuscript(tmp_cfg, generated, monkeypatch):
     from sdd.llm import Agent
     section, model, save, fake = generated

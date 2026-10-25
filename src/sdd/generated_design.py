@@ -199,7 +199,10 @@ def validate_answers(model, section, answers):
         text, _ = contract_text(pinned, section['id'], topic)
         blocks, _ = topic_blocks(pinned, section['id'], topic)
         allowed = set(extract_citations('\n'.join(b.text for b in blocks)))
-        findings = check(text, allowed, require=True).notes
+        # A source-bound subquestion can have a correct one-sentence answer.
+        # Apply the usual minimum again to the complete assembled topic.
+        findings = check(text, allowed, require=True,
+                         min_chars=1 if topic.get('_part_id') else 80).notes
         names = source_names(model, [b.text for b in blocks])
         findings += describe(lint(text, names))
         # Excerpts can contain standard-library types and aliases absent from
