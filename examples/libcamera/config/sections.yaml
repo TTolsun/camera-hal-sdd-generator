@@ -271,6 +271,10 @@ sections:
       start: \fn PipelineHandler::generateConfiguration()
       end: "This function is called from the CameraManager thread.\n *\n * \\return 0 on success or a negative error\
         \ code otherwise\n */"
+    - id: configure-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::configure()
+      end: \fn PipelineHandler::exportFrameBuffers()
     parts:
     - id: invalid
       question: Invalid 판정에서 구성의 유효성과 조정 가능성은 어떤 결합 조건입니까? 둘 중 하나만 해당해도 되는지 원문의 논리 관계만 설명하고 예시는 제외하세요.
@@ -334,17 +338,24 @@ sections:
           - nullptr
         reject_patterns: []
     - id: configure
-      question: configure의 검증된 입력 전제와 성공·실패 반환을 구분하세요. 유효한 입력이라는 사실을 장치 구성 성공 보장으로 바꾸지 마세요. 다른 함수는 다루지 마세요.
+      question: configure에 전달되는 입력이 validate를 거쳐야 하는 전제만 설명하세요. 반환값은 다음 질문에서 다룹니다.
       sources:
-      - configuration
+      - configure-contract
       answer_contract:
         basis: contract
         required_terms:
         - - configure
         - - validate
+        reject_patterns: []
+    - id: configure-result
+      question: configure의 성공 반환값과 실패 반환값은 각각 무엇입니까? 수치·부호만 구분하고 다른 함수는 다루지 마세요.
+      sources:
+      - configure-contract
+      answer_contract:
+        basis: description
+        required_terms:
         - - '0'
         - - 음수
-        reject_patterns: []
   - id: measurement
     title: 성능 근거를 읽는 기준
     question: DebayerCpu 벤치마크는 통계 수집과 디베이어 처리만 측정하고 캡처와 출력을 제외합니다. Software ISP를 쓰는 cam 또는 qcam에서 실행되는 참고 절차를 설명하세요.
@@ -490,14 +501,15 @@ sections:
         - - 호출자
         reject_patterns: []
     - id: hardware
-      question: 새 하드웨어의 match 구현자가 장치를 모두 확보한 경우 Camera 생성·등록까지 수행해야 하는 책임만 설명하세요. 성공·실패의 상세 반환 계약은 다음 절에서 다룹니다.
+      question: match 구현자가 생성한 카메라 인스턴스를 등록할 책임을 설명하세요. 장치 획득과 반환값의 세부 계약은 다음 절에서 다룹니다.
       sources:
       - handler
       answer_contract:
         basis: contract
         required_terms:
-        - - match
         - - Camera
+          - 카메라
+        - - 등록
   - id: boundary
     title: 하드웨어와 공통 계층의 경계
     question: 새 하드웨어의 match() 구현자가 장치 매칭 성공과 실패 때 각각 수행할 일과 카메라 등록 책임을 설명하세요. 객체 생성자나 다른 함수의 역할은 추정하지 마세요.
@@ -844,6 +856,18 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: void PipelineHandler::registerRequest(Request *request)
       end: "\tdoQueueRequests(request->_d()->camera());\n\t});\n}"
+    - id: waiting-code
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::queueRequest(Request *request)
+      end: void PipelineHandler::doQueueRequest(Request *request)
+    - id: submit-code
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequest(Request *request)
+      end: \brief Queue prepared requests to the device
+    - id: iterate-code
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequests(Camera *camera)
+      end: \fn PipelineHandler::queueRequestDevice()
     covers:
     - queue
     parts:
@@ -865,15 +889,25 @@ sections:
         - - prepared
         - - doQueueRequests
     - id: waiting
-      question: queueRequest가 어느 목록에 요청을 넣는지와 prepare에 전달하는 시간 인자만 설명하세요. 시간 인자를 고정 처리 지연이라고 쓰지 마세요.
+      question: queueRequest가 요청을 추가하는 내부 목록만 설명하세요. prepare의 인자는 다음 질문에서 다룹니다.
       sources:
-      - queue
+      - waiting-code
       answer_contract:
         basis: implementation
         required_terms:
         - - queueRequest
         - - waitingRequests_
+    - id: prepare-argument
+      question: queueRequest가 prepare 호출에 전달하는 시간 인자는 무엇입니까? 코드의 값과 단위만 설명하고 고정 처리 지연으로 해석하지 마세요.
+      sources:
+      - waiting-code
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - 300ms
+          - 300 ms
+          - 300밀리초
+          - 300 밀리초
     - id: fences
       question: Request::Private::prepare에서 획득 펜스 대기와 선택적 timeout 인자가 하는 일을 설명하세요. 호출 지점의 수치나 고정 처리 시간을 추정하지 마세요.
       sources:
@@ -886,7 +920,7 @@ sections:
     - id: capacity
       question: doQueueRequests가 장치 큐 크기를 어떤 한도와 비교하며 한도에 도달하면 반복을 어떻게 처리합니까? 이 분기만 설명하세요.
       sources:
-      - queue
+      - iterate-code
       answer_contract:
         basis: implementation
         required_terms:
@@ -897,7 +931,7 @@ sections:
     - id: head-ready
       question: doQueueRequests가 대기 큐 맨 앞 요청의 준비 여부를 확인하고 준비되지 않았으면 하는 일만 설명하세요. 아직 요청을 큐에서 제거한다고 쓰지 마세요.
       sources:
-      - queue
+      - iterate-code
       answer_contract:
         basis: implementation
         required_terms:
@@ -909,7 +943,7 @@ sections:
       question: doQueueRequest가 queuedRequests_에 요청을 등록하고 순번을 부여한 뒤 cancelled_ 요청을 만났을 때의 처리만 설명하세요. 이 분기를 하드웨어
         재제출로 바꾸지 마세요.
       sources:
-      - queue
+      - submit-code
       answer_contract:
         basis: implementation
         required_terms:
@@ -918,7 +952,7 @@ sections:
     - id: device-failure
       question: doQueueRequest에서 취소되지 않은 요청의 장치 제출과 오류 반환 시 처리만 설명하세요.
       sources:
-      - queue
+      - submit-code
       answer_contract:
         basis: implementation
         required_terms:
@@ -942,13 +976,29 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
       end: \brief Retrieve the absolute path to a platform configuration file
+    - id: buffer-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Signal request completion
+    - id: request-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Signal request completion
+      end: \brief Cancel request and signal its completion
+    - id: request-code
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::completeRequest(Request *request)
+      end: void PipelineHandler::cancelRequest(Request *request)
+    - id: cancel-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Cancel request and signal its completion
+      end: \brief Retrieve the absolute path to a platform configuration file
     covers:
     - completion
     parts:
     - id: buffer
       question: completeBuffer가 버퍼 추적과 알림을 수행하는 역할, 마지막 버퍼 이후에도 필요한 명시적 요청 완료 호출을 구분하세요.
       sources:
-      - completion
+      - buffer-contract
       answer_contract:
         basis: description
         required_terms:
@@ -957,7 +1007,7 @@ sections:
     - id: lifetime
       question: completeRequest가 반환한 뒤 파이프라인 핸들러가 해당 요청에 접근할 수 있는지에 관한 계약만 설명하세요.
       sources:
-      - completion
+      - request-contract
       answer_contract:
         basis: contract
         required_terms:
@@ -966,7 +1016,7 @@ sections:
     - id: ordering
       question: completeRequest의 호출 순서와 애플리케이션에 요청을 반환하는 순서는 어떻게 다릅니까? 이 순서 계약만 설명하세요.
       sources:
-      - completion
+      - request-contract
       answer_contract:
         basis: description
         required_terms:
@@ -976,6 +1026,7 @@ sections:
       question: completeRequest의 while 루프가 맨 앞 RequestPending 요청을 만났을 때 수행하는 제어문과 결과만 설명하세요. 해당 요청을 제거하거나 취소한다고
         쓰지 마세요.
       sources:
+      - request-code
       - completion
       answer_contract:
         basis: implementation
@@ -990,6 +1041,7 @@ sections:
     - id: resume
       question: completeRequest가 대기 요청 전달을 재개하기 위해 마지막에 호출하는 함수만 설명하세요. 새 요청 생성이나 Pending 요청 제거를 추정하지 마세요.
       sources:
+      - request-code
       - completion
       answer_contract:
         basis: implementation
@@ -999,7 +1051,8 @@ sections:
     - id: thread
       question: completeBuffer와 completeRequest 호출자가 지켜야 할 CameraManager 스레드 문맥만 설명하세요. 잘못된 스레드의 결과는 추정하지 마세요.
       sources:
-      - completion
+      - request-contract
+      - buffer-contract
       answer_contract:
         basis: contract
         required_terms:
@@ -1009,7 +1062,8 @@ sections:
     - id: cancel
       question: cancelRequest의 취소·완료 처리와 completeRequest에 대한 계약 참조를 설명하세요. 두 함수를 같은 것으로 바꾸지 마세요.
       sources:
-      - completion
+      - cancel-contract
+      - request-contract
       answer_contract:
         basis: description
         required_terms:
@@ -2060,6 +2114,10 @@ sections:
       start: "\\context This function is \\threadsafe. It may only be called when the camera\n * is in the Running\
         \ state as defined in \\ref camera_operation."
       end: int Camera::queueRequest(Request *request)
+    - id: synchronization
+      file: src/libcamera/camera.cpp
+      start: Functions that affect the camera state as defined below are generally not
+      end: for ensuring their synchronization if necessary.
     covers:
     - state
     parts:
@@ -2131,18 +2189,18 @@ sections:
         - - queueRequest
         - - Running
     - id: start-state
-      question: start의 허용 상태와 호출자가 지킬 동기화 의무만 설명하세요.
+      question: start를 호출할 수 있는 카메라 상태만 설명하세요. 동기화 책임은 다음 질문에서 다룹니다.
       sources:
       - start
       answer_contract:
-        basis: contract
+        basis: description
         required_terms:
         - - start
         - - Configured
-        - - 동기화
     - id: state-synchronization
       question: Camera의 상태 변경 함수들이 스스로 동기화되는지와 호출자의 조건부 동기화 책임만 설명하세요.
       sources:
+      - synchronization
       - states
       answer_contract:
         basis: contract
@@ -2445,13 +2503,16 @@ sections:
         - - disconnected_
         - - -ENODEV
     - id: access-state
-      question: 연결 해제 오류가 아닌 상태 검사에서 -EACCES가 나오는 조건과 관찰할 값을 설명하세요.
+      question: -EACCES 반환을 이미 확인했다면 상태 범위 비교를 위해 currentState·low·high의 어떤 값을 관찰합니까? 연결 해제 검사를 통과한 뒤의 상태 검사만 조사
+        계획으로 설명하세요.
       sources:
       - access
       answer_contract:
         basis: investigation
         required_terms:
-        - - -EACCES
+        - - currentState
+        - - low
+        - - high
     - id: validation-effects
       question: CameraConfiguration::validate가 Adjusted를 돌려줄 때 변경될 수 있는 구성과 호출자가 확인할 책임을 설명하세요. 이 부작용을 관찰하려고 validate를
         재호출하지 마세요.
@@ -2499,7 +2560,7 @@ sections:
       end: \brief Create a request object for the camera
     - id: access
       file: src/libcamera/camera.cpp
-      start: int Camera::Private::isAccessAllowed(State state, bool allowDisconnected,
+      start: int Camera::Private::isAccessAllowed(State low, State high,
       end: void Camera::Private::disconnect()
     - id: validate
       file: src/libcamera/camera.cpp

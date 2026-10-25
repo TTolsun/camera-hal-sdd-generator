@@ -300,7 +300,7 @@ def generate(generator, section, previous=None):
         for part in topic['parts']:
             unit = {**topic, 'question': part['question'], '_part_id': part['id'],
                     '_max_statements': 1 if part.get('answer_contract') else 2,
-                    'sources': [s for s in topic['sources'] if s['id'] in part['sources']]}
+                    'sources': [next(s for s in topic['sources'] if s['id'] == ref) for ref in part['sources']]}
             unit.pop('answer_contract', None)
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']

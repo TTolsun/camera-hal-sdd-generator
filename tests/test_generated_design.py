@@ -587,6 +587,24 @@ def test_quote_anchor_can_have_additional_real_source_evidence():
             resolve_passages([{**row, 'evidence': invalid}], passages)
 
 
+def test_parts_preserve_focus_source_before_supporting_context(tmp_cfg, generated):
+    section, model, save, base = generated
+    topic = section['design_topics'][0]
+    extra = dict(id='context', file='context.cpp', start='void context()', end='}')
+    text = 'void context() { inspect(); }'
+    topic['sources'].append(extra)
+    model.evidence['device/stop/context'] = dict(selector=extra, commit='a'*40, file='context.cpp',
+        line=1, end_line=1, text=text, sha256=hashlib.sha256(text.encode()).hexdigest(), status='available')
+    topic['parts'] = [dict(id='focus', question='종료 호출을 설명하세요.', sources=['context', 'stop'])]
+    save()
+    class Agent:
+        def chat(self, system, user, **kwargs):
+            payload, _ = json.JSONDecoder().raw_decode(user[user.index('{'):])
+            assert list(payload['sources']) == ['context', 'stop']
+            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+    assert Generator(tmp_cfg, model, Agent()).run()
+
+
 
 
 
