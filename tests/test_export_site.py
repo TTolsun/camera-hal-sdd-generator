@@ -322,6 +322,38 @@ def test_메뉴_그룹_순서는_설정이_정한다(tmp_cfg, sample_model):
     assert items[0] == '[시작하기]'
 
 
+def test_task_sections_group_pages_and_inherit_scenarios_without_changing_manuscripts(tmp_cfg, sample_model):
+    import re
+    import yaml
+    from sdd.site_build import verify_site
+    prepare_groups(tmp_cfg, sample_model)
+    sections = tmp_cfg.sections()
+    sections[0]['nav_section'] = 'Understand <structure>'
+    sections[1]['nav_section'] = 'Trace & diagnose'
+    sections[2]['group'] = 'For Developers'
+    sections[2]['nav_section'] = 'Understand <structure>'
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': sections}), encoding='utf-8')
+    before = {p: p.read_bytes() for p in tmp_cfg.sdd_dir.rglob('*.md')}
+    out = export_site(tmp_cfg)
+    doc = (out / 'scenarios/open.html').read_text(encoding='utf-8')
+    nav = re.search(r'<nav aria-label="문서 메뉴">(.*?)</nav>', doc, re.S)[1]
+    tasks = re.findall(r'<section class="nav-section"[^>]*>(.*?)</section>', nav, re.S)
+    assert len(tasks) == 2
+    assert '<h2>Understand &lt;structure&gt;</h2>' in tasks[0]
+    assert 'device.html' in tasks[0] and 'pipe.html' in tasks[0]
+    assert 'scenarios/' not in tasks[0]
+    assert '<h2>Trace &amp; diagnose</h2>' in tasks[1]
+    assert '<details class="nav-branch" open>' in tasks[1]
+    assert 'href="index.html"' in tasks[1] and 'href="open.html" aria-current="page"' in tasks[1]
+    assert tasks[1].endswith('</details>')
+    assert doc.count('<section class="nav-section"') == 2
+    assert before == {p: p.read_bytes() for p in tmp_cfg.sdd_dir.rglob('*.md')}
+    first = (out / 'site-manifest.json').read_bytes()
+    export_site(tmp_cfg)
+    assert (out / 'site-manifest.json').read_bytes() == first
+    assert verify_site(out)['broken_links'] == 0
+
+
 def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
     prepare_groups(tmp_cfg, sample_model)
     out = export_site(tmp_cfg)
@@ -336,6 +368,25 @@ def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
     # 접기는 하위 문서만 감싼다. 같은 그룹의 다른 문서가 안으로 들어가면 안 된다.
     branch = other.split('<details class="nav-branch">')[1].split('</details>')[0]
     assert 'scenarios/open.html' in branch and 'pipe.html' not in branch
+
+
+def test_task_sections_end_before_unclassified_pages_and_reader_groups(tmp_cfg, sample_model):
+    import re
+    import yaml
+    prepare_groups(tmp_cfg, sample_model)
+    sections = tmp_cfg.sections()
+    sections[0]['nav_section'] = sections[2]['nav_section'] = 'Shared task'
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': sections}), encoding='utf-8')
+    out = export_site(tmp_cfg)
+    doc = (out / 'device.html').read_text(encoding='utf-8')
+    nav = re.search(r'<nav aria-label="문서 메뉴">(.*?)</nav>', doc, re.S)[1]
+    tasks = re.findall(r'<section class="nav-section"[^>]*>(.*?)</section>', nav, re.S)
+    assert len(tasks) == 2
+    assert all('<h2>Shared task</h2>' in task for task in tasks)
+    assert 'device.html' in tasks[0] and 'pipe.html' not in tasks[0]
+    assert 'pipe.html' in tasks[1] and 'device.html' not in tasks[1]
+    assert all('nav-group' not in task and 'scenarios/' not in task for task in tasks)
+    assert 'scenarios/index.html' in nav and '<details class="nav-branch">' in nav
 
 
 def test_소스_링크_형식은_호스트_설정을_따른다(tmp_cfg, sample_model):

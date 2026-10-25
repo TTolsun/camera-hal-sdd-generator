@@ -208,6 +208,21 @@ def _grouped(entries: list[tuple[str, str, str]], preferred: list[str] | None = 
     return [e for group in order for e in entries if e[0] == group]
 
 
+def _nav_section(rel: str, sections: dict[str, dict]) -> str:
+    """Scenario children inherit the task category of their configured index."""
+    section = sections.get(rel, sections.get(f"{_branch_of(rel)}/index.md", {}))
+    return str(section.get("nav_section") or "")
+
+
+def _sectioned(entries: list[tuple[str, str, str]], sections: dict[str, dict]) -> list[tuple[str, str, str]]:
+    # Keep the first appearance of each task within its reader group. No task
+    # names or project-specific categories belong in the common renderer.
+    buckets: dict[tuple[str, str], list[tuple[str, str, str]]] = {}
+    for entry in entries:
+        buckets.setdefault((entry[0], _nav_section(entry[2], sections)), []).append(entry)
+    return [entry for bucket in buckets.values() for entry in bucket]
+
+
 def export_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None) -> Path:
     from .document_health import enforce
     enforce(cfg)
@@ -256,6 +271,7 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     if not entries:
         raise RuntimeError("No generated Markdown pages found")
     entries = _grouped(entries, [str(g) for g in (settings.get("nav_groups") or [])])
+    entries = _sectioned(entries, sections)
     entries = _place_scenarios(entries, [sc["id"] for sc in cfg.scenarios()])
     texts = {rel: (cfg.sdd_dir / rel).read_text(encoding="utf-8") for _, _, rel in entries}
     # 사람 승인 장부. 표시가 검사 결과를 바꾸지는 않지만, 승인·미승인 상태를 구분해 보여 준다.
@@ -398,16 +414,26 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         page_title, meta, content, toc = rendered_pages[rel]
         nav = []
         last_group = None
+        last_section = None
         branch_open = False
         for nav_group, nav_title, nav_rel in entries:
+            nav_section = _nav_section(nav_rel, sections)
+            section_changed = (nav_group, nav_section) != last_section
             child = _is_child(nav_rel)
-            if not child and branch_open:
+            if branch_open and (not child or section_changed):
                 nav.append("</details>")
                 branch_open = False
+            if section_changed and last_section and last_section[1]:
+                nav.append("</section>")
             if nav_group != last_group:
                 if nav_group:
                     nav.append(f'<p class="nav-group">{html.escape(nav_group)}</p>')
                 last_group = nav_group
+            if section_changed:
+                if nav_section:
+                    nav.append(f'<section class="nav-section" aria-label="{html.escape(nav_section, quote=True)}">'
+                               f'<h2>{html.escape(nav_section)}</h2>')
+                last_section = (nav_group, nav_section)
             active = ' aria-current="page"' if nav_rel == rel else ""
             link = (f'<a{" class=" + chr(34) + "nav-sub" + chr(34) if child else ""}'
                     f' href="{_href(_html_path(nav_rel), current)}"{active}>{html.escape(nav_title)}</a>')
@@ -421,6 +447,8 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
             nav.append(link)
         if branch_open:
             nav.append("</details>")
+        if last_section and last_section[1]:
+            nav.append("</section>")
         previous_next = []
         for offset, label in [(-1, "이전"), (1, "다음")]:
             other = index + offset
