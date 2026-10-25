@@ -33,9 +33,10 @@ PROFILES = {
 PROFILES['vendor-overview'] = {
     'capabilities': '어떤 기능을 제공하며 어디까지 지원합니까?',
     'benefits': '구현 근거로 설명할 수 있는 강점과 그 조건은 무엇입니까?',
-    'integration': '연동 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?',
+}
+PROFILES['vendor-assurance'] = {
     'constraints': '지원 전제, 미지원 범위와 별도 검증할 제약은 무엇입니까?',
-    **PROFILES['vendor'],
+    'verification': '어떤 근거가 있고 무엇을 아직 검증하지 않았습니까?',
 }
 
 

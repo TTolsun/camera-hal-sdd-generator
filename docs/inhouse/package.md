@@ -83,7 +83,7 @@ docs/inhouse/package.md에서 시작해 실행 순서와 품질 합격 기준에
 환경에서 소스·제품 빌드·compile DB·생성 헤더·기준 커밋을 조사하고,
 찾을 수 없는 필수 정보만 질문해줘. 나머지 독립적인 작업은 계속해줘.
 For Vendor는 기술 채택·연동·구현 담당자, For Developer는 신입·타팀 개발자를 대상으로 해줘.
-Vendor 개요는 reader_profile: vendor-overview로 기능·근거가 있는 강점·연동 순서·지원 제약을 설명해줘.
+Vendor 문서는 제품 개요(vendor-overview), 연동 가이드(vendor), 지원 범위와 검증(vendor-assurance)으로 나누고 각각 기능·강점, 구현 계약, 지원 조건·검증 근거를 설명해줘.
 상세 계약은 vendor, 신입·타팀 개발자 문서는 developer를 사용하고, 첫 파일·진입점부터 요청 흐름,
 증상별 코드 탐색과 수정 후 확인까지 따라갈 수 있게 안내해줘.
 작성 맥락이 없는 새 에이전트에게 사이트만 주고 reader-quality.md의 읽기 과제를 수행하게 해줘.

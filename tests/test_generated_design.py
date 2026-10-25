@@ -315,7 +315,7 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     from sdd.contract_schema import configuration_errors
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
-    assert len(designs) == 8
+    assert len(designs) == 10
     for section in designs:
         assert section['design_generation'] == 'llm'
         assert not configuration_errors(section)
@@ -323,7 +323,7 @@ def test_libcamera_design_documents_have_no_fixed_answers():
         assert all('sha256' not in source for topic in section['design_topics'] for source in topic['sources'])
 
 
-@pytest.mark.parametrize('profile', ['architecture', 'vendor', 'vendor-overview'])
+@pytest.mark.parametrize('profile', ['architecture', 'vendor', 'vendor-overview', 'vendor-assurance'])
 def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg, generated, profile):
     from sdd.reader_profiles import PROFILES
     section, model, save, base_agent = generated
