@@ -331,11 +331,12 @@ def test_passage_selection_resolves_real_quote_and_source(tmp_cfg, generated):
 
 
 def test_response_schema_preserves_cpp_operators_but_rejects_html(tmp_cfg, generated):
-    import re
     from sdd.generated_design import response_schema, materialize
     section, model, _, agent = generated
-    pattern = response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text']['pattern']
-    assert re.fullmatch(pattern, '`request->_d()->cancel()`과 `std::unique_ptr<Request>`를 사용합니다.')
+    assert response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text']['type'] == 'string'
+    agent.statement['text'] = '`request->_d()->cancel()`과 `std::unique_ptr<Request>`를 사용합니다.'
+    _, resolved = materialize(model, section, {'stop': [agent.statement]})
+    assert resolved['design_topics'][0]['statements'][0]['text'] == agent.statement['text']
     agent.statement['text'] = '<script>alert(1)</script>'
     with pytest.raises(ValueError, match='HTML'):
         materialize(model, section, {'stop': [agent.statement]})
@@ -478,9 +479,13 @@ def test_quote_comparison_ignores_comment_decoration_but_preserves_negation():
 
 
 
-def test_grounding_rejection_retries_the_model_without_replacing_prose(tmp_cfg, generated):
+@pytest.mark.parametrize('setting', ['project', 'section'])
+def test_grounding_rejection_retries_the_model_without_replacing_prose(tmp_cfg, generated, setting):
     section, model, save, base = generated
-    tmp_cfg.raw.setdefault('review', {})['design_grounding'] = True
+    tmp_cfg.raw.setdefault('review', {})['design_grounding'] = setting == 'project'
+    if setting == 'section':
+        section['design_grounding'] = True
+        save()
     class Agent:
         calls = []
         checks = 0
@@ -522,6 +527,18 @@ def test_grounding_requires_bounded_verdict_reasons(tmp_cfg, reason):
         review(SimpleNamespace(cfg=tmp_cfg, agent=Agent()), {'question': 'What happens?'},
                [{'text': 'A claim', 'quote': 'Source statement', 'evidence': ['s']}],
                {'s': 'Source statement'}, 'bounded')
+
+
+def test_json_code_string_literals_survive_without_schema_character_class(tmp_cfg, generated):
+    from sdd.generated_design import response_schema
+    section, model, save, agent = generated
+    assert response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text'] == {'type': 'string'}
+    agent.statement['text'] += ' 코드 문자열의 표기는 `"diagnostic"`입니다.'
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert '`"diagnostic"`' in path.read_text(encoding='utf-8')
+    agent.statement['text'] += '\n별도 문단입니다.'
+    with pytest.raises(ValueError, match='한 문단'):
+        Generator(tmp_cfg, model, agent).run()
 
 
 

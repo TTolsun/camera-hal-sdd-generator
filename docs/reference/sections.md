@@ -49,6 +49,7 @@
 | `design_generation` | `llm`이면 필수 설계 질문의 답변을 LLM이 작성합니다. 주제마다 `covers`로 질문을 연결하고 `statements`와 고정 `sha256`은 작성하지 않습니다. |
 | `needs_human` | `true`이면 실행 확인이 필요하다는 안내를 붙입니다. |
 | `prose_heading` | 설명 절의 제목. 기본은 "구조 설명". |
+| `design_grounding` | 선택적 boolean. 이 LLM 섹션의 별도 모델 근거 대조 여부를 지정합니다. 생략하면 `review.design_grounding`을 따릅니다. 판정 통과는 사람 승인이 아닙니다. |
 
 ### 이동 안내 작성
 

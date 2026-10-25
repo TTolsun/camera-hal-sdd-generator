@@ -4,6 +4,8 @@ from .answer_contracts import configuration_errors as answer_contract_errors
 
 def configuration_errors(section: dict) -> list[str]:
     errors = []
+    if 'design_grounding' in section and type(section['design_grounding']) is not bool:
+        errors.append('design_grounding은 boolean이어야 합니다.')
     for field in ('design_requirements', 'design_topics'):
         values = section.get(field, [])
         if not isinstance(values, list) or any(not isinstance(v, dict) for v in values):

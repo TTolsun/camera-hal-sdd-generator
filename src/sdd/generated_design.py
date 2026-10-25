@@ -106,7 +106,10 @@ def response_schema(topic, passages=None):
                      # C++ expressions such as request->_d()->cancel() and
                      # std::unique_ptr<Request> need angle brackets. HTML is
                      # rejected outside code spans by materialize().
-                     'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]\\]*$'},
+                    # Let the JSON grammar escape quotes/backslashes normally.
+                    # A character-class pattern here can emit unescaped code
+                    # string literals in constrained Ollama responses.
+                    'text': {'type': 'string'},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
                      'covers': ids(topic['covers']),
                      'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
@@ -137,6 +140,8 @@ def materialize(model, section, answers):
                 raise ValueError(f"{topic['id']}: 다른 주제의 질문에 답할 수 없습니다.")
             if not isinstance(st.get('text'), str) or not st['text'].strip():
                 raise ValueError('LLM 설명이 비었습니다.')
+            if '\n' in st['text'] or '\r' in st['text']:
+                raise ValueError('각 설명은 줄바꿈 없는 한 문단이어야 합니다.')
             normalized = ' '.join(st['text'].split())
             if normalized in seen:
                 raise ValueError('LLM 설명 문단이 중복됐습니다. 각 문단은 서로 다른 내용을 설명해야 합니다.')
@@ -257,7 +262,7 @@ def generate(generator, section, previous=None):
             'Distinguish a source contract from a measured result and from a vendor obligation.'
         )
     from .design_reuse import topic_inputs, reusable
-    grounding = (cfg.raw.get('review') or {}).get('design_grounding', False)
+    grounding = section.get('design_grounding', (cfg.raw.get('review') or {}).get('design_grounding', False))
     if type(grounding) is not bool:
         raise ValueError('review.design_grounding은 boolean이어야 합니다.')
     inputs = topic_inputs(model, section, system + json.dumps({'design_grounding': grounding}))

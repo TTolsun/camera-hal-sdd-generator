@@ -823,6 +823,84 @@ sections:
       end: \var Request::Private::prepared
     covers:
     - queue
+    parts:
+    - id: registration
+      question: registerRequest의 일회성 초기화 기회와 prepared 신호 연결만 설명하세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - registerRequest
+        - - prepared
+    - id: waiting
+      question: queueRequest가 어느 목록에 요청을 넣는지와 prepare에 전달하는 시간 인자만 설명하세요. 시간 인자를 고정 처리 지연이라고 쓰지 마세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - queueRequest
+        - - waitingRequests_
+        - - 300ms
+    - id: fences
+      question: Request::Private::prepare에서 획득 펜스 대기와 선택적 timeout 인자가 하는 일을 설명하세요. 호출 지점의 수치나 고정 처리 시간을 추정하지 마세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: description
+        required_terms:
+        - - prepare
+        - - 펜스
+    - id: capacity
+      question: doQueueRequests가 장치 큐 크기를 어떤 한도와 비교하며 한도에 도달하면 반복을 어떻게 처리합니까? 이 분기만 설명하세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - doQueueRequests
+        - - maxQueuedRequestsDevice_
+        - - 중단
+          - break
+    - id: head-ready
+      question: doQueueRequests가 대기 큐 맨 앞 요청의 준비 여부를 확인하고 준비되지 않았으면 하는 일만 설명하세요. 아직 요청을 큐에서 제거한다고 쓰지 마세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - doQueueRequests
+        - - prepared_
+        - - 중단
+          - break
+    - id: cancelled
+      question: doQueueRequest가 queuedRequests_에 요청을 등록하고 순번을 부여한 뒤 cancelled_ 요청을 만났을 때의 처리만 설명하세요. 이 분기를 하드웨어 재제출로 바꾸지 마세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - doQueueRequest
+        - - completeRequest
+    - id: device-failure
+      question: doQueueRequest에서 취소되지 않은 요청의 장치 제출과 오류 반환 시 처리만 설명하세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - queueRequestDevice
+        - - cancelRequest
+    - id: device-contract
+      question: queueRequestDevice 구현자가 요청의 매개변수를 제공된 버퍼의 프레임에 적용하기 위해 지켜야 할 의무만 설명하세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - queueRequestDevice
+        - - 버퍼
   - id: completion
     title: 버퍼 완료와 요청 반환
     question: completeBuffer()의 알림·추적과 명시적인 completeRequest()를 구분하세요. completeRequest()가 장치 큐 앞의 Pending 상태를 만나면
@@ -834,6 +912,76 @@ sections:
       end: \brief Retrieve the absolute path to a platform configuration file
     covers:
     - completion
+    parts:
+    - id: buffer
+      question: completeBuffer가 버퍼 추적과 알림을 수행하는 역할, 마지막 버퍼 이후에도 필요한 명시적 요청 완료 호출을 구분하세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: description
+        required_terms:
+        - - completeBuffer
+        - - completeRequest
+    - id: lifetime
+      question: completeRequest가 반환한 뒤 파이프라인 핸들러가 해당 요청에 접근할 수 있는지에 관한 계약만 설명하세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - completeRequest
+        - - 접근
+    - id: ordering
+      question: completeRequest의 호출 순서와 애플리케이션에 요청을 반환하는 순서는 어떻게 다릅니까? 이 순서 계약만 설명하세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: description
+        required_terms:
+        - - completeRequest
+        - - 순서
+    - id: pending
+      question: completeRequest의 while 루프가 맨 앞 RequestPending 요청을 만났을 때 수행하는 제어문과 결과만 설명하세요. 해당 요청을 제거하거나 취소한다고 쓰지 마세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - RequestPending
+          - Pending
+        - - break
+          - 중단
+        reject_patterns:
+        - pattern: Pending.{0,30}제거(?:하고|하며|합니다)
+          message: Pending 분기의 break를 큐 제거로 바꾸지 마세요.
+    - id: resume
+      question: completeRequest가 대기 요청 전달을 재개하기 위해 마지막에 호출하는 함수만 설명하세요. 새 요청 생성이나 Pending 요청 제거를 추정하지 마세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - completeRequest
+        - - doQueueRequests
+    - id: thread
+      question: completeBuffer와 completeRequest 호출자가 지켜야 할 CameraManager 스레드 문맥만 설명하세요. 잘못된 스레드의 결과는 추정하지 마세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - completeBuffer
+        - - completeRequest
+        - - CameraManager
+    - id: cancel
+      question: cancelRequest의 취소·완료 처리와 completeRequest에 대한 계약 참조를 설명하세요. 두 함수를 같은 것으로 바꾸지 마세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: description
+        required_terms:
+        - - cancelRequest
+        - - completeRequest
   - id: shutdown
     title: 정지와 미완료 요청
     question: PipelineHandler::stop()과 stopDevice()를 함수 이름으로 구분하세요. stop()의 대기 목록 분리, stopDevice() 호출, 대기 요청 취소와
@@ -850,6 +998,54 @@ sections:
       end: \brief Retrieve the absolute path to a platform configuration file
     covers:
     - shutdown
+    parts:
+    - id: detach
+      question: stop이 waitingRequests_를 분리한 뒤 stopDevice를 호출하는 순서와 분리하는 이유를 소스의 주석 범위에서 설명하세요.
+      sources:
+      - stop
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - waitingRequests_
+        - - stopDevice
+    - id: pending
+      question: stopDevice가 반환한 뒤 분리해 둔 대기 요청 각각을 취소하고 doQueueRequest로 처리하는 순서만 설명하세요. 하드웨어에 재제출한다고 쓰지 마세요.
+      sources:
+      - stop
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - stopDevice
+        - - doQueueRequest
+        - - 취소
+    - id: device-duty
+      question: stopDevice 구현자가 캡처·처리를 중단하고 이미 제출된 요청을 끝내기 위해 지켜야 할 의무를 설명하세요. 가상 함수 선언의 계약을 특정 장치의 검증된 구현으로 쓰지 마세요.
+      sources:
+      - stop
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - stopDevice
+        - - 요청
+    - id: assertions
+      question: stop 마지막의 queuedRequests_·waitingRequests_ ASSERT와 요청 순번 초기화만 설명하세요. ASSERT를 미래 실행의 보장으로 확대하지 마세요.
+      sources:
+      - stop
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - queuedRequests_
+        - - waitingRequests_
+        - - ASSERT
+    - id: reentry
+      question: completeRequest 끝에서 대기 요청 전달을 재개하려고 호출하는 함수만 설명하세요. 새 요청을 생성하거나 Pending 요청을 제거한다고 추정하지 마세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: description
+        required_terms:
+        - - completeRequest
+        - - doQueueRequests
   design_requirements:
   - id: responsibility
     question: 핸들러는 어떤 객체와 장치를 만들고 관리합니까?
@@ -874,6 +1070,7 @@ sections:
   show_evidence: true
   reader_profile: vendor
   design_generation: llm
+  design_grounding: true
 - id: ipa
   group: For Vendor
   nav_section: 연동 구현
