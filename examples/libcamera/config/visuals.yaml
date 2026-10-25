@@ -935,29 +935,29 @@ sections:
       label: CameraConfiguration::validate()
       label_en: CameraConfiguration::validate()
       evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
-        quote: This function adjusts the camera configuration to the closest valid
+      - source: constraints/configure-input
+        sha256: 625bd787da81f9407ba9e746d4939d93b7172a26642429bcfd3300aa6187675f
+        quote: CameraConfiguration::validate().
     - id: invalid
       label: 'Invalid: 조정 불가'
       label_en: 'Invalid: cannot adjust'
       evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
+      - source: constraints/invalid
+        sha256: 2247db4a7b9353362f9df6c84aaa5c2810dec4eaaae4b3b36d19c57e427f5790
         quote: The configuration is invalid and can't
     - id: adjusted
       label: 'Adjusted: 변경된 구성 확인'
       label_en: 'Adjusted: inspect changed configuration'
       evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
+      - source: constraints/adjusted
+        sha256: 1305054b4a0655a883d0cef7398ff34824da06ecdbac0dfbf1f06de218bb6ebc
         quote: "The caller shall check the\n * configuration carefully."
     - id: valid
       label: 'Valid: 입력이 이미 유효'
       label_en: 'Valid: input already valid'
       evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
+      - source: constraints/valid
+        sha256: 65317fa08ab2e5bece59b520aadbadd782fc7388215000c59e43e1b1bbf87105
         quote: "The configuration was already valid and\n * hasn't been adjusted."
     edges:
     - from: validate
@@ -965,24 +965,24 @@ sections:
       label: Invalid
       label_en: Invalid
       evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
+      - source: constraints/invalid
+        sha256: 2247db4a7b9353362f9df6c84aaa5c2810dec4eaaae4b3b36d19c57e427f5790
         quote: "The configuration is invalid and can't\n * be adjusted."
     - from: validate
       to: adjusted
       label: Adjusted
       label_en: Adjusted
       evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
+      - source: constraints/adjusted
+        sha256: 1305054b4a0655a883d0cef7398ff34824da06ecdbac0dfbf1f06de218bb6ebc
         quote: "Parameters may have changed for any stream, and stream\n * configurations may have been removed."
     - from: validate
       to: valid
       label: Valid
       label_en: Valid
       evidence:
-      - source: constraints/validate
-        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
+      - source: constraints/valid
+        sha256: 65317fa08ab2e5bece59b520aadbadd782fc7388215000c59e43e1b1bbf87105
         quote: "The configuration was already valid and\n * hasn't been adjusted."
   vendor-integration:
   - id: integration-stages
@@ -996,35 +996,35 @@ sections:
       label_en: Acquire
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: The camera needs to be acquired and
     - id: configure
       label: 구성
       label_en: Configure
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: configured to prepare the camera for capture.
     - id: start
       label: 시작·요청 처리
       label_en: Start and process requests
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: "Once started the camera can\n * process requests until it is stopped."
     - id: stop
       label: 정지
       label_en: Stop
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: process requests until it is stopped.
     - id: release
       label: 사용 종료 후 해제
       label_en: Release when finished
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: camera, the camera needs to be released.
     edges:
     - from: acquire
@@ -1033,7 +1033,7 @@ sections:
       label_en: Prepare capture
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: "The camera needs to be acquired and\n * configured to prepare the camera for capture."
     - from: configure
       to: start
@@ -1041,7 +1041,7 @@ sections:
       label_en: Start after preparation
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: configured to prepare the camera for capture. Once started the camera can
     - from: start
       to: stop
@@ -1049,7 +1049,7 @@ sections:
       label_en: End capture session
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: process requests until it is stopped.
     - from: stop
       to: release
@@ -1057,15 +1057,15 @@ sections:
       label_en: When finished using the camera
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: "When an application is done with a\n * camera, the camera needs to be released."
     - from: stop
       to: start
       label: 해제 전에는 재시작 가능
       label_en: May restart before release
       evidence:
-      - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+      - source: integration/restart
+        sha256: 4af35cfde252bae9391fc55c13025c02f8bd98084b9f53807de39707feb33377
         quote: "An application may start and stop a camera multiple times as long as it is\n * not released."
   vendor-overview:
   - id: hardware-boundary

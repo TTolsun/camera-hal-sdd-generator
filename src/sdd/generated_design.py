@@ -63,7 +63,7 @@ def source_passages(sources, *, whole_source=False, scopes=None):
     for source_id, text in sources.items():
         # Keep the original code, including leading multiplication/dereference
         # operators. Comment decoration is normalized only for quote comparison.
-        chunks = [text] if whole_source else re.split(r'\n\s*\n', text)
+        chunks = [text] if whole_source or (scopes and source_id in scopes) else re.split(r'\n\s*\n', text)
         annotated[source_id] = []
         for index, chunk in enumerate(chunks):
             item = {'scope': scopes[source_id]} if scopes and source_id in scopes else {}
@@ -243,9 +243,8 @@ def generate(generator, section, previous=None):
         'Keep an outcome and its necessary caller/implementer obligation together. '
         'A required call context does not prove thread safety or ordering. '
         'A reference measurement procedure is not a test result for this product. '
-        'For example, source "the caller shall retain the buffer until completion" supports '
-        '"호출자는 완료될 때까지 버퍼를 유지해야 합니다", not "라이브러리가 버퍼 수명을 보장합니다". '
-        'Do not infer the same claims about this project from that example. Return only the requested JSON.'
+        'Preserve the scope of any/all/only together with may and negation. '
+        'Use factual content only from the current source passages. Return only the requested JSON.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
         system += (
@@ -283,8 +282,7 @@ def generate(generator, section, previous=None):
         # A focused answer can relate a guard, loop and final check. Splitting
         # those on blank lines makes one quote_id insufficient for that claim.
         scopes = {s['id']: s['scope'] for s in topic['sources'] if 'scope' in s}
-        annotated, passages = source_passages(sources, whole_source=focused_system is not None,
-                                             scopes=scopes if focused_system is not None else None)
+        annotated, passages = source_passages(sources, whole_source=focused_system is not None, scopes=scopes)
         if not passages:
             raise ValueError(f"{section['id']}/{topic['id']}: 인용 가능한 소스 구절이 없습니다.")
         request = {'reader': section.get('reader', ''), 'sources': annotated, 'topic': topic['question'],

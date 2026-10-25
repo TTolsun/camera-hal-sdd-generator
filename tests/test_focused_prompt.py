@@ -64,3 +64,6 @@ def test_whole_source_keeps_guard_and_final_check_in_one_citable_passage():
     annotated, scoped = source_passages({'stop': code}, whole_source=True, scopes={'stop': scope})
     assert annotated['stop'][0]['scope'] == scope
     assert scoped == passages  # Context never rewrites the quoted source.
+    # Standard prompts also keep a scoped contract/control flow together.
+    standard, standard_passages = source_passages({'stop': code}, scopes={'stop': scope})
+    assert standard == annotated and standard_passages == passages

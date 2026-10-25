@@ -39,6 +39,10 @@ def generated(tmp_cfg):
             self.statement = copy.deepcopy(statement)
         def chat(self, system, user, **kw):
             self.calls.append(user)
+            # A previous factual few-shot example leaked into unrelated stop
+            # answers. Policy must not supply an unrelated buffer-lifetime fact.
+            assert 'retain the buffer until completion' not in system
+            assert '호출자는 완료될 때까지 버퍼를 유지해야 합니다' not in system
             return json.dumps({'statements': [self.statement]}, ensure_ascii=False)
     return section, model, save, Agent()
 
