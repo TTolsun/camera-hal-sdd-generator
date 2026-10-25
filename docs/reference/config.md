@@ -73,6 +73,8 @@
 
 설정만으로 데이터 반출을 막지는 못합니다. 실제 연결 대상은 운영 환경에서 관리합니다.
 
+`build/prompts/calls/<실행 id>/`에는 호출별 요청·응답·receipt를 보존합니다. 재시도가 같은 출력 디렉터리를 사용해도 기존 호출 기록을 덮어쓰지 않습니다. receipt의 `transport`, `http_call`, 요청·응답 해시, 모델 설정과 공급자가 반환한 토큰 수로 HTTP 호출과 파일 가져오기를 구분합니다. 인증 헤더와 모델의 내부 추론 본문은 receipt에 넣지 않습니다. HTTP 호출 성공이나 해시 일치는 설명의 의미 정확성을 보증하지 않습니다.
+
 ### 파일로 LLM 응답 교환하기
 
 `response-bundle`은 네트워크 호출 없이 별도 LLM 실행기가 만든 응답을 같은 생성·검증 경로로 가져옵니다. 생성기는 `<해시>.request.json`을 기록하고 대응하는 `<해시>.response.json`을 읽습니다. 응답이 없으면 기존 원고를 보존하고 실패합니다. 별도 실행기가 응답을 만든 뒤 같은 생성 명령을 다시 실행하세요. 여러 주제는 순서대로 요청되므로 새 요청이 나오면 이 과정을 반복합니다. 이 방식 자체가 LLM을 실행하거나 새 응답을 자동 작성하지는 않습니다. 연결된 모델의 자동 호출에는 `ollama` 또는 `openai-compatible`을 사용합니다.
@@ -149,6 +151,11 @@ agent:
 | 키 | 기본값 | 뜻 |
 |---|---|---|
 | `compdb_cmd` | 없음 | `sdd update`가 커밋마다 **소스 루트에서** 실행할 compile DB 재생성 명령. `ndk_build.enabled`이면 실행 뒤 자동 정규화합니다. 없을 때 `ndk_build.enabled`이면 `sdd compdb`와 같은 방법(`project_dir`, `args`)으로 다시 만들고, 그 밖에는 기존 DB를 그대로 씁니다. |
+| `extract_cmd` | 없음 | 별도 빌드 환경의 추출기를 호출하는 인자 목록. **설정 디렉터리에서** 실행합니다. 생략하면 기존 내장 추출기를 사용합니다. |
+
+외부 추출 명령은 `SDD_SOURCE_COMMIT`, `SDD_SOURCE_ROOT`, `SDD_FACTS_OUTPUT` 환경 변수를 받습니다. 요청된 커밋으로 실제 추출한 facts를 임시 경로인 `SDD_FACTS_OUTPUT`에 저장해야 합니다. 종료 코드가 0이고 출력 파일이 읽히며 `meta.source_commit`이 일치할 때만 기존 facts를 교체합니다. 실패·누락·다른 커밋의 출력은 갱신을 중단하고 기존 facts를 보존합니다. 이후 변경 영향 분석과 LLM 호출·원고 검증은 동일한 `update` 경로를 사용합니다.
+
+Windows의 로컬 Ollama와 WSL의 libcamera 빌드를 연결하는 공개 예제는 [extract_wsl.py](../../examples/libcamera/extract_wsl.py)입니다. 전용 WSL 소스 checkout·Meson 빌드·Linux 설정을 인자로 받으며 원본 checkout을 복원합니다. 이 스크립트는 모델을 호출하거나 저장된 facts를 가져오지 않습니다. 사내 빌드 환경에는 해당 프로젝트의 추출 명령을 연결합니다.
 
 ## automation
 

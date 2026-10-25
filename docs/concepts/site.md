@@ -76,7 +76,7 @@ site:
   english_catalog: english.json  # 설정 파일 기준 경로. 생략하면 기존 한국어 사이트만 만든다.
 ```
 
-번역은 빌드 입력인 JSON 카탈로그에 보관합니다. 외부 번역 서비스나 LLM 연결은 필요하지 않습니다. 공통 기능은 `src/sdd/site_localization.py`에 있고, 공개 libcamera 번역은 `examples/libcamera/english.json`에 있습니다. 사내 문서에는 해당 프로젝트의 별도 카탈로그를 사용하세요.
+번역은 빌드 입력인 JSON 카탈로그에 보관하므로 사이트 열람·빌드에는 LLM 연결이 필요하지 않습니다. 새 문장 번역에는 설정한 로컬·사내 LLM을 선택적으로 사용할 수 있습니다. 공통 기능은 `src/sdd/site_localization.py`에 있고, 공개 libcamera 번역은 `examples/libcamera/english.json`에 있습니다. 사내 문서에는 해당 프로젝트의 별도 카탈로그를 사용하세요.
 
 원고를 바꾼 뒤에는 다음 순서로 번역을 갱신합니다.
 
@@ -85,6 +85,8 @@ site:
    ```powershell
    python -m sdd.site_localization --config <설정>/sdd.yaml --out <설정>/english.json
    ```
+
+새 문장을 설정된 LLM으로 번역하려면 위 명령에 `--translate`를 붙입니다. `agent.kind: ollama`이면 같은 로컬 Qwen을 호출하며, 정확히 같은 기존 문자열의 번역은 유지합니다. 새 번역은 자리표시자와 출력 형식을 검사한 뒤 카탈로그에 반영합니다. 실패하면 기존 카탈로그를 보존하며, 호출 기록은 `build/translation-prompts/calls/`에 남습니다. 자동 번역도 사람 검토 전 상태입니다.
 
 2. 카탈로그 diff와 원문을 함께 검토합니다. 기존 문장과 정확히 같은 번역은 유지되고, 새 문장은 빈 값으로 남습니다. `strings`의 값을 영어로 작성하고 `{{0}}` 같은 자리표시자는 각각 한 번씩 보존하세요. 자리표시자는 코드·링크 등 인라인 요소이며 영어 어순에 맞게 옮길 수 있습니다. 원문의 조건·예외·근거를 빠뜨리지 마세요.
 3. `export-site`와 `verify-site`를 실행합니다. 원문 페이지 집합과 SHA-256, 번역 누락, 자리표시자 보존 및 링크를 검사합니다. 실패하면 기존 배포는 보존합니다. 카탈로그 준비 명령은 지문을 갱신하므로, 단순히 실행했다는 이유로 문맥 검토를 생략해서는 안 됩니다.

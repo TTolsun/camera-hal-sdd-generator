@@ -16,6 +16,8 @@ import hashlib
 import os
 import urllib.error
 import urllib.request
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import AgentConfig
@@ -30,9 +32,14 @@ class Agent:
         self.cfg = cfg
         self.dump_dir = dump_dir
         self._counter = 0
+        self._run_id = uuid.uuid4().hex
+        self._transport_metadata = {}
 
     def chat(self, system: str, user: str, tag: str = "prompt", response_schema: dict | None = None) -> str:
         self._counter += 1
+        self._transport_metadata = {}
+        request = {'system': system, 'user': user, 'response_schema': response_schema}
+        request_hash = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if self.dump_dir:
             self.dump_dir.mkdir(parents=True, exist_ok=True)
             (self.dump_dir / f"{self._counter:03d}_{tag}.md").write_text(
@@ -54,6 +61,27 @@ class Agent:
         if self.dump_dir:
             # 검증 전 원문. 왜 needs-review 가 됐는지 볼 때 필요하다.
             (self.dump_dir / f"{self._counter:03d}_{tag}.response.md").write_text(text + "\n", encoding="utf-8")
+            # Immutable per-invocation receipts distinguish real HTTP calls from
+            # imported responses, even when the caller retries into the same dir.
+            archive = self.dump_dir / 'calls' / self._run_id
+            archive.mkdir(parents=True, exist_ok=True)
+            prefix = archive / f'{self._counter:03d}'
+            prefix.with_suffix('.request.json').write_text(
+                json.dumps(request, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
+            prefix.with_suffix('.response.txt').write_text(text, encoding='utf-8', newline='\n')
+            receipt = {
+                'schema': 1, 'tag': tag, 'completed_at': datetime.now(timezone.utc).isoformat(),
+                'transport': kind, 'model': self.cfg.model,
+                'http_call': kind in ('ollama', 'openai-compatible'),
+                'request_sha256': request_hash,
+                'response_sha256': hashlib.sha256(text.encode()).hexdigest(),
+                'settings': {k: getattr(self.cfg, k) for k in (
+                    'temperature', 'think', 'num_ctx', 'max_output_tokens')},
+                'provider': self._transport_metadata,
+                'human_review': 'pending',
+            }
+            prefix.with_suffix('.receipt.json').write_text(
+                json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         return text
 
     def ping(self) -> str:
@@ -113,6 +141,10 @@ class Agent:
         if response_schema:
             body['format'] = response_schema
         data = self._post(f"{self.cfg.base_url}/api/chat", body)
+        self._transport_metadata = {k: data[k] for k in (
+            'model', 'created_at', 'done', 'done_reason', 'total_duration',
+            'load_duration', 'prompt_eval_count', 'prompt_eval_duration',
+            'eval_count', 'eval_duration') if k in data}
         try:
             content = str(data["message"]["content"]).strip()
             if not content and data.get('done_reason') == 'length':
@@ -131,6 +163,7 @@ class Agent:
         if self.cfg.max_output_tokens:
             body["max_tokens"] = self.cfg.max_output_tokens
         data = self._post(f"{self.cfg.base_url}/v1/chat/completions", body)
+        self._transport_metadata = {k: data[k] for k in ('model', 'id', 'usage') if k in data}
         try:
             return str(data["choices"][0]["message"]["content"]).strip()
         except (KeyError, IndexError, TypeError) as e:
