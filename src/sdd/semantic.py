@@ -20,7 +20,19 @@ def only_uncertainty(paragraph: str) -> bool:
     사실을 하나라도 주장하는 문단은 그대로 인용을 요구한다.
     """
     sentences = [x for x in re.split(r"(?<=[.!?])\s+|\n", paragraph) if x.strip()]
-    return bool(sentences) and all(_UNCERTAIN.search(x) for x in sentences)
+    def uncertain(sentence):
+        # An absence in a branch guard is a concrete condition, not a claim
+        # that the behavior is unknown ("파일이 존재하지 않으면 ... 반환합니다").
+        matches = [m for m in _UNCERTAIN.finditer(sentence)
+                   if not re.match(r'\s*(?:으면|면|을\s*때|는\s*경우)', sentence[m.end():])]
+        if not matches:
+            return False
+        # A caller's obligation can follow an independently stated operation.
+        # Do not erase that factual clause merely because the same sentence
+        # ends with "호출자는 ... 확인해야 합니다". It still requires evidence.
+        clauses = re.split(r'(?:하고|하며|되고|되며)[,\s]+', sentence)
+        return all(_UNCERTAIN.search(clause) for clause in clauses if clause.strip())
+    return bool(sentences) and all(uncertain(x) for x in sentences)
 
 
 def known_names(model: KnowledgeModel) -> set[str]:

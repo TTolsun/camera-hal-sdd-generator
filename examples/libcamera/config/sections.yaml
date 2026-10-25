@@ -138,6 +138,7 @@ sections:
   design_topics:
   - id: constraints
     title: 지원 조건과 제약
+    required_terms: [Invalid, Adjusted, Valid]
     question: CameraConfiguration::validate의 Invalid·Adjusted·Valid를 구분하고 Adjusted이면 스트림 파라미터 변경이나 스트림 삭제가 가능해 호출자가
       다시 확인해야 함을 설명하세요. generateConfiguration의 roles와 하드웨어 지원 한계, configure의 검증된 입력과 실패 계약을 설명하세요. 특정 해상도·동시 스트림
       수·성능을 보장하지 마세요.

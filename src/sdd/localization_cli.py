@@ -3,21 +3,14 @@ from pathlib import Path
 import json
 from .site_localization import source_hash, display_strings, KOREAN
 
-def main() -> None:
-    """Explicit catalog refresh; new strings remain empty until translated."""
-    import argparse
+def prepare_catalog(config, destination: Path, *, translate: bool = False) -> dict:
+    """Prepare through the same path in CLI runs and isolated pipeline trials."""
     import copy
     import tempfile
-    from .config import load
     from .export_site import _render_site
-    parser = argparse.ArgumentParser(description='Prepare an English catalog for translation review')
-    parser.add_argument('--config', type=Path, required=True)
-    parser.add_argument('--out', type=Path, required=True)
-    parser.add_argument('--translate', action='store_true', help='Translate new text with the configured agent; human review stays pending')
-    args = parser.parse_args()
-    cfg = copy.deepcopy(load(args.config))
+    cfg = copy.deepcopy(config)
     cfg.raw.setdefault('site', {}).pop('english_catalog', None)
-    previous = json.loads(args.out.read_text(encoding='utf-8')) if args.out.exists() else {}
+    previous = json.loads(destination.read_text(encoding='utf-8')) if destination.exists() else {}
     cfg.build_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.translation-', dir=cfg.build_dir) as temporary:
         out = _render_site(cfg, Path(temporary))
@@ -34,9 +27,24 @@ def main() -> None:
                 units.update(v.strip() for v in [item['term'], item['definition'], *item['names']] if KOREAN.search(v))
     catalog = {'schema': 1, 'review_status': 'human-review-pending', 'pages': pages,
                'strings': {key: previous.get('strings', {}).get(key, '') for key in sorted(units)}}
-    if args.translate:
+    if translate:
         from .translation import translate_missing
         catalog = translate_missing(cfg, catalog)
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print(f'Prepared {len(pages)} pages and {len(units)} strings. Review all changed source context before publishing.')
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    return {'pages': len(pages), 'strings': len(units),
+            'missing_translations': sum(not value for value in catalog['strings'].values()),
+            'human_review': 'pending'}
+
+
+def main() -> None:
+    """Explicit catalog refresh; new strings remain empty until translated."""
+    import argparse
+    from .config import load
+    parser = argparse.ArgumentParser(description='Prepare an English catalog for translation review')
+    parser.add_argument('--config', type=Path, required=True)
+    parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--translate', action='store_true', help='Translate new text with the configured agent; human review stays pending')
+    args = parser.parse_args()
+    result = prepare_catalog(load(args.config), args.out, translate=args.translate)
+    print(f'Prepared {result["pages"]} pages and {result["strings"]} strings. Review all changed source context before publishing.')

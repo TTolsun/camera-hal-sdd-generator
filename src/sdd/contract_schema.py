@@ -41,6 +41,10 @@ def generated_errors(section):
     ids = [r['id'] for r in requirements]
     covered = []
     for topic in topics:
+        terms = topic.get('required_terms', [])
+        if (not isinstance(terms, list) or any(not isinstance(t, str) or not t.strip() for t in terms)
+                or len(terms) != len(set(terms))):
+            errors.append(f"{topic['id']}: required_terms는 중복 없는 소스 식별자 문자열 목록이어야 합니다.")
         covers = topic.get('covers')
         if not isinstance(covers, list) or not covers or any(not isinstance(c, str) for c in covers):
             errors.append(f"{topic['id']}: covers는 비어 있지 않은 문자열 목록이어야 합니다.")

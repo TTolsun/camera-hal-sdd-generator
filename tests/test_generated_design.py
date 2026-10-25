@@ -396,6 +396,44 @@ def test_quote_comparison_ignores_comment_decoration_but_preserves_negation():
     assert quote_text('It must access the request after completion.') not in quote_text(source)
 
 
+def test_doxygen_paragraphs_are_individual_verbatim_passages():
+    from sdd.generated_design import source_passages, quote_text
+    source = ' * Return Valid for an unchanged configuration.\n *\n * The caller must check an Adjusted configuration.\n'
+    annotated, passages = source_passages({'status': source})
+    assert len(passages) == 2
+    assert all(quote_text(chunk) in quote_text(source) for _, chunk in passages.values())
+    assert 'Adjusted' not in passages['status:0'][1]
+    assert 'Adjusted' in passages['status:1'][1]
+    assert len(annotated['status']) == 2
+
+
+def test_source_terms_require_actual_input_and_generated_explanation(tmp_cfg, generated):
+    section, model, save, agent = generated
+    topic = section['design_topics'][0]
+    topic['required_terms'] = ['cancelPending']
+    save()
+    with pytest.raises(ValueError, match='필수 소스 용어'):
+        Generator(tmp_cfg, model, agent).run()
+    agent.statement['text'] += ' 호출하는 함수의 이름은 `cancelPending()`입니다.'
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert verify(model, section, path.read_text(encoding='utf-8'))['status'] == 'documented'
+    original = path.read_bytes()
+    topic['required_terms'] = ['inventedTerm']
+    save()
+    before = len(agent.calls)
+    with pytest.raises(ValueError, match='현재 소스 발췌에 없습니다'):
+        Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == before and path.read_bytes() == original
+
+
+@pytest.mark.parametrize('terms', ['text', [''], ['stop', 'stop'], [{}]])
+def test_invalid_required_source_terms_are_configuration_errors(generated, terms):
+    from sdd.contract_schema import configuration_errors
+    section, _, _, _ = generated
+    section['design_topics'][0]['required_terms'] = terms
+    assert any('required_terms' in error for error in configuration_errors(section))
+
+
 def test_libcamera_design_documents_have_no_fixed_answers():
     from pathlib import Path
     from sdd.contract_schema import configuration_errors
