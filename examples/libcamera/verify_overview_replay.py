@@ -83,6 +83,9 @@ def verify(root, *, complete=True):
             _, published = manuscript(root / entry['file'])
             _, restored = manuscript(root / proof['stages']['restored']['pages'][page]['file'])
             assert published['answers'] == restored['answers']
+            deployed = root.parent / 'docs' / f'{page}.md'
+            if deployed.is_file():
+                assert deployed.read_text(encoding='utf-8') == (root / entry['file']).read_text(encoding='utf-8')
     print(f'Verified {len(calls)} actual Ollama response records across {len(proof["stages"])} stages.')
     print('This is a controlled 32 -> 16 -> 32 source mutation test, not an upstream change or human approval.')
 
