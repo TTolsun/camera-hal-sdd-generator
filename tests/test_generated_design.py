@@ -280,6 +280,17 @@ def test_passage_selection_resolves_real_quote_and_source(tmp_cfg, generated):
     assert path.read_bytes() == original
 
 
+def test_response_schema_preserves_cpp_operators_but_rejects_html(tmp_cfg, generated):
+    import re
+    from sdd.generated_design import response_schema, materialize
+    section, model, _, agent = generated
+    pattern = response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text']['pattern']
+    assert re.fullmatch(pattern, '`request->_d()->cancel()`과 `std::unique_ptr<Request>`를 사용합니다.')
+    agent.statement['text'] = '<script>alert(1)</script>'
+    with pytest.raises(ValueError, match='HTML'):
+        materialize(model, section, {'stop': [agent.statement]})
+
+
 def test_exhausted_thinking_budget_preserves_manuscript(tmp_cfg, generated, monkeypatch):
     from sdd.llm import Agent
     section, model, save, fake = generated

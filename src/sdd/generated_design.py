@@ -102,7 +102,10 @@ def response_schema(topic, passages=None):
         return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'quote_id', 'covers', 'kind'], 'properties': {
-                     'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]<>\\]*$'},
+                     # C++ expressions such as request->_d()->cancel() and
+                     # std::unique_ptr<Request> need angle brackets. HTML is
+                     # rejected outside code spans by materialize().
+                     'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]\\]*$'},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
                      'covers': ids(topic['covers']),
                      'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
