@@ -58,12 +58,9 @@ sections:
         '
       end: '.. graphviz:: mali-c55.dot'
     parts:
-    - id: problem
-      question: libcamera가 대상으로 하는 Linux 카메라 하드웨어와 이미지 처리의 복잡성을 두 문장 이내로 설명하세요.
-      sources:
-      - introduction
-    - id: approach
-      question: libcamera가 이 하드웨어와 알고리즘을 공통 방식으로 제어하도록 제공하는 기능을 설명하세요. 제품 성능이나 지원 기종은 추정하지 마세요.
+    - id: value
+      question: Linux 카메라의 하드웨어 구성과 이미지 제어 알고리즘을 libcamera가 공통 방식으로 다루는 가치와 접근 방식을 두 문단 이내로 설명하세요. 같은 이점을 반복하거나 제품 성능을 추정하지
+        마세요.
       sources:
       - introduction
   - id: capabilities
@@ -102,7 +99,15 @@ sections:
     - id: queue
       file: src/libcamera/pipeline_handler.cpp
       start: \fn PipelineHandler::queueRequest()
-      end: void PipelineHandler::queueRequest(Request *request)
+      end: in the same order they have been queued by calling this function.
+    - id: failure
+      file: src/libcamera/pipeline_handler.cpp
+      start: If a Request fails during the preparation phase
+      end: fails in queuing the request to the hardware the request is cancelled.
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: Keeping track of queued requests ensures automatic completion of all requests
+      end: signalled by the pipeline handler using the completeRequest() function.
     parts:
     - id: preparation
       question: PipelineHandler::queueRequest()의 공통 구현이 준비된 요청을 장치에 전달하는 순서와 개수 제한을 설명하세요.
@@ -111,15 +116,11 @@ sections:
     - id: failure
       question: PipelineHandler::queueRequest() 계약에서 준비 실패와 장치 제출 실패가 발생한 요청을 어떻게 처리하는지 설명하세요.
       sources:
-      - queue
-    - id: tracking
-      question: PipelineHandler::queueRequest()의 공통 구현이 정지 시 취소할 요청을 어떻게 추적하는지 설명하세요.
-      sources:
-      - queue
+      - failure
     - id: completion
-      question: PipelineHandler::queueRequest()로 제출한 요청이 완료됐을 때 파이프라인 구현자가 호출해야 하는 완료 통지 함수만 설명하세요.
+      question: 요청 추적의 정지 시 동작과 completeRequest()로 완료를 통지할 책임을 각각 한 문장으로 설명하세요. 두 계약 사이의 호출 순서나 완료 후 추가 통지를 추정하지 마세요.
       sources:
-      - queue
+      - completion
   - id: queue-limit
     title: 장치 요청 한도와 대기 큐
     question: PipelineHandler 생성자의 장치 요청 한도 기본값과 장치 큐·대기 큐의 구분을 설명하세요.
