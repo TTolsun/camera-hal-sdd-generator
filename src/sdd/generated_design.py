@@ -57,16 +57,17 @@ def quote_text(text):
     return ' '.join(re.sub(r'^\s*\*(?: |$)', '', text, flags=re.M).split())
 
 
-def source_passages(sources):
+def source_passages(sources, *, whole_source=False, scopes=None):
     """Send each source once, with stable local IDs for verbatim paragraphs."""
     annotated, passages = {}, {}
     for source_id, text in sources.items():
         # Keep the original code, including leading multiplication/dereference
         # operators. Comment decoration is normalized only for quote comparison.
-        chunks = re.split(r'\n\s*\n', text)
+        chunks = [text] if whole_source or (scopes and source_id in scopes) else re.split(r'\n\s*\n', text)
         annotated[source_id] = []
         for index, chunk in enumerate(chunks):
-            item = {'text': chunk}
+            item = {'scope': scopes[source_id]} if scopes and source_id in scopes else {}
+            item['text'] = chunk
             if len(quote_text(chunk)) >= 12:
                 key = f'{source_id}:{index}'
                 item['quote_id'] = key
@@ -100,6 +101,10 @@ def resolve_passages(statements, passages):
 def response_schema(topic, passages=None):
     def ids(values):
         return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
+    # A documented prohibition is a contract, not an admission of missing
+    # knowledge. Required contract answers already reject limitation-only
+    # replies; constrain their label instead of asking the model to guess it.
+    kinds = ['behavior'] if topic.get('answer_contract', {}).get('basis') == 'contract' else ['behavior', 'limitation']
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'quote_id', 'covers', 'kind'], 'properties': {
                      # C++ expressions such as request->_d()->cancel() and
@@ -108,7 +113,7 @@ def response_schema(topic, passages=None):
                      'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]\\]*$'},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
                      'covers': ids(topic['covers']),
-                     'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
+                     'kind': {'type': 'string', 'enum': kinds}}}
     return {'type': 'object', 'additionalProperties': False, 'required': ['statements'],
             'properties': {'statements': {'type': 'array', 'maxItems': topic.get('_max_statements', 8), 'items': statement}}}
 
@@ -183,6 +188,8 @@ def normalize_answer(model, statements, sources):
     if not isinstance(statements, list):
         return
     names = source_names(model, sources)
+    template = re.compile(r'\b(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*<[^<>\n;]+>')
+    templates = set(template.findall('\n'.join(sources)))
     token = re.compile(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*(?:\(\))?')
     def mark(match):
         word = match[0]
@@ -191,6 +198,10 @@ def normalize_answer(model, statements, sources):
     for statement in statements:
         if isinstance(statement, dict) and isinstance(statement.get('text'), str):
             parts = re.split(r'(`[^`]*`)', statement['text'])
+            marked = ''.join(part if i % 2 else template.sub(
+                lambda m: f'`{m[0]}`' if m[0] in templates else m[0], part)
+                for i, part in enumerate(parts))
+            parts = re.split(r'(`[^`]*`)', marked)
             statement['text'] = ''.join(part if i % 2 else token.sub(mark, part) for i, part in enumerate(parts))
 
 
@@ -227,6 +238,8 @@ def generate(generator, section, previous=None):
     if cfg.agent.kind == 'dry-run':
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
+    from . import focused_prompt
+    focused_system = focused_prompt.system_prompt(cfg)
     from .prompting import compose_system_prompt
     system = compose_system_prompt(cfg, structured=True) + (
         '\n\nFor this call, override earlier Markdown, citation and two-paragraph instructions. '
@@ -253,7 +266,10 @@ def generate(generator, section, previous=None):
             'Distinguish a source contract from a measured result and from a vendor obligation.'
         )
     from .design_reuse import topic_inputs, reusable
-    inputs = topic_inputs(model, section, system)
+    if focused_system is not None:
+        system = focused_system
+    policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
+    inputs = topic_inputs(model, section, policy)
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
     reused = list(answers)
     units = []
@@ -274,7 +290,8 @@ def generate(generator, section, previous=None):
             units.append(unit)
     for topic in units:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
-        annotated, passages = source_passages(sources)
+        scopes = {s['id']: s['scope'] for s in topic['sources'] if 'scope' in s}
+        annotated, passages = source_passages(sources, whole_source=focused_system is not None, scopes=scopes)
         if not passages:
             raise ValueError(f"{section['id']}/{topic['id']}: 인용 가능한 소스 구절이 없습니다.")
         request = {'reader': section.get('reader', ''), 'sources': annotated, 'topic': topic['question'],
@@ -297,12 +314,16 @@ def generate(generator, section, previous=None):
             'Return only a JSON object with a statements array. Return an empty array if the source cannot answer.\n'
         )
         base_user = instruction + json.dumps(request, ensure_ascii=False)
+        if focused_system is not None:
+            base_user = focused_prompt.user_prompt(topic, annotated,
+                request['requirements'] if '_part_id' not in topic else None)
         user = base_user
         last = None
         from . import answer_cache
         options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
         cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
-                                             {'request': options, 'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
+                                             {'request': options, 'policy': policy,
+                                              'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
         cached = answer_cache.read(cached_path)
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:

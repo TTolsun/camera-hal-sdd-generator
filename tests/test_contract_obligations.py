@@ -35,3 +35,12 @@ def test_conditional_absence_is_a_branch_not_missing_evidence():
     assert review(text, KnowledgeModel(), set()) == ['설명 문단에 근거 인용이 없습니다.']
     assert review(text + ' `ipa_manager.h:40`.', KnowledgeModel(), {'ipa_manager.h:40'}) == []
     assert only_uncertainty('모듈이 존재하지 않으면 어떤 값을 반환하는지 알 수 없습니다.')
+
+
+def test_option_absence_does_not_deny_enclosing_class():
+    from sdd.facts.model import KnowledgeModel, ClassInfo
+    model = KnowledgeModel()
+    model.classes['ns::Benchmark'] = ClassInfo('ns::Benchmark')
+    text = '`Benchmark` 생성자는 설정이 존재하지 않을 경우 초기값을 유지합니다 `x.h:1`.'
+    assert review(text, model, {'x.h:1'}) == []
+    assert review('`Benchmark` 클래스는 존재하지 않습니다 `x.h:1`.', model, {'x.h:1'})

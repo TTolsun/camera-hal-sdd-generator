@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "complete": false,
+  "published": false,
+  "generator_commit": "3f7206ffcab85804f6d139e5e2186c9287fc53cc",
+  "source_commit": "7f28df94ac957df8b4d57561ac7f1bc83782241f",
+  "note": "First failed actual sdd update attempt. The baseline manuscripts were not yet fully accepted; this is not a completed mutation/restoration replay. Subsequent retries must be recorded separately.",
+  "extraction": {
+    "fresh_wsl_build": true,
+    "translation_units": 300,
+    "parse_errors": 0,
+    "classes": 1514
+  },
+  "changed_files": [
+    "include/libcamera/internal/ipa_manager.h",
+    "include/libcamera/internal/software_isp/benchmark.h",
+    "src/ipa/ipu3/algorithms/lsc.cpp",
+    "src/ipa/ipu3/ipa_context.h",
+    "src/libcamera/camera.cpp",
+    "src/libcamera/converter/converter_dw100.cpp",
+    "src/libcamera/converter/converter_dw100_vertexmap.cpp",
+    "src/libcamera/pipeline_handler.cpp"
+  ],
+  "affected_sections": [
+    "vendor-assurance",
+    "vendor-integration",
+    "pipeline-handler",
+    "ipa",
+    "ipu3-lsc",
+    "ipu3-lsc-flow",
+    "rkisp1-dewarp",
+    "camera-model",
+    "request-lifecycle",
+    "scenarios",
+    "component-index"
+  ],
+  "sections": {
+    "vendor-assurance": {
+      "status": "documented",
+      "findings": []
+    },
+    "vendor-integration": {
+      "status": "incomplete",
+      "findings": [
+        "vendor-integration/boundary: LLM 답변 검증 실패: boundary: 답변 계약 검사: 필수 용어 누락: 등록"
+      ]
+    },
+    "pipeline-handler": {
+      "status": "documented",
+      "findings": []
+    },
+    "ipa": {
+      "status": "documented",
+      "findings": []
+    },
+    "ipu3-lsc-flow": {
+      "status": "incomplete",
+      "findings": [
+        "ipu3-lsc-flow/setup: LLM 답변 검증 실패: Expecting ',' delimiter: line 4 column 55 (char 80)"
+      ]
+    },
+    "rkisp1-dewarp": {
+      "status": "documented",
+      "findings": []
+    },
+    "camera-model": {
+      "status": "documented",
+      "findings": []
+    },
+    "request-lifecycle": {
+      "status": "incomplete",
+      "findings": [
+        "request-lifecycle/configuration-failure: LLM 답변 검증 실패: configuration-failure: 답변 계약 검사: 필수 용어 누락: clear"
+      ]
+    }
+  },
+  "update_state": {
+    "schema": 1,
+    "last_done": "",
+    "failed": {
+      "7f28df94ac957df8b4d57561ac7f1bc83782241f": "설계 항목 검증 실패:\nvendor-integration: vendor-integration/boundary: LLM 답변 검증 실패: boundary: 답변 계약 검사: 필수 용어 누락: 등록\nipu3-lsc-flow: ipu3-lsc-flow/setup: LLM 답변 검증 실패: Expecting ',' delimiter: line 4 column 55 (char 80)\nrequest-lifecycle: request-lifecycle/configuration-failure: LLM 답변 검증 실패: configuration-failure: 답변 계약 검사: 필수 용어 누락: clear"
+    },
+    "baseline": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f"
+  },
+  "ollama_http_responses": 64,
+  "wsl_checkout_restored_to": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f"
+}

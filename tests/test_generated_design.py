@@ -138,6 +138,16 @@ def test_response_bundle_generates_then_rejects_changed_source(tmp_cfg, generate
         export_site(tmp_cfg)
 
 
+def test_required_contract_schema_does_not_mislabel_prohibitions_as_unknown():
+    from sdd.generated_design import response_schema
+    topic = {'covers':['lifetime'], 'answer_contract':{'basis':'contract'}}
+    schema = response_schema(topic, {'source:0': ('source', 'shall not access the request')})
+    assert schema['properties']['statements']['items']['properties']['kind']['enum'] == ['behavior']
+    assert 'minItems' not in schema['properties']['statements']  # No evidence can still return no answer.
+    topic['answer_contract']['basis'] = 'description'
+    assert response_schema(topic)['properties']['statements']['items']['properties']['kind']['enum'] == ['behavior','limitation']
+
+
 @pytest.mark.parametrize('bad', [0, 9, True, '3'])
 def test_invalid_part_answer_budget_fails_before_generation(tmp_cfg, generated, bad):
     section, model, save, agent = generated
@@ -587,3 +597,24 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
     with pytest.raises(ValueError, match='필수 독자 질문'):
         Generator(tmp_cfg, model, agent).run()
     assert not agent.calls and path.read_bytes() == original
+
+
+def test_source_backed_cpp_template_typography_preserves_model_words():
+    from sdd.generated_design import normalize_answer
+    from sdd.facts.model import KnowledgeModel
+    text = 'std::vector<double> 값을 반환합니다. <script>와 std::evil<script>는 근거에 없습니다.'
+    answers = [{'text': text}]
+    normalize_answer(KnowledgeModel(), answers, ['std::vector<double> positions;'])
+    assert answers[0]['text'] == '`std::vector<double>` 값을 반환합니다. <script>와 std::evil<script>는 근거에 없습니다.'
+    assert answers[0]['text'].replace('`', '') == text
+    once = answers[0]['text']
+    normalize_answer(KnowledgeModel(), answers, ['std::vector<double> positions;'])
+    assert answers[0]['text'] == once
+
+
+def test_unqualified_source_template_is_code_not_html():
+    from sdd.generated_design import normalize_answer
+    from sdd.facts.model import KnowledgeModel
+    answers = [{'text': 'Matrix<double, 3, 3> 행렬을 읽습니다.'}]
+    normalize_answer(KnowledgeModel(), answers, ['Matrix<double, 3, 3> cm;'])
+    assert answers[0]['text'] == '`Matrix<double, 3, 3>` 행렬을 읽습니다.'

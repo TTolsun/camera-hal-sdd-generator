@@ -14,6 +14,14 @@ def sha(text):
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
 
+def request_sources(user):
+    if user.startswith('근거:\n'):
+        sources, _ = json.JSONDecoder().raw_decode(user[len('근거:\n'):])
+        return sources
+    request, _ = json.JSONDecoder().raw_decode(user[user.index('{"reader":'):])
+    return request['sources']
+
+
 def manuscript(path):
     text = path.read_text(encoding='utf-8')
     match = re.fullmatch(r'---\n(.*?)\n---\n(.*)', text, re.S)
@@ -62,8 +70,8 @@ def verify(root, *, complete=True):
                     assert answer['text'].replace('`', '') == raw['text'].replace('`', '')
                     assert answer['covers'] == raw['covers'] and answer['kind'] == raw['kind']
                     user = call['request']['user']
-                    request, _ = json.JSONDecoder().raw_decode(user[user.index('{"reader":'):])
-                    passage = next((sid, p['text'].strip()) for sid, parts in request['sources'].items()
+                    sources = request_sources(user)
+                    passage = next((sid, p['text'].strip()) for sid, parts in sources.items()
                                    for p in parts if p.get('quote_id') == raw['quote_id'])
                     assert answer['evidence'] == [passage[0]] and answer['quote'] == passage[1]
             for expectation in entry.get('expectations', []):

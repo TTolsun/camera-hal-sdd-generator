@@ -84,7 +84,9 @@ def review(text: str, model: KnowledgeModel, supplied: set[str], *, source_ident
             candidate = resolve(name)
             tail = sentence.split(f'`{name}`', 1)[1].split('`', 1)[0]
             absence = bool(re.search(r"존재하지 않|추출되지 않|포함되지 않|포함되어 있지 않", tail))
-            if absence and candidate:
+            # Conditional absence of an option is not a claim that the named
+            # enclosing class is missing from facts.
+            if absence and candidate and not _ABSENCE_CONDITION.search(tail):
                 findings.append(f"현재 facts에 있는 클래스를 없다고 서술했습니다: {name}")
             if "::" in name and not candidate and name not in model.functions and name not in (source_identifiers or set()):
                 # Qualified methods and enumerators may not be class entities.

@@ -480,8 +480,8 @@ sections:
   design_topics:
   - id: integration
     title: 연동 순서와 책임
-    question: 애플리케이션 연동은 acquire, configure, start, 요청 처리, stop, release 순서로 설명하세요. 하드웨어 구현자는 match에서 장치를 확보하고 Camera를
-      등록하는 별도 책임이 있습니다. match 성공·실패 계약을 지키고 상태 변경 함수의 동기화 책임이 호출자에게 있음을 설명하세요. 상세 함수 구현을 모두 반복하지 마세요.
+    question: 애플리케이션 연동은 acquire, configure, start, 요청 처리, stop, release 순서로 설명하세요. 하드웨어 구현자는 match에서 장치를 확보하고 Camera를 등록하는
+      별도 책임이 있습니다. match 성공·실패 계약을 지키고 상태 변경 함수의 동기화 책임이 호출자에게 있음을 설명하세요. 상세 함수 구현을 모두 반복하지 마세요.
     covers:
     - integration
     sources:
@@ -495,23 +495,37 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \fn PipelineHandler::match(DeviceEnumerator *enumerator)
       end: \brief Search and acquire a MediaDevice
+    - id: release
+      file: src/libcamera/camera.cpp
+      start: \brief Release exclusive access to the camera device
+      end: int Camera::release()
     parts:
     - id: application
       question: 애플리케이션이 카메라로 촬영을 시작하기 전에 수행해야 하는 확보·구성·시작 순서만 설명하세요. 사용 후 처리는 별도 질문에서 다룹니다.
-      sources: [camera]
+      sources:
+      - camera
     - id: application-finish
-      question: 애플리케이션이 카메라 사용을 마친 뒤 정지와 해제를 어떤 순서로 수행해야 하는지 원문에서 읽어 설명하세요. 사용 전 순서는 반복하지 마세요.
-      sources: [camera]
+      question: release()의 실행 중 해제 오류 계약을 근거로, 사용을 마친 애플리케이션이 실행 중인 카메라를 해제하기 전에 무엇을 해야 하는지 설명하세요. 오류 식별자와 호출자 의무를 함께 적으세요.
+      sources:
+      - release
       answer_contract:
         basis: contract
-        required_terms: [[정지, stop], [해제, release]]
+        required_terms:
+        - - 정지
+          - stop
+        - - 해제
+          - release
         reject_patterns: []
     - id: synchronization
       question: 카메라 상태를 바꾸는 함수들 사이의 동기화 책임이 누구에게 있는지 원문에서 찾아 한 문단으로 설명하세요. 함수 호출 순서는 반복하지 마세요.
-      sources: [camera]
+      sources:
+      - camera
       answer_contract:
         basis: contract
-        required_terms: [[동기화], [호출자, 애플리케이션]]
+        required_terms:
+        - - 동기화
+        - - 호출자
+          - 애플리케이션
         reject_patterns: []
     - id: hardware
       question: 새 하드웨어의 match 구현자가 장치를 모두 확보한 경우 Camera 생성·등록까지 수행해야 하는 책임만 설명하세요. 성공·실패의 상세 반환 계약은 다음 절에서 다룹니다.
@@ -534,7 +548,7 @@ sections:
       end: \brief Search and acquire a MediaDevice
     - id: registration
       file: src/libcamera/pipeline_handler.cpp
-      start: create one or multiple Camera instances and register them with the
+      start: This function is the main entry point of the pipeline handler.
       end: '* camera manager.'
     parts:
     - id: acquisition
@@ -546,7 +560,8 @@ sections:
         required_terms:
         - - acquire
     - id: registration
-      question: match 구현자가 Camera 인스턴스를 생성하고 카메라 매니저에 등록해야 하는 의무만 설명하세요.
+      question: match 구현자가 카메라 매니저에 등록해야 할 객체는 무엇입니까? 등록 의무를 명시하세요. 영문 동사 create를 함수 이름으로 바꾸지 마세요.
+      max_statements: 2
       sources:
       - registration
       answer_contract:
@@ -699,18 +714,23 @@ sections:
         reject_patterns: []
       max_statements: 2
     - id: completion
-      question: 마지막 버퍼의 completeBuffer 호출만으로 요청이 완료되는지 설명하고, 호출자가 별도로 completeRequest를 호출해야 하는 의무를 적으세요.
-      max_statements: 2
+      question: 요청 완료를 알리기 위해 호출자가 명시적으로 호출해야 하는 함수와 그 의무만 설명하세요.
       sources:
       - completion
       answer_contract:
         basis: contract
         required_terms:
-        - - completeBuffer
         - - completeRequest
         reject_patterns:
         - pattern: (스레드\s*안전성|스레드\s*안전|동기화|반환\s*순서).{0,30}보장(?:합니다|된다|됩니다|한다)
           message: 호출 스레드 의무만으로 안전성·순서·동기화를 보장한다고 추론하지 마세요.
+    - id: buffer-notification
+      question: completeBuffer의 버퍼 완료 알림과 요청 완료의 차이를 설명하세요. 마지막 버퍼의 완료가 요청 완료를 자동으로 통지하는지 원문을 읽으세요.
+      sources: [completion]
+      answer_contract:
+        basis: description
+        required_terms: [[completeBuffer]]
+        reject_patterns: []
   - id: algorithm
     title: IPA 모듈 선택과 실패 조건
     question: createIPA()의 모듈 검색, 서명 판정, 생성된 프록시 유효성 검사를 각각 설명하세요. nullptr를 반환하는 분기와 실행 방식을 선택하는 분기를 구분하세요.
@@ -724,6 +744,7 @@ sections:
     parts:
     - id: module
       question: createIPA의 module 호출에 쓰는 이름·최소/최대 버전과 모듈을 찾지 못했을 때 nullptr 반환 분기만 설명하세요.
+      max_statements: 2
       sources:
       - selection
       answer_contract:
@@ -734,7 +755,8 @@ sections:
           - 널 포인터
         reject_patterns: []
     - id: signature
-      question: Threaded/Isolated 프록시를 선택하는 현재 if 조건 전체를 읽고 isSignatureValid가 평가되는 조건과 각 분기를 설명하세요. 서명 실패를 즉시 생성 실패로 바꾸지 마세요.
+      question: 프록시를 선택하는 if 조건식 전체를 코드 그대로 적고 참·거짓 분기의 Threaded/Isolated 선택을 설명하세요. 상수 조건이 있다면 isSignatureValid 호출의 단락 평가도 설명하세요. 서명 실패를 즉시 생성 실패로 바꾸지 마세요.
+      max_statements: 3
       sources:
       - selection
       answer_contract:
@@ -746,6 +768,7 @@ sections:
         reject_patterns: []
     - id: proxy
       question: 생성한 프록시의 isValid 검사 결과에 따른 오류 기록·nullptr 반환과 성공 반환만 설명하세요.
+      max_statements: 2
       sources:
       - selection
       answer_contract:
@@ -765,6 +788,18 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Stop capturing from all running streams and cancel pending requests
       end: \brief Determine if the camera has any requests pending
+    - id: device-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::stopDevice()
+      end: "*/"
+    - id: waiting
+      file: src/libcamera/pipeline_handler.cpp
+      start: while (!waitingRequests.empty())
+      end: ASSERT(data->queuedRequests_.empty());
+    - id: final-check
+      file: src/libcamera/pipeline_handler.cpp
+      start: ASSERT(data->queuedRequests_.empty());
+      end: "\n}"
     parts:
     - id: order
       question: 공통 stop 구현에서 waitingRequests_를 옮긴 뒤 stopDevice를 호출하는 순서와 재등록 방지 이유를 설명하세요. 장치 구현의 계약을 검증된 실행 결과로
@@ -780,8 +815,9 @@ sections:
     - id: device
       question: stopDevice 선언의 계약만 설명하세요. 장치 구현자가 캡처·요청 처리를 중단하고 남은 요청을 취소하여 오류 상태로 완료해야 하는 의무입니다. 구체 장치 코드나 실행
         결과는 이 발췌에 없습니다.
+      max_statements: 2
       sources:
-      - stop
+      - device-contract
       answer_contract:
         basis: contract
         required_terms:
@@ -790,14 +826,22 @@ sections:
         - - 오류
         reject_patterns: []
     - id: waiting
-      question: stopDevice 뒤 대기 요청의 cancel·doQueueRequest 경로, 순번과 queuedRequests_ 사용, 마지막 ASSERT 검사와 requestSequence_
-        초기화를 설명하세요. ASSERT를 실제 장치 종료 검증 결과로 해석하지 마세요.
-      sources:
-      - stop
+      question: stopDevice 호출 뒤 분리한 대기 요청을 처리하는 반복문에서 cancel과 doQueueRequest를 호출하는 순서를 설명하세요. doQueueRequest의 내부 동작은 이 발췌에서 추정하지 마세요.
+      sources: [waiting]
+      max_statements: 2
       answer_contract:
         basis: implementation
         required_terms:
         - - doQueueRequest
+        - - cancel
+        reject_patterns: []
+    - id: final-check
+      question: stop 끝에서 두 큐를 검사하는 ASSERT와 requestSequence_ 초기화를 설명하세요. ASSERT를 실기기 시험 결과로 해석하지 마세요.
+      sources: [final-check]
+      max_statements: 3
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - ASSERT
         - - requestSequence_
         reject_patterns: []
@@ -812,11 +856,15 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Signal request completion
       end: void PipelineHandler::completeRequest
+    - id: completion-order
+      file: src/libcamera/pipeline_handler.cpp
+      start: This function ensures that requests will be returned to the application in
+      end: without any ordering constraint.
     parts:
     - id: lifetime
       question: completeRequest 반환 뒤 요청 접근에 관한 파이프라인 구현자의 금지 의무를 설명하세요. 애플리케이션 소유권을 추정하지 마세요.
       sources:
-      - completion
+      - completion-order
       answer_contract:
         basis: contract
         required_terms:
@@ -824,16 +872,22 @@ sections:
         - - 반환
         reject_patterns: []
     - id: order
-      question: 완료된 요청을 completeRequest에 전달하는 순서와 애플리케이션에 반환하는 제출 순서를 구분하고 CameraManager 호출 의무를 설명하세요. 이는 API 계약이며
-        실기기 시험 결과가 아닙니다.
+      question: 완료된 요청을 completeRequest에 전달하는 순서와 애플리케이션에 반환하는 제출 순서를 구분하세요. 이는 API 문서의 설명이며 실기기 시험 결과가 아닙니다.
+      max_statements: 2
       sources:
-      - completion
+      - completion-order
       answer_contract:
-        basis: contract
+        basis: description
         required_terms:
         - - completeRequest
-        - - CameraManager
         - - 순서
+        reject_patterns: []
+    - id: completion-context
+      question: completeRequest의 API 주석에 적힌 호출 스레드 문맥만 설명하세요.
+      sources: [completion]
+      answer_contract:
+        basis: description
+        required_terms: [[CameraManager]]
         reject_patterns: []
   reader_profile: vendor
   routes:
@@ -937,8 +991,8 @@ sections:
     - queue
     parts:
     - id: registration
-      question: registerRequest()에서 요청의 prepared 신호에 어떤 처리를 연결하는지 설명하세요. 이 함수가 실제로 수행하는 작업만 설명하세요.
-      max_statements: 3
+      question: registerRequest()가 어떤 신호와 어떤 콜백 호출을 연결하는지 신호명과 함수명을 포함하여 한 문장으로 설명하세요. doQueueRequests 내부 역할은 설명하지 마세요.
+      max_statements: 1
       sources:
       - registration
       answer_contract:
@@ -954,8 +1008,7 @@ sections:
       - enqueue
       - prepare
     - id: queue-limit
-      question: doQueueRequests()에서 queuedRequests_ 크기와 maxQueuedRequestsDevice_를 비교한 if 조건이 참이면 수행하는 작업을 설명하세요. break를 요청 취소라고 바꾸지 마세요.
-      max_statements: 2
+      question: doQueueRequests의 장치 큐 한도 if 조건식을 원문 코드 그대로 적고, 참일 때 실행하는 제어문 이름을 함께 한 문장으로 설명하세요. 비교 연산자를 자연어로 바꾸지 마세요.
       sources:
       - drain
       answer_contract:
@@ -963,6 +1016,7 @@ sections:
         required_terms:
         - - queuedRequests_
         - - maxQueuedRequestsDevice_
+        - - break
         reject_patterns:
         - pattern: '크거나|이상|>='
           message: 코드의 비교 연산자를 정확히 읽으세요. 같음과 크거나 같음을 바꾸지 마세요.
@@ -1028,11 +1082,15 @@ sections:
     - id: device-contract
       file: src/libcamera/pipeline_handler.cpp
       start: \fn PipelineHandler::stopDevice()
-      end: \brief Determine if the camera has any requests pending
+      end: "*/"
     - id: dispatch
       file: src/libcamera/pipeline_handler.cpp
       start: void PipelineHandler::doQueueRequest(Request *request)
       end: \brief Queue prepared requests to the device
+    - id: final-check
+      file: src/libcamera/pipeline_handler.cpp
+      start: ASSERT(data->queuedRequests_.empty());
+      end: "\n}"
     covers:
     - shutdown
     parts:
@@ -1048,10 +1106,10 @@ sections:
       - stop
       - dispatch
     - id: final-check
-      question: stop() 끝의 ASSERT가 검사하는 두 큐와 requestSequence_ 초기화를 설명하세요. ASSERT 검사를 향후 동작에 대한 보장으로 해석하지 마세요.
+      question: 이 발췌는 PipelineHandler::stop() 함수 끝부분입니다. ASSERT가 검사하는 두 큐와 requestSequence_ 초기화를 설명하세요. 다음 함수 이름을 주어로 쓰지 마세요.
       max_statements: 3
       sources:
-      - stop
+      - final-check
       answer_contract:
         basis: implementation
         required_terms: [[ASSERT], [requestSequence_]]
@@ -1149,6 +1207,32 @@ sections:
       end: '} /* namespace libcamera */'
     covers:
     - selection
+    parts:
+    - id: paths
+      question: IPAManager 생성자의 IPA 검색 경로 순서를 한 문장으로 설명하고, 빌드 경로를 추가하는 if 조건식을 코드 그대로 별도 문장에 쓰세요. 사용자 경로 검색 결과를 설치 여부 판정으로 해석하지 마세요.
+      sources: [modules]
+      max_statements: 3
+    - id: match
+      question: IPAModule::match의 return 식을 코드 그대로 인용하고 이름과 최소·최대 버전 범위 조건을 설명하세요. 버전 조건을 빠뜨리지 마세요.
+      sources: [match]
+    - id: module
+      question: createIPA에서 module 호출에 전달하는 이름·버전과 모듈이 없을 때의 반환값을 설명하세요.
+      sources: [selection]
+    - id: proxy-choice
+      question: createIPA의 프록시 선택 if 조건식 전체를 코드 그대로 적고 참·거짓 분기의 Threaded/Isolated 선택을 설명하세요. 상수 조건이 있다면 isSignatureValid 호출의 단락 평가도 설명하세요.
+      sources: [selection]
+      max_statements: 3
+      answer_contract:
+        basis: implementation
+        required_terms: [[isSignatureValid], [Threaded], [Isolated]]
+        reject_patterns: []
+    - id: validity
+      question: createIPA에서 생성된 프록시의 isValid 검사 실패와 성공 시 각각 무엇을 반환하는지 설명하세요.
+      sources: [selection]
+    - id: signature
+      question: isSignatureValid 함수 자체가 서명 검증을 생략하고 false를 반환하는 조건과 서명 검증 결과를 설명하세요. createIPA의 바깥쪽 if 조건과 구분하세요.
+      sources: [signature]
+      max_statements: 3
   - id: execution
     title: 스레드와 프로세스 경계
     question: Threaded 프록시의 sync·async 메서드 실행 경계와 Isolated 프록시의 worker·IPC 경계를 구분하세요. worker 경로 검색과 메시지 전달이 모든 콜백의
@@ -1444,37 +1528,91 @@ sections:
       sources: [context]
   - id: setup
     title: 초기화와 크롭 설정
-    question: init()의 센서 activeArea, 그리드 최대 셀 수, 셀 크기 반올림과 공통 알고리즘 전달값을 설명하세요. configure()의 analogCrop과 정규화 샘플 위치를
-      설명하고 샘플 수 경계는 검증 결과로 단정하지 마세요.
+    question: init()의 센서 activeArea, 그리드 최대 셀 수, 셀 크기 반올림과 공통 알고리즘 전달값을 설명하세요. configure()의 analogCrop과 정규화 샘플 위치를 설명하고 샘플 수
+      경계는 검증 결과로 단정하지 마세요.
     sources:
     - id: setup
       file: src/ipa/ipu3/algorithms/lsc.cpp
       start: static constexpr unsigned int kMaxNumHCells
       end: void Lsc::queueRequest(
+    - id: positions
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: std::vector<double> Lsc::calculatePositions
+      end: '
+
+        }'
+    - id: grid-values
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: static constexpr unsigned int kMaxNumHCells
+      end: int Lsc::init
+    - id: cell-size
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: unsigned int cellWidth =
+      end: ';
+
+
+        '
+    - id: rounding
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: unsigned int minCellWidth =
+      end: ';
+
+
+        '
+    - id: cell-count
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: numHCells_ =
+      end: ';
+
+
+        '
     covers:
     - setup
     parts:
     - id: grid
-      question: kMaxNumHCells와 kMaxNumVCells의 현재 선언 값, activeArea에서 셀 크기를 계산하고 bit_ceil로 반올림하는 과정을 설명하세요. 주석 예시 숫자와 현재 선언을 구분하세요.
-      max_statements: 4
-      sources: [setup]
+      question: kMaxNumHCells와 kMaxNumVCells의 현재 선언 값을 각각 적으세요.
+      max_statements: 1
+      sources:
+      - grid-values
+    - id: cell-size
+      question: cellWidth와 cellHeight에 대입하는 식을 원문 코드 그대로 각각 인용하고, 해당 값을 저장한다고만 설명하세요. 추가 해석이나 구현 의무를 덧붙이지 마세요.
+      sources:
+      - cell-size
+      max_statements: 2
+    - id: rounding
+      question: minCellWidth와 minCellHeight를 초기화할 때 각각 어느 변수에 어떤 함수를 호출하는지 설명하세요. 비트 개수로 해석하지 마세요.
+      sources:
+      - rounding
+      max_statements: 2
+    - id: cell-count
+      question: numHCells_와 numVCells_에 대입하는 식을 원문 코드 그대로 각각 인용하고, 해당 값을 저장한다고만 설명하세요. 추가 해석이나 구현 의무를 덧붙이지 마세요.
+      sources:
+      - cell-count
+      max_statements: 2
     - id: algorithm
-      question: Lsc::init이 공통 lscAlgo_.init에 전달하는 채널 키, 샘플 수, 센서 크기를 설명하세요.
+      question: Lsc::init이 공통 lscAlgo_.init에 전달하는 채널 키, 샘플 수, 센서 크기를 설명하세요. 채널 키는 문자열 리터럴의 따옴표 없이 이름만 적으세요.
       max_statements: 3
-      sources: [setup]
+      sources:
+      - setup
     - id: positions
-      question: calculatePositions에서 dimension이 1보다 클 때 첫 원소와 마지막 원소의 값을 식으로 계산하여 설명하세요. 마지막 인덱스는 dimension - 1입니다. 경계값 검증이 구현되어 있다고 추정하지 마세요.
-      sources: [setup]
+      question: calculatePositions의 반복문 시작 인덱스와 종료 조건, 각 원소에 대입하는 식을 코드 식별자를 포함하여 설명하세요. dimension의 유효성을 검사한다고 추정하지 마세요.
+      sources:
+      - positions
       answer_contract:
         basis: implementation
-        required_terms: [['0'], ['1']]
+        required_terms:
+        - - '0'
+        - - dimension
+        - - '1'
         reject_patterns:
-        - pattern: '1(?:\.0)?\s*미만'
+        - pattern: 1(?:\.0)?\s*미만
           message: 마지막 원소는 (dimension - 1) / (dimension - 1)입니다. 닫힌 끝값을 제외하지 마세요.
+      max_statements: 3
     - id: crop
       question: Lsc::configure에서 analogCrop과 xPos 및 yPos가 공통 알고리즘에 전달되는 경로를 설명하세요.
       max_statements: 3
-      sources: [setup]
+      sources:
+      - setup
   - id: request
     title: 첫 프레임과 요청별 제어
     question: frame 번호와 LensShadingCorrectionEnable 포함 여부에 따른 첫 프레임 enabled/update 설정을 설명하세요. 공통 queueRequest()로
@@ -2220,8 +2358,8 @@ sections:
   - id: configuration-failure
     title: 구성 실패를 좁히는 순서
     question: 구성 실패를 처음 조사하는 개발자가 src/libcamera/camera.cpp의 Camera::configure에서 상태 검사, validate 결과, 실제 PipelineHandler::configure
-      반환, stream 연결 결과 순서로 원인을 좁히도록 설명하세요. 각 단계에서 읽을 값과 다음 분기, 실제 반환 오류 코드와 각각의 원인을 구분하세요. API 주석과 구현의 반환값이 다르면 실제 분기를 우선하세요. validate를
-      디버거에서 재호출하지 말고 원래 호출의 결과를 관찰하세요. validate 후보 목록을 모두 실행하지 말고 실제 config 동적 타입과 pipe_의 구체 구현을 호출 스택에서 확인하도록 안내하세요.
+      반환, stream 연결 결과 순서로 원인을 좁히도록 설명하세요. 각 단계에서 읽을 값과 다음 분기, 실제 반환 오류 코드와 각각의 원인을 구분하세요. API 주석과 구현의 반환값이 다르면 실제 분기를 우선하세요.
+      validate를 디버거에서 재호출하지 말고 원래 호출의 결과를 관찰하세요. validate 후보 목록을 모두 실행하지 말고 실제 config 동적 타입과 pipe_의 구체 구현을 호출 스택에서 확인하도록 안내하세요.
       이는 소스 기반 조사 계획이며 실기기 검증 명령이나 복구 보장이 아닙니다.
     covers:
     - configuration-failure
@@ -2230,9 +2368,13 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Configure the camera prior to capture
       end: \brief Create a request object for the camera
+    - id: access-entry
+      file: src/libcamera/camera.cpp
+      start: int Camera::configure(CameraConfiguration *config)
+      end: 'for (auto &cfg : *config)'
     - id: access
       file: src/libcamera/camera.cpp
-      start: int Camera::Private::isAccessAllowed(State state, bool allowDisconnected,
+      start: int Camera::Private::isAccessAllowed(State low, State high,
       end: void Camera::Private::disconnect()
     - id: validate
       file: src/libcamera/camera.cpp
@@ -2240,41 +2382,71 @@ sections:
       end: \brief Retrieve a reference to a stream configuration
     - id: validation-branch
       file: src/libcamera/camera.cpp
-      start: 'if (config->validate() != CameraConfiguration::Valid) {'
-      end: 'std::ostringstream msg'
+      start: if (config->validate() != CameraConfiguration::Valid) {
+      end: std::ostringstream msg
+    - id: stream-failure
+      file: src/libcamera/camera.cpp
+      start: Stream *stream = cfg.stream();
+      end: stream->configuration_ = cfg;
     parts:
     - id: access
-      question: Camera::configure 진입 시 isAccessAllowed에 넘기는 상태 범위와 실패 시 반환식을 설명하세요. isAccessAllowed 구현에서 연결 해제와 상태 불일치의 실제 오류 식별자를 읽으세요.
-      max_statements: 4
-      sources: [configure, access]
-    - id: validation
-      question: Camera::configure는 validate 결과가 Valid가 아닌 경우 어떤 오류 식별자를 반환합니까? 조건과 Camera::configure의 반환값을 함께 한 문장으로 적으세요.
-      sources: [validation-branch]
+      question: Camera::configure가 isAccessAllowed에 전달하는 두 상태 상수와 실패 시 반환식을 설명하세요. isAccessAllowed의 연결 해제 if 조건식을 전체 코드 그대로
+        인용하고, 상태 범위 검사와 반환 오류 식별자를 설명하세요. allowDisconnected 조건을 생략하거나 반대로 설명하지 마세요.
+      max_statements: 3
+      sources:
+      - access-entry
+      - access
       answer_contract:
         basis: implementation
-        required_terms: [[Valid], [EINVAL]]
+        required_terms:
+        - - allowDisconnected
+        - - ENODEV
+        - - isAccessAllowed
         reject_patterns:
-        - pattern: 'validate\(\).{0,30}-EINVAL.{0,10}반환'
+        - pattern: 플래그를 무시
+          message: 연결 해제 분기의 전체 조건식을 대조하세요.
+    - id: validation
+      question: Camera::configure는 validate 결과가 Valid가 아닌 경우 어떤 오류 식별자를 반환합니까? 조건과 Camera::configure의 반환값을 함께 한 문장으로 적으세요.
+      sources:
+      - validation-branch
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - Valid
+        - - EINVAL
+        reject_patterns:
+        - pattern: validate\(\).{0,30}-EINVAL.{0,10}반환
           message: validate의 Status와 Camera::configure의 오류 코드를 구분하세요.
     - id: validation-status
       question: CameraConfiguration::validate()의 반환 상태와 구성 조정 가능성을 설명하세요. errno 정수 반환과 구분하세요.
-      sources: [validate]
+      sources:
+      - validate
     - id: pipeline
-      question: Camera::configure가 PipelineHandler::configure를 invokeMethod로 호출한 뒤 ret를 검사하는 분기만 설명하세요. 반환값이 변환되는지 그대로 반환되는지 실제 코드를 읽으세요. 특정 장치 오류 코드를 추정하지 마세요.
+      question: Camera::configure가 PipelineHandler::configure를 invokeMethod로 호출한 뒤 ret를 검사하는 분기만 설명하세요. 반환값이 변환되는지 그대로 반환되는지
+        실제 코드를 읽으세요. 특정 장치 오류 코드를 추정하지 마세요.
       max_statements: 2
-      sources: [configure]
+      sources:
+      - configure
       answer_contract:
         basis: implementation
-        required_terms: [[ret]]
+        required_terms:
+        - - ret
         reject_patterns:
         - pattern: EINVAL
           message: 이 질문은 파이프라인 호출 결과 ret 분기만 다룹니다. 다른 분기의 EINVAL을 옮기지 마세요.
     - id: stream
-      question: 파이프라인 configure 성공 뒤 cfg.stream()이 null인 분기에서 activeStreams_에 호출하는 연산과 반환값을 설명하세요. 컨테이너 타입이나 물리 장치 장애를 추정하지 마세요.
-      sources: [configure]
+      question: Camera::configure의 if (!stream) 블록이 반환하기 전에 어떤 컨테이너 연산을 하고 어떤 오류를 반환합니까? 두 동작을 설명하고 컨테이너 타입이나 물리 장치 장애를 추정하지
+        마세요.
+      sources:
+      - stream-failure
+      max_statements: 2
       answer_contract:
         basis: implementation
-        required_terms: [[clear], [EINVAL]]
+        required_terms:
+        - - clear
+          - 비우고
+          - 비웁니다
+        - - EINVAL
         reject_patterns: []
   - id: journey
     title: 제출에서 완료까지

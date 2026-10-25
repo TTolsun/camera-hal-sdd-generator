@@ -97,6 +97,7 @@ agent:
 | `require_citations` | `true` | 모델이 쓴 모든 `파일:줄` 인용이 facts에 있어야 통과합니다. |
 | `max_retries` | `1` | 검사 실패 시 재시도 횟수. 넘으면 `status: needs-review`로 남깁니다. |
 | `design_revision` | `false` | 필수 설계 답변마다 소스와 초안을 다시 보내 수정 답변을 받습니다. 호출 수가 늘며 입력 한도 초과 시 근거를 생략하지 않고 실패합니다. 모델의 재검토는 사람 승인이 아닙니다. |
+| `design_prompt` | `standard` | `focused`이면 프로젝트의 `focused-design-system.md`로 짧은 문단 작성 지침을 사용합니다. 집필 규칙은 계속 적용되며 규칙·질문·근거 변경 시 이월과 캐시를 무효화합니다. 구조·계약 검사를 생략하지 않습니다. |
 | `answer_cache` | `false` | Ollama의 검사 통과한 설계 답변을 같은 커밋의 재시도에서 재사용합니다. 소스 커밋·질문·발췌·프롬프트·모델 설정·모델 digest가 같아야 하며, 재사용 응답도 다시 검사합니다. 모델 digest를 조회할 수 없으면 캐시를 사용하지 않습니다. 강제 재호출이 필요하면 끕니다. |
 | `coverage_triage.enabled` | `false` | 사람이 승인하지 않은 범위 검토 항목을 모델이 먼저 판정합니다. |
 | `coverage_triage.pass_gate` | `false` | `true`이면 "범위 밖" 판정이 관문을 통과시킵니다. YAML 불리언만 받습니다. |
