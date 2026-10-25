@@ -932,7 +932,8 @@ sections:
     question: validate()의 Invalid·Adjusted·Valid는 무엇을 뜻하며, Adjusted이면 호출자는 무엇을 다시 확인해야 합니까?
     prompt: 네 노드는 CameraConfiguration::validate·Invalid·Adjusted·Valid입니다. 가장 중요한 답은 Adjusted에서 호출자가 할 일입니다. Adjusted 노드의
       label에는 호출자·확인·가능을 모두 넣고 label_en에는 caller·check·may를 모두 넣으세요. 파라미터 변경이나 스트림 삭제는 가능성이며 호출자는 조정된 구성을 주의하여 확인해야 합니다. 영어에서도
-      이 가능성과 의무를 보존하세요. 제공한 원문에 없는 보장은 추가하지 마세요.
+      이 가능성과 의무를 보존하세요. 제공한 원문에 없는 보장은 추가하지 마세요. 반환 관계의 선에는 함수 머리와 해당 반환 상태가 함께 포함된 valid 발췌의 인용 단위를 사용하세요. 상태 이름만 있는 발췌로
+      함수와 상태의 관계를 추정하지 마세요.
     generation: llm
     max_nodes: 4
     required_symbols:

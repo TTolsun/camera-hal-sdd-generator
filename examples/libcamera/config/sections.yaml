@@ -274,7 +274,7 @@ sections:
         end: '*/'
     - id: valid
       file: src/libcamera/camera.cpp
-      start: '\retval CameraConfiguration::Valid '
+      start: \fn CameraConfiguration::validate()
       end: hasn't been adjusted.
       scope:
         start: \fn CameraConfiguration::validate()
@@ -582,6 +582,7 @@ sections:
         - - 일반적으로
           - 대체로
           - 보통
+          - 일반적인 원칙
         - - 필요
         reject_patterns:
         - pattern: 아래에?\s*정의|as defined below
@@ -964,17 +965,17 @@ sections:
         - pattern: 생성
           message: 이 질문은 호출식의 세 인자를 설명합니다. module 내부 동작은 별도 근거와 질문으로 다룹니다.
     - id: module-lookup
-      question: IPAManager::module은 modules_에 보관된 모듈 중 어떤 조건에 맞는 항목을 반환합니까? 반복문과 match 조건에 근거하여 조회 동작을 한 문장으로 설명하세요.
+      question: IPAManager::module의 반복문에서 match가 처음 참이 된 경우 무엇을 반환합니까? 그때 반복을 계속하는지도 반환문에 근거하여 한 문장으로 설명하세요.
       sources:
       - module-lookup
       answer_contract:
         basis: implementation
         required_terms:
-        - - modules_
+        - - module
         - - match
-        - - name
-        - - minVersion
-        - - maxVersion
+        - - 반환
+        - - 첫
+          - 처음
     - id: module-missing
       question: createIPA에서 module 호출로 모듈을 찾지 못한 분기의 반환값을 한 문장으로 설명하세요.
       sources:
@@ -1229,8 +1230,8 @@ sections:
     - responsibility
   - id: configuration
     title: 구성의 입력과 검증 책임
-    question: generateConfiguration()의 roles 입력·반환값·호출 문맥과 configure()의 검증 전제·setStream 책임·반환값을 구분해 설명하세요. API 계약의 의무와 허용을
-      원문의 강도로 옮기세요.
+    question: generateConfiguration()의 roles 입력·반환값·호출 문맥과 configure()의 검증 전제·setStream 책임·반환값을 구분해 설명하세요. API 계약의
+      의무와 허용을 원문의 강도로 옮기세요.
     sources:
     - id: configuration
       file: src/libcamera/pipeline_handler.cpp
@@ -1240,8 +1241,9 @@ sections:
     - configuration
   - id: queue
     title: 요청 준비와 장치 큐
-    question: registerRequest(), queueRequest(), doQueueRequests(), doQueueRequest(), queueRequestDevice()의 역할을 구분하세요. 대기
-      큐 추가와 준비 순서, prepare(300ms)의 인자 의미, 대기 큐의 맨 앞 준비 여부와 장치 큐 한도에 따른 반복 중단, 큐 제거와 전달 순서, 취소·장치 오류 분기를 설명하세요.
+    question: registerRequest(), queueRequest(), doQueueRequests(), doQueueRequest(), queueRequestDevice()의 역할을
+      구분하세요. 대기 큐 추가와 준비 순서, prepare(300ms)의 인자 의미, 대기 큐의 맨 앞 준비 여부와 장치 큐 한도에 따른 반복 중단, 큐 제거와 전달 순서, 취소·장치 오류 분기를
+      설명하세요.
     sources:
     - id: queue
       file: src/libcamera/pipeline_handler.cpp
@@ -1255,8 +1257,8 @@ sections:
     - queue
   - id: completion
     title: 버퍼 완료와 요청 반환
-    question: completeBuffer()의 알림·추적과 명시적인 completeRequest()를 구분하세요. completeRequest()가 장치 큐 앞의 Pending 상태를 만나면 반복을 어떻게 처리하는지,
-      애플리케이션 반환 순서와 핸들러 완료 호출 순서, 대기 요청 전달 재개, 호출 스레드와 반환 후 접근 규칙을 설명하세요.
+    question: completeBuffer()의 알림·추적과 명시적인 completeRequest()를 구분하세요. completeRequest()가 장치 큐 앞의 Pending 상태를 만나면
+      반복을 어떻게 처리하는지, 애플리케이션 반환 순서와 핸들러 완료 호출 순서, 대기 요청 전달 재개, 호출 스레드와 반환 후 접근 규칙을 설명하세요.
     sources:
     - id: completion
       file: src/libcamera/pipeline_handler.cpp
@@ -1266,8 +1268,9 @@ sections:
     - completion
   - id: shutdown
     title: 정지와 미완료 요청
-    question: PipelineHandler::stop()과 stopDevice()를 함수 이름으로 구분하세요. stop()의 대기 목록 분리, stopDevice() 호출, 대기 요청 취소와 doQueueRequest()
-      처리 순서를 설명하세요. doQueueRequest()를 하드웨어에 다시 제출한다고 설명하지 마세요. stopDevice() 구현의 완료 의무와 최종 대기 요청 검사를 구분하세요.
+    question: PipelineHandler::stop()과 stopDevice()를 함수 이름으로 구분하세요. stop()의 대기 목록 분리, stopDevice() 호출, 대기 요청 취소와
+      doQueueRequest() 처리 순서를 설명하세요. doQueueRequest()를 하드웨어에 다시 제출한다고 설명하지 마세요. stopDevice() 구현의 완료 의무와 최종 대기 요청
+      검사를 구분하세요.
     sources:
     - id: stop
       file: src/libcamera/pipeline_handler.cpp
@@ -1341,7 +1344,8 @@ sections:
   design_topics:
   - id: selection
     title: 모듈 탐색과 격리 조건
-    question: 모듈 검색 경로와 우선순위, 이름·버전 매칭, createIPA()의 모듈 없음·프록시 무효 분기를 설명하세요. 서명 실패는 isolated 선택인지 nullptr 반환인지 코드를 대조하세요.
+    question: 모듈 검색 경로와 우선순위, 이름·버전 매칭, createIPA()의 모듈 없음·프록시 무효 분기를 설명하세요. 서명 실패는 isolated 선택인지 nullptr 반환인지 코드를
+      대조하세요.
     sources:
     - id: modules
       file: src/libcamera/ipa_manager.cpp
@@ -1363,8 +1367,8 @@ sections:
     - selection
   - id: execution
     title: 스레드와 프로세스 경계
-    question: Threaded 프록시의 sync·async 메서드 실행 경계와 Isolated 프록시의 worker·IPC 경계를 구분하세요. worker 경로 검색과 메시지 전달이 모든 콜백의 실행 스레드를
-      보장한다고 추정하지 마세요.
+    question: Threaded 프록시의 sync·async 메서드 실행 경계와 Isolated 프록시의 worker·IPC 경계를 구분하세요. worker 경로 검색과 메시지 전달이 모든 콜백의
+      실행 스레드를 보장한다고 추정하지 마세요.
     sources:
     - id: threaded
       file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
@@ -1386,8 +1390,8 @@ sections:
     - execution
   - id: interface
     title: 프레임 입력과 결과 인터페이스
-    question: IPU3와 RKISP1 인터페이스에 선언된 요청·통계 입력 및 paramsComputed·metadataReady 결과를 각각 함수 이름과 인자에서 설명하세요. [async] 메서드와 EventInterface를
-      구분하고 선언만으로 실행 타이밍을 보장하지 마세요.
+    question: IPU3와 RKISP1 인터페이스에 선언된 요청·통계 입력 및 paramsComputed·metadataReady 결과를 각각 함수 이름과 인자에서 설명하세요. [async]
+      메서드와 EventInterface를 구분하고 선언만으로 실행 타이밍을 보장하지 마세요.
     sources:
     - id: ipu3-api
       file: include/libcamera/ipa/ipu3.mojom
@@ -1427,8 +1431,8 @@ sections:
     - lifetime
   - id: errors
     title: 생성과 IPC 실패
-    question: createIPA의 nullptr 반환 조건, 모듈 로딩·심볼 검색 오류, Isolated 프록시 유효성 및 IPC sendSync의 타임아웃·오류 반환을 구분하세요. 서명 판정을 생성 실패로
-      바꾸지 마세요.
+    question: createIPA의 nullptr 반환 조건, 모듈 로딩·심볼 검색 오류, Isolated 프록시 유효성 및 IPC sendSync의 타임아웃·오류 반환을 구분하세요. 서명 판정을
+      생성 실패로 바꾸지 마세요.
     sources:
     - id: selection
       file: include/libcamera/internal/ipa_manager.h
@@ -1450,8 +1454,8 @@ sections:
     - errors
   - id: tuning
     title: 보정 전 튜닝 파일
-    question: RKISP1과 Mali-C55의 센서별 파일 이름과 fallback 요청, IPAProxy::configurationFile()의 대체 파일 검색, 두 uncalibrated.yaml의 알고리즘
-      목록을 설명하세요. 목록에 없는 보정 알고리즘이 활성화된다고 추정하지 마세요.
+    question: RKISP1과 Mali-C55의 센서별 파일 이름과 fallback 요청, IPAProxy::configurationFile()의 대체 파일 검색, 두 uncalibrated.yaml의
+      알고리즘 목록을 설명하세요. 목록에 없는 보정 알고리즘이 활성화된다고 추정하지 마세요.
     sources:
     - id: rkisp1-tuning
       file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
@@ -1477,8 +1481,8 @@ sections:
     - tuning
   - id: dma-import
     title: 소프트웨어 ISP 입력 버퍼의 텍스처 형식
-    question: createDMABufTexture2D()에서 각 GL 형식이 어떤 DRM 형식으로 연결되는지 설명하세요. 지원하지 않는 형식과 EGL 이미지 생성 실패의 반환값·실패 표시를 구분하고, 입력 텍스처와
-      출력 텍스처의 framebuffer 연결 차이를 설명하세요. 실제 장치의 성공률이나 성능은 추정하지 마세요.
+    question: createDMABufTexture2D()에서 각 GL 형식이 어떤 DRM 형식으로 연결되는지 설명하세요. 지원하지 않는 형식과 EGL 이미지 생성 실패의 반환값·실패 표시를
+      구분하고, 입력 텍스처와 출력 텍스처의 framebuffer 연결 차이를 설명하세요. 실제 장치의 성공률이나 성능은 추정하지 마세요.
     sources:
     - id: import
       file: src/libcamera/egl.cpp
@@ -1488,7 +1492,8 @@ sections:
     - dma-import
     parts:
     - id: formats
-      question: createDMABufTexture2D()의 switch에 나온 GL 형식과 DRM 형식의 대응을 모두 한 문단으로 설명하세요. 각 case를 구분하고 오류 처리나 다른 동작은 설명하지 마세요.
+      question: createDMABufTexture2D()의 switch에 나온 GL 형식과 DRM 형식의 대응을 모두 한 문단으로 설명하세요. 각 case를 구분하고 오류 처리나 다른 동작은
+        설명하지 마세요.
       sources:
       - import
     - id: unsupported
@@ -1496,23 +1501,24 @@ sections:
       sources:
       - import
     - id: image-failure
-      question: createDMABufTexture2D()에서 eglCreateImageKHR() 결과가 EGL_NO_IMAGE_KHR일 때의 로그·실패 플래그 대입·반환값만 한 문단으로 설명하세요. 다른
-        분기는 설명하지 마세요.
+      question: createDMABufTexture2D()에서 eglCreateImageKHR() 결과가 EGL_NO_IMAGE_KHR일 때의 로그·실패 플래그 대입·반환값만 한 문단으로
+        설명하세요. 다른 분기는 설명하지 마세요.
       sources:
       - import
     - id: wrappers
-      question: createInputDMABufTexture2D()와 createOutputDMABufTexture2D()가 createDMABufTexture2D()에 전달하는 마지막 인자의 값을 각각 설명하세요.
+      question: createInputDMABufTexture2D()와 createOutputDMABufTexture2D()가 createDMABufTexture2D()에 전달하는 마지막 인자의
+        값을 각각 설명하세요.
       sources:
       - import
     - id: framebuffer
-      question: createDMABufTexture2D()에서 output 조건이 참일 때 수행되는 framebuffer 연결과 ret 대입을 설명하세요. 앞선 오류 분기에서 반환하지 않은 경로의 최종 ret
-        반환을 구분하세요.
+      question: createDMABufTexture2D()에서 output 조건이 참일 때 수행되는 framebuffer 연결과 ret 대입을 설명하세요. 앞선 오류 분기에서 반환하지 않은
+        경로의 최종 ret 반환을 구분하세요.
       sources:
       - import
   - id: softisp-lsc
     title: 소프트웨어 ISP 셰이더의 렌즈 음영 보정
-    question: 두 셰이더에서 블랙 레벨, APPLY_LSC 조건, 텍스처 좌표·4.0 배율, AWB·색 보정·감마의 순서를 설명하세요. softisp 인터페이스의 LSC 버퍼 전달은 선언 범위에서 설명하고 실제
-      GPU 실행을 검증했다고 쓰지 마세요.
+    question: 두 셰이더에서 블랙 레벨, APPLY_LSC 조건, 텍스처 좌표·4.0 배율, AWB·색 보정·감마의 순서를 설명하세요. softisp 인터페이스의 LSC 버퍼 전달은 선언 범위에서
+      설명하고 실제 GPU 실행을 검증했다고 쓰지 마세요.
     sources:
     - id: packed-shader
       file: src/libcamera/shaders/bayer_1x_packed.frag
@@ -1633,8 +1639,8 @@ sections:
     - integration
   - id: setup
     title: 초기화와 크롭 설정
-    question: init()의 센서 activeArea, 그리드 최대 셀 수, 셀 크기 반올림과 공통 알고리즘 전달값을 설명하세요. configure()의 analogCrop과 정규화 샘플 위치를 설명하고 샘플
-      수 경계는 검증 결과로 단정하지 마세요.
+    question: init()의 센서 activeArea, 그리드 최대 셀 수, 셀 크기 반올림과 공통 알고리즘 전달값을 설명하세요. configure()의 analogCrop과 정규화 샘플 위치를
+      설명하고 샘플 수 경계는 검증 결과로 단정하지 마세요.
     sources:
     - id: setup
       file: src/ipa/ipu3/algorithms/lsc.cpp
@@ -1644,8 +1650,8 @@ sections:
     - setup
   - id: request
     title: 첫 프레임과 요청별 제어
-    question: frame 번호와 LensShadingCorrectionEnable 포함 여부에 따른 첫 프레임 enabled/update 설정을 설명하세요. 공통 queueRequest()로 전달하는 공유 상태·프레임
-      상태·controls도 구분하세요.
+    question: frame 번호와 LensShadingCorrectionEnable 포함 여부에 따른 첫 프레임 enabled/update 설정을 설명하세요. 공통 queueRequest()로
+      전달하는 공유 상태·프레임 상태·controls도 구분하세요.
     sources:
     - id: request
       file: src/ipa/ipu3/algorithms/lsc.cpp
@@ -1655,8 +1661,8 @@ sections:
     - request
   - id: prepare
     title: 파라미터 갱신 조건
-    question: update가 false일 때만 적용되는 enabled 및 원래·양자화 색온도 비교 조건을 설명하세요. update가 true인 비활성화 전환에서 기록되는 플래그, 활성 경로의 그리드·크롭·보간
-      LUT와 저장 색온도를 구분하세요. 모든 비활성 호출이 조기 반환한다고 설명하지 마세요.
+    question: update가 false일 때만 적용되는 enabled 및 원래·양자화 색온도 비교 조건을 설명하세요. update가 true인 비활성화 전환에서 기록되는 플래그, 활성 경로의
+      그리드·크롭·보간 LUT와 저장 색온도를 구분하세요. 모든 비활성 호출이 조기 반환한다고 설명하지 마세요.
     sources:
     - id: prepare
       file: src/ipa/ipu3/algorithms/lsc.cpp
@@ -1670,7 +1676,8 @@ sections:
     - prepare
   - id: metadata
     title: 메타데이터와 확인 범위
-    question: process() 래퍼가 공통 알고리즘에 전달하는 프레임 상태와 metadata, 직접 사용하는 통계가 있는지, 파일 끝의 알고리즘 등록을 설명하세요. 장치 실행 결과는 추정하지 마세요.
+    question: process() 래퍼가 공통 알고리즘에 전달하는 프레임 상태와 metadata, 직접 사용하는 통계가 있는지, 파일 끝의 알고리즘 등록을 설명하세요. 장치 실행 결과는 추정하지
+      마세요.
     sources:
     - id: process
       file: src/ipa/ipu3/algorithms/lsc.cpp
@@ -1721,8 +1728,8 @@ sections:
   design_topics:
   - id: ownership
     title: 카메라별 보정값의 소유권
-    question: dewarpParams_가 카메라별로 선언되는 곳, loadTuningFile()에서 적재되는 곳, configure()에서 현재 카메라 값으로 전달되는 곳을 설명하세요. 보정기 없음과 파일·YAML
-      실패 조건도 구분하세요.
+    question: dewarpParams_가 카메라별로 선언되는 곳, loadTuningFile()에서 적재되는 곳, configure()에서 현재 카메라 값으로 전달되는 곳을 설명하세요. 보정기
+      없음과 파일·YAML 실패 조건도 구분하세요.
     sources:
     - id: camera
       file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
@@ -1740,8 +1747,8 @@ sections:
     - ownership
   - id: parameters
     title: 튜닝 입력의 기본값과 오류
-    question: 출력 optional 초기화, 입력 항목이 전혀 없는 성공 경로, 일부 입력만 있는 오류 경로를 구분하세요. cm과 cmNew의 행렬 크기, coefficients의 허용 개수, cmNew 생략
-      시 기본값과 최종 저장 시점을 설명하세요.
+    question: 출력 optional 초기화, 입력 항목이 전혀 없는 성공 경로, 일부 입력만 있는 오류 경로를 구분하세요. cm과 cmNew의 행렬 크기, coefficients의 허용 개수,
+      cmNew 생략 시 기본값과 최종 저장 시점을 설명하세요.
     sources:
     - id: parameters
       file: src/libcamera/converter/converter_dw100.cpp
@@ -1751,8 +1758,8 @@ sections:
     - parameters
   - id: application
     title: 스트림 적용과 실행 확인 범위
-    question: configure()에서 스트림마다 적용하는 크기·크롭·선택적 보정값, LensDewarpEnable 지원 제어와 metadata 조건을 설명하세요. 미설정 스트림의 조기 반환과 실행 중 제어
-      변경에 필요한 커널 requests 지원을 구분하세요.
+    question: configure()에서 스트림마다 적용하는 크기·크롭·선택적 보정값, LensDewarpEnable 지원 제어와 metadata 조건을 설명하세요. 미설정 스트림의 조기 반환과
+      실행 중 제어 변경에 필요한 커널 requests 지원을 구분하세요.
     sources:
     - id: configure
       file: src/libcamera/converter/converter_dw100.cpp
@@ -2153,8 +2160,8 @@ sections:
     - responsibility
   - id: state
     title: 상태와 허용 호출
-    question: Available·Acquired·Configured·Running·Stopping 상태와 acquire/configure/start/stop/release 허용 전이를 설명하세요. createRequest와
-      queueRequest의 허용 상태 및 호출자의 상태 변경 동기화 책임을 구분하세요.
+    question: Available·Acquired·Configured·Running·Stopping 상태와 acquire/configure/start/stop/release 허용 전이를 설명하세요.
+      createRequest와 queueRequest의 허용 상태 및 호출자의 상태 변경 동기화 책임을 구분하세요.
     sources:
     - id: states
       file: src/libcamera/camera.cpp
@@ -2186,8 +2193,8 @@ sections:
     - request
   - id: lifetime
     title: 소유권과 재사용
-    question: 요청 소유권, addBuffer()의 버퍼 참조 유효 기간, reuse()의 상태·controls·metadata 초기화와 ReuseBuffers 조건을 설명하세요. fence는 성공 시 어느
-      객체로 이전되고 타임아웃 뒤 releaseFence()가 필요한지, ReuseBuffers와 fence의 주의를 빠뜨리지 마세요.
+    question: 요청 소유권, addBuffer()의 버퍼 참조 유효 기간, reuse()의 상태·controls·metadata 초기화와 ReuseBuffers 조건을 설명하세요. fence는
+      성공 시 어느 객체로 이전되고 타임아웃 뒤 releaseFence()가 필요한지, ReuseBuffers와 fence의 주의를 빠뜨리지 마세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -2209,8 +2216,8 @@ sections:
     - lifetime
   - id: shutdown
     title: 오류와 종료
-    question: queueRequest()의 오류 반환과 RequestPending·controls 정보 맵·활성 스트림 검사를 설명하세요. stop()에서 실행 중이 아닌 경우 실제 반환값, 실행 중 상태 전환과
-      ConnectionTypeBlocking 호출, 동기 취소·완료를 구분하세요. 주석과 구현이 다르면 실제 분기를 우선하세요.
+    question: queueRequest()의 오류 반환과 RequestPending·controls 정보 맵·활성 스트림 검사를 설명하세요. stop()에서 실행 중이 아닌 경우 실제 반환값,
+      실행 중 상태 전환과 ConnectionTypeBlocking 호출, 동기 취소·완료를 구분하세요. 주석과 구현이 다르면 실제 분기를 우선하세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -2250,8 +2257,8 @@ sections:
     - concurrency
   - id: disconnection
     title: 연결 해제와 대기 요청
-    question: Camera::disconnect()의 내부 상태 전환과 disconnected 신호, isAccessAllowed()의 allowDisconnected 분기를 설명하세요. 연결 해제 시 대기
-      요청의 TODO를 stop()의 취소·완료 보장으로 바꾸지 마세요.
+    question: Camera::disconnect()의 내부 상태 전환과 disconnected 신호, isAccessAllowed()의 allowDisconnected 분기를 설명하세요. 연결
+      해제 시 대기 요청의 TODO를 stop()의 취소·완료 보장으로 바꾸지 마세요.
     sources:
     - id: access
       file: src/libcamera/camera.cpp
@@ -2325,9 +2332,9 @@ sections:
   - id: configuration-failure
     title: 구성 실패를 좁히는 순서
     question: 구성 실패를 처음 조사하는 개발자가 src/libcamera/camera.cpp의 Camera::configure에서 상태 검사, validate 결과, 실제 PipelineHandler::configure
-      반환, stream 연결 결과 순서로 원인을 좁히도록 설명하세요. 각 단계에서 읽을 값과 다음 분기, -ENODEV/-EACCES/-EINVAL의 다른 원인을 구분하세요. validate를 디버거에서 재호출하지
-      말고 원래 호출의 결과를 관찰하세요. validate 후보 목록을 모두 실행하지 말고 실제 config 동적 타입과 pipe_의 구체 구현을 호출 스택에서 확인하도록 안내하세요. 이는 소스 기반 조사 계획이며
-      실기기 검증 명령이나 복구 보장이 아닙니다.
+      반환, stream 연결 결과 순서로 원인을 좁히도록 설명하세요. 각 단계에서 읽을 값과 다음 분기, -ENODEV/-EACCES/-EINVAL의 다른 원인을 구분하세요. validate를
+      디버거에서 재호출하지 말고 원래 호출의 결과를 관찰하세요. validate 후보 목록을 모두 실행하지 말고 실제 config 동적 타입과 pipe_의 구체 구현을 호출 스택에서 확인하도록 안내하세요.
+      이는 소스 기반 조사 계획이며 실기기 검증 명령이나 복구 보장이 아닙니다.
     covers:
     - configuration-failure
     sources:
@@ -2345,8 +2352,8 @@ sections:
       end: \brief Retrieve a reference to a stream configuration
   - id: journey
     title: 제출에서 완료까지
-    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임, 버퍼 완료와 요청
-      완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션 콜백 스레드의 확인 범위를 구분하세요.
+    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임,
+      버퍼 완료와 요청 완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션 콜백 스레드의 확인 범위를 구분하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -2399,10 +2406,10 @@ sections:
     - resources
   - id: diagnosis
     title: 실패 위치별 확인 순서
-    question: 제출 실패와 완료 누락을 조사하는 개발자에게 순서가 있는 짧은 문단으로 설명하세요. 각 단계에 실제 파일·함수와 읽을 값, 그 값에 따른 다음 분기를 적으세요. queueRequest 반환 오류,
-      doQueueRequests의 prepared_ 및 queuedRequests_.size()와 maxQueuedRequestsDevice_, doQueueRequest의 cancelled_와 queueRequestDevice
-      반환값, completeBuffer/completeRequest와 선두 RequestPending을 구분하세요. 관측 지점은 디버거 중단점이나 계측을 추가할 위치로 제안하되 검증된 실행 명령·실제 관측 결과·지연
-      기준으로 쓰지 마세요.
+    question: 제출 실패와 완료 누락을 조사하는 개발자에게 순서가 있는 짧은 문단으로 설명하세요. 각 단계에 실제 파일·함수와 읽을 값, 그 값에 따른 다음 분기를 적으세요. queueRequest
+      반환 오류, doQueueRequests의 prepared_ 및 queuedRequests_.size()와 maxQueuedRequestsDevice_, doQueueRequest의 cancelled_와
+      queueRequestDevice 반환값, completeBuffer/completeRequest와 선두 RequestPending을 구분하세요. 관측 지점은 디버거 중단점이나 계측을 추가할
+      위치로 제안하되 검증된 실행 명령·실제 관측 결과·지연 기준으로 쓰지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -2424,9 +2431,10 @@ sections:
     - diagnosis
   - id: stopping
     title: 정지와 연결 해제를 구분하기
-    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을 구분하세요. PipelineHandler::stop의
-      waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소, queuedRequests_/waitingRequests_ ASSERT를 조사 지점에 연결하세요. stopDevice
-      내부에서 멎음과 반환 후 큐가 남음, 별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요. 실행 시험 결과나 보장된 타임아웃을 만들지 마세요.
+    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을 구분하세요.
+      PipelineHandler::stop의 waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소, queuedRequests_/waitingRequests_
+      ASSERT를 조사 지점에 연결하세요. stopDevice 내부에서 멎음과 반환 후 큐가 남음, 별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요. 실행
+      시험 결과나 보장된 타임아웃을 만들지 마세요.
     sources:
     - id: stop
       file: src/libcamera/camera.cpp
@@ -2448,8 +2456,8 @@ sections:
     - stopping
   - id: review
     title: 변경 검토와 실행 확인
-    question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기 요청 처리를 정리하세요. 정상 반복·fence 대기·장치 오류·미완료
-      요청 정지의 실행 확인은 limitation으로 구분하고 실제 시험 결과를 만들지 마세요.
+    question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기 요청 처리를 정리하세요. 정상 반복·fence 대기·장치
+      오류·미완료 요청 정지의 실행 확인은 limitation으로 구분하고 실제 시험 결과를 만들지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp

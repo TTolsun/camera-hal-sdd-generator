@@ -47,6 +47,7 @@ binds the IDs to source symbols; never repeat id or symbol inside these values.
 Return EVERY bound node and use its exact ID in edges. You still propose all labels
 and connections from the evidence, never invent a relationship to connect nodes.'''
 POLICY += '\nDoxygen return-value passages retain the function header through the relevant status; cite that status passage, including its duties and may/must qualifications.'
+POLICY += '\nEvery label is a single line without Markdown bullets or line breaks. The renderer wraps labels automatically. label is Korean explanatory text (code identifiers stay unchanged); label_en is its English translation.'
 
 
 def digest(value):
@@ -194,10 +195,12 @@ def schema(passages, limit, required_symbols=None):
     refs = {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': list(passages)}}
     def obj(properties):
         return {'type': 'object', 'additionalProperties': False, 'required': list(properties), 'properties': properties}
-    label = string
-    node = obj({'id': {**string, 'pattern': '^[a-z][a-z0-9_-]*$'}, 'symbol': {**string, 'enum': required_symbols or source_symbols(passages)}, 'label': label,
-                'label_en': label, 'shape': {'type': 'string', 'enum': ['box', 'process', 'decision']}, 'quote_ids': refs})
-    edge = obj({'from': string, 'to': string, 'label': label, 'label_en': label,
+    label = {**string, 'pattern': r'^[^\r\n]+$'}
+    korean = {**label, 'description': 'Single-line Korean explanation; preserve code identifiers.'}
+    english = {**label, 'description': 'Single-line English translation with the same conditions and obligations.'}
+    node = obj({'id': {**string, 'pattern': '^[a-z][a-z0-9_-]*$'}, 'symbol': {**string, 'enum': required_symbols or source_symbols(passages)}, 'label': korean,
+                'label_en': english, 'shape': {'type': 'string', 'enum': ['box', 'process', 'decision']}, 'quote_ids': refs})
+    edge = obj({'from': string, 'to': string, 'label': korean, 'label_en': english,
                 'condition_ref': {'type': 'string', 'enum': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages) for branch in ('true', 'false')]},
                 'quote_ids': refs})
     nodes = {'type': 'array', 'minItems': 2, 'maxItems': limit, 'items': node}

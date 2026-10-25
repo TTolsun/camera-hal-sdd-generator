@@ -259,3 +259,20 @@ def test_long_bilingual_labels_wrap_without_losing_text_or_escaping():
     assert '<source>' not in left and '<source>' not in right
     source = 'flowchart TB\n%% sdd:translations ' + json.dumps({left: right}) + '\n v_n0["' + left + '"]'
     assert 'v_n0["' + right + '"]' in english_diagram(source)
+
+
+def test_label_schema_matches_single_line_validator_for_nodes_and_edges():
+    import re
+    from sdd.generated_visuals import schema
+    from sdd.visuals import _text
+    result = schema({'source:0': ('source', 'stop(); cancel();')}, 2, ['stop', 'cancel'])
+    for properties in [result['properties']['nodes']['properties']['n0']['properties'],
+                       result['properties']['edges']['items']['properties']]:
+        for field in ('label', 'label_en'):
+            rule = properties[field]
+            assert re.fullmatch(rule['pattern'], '상태 확인 / check state')
+            assert _text('상태 확인 / check state', field)
+            for value in ('', 'Adjusted\nCheck', 'Adjusted\rCheck'):
+                assert not re.fullmatch(rule['pattern'], value)
+                with pytest.raises(ValueError, match='single line'):
+                    _text(value, field)
