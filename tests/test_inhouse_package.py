@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import zipfile
+import shutil
 
 import pytest
 
@@ -116,3 +117,66 @@ def test_dependency_list_contains_locked_runtime_and_test_closure():
     assert {"libclang", "markdown", "pymdown-extensions", "pyyaml", "tzdata", "pytest", "pluggy", "packaging"} <= pins
     assert "mkdocs-material" not in pins
     assert not any("http" in line or line.startswith("-e") for line in lines)
+
+
+def test_real_import_runs_task_navigation(tmp_path):
+    """Run only the committed ZIP's code/configuration, without its Git history."""
+    import yaml
+    archive = tmp_path / 'kit.zip'
+    info = builder.build(ROOT, archive)
+    with zipfile.ZipFile(archive) as source:
+        source.extractall(tmp_path / 'import')
+    kit = tmp_path / 'import/camera-hal-sdd-generator'
+    assert not (kit / '.git').exists()
+    assert verifier.verify(kit)['source_commit'] == info['source_commit']
+    assert 'nav_section' in (kit / 'AGENTS.md').read_text(encoding='utf-8')
+    # A real source checkout is separate from the imported generator. No
+    # private source, libcamera structure or invented evidence is used.
+    source = tmp_path / 'hal'
+    shutil.copytree(kit / 'examples/mini-hal', source)
+    subprocess.run(['git', 'init', '-q', str(source)], check=True)
+    subprocess.run(['git', '-C', str(source), 'add', '.'], check=True)
+    subprocess.run(['git', '-C', str(source), '-c', 'user.name=Test',
+                    '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'source'], check=True)
+    commit = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
+    project = tmp_path / 'project'
+    project.mkdir()
+    sections = yaml.safe_load((source / 'config/reader-sections.yaml').read_text(encoding='utf-8'))
+    template = yaml.safe_load((kit / 'examples/inhouse-template/config/sections.yaml').read_text(encoding='utf-8'))
+    roles = {s['reader_profile']: s for s in template['sections'] if s.get('reader_profile')}
+    for section in sections['sections']:
+        section.update({k: roles[section['reader_profile']][k] for k in ('group', 'nav_section')})
+    (project / 'sections.yaml').write_text(yaml.safe_dump(sections, allow_unicode=True), encoding='utf-8')
+    cfg = {
+        'source': {'root': str(source), 'compile_commands': str(source / 'compile_commands.json')},
+        'output': {'facts_dir': 'facts', 'sdd_dir': 'sdd'},
+        'paths': {'sections_file': 'sections.yaml', 'prompts': str(kit / 'prompts'),
+                  'templates': str(kit / 'templates'), 'style': str(kit / 'style')},
+        'agent': {'kind': 'dry-run'}, 'documentation': {'enabled': True},
+        'site': {'nav_groups': ['For Vendor', 'For Developer'],
+                 'mermaid': 'https://assets.internal.invalid/mermaid.mjs'},
+    }
+    config = project / 'sdd.yaml'
+    config.write_text(yaml.safe_dump(cfg), encoding='utf-8')
+    bootstrap = (
+        'import sys; from pathlib import Path; sys.path.insert(0,sys.argv[1]); '
+        'from sdd.config import load; from sdd.evidence import collect; '
+        'from sdd.facts.model import KnowledgeModel; '
+        'cfg=load(Path(sys.argv[2])); model=KnowledgeModel(meta={"source_commit":sys.argv[3]}); '
+        'collect(cfg,model); '
+        'assert all(r["status"]=="available" for r in model.evidence.values()); model.save(cfg.facts_path)'
+    )
+    subprocess.run([sys.executable, '-c', bootstrap, str(kit / 'src'), str(config), commit],
+                   cwd=project, check=True, capture_output=True)
+    for command in ('generate', 'audit-docs', 'export-site', 'verify-site'):
+        result = subprocess.run([sys.executable, str(kit / 'tools/run_sdd.py'), '--config', str(config), command],
+                                cwd=project, capture_output=True)
+        assert result.returncode == 0, (command, result.stdout, result.stderr)
+    site = project / 'build/site'
+    page = (site / 'vendor-contract.html').read_text(encoding='utf-8')
+    assert all(f'<h2>{task}</h2>' in page for task in ('도입 판단', '연동 구현', '구조 이해'))
+    manifest = (site / 'site-manifest.json').read_bytes()
+    result = subprocess.run([sys.executable, str(kit / 'tools/run_sdd.py'), '--config', str(config), 'export-site'],
+                            cwd=project, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    assert (site / 'site-manifest.json').read_bytes() == manifest

@@ -11,5 +11,6 @@
 - facts·원고의 커밋 불일치, 노드 한도, 필수 질문·근거 해시 관문을 우회하지 않습니다. 자동 검사는 사람 승인이 아닙니다.
 - 같은 설정을 동시에 실행하지 않으며 실패 상태·직전 정상 결과·승인 장부를 보존합니다. 복구는 docs/inhouse/troubleshooting.md를 따릅니다.
 - 독자는 For Vendor(기술 채택·연동·구현 담당자)와 For Developer(신입·타팀 개발자)입니다. 제품 개요(vendor-overview), 연동 가이드(vendor), 지원 범위와 검증(vendor-assurance)을 나누고 주장마다 실제 근거를 연결합니다. docs/concepts/reader-quality.md의 첫 코드 탐색·요청 흐름·수정·디버깅 과제를 적용합니다.
+- 메뉴는 독자 → 수행할 작업 → 문서 순서입니다. 두 독자 그룹은 group으로 유지하고 작업 소분류는 sections.yaml의 nav_section으로 지정합니다. 새 설정은 사내 템플릿을 따르고 기존 설정은 실제 문서 목적에 맞게 이전합니다. 수정 후 generate·export-site·verify-site로 재생성·검증하며 특정 공개 사이트의 HTML을 복사하지 않습니다.
 - DESIGN.md와 style/README.md의 읽기·집필 계약을 따릅니다. 설정부터 계약 작성·검증까지 수행하고 handoff.md에 실제 완료·미완료와 재개 조건을 기록합니다.
 - 게시·예약 설치는 사용자가 허용한 사내 대상과 범위에서만 수행합니다. 대상이 없으면 검증된 로컬 초안과 남은 게시 단계를 전달합니다.

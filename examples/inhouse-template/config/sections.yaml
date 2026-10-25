@@ -11,6 +11,7 @@ sections:
     link: overview.md
 - id: vendor-overview
   group: For Vendor
+  nav_section: 도입 판단
   title: 제품 개요
   output: vendor-overview.md
   kind: prose
@@ -53,6 +54,7 @@ sections:
     link: vendor-contract.md
 - id: vendor-contract
   group: For Vendor
+  nav_section: 연동 구현
   title: 연동 가이드
   output: vendor-contract.md
   kind: prose
@@ -131,6 +133,7 @@ sections:
     link: vendor-assurance.md
 - id: vendor-assurance
   group: For Vendor
+  nav_section: 도입 판단
   title: 지원 범위와 검증
   output: vendor-assurance.md
   kind: prose
@@ -173,6 +176,7 @@ sections:
     link: overview.md
 - id: overview
   group: For Developer
+  nav_section: 구조 이해
   title: 시스템 개요
   output: overview.md
   kind: prose
@@ -264,6 +268,7 @@ sections:
     enabled: false
 - id: components
   group: For Developer
+  nav_section: 코드 탐색
   title: 컴포넌트 구조와 책임
   output: components.md
   kind: per-package
@@ -296,6 +301,7 @@ sections:
     link: scenarios/index.md
 - id: scenarios
   group: For Developer
+  nav_section: 동작 추적과 문제 진단
   title: 핵심 시나리오
   output: scenarios/index.md
   kind: per-scenario
@@ -314,6 +320,7 @@ sections:
     link: feature-flags.md
 - id: feature-flags
   group: For Developer
+  nav_section: 동작 추적과 문제 진단
   title: Feature flag 매트릭스
   output: feature-flags.md
   kind: table
@@ -335,6 +342,7 @@ sections:
     link: threading.md
 - id: threading
   group: For Developer
+  nav_section: 구조 이해
   title: 스레드와 큐 모델
   output: threading.md
   kind: prose
@@ -361,6 +369,7 @@ sections:
     link: constraints.md
 - id: constraints
   group: For Developer
+  nav_section: 변경 검토
   title: 변경 시 지켜야 할 제약
   output: constraints.md
   kind: manual
@@ -369,6 +378,7 @@ sections:
     link: decisions.md
 - id: decisions
   group: For Developer
+  nav_section: 변경 검토
   title: 설계 결정 기록
   output: decisions.md
   kind: manual
