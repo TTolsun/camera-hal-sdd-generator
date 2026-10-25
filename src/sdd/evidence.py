@@ -19,10 +19,11 @@ from .facts.model import KnowledgeModel
 # 지문에 넣으면 메뉴 분류나 다음 문서 링크만 바꿔도 근거가 달라진 것으로 판정되어,
 # 근거가 고정된 문서를 모델로 다시 만들어야 한다.
 #   group  - 사이트 왼쪽 메뉴에서 묶을 제목
+#   nav_section - 독자 그룹 안의 작업별 소분류
 #   routes - "지금 확인할 내용" 표
 #   next   - 페이지 끝의 다음 문서 링크
 #   watch  - 재생성 대상을 고르는 경로 glob
-_PRESENTATION_KEYS = ("group", "routes", "next", "watch")
+_PRESENTATION_KEYS = ("group", "nav_section", "routes", "next", "watch")
 
 
 def requires_fingerprint(section: dict) -> bool:
