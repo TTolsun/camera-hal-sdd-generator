@@ -85,3 +85,27 @@ def test_partial_json_is_not_provenance_even_when_parseable(tmp_path):
     path.write_text(json.dumps(receipt))
     with pytest.raises(ValueError, match='No matching HTTP'):
         verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')
+
+
+def test_visual_draft_requires_same_real_http_response_and_model(tmp_path):
+    model, manuscripts, calls, artifact, save = setup(tmp_path)
+    draft = {'nodes': [{'id': 'start'}], 'edges': []}
+    request = {'system': 'visual', 'user': '{}', 'response_schema': {}}
+    raw = json.dumps(draft)
+    receipt = {'tag': 'visual_device_flow_0', 'http_call': True, 'transport': 'ollama', 'model': 'test',
+               'request_sha256': hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest(),
+               'response_sha256': hashlib.sha256(raw.encode()).hexdigest()}
+    (calls / '002.request.json').write_text(json.dumps(request), encoding='utf-8')
+    (calls / '002.response.txt').write_text(raw, encoding='utf-8')
+    (calls / '002.receipt.json').write_text(json.dumps(receipt), encoding='utf-8')
+    page = manuscripts / 'visual-only.md'
+    record = {'producer': 'ollama/test', 'draft': draft, 'reused': False}
+    def save_visual():
+        page.write_text('---\nsection: device\ngenerated_visuals: ' + json.dumps({'records': {'flow': record}})
+                        + '\n---\n# Visual\n', encoding='utf-8')
+    save_visual()
+    assert verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')['visuals'] == 1
+    record['draft'] = {'nodes': [{'id': 'invented'}], 'edges': []}
+    save_visual()
+    with pytest.raises(ValueError, match='No matching HTTP visual'):
+        verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')

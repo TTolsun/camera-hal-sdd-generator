@@ -43,6 +43,7 @@ review:
   require_citations: true
   max_retries: 1
   design_revision: false
+  design_grounding: true
 
 documentation:
   enabled: true

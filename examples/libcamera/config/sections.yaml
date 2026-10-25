@@ -351,13 +351,20 @@ sections:
         - - validate
         reject_patterns: []
     - id: configure-result
-      question: configure의 성공 반환값과 실패 반환값은 각각 무엇입니까? 수치·부호만 구분하고 다른 함수는 다루지 마세요.
+      question: PipelineHandler::configure가 성공하면 반환하는 정수값만 설명하세요.
       sources:
       - configure-contract
       answer_contract:
         basis: description
         required_terms:
         - - '0'
+    - id: configure-failure
+      question: PipelineHandler::configure가 실패하면 반환하는 오류 코드의 부호만 설명하세요. 성공 반환값은 다루지 마세요.
+      sources:
+      - configure-contract
+      answer_contract:
+        basis: description
+        required_terms:
         - - 음수
   - id: measurement
     title: 성능 근거를 읽는 기준
@@ -574,16 +581,26 @@ sections:
         required_terms:
         - - release
         - - 'false'
-    - id: repeat
-      question: CameraManager의 match 호출 문맥과 성공 후 새 PipelineHandler 인스턴스에서 반복하는 절차만 설명하세요. match 함수 자체가 생성된다는 표현은
-        쓰지 마세요.
+    - id: caller
+      question: match를 호출하는 주체와 호출 스레드의 이름만 설명하세요.
       sources:
       - handler
       answer_contract:
         basis: description
         required_terms:
         - - CameraManager
+          - 카메라 관리자
+          - 카메라 매니저
+        reject_patterns: []
+    - id: repeat
+      question: match가 true를 반환한 다음, 어떤 새 객체를 만들고 어떤 함수를 다시 호출합니까? 반복 인스턴스 생성만 설명하세요.
+      sources:
+      - handler
+      answer_contract:
+        basis: description
+        required_terms:
         - - 인스턴스
+        - - match
         reject_patterns: []
   - id: configuration
     title: 구현할 설정 인터페이스
@@ -967,9 +984,17 @@ sections:
         - - prepared_
         - - 중단
           - break
+    - id: submit-tracking
+      question: doQueueRequest에서 queuedRequests_와 sequence_에 수행하는 요청 추적 동작만 설명하세요. 취소 분기와 장치 제출은 다루지 마세요.
+      sources:
+      - submit-code
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - queuedRequests_
+        - - sequence_
     - id: cancelled
-      question: doQueueRequest가 queuedRequests_에 요청을 등록하고 순번을 부여한 뒤 cancelled_ 요청을 만났을 때의 처리만 설명하세요. 이 분기를 하드웨어
-        재제출로 바꾸지 마세요.
+      question: doQueueRequest의 if (request->_d()->cancelled_) 분기가 참이면 어떤 완료 함수를 호출하고 어디서 반환합니까? 이 조건의 본문만 설명하세요.
       sources:
       - submit-code
       answer_contract:
@@ -1278,6 +1303,14 @@ sections:
       file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
       start: '{%- elif method.mojom_name == "start" %}'
       end: '{%- elif not method|is_async %}'
+    - id: async-branch
+      file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
+      start: "{% elif method|is_async %}\n\tASSERT(state_ == ProxyRunning);"
+      end: '{%- endif %}
+
+        }
+
+        {% endfor %}'
     covers:
     - execution
     parts:
@@ -1309,9 +1342,9 @@ sections:
         required_terms:
         - - ipa_
     - id: async
-      question: Threaded 템플릿의 비동기 메서드 분기에서 상태 ASSERT와 invokeMethod의 연결 유형만 설명하세요.
+      question: 이 Threaded 비동기 분기가 검사하는 정확한 ASSERT 조건과 invokeMethod의 연결 유형만 설명하세요. 이벤트 Handler 분기와 구분하세요.
       sources:
-      - dispatch
+      - async-branch
       answer_contract:
         basis: implementation
         required_terms:
@@ -1625,10 +1658,31 @@ sections:
       end: static unsigned int quantize(
     covers:
     - request
+    parts:
+    - id: default
+      question: Lsc::queueRequest에서 frame이 0이고 LensShadingCorrectionEnable 제어가 없을 때 변경하는 두 필드만 설명하세요.
+      sources:
+      - request
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - enabled
+        - - update
+    - id: delegate
+      question: 첫 프레임 기본값 처리 뒤 모든 요청에 대해 호출하는 공통 알고리즘 함수와 그 인자만 설명하세요.
+      sources:
+      - request
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - lscAlgo_
+        - - queueRequest
+        - - activeState
+        - - frameContext
+        - - controls
   - id: prepare
     title: 파라미터 갱신 조건
-    question: update가 false일 때만 적용되는 enabled 및 원래·양자화 색온도 비교 조건을 설명하세요. update가 true인 비활성화 전환에서 기록되는 플래그, 활성 경로의
-      그리드·크롭·보간 LUT와 저장 색온도를 구분하세요. 모든 비활성 호출이 조기 반환한다고 설명하지 마세요.
+    question: prepare의 조기 반환 조건과 그 뒤 공통으로 기록하는 커널 플래그, 활성 경로의 그리드·크롭·보간 LUT·저장 색온도를 소스의 실제 조건에 맞게 설명하세요.
     sources:
     - id: prepare
       file: src/ipa/ipu3/algorithms/lsc.cpp
@@ -1640,6 +1694,107 @@ sections:
       end: int Lsc::init(
     covers:
     - prepare
+    parts:
+    - id: disabled-no-update
+      question: Lsc::prepare에서 update가 false이며 enabled도 false인 분기만 설명하세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - update
+        - - enabled
+        - - 반환
+          - return
+    - id: ct-threshold
+      question: update가 false이며 enabled가 true일 때 원래 색온도 차이로 조기 반환하는 조건만 설명하세요.
+      sources:
+      - prepare
+      - constants
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - lastAppliedCt_
+        - - kColourTemperatureQuantization
+    - id: quantized-same
+      question: update가 false이며 enabled가 true일 때 양자화 색온도 비교로 조기 반환하는 조건만 설명하세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - quantizedCt
+        - - lastAppliedQuantizedCt_
+    - id: upload
+      question: 앞의 조기 반환을 통과한 경로에서 params->use.acc_shd에 기록하는 값과 그 플래그의 의미만 설명하세요. update가 true일 때만 실행된다고 제한하지 마세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - acc_shd
+        - - '1'
+    - id: enable
+      question: 커널에 전달하는 shd_enable 값과 그 뒤 비활성 상태에서 반환하는 분기만 설명하세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - shd_enable
+        - - enabled
+        - - 반환
+          - return
+    - id: grid
+      question: 활성 경로에서 grid의 크기·블록 크기와 grid_height_per_slice를 설정하는 값을 설명하세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - grid
+        - - numHCells_
+        - - grid_height_per_slice
+    - id: crop
+      question: polynomial_ 값에 따라 grid.x_start와 grid.y_start를 설정하는 두 경로를 설명하세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - polynomial_
+        - - x_start
+        - - y_start
+    - id: gain
+      question: 활성 경로에서 gain_factor와 black_level 필드에 설정하는 값을 설명하세요. 주석의 해석을 장치에서 검증한 사실로 바꾸지 마세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - gain_factor
+        - - black_level
+        - - '0'
+    - id: lut
+      question: lscAlgo_.interpolateComponents에 전달하는 색온도와 각 LUT 세트에 채우는 r·gr·gb·b 채널을 설명하세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - interpolateComponents
+        - - quantizedCt
+        - - LUT
+          - lut
+    - id: remember
+      question: LUT 기록 뒤 lastAppliedCt_와 lastAppliedQuantizedCt_에 저장하는 두 값만 설명하세요.
+      sources:
+      - prepare
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - lastAppliedCt_
+        - - lastAppliedQuantizedCt_
   - id: metadata
     title: 메타데이터와 확인 범위
     question: process() 래퍼가 공통 알고리즘에 전달하는 프레임 상태와 metadata, 직접 사용하는 통계가 있는지, 파일 끝의 알고리즘 등록을 설명하세요. 장치 실행 결과는 추정하지
@@ -2259,6 +2414,10 @@ sections:
       file: src/libcamera/request.cpp
       start: \brief Add a FrameBuffer with its associated Stream to the Request
       end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: queue-code
+      file: src/libcamera/camera.cpp
+      start: int Camera::queueRequest(Request *request)
+      end: \brief Start capture from camera
     covers:
     - request
     parts:
@@ -2300,17 +2459,51 @@ sections:
         required_terms:
         - - queueRequest
         - - 버퍼
-    - id: queue-checks
-      question: queueRequest 구현의 카메라 소속·RequestPending·controls 정보 맵·비어 있는 버퍼·활성 스트림 검사와 실패 반환을 설명하세요. 모두 실제 검사
-        대상의 이름으로 구분하세요.
+    - id: queue-owner
+      question: Camera::queueRequest에서 요청이 다른 카메라에 속하는 조건과 이때 반환하는 오류만 설명하세요.
       sources:
-      - queue
+      - queue-code
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - camera
+        - - -EXDEV
+    - id: queue-status
+      question: Camera::queueRequest의 RequestPending 상태 비교와 일치하지 않을 때의 반환값만 설명하세요.
+      sources:
+      - queue-code
       answer_contract:
         basis: implementation
         required_terms:
         - - RequestPending
+        - - -EINVAL
+    - id: queue-controls
+      question: Camera::queueRequest에서 controls의 infoMap을 어떤 값과 비교하며 불일치 때 어떻게 반환하는지 설명하세요.
+      sources:
+      - queue-code
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - infoMap
+        - - -EINVAL
+    - id: queue-buffers
+      question: Camera::queueRequest에서 buffers가 비었을 때의 검사와 반환값만 설명하세요.
+      sources:
+      - queue-code
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - buffers
+        - - -EINVAL
+    - id: queue-stream
+      question: Camera::queueRequest의 activeStreams_ 검사에서 거절하는 스트림 조건과 반환값만 설명하세요.
+      sources:
+      - queue-code
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - activeStreams_
+        - - -EINVAL
     - id: completion-signal
       question: queueRequest의 성공 반환과 requestCompleted 완료 통지를 구분하세요. 이 함수가 큐에 넣자마자 완료 신호를 직접 발행한다고 쓰지 마세요.
       sources:
@@ -2534,6 +2727,7 @@ sections:
       question: 첫 조사 지점의 파일과 Camera::configure에서 실제 호출한 isAccessAllowed의 반환값을 관찰하는 계획을 설명하세요. 성공이면 다음 검증 단계로 이동하고
         상태 변경 함수를 재호출하지 마세요.
       sources:
+      - configure-code
       - configure
       answer_contract:
         basis: investigation
@@ -2573,6 +2767,7 @@ sections:
     - id: validation-result
       question: configure 내부에서 이미 실행된 validate의 반환값을 관찰해 Valid 이외일 때의 오류와 다음 분기를 구분하는 조사 계획을 설명하세요.
       sources:
+      - configure-code
       - configure
       answer_contract:
         basis: investigation
@@ -2584,6 +2779,7 @@ sections:
       question: 상태·검증을 통과했으면 실제 pipe_의 configure 호출 반환값과 호출 스택의 구체 구현을 관찰해 실패 위치를 좁히는 계획을 설명하세요. 구체 클래스 이름은 추정하지
         마세요.
       sources:
+      - configure-code
       - configure
       answer_contract:
         basis: investigation
@@ -2594,6 +2790,7 @@ sections:
     - id: stream-link
       question: 장치 configure가 성공한 다음 cfg.stream() 연결 결과와 -EINVAL 분기를 어디서 관찰할지 설명하세요. 소스의 실제 스트림 검사를 사용하세요.
       sources:
+      - configure-code
       - configure
       answer_contract:
         basis: investigation
@@ -2603,7 +2800,7 @@ sections:
     sources:
     - id: configure
       file: src/libcamera/camera.cpp
-      start: int Camera::configure(CameraConfiguration *config)
+      start: \brief Configure the camera prior to capture
       end: \brief Create a request object for the camera
     - id: access
       file: src/libcamera/camera.cpp
@@ -2613,6 +2810,10 @@ sections:
       file: src/libcamera/camera.cpp
       start: \fn CameraConfiguration::validate()
       end: \brief Retrieve a reference to a stream configuration
+    - id: configure-code
+      file: src/libcamera/camera.cpp
+      start: int Camera::configure(CameraConfiguration *config)
+      end: \brief Create a request object for the camera
   - id: journey
     title: 제출에서 완료까지
     question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임,

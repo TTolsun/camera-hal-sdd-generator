@@ -13,6 +13,7 @@ from .generated_design import normalize_answer, resolve_passages
 def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_name: str,
                  allow_reused: bool = False) -> dict:
     responses = []
+    json_responses = []
     for receipt_path in sorted(calls.rglob('*.receipt.json')):
         prefix = receipt_path.name.removesuffix('.receipt.json')
         request_path = receipt_path.with_name(prefix + '.request.json')
@@ -31,25 +32,36 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
                 or receipt.get('provider', {}).get('finish_reason') == 'length'):
             continue  # An archived partial response cannot establish authorship.
         try:
+            data = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
+            json_responses.append((receipt['tag'], data))
             payload, _ = json.JSONDecoder().raw_decode(user[user.index('{'):])
             sources = payload['sources']
             passages = {item['quote_id']: (sid, item['text'].strip())
                         for sid, blocks in sources.items() for item in blocks if item.get('quote_id')}
-            data = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
             statements = resolve_passages(data['statements'], passages)
             normalize_answer(model, statements, ['\n'.join(b['text'] for b in blocks) for blocks in sources.values()] + [payload.get('topic', '')])
         except (ValueError, KeyError, TypeError, AttributeError):
             continue  # Invalid retry responses cannot establish manuscript provenance.
         responses.append((receipt['tag'], statements))
-    documents, topics, statements = 0, 0, 0
+    documents, topics, statements, visuals = 0, 0, 0, 0
     for path in manuscripts.rglob('*.md'):
         metadata, _ = _split(path.read_text(encoding='utf-8'))
+        sid = metadata.get('section')
+        for vid, record in metadata.get('generated_visuals', {}).get('records', {}).items():
+            if not sid or record.get('producer') != f'{provider}/{model_name}':
+                raise ValueError(f'Visual model identity mismatch: {path.name}/{vid}')
+            if record.get('reused') and not allow_reused:
+                raise ValueError('A full fresh-model trial cannot reuse previous visual drafts.')
+            prefix = f'visual_{sid}_{vid}_'
+            if not any(tag.startswith(prefix) and data == record.get('draft')
+                       for tag, data in json_responses):
+                raise ValueError(f'No matching HTTP visual response for {sid}/{vid}')
+            visuals += 1
         artifact = metadata.get('generated_design')
         if not artifact:
             continue
         if (artifact.get('reused_topics') or artifact.get('replayed_units')) and not allow_reused:
             raise ValueError('A full fresh-model trial cannot reuse previous topic answers.')
-        sid = metadata.get('section')
         if not sid:
             raise ValueError(f'Missing manuscript section identity: {path.name}')
         documents += 1
@@ -63,7 +75,7 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
                 if original not in possible:
                     raise ValueError(f'No matching HTTP model response for {sid}/{tid}')
                 statements += 1
-    return {'documents': documents, 'topics': topics, 'statements': statements,
+    return {'documents': documents, 'topics': topics, 'statements': statements, 'visuals': visuals,
             'previous_http_answers_allowed': allow_reused,
             'verified_http_calls': len(list(calls.rglob('*.receipt.json'))),
             'scope': 'Exact request/response hashes and model authorship; not semantic or human approval.'}
