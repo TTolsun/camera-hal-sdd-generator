@@ -99,13 +99,16 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
             inputs["english_catalog"] = digest(cfg.root / catalog)
         if cfg.facts_path.exists():
             inputs["facts"] = digest(cfg.facts_path)
+        visuals_file = (cfg.raw.get('visuals') or {}).get('file')
+        if visuals_file:
+            inputs['visuals'] = digest(cfg.root / visuals_file)
         from .approvals import ledger_path
         if ledger_path(cfg).exists():
             inputs["approvals"] = digest(ledger_path(cfg))
         for p in sorted(cfg.sdd_dir.rglob("*.md")):
             inputs["markdown/" + p.relative_to(cfg.sdd_dir).as_posix()] = digest(p)
         code_root = Path(__file__).parent
-        engine = {p.name: digest(p) for p in [code_root / "diagrams.py", code_root / "export_site.py",
+        engine = {p.name: digest(p) for p in [code_root / "diagrams.py", code_root / "visuals.py", code_root / "export_site.py",
                                             code_root / "document_health.py", code_root / "evidence_navigation.py",
                                             code_root / "site_localization.py",
                                             code_root / "document_metadata.py", code_root / "scenario_document.py",

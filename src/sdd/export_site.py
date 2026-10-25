@@ -315,6 +315,7 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     rendered_pages = {}
     search = []
     diagram_sources = {}
+    visual_sources = {}
     for group, name, rel in entries:
         meta, body = _split(texts[rel])
         if meta.get("generation_method") and meta.get("generation_method") != "manual":
@@ -372,6 +373,11 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         if rel != glossary.PAGE and glossary.PAGE in texts:
             body = glossary.insert(body, glossary.block(glossary.used_terms(terms, texts[rel]),
                                                         posixpath.relpath(glossary.PAGE, posixpath.dirname(rel) or ".")))
+        from .visuals import render as render_visuals, place
+        visuals = render_visuals(cfg, model, section) if section else []
+        body = place(body, visuals, section)
+        for visual, _, source in visuals:
+            visual_sources[str(PurePosixPath(rel).with_suffix('')) + '.' + visual['id'] + '.mmd'] = source
         content, toc, tokens = _render(body, rel, known, model, source_url, str(meta.get("source_commit", "")),
                                        link_template)
         rendered_pages[rel] = (page_title, meta, content, toc)
@@ -386,6 +392,10 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         headings(tokens)
     out.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ASSETS, out / "assets", dirs_exist_ok=True)
+    for rel, source in visual_sources.items():
+        target = out / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(source + '\n', encoding='utf-8', newline='\n')
     # 화면 자산이 바뀌면 주소도 바뀌게 한다. 그렇지 않으면 배포 직후 브라우저가 캐시한 예전 CSS·JS 로
     # 새 HTML 을 그려서, 새 기능이 깨진 모양으로 보인다.
     # 줄바꿈을 LF 로 맞춰 해시한다. 같은 커밋이면 Windows 작업 폴더(CRLF)에서도 같은 주소가 나온다.

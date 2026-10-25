@@ -66,6 +66,9 @@ class Generator:
         # Validate every selected contract before replacing any manuscript.
         selected = [s for s in self.cfg.sections()
                     if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)]
+        from .visuals import render as render_visuals
+        for section in selected:
+            render_visuals(self.cfg, self.model, section)
         reports = {s['id']: audit_design(self.model, s) for s in selected
                    if (s.get('design_requirements') or s.get('reader_profile')) and not generated_design.enabled(s)}
         # Generate and validate every required LLM answer before replacing any page.
@@ -206,6 +209,8 @@ class Generator:
             prose = f"## {sec.get('prose_heading', '구조 설명')}\n\n{text}"
         body = "\n\n".join([prose]
                            + ([diagram] if diagram else []) + tables)
+        from .visuals import render as render_visuals, place
+        body = place(body, render_visuals(self.cfg, self.model, original), original)
         if sec.get("needs_human"):
             body += "\n\n확인 필요: 이 절의 내용은 정적 분석 결과입니다. 콜백 실행 스레드와 종료 순서는 코드를 직접 실행해서 확인해야 합니다."
         return self._write_section(original, body, blocks, tables, verdict, omitted)

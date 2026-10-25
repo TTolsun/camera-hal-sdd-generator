@@ -10,6 +10,7 @@ from .validate import extract_citations
 # 확인되지 않았다고 말하는 문장. 이런 문장은 인용할 근거 자체가 없다.
 _UNCERTAIN = re.compile(r"확인이 필요|확인해야|확인할 수 없|확인되지 않|확인하지 못|명시되지 않|"
                         r"근거가 부족|근거가 없|보장하지 않|알 수 없|추출되지 않|존재하지 않")
+_CHECK_OBLIGATION = re.compile(r"(?:호출자|구현자|구현체).*(?:확인해야)")
 
 
 def only_uncertainty(paragraph: str) -> bool:
@@ -20,7 +21,11 @@ def only_uncertainty(paragraph: str) -> bool:
     사실을 하나라도 주장하는 문단은 그대로 인용을 요구한다.
     """
     sentences = [x for x in re.split(r"(?<=[.!?])\s+|\n", paragraph) if x.strip()]
-    return bool(sentences) and all(_UNCERTAIN.search(x) for x in sentences)
+    # "The caller must ensure ..." asserts an API obligation. It needs
+    # evidence just like other factual claims; it is not an admission that
+    # evidence is missing. This classification does not approve that claim.
+    return bool(sentences) and all(_UNCERTAIN.search(x) and not _CHECK_OBLIGATION.search(x)
+                                   for x in sentences)
 
 
 def known_names(model: KnowledgeModel) -> set[str]:
