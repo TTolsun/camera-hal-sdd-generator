@@ -307,7 +307,7 @@ def generate(generator, section, previous=None):
                 if '_part_id' in topic and isinstance(data['statements'], list) and len(data['statements']) > 2:
                     raise ValueError('분할 질문은 두 문단 이내로 답해야 합니다.')
                 data['statements'] = resolve_passages(data['statements'], passages)
-                normalize_answer(model, data['statements'], sources.values())
+                normalize_answer(model, data['statements'], [*sources.values(), topic['question']])
                 candidate = {topic['id']: data['statements']}
                 subset = {**section, 'design_topics': [topic], 'design_requirements': [
                     r for r in section['design_requirements'] if r['id'] in topic['covers']]}

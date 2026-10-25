@@ -302,6 +302,15 @@ def test_short_part_answer_is_checked_again_as_complete_topic(tmp_cfg, generated
         validate_answers(model, section, {'stop': [agent.statement]})
 
 
+def test_question_identifier_can_receive_code_typography():
+    from sdd.facts.model import ClassInfo
+    from sdd.generated_design import normalize_answer
+    model = KnowledgeModel(classes={'ns::Manager': ClassInfo('ns::Manager')})
+    statements = [{'text': 'Manager는 장치를 열거합니다.'}]
+    normalize_answer(model, statements, ['The manager enumerates devices.', 'Manager의 역할은 무엇입니까?'])
+    assert statements[0]['text'] == '`Manager`는 장치를 열거합니다.'
+
+
 def test_exhausted_thinking_budget_preserves_manuscript(tmp_cfg, generated, monkeypatch):
     from sdd.llm import Agent
     section, model, save, fake = generated
