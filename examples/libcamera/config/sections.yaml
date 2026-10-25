@@ -545,8 +545,8 @@ sections:
         - - 시작
         - - 정지
     - id: synchronization
-      question: 카메라 상태에 영향을 주는(affect the camera state) 함수들 사이에서 Camera가 제공하지 않는 동기화와 호출자가 필요할 때 지켜야 할 동기화 책임을 설명하세요.
-        질문의 모든 항목을 한 문장으로 설명하세요.
+      question: Camera의 상태에 영향을 주는 함수들에 대한 동기화 제공 여부와 필요한 경우 호출자가 맡는 책임을 독립적인 한 문장으로 설명하세요. 페이지 안의 다른 정의나 위치를 참조하지
+        마세요.
       sources:
       - synchronization
       answer_contract:
@@ -554,6 +554,13 @@ sections:
         required_terms:
         - - 동기화
         - - 호출자
+        - - 일반
+          - 대체로
+          - 보통
+        - - 필요
+        reject_patterns:
+        - pattern: 아래에?\s*정의|as defined below
+          message: 현재 문서에 없는 아래의 정의를 참조하지 마세요. 상태에 영향을 주는 함수와 동기화 책임을 독립적인 문장으로 설명하세요.
     - id: hardware
       question: 새 하드웨어의 match 구현자가 장치를 모두 확보한 경우 Camera 생성·등록까지 수행해야 하는 책임만 설명하세요. 성공·실패의 상세 반환 계약은 다음 절에서 다룹니다.
         질문의 모든 항목을 한 문장으로 설명하세요.
@@ -580,7 +587,7 @@ sections:
         end: '*/'
     - id: repeat
       file: src/libcamera/pipeline_handler.cpp
-      start: If multiple instances of a pipeline are available in the system, the
+      start: If this function returns true, a new instance of the pipeline handler will
       end: \context This function is called from the CameraManager thread.
       scope:
         start: \fn PipelineHandler::match(DeviceEnumerator *enumerator)
@@ -617,7 +624,8 @@ sections:
         - - release
         - - 'false'
     - id: repeat
-      question: match의 호출 스레드와 true 반환 뒤 새 PipelineHandler 인스턴스에서 match를 반복하는 절차를 설명하세요. 질문의 모든 항목을 한 문장으로 설명하세요.
+      question: match의 호출 스레드와 true 반환 뒤 새 PipelineHandler 인스턴스에서 match를 반복하는 절차를 한 문장으로 설명하세요. 호출 사이의 실제 시간은 추정하지
+        마세요.
       sources:
       - repeat
       answer_contract:
@@ -625,7 +633,9 @@ sections:
         required_terms:
         - - CameraManager
         - - 인스턴스
-        reject_patterns: []
+        reject_patterns:
+        - pattern: (생성되고|생성된\s*뒤)\s*(곧바로|즉시)
+          message: 원문은 새 인스턴스의 반복 호출 절차를 설명합니다. 호출 사이의 시간을 보장하는 부사 없이 절차만 설명하세요.
   - id: configuration
     title: 구현할 설정 인터페이스
     question: 하드웨어 구현자가 generateConfiguration()과 configure()를 구현할 때 각각 받는 입력, 만들어야 할 출력과 실패 반환값을 설명하세요. 호출자의 API
@@ -674,6 +684,7 @@ sections:
         required_terms:
         - - roles
         - - 호출자
+        - - generateConfiguration
     - id: generate-output
       question: generateConfiguration이 반환하는 구성에는 어떤 스트림과 파라미터 정보가 포함됩니까? 스트림 집합과 기본 파라미터를 한 문장으로 설명하세요.
       sources:
@@ -698,7 +709,7 @@ sections:
         - - 'null'
           - nullptr
     - id: generate-context
-      question: generateConfiguration의 호출 가능 스레드 범위와 구현자가 지켜야 할 스레드 안전성 의무를 함께 한 문장으로 설명하세요.
+      question: generateConfiguration의 호출 가능 스레드 범위와 함수에 요구되는 스레드 안전성을 함께 한 문장으로 설명하세요.
       sources:
       - generate-context
       answer_contract:
@@ -786,7 +797,7 @@ sections:
     - id: completion
       file: src/libcamera/pipeline_handler.cpp
       start: "The request\n * is not completed automatically when the last buffer completes to give"
-      end: needed. They shall complete requests explicitly with completeRequest().
+      end: needed.
       scope:
         start: \brief Complete a buffer for a request
         end: bool PipelineHandler::completeBuffer
@@ -794,6 +805,13 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \context This function shall be called from the CameraManager
       end: thread.
+      scope:
+        start: \brief Complete a buffer for a request
+        end: bool PipelineHandler::completeBuffer
+    - id: notification
+      file: src/libcamera/pipeline_handler.cpp
+      start: They shall complete requests explicitly
+      end: with completeRequest().
       scope:
         start: \brief Complete a buffer for a request
         end: bool PipelineHandler::completeBuffer
@@ -850,7 +868,7 @@ sections:
     - id: notification
       question: 요청을 완료할 파이프라인 핸들러는 어떤 함수를 명시적으로 호출해야 합니까? 핸들러의 의무만 한 문장으로 설명하세요.
       sources:
-      - completion
+      - notification
       answer_contract:
         basis: contract
         required_terms:
@@ -872,10 +890,6 @@ sections:
     covers:
     - algorithm
     sources:
-    - id: selection
-      file: include/libcamera/internal/ipa_manager.h
-      start: template<typename T>
-      end: "return proxy;\n\t}"
     - id: proxy-kind
       file: include/libcamera/internal/ipa_manager.h
       start: auto proxy = [&]() -> std::unique_ptr<T> {
@@ -883,17 +897,48 @@ sections:
       scope:
         start: template<typename T>
         end: "return proxy;\n\t}"
+    - id: module-call
+      file: include/libcamera/internal/ipa_manager.h
+      start: IPAModule *m = module(
+      end: maxVersion);
+      scope: &id004
+        start: template<typename T>
+        end: "return proxy;\n\t}"
+    - id: module-missing
+      file: include/libcamera/internal/ipa_manager.h
+      start: IPAModule *m = module(
+      end: return nullptr;
+      scope: *id004
+    - id: proxy-result
+      file: include/libcamera/internal/ipa_manager.h
+      start: if (!proxy->isValid()) {
+      end: return proxy;
+      scope: *id004
     parts:
     - id: module
-      question: createIPA의 module 호출에 쓰는 이름·최소/최대 버전과 모듈을 찾지 못했을 때 nullptr 반환 분기만 설명하세요. 질문의 모든 항목을 한 문장으로 설명하세요.
+      question: createIPA가 module을 호출할 때 전달하는 이름·최소 버전·최대 버전 인자를 한 문장으로 설명하세요.
       sources:
-      - selection
+      - module-call
       answer_contract:
         basis: implementation
         required_terms:
         - - module
-        - - nullptr
+        - - 이름
+          - name
+        - - 최소
+          - minVersion
+        - - 최대
+          - maxVersion
         reject_patterns: []
+    - id: module-missing
+      question: createIPA에서 module 호출로 모듈을 찾지 못한 분기의 반환값을 한 문장으로 설명하세요.
+      sources:
+      - module-missing
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - createIPA
+        - - nullptr
     - id: signature
       question: createIPA 내부 람다에서 isSignatureValid 결과가 참·거짓일 때 각각 생성하는 프록시 객체의 종류를 한 문장으로 설명하세요. 객체 생성과 최종 성공 반환은
         별도 단계입니다. 포인터의 템플릿 반환형은 이 질문의 범위가 아닙니다.
@@ -907,15 +952,27 @@ sections:
         - - isSignatureValid
         reject_patterns: []
     - id: proxy
-      question: 생성한 프록시의 isValid 검사 결과에 따른 오류 기록·nullptr 반환과 성공 반환만 설명하세요. 질문의 모든 항목을 한 문장으로 설명하세요.
+      question: createIPA에서 생성한 프록시의 isValid 검사에 실패한 경우 오류 기록과 반환값을 한 문장으로 설명하세요.
       sources:
-      - selection
+      - proxy-result
       answer_contract:
         basis: implementation
         required_terms:
         - - isValid
         - - nullptr
+        - - 오류
+          - LOG
         reject_patterns: []
+    - id: proxy-success
+      question: createIPA에서 생성한 프록시의 유효성 검사를 통과한 경우 무엇을 반환합니까? 한 문장으로 설명하세요.
+      sources:
+      - proxy-result
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - createIPA
+        - - 프록시
+          - proxy
   - id: shutdown
     title: 정지와 오류 처리의 책임
     question: 공통 stop과 하드웨어별 stopDevice의 책임을 나누고 대기 요청과 장치 요청이 종료되는 조건을 설명하세요.
@@ -946,10 +1003,19 @@ sections:
         end: 'data->requestSequence_ = 0;
 
           }'
+    - id: stop-rationale
+      file: src/libcamera/pipeline_handler.cpp
+      start: Take all waiting requests so that they are not requeued in response
+      end: to completeRequest() being called inside stopDevice().
+      scope:
+        start: void PipelineHandler::stop(Camera *camera)
+        end: 'data->requestSequence_ = 0;
+
+          }'
     parts:
     - id: order
-      question: 공통 stop에서 waitingRequests_를 옮기는 순서와, stopDevice 안의 completeRequest 호출로 대기 요청이 다시 등록되는 일을 막는 의도를
-        설명하세요. 소스에 있는 주석과 코드만 근거로 삼으세요. 질문의 모든 항목을 한 문장으로 설명하세요.
+      question: 공통 stop에서 waitingRequests.swap(data->waitingRequests_)와 stopDevice(camera) 중 무엇이 먼저 실행됩니까? 두 호출의
+        순서만 한 문장으로 설명하세요.
       sources:
       - stop-order
       answer_contract:
@@ -957,8 +1023,18 @@ sections:
         required_terms:
         - - waitingRequests_
         - - stopDevice
+        reject_patterns:
+        - pattern: 완료
+          message: 이 질문에서는 두 호출의 순서만 설명하세요. 요청 완료의 주체와 조건은 별도 질문에서 다룹니다.
+    - id: rationale
+      question: stop에서 대기 요청을 따로 옮기는 이유를 stopDevice 내부의 completeRequest 호출과 연결하여 한 문장으로 설명하세요. 소스 주석에 있는 이유만 사용하세요.
+      sources:
+      - stop-rationale
+      answer_contract:
+        basis: description
+        required_terms:
+        - - stopDevice
         - - completeRequest
-        reject_patterns: []
     - id: device
       question: stopDevice의 장치 구현자가 캡처·요청 처리와 남은 요청에 대해 지켜야 하는 중단·취소·오류 완료 의무를 설명하세요. 이는 선언의 계약입니다. 질문의 모든 항목을 한
         문장으로 설명하세요.
@@ -1012,14 +1088,14 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: This function ensures that requests will be returned to the application in
       end: without any ordering constraint.
-      scope: &id004
+      scope: &id005
         start: \brief Signal request completion
         end: void PipelineHandler::completeRequest
     - id: completion-thread
       file: src/libcamera/pipeline_handler.cpp
       start: \context This function shall be called from the CameraManager thread.
       end: '*/'
-      scope: *id004
+      scope: *id005
     parts:
     - id: lifetime
       question: completeRequest 반환 뒤 요청 접근에 관한 파이프라인 구현자의 금지 의무를 설명하세요. 애플리케이션 소유권을 추정하지 마세요. 질문의 모든 항목을 한 문장으로

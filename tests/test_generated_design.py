@@ -14,6 +14,17 @@ from sdd.facts.model import KnowledgeModel
 from sdd.impact import compute
 
 
+def test_single_required_contract_cannot_decode_as_only_a_limitation():
+    from sdd.generated_design import response_schema
+    topic = dict(covers=['lifetime'], _max_statements=1, answer_contract=dict(basis='contract'))
+    def kinds(t):
+        return response_schema(t)['properties']['statements']['items']['properties']['kind']['enum']
+    assert kinds(topic) == ['behavior']
+    # Optional uncertainty still belongs in genuinely multi-statement answers.
+    assert kinds({**topic, '_max_statements': 2}) == ['behavior', 'limitation']
+    assert kinds(dict(covers=['lifetime'])) == ['behavior', 'limitation']
+
+
 @pytest.fixture
 def generated(tmp_cfg):
     source = dict(id='stop', file='device.cpp', start='void stop()', end='}')

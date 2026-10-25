@@ -101,6 +101,10 @@ def resolve_passages(statements, passages):
 def response_schema(topic, passages=None):
     def ids(values):
         return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
+    # A checked part has exactly one required factual/contract answer. Offering
+    # limitation here asks the model to choose an option the validator rejects,
+    # especially for negative but fully sourced API obligations.
+    kinds = ['behavior'] if topic.get('_max_statements') == 1 and topic.get('answer_contract') else ['behavior', 'limitation']
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'quote_id', 'covers', 'kind'], 'properties': {
                      # C++ expressions such as request->_d()->cancel() and
@@ -109,7 +113,7 @@ def response_schema(topic, passages=None):
                      'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]\\]*$'},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
                      'covers': ids(topic['covers']),
-                     'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
+                     'kind': {'type': 'string', 'enum': kinds}}}
     return {'type': 'object', 'additionalProperties': False, 'required': ['statements'],
             'properties': {'statements': {'type': 'array', 'maxItems': topic.get('_max_statements', 8), 'items': statement}}}
 

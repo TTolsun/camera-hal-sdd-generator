@@ -62,3 +62,33 @@ def test_rehashed_manual_rewrite_or_non_http_origin_is_not_model_success(tmp_pat
     fixture(tmp_path, **changes)
     with pytest.raises(AssertionError):
         proof.verify(tmp_path)
+
+
+@pytest.mark.parametrize('damage', [None, 'missing', 'unbound'])
+def test_explicit_repair_requires_replay_bound_to_http_origin(tmp_path, damage):
+    fixture(tmp_path)
+    report = json.loads((tmp_path/'evaluation.json').read_text(encoding='utf-8'))
+    report['execution_mode'] = 'verified-http-replay-and-live-repair'
+    manuscript = tmp_path/'manuscripts/page.md'
+    manuscript.write_text(manuscript.read_text(encoding='utf-8').replace(
+        'ollama/local-test', 'response-bundle/local-test'), encoding='utf-8')
+    report['results'][0]['manuscripts'][0]['sha256'] = hashlib.sha256(manuscript.read_bytes()).hexdigest()
+    save(tmp_path/'evaluation.json', report)
+    if damage != 'missing':
+        request = json.loads((tmp_path/'calls/1.request.json').read_text(encoding='utf-8'))
+        receipt = json.loads((tmp_path/'calls/1.receipt.json').read_text(encoding='utf-8'))
+        response = (tmp_path/'calls/1.response.txt').read_text(encoding='utf-8')
+        receipt.update(transport='response-bundle', http_call=False)
+        if damage == 'unbound':
+            response = 'A response with no matching HTTP origin'
+            receipt['response_sha256'] = proof.digest(response)
+        save(tmp_path/'replay-prompts/calls/1.receipt.json', receipt)
+        save(tmp_path/'replay-prompts/calls/1.request.json', request)
+        (tmp_path/'replay-prompts/calls/1.response.txt').write_text(response, encoding='utf-8')
+    if damage:
+        with pytest.raises(AssertionError):
+            proof.verify(tmp_path)
+    else:
+        result = proof.verify(tmp_path)
+        assert result['answers'] == result['http_calls'] == result['replayed_requests'] == 1
+        assert result['execution_mode'] == 'verified-http-replay-and-live-repair'

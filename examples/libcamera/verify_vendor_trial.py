@@ -33,6 +33,21 @@ def verify(root):
                    for k in ('temperature', 'think', 'num_ctx', 'max_output_tokens'))
         calls.append((receipt, request, response))
     assert calls, 'Missing actual HTTP receipts'
+    repairing = report.get('execution_mode') == 'verified-http-replay-and-live-repair'
+    origins = {(r['request_sha256'], r['response_sha256']) for r, _, _ in calls}
+    replayed = set()
+    if repairing:
+        for path in sorted((root / 'replay-prompts/calls').rglob('*.receipt.json')):
+            prefix = str(path).removesuffix('.receipt.json')
+            receipt = json.loads(path.read_text(encoding='utf-8'))
+            request = json.loads(Path(prefix + '.request.json').read_text(encoding='utf-8'))
+            response = Path(prefix + '.response.txt').read_text(encoding='utf-8')
+            pair = (digest(json.dumps(request, ensure_ascii=False, sort_keys=True)), digest(response))
+            assert pair == (receipt['request_sha256'], receipt['response_sha256']) and pair in origins
+            assert receipt['transport'] == 'response-bundle' and receipt['http_call'] is False
+            assert receipt['model'] == report['model']
+            replayed.add(pair)
+        assert replayed, 'Repair manuscripts require replay receipts bound to actual HTTP origins'
     count = 0
     for result in report['results']:
         assert result['automatic_checks'] == 'passed', result
@@ -46,13 +61,16 @@ def verify(root):
             artifact = json.loads(next(line.split(': ', 1)[1] for line in front.splitlines()
                                        if line.startswith('generated_design: ')))
             assert artifact['body_sha256'] == digest(body.strip())
-            assert set(artifact['topic_agents'].values()) == {report['provider'] + '/' + report['model']}
+            transport = 'response-bundle' if repairing else report['provider']
+            assert set(artifact['topic_agents'].values()) == {transport + '/' + report['model']}
             for topic, answers in artifact['answers'].items():
                 for answer in answers:
                     tag = f"{result['section']}_{topic}_{answer['part_id']}_"
                     matched = False
                     for receipt, request, response in calls:
                         if not receipt['tag'].startswith(tag):
+                            continue
+                        if repairing and (receipt['request_sha256'], receipt['response_sha256']) not in replayed:
                             continue
                         try:
                             raw_answers = json.loads(response)['statements']
@@ -72,7 +90,8 @@ def verify(root):
                                                     and answer['kind'] == raw['kind'])
                     assert matched, (result['section'], topic, answer['part_id'])
                     count += 1
-    return {'answers': count, 'http_calls': len(calls), 'source_commit': report['source_commit'],
+    return {'answers': count, 'http_calls': len(calls), 'replayed_requests': len(replayed),
+            'execution_mode': report.get('execution_mode', 'fresh-http-trial'), 'source_commit': report['source_commit'],
             'semantic_approval': False, 'human_approval': False}
 
 
