@@ -38,12 +38,14 @@ sections:
     title: 제공 기능과 지원 범위
     question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
     sources: []
-    statements: []
+    covers:
+    - capabilities
   - id: benefits
     title: 구현 근거로 보는 강점
     question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
     sources: []
-    statements: []
+    covers:
+    - benefits
   routes:
   - q: 연동 가이드에서 필요한 내용을 확인합니다.
     to: vendor-contract.md
@@ -52,6 +54,7 @@ sections:
   next:
     title: 연동 가이드
     link: vendor-contract.md
+  design_generation: llm
 - id: vendor-contract
   group: For Vendor
   nav_section: 연동 구현
@@ -97,32 +100,38 @@ sections:
     title: 연동 순서와 책임
     question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
     sources: []
-    statements: []
+    covers:
+    - integration
   - id: inputs
     title: 입력 조건과 구현 책임
     question: 입력 조건과 구현 책임은 무엇입니까?
     sources: []
-    statements: []
+    covers:
+    - inputs
   - id: ownership
     title: 요청과 버퍼 수명
     question: 요청과 버퍼를 누가 유지하고 반환합니까?
     sources: []
-    statements: []
+    covers:
+    - ownership
   - id: completion
     title: 제출·완료·정지
     question: 제출과 완료, 정지를 어떻게 구분합니까?
     sources: []
-    statements: []
+    covers:
+    - completion
   - id: failure
     title: 실패 처리
     question: 실패를 어떻게 구분하고 처리합니까?
     sources: []
-    statements: []
+    covers:
+    - failure
   - id: verification
     title: 실행 확인
     question: 어떤 조건을 실행에서 확인해야 합니까?
     sources: []
-    statements: []
+    covers:
+    - verification
   routes:
   - q: 제품 개요에서 필요한 내용을 확인합니다.
     to: vendor-overview.md
@@ -131,6 +140,7 @@ sections:
   next:
     title: 지원 범위와 검증
     link: vendor-assurance.md
+  design_generation: llm
 - id: vendor-assurance
   group: For Vendor
   nav_section: 도입 판단
@@ -160,12 +170,14 @@ sections:
     title: 지원 조건과 제약
     question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
     sources: []
-    statements: []
+    covers:
+    - constraints
   - id: verification
     title: 실행 확인
     question: 어떤 조건을 실행에서 확인해야 합니까?
     sources: []
-    statements: []
+    covers:
+    - verification
   routes:
   - q: 제품 개요에서 필요한 내용을 확인합니다.
     to: vendor-overview.md
@@ -174,6 +186,7 @@ sections:
   next:
     title: 시스템 개요
     link: overview.md
+  design_generation: llm
 - id: overview
   group: For Developer
   nav_section: 구조 이해
@@ -238,34 +251,41 @@ sections:
     title: 처음 읽을 코드와 순서
     question: 처음 읽을 파일과 진입점, 요청을 따라갈 순서는 무엇입니까?
     sources: []
-    statements: []
+    covers:
+    - entry
   - id: responsibility
     title: 컴포넌트 책임
     question: 컴포넌트의 책임은 어떻게 나뉩니까?
     sources: []
-    statements: []
+    covers:
+    - responsibility
   - id: boundaries
     title: 제어·데이터 경계
     question: 제어와 데이터는 어떤 경계를 통과합니까?
     sources: []
-    statements: []
+    covers:
+    - boundaries
   - id: lifecycle
     title: 상태·자원 수명
     question: 상태와 자원 수명은 어떻게 변합니까?
     sources: []
-    statements: []
+    covers:
+    - lifecycle
   - id: concurrency
     title: 동기화 책임
     question: 스레드와 동기화 책임은 어디에 있습니까?
     sources: []
-    statements: []
+    covers:
+    - concurrency
   - id: verification
     title: 정적 근거와 실행 확인
     question: 구성 실패·완료 누락·정지 문제별로 처음 볼 파일·함수, 관측할 값과 그에 따른 다음 분기, 수정 후 확인 조건은 무엇입니까? 조사 계획과 실제 실행 결과를 구분하세요.
     sources: []
-    statements: []
+    covers:
+    - verification
   diagram:
     enabled: false
+  design_generation: llm
 - id: components
   group: For Developer
   nav_section: 코드 탐색
