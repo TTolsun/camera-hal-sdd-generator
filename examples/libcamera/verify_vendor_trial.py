@@ -48,7 +48,7 @@ def verify(root):
             assert receipt['model'] == report['model']
             replayed.add(pair)
         assert replayed, 'Repair manuscripts require replay receipts bound to actual HTTP origins'
-    count = 0
+    count, visual_count = 0, 0
     for result in report['results']:
         assert result['automatic_checks'] == 'passed', result
         for item in result['manuscripts']:
@@ -90,7 +90,26 @@ def verify(root):
                                                     and answer['kind'] == raw['kind'])
                     assert matched, (result['section'], topic, answer['part_id'])
                     count += 1
-    return {'answers': count, 'http_calls': len(calls), 'replayed_requests': len(replayed),
+            visual_lines = [line.split(': ', 1)[1] for line in front.splitlines()
+                            if line.startswith('generated_visuals: ')]
+            if visual_lines:
+                visual = json.loads(visual_lines[0])
+                assert visual['body_sha256'] == digest(body.strip())
+                for ident, record in visual['records'].items():
+                    assert record['producer'] == transport + '/' + report['model']
+                    matching = []
+                    for receipt, _, response in calls:
+                        if not receipt['tag'].startswith(f"visual_{result['section']}_{ident}_"):
+                            continue
+                        if repairing and (receipt['request_sha256'], receipt['response_sha256']) not in replayed:
+                            continue
+                        try:
+                            matching.append(json.loads(response) == record['draft'])
+                        except ValueError:
+                            continue
+                    assert any(matching), (result['section'], ident, 'visual HTTP origin')
+                    visual_count += 1
+    return {'answers': count, 'visuals': visual_count, 'http_calls': len(calls), 'replayed_requests': len(replayed),
             'execution_mode': report.get('execution_mode', 'fresh-http-trial'), 'source_commit': report['source_commit'],
             'semantic_approval': False, 'human_approval': False}
 

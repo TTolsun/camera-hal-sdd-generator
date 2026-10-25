@@ -92,3 +92,34 @@ def test_explicit_repair_requires_replay_bound_to_http_origin(tmp_path, damage):
         result = proof.verify(tmp_path)
         assert result['answers'] == result['http_calls'] == result['replayed_requests'] == 1
         assert result['execution_mode'] == 'verified-http-replay-and-live-repair'
+
+
+@pytest.mark.parametrize('rewrite', [False, True])
+def test_visual_draft_also_requires_exact_http_origin(tmp_path, rewrite):
+    fixture(tmp_path)
+    request = {'system': 'Draw from source', 'user': 'A source-bound question', 'response_schema': {}}
+    draft = {'nodes': [{'label': 'Source label'}], 'edges': []}
+    raw = json.dumps(draft)
+    receipt = json.loads((tmp_path/'calls/1.receipt.json').read_text(encoding='utf-8'))
+    receipt.update(tag='visual_page_diagram_0', response_sha256=proof.digest(raw),
+                   request_sha256=proof.digest(json.dumps(request, ensure_ascii=False, sort_keys=True)))
+    save(tmp_path/'calls/2.receipt.json', receipt)
+    save(tmp_path/'calls/2.request.json', request)
+    (tmp_path/'calls/2.response.txt').write_text(raw, encoding='utf-8')
+    path = tmp_path/'manuscripts/page.md'
+    document = path.read_text(encoding='utf-8')
+    body = document.split('\n---\n', 1)[1]
+    if rewrite:
+        draft['nodes'][0]['label'] = 'Manually replaced label'
+    visual = dict(body_sha256=proof.digest(body.strip()), records={'diagram': dict(
+        producer='ollama/local-test', draft=draft)})
+    document = document.replace('\n---\n', '\ngenerated_visuals: ' + json.dumps(visual) + '\n---\n', 1)
+    path.write_text(document, encoding='utf-8')
+    report = json.loads((tmp_path/'evaluation.json').read_text(encoding='utf-8'))
+    report['results'][0]['manuscripts'][0]['sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
+    save(tmp_path/'evaluation.json', report)
+    if rewrite:
+        with pytest.raises(AssertionError, match='visual HTTP origin'):
+            proof.verify(tmp_path)
+    else:
+        assert proof.verify(tmp_path)['visuals'] == 1
