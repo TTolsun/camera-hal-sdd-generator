@@ -47,6 +47,7 @@ binds the IDs to source symbols; never repeat id or symbol inside these values.
 Return EVERY bound node and use its exact ID in edges. You still propose all labels
 and connections from the evidence, never invent a relationship to connect nodes.'''
 POLICY += '\nDoxygen return-value passages retain the function header through the relevant status; cite that status passage, including its duties and may/must qualifications.'
+POLICY += '\nEvery label is a single line without Markdown bullets or line breaks. The renderer wraps labels automatically. label is Korean explanatory text (code identifiers stay unchanged); label_en is its English translation.'
 
 
 def digest(value):
@@ -134,7 +135,7 @@ def inputs(cfg, model, section, plan):
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'prompt'}:
+    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'prompt', 'sources'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -154,10 +155,14 @@ def inputs(cfg, model, section, plan):
     if section.get('kind', 'prose') != 'prose' or not section.get('show_evidence'):
         raise ValueError('LLM visuals require prose and show_evidence')
     topic = topics[plan['topic']]
+    selected = plan.get('sources', [s['id'] for s in topic['sources']])
+    if (not isinstance(selected, list) or not selected or any(not isinstance(s, str) for s in selected)
+            or len(selected) != len(set(selected)) or not set(selected) <= {s['id'] for s in topic['sources']}):
+        raise ValueError('Visual sources must select unique source IDs from the current topic')
     _, gaps = topic_blocks(model, section['id'], topic)
     if gaps:
         raise ValueError(' / '.join(gaps))
-    records = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"] for s in topic['sources']}
+    records = {sid: model.evidence[f"{section['id']}/{topic['id']}/{sid}"] for sid in selected}
     for record in records.values():
         if hashlib.sha256(record['text'].encode()).hexdigest() != record.get('sha256'):
             raise ValueError('Visual source excerpt hash mismatch')
@@ -194,10 +199,12 @@ def schema(passages, limit, required_symbols=None):
     refs = {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': list(passages)}}
     def obj(properties):
         return {'type': 'object', 'additionalProperties': False, 'required': list(properties), 'properties': properties}
-    label = string
-    node = obj({'id': {**string, 'pattern': '^[a-z][a-z0-9_-]*$'}, 'symbol': {**string, 'enum': required_symbols or source_symbols(passages)}, 'label': label,
-                'label_en': label, 'shape': {'type': 'string', 'enum': ['box', 'process', 'decision']}, 'quote_ids': refs})
-    edge = obj({'from': string, 'to': string, 'label': label, 'label_en': label,
+    label = {**string, 'pattern': r'^[^\r\n]+$'}
+    korean = {**label, 'description': 'Single-line Korean explanation; preserve code identifiers.'}
+    english = {**label, 'description': 'Single-line English translation with the same conditions and obligations.'}
+    node = obj({'id': {**string, 'pattern': '^[a-z][a-z0-9_-]*$'}, 'symbol': {**string, 'enum': required_symbols or source_symbols(passages)}, 'label': korean,
+                'label_en': english, 'shape': {'type': 'string', 'enum': ['box', 'process', 'decision']}, 'quote_ids': refs})
+    edge = obj({'from': string, 'to': string, 'label': korean, 'label_en': english,
                 'condition_ref': {'type': 'string', 'enum': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages) for branch in ('true', 'false')]},
                 'quote_ids': refs})
     nodes = {'type': 'array', 'minItems': 2, 'maxItems': limit, 'items': node}
@@ -224,7 +231,7 @@ def materialize(cfg, model, section, plan, draft, producer):
     limit = node_limit(cfg, plan)
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'prompt')} | {'nodes': [], 'edges': [], 'producer': producer}
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'prompt', 'sources')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):

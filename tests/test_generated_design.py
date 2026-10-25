@@ -57,6 +57,18 @@ def test_answer_checkpoint_is_disabled_by_default(generated, tmp_cfg):
     assert not (tmp_cfg.build_dir/'validated-answers').exists()
 
 
+def test_single_required_contract_cannot_decode_as_only_a_limitation():
+    from sdd.generated_design import response_schema
+    topic = dict(covers=['lifetime'], _max_statements=1, answer_contract=dict(basis='contract'))
+    def kinds(t):
+        return response_schema(t)['properties']['statements']['items']['properties']['kind']['enum']
+    assert kinds(topic) == ['behavior']
+    # Optional uncertainty still belongs in genuinely multi-statement answers.
+    assert kinds({**topic, '_max_statements': 2}) == ['behavior']
+    assert kinds({**topic, '_max_statements': 2, 'answer_contract': {'basis': 'description'}}) == ['behavior', 'limitation']
+    assert kinds(dict(covers=['lifetime'])) == ['behavior', 'limitation']
+
+
 @pytest.fixture
 def generated(tmp_cfg):
     source = dict(id='stop', file='device.cpp', start='void stop()', end='}')
@@ -82,6 +94,10 @@ def generated(tmp_cfg):
             self.statement = copy.deepcopy(statement)
         def chat(self, system, user, **kw):
             self.calls.append(user)
+            # A previous factual few-shot example leaked into unrelated stop
+            # answers. Policy must not supply an unrelated buffer-lifetime fact.
+            assert 'retain the buffer until completion' not in system
+            assert '호출자는 완료될 때까지 버퍼를 유지해야 합니다' not in system
             return json.dumps({'statements': [self.statement]}, ensure_ascii=False)
     return section, model, save, Agent()
 
@@ -200,7 +216,10 @@ def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated, maximum):
     assert path.read_bytes() == original and len(agent.calls) == 2
 
 
-def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated):
+@pytest.mark.parametrize('prompt_mode', ['standard', 'focused'])
+def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated, prompt_mode):
+    tmp_cfg.raw['review'] = {'design_prompt': prompt_mode}
+    (tmp_cfg.prompts_dir / 'focused-design-system.md').write_text('각 질문에 답하세요.', encoding='utf-8')
     from sdd.export_html import _split
     section, model, save, agent = generated
     topic = section['design_topics'][0]
@@ -212,6 +231,9 @@ def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated):
     class RetryAgent:
         calls = []
         def chat(self, system, user, **kw):
+            if prompt_mode == 'focused':
+                assert system == '각 질문에 답하세요.'
+                assert kw['response_schema']['properties']['statements']['maxItems'] == 1
             self.calls.append(user)
             response = copy.deepcopy(agent.statement)
             response['text'] = rejected if len(self.calls) == 1 else valid

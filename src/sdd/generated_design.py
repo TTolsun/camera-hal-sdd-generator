@@ -239,7 +239,7 @@ def generate(generator, section, previous=None):
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
     from . import focused_prompt
-    focused_system = focused_prompt.system_prompt(cfg)
+    focused_system = focused_prompt.system_prompt(cfg, section.get('design_prompt'))
     from .prompting import compose_system_prompt
     system = compose_system_prompt(cfg, structured=True) + (
         '\n\nFor this call, override earlier Markdown, citation and two-paragraph instructions. '
@@ -255,6 +255,7 @@ def generate(generator, section, previous=None):
         'A reference measurement procedure is not a test result for this product. '
         'Every sentence must be supported by its selected source passage. '
         'Do not copy duties or example behavior from instructions into the answer. '
+        'Preserve the scope of any/all/only together with may and negation. '
         'Return only the requested JSON.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
@@ -290,6 +291,8 @@ def generate(generator, section, previous=None):
             units.append(unit)
     for topic in units:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
+        # A focused answer can relate a guard, loop and final check. Splitting
+        # those on blank lines makes one quote_id insufficient for that claim.
         scopes = {s['id']: s['scope'] for s in topic['sources'] if 'scope' in s}
         annotated, passages = source_passages(sources, whole_source=focused_system is not None, scopes=scopes)
         if not passages:
@@ -322,7 +325,7 @@ def generate(generator, section, previous=None):
         from . import answer_cache
         options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
         cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
-                                             {'request': options, 'policy': policy,
+                                             {'request': options, **({'policy': policy} if focused_system is not None else {}),
                                               'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
         cached = answer_cache.read(cached_path)
         for attempt in range(cfg.max_retries + 1):

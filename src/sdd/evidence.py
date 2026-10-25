@@ -31,6 +31,23 @@ def requires_fingerprint(section: dict) -> bool:
                 or section.get("narration") == "facts")
 
 
+def select_span(text: str, source: dict) -> tuple[int, int]:
+    """Select a unique passage inside an optional uniquely anchored scope."""
+    offset, region = 0, text
+    if 'scope' in source:
+        scope = source['scope']
+        offset, limit = select_span(text, scope)
+        region = text[offset:limit]
+    start, end = source['start'], source['end']
+    if not start or not end or region.count(start) != 1:
+        raise ValueError('시작 앵커가 없거나 유일하지 않습니다.')
+    begin = region.index(start)
+    finish = region.find(end, begin + len(start))
+    if finish < 0:
+        raise ValueError('종료 앵커가 선택 범위 안에 없습니다.')
+    return offset + begin, offset + finish + len(end)
+
+
 def collect(cfg: Config, model: KnowledgeModel) -> None:
     from .contract_schema import configuration_errors
 
@@ -64,14 +81,7 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
                             raise ValueError("해당 커밋에서 근거 파일을 읽을 수 없습니다.")
                         cache[file] = result.stdout
                     text = cache[file]
-                    start, end = source["start"], source["end"]
-                    if not start or not end or text.count(start) != 1:
-                        raise ValueError("시작 앵커가 없거나 유일하지 않습니다.")
-                    begin = text.index(start)
-                    finish = text.find(end, begin + len(start))
-                    if finish < 0:
-                        raise ValueError("종료 앵커가 없습니다.")
-                    finish += len(end)
+                    begin, finish = select_span(text, source)
                     excerpt = text[begin:finish]
                     if len(excerpt) > int(source.get("max_chars", 12000)):
                         raise ValueError("근거 발췌가 허용 길이를 초과했습니다.")

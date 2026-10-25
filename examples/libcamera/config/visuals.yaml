@@ -362,8 +362,8 @@ sections:
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret =\
-          \ queueRequestDevice(camera, request);"
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
+          \ request);"
     - from: device
       to: cancel
       label: 장치 제출 실패
@@ -451,8 +451,8 @@ sections:
       evidence:
       - source: journey/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret =\
-          \ queueRequestDevice(camera, request);"
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
+          \ request);"
     - from: device
       to: buffer
       label: 장치 구현자가 버퍼 완료 통지
@@ -618,8 +618,8 @@ sections:
       evidence:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
-        quote: "waitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued\
-          \ requests complete. */\n\tstopDevice(camera);"
+        quote: "waitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests\
+          \ complete. */\n\tstopDevice(camera);"
     - from: stop
       to: cancel
       label: 장치 요청 뒤 대기 요청 취소
@@ -847,8 +847,8 @@ sections:
       evidence:
       - source: queue/dispatch
         sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret =\
-          \ queueRequestDevice(camera, request);"
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
+          \ request);"
     - from: device
       to: cancel
       label: 장치 제출 실패
@@ -930,7 +930,10 @@ sections:
     kind: decision
     title: validate() 결과별 호출자의 책임
     question: validate()의 Invalid·Adjusted·Valid는 무엇을 뜻하며, Adjusted이면 호출자는 무엇을 다시 확인해야 합니까?
-    prompt: 네 노드는 CameraConfiguration::validate·Invalid·Adjusted·Valid입니다. 가장 중요한 답은 Adjusted에서 호출자가 할 일입니다. Adjusted 노드의 label에는 호출자·확인·가능을 모두 넣고 label_en에는 caller·check·may를 모두 넣으세요. 파라미터 변경이나 스트림 삭제는 가능성이며 호출자는 조정된 구성을 주의하여 확인해야 합니다. 영어에서도 이 가능성과 의무를 보존하세요. 제공한 원문에 없는 보장은 추가하지 마세요.
+    prompt: 네 노드는 CameraConfiguration::validate·Invalid·Adjusted·Valid입니다. 함수에서 세 반환 상태로 향하는 선 세 개를 그리세요. 각 노드의 label은 한국어
+      설명, label_en은 같은 의미의 영어 설명이며 모두 한 줄입니다. Invalid에서 빈 구성은 극단적인 예시이며 유일한 발생 조건으로 쓰지 마세요. Adjusted 노드에는 파라미터 변경·스트림 삭제 가능성과
+      호출자의 확인 의무를 함께 설명하세요. label에 호출자·확인·가능을, label_en에 caller·check·may를 포함하세요. 반환 관계는 함수 머리와 해당 상태가 함께 있는 원문을 인용하세요. 제공한
+      근거 밖 보장은 추가하지 마세요.
     generation: llm
     max_nodes: 4
     required_symbols:
@@ -941,13 +944,19 @@ sections:
     answer_contract:
       basis: description
       required_terms:
-      - [확인, 재확인]
-      - [가능, 수 있습니다, 수있습니다, 있을 수]
+      - - 확인
+        - 재확인
+      - - 가능
+        - 수 있습니다
+        - 수있습니다
+        - 있을 수
     answer_contract_en:
       basis: description
       required_terms:
-      - [may]
-      - [caller]
+      - - may
+      - - caller
+    sources:
+    - valid
   vendor-integration:
   - id: integration-stages
     topic: integration
@@ -960,35 +969,35 @@ sections:
       label_en: Acquire
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: The camera needs to be acquired and
     - id: configure
       label: 구성
       label_en: Configure
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: configured to prepare the camera for capture.
     - id: start
       label: 시작·요청 처리
       label_en: Start and process requests
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: "Once started the camera can\n * process requests until it is stopped."
     - id: stop
       label: 정지
       label_en: Stop
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: process requests until it is stopped.
     - id: release
       label: 사용 종료 후 해제
       label_en: Release when finished
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: camera, the camera needs to be released.
     edges:
     - from: acquire
@@ -997,7 +1006,7 @@ sections:
       label_en: Prepare capture
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: "The camera needs to be acquired and\n * configured to prepare the camera for capture."
     - from: configure
       to: start
@@ -1005,7 +1014,7 @@ sections:
       label_en: Start after preparation
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: configured to prepare the camera for capture. Once started the camera can
     - from: start
       to: stop
@@ -1013,7 +1022,7 @@ sections:
       label_en: End capture session
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: process requests until it is stopped.
     - from: stop
       to: release
@@ -1021,15 +1030,15 @@ sections:
       label_en: When finished using the camera
       evidence:
       - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+        sha256: 2727ed2082026463f6e5fe4b907fefa46749d0ff9d9122ad2d578b6440c206a0
         quote: "When an application is done with a\n * camera, the camera needs to be released."
     - from: stop
       to: start
       label: 해제 전에는 재시작 가능
       label_en: May restart before release
       evidence:
-      - source: integration/camera
-        sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
+      - source: integration/restart
+        sha256: 4af35cfde252bae9391fc55c13025c02f8bd98084b9f53807de39707feb33377
         quote: "An application may start and stop a camera multiple times as long as it is\n * not released."
   vendor-overview:
   - id: hardware-boundary
@@ -1191,8 +1200,7 @@ sections:
       evidence:
       - source: selection/selection
         sha256: e0bd5192ea24a8b39d3df7b7b93c8b17614663a0144f6dd0741d410fa321d458
-        quote: "if (!proxy->isValid()) {\n\t\t\tLOG(IPAManager, Error) << \"Failed to load proxy\";\n\t\t\treturn\
-          \ nullptr;"
+        quote: "if (!proxy->isValid()) {\n\t\t\tLOG(IPAManager, Error) << \"Failed to load proxy\";\n\t\t\treturn nullptr;"
     - from: valid
       to: success
       label: 예
