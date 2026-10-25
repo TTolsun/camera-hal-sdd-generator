@@ -160,6 +160,8 @@ LLM 개요 생성에는 강점을 구체적 구현과 조건에 연결하고, �
 
 ## scenarios.yaml
 
+질문별 그림은 `sdd.yaml`의 `visuals.file`에서 별도로 설정합니다. [사이트 구성의 질문별 그림](../concepts/site.md#질문별-그림)을 참고하세요.
+
 ```yaml
 defaults:
   glob: ["**/*.cpp"]
