@@ -1,0 +1,14 @@
+schema: 1
+sections:
+  completion-demo:
+    - id: completion-branches
+      topic: completion
+      kind: decision
+      title: 파이프 결과와 완료 처리의 분기
+      question: >-
+        RequestManager::onFrame에서 runPipes, sendResult, onFrameDone의 연결을 그리세요.
+        결과 전송 조건의 condition_ref를 원문 조건 ID의 참·거짓으로 선택하고 성공·실패 경로를 구분하세요.
+        onFrameDone이 성공·실패 양쪽에서 호출되는 것을 보존하세요. 기기 동작이나 스레드 보장은 추정하지 마세요.
+        세 호출을 각각 한 노드로 표현하며 진입점·변수·성공실패별 가상 상태 노드는 추가하지 마세요.
+      generation: llm
+      required_symbols: [runPipes, sendResult, onFrameDone]

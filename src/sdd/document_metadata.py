@@ -7,6 +7,7 @@ import yaml
 
 
 GENERATION_METHODS = {
+    "source-question": ("질문과 소스 원문 보기", "동작 설명을 생성하지 않습니다. 질문과 소스 위치를 표시하며 그림 초안의 작성자와 검사 범위는 그림 아래에 따로 기록합니다."),
     "source-bound-contract": ("소스 발췌에 연결한 설계 설명",
                               "설정에 작성된 설명을 발췌 해시와 대조합니다. 해시 일치는 설명의 의미를 승인하지 않습니다."),
     "extracted-structure": ("추출 사실로 만든 구조 설명", "클래스와 관계를 facts에서 구성합니다. 실행 동작을 검증하지 않습니다."),
@@ -21,6 +22,7 @@ GENERATION_METHODS = {
 
 # 사이트 상단 배지에 쓰는 짧은 표현이다. 원고에 기록되는 위 문구는 바꾸지 않는다(원고 해시와 승인이 바뀐다).
 READER_LABELS = {
+    "source-question": "질문과 소스 원문",
     "source-bound-contract": "코드 발췌와 대조한 설명",
     "extracted-structure": "코드에서 추출한 구조",
     "extracted-scenario": "코드에서 추출한 호출 흐름",
@@ -43,6 +45,8 @@ def generation_method(section: dict, agent_kind: str) -> str:
     if kind == "per-package" and section.get("narration") == "facts":
         return "extracted-structure"
     topics = (section.get("design_topics") or []) if kind == "prose" else []
+    if topics and all(topic.get('narration') == 'facts' for topic in topics):
+        return "source-question"
     if topics and all("statements" in topic for topic in topics):
         return "source-bound-contract"
     if kind == "prose" and not topics and section.get("narration") == "facts":

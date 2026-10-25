@@ -373,8 +373,10 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         if rel != glossary.PAGE and glossary.PAGE in texts:
             body = glossary.insert(body, glossary.block(glossary.used_terms(terms, texts[rel]),
                                                         posixpath.relpath(glossary.PAGE, posixpath.dirname(rel) or ".")))
-        from .visuals import render as render_visuals, place
-        visuals = render_visuals(cfg, model, section) if section else []
+        from .visuals import place
+        from .generated_visuals import from_manuscript, render as render_visuals
+        artifact = from_manuscript(cfg, model, section, texts[rel]) if section else None
+        visuals = render_visuals(cfg, model, section, artifact) if section else []
         body = place(body, visuals, section)
         for visual, _, source in visuals:
             if source:

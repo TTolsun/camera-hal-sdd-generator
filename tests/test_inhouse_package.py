@@ -32,6 +32,9 @@ def kit_repo(tmp_path):
         "docs/inhouse/import-agent.md": "Internal destinations only.",
         "skills/camera-hal-sdd/SKILL.md": "Skill.",
         "examples/inhouse-template/sdd.yaml": "agent: {kind: dry-run}",
+        "examples/inhouse-template/config/visuals.yaml": "schema: 1\nsections: {}\n",
+        "src/sdd/generated_visuals.py": "# graph draft runtime\n",
+        "tools/evaluate_visuals.py": "# public model replay entrypoint\n",
         "src/sdd/__init__.py": "",
         "src/sdd/cli.py": "import sys\ndef main(): return 7 if '--fail' in sys.argv else 0\n",
         "AGENTS.md": "PUBLIC DEPLOYMENT INSTRUCTION MUST NOT TRAVEL",
@@ -128,6 +131,8 @@ def test_real_import_runs_task_navigation(tmp_path):
         source.extractall(tmp_path / 'import')
     kit = tmp_path / 'import/camera-hal-sdd-generator'
     assert not (kit / '.git').exists()
+    for rel in ('src/sdd/generated_visuals.py', 'tools/evaluate_visuals.py', 'examples/inhouse-template/config/visuals.yaml'):
+        assert (kit / rel).is_file()
     assert verifier.verify(kit)['source_commit'] == info['source_commit']
     assert 'nav_section' in (kit / 'AGENTS.md').read_text(encoding='utf-8')
     # A real source checkout is separate from the imported generator. No

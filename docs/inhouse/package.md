@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**[검증된 GitHub 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-24) 링크를 공유하면 됩니다.** 전달용 ZIP을 다시 묶거나 메일에 첨부할 필요가 없습니다. 받은 반입 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달하세요. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[LLM 그림 자동화 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-25-visuals) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -14,16 +14,18 @@
 
 ## 반입 확인과 설치
 
+이 버전은 [LLM 그림 자동화](../concepts/site.md#사내-llm으로-초안-자동-생성하기)를 포함합니다. `src/sdd/generated_visuals.py`, `examples/inhouse-template/config/visuals.yaml`, `tools/evaluate_visuals.py`가 manifest에 포함돼야 합니다. 반입본에서 실제 승인 모델로 재시험하기 전에는 사내 모델 검증 완료로 기록하지 않습니다.
+
 ### GitHub에서 받기
 
-검증 버전은 `3066527e44f5ee843acb0f192cc7505afdc16c9e`이며, 이동하는 main 대신 `inhouse-2026-10-24` 릴리스에 고정했습니다. 아래 네 파일을 같은 폴더에 받으세요. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+`inhouse-2026-10-25-visuals` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
 
 | 파일 | 용도 |
 |---|---|
-| [camera-hal-sdd-inhouse-3066527.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-24/camera-hal-sdd-inhouse-3066527.zip) | 검증된 생성기·가이드·스킬·설정 템플릿 |
-| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-24/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
-| [camera-hal-sdd-inhouse-3066527.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-24/camera-hal-sdd-inhouse-3066527.zip.sha256) | 반입 ZIP의 SHA-256 |
-| [published-reader-evaluation.md](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-24/published-reader-evaluation.md) | 최종 공개 배포본의 독립 읽기 평가 기록 |
+| [camera-hal-sdd-inhouse-llm-visuals.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/camera-hal-sdd-inhouse-llm-visuals.zip) | 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [camera-hal-sdd-inhouse-llm-visuals.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/camera-hal-sdd-inhouse-llm-visuals.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [visual-replay-report.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/visual-replay-report.json) | 이 반입본으로 실행한 Local Qwen 소스 변경 전후 그림 시험 기록 |
 
 프롬프트 파일은 이 검증 버전과 함께 보관하는 사본입니다. 이후 버전의 절차는 해당 버전의 이 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
 
@@ -106,6 +108,9 @@ Vendor 문서는 제품 개요(vendor-overview), 연동 가이드(vendor), 지�
 작성 맥락이 없는 새 에이전트에게 사이트만 주고 reader-quality.md의 읽기 과제를 수행하게 해줘.
 답·코드 위치·관측값·다음 분기를 못 찾으면 보완 후 같은 배포본에서 재평가해줘.
 실제 소스에 근거한 design_requirements와 design_topics를 직접 작성해줘.
+기본 템플릿의 design_generation: llm으로 질문·covers·sources를 작성하고 사내 LLM이 답변을 생성하게 해줘.
+config/visuals.yaml에는 generation: llm 질문을 실제 근거와 연결해줘. 노드·화살표를 정답으로 미리 작성하지 마.
+실제 모델 호출 영수증, 그림 근거·문서 배치, 별도 소스 변경 후 재생성과 실패 보존을 검증해줘.
 요청 제출·완료·정지 경로를 먼저 연결한 뒤, 확인한 제품 범위에 확장해줘.
 한 계약은 한 문서에서 자세히 설명하고 다른 문서는 요약과 링크로 연결해줘.
 
@@ -129,7 +134,7 @@ Vendor 문서는 제품 개요(vendor-overview), 연동 가이드(vendor), 지�
 | 1. 설정 | `examples/inhouse-template/`을 `../hal-sdd-project/`로 복사합니다. 환경과 최종 로컬 덮어쓰기를 확인합니다. | 소스 SHA·제품 변형·실제 DB 생성 명령·사내 경로가 정해졌습니다. |
 | 2. 빌드 근거 | NDK-build면 `<PY> tools/run_sdd.py --config <CFG> compdb`를 실행합니다. 다른 빌드는 제품의 DB 생성 명령을 실행하고 `ndk_build.enabled: false`로 둡니다. | 제품과 같은 매크로·헤더·TU를 담은 DB가 있습니다. |
 | 3. 환경·추출 | `doctor` → `extract` 순서로 실행합니다. 두 명령에도 `--config <CFG>`를 지정합니다. | 필수 환경 오류, 파싱 오류, 미해결 필수 진입점이 없습니다. |
-| 4. 계약 작성 | [계약 작성 절차](contract-authoring.md)에 따라 발췌 원문을 읽고 `sources`, `statements`, `evidence`, `covers`, 해시를 채웁니다. 약어도 정의합니다. | Vendor·Developer 질문에 실제 소스로 답하고 조건·예외·수명을 대조했습니다. |
+| 4. 질문·근거 작성 | [계약 작성 절차](contract-authoring.md)에 따라 실제 `sources`, 질문·`covers`와 LLM 그림 계획을 연결합니다. 고정 계약을 선택한 섹션에서만 `statements`·해시를 직접 작성합니다. 약어도 정의합니다. | 질문·조건·예외·수명이 실제 소스로 뒷받침됩니다. |
 | 5. 생성·검사 | `generate` → `audit-docs`를 실행합니다. | 자동 검사를 통과하고 미해결 필수 계약이 없습니다. |
 | 6. 로컬 사이트 | `fetch-mermaid --tarball <승인된 파일>`로 자산을 준비한 뒤 `export-site` → `verify-site`를 실행합니다. | 내부 링크 오류 0, manifest 검증 성공, 외부 자산 의존 없음 또는 승인된 사내 자산입니다. |
 | 7. 독자·복구 시험 | 아래 품질 기준으로 대조하고 별도 시험 사본에서 반복·실패 보존·수정 후 재개를 확인합니다. | 자동 검사와 의미 검토의 증거, 실패 전후 해시가 있습니다. |
@@ -186,6 +191,8 @@ python tools/build_inhouse_package.py --ref HEAD --out build/import/camera-hal-s
 
 
 ## 이 패키지에서 확인한 범위
+
+LLM 그림 자동화 버전은 Git 이력이 없는 실제 ZIP에서 Local Qwen을 호출해 공개 소스 조건 변경 전후의 그림·원고·사이트를 검사합니다. 입력 지문 변경, 새 실제 응답 사용, 오래된 그림 게시 차단과 기존 사이트 보존도 확인합니다. [시험 범위와 실제 실패 기록](records/llm-visual-replay.md)을 읽고, 릴리스의 `visual-replay-report.json`에서 반입본 실행 결과를 대조하세요.
 
 최초 반입 패키지 검증에서는 공개 mini HAL의 기존 검증 입력으로, ZIP을 공백이 있는 다른 경로에 풀어 동봉한 생성기를 실행했습니다. 반입 파일 해시와 안내 문서의 로컬 링크를 검사했고 doctor·generate·audit-docs·export-site·verify-site가 통과했습니다. 반복 manifest는 같았고, 필수 답변을 제거한 시험에서는 생성·사이트 반영이 차단되면서 기존 파일 123개가 보존됐습니다. 설정을 복구한 뒤 같은 명령으로 정상 재개했습니다.
 
