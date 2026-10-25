@@ -152,7 +152,17 @@ def schema(passages, limit, required_symbols=None):
     edge = obj({'from': string, 'to': string, 'label': label, 'label_en': label,
                 'condition_ref': {'type': 'string', 'enum': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages) for branch in ('true', 'false')]},
                 'quote_ids': refs})
-    return obj({'nodes': {'type': 'array', 'minItems': 2, 'maxItems': limit, 'items': node},
+    nodes = {'type': 'array', 'minItems': 2, 'maxItems': limit, 'items': node}
+    if required_symbols and len(required_symbols) == limit:
+        # A full fixed-size symbol set can constrain each tuple position. The
+        # provider-independent validator still checks coverage after decoding.
+        nodes['prefixItems'] = []
+        for symbol in required_symbols:
+            item = copy.deepcopy(node)
+            item['properties']['symbol']['enum'] = [symbol]
+            nodes['prefixItems'].append(item)
+        nodes.update(minItems=limit, items=False)
+    return obj({'nodes': nodes,
                 'edges': {'type': 'array', 'minItems': 1, 'maxItems': limit * 3, 'items': edge}})
 
 
