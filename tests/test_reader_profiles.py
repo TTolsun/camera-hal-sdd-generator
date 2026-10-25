@@ -15,12 +15,19 @@ from sdd.reader_profiles import PROFILES
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_non_libcamera_reader_profiles_generate_and_preserve_outputs_on_failure(tmp_cfg):
+@pytest.mark.parametrize('navigation', ['mini-hal', 'inhouse-template'])
+def test_non_libcamera_reader_profiles_generate_and_preserve_outputs_on_failure(tmp_cfg, navigation):
     # Use the committed mini HAL, not fabricated evidence or libcamera fixtures.
     tmp_cfg.raw["documentation"] = {"enabled": True}
     tmp_cfg.source_root = ROOT / 'examples/mini-hal'
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     sections = yaml.safe_load((tmp_cfg.source_root / 'config/reader-sections.yaml').read_text(encoding='utf-8'))
+    if navigation == 'inhouse-template':
+        template = yaml.safe_load((ROOT / 'examples/inhouse-template/config/sections.yaml').read_text(encoding='utf-8'))
+        by_profile = {s['reader_profile']: s for s in template['sections'] if s.get('reader_profile')}
+        for section in sections['sections']:
+            source = by_profile[section['reader_profile']]
+            section.update({k: source[k] for k in ('group', 'nav_section')})
     tmp_cfg.sections_file.write_text(yaml.safe_dump(sections, allow_unicode=True), encoding='utf-8')
     tmp_cfg.scenarios_file.write_text('scenarios: []\n', encoding='utf-8')
     model = KnowledgeModel(meta={'source_commit': commit})
@@ -38,7 +45,18 @@ def test_non_libcamera_reader_profiles_generate_and_preserve_outputs_on_failure(
         assert text.count('#include "device/RequestManager.h"') == 1
         assert 'libcamera::' not in text
         assert '??? note "설계 질문과 검증 범위"' in text
+    site = export_site(tmp_cfg)
+    from sdd.site_build import verify_site
+    assert verify_site(site)['broken_links'] == 0
+    page = (site / 'vendor-contract.html').read_text(encoding='utf-8')
+    assert '<section class="nav-section" aria-label="도입 판단">' in page
+    assert '<section class="nav-section" aria-label="연동 구현">' in page
+    assert '<section class="nav-section" aria-label="구조 이해">' in page
+    # Menu grouping reuses the public renderer with unrelated HAL contracts.
+    assert page.index('vendor-assurance.html') < page.index('vendor-contract.html')
+    manifest_before = (site / 'site-manifest.json').read_bytes()
     export_site(tmp_cfg)
+    assert (site / 'site-manifest.json').read_bytes() == manifest_before
     before = {p: p.read_bytes() for p in paths}
     manifest = tmp_cfg.build_dir / 'site/site-manifest.json'
     old_manifest = manifest.read_bytes()

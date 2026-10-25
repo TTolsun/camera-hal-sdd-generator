@@ -175,7 +175,7 @@ def test_default_output_name_still_enforces_publication_fingerprint(tmp_cfg, sam
 
 
 def test_메뉴_분류만_바꾸면_지문이_그대로다(sample_model):
-    """group·routes·next·watch 는 페이지 배치와 영향 분석에만 쓰인다.
+    """group·nav_section·routes·next·watch 는 페이지 배치와 영향 분석에만 쓰인다.
 
     이것만 바꿔도 지문이 달라지면, 메뉴 라벨 한 줄 때문에 근거가 고정된 문서를 모델로 다시
     만들어야 한다. 게시 문서의 문장이 이유 없이 바뀐다.
@@ -183,7 +183,7 @@ def test_메뉴_분류만_바꾸면_지문이_그대로다(sample_model):
     sec = dict(id='camera', semantic_review=True, title='카메라',
                facts={'classes': ['CameraDevice']}, next={'title': '다음', 'link': 'a.md'})
     original = fingerprint(sample_model, sec)
-    moved = dict(sec, group='For Vendors', routes=[{'q': '확인합니다.', 'to': '#절'}],
+    moved = dict(sec, group='For Vendors', nav_section='연동 구현', routes=[{'q': '확인합니다.', 'to': '#절'}],
                  next={'title': '다른 문서', 'link': 'b.md'}, watch=['src/**'])
     assert fingerprint(sample_model, moved) == original
 

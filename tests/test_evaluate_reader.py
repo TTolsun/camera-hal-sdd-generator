@@ -1,4 +1,5 @@
 import json
+import hashlib
 
 import pytest
 
@@ -36,4 +37,8 @@ def test_evaluation_records_failure_without_publishing(tmp_cfg, tmp_path, sample
     assert report['results'][0]['automatic_checks'] == 'failed'
     assert report['human_approval'] == 'pending' and report['publishable'] is False
     assert json.loads((out/'evaluation.json').read_text(encoding='utf-8')) == report
+    assert (out/'sections.yaml').read_bytes() == cfg.sections_file.read_bytes()
+    assert report['sections_sha256'] == hashlib.sha256((out/'sections.yaml').read_bytes()).hexdigest()
+    assert 'answer_contracts.py' in report['generator_files_sha256']
+    assert report['settings']['think'] == cfg.agent.think
     assert not cfg.sdd_dir.exists()

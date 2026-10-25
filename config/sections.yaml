@@ -21,6 +21,7 @@
 # group: 사이트 왼쪽 메뉴에서 이 문서를 묶을 제목. 생략하면 sdd.yaml 의 site.nav_group 또는 "설계 문서" 로 묶는다.
 #        같은 그룹끼리 처음 나온 순서대로 모이므로, 섹션 순서를 바꿔도 제목이 두 번 나오지 않는다.
 #        그룹이 메뉴에 나오는 차례는 sdd.yaml 의 site.nav_groups 로 따로 정한다.
+# nav_section: 독자 그룹 안에서 수행할 작업. 문서 제목이나 클래스 이름과 같은 단계에 섞지 않는다.
 # lead: 페이지 첫 문장. 독자가 먼저 할 일 또는 결론. 굵게 표시된다.
 # routes: "지금 확인할 내용 -> 이동할 절" 표. 생략하면 본문의 ## 제목에서 자동 생성한다.
 # next: 페이지 끝에 연결할 문서 하나.
@@ -37,6 +38,7 @@ sections:
 
   - id: overview
     group: For Developer
+    nav_section: 구조 이해
     title: 시스템 개요
     output: overview.md
     kind: prose
@@ -67,6 +69,7 @@ sections:
 
   - id: components
     group: For Developer
+    nav_section: 코드 탐색
     title: 컴포넌트 구조와 책임
     output: components.md
     kind: per-package
@@ -85,6 +88,7 @@ sections:
 
   - id: scenarios
     group: For Developer
+    nav_section: 동작 추적과 문제 진단
     title: 핵심 시나리오
     output: scenarios/index.md
     kind: per-scenario
@@ -100,6 +104,7 @@ sections:
 
   - id: feature-flags
     group: For Developer
+    nav_section: 동작 추적과 문제 진단
     title: Feature flag 매트릭스
     output: feature-flags.md
     kind: table
@@ -112,6 +117,7 @@ sections:
 
   - id: threading
     group: For Developer
+    nav_section: 구조 이해
     title: 스레드와 큐 모델
     output: threading.md
     kind: prose
@@ -132,6 +138,7 @@ sections:
 
   - id: constraints
     group: For Developer
+    nav_section: 변경 검토
     title: 변경 시 지켜야 할 제약
     output: constraints.md
     kind: manual
@@ -139,6 +146,7 @@ sections:
 
   - id: decisions
     group: For Developer
+    nav_section: 변경 검토
     title: 설계 결정 기록
     output: decisions.md
     kind: manual

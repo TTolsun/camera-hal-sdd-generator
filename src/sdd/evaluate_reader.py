@@ -33,8 +33,13 @@ def evaluate(cfg, section_ids, out: Path):
             or any(out.is_relative_to(p.resolve()) for p in protected[1:])):
         raise ValueError('평가 출력에는 기존 입력·원고를 포함하지 않는 새 디렉터리가 필요합니다.')
     out.mkdir(parents=True)
+    sections_bytes = cfg.sections_file.read_bytes()
+    sections_hash = hashlib.sha256(sections_bytes).hexdigest()
+    (out/'sections.yaml').write_bytes(sections_bytes)
+    generator_hashes = {name:hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
+                       for name in ('generated_design.py','answer_contracts.py','contract_schema.py','evaluate_reader.py','validate.py')}
     trial = copy.deepcopy(cfg)
-    trial.paths = {**trial.paths, 'sections_file':cfg.sections_file, 'scenarios_file':cfg.scenarios_file,
+    trial.paths = {**trial.paths, 'sections_file':out/'sections.yaml', 'scenarios_file':cfg.scenarios_file,
                    'prompts':cfg.prompts_dir, 'templates':cfg.templates_dir, 'style':cfg.style_dir}
     trial.root = out
     trial.sdd_dir = out / 'manuscripts'
@@ -59,10 +64,13 @@ def evaluate(cfg, section_ids, out: Path):
     report = {'schema':1, 'source_commit':model.meta['source_commit'],
               'model':trial.agent.model, 'provider':trial.agent.kind,
               'settings':{'temperature':trial.agent.temperature,'num_ctx':trial.agent.num_ctx,
+                          'think':trial.agent.think,
                           'max_output_tokens':trial.agent.max_output_tokens,
                           'max_retries':trial.max_retries,
                           'design_revision':bool(trial.raw.get('review',{}).get('design_revision',False))},
-              'sections_sha256':hashlib.sha256(cfg.sections_file.read_bytes()).hexdigest(),
+              'sections_sha256':sections_hash,
+              'generator_files_sha256':generator_hashes,
+              'checks_scope':'Coverage, source binding, configured terms and known textual failure patterns; not a semantic truth oracle.',
               'results':results, 'semantic_review':'pending', 'human_approval':'pending',
               'publishable':False,
               'review_questions':['주장마다 직접 근거와 적용 조건을 찾을 수 있습니까?',
