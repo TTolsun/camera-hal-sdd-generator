@@ -98,7 +98,7 @@ sections:
         - - 스트림
         reject_patterns: []
     - id: hardware
-      question: 새 파이프라인의 구현·장치 확보·Camera 생성·등록에 관해 하드웨어 구현자가 지켜야 할 계약을 설명하세요. 특정 기기 지원 여부는 추정하지 마세요.
+      question: 장치 확보 뒤 Camera를 생성하는 책임과 REGISTER_PIPELINE_HANDLER()로 등록하는 계약을 모두 한 문장으로 설명하세요. 특정 기기 지원 여부는 추정하지 마세요.
       sources:
       - handler
       answer_contract:
@@ -153,19 +153,28 @@ sections:
         - - 실패
         - - 취소
         reject_patterns: []
-    - id: completion
-      question: 공통 queueRequest의 요청 추적은 stop 시 완료와 어떤 관계가 있고, 파이프라인 핸들러는 어떤 함수로 완료를 통지해야 합니까? 추적을 호출자의 의무로 바꾸지 말고 공통 처리와 파이프라인의
-        통지 의무를 같은 한 문단에 설명하세요. 두 계약 사이의 호출 순서나 완료 후 추가 통지를 추정하지 마세요.
+    - id: tracking
+      question: 공통 queueRequest의 요청 추적이 stop() 시 완료와 어떤 관계가 있는지만 한 문장으로 설명하세요. 추적을 호출자의 의무로 바꾸지 마세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: description
+        required_terms:
+        - - stop
+        reject_patterns:
+        - pattern: 호출자는.{0,40}추적
+          message: 요청 추적은 공통 함수의 처리입니다. 호출자 의무로 바꾸지 마세요.
+    - id: notification
+      question: 파이프라인 핸들러가 completeRequest()로 완료를 통지해야 하는 의무만 한 문장으로 설명하세요. stop()의 호출 순서나 자동 완료 후 추가 통지를 추정하지 마세요.
       sources:
       - completion
       answer_contract:
         basis: contract
         required_terms:
-        - - stop
         - - completeRequest
         reject_patterns:
-        - pattern: 호출자는.{0,40}추적
-          message: 요청 추적은 공통 함수의 처리입니다. 호출자 의무로 바꾸지 마세요.
+        - pattern: 완료.{0,10}(후|뒤)
+          message: 원문에 없는 자동 완료와 통지 사이의 순서를 추가하지 마세요.
   - id: queue-limit
     title: 장치 요청 한도와 대기 큐
     question: PipelineHandler 생성자의 장치 요청 한도 기본값과 장치 큐·대기 큐의 구분을 설명하세요.
@@ -1513,11 +1522,18 @@ sections:
       start: \brief Complete a buffer for a request
       end: bool PipelineHandler::completeBuffer
     parts:
-    - id: completion
-      question: PipelineHandler::completeBuffer()의 알림과 추적 역할, 마지막 버퍼 완료 뒤에도 completeRequest()를 명시적으로 호출해야 하는 계약을 함수 이름을 사용하여
-        설명하세요. 두 문단 이내로 필요한 계약만 설명하고 소스에 없는 결과나 보장은 덧붙이지 마세요.
+    - id: buffer
+      question: PipelineHandler::completeBuffer()의 버퍼 알림과 추적 역할만 설명하세요.
       sources:
       - buffer
+    - id: request
+      question: 마지막 버퍼 완료와 요청 완료를 구분하고 파이프라인 핸들러가 completeRequest()를 호출해야 하는 계약을 한 문장으로 설명하세요.
+      sources:
+      - buffer
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - completeRequest
   - id: boundary
     title: 스레드 경계와 동기화
     question: Camera 상태를 바꾸는 함수의 동기화 책임과 PipelineHandler::completeRequest()의 실행 스레드 계약을 구분하여 설명하세요. 이 계약을 모든 콜백에 확대하지 마세요.
@@ -1559,10 +1575,12 @@ sections:
       end: The Camera class models a camera
     parts:
     - id: contracts
-      question: Camera::start()의 허용 상태와 호출자 동기화 계약을 behavior로 설명하고, 별도 limitation에서 Camera 클래스 주석의 시작 타이밍 문서화 TODO만 설명하세요.
-        TODO로 전체 구현이 미정이라고 추정하지 마세요. behavior와 limitation 문단을 하나씩, 총 두 문단으로 작성하세요.
+      question: Camera::start()의 허용 상태와 호출자 동기화 계약만 설명하세요.
       sources:
       - start
+    - id: timing
+      question: Camera 클래스 주석에 남은 시작 타이밍 문서화 TODO를 한 문장으로 설명하세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.
+      sources:
       - timing
   - id: queue-limit
     title: 장치 요청 한도와 대기 큐
