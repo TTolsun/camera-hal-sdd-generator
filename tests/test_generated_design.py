@@ -511,6 +511,19 @@ def test_enabling_grounding_invalidates_unguarded_topic_reuse(tmp_cfg, generated
     assert agent.calls and path.read_bytes() == before
 
 
+@pytest.mark.parametrize('reason', ['', 'x' * 401])
+def test_grounding_requires_bounded_verdict_reasons(tmp_cfg, reason):
+    from types import SimpleNamespace
+    from sdd.grounding import review
+    class Agent:
+        def chat(self, *args, **kwargs):
+            return json.dumps({'reviews': [{'index': 0, 'supported': True, 'reason': reason}]})
+    with pytest.raises(ValueError, match='근거 대조 응답'):
+        review(SimpleNamespace(cfg=tmp_cfg, agent=Agent()), {'question': 'What happens?'},
+               [{'text': 'A claim', 'quote': 'Source statement', 'evidence': ['s']}],
+               {'s': 'Source statement'}, 'bounded')
+
+
 
 
 

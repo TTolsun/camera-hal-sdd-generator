@@ -11,7 +11,9 @@ def review(generator, topic, statements, sources, tag):
         'The quote locates a passage within that evidence; read its full associated source context '
         'to preserve enclosing conditions. Do not use unrelated evidence IDs. '
         'Preserve may versus shall and caller obligations. '
-        'Plausibility is not evidence. Do not write replacement prose. Return only the requested JSON reviews.'
+        'Plausibility is not evidence. Do not write replacement prose. '
+        'Give one concise reason per verdict, at most 400 characters, without deliberation. '
+        'Return only the requested JSON reviews.'
     )
     payload = {'topic': topic['question'], 'source_context': sources,
                'statements': [{'index': index, 'text': statement['text'], 'source_quote': statement['quote'],
@@ -25,7 +27,8 @@ def review(generator, topic, statements, sources, tag):
                  'maxItems': len(statements), 'items': {'type': 'object',
                     'required': ['index', 'supported', 'reason'], 'additionalProperties': False,
                     'properties': {'index': {'type': 'integer', 'enum': list(range(len(statements)))},
-                                   'supported': {'type': 'boolean'}, 'reason': {'type': 'string'}}}}}}
+                                   'supported': {'type': 'boolean'},
+                                   'reason': {'type': 'string', 'minLength': 1, 'maxLength': 400}}}}}}
     options = {'response_schema': schema} if generator.cfg.agent.kind in ('ollama', 'response-bundle') else {}
     raw = generator.agent.chat(system, user, tag=tag + '_grounding', **options)
     data = json.loads(raw)
@@ -35,7 +38,8 @@ def review(generator, topic, statements, sources, tag):
     if (set(data) != {'reviews'} or not isinstance(rows, list) or len(rows) != len(statements)
             or any(not isinstance(row, dict) or set(row) != {'index', 'supported', 'reason'}
                    or type(row['index']) is not int or type(row['supported']) is not bool
-                   or not isinstance(row['reason'], str) for row in rows)
+                   or not isinstance(row['reason'], str) or not 1 <= len(row['reason'].strip()) <= 400
+                   for row in rows)
             or sorted(row['index'] for row in rows) != list(range(len(statements)))):
         raise ValueError('근거 대조 응답은 모든 설명 문단을 중복 없이 판정해야 합니다.')
     findings = [f"paragraph {row['index'] + 1}: {row['reason']}" for row in rows if not row['supported']]

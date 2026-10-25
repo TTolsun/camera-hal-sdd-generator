@@ -75,3 +75,13 @@ def test_part_identity_must_match_real_call_tag(tmp_path):
     save()
     with pytest.raises(ValueError, match='No matching HTTP'):
         verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')
+
+
+def test_partial_json_is_not_provenance_even_when_parseable(tmp_path):
+    model, manuscripts, calls, artifact, save = setup(tmp_path)
+    path = calls / '001.receipt.json'
+    receipt = json.loads(path.read_text())
+    receipt['provider'] = {'done_reason': 'length'}
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='No matching HTTP'):
+        verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')

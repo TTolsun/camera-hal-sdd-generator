@@ -26,6 +26,9 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
                 or receipt.get('model') != model_name):
             raise ValueError(f'Model call receipt mismatch: {receipt_path.name}')
         user = request['user']
+        if (receipt.get('provider', {}).get('done_reason') == 'length'
+                or receipt.get('provider', {}).get('finish_reason') == 'length'):
+            continue  # An archived partial response cannot establish authorship.
         try:
             payload, _ = json.JSONDecoder().raw_decode(user[user.index('{'):])
             sources = payload['sources']
