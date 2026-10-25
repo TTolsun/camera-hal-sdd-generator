@@ -43,6 +43,8 @@ sections:
     question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
     aspects:
     - benefits
+  - id: queue-limit
+    question: 장치에 동시에 제출하는 요청 수의 기본 한도와 대기 요청의 처리는 무엇입니까?
   design_topics:
   - id: value
     title: 복잡한 카메라를 공통 API로 제어하기
@@ -69,8 +71,8 @@ sections:
         reject_patterns: []
   - id: capabilities
     title: 제공 기능과 지원 범위
-    question: Camera가 하나의 이미지 소스에서 하나 이상의 스트림을 제공하는 기능을 설명하세요. 하드웨어 지원은 장치별 PipelineHandler 구현과 등록에 달려 있습니다. 지원
-      기종이나 성능 수치를 추정하지 마세요.
+    question: Camera가 하나의 이미지 소스에서 하나 이상의 스트림을 제공하는 기능을 설명하세요. 하드웨어 지원은 장치별 PipelineHandler 구현과 등록에 달려 있습니다. 지원 기종이나 성능 수치를
+      추정하지 마세요.
     covers:
     - capabilities
     sources:
@@ -96,7 +98,7 @@ sections:
         - - 스트림
         reject_patterns: []
     - id: hardware
-      question: 새 파이프라인의 구현·장치 확보·Camera 생성·등록에 관해 하드웨어 구현자가 지켜야 할 계약을 설명하세요. 특정 기기 지원 여부는 추정하지 마세요.
+      question: 장치 확보 뒤 Camera를 생성하는 책임과 REGISTER_PIPELINE_HANDLER()로 등록하는 계약을 모두 한 문장으로 설명하세요. 특정 기기 지원 여부는 추정하지 마세요.
       sources:
       - handler
       answer_contract:
@@ -107,19 +109,27 @@ sections:
         reject_patterns: []
   - id: benefits
     title: 구현 근거로 보는 강점
-    question: PipelineHandler::queueRequest의 공통 구현과 계약이 제공하는 이점을 설명하세요. 준비 대기, 제출 순서, maxQueuedRequestsDevice_ 한도,
-      준비 실패·장치 제출 실패 시 취소와 정지 시 요청 추적을 다루세요. 장치 구현자의 completeRequest 통지 책임은 유지하며 처리 속도나 개발 기간 절감량을 추정하지 마세요.
+    question: PipelineHandler::queueRequest의 공통 구현과 계약이 제공하는 이점을 설명하세요. 준비 대기, 제출 순서, maxQueuedRequestsDevice_ 한도, 준비 실패·장치
+      제출 실패 시 취소와 정지 시 요청 추적을 다루세요. 장치 구현자의 completeRequest 통지 책임은 유지하며 처리 속도나 개발 기간 절감량을 추정하지 마세요.
     covers:
     - benefits
     sources:
     - id: queue
       file: src/libcamera/pipeline_handler.cpp
       start: \fn PipelineHandler::queueRequest()
-      end: void PipelineHandler::queueRequest(Request *request)
+      end: in the same order they have been queued by calling this function.
+    - id: failure
+      file: src/libcamera/pipeline_handler.cpp
+      start: If a Request fails during the preparation phase
+      end: fails in queuing the request to the hardware the request is cancelled.
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: Keeping track of queued requests ensures automatic completion of all requests
+      end: signalled by the pipeline handler using the completeRequest() function.
     parts:
     - id: queue
-      question: 공통 PipelineHandler::queueRequest가 요청을 기다렸다가 전달하는 순서와 maxQueuedRequestsDevice_ 한도는 무엇입니까? 대기 큐 관리의
-        주체를 호출자로 바꾸지 말고 이 함수의 동작만 한 문단으로 설명하세요. 실패 처리는 다음 질문에서 다룹니다.
+      question: 공통 PipelineHandler::queueRequest가 요청을 기다렸다가 전달하는 순서와 maxQueuedRequestsDevice_ 한도는 무엇입니까? 대기 큐 관리의 주체를 호출자로
+        바꾸지 말고 이 함수의 동작만 한 문단으로 설명하세요. 실패 처리는 다음 질문에서 다룹니다.
       sources:
       - queue
       answer_contract:
@@ -135,7 +145,7 @@ sections:
     - id: failure
       question: 준비 단계 실패와 하드웨어 큐 등록 실패 때의 요청 취소 계약만 한 문단으로 설명하세요.
       sources:
-      - queue
+      - failure
       answer_contract:
         basis: description
         required_terms:
@@ -143,19 +153,55 @@ sections:
         - - 실패
         - - 취소
         reject_patterns: []
-    - id: completion
-      question: 공통 queueRequest의 요청 추적은 stop 시 완료와 어떤 관계가 있고, 파이프라인 핸들러는 어떤 함수로 완료를 통지해야 합니까? 추적을 호출자의 의무로 바꾸지 말고
-        공통 처리와 파이프라인의 통지 의무를 같은 한 문단에 설명하세요.
+    - id: tracking
+      question: 공통 queueRequest의 요청 추적이 stop() 시 완료와 어떤 관계가 있는지만 한 문장으로 설명하세요. 추적을 호출자의 의무로 바꾸지 마세요.
       sources:
-      - queue
+      - completion
       answer_contract:
-        basis: contract
+        basis: description
         required_terms:
         - - stop
-        - - completeRequest
         reject_patterns:
         - pattern: 호출자는.{0,40}추적
           message: 요청 추적은 공통 함수의 처리입니다. 호출자 의무로 바꾸지 마세요.
+    - id: notification
+      question: 파이프라인 핸들러가 completeRequest()로 완료를 통지해야 하는 의무만 한 문장으로 설명하세요. stop()의 호출 순서나 자동 완료 후 추가 통지를 추정하지 마세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - completeRequest
+        reject_patterns:
+        - pattern: 완료.{0,10}(후|뒤)
+          message: 원문에 없는 자동 완료와 통지 사이의 순서를 추가하지 마세요.
+  - id: queue-limit
+    title: 장치 요청 한도와 대기 큐
+    question: PipelineHandler 생성자의 장치 요청 한도 기본값과 장치 큐·대기 큐의 구분을 설명하세요.
+    covers:
+    - queue-limit
+    sources:
+    - id: default
+      file: include/libcamera/internal/pipeline_handler.h
+      start: PipelineHandler(CameraManager *manager,
+      end: virtual ~PipelineHandler();
+    - id: queue
+      file: src/libcamera/pipeline_handler.cpp
+      start: \var PipelineHandler::maxQueuedRequestsDevice_
+      end: \fn PipelineHandler::name()
+    parts:
+    - id: default
+      question: PipelineHandler 생성자 선언에서 maxQueuedRequestsDevice의 기본값은 몇입니까? 그 정수 값을 숫자로 명시하여 한 문장으로 답하세요.
+      sources:
+      - default
+    - id: queue
+      question: maxQueuedRequestsDevice_가 제한하는 요청 수는 어느 큐에 해당합니까? 한 문장으로 답하세요.
+      sources:
+      - queue
+    - id: waiting
+      question: 애플리케이션이 장치 한도보다 많은 요청을 제출하면 나머지 요청은 어디에서 기다립니까? 한 문장으로 답하세요.
+      sources:
+      - queue
   reader_profile: vendor-overview
   routes:
   - q: 연동 가이드에서 필요한 내용을 확인합니다.
@@ -1292,7 +1338,6 @@ sections:
   semantic_review: true
 - id: overview
   group: For Developer
-  nav_section: 구조 이해
   title: 시스템 개요
   output: overview.md
   kind: prose
@@ -1337,8 +1382,8 @@ sections:
   design_topics:
   - id: discovery
     title: 탐색과 파이프라인 선택
-    question: 처음 읽는 개발자에게 CameraManager의 단일 인스턴스와 진입점 역할, start() 성공 후 장치 접근 순서, cameras()와 get()의 실행 상태 조건을 설명하세요.
-      PipelineHandler::match()의 장치 확보·카메라 생성·등록 책임도 구분하세요. 네 개의 짧은 문단으로 설명하고 실제 소스의 API 이름과 조건을 유지하세요.
+    question: 처음 읽는 개발자에게 CameraManager의 단일 인스턴스와 진입점 역할, start() 성공 후 장치 접근 순서, cameras()와 get()의 실행 상태 조건을 설명하세요. PipelineHandler::match()의
+      장치 확보·카메라 생성·등록 책임도 구분하세요. 네 개의 짧은 문단으로 설명하고 실제 소스의 API 이름과 조건을 유지하세요.
     covers:
     - discovery
     sources:
@@ -1358,6 +1403,27 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \fn PipelineHandler::match(DeviceEnumerator *enumerator)
       end: \brief Search and acquire a MediaDevice
+    parts:
+    - id: entry
+      question: CameraManager의 진입점 역할과 장치 열거·파이프라인 연결·카메라 접근 기능을 설명하세요.
+      sources:
+      - manager
+    - id: singleton
+      question: 동시에 존재할 수 있는 CameraManager 인스턴스 수와 기존 인스턴스를 삭제하지 않고 추가 생성할 때의 계약을 설명하세요.
+      sources:
+      - manager
+    - id: start
+      question: CameraManager::start()가 성공한 뒤 애플리케이션이 카메라를 나열하고 사용할 수 있는 시점을 한 문장으로 설명하세요.
+      sources:
+      - start
+    - id: access
+      question: CameraManager::cameras()와 get()은 매니저가 실행 중일 때와 정지했을 때 중 어느 상태에서 사용할 수 있습니까? 상태 조건만 한 문장으로 설명하세요.
+      sources:
+      - access
+    - id: match
+      question: PipelineHandler::match() 구현자의 장치 획득과 Camera 생성·등록 책임을 두 문장 이내로 설명하세요. 실패와 반복 호출은 다루지 마세요.
+      sources:
+      - match
   - id: responsibility
     title: 컴포넌트별 책임
     question: Camera가 공개하는 기능과 객체 수명 관리 방식을 설명하세요.
@@ -1368,6 +1434,11 @@ sections:
       file: src/libcamera/camera.cpp
       start: The Camera class models a camera
       end: \section camera_operation
+    parts:
+    - id: responsibility
+      question: Camera가 공개하는 기능과 객체 수명 관리 방식을 설명하세요. 두 문단 이내로 필요한 계약만 설명하고 소스에 없는 결과나 보장은 덧붙이지 마세요.
+      sources:
+      - camera
   - id: creation
     title: 요청 생성과 소유권
     question: Camera::createRequest()의 입력, 허용 상태와 반환된 요청의 소유권·재사용 계약을 설명하세요.
@@ -1378,6 +1449,19 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Create a request object for the camera
       end: std::unique_ptr<Request> Camera::createRequest
+    parts:
+    - id: state
+      question: Camera::createRequest()는 어느 카메라 상태에서 호출할 수 있습니까? 상태 이름을 모두 포함해 한 문장으로 답하세요.
+      sources:
+      - create
+    - id: ownership
+      question: Camera::createRequest()가 돌려주는 요청의 소유권과 삭제 책임은 누구에게 있습니까? 한 문장으로 답하세요.
+      sources:
+      - create
+    - id: reuse
+      question: Request::reuse() 함수는 재사용할 요청의 상태에 어떤 처리를 합니까? 그 함수 호출과 요청 재사용의 순서가 드러나게 한 문장으로 설명하세요.
+      sources:
+      - create
   - id: lifecycle
     title: 캡처 세션의 상태와 자원
     question: 캡처 준비 순서, 시작 이후 요청 처리, 정지와 최종 해제, 해제 전 반복 시작·정지와 재설정을 설명하세요. 최종 해제 단계를 빠뜨리지 마세요.
@@ -1388,11 +1472,24 @@ sections:
       file: src/libcamera/camera.cpp
       start: \section camera_operation
       end: Functions that affect the camera state
+    parts:
+    - id: prepare
+      question: 캡처 준비를 위한 카메라 획득·구성·시작의 순서를 한 문장으로 설명하세요.
+      sources:
+      - state
+    - id: finish
+      question: 요청 처리 종료와 애플리케이션의 사용 종료 시 카메라를 정지하고 해제하는 순서를 한 문장으로 설명하세요.
+      sources:
+      - state
+    - id: repeat
+      question: 카메라 해제 전에 시작·정지와 구성을 반복할 수 있는지 한 문장으로 설명하세요.
+      sources:
+      - state
   - id: request
     title: 요청 제출과 완료
-    question: Camera::queueRequest()의 버퍼 입력 조건, requestCompleted 완료 알림, Running 상태 조건을 설명하세요. 각 문단에서 함수나 신호 이름을
-      밝혀 주세요. fill it with buffers의 it은 요청 객체이며 버퍼 안의 픽셀 데이터를 채우라는 뜻이 아닙니다. 허용 상태는 실제 카메라 상태에 관한 조건이며 호출자가 상태를 미리
-      확인했는지와는 다릅니다. 확인을 권하는 조언은 쓰지 마세요.
+    question: Camera::queueRequest()의 버퍼 입력 조건, requestCompleted 완료 알림, Running 상태 조건을 설명하세요. 각 문단에서 함수나 신호 이름을 밝혀 주세요. fill
+      it with buffers의 it은 요청 객체이며 버퍼 안의 픽셀 데이터를 채우라는 뜻이 아닙니다. 허용 상태는 실제 카메라 상태에 관한 조건이며 호출자가 상태를 미리 확인했는지와는 다릅니다. 확인을 권하는
+      조언은 쓰지 마세요.
     covers:
     - request
     sources:
@@ -1400,10 +1497,23 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Queue a request to the camera
       end: int Camera::queueRequest
+    parts:
+    - id: buffers
+      question: Camera::queueRequest()에 전달할 요청 객체에 연결되어 있어야 하는 버퍼 조건만 한 문장으로 설명하세요.
+      sources:
+      - queue
+    - id: signal
+      question: Camera::queueRequest()로 제출한 요청의 처리가 끝났을 때 애플리케이션이 받는 완료 신호 이름을 한 문장으로 설명하세요. 제출 직후를 완료 시점으로 설명하지 마세요.
+      sources:
+      - queue
+    - id: state
+      question: Camera::queueRequest()를 호출할 수 있는 카메라 상태 이름만 한 문장으로 설명하세요.
+      sources:
+      - queue
   - id: completion
     title: 버퍼 완료와 요청 완료
-    question: PipelineHandler::completeBuffer()의 알림과 추적 역할, 마지막 버퍼 완료 뒤에도 completeRequest()를 명시적으로 호출해야 하는 계약을 함수
-      이름을 사용하여 설명하세요.
+    question: PipelineHandler::completeBuffer()의 알림과 추적 역할, 마지막 버퍼 완료 뒤에도 completeRequest()를 명시적으로 호출해야 하는 계약을 함수 이름을 사용하여
+      설명하세요.
     covers:
     - completion
     sources:
@@ -1411,10 +1521,25 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
       end: bool PipelineHandler::completeBuffer
+    parts:
+    - id: buffer
+      question: PipelineHandler::completeBuffer()의 버퍼 알림과 추적 역할만 설명하세요.
+      sources:
+      - buffer
+    - id: request
+      question: 마지막 버퍼 완료 뒤에도 파이프라인 핸들러가 completeRequest()를 명시적으로 호출해야 하는 의무만 한 문장으로 설명하세요. 추가 작업의 이유나 호출 목적은 이 질문의 범위가 아닙니다.
+      sources:
+      - buffer
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - completeRequest
+        reject_patterns:
+        - pattern: 기회|위해
+          message: 완료 호출 의무만 설명하고 추가 작업의 기회나 목적과 인과관계로 연결하지 마세요.
   - id: boundary
     title: 스레드 경계와 동기화
-    question: Camera 상태를 바꾸는 함수의 동기화 책임과 PipelineHandler::completeRequest()의 실행 스레드 계약을 구분하여 설명하세요. 이 계약을 모든 콜백에
-      확대하지 마세요.
+    question: Camera 상태를 바꾸는 함수의 동기화 책임과 PipelineHandler::completeRequest()의 실행 스레드 계약을 구분하여 설명하세요. 이 계약을 모든 콜백에 확대하지 마세요.
     covers:
     - boundary
     sources:
@@ -1426,10 +1551,25 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Signal request completion
       end: void PipelineHandler::completeRequest
+    parts:
+    - id: state
+      question: Camera 상태를 바꾸는 함수들을 호출할 때 필요한 동기화를 보장할 호출자의 의무만 한 문장으로 설명하세요.
+      sources:
+      - synchronization
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - 호출자
+        - - 동기화
+    - id: complete
+      question: PipelineHandler::completeRequest()의 실행 스레드 계약만 설명하세요. 다른 콜백이나 모든 메서드에 확대하지 마세요. 두 문단 이내로 필요한 계약만 설명하고 소스에
+        없는 결과나 보장은 덧붙이지 마세요.
+      sources:
+      - completion
   - id: verification
     title: 정적 근거의 확인 범위
-    question: Camera::start()의 허용 상태와 호출자 동기화 계약을 behavior로 설명하고, 별도 limitation에서 Camera 클래스 주석의 시작 타이밍 문서화 TODO만
-      설명하세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.
+    question: Camera::start()의 허용 상태와 호출자 동기화 계약을 behavior로 설명하고, 별도 limitation에서 Camera 클래스 주석의 시작 타이밍 문서화 TODO만 설명하세요. TODO로
+      전체 구현이 미정이라고 추정하지 마세요.
     covers:
     - verification
     sources:
@@ -1441,6 +1581,42 @@ sections:
       file: src/libcamera/camera.cpp
       start: \todo Add documentation for camera start timings.
       end: The Camera class models a camera
+    parts:
+    - id: contracts
+      question: Camera::start()의 허용 상태와 호출자 동기화 계약만 설명하세요.
+      sources:
+      - start
+    - id: timing
+      question: Camera 클래스 주석에 남은 시작 타이밍 문서화 TODO를 한 문장으로 설명하세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.
+      sources:
+      - timing
+  - id: queue-limit
+    title: 장치 요청 한도와 대기 큐
+    question: PipelineHandler 생성자의 장치 요청 한도 기본값과 장치 큐·대기 큐의 구분을 설명하세요.
+    covers:
+    - queue-limit
+    sources:
+    - id: default
+      file: include/libcamera/internal/pipeline_handler.h
+      start: PipelineHandler(CameraManager *manager,
+      end: virtual ~PipelineHandler();
+    - id: queue
+      file: src/libcamera/pipeline_handler.cpp
+      start: \var PipelineHandler::maxQueuedRequestsDevice_
+      end: \fn PipelineHandler::name()
+    parts:
+    - id: default
+      question: PipelineHandler 생성자 선언에서 maxQueuedRequestsDevice의 기본값은 몇입니까? 그 정수 값을 숫자로 명시하여 한 문장으로 답하세요.
+      sources:
+      - default
+    - id: queue
+      question: maxQueuedRequestsDevice_가 제한하는 요청 수는 어느 큐에 해당합니까? 한 문장으로 답하세요.
+      sources:
+      - queue
+    - id: waiting
+      question: 애플리케이션이 장치 한도보다 많은 요청을 제출하면 나머지 요청은 어디에서 기다립니까? 한 문장으로 답하세요.
+      sources:
+      - queue
   design_requirements:
   - id: responsibility
     question: Camera는 어떤 공개 기능과 객체 수명 계약을 제공합니까?
@@ -1475,11 +1651,14 @@ sections:
     question: 시작 API의 명시된 계약과 아직 문서화되지 않은 타이밍은 무엇입니까?
     aspects:
     - verification
+  - id: queue-limit
+    question: 장치에 동시에 제출하는 요청 수의 기본 한도와 대기 요청의 처리는 무엇입니까?
   show_evidence: true
   reader_profile: developer
   semantic_review: true
   narration: facts
   design_generation: llm
+  nav_section: 구조 이해
 - id: camera-model
   group: For Developer
   nav_section: 구조 이해

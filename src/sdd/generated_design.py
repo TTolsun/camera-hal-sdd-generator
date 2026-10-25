@@ -102,7 +102,10 @@ def response_schema(topic, passages=None):
         return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'quote_id', 'covers', 'kind'], 'properties': {
-                     'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]<>\\]*$'},
+                     # C++ expressions such as request->_d()->cancel() and
+                     # std::unique_ptr<Request> need angle brackets. HTML is
+                     # rejected outside code spans by materialize().
+                     'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]\\]*$'},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
                      'covers': ids(topic['covers']),
                      'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
@@ -327,7 +330,7 @@ def generate(generator, section, previous=None):
                 if '_part_id' in topic:
                     for statement in data['statements']:
                         statement['part_id'] = topic['_part_id']
-                normalize_answer(model, data['statements'], sources.values())
+                normalize_answer(model, data['statements'], [*sources.values(), topic['question']])
                 candidate = {topic['id']: data['statements']}
                 subset = {**section, 'design_topics': [topic], 'design_requirements': [
                     r for r in section['design_requirements'] if r['id'] in topic['covers']]}
