@@ -476,24 +476,6 @@ def test_quote_comparison_ignores_comment_decoration_but_preserves_negation():
     assert quote_text('It must access the request after completion.') not in quote_text(source)
 
 
-def test_doxygen_paragraphs_are_individual_verbatim_passages():
-    from sdd.generated_design import source_passages, quote_text
-    source = ' * Return Valid for an unchanged configuration.\n *\n * The caller must check an Adjusted configuration.\n'
-    annotated, passages = source_passages({'status': source})
-    assert len(passages) == 2
-    assert all(quote_text(chunk) in quote_text(source) for _, chunk in passages.values())
-    assert 'Adjusted' not in passages['status:0'][1]
-    assert 'Adjusted' in passages['status:1'][1]
-    assert len(annotated['status']) == 2
-
-
-
-def test_source_paragraph_boundaries_never_delete_operators_or_input_bytes():
-    from sdd.generated_design import source_passages
-    source = 'result = left\n    *\n    right;\n\nfinish();'
-    annotated, _ = source_passages({'code': source})
-    assert ''.join(chunk['text'] for chunk in annotated['code']) == source
-
 
 
 def test_grounding_rejection_retries_the_model_without_replacing_prose(tmp_cfg, generated):

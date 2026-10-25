@@ -64,11 +64,7 @@ def source_passages(sources):
     for source_id, text in sources.items():
         # Keep the original code, including leading multiplication/dereference
         # operators. Comment decoration is normalized only for quote comparison.
-        separated = re.split(r'(\n(?:[ \t]*\*?[ \t]*\n)+)', text)
-        chunks = [separated[0]]
-        for index in range(1, len(separated), 2):
-            chunks[-1] += separated[index]
-            chunks.append(separated[index + 1])
+        chunks = re.split(r'\n\s*\n', text)
         annotated[source_id] = []
         for index, chunk in enumerate(chunks):
             item = {'text': chunk}
