@@ -14,6 +14,49 @@ from sdd.facts.model import KnowledgeModel
 from sdd.impact import compute
 
 
+def test_opt_in_answer_checkpoint_is_bound_to_revision_and_question(generated, tmp_cfg, monkeypatch):
+    monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'original-weights')
+    section, model, save, agent = generated
+    tmp_cfg.raw.setdefault('review', {})['answer_cache'] = True
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 1
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 1
+    model.meta['source_commit'] = 'b' * 40
+    for record in model.evidence.values():
+        record['commit'] = 'b' * 40
+    save()
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 2
+    section['design_topics'][0]['question'] = '종료 시 대기 요청이 어떻게 취소됩니까?'
+    save()
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 3
+    monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'updated-weights')
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 4
+
+
+def test_cached_answer_is_revalidated_not_treated_as_approval(generated, tmp_cfg, monkeypatch):
+    monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'original-weights')
+    _, model, _, agent = generated
+    tmp_cfg.raw.setdefault('review', {})['answer_cache'] = True
+    Generator(tmp_cfg, model, agent).run()
+    cache = next((tmp_cfg.build_dir/'validated-answers').glob('*.json'))
+    raw = json.dumps({'statements': []})
+    cache.write_text(json.dumps({'response': raw, 'sha256': hashlib.sha256(raw.encode()).hexdigest()}))
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 2
+
+
+def test_answer_checkpoint_is_disabled_by_default(generated, tmp_cfg):
+    _, model, _, agent = generated
+    Generator(tmp_cfg, model, agent).run()
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 2
+    assert not (tmp_cfg.build_dir/'validated-answers').exists()
+
+
 @pytest.fixture
 def generated(tmp_cfg):
     source = dict(id='stop', file='device.cpp', start='void stop()', end='}')
@@ -95,7 +138,18 @@ def test_response_bundle_generates_then_rejects_changed_source(tmp_cfg, generate
         export_site(tmp_cfg)
 
 
-def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated):
+@pytest.mark.parametrize('bad', [0, 9, True, '3'])
+def test_invalid_part_answer_budget_fails_before_generation(tmp_cfg, generated, bad):
+    section, model, save, agent = generated
+    section['design_topics'][0]['parts'] = [dict(id='one', question='종료 동작은 무엇입니까?',
+        sources=['stop'], max_statements=bad)]
+    save()
+    with pytest.raises(ValueError, match='max_statements'):
+        Generator(tmp_cfg, model, agent).run()
+
+
+@pytest.mark.parametrize('maximum', [None, 4])
+def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated, maximum):
     section, model, save, base_agent = generated
     topic = section['design_topics'][0]
     second = dict(id='drain', file='device.cpp', start='void drain()', end='}')
@@ -105,13 +159,16 @@ def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated):
         line=20, end_line=20, text=source, sha256=hashlib.sha256(source.encode()).hexdigest(), status='available')
     topic['parts'] = [dict(id='cancel', question='취소 책임은 무엇입니까?', sources=['stop']),
                       dict(id='drain', question='비우는 책임은 무엇입니까?', sources=['drain'])]
+    if maximum is not None:
+        for part in topic['parts']:
+            part['max_statements'] = maximum
     save()
     class PartAgent:
         calls = []
         def chat(self, system, user, **kw):
             self.calls.append(user)
             assert '대기 요청은 어떻게 반환됩니까?' not in user
-            assert kw['response_schema']['properties']['statements']['maxItems'] == 2
+            assert kw['response_schema']['properties']['statements']['maxItems'] == (maximum or 2)
             statement = copy.deepcopy(base_agent.statement)
             if 'drainQueue' in user:
                 assert 'cancelPending' not in user

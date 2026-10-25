@@ -97,6 +97,7 @@ agent:
 | `require_citations` | `true` | 모델이 쓴 모든 `파일:줄` 인용이 facts에 있어야 통과합니다. |
 | `max_retries` | `1` | 검사 실패 시 재시도 횟수. 넘으면 `status: needs-review`로 남깁니다. |
 | `design_revision` | `false` | 필수 설계 답변마다 소스와 초안을 다시 보내 수정 답변을 받습니다. 호출 수가 늘며 입력 한도 초과 시 근거를 생략하지 않고 실패합니다. 모델의 재검토는 사람 승인이 아닙니다. |
+| `answer_cache` | `false` | Ollama의 검사 통과한 설계 답변을 같은 커밋의 재시도에서 재사용합니다. 소스 커밋·질문·발췌·프롬프트·모델 설정·모델 digest가 같아야 하며, 재사용 응답도 다시 검사합니다. 모델 digest를 조회할 수 없으면 캐시를 사용하지 않습니다. 강제 재호출이 필요하면 끕니다. |
 | `coverage_triage.enabled` | `false` | 사람이 승인하지 않은 범위 검토 항목을 모델이 먼저 판정합니다. |
 | `coverage_triage.pass_gate` | `false` | `true`이면 "범위 밖" 판정이 관문을 통과시킵니다. YAML 불리언만 받습니다. |
 | `coverage_triage.agent` | `agent` 값 | 판정 모델만 다르게 할 때 `kind`, `model`, `base_url` 등을 적습니다. `base_url`이 `agent.base_url`과 다르면 토큰은 `SDD_TRIAGE_API_KEY`에서만 읽습니다. |
@@ -128,6 +129,18 @@ agent:
 | `max_nodes` | `16` | 그림의 노드 한도. 넘으면 조용히 자르지 않고 실패합니다. 섹션별로 `diagram.max_nodes`로 바꿀 수 있습니다. |
 | `direction` | `LR` | Mermaid 방향. |
 | `strip_namespace` | `""` | 노드 이름에서 뺄 네임스페이스 접두사. |
+
+## visuals
+
+질문별 그림은 작성된 정의와 소스 발췌의 해시를 연결합니다. facts에서 만드는 `diagrams`와 별개입니다.
+
+| 키 | 기본값 | 뜻 |
+|---|---|---|
+| `file` | 없음 | 질문별 그림 정의 YAML 경로. |
+| `max_nodes` | `12` | 그림별 노드 한도. 초과하면 실패합니다. |
+| `on_stale` | `error` | `error`는 근거가 바뀐 그림에서 생성을 중단합니다. `omit`는 해당 그림과 다운로드를 제외하고 원고에 재검토 안내를 표시합니다. |
+
+`omit`는 그림을 자동으로 다시 작성하거나 승인하지 않습니다. 다른 커밋의 facts, 잘못된 정의, 노드 한도 초과는 여전히 실패합니다. 공개 libcamera 예제는 본문 갱신을 계속할 수 있도록 `omit`를 선택합니다.
 
 ## site
 

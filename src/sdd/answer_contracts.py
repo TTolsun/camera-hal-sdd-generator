@@ -88,16 +88,16 @@ def validate(topic, statements):
             raise ValueError('정의되지 않은 분할 질문의 답변입니다.')
         return
     # Old parts without checks have no stored identities; preserve that format.
-    if not any('answer_contract' in p for p in parts) and not any('part_id' in st for st in statements):
+    if not any('answer_contract' in p or 'max_statements' in p for p in parts) and not any('part_id' in st for st in statements):
         return
     ids = {p['id'] for p in parts}
     if any(not isinstance(st.get('part_id'), str) or st['part_id'] not in ids for st in statements):
         raise ValueError('분할 질문의 답변 id가 없거나 정의되지 않았습니다.')
     for part in parts:
         selected = [st for st in statements if st['part_id'] == part['id']]
-        maximum = 1 if part.get('answer_contract') else 2
+        maximum = part.get('max_statements', 1 if part.get('answer_contract') else 2)
         if not 1 <= len(selected) <= maximum:
-            raise ValueError(f"{topic['id']}/{part['id']}: 분할 질문마다 한두 문단의 답변이 필요합니다.")
+            raise ValueError(f"{topic['id']}/{part['id']}: 분할 질문마다 1부터 {maximum}개까지 답변이 필요합니다.")
         if any(not set(st['evidence']) <= set(part['sources']) for st in selected):
             raise ValueError(f"{topic['id']}/{part['id']}: 다른 분할 질문의 근거를 사용할 수 없습니다.")
         check(part.get('answer_contract'), selected, topic['id'] + '/' + part['id'])

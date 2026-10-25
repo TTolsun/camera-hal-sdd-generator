@@ -73,8 +73,11 @@ def generated_errors(section):
                     errors.append(f"{topic['id']}: parts sources는 현재 주제의 근거 id 목록이어야 합니다.")
                 else:
                     used.update(refs)
-                if set(part) - {'id', 'question', 'sources', 'answer_contract'}:
-                    errors.append(f"{topic['id']}: parts에는 id, question, sources, answer_contract만 허용합니다.")
+                maximum = part.get('max_statements', 1 if part.get('answer_contract') else 2)
+                if isinstance(maximum, bool) or not isinstance(maximum, int) or not 1 <= maximum <= 8:
+                    errors.append(f"{topic['id']}: max_statements는 1부터 8까지의 정수여야 합니다.")
+                if set(part) - {'id', 'question', 'sources', 'answer_contract', 'max_statements'}:
+                    errors.append(f"{topic['id']}: parts에는 id, question, sources, answer_contract, max_statements만 허용합니다.")
             if used != source_ids:
                 errors.append(f"{topic['id']}: parts가 모든 소스 근거를 다뤄야 합니다.")
     if sorted(covered) != sorted(ids) or len(ids) != len(set(ids)):

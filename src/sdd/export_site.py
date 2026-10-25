@@ -377,7 +377,8 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         visuals = render_visuals(cfg, model, section) if section else []
         body = place(body, visuals, section)
         for visual, _, source in visuals:
-            visual_sources[str(PurePosixPath(rel).with_suffix('')) + '.' + visual['id'] + '.mmd'] = source
+            if source:
+                visual_sources[str(PurePosixPath(rel).with_suffix('')) + '.' + visual['id'] + '.mmd'] = source
         content, toc, tokens = _render(body, rel, known, model, source_url, str(meta.get("source_commit", "")),
                                        link_template)
         rendered_pages[rel] = (page_title, meta, content, toc)

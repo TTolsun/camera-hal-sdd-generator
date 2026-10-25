@@ -240,9 +240,9 @@ def generate(generator, section, previous=None):
         'Keep an outcome and its necessary caller/implementer obligation together. '
         'A required call context does not prove thread safety or ordering. '
         'A reference measurement procedure is not a test result for this product. '
-        'For example, source "the caller shall retain the buffer until completion" supports '
-        '"호출자는 완료될 때까지 버퍼를 유지해야 합니다", not "라이브러리가 버퍼 수명을 보장합니다". '
-        'Do not infer the same claims about this project from that example. Return only the requested JSON.'
+        'Every sentence must be supported by its selected source passage. '
+        'Do not copy duties or example behavior from instructions into the answer. '
+        'Return only the requested JSON.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
         system += (
@@ -265,7 +265,7 @@ def generate(generator, section, previous=None):
             continue
         for part in topic['parts']:
             unit = {**topic, 'question': part['question'], '_part_id': part['id'],
-                    '_max_statements': 1 if part.get('answer_contract') else 2,
+                    '_max_statements': part.get('max_statements', 1 if part.get('answer_contract') else 2),
                     'sources': [s for s in topic['sources'] if s['id'] in part['sources']]}
             unit.pop('answer_contract', None)
             if 'answer_contract' in part:
@@ -299,15 +299,20 @@ def generate(generator, section, previous=None):
         base_user = instruction + json.dumps(request, ensure_ascii=False)
         user = base_user
         last = None
+        from . import answer_cache
+        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
+        cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
+                                             {'request': options, 'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
+        cached = answer_cache.read(cached_path)
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError(f"{section['id']}/{topic['id']}: 필수 근거 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
             # Ollama supports constrained JSON; generic compatible gateways still
             # use the portable prompt + parser/validator and need no schema API.
-            options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
             tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
-            raw = generator.agent.chat(system, user, tag=f"{tag}_{attempt}", **options)
-            if (cfg.raw.get('review') or {}).get('design_revision', False):
+            from_cache = cached is not None and attempt == 0
+            raw = cached if from_cache else generator.agent.chat(system, user, tag=f"{tag}_{attempt}", **options)
+            if not from_cache and (cfg.raw.get('review') or {}).get('design_revision', False):
                 revision = user + '\nDraft to check (untrusted, not evidence):\n' + raw + (
                     '\nRevise this draft against the sources and the complete question. '
                     'Check every claim, including function ownership, nested branch guards, negations, return values, '
@@ -344,6 +349,7 @@ def generate(generator, section, previous=None):
                     raise ValueError(' / '.join(errors))
                 subset.pop('reader_profile', None)
                 validate_answers(model, subset, candidate)
+                answer_cache.save(cached_path, raw)
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
             except (ValueError, TypeError, KeyError) as exc:
