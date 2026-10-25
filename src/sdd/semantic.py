@@ -10,6 +10,7 @@ from .validate import extract_citations
 # 확인되지 않았다고 말하는 문장. 이런 문장은 인용할 근거 자체가 없다.
 _UNCERTAIN = re.compile(r"확인이 필요|확인할 수 없|확인되지 않|확인하지 못|명시되지 않|"
                         r"근거가 부족|근거가 없|보장하지 않|알 수 없|추출되지 않|존재하지 않")
+_CHECK_OBLIGATION = re.compile(r"(?:호출자|구현자|구현체).*(?:확인해야)")
 
 
 def only_uncertainty(paragraph: str) -> bool:
@@ -21,6 +22,8 @@ def only_uncertainty(paragraph: str) -> bool:
     """
     sentences = [x for x in re.split(r"(?<=[.!?])\s+|\n", paragraph) if x.strip()]
     def uncertain(sentence):
+        if _CHECK_OBLIGATION.search(sentence):
+            return False
         clauses = [c for c in re.split(r'(?:하고|하며|되고|되며)[,\s]+', sentence) if c.strip()]
         if len(clauses) > 1:
             return all(uncertain(clause) for clause in clauses)

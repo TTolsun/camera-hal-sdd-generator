@@ -20,7 +20,12 @@ VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "met
 
 
 def english_diagram(source: str) -> str:
-    """Translate only generator-owned edge labels, never nodes or edges."""
+    """Translate declared labels only; preserve node IDs and graph topology."""
+    for match in re.finditer(r'^%% sdd:translations (.+)$', source, re.M):
+        translations = json.loads(match[1])
+        # Only quoted labels change. IDs and topology remain identical.
+        source = re.sub(r'"([^"\n]*)"', lambda m: '"' + translations.get(m[1], m[1]) + '"',
+                        source[:match.start()] + source[match.end():])
     labels = {'상속': 'inheritance', '필드 참조': 'field reference', '의존': 'dependency',
               '집합': 'aggregation', '합성': 'composition'}
     for ko, en in labels.items():

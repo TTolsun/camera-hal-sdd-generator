@@ -1,5 +1,6 @@
 """Validate contract configuration without reading evidence or rendering pages."""
 from .reader_profiles import profile_errors
+from .answer_contracts import configuration_errors as answer_contract_errors
 
 def configuration_errors(section: dict) -> list[str]:
     errors = []
@@ -10,6 +11,7 @@ def configuration_errors(section: dict) -> list[str]:
         if any(not isinstance(v.get('id'), str) or not v['id'].strip() for v in values):
             return [f'{field}의 id는 비어 있지 않은 문자열이어야 합니다.']
     for topic in section.get('design_topics', []):
+        errors.extend(answer_contract_errors(topic))
         for field in ('sources', 'statements'):
             values = topic.get(field, [])
             if not isinstance(values, list) or any(not isinstance(v, dict) for v in values):
@@ -63,6 +65,7 @@ def generated_errors(section):
             seen, used, checked_terms = set(), set(), set()
             source_ids = {s['id'] for s in topic.get('sources', [])}
             for part in parts:
+                errors.extend(answer_contract_errors(part))
                 pid = part.get('id')
                 if not isinstance(pid, str) or not pid or pid in seen:
                     errors.append(f"{topic['id']}: parts id는 비어 있지 않고 고유해야 합니다.")
@@ -81,8 +84,8 @@ def generated_errors(section):
                     errors.append(f"{topic['id']}: parts required_terms는 주제의 필수 용어 중 중복 없는 목록이어야 합니다.")
                 else:
                     checked_terms.update(part_terms)
-                if set(part) - {'id', 'question', 'sources', 'required_terms'}:
-                    errors.append(f"{topic['id']}: parts에는 id, question, sources, required_terms만 허용합니다.")
+                if set(part) - {'id', 'question', 'sources', 'required_terms', 'answer_contract'}:
+                    errors.append(f"{topic['id']}: parts에는 id, question, sources, required_terms, answer_contract만 허용합니다.")
             if used != source_ids:
                 errors.append(f"{topic['id']}: parts가 모든 소스 근거를 다뤄야 합니다.")
             if set(valid_terms) != checked_terms:

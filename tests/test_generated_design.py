@@ -133,6 +133,56 @@ def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated):
     assert path.read_bytes() == original and len(agent.calls) == 2
 
 
+def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated):
+    from sdd.export_html import _split
+    section, model, save, agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='cancel', question='호출자의 취소 의무는 무엇입니까?', sources=['stop'],
+                          answer_contract=dict(basis='contract', required_terms=[['cancelPending']]))]
+    save()
+    rejected = '종료는 언제나 안전합니다.'
+    valid = '호출자는 `cancelPending()`으로 취소 처리를 시작해야 합니다.'
+    class RetryAgent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            response = copy.deepcopy(agent.statement)
+            response['text'] = rejected if len(self.calls) == 1 else valid
+            return json.dumps({'statements': [response]}, ensure_ascii=False)
+    retry = RetryAgent()
+    path = Generator(tmp_cfg, model, retry).run()[0]
+    assert len(retry.calls) == 2 and rejected in retry.calls[1]
+    assert '필수 용어 누락' in retry.calls[1]
+    manuscript = path.read_text(encoding='utf-8')
+    meta, body = _split(manuscript)
+    assert meta['generated_design']['answers']['stop'][0]['part_id'] == 'cancel'
+    # A stored answer cannot remove its part identity even if a body hash still matches.
+    meta['generated_design']['answers']['stop'][0].pop('part_id')
+    tampered = '---\n' + yaml.safe_dump(meta, allow_unicode=True) + '---\n' + body
+    with pytest.raises(ValueError, match='id'):
+        verify(model, section, tampered)
+    original = path.read_bytes()
+    topic['parts'][0]['answer_contract']['required_terms'].append(['missingRequirement'])
+    save()
+    with pytest.raises(ValueError, match='재생성'):
+        export_site(tmp_cfg)
+    with pytest.raises(ValueError, match='필수 용어 누락'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+
+
+def test_cited_caller_check_obligation_is_a_valid_answer(tmp_cfg, generated):
+    section, model, save, agent = generated
+    quote = 'The caller shall check the configuration carefully.'
+    record = model.evidence['device/stop/stop']
+    record.update(text=quote, sha256=hashlib.sha256(quote.encode()).hexdigest())
+    section['design_topics'][0]['answer_contract'] = dict(basis='contract')
+    agent.statement.update(quote=quote, text='호출자는 조정된 설정을 다시 확인해야 합니다.')
+    save()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    verify(model, section, path.read_text(encoding='utf-8'))
+
+
 def test_impact_reuses_only_unchanged_topics_and_preserves_origin(tmp_cfg, generated):
     from sdd.impact import ImpactReport
     from sdd.export_html import _split
@@ -278,6 +328,36 @@ def test_passage_selection_resolves_real_quote_and_source(tmp_cfg, generated):
     with pytest.raises(ValueError, match='제공되지 않은 quote_id'):
         Generator(tmp_cfg, model, agent).run()
     assert path.read_bytes() == original
+
+
+def test_response_schema_preserves_cpp_operators_but_rejects_html(tmp_cfg, generated):
+    import re
+    from sdd.generated_design import response_schema, materialize
+    section, model, _, agent = generated
+    pattern = response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text']['pattern']
+    assert re.fullmatch(pattern, '`request->_d()->cancel()`과 `std::unique_ptr<Request>`를 사용합니다.')
+    agent.statement['text'] = '<script>alert(1)</script>'
+    with pytest.raises(ValueError, match='HTML'):
+        materialize(model, section, {'stop': [agent.statement]})
+
+
+def test_short_source_bound_answer_does_not_need_padding(tmp_cfg, generated):
+    from sdd.generated_design import validate_answers
+    section, model, _, agent = generated
+    agent.statement['text'] = '`stop()`은 대기 큐를 비웁니다.'
+    part = copy.deepcopy(section)
+    part['design_topics'][0]['_part_id'] = 'one-contract'
+    validate_answers(model, part, {'stop': [agent.statement]})
+    validate_answers(model, section, {'stop': [agent.statement]})
+
+
+def test_question_identifier_can_receive_code_typography():
+    from sdd.facts.model import ClassInfo
+    from sdd.generated_design import normalize_answer
+    model = KnowledgeModel(classes={'ns::Manager': ClassInfo('ns::Manager')})
+    statements = [{'text': 'Manager는 장치를 열거합니다.'}]
+    normalize_answer(model, statements, ['The manager enumerates devices.', 'Manager의 역할은 무엇입니까?'])
+    assert statements[0]['text'] == '`Manager`는 장치를 열거합니다.'
 
 
 def test_exhausted_thinking_budget_preserves_manuscript(tmp_cfg, generated, monkeypatch):

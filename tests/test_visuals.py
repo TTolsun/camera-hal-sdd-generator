@@ -1,0 +1,134 @@
+import copy
+
+import pytest
+import yaml
+
+from sdd.visuals import render, place
+from sdd.site_localization import english_diagram
+from sdd.export_site import export_site
+from sdd.generate import Generator
+
+
+@pytest.fixture
+def visual(tmp_cfg, contract):
+    section, model, save = contract
+    evidence = dict(source='shutdown/stop', sha256=model.evidence['device/shutdown/stop']['sha256'],
+                    quote='cancelPending();')
+    graph = dict(id='stop-flow', topic='shutdown', kind='decision', title='종료의 분기', question='대기 요청은 어떻게 끝납니까?',
+                 nodes=[dict(id='pending', label='대기 요청', label_en='Pending requests', evidence=[evidence]),
+                        dict(id='cancelled', label='취소됨', label_en='Cancelled', evidence=[evidence])],
+                 edges=[dict(**{'from': 'pending', 'to': 'cancelled'}, label='stop()으로 취소',
+                             label_en='cancelled by stop()', evidence=[evidence])])
+    tmp_cfg.raw['visuals'] = dict(file='visuals.yaml', max_nodes=4)
+    def write():
+        (tmp_cfg.root / 'visuals.yaml').write_text(yaml.safe_dump(dict(schema=1, sections={'device': [graph]}),
+                                                               allow_unicode=True), encoding='utf-8')
+        save()
+    write()
+    return section, model, graph, write
+
+
+# Reuse the source-bound fixture so both prose and diagrams must pass the same source pins.
+from test_design_contracts import contract
+from test_generated_design import generated
+
+
+def test_diagrams_stay_near_explanation_in_markdown_html_and_english(tmp_cfg, visual):
+    section, model, graph, _ = visual
+    Generator(tmp_cfg, model, None).run()
+    text = (tmp_cfg.sdd_dir / 'device.md').read_text(encoding='utf-8')
+    assert text.index('stop()은 대기 요청을 취소합니다.') < text.index('### 종료의 분기') < text.index('## 소스 근거')
+    assert text.count('<!-- sdd:visual:stop-flow -->') == 1
+    site = export_site(tmp_cfg)
+    document = (site / 'device.html').read_text(encoding='utf-8')
+    assert document.count('<pre class="mermaid">') == 1
+    assert '그림 근거와 확인 범위' in document and 'source-' in document
+    assert 'href="device.stop-flow.mmd"' in document
+    source = (site / 'device.stop-flow.mmd').read_text(encoding='utf-8')
+    english = english_diagram(source)
+    assert 'Pending requests' in english and '대기 요청' not in english
+    assert 'v_pending -->|"cancelled by stop()"| v_cancelled' in english
+    manifest = (site / 'site-manifest.json').read_bytes()
+    export_site(tmp_cfg)
+    assert (site / 'site-manifest.json').read_bytes() == manifest
+
+
+@pytest.mark.parametrize('mutation', ['hash', 'text', 'quote', 'commit', 'missing-evidence', 'target', 'limit',
+                                     'unknown-topic', 'duplicate-node', 'unsafe-id', 'missing-translation', 'selector'])
+def test_invalid_diagrams_preserve_manuscripts_and_published_site(tmp_cfg, visual, mutation):
+    section, model, graph, write = visual
+    Generator(tmp_cfg, model, None).run()
+    site = export_site(tmp_cfg)
+    old = (site / 'site-manifest.json').read_bytes()
+    manuscript = (tmp_cfg.sdd_dir / 'device.md').read_bytes()
+    if mutation == 'hash': graph['edges'][0]['evidence'][0]['sha256'] = '0' * 64
+    elif mutation == 'text': model.evidence['device/shutdown/stop']['text'] = 'changed code'
+    elif mutation == 'quote': graph['edges'][0]['evidence'][0]['quote'] = 'invented();'
+    elif mutation == 'commit': model.evidence['device/shutdown/stop']['commit'] = 'b' * 40
+    elif mutation == 'missing-evidence': graph['nodes'][0]['evidence'] = []
+    elif mutation == 'target': graph['edges'][0]['to'] = 'unknown'
+    elif mutation == 'limit': tmp_cfg.raw['visuals']['max_nodes'] = 1
+    elif mutation == 'unknown-topic': graph['topic'] = 'unknown'
+    elif mutation == 'duplicate-node': graph['nodes'].append(copy.deepcopy(graph['nodes'][0]))
+    elif mutation == 'unsafe-id': graph['nodes'][0]['id'] = 'x\nclick x javascript:evil'
+    elif mutation == 'missing-translation': graph['nodes'][0].pop('label_en')
+    elif mutation == 'selector': model.evidence['device/shutdown/stop']['selector']['end'] = 'new end'
+    write()
+    with pytest.raises(ValueError): Generator(tmp_cfg, model, None).run()
+    assert (tmp_cfg.sdd_dir / 'device.md').read_bytes() == manuscript
+    with pytest.raises((ValueError, RuntimeError)): export_site(tmp_cfg)
+    assert (site / 'site-manifest.json').read_bytes() == old
+
+
+def test_replaces_changed_edges_and_removes_deleted_diagrams(tmp_cfg, visual):
+    section, model, graph, write = visual
+    Generator(tmp_cfg, model, None).run()
+    original = (tmp_cfg.sdd_dir / 'device.md').read_text(encoding='utf-8')
+    graph['edges'][0]['label'] = '취소 경로'
+    write()
+    rendered = render(tmp_cfg, model, section)
+    updated = place(original, rendered, section)
+    assert updated.count('```mermaid') == 1 and 'stop()으로 취소' not in updated
+    assert place(updated, rendered, section) == updated
+    site = export_site(tmp_cfg)
+    assert '취소 경로' in (site / 'device.html').read_text(encoding='utf-8')
+    tmp_cfg.raw.pop('visuals')
+    export_site(tmp_cfg)
+    assert not (site / 'device.stop-flow.mmd').exists()
+    assert '종료의 분기' not in (site / 'device.html').read_text(encoding='utf-8')
+
+
+def test_missing_heading_and_unsafe_labels(tmp_cfg, visual):
+    section, model, graph, write = visual
+    with pytest.raises(ValueError, match='heading'): place('# Missing\n', render(tmp_cfg, model, section), section)
+    graph['nodes'][0]['label'] = '"><script>alert(1)</script>'
+    write()
+    _, block, source = render(tmp_cfg, model, section)[0]
+    assert '<script>' not in block and '&lt;script&gt;' in source
+
+
+def test_procedure_numbering_survives_nearby_visual(tmp_cfg, visual):
+    from sdd.visuals import strip_blocks
+    section, model, _, _ = visual
+    body = '## 종료 계약\n\n1. 첫 단계입니다.\n\n2. 다음 단계입니다.\n\n## 소스 근거\n'
+    updated = place(body, render(tmp_cfg, model, section), section)
+    assert updated.index('### 종료의 분기') < updated.index('1. 첫 단계')
+    assert strip_blocks(updated) == body
+
+
+def test_generated_answer_integrity_and_review_are_preserved(tmp_cfg, generated):
+    from sdd.generated_design import verify
+    section, model, save, agent = generated
+    evidence = dict(source='stop/stop', sha256=model.evidence['device/stop/stop']['sha256'], quote='cancelPending();')
+    graph = dict(id='stop-flow', topic='stop', kind='flow', title='취소 경로', question='종료는 어디서 시작합니까?',
+                 nodes=[dict(id='stop', label='stop()', label_en='stop()', evidence=[evidence]),
+                        dict(id='cancel', label='cancelPending()', label_en='cancelPending()', evidence=[evidence])],
+                 edges=[dict(**{'from':'stop','to':'cancel'}, label='호출', label_en='calls', evidence=[evidence])])
+    tmp_cfg.raw['visuals'] = {'file': 'visuals.yaml'}
+    (tmp_cfg.root / 'visuals.yaml').write_text(yaml.safe_dump(dict(schema=1, sections={'device':[graph]}), allow_unicode=True), encoding='utf-8')
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    manuscript = path.read_text(encoding='utf-8')
+    assert verify(model, section, manuscript)['human_review'] == 'pending'
+    export_site(tmp_cfg)
+    with pytest.raises(ValueError, match='원고 본문'):
+        verify(model, section, manuscript.replace('종료는 어디서 시작합니까?', '다른 질문'))

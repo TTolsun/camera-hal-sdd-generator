@@ -80,3 +80,7 @@ diagrams:
   max_nodes: 16
   direction: LR
   strip_namespace: 'libcamera::'
+
+visuals:
+  file: config/visuals.yaml
+  max_nodes: 12
