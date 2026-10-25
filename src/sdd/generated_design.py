@@ -341,6 +341,8 @@ def verify(model, section, manuscript):
     if artifact.get('body_sha256') != digest(body.strip()):
         raise ValueError('LLM 설계 답변 기록과 원고 본문이 일치하지 않습니다.')
     pinned, resolved, report = validate_answers(model, section, artifact.get('answers'))
+    from .visuals import strip_blocks
+    body = strip_blocks(body)
     for topic in resolved['design_topics']:
         text, _ = contract_text(pinned, section['id'], topic)
         if f"## {topic['title']}\n\n{text}" not in body:
