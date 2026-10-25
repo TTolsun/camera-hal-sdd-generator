@@ -218,3 +218,29 @@ def test_full_required_symbol_set_uses_bound_object_supported_by_ollama():
     assert [n['symbol'] for n in expanded['nodes']] == ['stop', 'cancel']
     with pytest.raises(ValueError, match='missing or unknown'):
         expand_draft({'required_symbols': ['stop', 'cancel']}, {'nodes': {'n0': value}}, 2)
+
+
+def test_status_passages_remain_verbatim_and_keep_caller_duties():
+    from sdd.generated_visuals import visual_passages
+    text = '\\fn Config::validate()\n * Returns status.\n * \\retval Config::Invalid Cannot adjust.\n * \\retval Config::Adjusted Parameters may change.\n * Caller shall check carefully.\n * \\retval Config::Valid Already valid.'
+    _, passages = visual_passages({'validate': text})
+    assert len(passages) == 4
+    assert all(quote in text for _, quote in passages.values())
+    assert 'Caller shall check carefully.' in passages['validate:2'][1]
+
+
+def test_exact_source_guard_labels_allowed_but_old_guard_rejected(tmp_cfg, automatic):
+    section, model, save, agent = automatic
+    record = model.evidence['device/shutdown/stop']
+    def change(expression):
+        record['text'] = 'void Device::stop() { cancelPending(); }\nif (' + expression + ') { stop(); cancelPending(); }'
+        record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+        section['design_topics'][0]['sources'][0]['sha256'] = record['sha256']
+        record['selector'] = copy.deepcopy(section['design_topics'][0]['sources'][0])
+        save()
+    change('ret == 0')
+    agent.draft['edges'][0].update(label='취소 ret == 0', label_en='Cancel ret == 0', condition_ref='c0:true')
+    Generator(tmp_cfg, model, agent).run()
+    change('ret >= 0')
+    with pytest.raises(ValueError, match='differs from cited source guards'):
+        Generator(tmp_cfg, model, agent).run()

@@ -30,8 +30,9 @@ The output fields are nodes [{id,symbol,label,label_en,shape,quote_ids}] and
 edges [{from,to,label,label_en,condition_ref,quote_ids}]. Choose condition_ref
 from the supplied choices: c0:true or c0:false for each source guard, always for
 an unconditional edge. Never write or negate a guard expression yourself.
-The generator expands the condition ID to the exact source expression. Do NOT
-put comparisons or guard expressions in labels. Cover all required_symbols as
+The generator expands the condition ID to the exact source expression. Prefer
+condition_ref over guard expressions in labels. If included, copy the exact cited source guard;
+never invert or retain an old expression. Cover all required_symbols as
 distinct nodes when supplied; do not replace requested calls with invented states.
 Use only supplied quote_ids. Never invent IDs.'''
 
@@ -45,6 +46,7 @@ Each value contains ONLY label, label_en, shape, quote_ids. The generator alread
 binds the IDs to source symbols; never repeat id or symbol inside these values.
 Return EVERY bound node and use its exact ID in edges. You still propose all labels
 and connections from the evidence, never invent a relationship to connect nodes.'''
+POLICY += '\nDoxygen return-value descriptions are separate passages; cite each relevant status passage, including its duties and may/must qualifications.'
 
 
 def digest(value):
@@ -74,6 +76,14 @@ def source_symbols(passages):
     names = {name for _, quote in passages.values()
              for name in re.findall(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*', quote)}
     return sorted(names | {part for name in names for part in name.split('::')})
+
+
+def visual_passages(sources):
+    # Preserve contiguous source text inside each passage while exposing each
+    # documented return case independently to small models.
+    separated = {key: re.sub(r'(?m)(?=^[ \t]*\*[ \t]*\\retval\b)', '\n', text)
+                 for key, text in sources.items()}
+    return source_passages(separated)
 
 
 def plans(cfg, section):
@@ -139,7 +149,7 @@ def inputs(cfg, model, section, plan):
     for record in records.values():
         if hashlib.sha256(record['text'].encode()).hexdigest() != record.get('sha256'):
             raise ValueError('Visual source excerpt hash mismatch')
-    annotated, passages = source_passages({key: rec['text'] for key, rec in records.items()})
+    annotated, passages = visual_passages({key: rec['text'] for key, rec in records.items()})
     if not passages:
         raise ValueError('No quotable visual evidence')
     required_symbols = plan.get('required_symbols', [])
@@ -180,8 +190,12 @@ def schema(passages, limit, required_symbols=None):
                 'quote_ids': refs})
     nodes = {'type': 'array', 'minItems': 2, 'maxItems': limit, 'items': node}
     if fixed := bindings(required_symbols, limit):
-        bound_node = obj({key: value for key, value in node['properties'].items() if key not in ('id', 'symbol')})
-        nodes = obj({ident: bound_node for ident in fixed})
+        properties = {}
+        for ident, symbol in fixed.items():
+            bound_node = obj(copy.deepcopy({key: value for key, value in node['properties'].items() if key not in ('id', 'symbol')}))
+            bound_node['properties']['quote_ids']['items']['enum'] = [qid for qid, (_, quote) in passages.items() if symbol in quote]
+            properties[ident] = bound_node
+        nodes = obj(properties)
         for key in ('from', 'to'):
             edge['properties'][key] = {'type': 'string', 'enum': list(fixed)}
     return obj({'nodes': nodes,
@@ -201,8 +215,8 @@ def materialize(cfg, model, section, plan, draft, producer):
     graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'prompt')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
-        if any(not isinstance(item.get(k), str) or re.search(r'[<>=!]', item[k]) for k in ('label', 'label_en')):
-            raise ValueError('Labels must not contain comparison expressions; use the source condition_ref')
+        if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):
+            raise ValueError('Visual labels must be strings')
         ids = item['quote_ids']
         if not isinstance(ids, list) or not ids or any(not isinstance(q, str) or q not in passages for q in ids):
             raise ValueError('Unknown or missing visual quote ID')
@@ -212,7 +226,15 @@ def materialize(cfg, model, section, plan, draft, producer):
             rec = records[source]
             evidence.append({'source': f"{plan['topic']}/{source}", 'sha256': rec['sha256'], 'quote': quote})
             quotes.append(quote)
-        return evidence, '\n'.join(quotes)
+        quote = '\n'.join(quotes)
+        for key in ('label', 'label_en'):
+            remaining = ''.join(item[key].split())
+            for guard in sorted(conditions({'cited': ('cited', quote)}), key=len, reverse=True):
+                if guard:
+                    remaining = remaining.replace(''.join(guard.split()), '')
+            if re.search(r'[<>=!]', remaining):
+                raise ValueError('Label comparison differs from cited source guards; use condition_ref')
+        return evidence, quote
     for item in draft['nodes']:
         if not isinstance(item, dict) or set(item) != {'id', 'symbol', 'label', 'label_en', 'shape', 'quote_ids'}:
             raise ValueError('Invalid visual node fields')
