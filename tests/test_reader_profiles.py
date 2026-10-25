@@ -31,7 +31,7 @@ def test_non_libcamera_reader_profiles_generate_and_preserve_outputs_on_failure(
         def chat(self, *a, **kw):
             pytest.fail('Evidence-bound contracts must work with any model provider, including none')
     paths = Generator(tmp_cfg, model, NoModel()).run()
-    assert len(paths) == 2
+    assert len(paths) == 4
     for path in paths:
         text = path.read_text(encoding='utf-8')
         assert 'status: ok' in text and 'source-bound-contract' in text
@@ -66,7 +66,7 @@ def test_inhouse_template_cannot_silently_publish_empty_contracts(tmp_cfg):
     from sdd.design_contracts import audit
     sections = yaml.safe_load((ROOT / 'examples/inhouse-template/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     profiles = [s for s in sections if s.get('reader_profile')]
-    assert {s['reader_profile'] for s in profiles} == {'vendor', 'developer'}
+    assert {s['reader_profile'] for s in profiles} == {'vendor-overview', 'vendor', 'vendor-assurance', 'developer'}
     for sec in profiles:
         assert configuration_errors(sec) == []
         assert audit(KnowledgeModel(), sec)['status'] == 'incomplete'
@@ -89,3 +89,23 @@ def test_developer_rejects_architecture_only_question_set():
     assert any('developer/entry' in e for e in configuration_errors(section))
     section['reader_profile'] = 'architecture'
     assert configuration_errors(section) == []  # Saved legacy configs remain supported.
+
+
+def test_vendor_overview_rejects_implementation_only_contract():
+    section = {'reader_profile': 'vendor-overview', 'design_requirements': [
+        dict(id=k, aspects=[k]) for k in PROFILES['vendor']]}
+    assert configuration_errors(section)
+    section['reader_profile'] = 'vendor'
+    assert configuration_errors(section) == []  # Detail pages keep their contract.
+
+
+def test_public_and_portable_vendor_entry_pages_require_adoption_answers():
+    for filename in ('libcamera/config/sections.yaml', 'inhouse-template/config/sections.yaml',
+                     'mini-hal/config/reader-sections.yaml'):
+        sections = yaml.safe_load((ROOT / 'examples' / filename).read_text(encoding='utf-8'))['sections']
+        entry = next(s for s in sections if s.get('reader_profile') == 'vendor-overview')
+        assert configuration_errors(entry) == []
+        assert {'capabilities', 'benefits'} <= {
+            r['id'] for r in entry['design_requirements']}
+        for profile in ('vendor', 'vendor-assurance'):
+            assert not configuration_errors(next(s for s in sections if s.get('reader_profile') == profile))
