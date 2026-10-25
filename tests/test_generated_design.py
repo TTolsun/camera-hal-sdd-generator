@@ -407,7 +407,7 @@ def test_passages_keep_context_and_reject_forged_source():
     assert preserved['expression'][0]['text'] == code
     assert code_passages['expression:0'] == ('expression', code)
     key = next(iter(passages))
-    with pytest.raises(ValueError, match='함께 쓸 수'):
+    with pytest.raises(ValueError, match='제공된 소스 ID'):
         resolve_passages([dict(quote_id=key, text='설명합니다.', covers=['q'], kind='behavior', evidence=['forged'])], passages)
 
 
@@ -574,6 +574,17 @@ def test_changed_grounding_policy_requires_new_review(tmp_cfg, generated, monkey
     Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='a'*40, sections=['device']))
     assert agent.calls == 4
     assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
+def test_quote_anchor_can_have_additional_real_source_evidence():
+    from sdd.generated_design import resolve_passages
+    passages = {'a:0': ('a', 'A real source passage.'), 'b:0': ('b', 'Another real passage.')}
+    row = dict(text='두 입력을 설명합니다.', quote_id='a:0', evidence=['a', 'b'], covers=['flow'], kind='behavior')
+    resolved = resolve_passages([row], passages)[0]
+    assert resolved['quote'] == 'A real source passage.' and resolved['evidence'] == ['a', 'b']
+    for invalid in (['b'], ['a', 'invented'], ['a', 'a']):
+        with pytest.raises(ValueError, match='제공된 소스 ID'):
+            resolve_passages([{**row, 'evidence': invalid}], passages)
 
 
 

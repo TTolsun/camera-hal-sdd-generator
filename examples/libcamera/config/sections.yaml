@@ -273,7 +273,7 @@ sections:
         \ code otherwise\n */"
     parts:
     - id: invalid
-      question: CameraConfiguration::Invalid의 의미와 발생 가능한 경우만 한 문단으로 설명하세요.
+      question: Invalid 판정에서 구성의 유효성과 조정 가능성은 어떤 결합 조건입니까? 둘 중 하나만 해당해도 되는지 원문의 논리 관계만 설명하고 예시는 제외하세요.
       sources:
       - validate
       answer_contract:
@@ -283,6 +283,14 @@ sections:
         reject_patterns:
         - pattern: (조정|수정).{0,15}없거나
           message: Invalid의 무효·조정 불가 조건과 극단적인 경우의 예시를 또는 조건으로 바꾸지 마세요.
+    - id: invalid-example
+      question: Invalid가 발생할 수 있는 극단적인 경우의 예시만 설명하세요. 정의와 예시를 또는 조건으로 묶지 마세요.
+      sources:
+      - validate
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Invalid
     - id: adjusted
       question: CameraConfiguration::Adjusted일 때 스트림 파라미터 변경·스트림 구성 제거 가능성과 호출자가 지켜야 할 확인 의무만 한 문단으로 설명하세요.
       sources:
@@ -314,7 +322,8 @@ sections:
           - 스트림 용도
         reject_patterns: []
     - id: unsupported-roles
-      question: 요청한 roles를 만족시킬 수 없을 때 generateConfiguration이 반환하는 포인터 값은 무엇입니까? 실패 조건과 반환값만 설명하고 포인터 값은 원문 식별자로 쓰세요.
+      question: 요청한 roles를 만족시킬 수 없을 때 generateConfiguration이 반환하는 포인터 값은 무엇입니까? 실패 조건과 반환값만 설명하고 포인터 값은 원문 식별자로
+        쓰세요.
       sources:
       - configuration
       answer_contract:
@@ -499,10 +508,13 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \fn PipelineHandler::match(DeviceEnumerator *enumerator)
       end: \brief Search and acquire a MediaDevice
+    - id: match-result
+      file: src/libcamera/pipeline_handler.cpp
+      start: \return true if media devices have been acquired and camera instances
+      end: created, or false otherwise
     parts:
     - id: success
-      question: match 구현에서 모든 장치를 찾은 경우 MediaDevice::acquire와 Camera 생성·저장·카메라 매니저 등록 및 true 반환에 관한 의무는 무엇입니까? 성공
-        경로만 한 문단으로 설명하세요.
+      question: match 성공 경로에서 필요한 장치 확보와 Camera 생성·저장·등록 의무만 설명하세요. 반환값은 다음 질문에서 다룹니다.
       sources:
       - handler
       answer_contract:
@@ -512,6 +524,13 @@ sections:
         - - Camera
           - 카메라 인스턴스
         - - 등록
+    - id: success-result
+      question: 장치를 확보하고 카메라 인스턴스를 만든 match 구현은 어떤 C++ bool 값을 반환해야 합니까? 성공 반환만 설명하세요.
+      sources:
+      - match-result
+      answer_contract:
+        basis: contract
+        required_terms:
         - - 'true'
     - id: failure
       question: match 구현에서 필요한 장치를 모두 찾지 못한 경우 이미 확보한 장치의 release와 false 반환에 관한 의무는 무엇입니까? 실패 경로만 한 문단으로 설명하세요.
@@ -821,18 +840,30 @@ sections:
       file: src/libcamera/request.cpp
       start: \brief Prepare the Request to be queued to the device
       end: \var Request::Private::prepared
+    - id: registration-code
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::registerRequest(Request *request)
+      end: "\tdoQueueRequests(request->_d()->camera());\n\t});\n}"
     covers:
     - queue
     parts:
     - id: registration
-      question: registerRequest의 일회성 초기화 기회와 prepared 신호 연결만 설명하세요.
+      question: registerRequest가 요청별 일회성 초기화를 수행할 기회를 주는 시점만 설명하세요.
       sources:
       - queue
       answer_contract:
         basis: implementation
         required_terms:
         - - registerRequest
+    - id: prepared-signal
+      question: prepared 신호에 연결한 콜백에서 실제 호출하는 함수의 이름만 구현 코드에서 설명하세요.
+      sources:
+      - registration-code
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - prepared
+        - - doQueueRequests
     - id: waiting
       question: queueRequest가 어느 목록에 요청을 넣는지와 prepare에 전달하는 시간 인자만 설명하세요. 시간 인자를 고정 처리 지연이라고 쓰지 마세요.
       sources:
@@ -875,7 +906,8 @@ sections:
         - - 중단
           - break
     - id: cancelled
-      question: doQueueRequest가 queuedRequests_에 요청을 등록하고 순번을 부여한 뒤 cancelled_ 요청을 만났을 때의 처리만 설명하세요. 이 분기를 하드웨어 재제출로 바꾸지 마세요.
+      question: doQueueRequest가 queuedRequests_에 요청을 등록하고 순번을 부여한 뒤 cancelled_ 요청을 만났을 때의 처리만 설명하세요. 이 분기를 하드웨어
+        재제출로 바꾸지 마세요.
       sources:
       - queue
       answer_contract:
@@ -941,7 +973,8 @@ sections:
         - - completeRequest
         - - 순서
     - id: pending
-      question: completeRequest의 while 루프가 맨 앞 RequestPending 요청을 만났을 때 수행하는 제어문과 결과만 설명하세요. 해당 요청을 제거하거나 취소한다고 쓰지 마세요.
+      question: completeRequest의 while 루프가 맨 앞 RequestPending 요청을 만났을 때 수행하는 제어문과 결과만 설명하세요. 해당 요청을 제거하거나 취소한다고
+        쓰지 마세요.
       sources:
       - completion
       answer_contract:
@@ -1019,7 +1052,8 @@ sections:
         - - doQueueRequest
         - - 취소
     - id: device-duty
-      question: stopDevice 구현자가 캡처·처리를 중단하고 이미 제출된 요청을 끝내기 위해 지켜야 할 의무를 설명하세요. 가상 함수 선언의 계약을 특정 장치의 검증된 구현으로 쓰지 마세요.
+      question: stopDevice 구현자가 캡처·처리를 중단하고 이미 제출된 요청을 끝내기 위해 지켜야 할 의무를 설명하세요. 가상 함수 선언의 계약을 특정 장치의 검증된 구현으로 쓰지
+        마세요.
       sources:
       - stop
       answer_contract:
@@ -1151,8 +1185,87 @@ sections:
       file: src/libcamera/ipc_pipe_unixsocket.cpp
       start: IPCPipeUnixSocket::IPCPipeUnixSocket(
       end: '} /* namespace libcamera */'
+    - id: dispatch
+      file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
+      start: '{{proxy_name}}Threaded::~{{proxy_name}}Threaded() = default;
+
+
+        {% for method in interface_main.methods %}'
+      end: /* ========================================================================== */
     covers:
     - execution
+    parts:
+    - id: init
+      question: Threaded 템플릿의 init 분기에서 IPA 메서드를 직접 호출하는지와 그 뒤 proxy_.moveToThread 호출을 설명하세요. start 분기와 구분하세요.
+      sources:
+      - dispatch
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - moveToThread
+        - - ipa_
+    - id: start
+      question: Threaded 템플릿의 start 분기에서 thread_.start와 ThreadProxy::start의 Blocking 호출 순서만 설명하세요.
+      sources:
+      - dispatch
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - thread_
+        - - ConnectionTypeBlocking
+    - id: sync
+      question: init·start·stop을 제외한 일반 동기 메서드 분기에서 ipa_ 호출 경로만 설명하세요. 모든 동기 메서드를 worker 스레드 실행으로 묶지 마세요.
+      sources:
+      - dispatch
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ipa_
+    - id: async
+      question: Threaded 템플릿의 비동기 메서드 분기에서 상태 ASSERT와 invokeMethod의 연결 유형만 설명하세요.
+      sources:
+      - dispatch
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ASSERT
+        - - ConnectionTypeQueued
+    - id: constructor
+      question: Threaded 생성자에서 모듈 로딩·인터페이스 생성 및 이벤트 Handler 연결을 설명하세요. 생성자나 init이 thread_.start를 호출한다고 추정하지 마세요.
+      sources:
+      - threaded
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - load
+        - - createInterface
+    - id: isolated
+      question: Isolated 프록시 생성자가 worker 경로로 IPCPipeUnixSocket을 만들고 recv 연결 뒤 유효해지는 경계를 설명하세요. 모든 애플리케이션 콜백의 실행
+        스레드를 추정하지 마세요.
+      sources:
+      - isolated
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - IPCPipeUnixSocket
+        - - valid_
+    - id: worker
+      question: resolvePath의 worker 경로 검색과 찾지 못했을 때 반환을 설명하세요. 메시지 전달이나 콜백 스레드 보장으로 확대하지 마세요.
+      sources:
+      - worker-path
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - resolvePath
+    - id: ipc
+      question: IPCPipeUnixSocket에서 sendSync와 sendAsync의 응답 대기 차이를 설명하세요. 소스에 없는 실행 결과는 쓰지 마세요.
+      sources:
+      - ipc
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - sendSync
+        - - sendAsync
   - id: interface
     title: 프레임 입력과 결과 인터페이스
     question: IPU3와 RKISP1 인터페이스에 선언된 요청·통계 입력 및 paramsComputed·metadataReady 결과를 각각 함수 이름과 인자에서 설명하세요. [async]
@@ -1328,6 +1441,7 @@ sections:
     question: 소프트웨어 ISP의 입력 버퍼를 텍스처로 가져올 때 형식과 실패 처리는 어떻게 연결됩니까?
   show_evidence: true
   design_generation: llm
+  design_grounding: true
 - id: ipu3-lsc
   group: For Vendor
   nav_section: 장치별 기능 구현
@@ -1938,27 +2052,65 @@ sections:
       end: int Camera::start(const ControlList *controls)
     - id: create-state
       file: src/libcamera/camera.cpp
-      start: \brief Create a request object for the camera
+      start: "\\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured\
+        \ or Running state as defined in \\ref camera_operation."
       end: std::unique_ptr<Request> Camera::createRequest(uint64_t cookie)
     - id: queue-state
       file: src/libcamera/camera.cpp
-      start: \brief Queue a request to the camera
+      start: "\\context This function is \\threadsafe. It may only be called when the camera\n * is in the Running\
+        \ state as defined in \\ref camera_operation."
       end: int Camera::queueRequest(Request *request)
     covers:
     - state
     parts:
-    - id: transitions
-      question: 상태 그림에서 acquire·configure·start·stop·release로 바뀌는 상태와 Stopping 이후 전이만 설명하세요. 요청 생성·제출 함수는 다음 질문에서 다룹니다.
+    - id: transition-acquire
+      question: acquire가 성공한 뒤의 상태는 무엇입니까?
+      sources:
+      - states
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Acquired
+    - id: transition-configure
+      question: configure가 성공한 뒤의 상태는 무엇입니까?
+      sources:
+      - states
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Configured
+    - id: transition-start
+      question: start가 성공한 뒤의 상태는 무엇입니까?
+      sources:
+      - states
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Running
+    - id: transition-stop-entry
+      question: Running에서 stop을 시작할 때 진입하는 상태는 무엇입니까?
+      sources:
+      - states
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Stopping
+    - id: transition-stop-return
+      question: 정지 처리가 끝난 뒤 돌아가는 상태는 무엇입니까?
+      sources:
+      - states
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Configured
+    - id: transition-release
+      question: release가 성공한 뒤의 상태는 무엇입니까?
       sources:
       - states
       answer_contract:
         basis: description
         required_terms:
         - - Available
-        - - Acquired
-        - - Configured
-        - - Running
-        - - Stopping
     - id: create-state
       question: createRequest가 허용되는 카메라 상태만 원문 계약에서 설명하세요. queueRequest의 상태와 합치지 마세요.
       sources:
@@ -2044,8 +2196,8 @@ sections:
         - - queueRequest
         - - 버퍼
     - id: queue-checks
-      question: queueRequest 구현의 카메라 소속·RequestPending·controls 정보 맵·비어 있는 버퍼·활성 스트림 검사와 실패 반환을 설명하세요. 모두 실제 검사 대상의
-        이름으로 구분하세요.
+      question: queueRequest 구현의 카메라 소속·RequestPending·controls 정보 맵·비어 있는 버퍼·활성 스트림 검사와 실패 반환을 설명하세요. 모두 실제 검사
+        대상의 이름으로 구분하세요.
       sources:
       - queue
       answer_contract:
@@ -2118,7 +2270,8 @@ sections:
         - - 버퍼
         - - 실패
     - id: fence-timeout
-      question: 버퍼의 펜스가 신호를 보내지 않을 때 어느 요청이 타임아웃으로 실패하며 버퍼 재사용 전에 무엇을 회수해야 하는지 설명하세요. addBuffer 함수 자체의 타임아웃으로 바꾸지 마세요.
+      question: 버퍼의 펜스가 신호를 보내지 않을 때 어느 요청이 타임아웃으로 실패하며 버퍼 재사용 전에 무엇을 회수해야 하는지 설명하세요. addBuffer 함수 자체의 타임아웃으로 바꾸지
+        마세요.
       sources:
       - buffer
       answer_contract:
@@ -2273,8 +2426,8 @@ sections:
     - configuration-failure
     parts:
     - id: entry
-      question: 첫 조사 지점의 파일과 Camera::configure에서 실제 호출한 isAccessAllowed의 반환값을 관찰하는 계획을 설명하세요. 성공이면 다음 검증 단계로 이동하고 상태
-        변경 함수를 재호출하지 마세요.
+      question: 첫 조사 지점의 파일과 Camera::configure에서 실제 호출한 isAccessAllowed의 반환값을 관찰하는 계획을 설명하세요. 성공이면 다음 검증 단계로 이동하고
+        상태 변경 함수를 재호출하지 마세요.
       sources:
       - configure
       answer_contract:
@@ -2283,7 +2436,7 @@ sections:
         - - configure
         - - isAccessAllowed
     - id: access
-      question: isAccessAllowed의 disconnected·allowDisconnected 및 상태 검사에서 -ENODEV와 -EACCES를 구분해 관찰할 값과 분기를 설명하세요.
+      question: isAccessAllowed에서 disconnected_와 allowDisconnected 조건에 따라 -ENODEV가 나오는 분기만 관찰하는 조사 계획을 설명하세요.
       sources:
       - access
       answer_contract:
@@ -2291,6 +2444,13 @@ sections:
         required_terms:
         - - disconnected_
         - - -ENODEV
+    - id: access-state
+      question: 연결 해제 오류가 아닌 상태 검사에서 -EACCES가 나오는 조건과 관찰할 값을 설명하세요.
+      sources:
+      - access
+      answer_contract:
+        basis: investigation
+        required_terms:
         - - -EACCES
     - id: validation-effects
       question: CameraConfiguration::validate가 Adjusted를 돌려줄 때 변경될 수 있는 구성과 호출자가 확인할 책임을 설명하세요. 이 부작용을 관찰하려고 validate를
@@ -2313,7 +2473,8 @@ sections:
         - - Valid
         - - -EINVAL
     - id: device-configure
-      question: 상태·검증을 통과했으면 실제 pipe_의 configure 호출 반환값과 호출 스택의 구체 구현을 관찰해 실패 위치를 좁히는 계획을 설명하세요. 구체 클래스 이름은 추정하지 마세요.
+      question: 상태·검증을 통과했으면 실제 pipe_의 configure 호출 반환값과 호출 스택의 구체 구현을 관찰해 실패 위치를 좁히는 계획을 설명하세요. 구체 클래스 이름은 추정하지
+        마세요.
       sources:
       - configure
       answer_contract:
@@ -2503,8 +2664,8 @@ sections:
         - - -EEXIST
         - - 펜스
     - id: capacity
-      question: 제출 성공 후 doQueueRequests에서 queuedRequests_.size()와 maxQueuedRequestsDevice_를 비교하고 한도에 도달한 분기를 관찰하는 계획을
-        설명하세요.
+      question: 제출 성공 후 doQueueRequests에서 queuedRequests_.size()와 maxQueuedRequestsDevice_를 비교하고 한도에 도달한 분기를 관찰하는
+        계획을 설명하세요.
       sources:
       - device-queue
       answer_contract:
@@ -2514,7 +2675,8 @@ sections:
         - - maxQueuedRequestsDevice_
         - - doQueueRequests
     - id: preparation
-      question: 장치 한도가 남으면 doQueueRequests의 선두 prepared_ 값과 준비되지 않았을 때의 break를 관찰하는 다음 단계를 설명하세요. 아직 요청을 꺼냈다고 쓰지 마세요.
+      question: 장치 한도가 남으면 doQueueRequests의 선두 prepared_ 값과 준비되지 않았을 때의 break를 관찰하는 다음 단계를 설명하세요. 아직 요청을 꺼냈다고 쓰지
+        마세요.
       sources:
       - device-queue
       answer_contract:
@@ -2525,8 +2687,8 @@ sections:
         - - break
           - 중단
     - id: cancelled
-      question: doQueueRequest의 cancelled_ 값과 true 분기에서 completeRequest 후 반환하는 경로를 관찰하는 계획을 설명하세요. 취소 원인이 언제나 사용자의 의도라고
-        추정하지 마세요.
+      question: doQueueRequest의 cancelled_ 값과 true 분기에서 completeRequest 후 반환하는 경로를 관찰하는 계획을 설명하세요. 취소 원인이 언제나 사용자의
+        의도라고 추정하지 마세요.
       sources:
       - device-queue
       answer_contract:
@@ -2545,7 +2707,8 @@ sections:
         - - cancelRequest
         - - 반환
     - id: buffer-completion
-      question: completeBuffer의 버퍼 추적 결과와 별도 completeRequest 호출 여부를 구분해 확인하는 계획을 설명하세요. 마지막 버퍼 완료를 자동 요청 완료로 바꾸지 마세요.
+      question: completeBuffer의 버퍼 추적 결과와 별도 completeRequest 호출 여부를 구분해 확인하는 계획을 설명하세요. 마지막 버퍼 완료를 자동 요청 완료로 바꾸지
+        마세요.
       sources:
       - completion
       answer_contract:
@@ -2554,8 +2717,8 @@ sections:
         - - completeBuffer
         - - completeRequest
     - id: pending-head
-      question: completeRequest의 선두 RequestPending 여부와 break를 관찰하는 계획을 설명하세요. Pending을 만나면 완료·제거한다고 쓰지 말고 소스의 다음 분기를
-        구분하세요.
+      question: completeRequest의 선두 RequestPending 여부와 break를 관찰하는 계획을 설명하세요. Pending을 만나면 완료·제거한다고 쓰지 말고 소스의 다음
+        분기를 구분하세요.
       sources:
       - completion
       answer_contract:
@@ -2611,8 +2774,8 @@ sections:
         - - Stopping
         - - Blocking
     - id: device-entry
-      question: PipelineHandler::stop이 waitingRequests_를 분리하는 지점과 stopDevice 진입·복귀를 비교하여 장치 내부에서 멎은 경우와 반환한 경우를 나누는
-        계획을 설명하세요.
+      question: PipelineHandler::stop이 waitingRequests_를 분리하는 지점과 stopDevice 진입·복귀를 비교하여 장치 내부에서 멎은 경우와 반환한 경우를
+        나누는 계획을 설명하세요.
       sources:
       - device-stop
       answer_contract:
@@ -2621,8 +2784,8 @@ sections:
         - - waitingRequests_
         - - stopDevice
     - id: pending
-      question: stopDevice 복귀 후 대기 요청의 cancel·doQueueRequest 처리와 queuedRequests_·waitingRequests_ ASSERT를 관찰하는 계획을 설명하세요.
-        ASSERT를 미래 실행의 보장으로 쓰지 마세요.
+      question: stopDevice 복귀 후 대기 요청의 cancel·doQueueRequest 처리와 queuedRequests_·waitingRequests_ ASSERT를 관찰하는 계획을
+        설명하세요. ASSERT를 미래 실행의 보장으로 쓰지 마세요.
       sources:
       - device-stop
       answer_contract:
@@ -2642,8 +2805,8 @@ sections:
         - - completeRequest
         - - CameraManager
     - id: disconnect
-      question: disconnect의 내부 처리·disconnected 신호와 남은 요청 처리 TODO를 설명하세요. 연결 해제의 TODO를 stop의 완료 보장이나 기존 요청의 실제 취소로 바꾸지
-        마세요.
+      question: disconnect의 내부 처리·disconnected 신호와 남은 요청 처리 TODO를 설명하세요. 연결 해제의 TODO를 stop의 완료 보장이나 기존 요청의 실제 취소로
+        바꾸지 마세요.
       sources:
       - notification
       answer_contract:

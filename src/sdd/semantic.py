@@ -24,6 +24,10 @@ def only_uncertainty(paragraph: str) -> bool:
     def uncertain(sentence):
         if _CHECK_OBLIGATION.search(sentence):
             return False
+        # Naming a concrete assertion and its checked expression is a code
+        # claim, even when Korean ends with "상태 확인이 필요합니다".
+        if re.search(r'\b(?:ASSERT|assert|static_assert)\s*\(', sentence):
+            return False
         clauses = [c for c in re.split(r'(?:하고|하며|되고|되며)[,\s]+', sentence) if c.strip()]
         if len(clauses) > 1:
             return all(uncertain(clause) for clause in clauses)

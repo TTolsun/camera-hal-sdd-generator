@@ -87,22 +87,30 @@ def resolve_passages(statements, passages):
             # Legacy quoted responses still undergo the same strict source check.
             result.append(statement)
             continue
-        if set(statement) != {'quote_id', 'text', 'covers', 'kind'}:
-            raise ValueError('quote_id 답변에는 text, covers, kind만 함께 쓸 수 있습니다.')
+        if (set(statement) - {'quote_id', 'text', 'covers', 'kind', 'evidence'}
+                or not {'quote_id', 'text', 'covers', 'kind'} <= set(statement)):
+            raise ValueError('quote_id 답변에는 text, covers, kind와 선택적 evidence만 함께 쓸 수 있습니다.')
         key = statement['quote_id']
         if not isinstance(key, str) or key not in passages:
             raise ValueError('제공되지 않은 quote_id입니다.')
         source_id, quote = passages[key]
+        evidence = statement.get('evidence', [source_id])
+        allowed = {sid for sid, _ in passages.values()}
+        if (not isinstance(evidence, list) or any(not isinstance(sid, str) for sid in evidence)
+                or len(evidence) != len(set(evidence)) or source_id not in evidence
+                or not set(evidence) <= allowed):
+            raise ValueError('evidence는 quote_id의 소스를 포함하는 제공된 소스 ID 목록이어야 합니다.')
         result.append({k: v for k, v in statement.items() if k != 'quote_id'} | {
-            'quote': quote, 'evidence': [source_id]})
+            'quote': quote, 'evidence': evidence})
     return result
 
 
 def response_schema(topic, passages=None):
     def ids(values):
-        return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
+        return {'type': 'array', 'minItems': 1, 'maxItems': len(values), 'uniqueItems': True,
+                'items': {'type': 'string', 'enum': values}}
     statement = {'type': 'object', 'additionalProperties': False,
-                 'required': ['text', 'quote_id', 'covers', 'kind'], 'properties': {
+                 'required': ['text', 'quote_id', 'evidence', 'covers', 'kind'], 'properties': {
                      # C++ expressions such as request->_d()->cancel() and
                      # std::unique_ptr<Request> need angle brackets. HTML is
                      # rejected outside code spans by materialize().
@@ -111,6 +119,8 @@ def response_schema(topic, passages=None):
                     # string literals in constrained Ollama responses.
                     'text': {'type': 'string'},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
+                     'evidence': ids(sorted({sid for sid, _ in passages.values()}) if passages
+                                     else [source['id'] for source in topic.get('sources', [])]),
                      'covers': ids(topic['covers']),
                      'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
     return {'type': 'object', 'additionalProperties': False, 'required': ['statements'],
@@ -318,7 +328,8 @@ def generate(generator, section, previous=None):
             'Cover required_terms from the source, without inventing relations merely to include keywords. '
             'Do not invent advice, rationale, guarantees or cleanup behavior. Preserve may/can versus must/shall and all negations. '
             'Each statement has text (one Korean paragraph without newlines), quote_id (the ID of the source passage directly supporting it), '
-            'covers (answered requirement IDs), and kind (behavior or limitation). Required answers must have behavior, not just a limitation. '
+            'evidence (all supporting source IDs, including the quote_id source), covers (answered requirement IDs), '
+            'and kind (behavior or limitation). Required answers must have behavior, not just a limitation. '
             'Put code identifiers in backticks. Do not output citations, links, tables or headings. '
             'Return only a JSON object with a statements array. Return an empty array if the source cannot answer.\n'
         )

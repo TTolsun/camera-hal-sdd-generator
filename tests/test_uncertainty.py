@@ -22,3 +22,11 @@ def test_concrete_conditions_and_caller_contracts_still_require_evidence(text):
 ])
 def test_pure_unknowns_remain_unknown(text):
     assert only_uncertainty(text)
+def test_assertion_check_is_a_factual_claim_requiring_a_citation():
+    from sdd.semantic import only_uncertainty, review
+    from sdd.facts.model import KnowledgeModel
+    text = '이 핸들러에서는 ASSERT(state_ != Stopped)와 같은 상태 확인이 필요합니다.'
+    assert not only_uncertainty(text)
+    assert review(text, KnowledgeModel(), set()) == ['설명 문단에 근거 인용이 없습니다.']
+    assert only_uncertainty('실제 콜백의 실행 스레드는 별도 확인이 필요합니다.')
+
