@@ -59,7 +59,7 @@ def strip_echo(text: str, prompt: str) -> str:
 _TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$", re.M)
 
 
-def check(text: str, allowed: set[str], require: bool = True) -> Verdict:
+def check(text: str, allowed: set[str], require: bool = True, *, min_chars: int = 80) -> Verdict:
     cites = extract_citations(text)
     invalid = sorted({c for c in cites if c not in allowed})
     v = Verdict(ok=True, invalid=invalid, total=len(cites))
@@ -78,7 +78,7 @@ def check(text: str, allowed: set[str], require: bool = True) -> Verdict:
     if _TABLE_ROW.search(text):
         v.ok = False
         v.notes.append("표를 출력했습니다. 표는 파이프라인이 만듭니다. 문단만 씁니다.")
-    if len(text.strip()) < 80:
+    if len(text.strip()) < min_chars:
         v.ok = False
         v.notes.append("본문이 비어 있거나 너무 짧습니다.")
     if v.uncited_paragraphs:

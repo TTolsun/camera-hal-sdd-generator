@@ -4,6 +4,7 @@ sections:
   kind: prose
   output: vendor-overview.md
   group: For Vendor
+  nav_section: 도입 판단
   reader_profile: vendor-overview
   lead: 제공 기능과 공통 설계의 강점을 확인하고 도입할 범위를 판단하세요.
   narration: facts
@@ -71,6 +72,7 @@ sections:
   kind: prose
   output: vendor-contract.md
   group: For Vendor
+  nav_section: 연동 구현
   reader_profile: vendor
   lead: 연동 순서와 구현 책임을 확인하고 설정·요청·정지 계약을 적용하세요.
   narration: facts
@@ -211,6 +213,7 @@ sections:
   kind: prose
   output: vendor-assurance.md
   group: For Vendor
+  nav_section: 도입 판단
   reader_profile: vendor-assurance
   lead: 지원 조건과 구성 제약을 확인하고 제품 도입 전에 검증할 범위를 정하세요.
   narration: facts
@@ -287,6 +290,7 @@ sections:
   kind: prose
   output: architecture-contract.md
   group: For Developer
+  nav_section: 구조 이해
   reader_profile: developer
   lead: CameraModule.cpp에서 시작해 요청 제출과 결과 콜백을 따라가세요.
   narration: facts

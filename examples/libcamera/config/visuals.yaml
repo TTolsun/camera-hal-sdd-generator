@@ -936,28 +936,28 @@ sections:
       label_en: CameraConfiguration::validate()
       evidence:
       - source: constraints/validate
-        sha256: a6c84f68e53cafd0f2721ee7eee586981059b62a93378a48235f86ffaa0a8fce
+        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
         quote: This function adjusts the camera configuration to the closest valid
     - id: invalid
       label: 'Invalid: 조정 불가'
       label_en: 'Invalid: cannot adjust'
       evidence:
       - source: constraints/validate
-        sha256: a6c84f68e53cafd0f2721ee7eee586981059b62a93378a48235f86ffaa0a8fce
+        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
         quote: The configuration is invalid and can't
     - id: adjusted
       label: 'Adjusted: 변경된 구성 확인'
       label_en: 'Adjusted: inspect changed configuration'
       evidence:
       - source: constraints/validate
-        sha256: a6c84f68e53cafd0f2721ee7eee586981059b62a93378a48235f86ffaa0a8fce
+        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
         quote: "The caller shall check the\n * configuration carefully."
     - id: valid
       label: 'Valid: 입력이 이미 유효'
       label_en: 'Valid: input already valid'
       evidence:
       - source: constraints/validate
-        sha256: a6c84f68e53cafd0f2721ee7eee586981059b62a93378a48235f86ffaa0a8fce
+        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
         quote: "The configuration was already valid and\n * hasn't been adjusted."
     edges:
     - from: validate
@@ -966,7 +966,7 @@ sections:
       label_en: Invalid
       evidence:
       - source: constraints/validate
-        sha256: a6c84f68e53cafd0f2721ee7eee586981059b62a93378a48235f86ffaa0a8fce
+        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
         quote: "The configuration is invalid and can't\n * be adjusted."
     - from: validate
       to: adjusted
@@ -974,7 +974,7 @@ sections:
       label_en: Adjusted
       evidence:
       - source: constraints/validate
-        sha256: a6c84f68e53cafd0f2721ee7eee586981059b62a93378a48235f86ffaa0a8fce
+        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
         quote: "Parameters may have changed for any stream, and stream\n * configurations may have been removed."
     - from: validate
       to: valid
@@ -982,7 +982,7 @@ sections:
       label_en: Valid
       evidence:
       - source: constraints/validate
-        sha256: a6c84f68e53cafd0f2721ee7eee586981059b62a93378a48235f86ffaa0a8fce
+        sha256: bc000ee568d90f13e6946b7574d1a92290270b8594bd9449dd54458ba6ac64e3
         quote: "The configuration was already valid and\n * hasn't been adjusted."
   vendor-integration:
   - id: integration-stages

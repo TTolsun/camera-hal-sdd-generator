@@ -2,7 +2,7 @@
 name: camera-hal-sdd
 description: camera-hal-sdd-generator를 사내 Camera HAL에 처음 적용하거나 SDD를 갱신할 때 사용합니다. 제품 빌드 설정, 소스에 근거한 Vendor·Developer 계약 작성, 문서·사이트 검증과 변경 후 재검토를 수행합니다. 사람 승인이나 실기기 시험 결과를 대신 만들지 않습니다.
 metadata:
-  version: "7"
+  version: "8"
   repository: camera-hal-sdd-generator
 ---
 
@@ -43,6 +43,8 @@ metadata:
 ## 계약을 작성할 때
 
 독자는 **For Vendor(연동·구현 담당자)**와 **For Developer(신입·타팀 개발자)**입니다. Developer가 기존 HAL 구조를 안다고 가정하지 않습니다. 첫 파일·진입점 → 요청과 결과 흐름 → 증상별 코드 탐색 → 수정 후 확인 순서로 안내하고, 상세 수명·스레드 계약은 필요한 자리에서 연결합니다.
+
+메뉴는 독자 → 수행할 작업 → 문서로 구성합니다. `group`으로 두 독자 그룹을 유지하고 `nav_section`으로 작업을 지정합니다. 새 설정은 사내 템플릿의 분류를 사용하고, 기존 설정은 실제 문서의 목적에 맞게 명시적으로 이전합니다. 장치 이름·클래스 이름을 작업 소분류와 같은 단계에 섞지 않으며 없는 문서의 소분류를 만들지 않습니다. `generate`·`export-site`로 재생성해 분류·순서·시나리오 상속을 확인하고, HTML을 직접 편집하지 않습니다. 정확한 키와 순서는 [설정 참조](../../docs/reference/sections.md)를 따릅니다.
 
 1. 제출·완료·정지 경로의 실제 정의와 호출자, 큐 소비자, 오류 처리를 찾습니다. `reader_profile: vendor`와 `reader_profile: developer`를 유지하고 필수 질문을 실제 모듈에 연결합니다.
 2. 최초에는 선택자만 설정하고 `extract`로 발췌를 확보합니다. 발췌 원문을 읽은 뒤 주장과 `evidence`·`covers`·해시를 작성합니다. 새 해시를 얻었다는 이유만으로 이전 설명이 맞다고 판단하지 않습니다.
