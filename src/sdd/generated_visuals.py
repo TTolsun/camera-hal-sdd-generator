@@ -161,7 +161,7 @@ def schema(passages, limit, required_symbols=None):
             item = copy.deepcopy(node)
             item['properties']['symbol']['enum'] = [symbol]
             nodes['prefixItems'].append(item)
-        nodes.update(minItems=limit, items=False)
+        nodes.update(minItems=limit)
     return obj({'nodes': nodes,
                 'edges': {'type': 'array', 'minItems': 1, 'maxItems': limit * 3, 'items': edge}})
 

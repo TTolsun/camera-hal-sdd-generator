@@ -212,5 +212,5 @@ def test_english_label_coverage_is_checked_separately(tmp_cfg, automatic):
 def test_full_required_symbol_set_constrains_structured_tuple():
     from sdd.generated_visuals import schema
     nodes = schema({'code:0': ('code', 'stop(); cancel();')}, 2, ['stop', 'cancel'])['properties']['nodes']
-    assert nodes['items'] is False and nodes['minItems'] == 2
+    assert isinstance(nodes['items'], dict) and nodes['minItems'] == 2
     assert [p['properties']['symbol']['enum'] for p in nodes['prefixItems']] == [['stop'], ['cancel']]
