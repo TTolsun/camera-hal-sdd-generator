@@ -96,6 +96,8 @@ python -m sdd.evaluate_pipeline --config project/sdd.yaml --out build/full-model
 
 `review.design_grounding: true`를 설정하면 생성 답변을 별도 모델 호출에서 소스와 대조하고, 지적이 남으면 `max_retries` 안에서 모델에 다시 요청합니다. 이 설정은 호출·입력 비용을 늘리며 모델 판정의 정확성도 별도로 검토해야 합니다. 판정이 누락되거나 근거 입력이 한도를 넘으면 통과시키지 않습니다. 미정의 용어·깨진 링크는 번역 전에 한국어 사이트 미리보기 단계에서 확인합니다.
 
+영어판의 새 문장이 많으면 `site.translation_batch_size: 6`처럼 묶음 크기를 지정할 수 있습니다. 모델 출력 한도도 묶음 전체를 담을 수 있어야 합니다. 문장별 코드·링크 자리표시자를 검사하며, 전체 번역이 끝나기 전에는 기존 번역 목록을 교체하지 않습니다.
+
 실제 모델 연결과 제품별 근거를 설정한 뒤 별도 출력 폴더에서 시험합니다. libcamera 공개 예제의 세 문서는 다음 명령으로 평가할 수 있습니다. 사내 템플릿은 먼저 빈 sources와 질문을 실제 HAL 근거로 채우고 `design_generation: llm`으로 전환해야 합니다.
 
 ```powershell

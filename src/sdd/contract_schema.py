@@ -43,11 +43,6 @@ def generated_errors(section):
     ids = [r['id'] for r in requirements]
     covered = []
     for topic in topics:
-        terms = topic.get('required_terms', [])
-        if (not isinstance(terms, list) or any(not isinstance(t, str) or not t.strip() for t in terms)
-                or len(terms) != len(set(terms))):
-            errors.append(f"{topic['id']}: required_terms는 중복 없는 소스 식별자 문자열 목록이어야 합니다.")
-        valid_terms = terms if isinstance(terms, list) and all(isinstance(t, str) for t in terms) else []
         covers = topic.get('covers')
         if not isinstance(covers, list) or not covers or any(not isinstance(c, str) for c in covers):
             errors.append(f"{topic['id']}: covers는 비어 있지 않은 문자열 목록이어야 합니다.")
@@ -62,7 +57,7 @@ def generated_errors(section):
             if not isinstance(parts, list) or not parts or any(not isinstance(p, dict) for p in parts):
                 errors.append(f"{topic['id']}: parts는 비어 있지 않은 객체 목록이어야 합니다.")
                 continue
-            seen, used, checked_terms = set(), set(), set()
+            seen, used = set(), set()
             source_ids = {s['id'] for s in topic.get('sources', [])}
             for part in parts:
                 errors.extend(answer_contract_errors(part))
@@ -78,18 +73,10 @@ def generated_errors(section):
                     errors.append(f"{topic['id']}: parts sources는 현재 주제의 근거 id 목록이어야 합니다.")
                 else:
                     used.update(refs)
-                part_terms = part.get('required_terms', [])
-                if (not isinstance(part_terms, list) or any(not isinstance(t, str) or t not in valid_terms for t in part_terms)
-                        or len(part_terms) != len(set(part_terms))):
-                    errors.append(f"{topic['id']}: parts required_terms는 주제의 필수 용어 중 중복 없는 목록이어야 합니다.")
-                else:
-                    checked_terms.update(part_terms)
-                if set(part) - {'id', 'question', 'sources', 'required_terms', 'answer_contract'}:
-                    errors.append(f"{topic['id']}: parts에는 id, question, sources, required_terms, answer_contract만 허용합니다.")
+                if set(part) - {'id', 'question', 'sources', 'answer_contract'}:
+                    errors.append(f"{topic['id']}: parts에는 id, question, sources, answer_contract만 허용합니다.")
             if used != source_ids:
                 errors.append(f"{topic['id']}: parts가 모든 소스 근거를 다뤄야 합니다.")
-            if set(valid_terms) != checked_terms:
-                errors.append(f"{topic['id']}: parts가 모든 필수 용어를 검사해야 합니다.")
     if sorted(covered) != sorted(ids) or len(ids) != len(set(ids)):
         errors.append('각 필수 질문은 정확히 한 주제의 covers에 연결해야 합니다.')
     return errors

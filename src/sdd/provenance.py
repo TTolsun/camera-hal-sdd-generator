@@ -62,3 +62,22 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
     return {'documents': documents, 'topics': topics, 'statements': statements,
             'verified_http_calls': len(list(calls.rglob('*.receipt.json'))),
             'scope': 'Exact request/response hashes and model authorship; not semantic or human approval.'}
+
+
+def main():
+    import argparse
+    from .facts.model import KnowledgeModel
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--facts', type=Path, required=True)
+    parser.add_argument('--manuscripts', type=Path, required=True)
+    parser.add_argument('--calls', type=Path, required=True)
+    parser.add_argument('--provider', choices=('ollama', 'openai-compatible'), required=True)
+    parser.add_argument('--model', required=True)
+    args = parser.parse_args()
+    report = verify_calls(KnowledgeModel.load(args.facts), args.manuscripts, args.calls,
+                          provider=args.provider, model_name=args.model)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+
+
+if __name__ == '__main__':
+    main()

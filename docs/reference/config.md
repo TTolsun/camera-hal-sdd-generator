@@ -146,6 +146,7 @@ agent:
 | `nav_groups` | `[]` | 왼쪽 메뉴 그룹 순서. |
 | `undefined_terms` | 용어집이 있으면 `fail`, 없으면 `warn` | 뜻을 적지 않은 약어의 처리. `fail`, `warn`, `off`. [약어 검사](glossary.md#약어-검사). |
 | `english_catalog` | 없음 | 영어판 번역 목록. 공개 libcamera에서만 씁니다. |
+| `translation_batch_size` | `1` | 번역 호출당 문장 수. 1~16을 허용하며 입력 예산에 맞게 묶음을 줄입니다. 각 문장의 ID·코드 자리표시자·영어 응답을 검사하고 실패한 묶음은 반영하지 않습니다. |
 
 ## update
 
