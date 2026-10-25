@@ -37,7 +37,8 @@ def evaluate(cfg, section_ids, out: Path):
     sections_hash = hashlib.sha256(sections_bytes).hexdigest()
     (out/'sections.yaml').write_bytes(sections_bytes)
     generator_hashes = {name:hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
-                       for name in ('generated_design.py','answer_contracts.py','contract_schema.py','evaluate_reader.py','validate.py')}
+                       for name in ('generated_design.py','focused_prompt.py','prompting.py','evidence.py',
+                                    'answer_contracts.py','contract_schema.py','evaluate_reader.py','validate.py')}
     trial = copy.deepcopy(cfg)
     trial.paths = {**trial.paths, 'sections_file':out/'sections.yaml', 'scenarios_file':cfg.scenarios_file,
                    'prompts':cfg.prompts_dir, 'templates':cfg.templates_dir, 'style':cfg.style_dir}
@@ -67,6 +68,7 @@ def evaluate(cfg, section_ids, out: Path):
                           'think':trial.agent.think,
                           'max_output_tokens':trial.agent.max_output_tokens,
                           'max_retries':trial.max_retries,
+                          'design_prompt':trial.raw.get('review',{}).get('design_prompt','standard'),
                           'design_revision':bool(trial.raw.get('review',{}).get('design_revision',False))},
               'sections_sha256':sections_hash,
               'generator_files_sha256':generator_hashes,

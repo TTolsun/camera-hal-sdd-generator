@@ -39,6 +39,7 @@ agent:
   # model: <모델 이름>
 
 review:
+  design_prompt: focused      # 문단 작성 지침. prompts/focused-design-system.md를 사내 모델로 시험한다.
   require_citations: true
   max_retries: 1
   coverage_triage:

@@ -133,7 +133,10 @@ def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated):
     assert path.read_bytes() == original and len(agent.calls) == 2
 
 
-def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated):
+@pytest.mark.parametrize('prompt_mode', ['standard', 'focused'])
+def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated, prompt_mode):
+    tmp_cfg.raw['review'] = {'design_prompt': prompt_mode}
+    (tmp_cfg.prompts_dir / 'focused-design-system.md').write_text('각 질문에 답하세요.', encoding='utf-8')
     from sdd.export_html import _split
     section, model, save, agent = generated
     topic = section['design_topics'][0]
@@ -145,6 +148,9 @@ def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated):
     class RetryAgent:
         calls = []
         def chat(self, system, user, **kw):
+            if prompt_mode == 'focused':
+                assert system == '각 질문에 답하세요.'
+                assert kw['response_schema']['properties']['statements']['maxItems'] == 1
             self.calls.append(user)
             response = copy.deepcopy(agent.statement)
             response['text'] = rejected if len(self.calls) == 1 else valid

@@ -61,6 +61,16 @@ def test_observed_invalid_disjunction_is_rejected_by_project_rule():
     check(rule, [statement('Invalid는 구성이 유효하지 않고 조정할 수 없다는 뜻입니다. 빈 구성과 같은 극단적인 경우에만 발생할 수 있습니다.')], 'invalid')
 
 
+def test_completion_is_not_merely_considered_complete():
+    config = Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml'
+    section = next(s for s in yaml.safe_load(config.read_text(encoding='utf-8'))['sections'] if s['id']=='vendor-overview')
+    topic = next(t for t in section['design_topics'] if t['id']=='benefits')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id']=='completion')
+    with pytest.raises(ValueError, match='간주'):
+        check(rule, [statement('stop 시 자동으로 모든 요청이 완료된 것으로 간주되도록 보장하며, 파이프라인은 completeRequest로 통지해야 합니다.')], 'completion')
+    check(rule, [statement('stop 시 단순히 완료된 것으로 간주해서는 안 됩니다. 파이프라인은 completeRequest로 완료를 통지해야 합니다.')], 'completion')
+
+
 @pytest.mark.parametrize('rule', [None, {}, {'basis':'guaranteed'}, {'basis':'contract','answer':'fixed'},
     {'basis':'contract','required_terms':['WrongShape']},
     {'basis':'contract','reject_patterns':[{'pattern':'[','message':'bad regex'}]}])
