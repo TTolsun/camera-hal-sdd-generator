@@ -9,6 +9,7 @@ import hashlib
 import html
 import json
 import re
+import unicodedata
 from pathlib import PurePosixPath
 
 import yaml
@@ -47,6 +48,25 @@ def _id(value):
     return value
 
 
+def wrap_label(value, width=28):
+    """Keep every character, wrapping Korean/Latin labels before escaping HTML."""
+    def size(text):
+        return sum(2 if unicodedata.east_asian_width(c) in ('W', 'F') else 1 for c in text)
+    lines, line = [], ''
+    for word in re.findall(r'\S+\s*|\s+', value):
+        if line and size(line + word) > width:
+            lines.append(line)
+            line = ''
+        for char in word:
+            if line and size(line + char) > width:
+                lines.append(line)
+                line = ''
+            line += char
+    if line:
+        lines.append(line)
+    return '<br/>'.join(html.escape(part, quote=True) for part in lines)
+
+
 def _records(model, section, item):
     refs = item.get('evidence')
     if not isinstance(refs, list) or not refs or any(not isinstance(r, dict) for r in refs):
@@ -74,6 +94,10 @@ def _records(model, section, item):
 def render(cfg, model, section):
     """Return validated (definition, Markdown, Mermaid) tuples."""
     values = definitions(cfg, section)
+    return render_values(cfg, model, section, values)
+
+
+def render_values(cfg, model, section, values):
     if not values:
         return []
     if model is None:
@@ -91,7 +115,7 @@ def render(cfg, model, section):
         if ident in seen:
             raise ValueError('Duplicate visual ID')
         seen.add(ident)
-        if set(visual) - {'id', 'topic', 'kind', 'title', 'question', 'nodes', 'edges'}:
+        if set(visual) - {'id', 'topic', 'kind', 'title', 'question', 'nodes', 'edges', 'producer'}:
             raise ValueError('Unknown visual setting')
         if visual.get('kind') not in {'state', 'flow', 'ownership', 'decision'} or visual.get('topic') not in topics:
             raise ValueError('Visual kind or topic is invalid')
@@ -107,8 +131,8 @@ def render(cfg, model, section):
             raise ValueError(f'Visual {ident} has {len(nodes)} nodes (limit {limit}); split the diagram')
         ids, translations, rows, proof = set(), {}, ['flowchart TB'], []
         def label(item):
-            ko = html.escape(_text(item.get('label'), 'label'), quote=True)
-            en = html.escape(_text(item.get('label_en'), 'label_en'), quote=True)
+            ko = wrap_label(_text(item.get('label'), 'label'))
+            en = wrap_label(_text(item.get('label_en'), 'label_en'))
             if ko in translations and translations[ko] != en:
                 raise ValueError('Conflicting visual label translations')
             translations[ko] = en
@@ -147,6 +171,10 @@ def render(cfg, model, section):
         download = PurePosixPath(section_output(section)).stem + '.' + ident + '.mmd'
         block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n{question}\n\n'
                  f'```mermaid\n{source}\n```\n\n[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
+        if visual.get('producer'):
+            producer = _text(visual['producer'], 'producer')
+            block = block.replace(question + '\n\n', question + '\n\nLLM 그림 초안 · 사람 검토 전\n\n작성 모델: `'
+                                  + html.escape(producer) + '`\n\n', 1)
         result.append((visual, block, source))
     return result
 

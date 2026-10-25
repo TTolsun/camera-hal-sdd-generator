@@ -362,8 +362,8 @@ sections:
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret =\
-          \ queueRequestDevice(camera, request);"
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
+          \ request);"
     - from: device
       to: cancel
       label: 장치 제출 실패
@@ -451,8 +451,8 @@ sections:
       evidence:
       - source: journey/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret =\
-          \ queueRequestDevice(camera, request);"
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
+          \ request);"
     - from: device
       to: buffer
       label: 장치 구현자가 버퍼 완료 통지
@@ -618,8 +618,8 @@ sections:
       evidence:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
-        quote: "waitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued\
-          \ requests complete. */\n\tstopDevice(camera);"
+        quote: "waitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests\
+          \ complete. */\n\tstopDevice(camera);"
     - from: stop
       to: cancel
       label: 장치 요청 뒤 대기 요청 취소
@@ -847,8 +847,8 @@ sections:
       evidence:
       - source: queue/queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret =\
-          \ queueRequestDevice(camera, request);"
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
+          \ request);"
     - from: device
       to: cancel
       label: 장치 제출 실패
@@ -929,61 +929,31 @@ sections:
     topic: constraints
     kind: decision
     title: validate() 결과별 호출자의 책임
-    question: Adjusted는 조정된 결과를 다시 확인해야 한다는 뜻입니다. 최종 configure()에는 완전히 유효한 입력이 필요합니다.
-    nodes:
-    - id: validate
-      label: CameraConfiguration::validate()
-      label_en: CameraConfiguration::validate()
-      evidence:
-      - source: constraints/configure-input
-        sha256: 625bd787da81f9407ba9e746d4939d93b7172a26642429bcfd3300aa6187675f
-        quote: CameraConfiguration::validate().
-    - id: invalid
-      label: 'Invalid: 조정 불가'
-      label_en: 'Invalid: cannot adjust'
-      evidence:
-      - source: constraints/invalid
-        sha256: 2247db4a7b9353362f9df6c84aaa5c2810dec4eaaae4b3b36d19c57e427f5790
-        quote: The configuration is invalid and can't
-    - id: adjusted
-      label: 'Adjusted: 변경된 구성 확인'
-      label_en: 'Adjusted: inspect changed configuration'
-      evidence:
-      - source: constraints/adjusted
-        sha256: 1305054b4a0655a883d0cef7398ff34824da06ecdbac0dfbf1f06de218bb6ebc
-        quote: "The caller shall check the\n * configuration carefully."
-    - id: valid
-      label: 'Valid: 입력이 이미 유효'
-      label_en: 'Valid: input already valid'
-      evidence:
-      - source: constraints/valid
-        sha256: 65317fa08ab2e5bece59b520aadbadd782fc7388215000c59e43e1b1bbf87105
-        quote: "The configuration was already valid and\n * hasn't been adjusted."
-    edges:
-    - from: validate
-      to: invalid
-      label: Invalid
-      label_en: Invalid
-      evidence:
-      - source: constraints/invalid
-        sha256: 2247db4a7b9353362f9df6c84aaa5c2810dec4eaaae4b3b36d19c57e427f5790
-        quote: "The configuration is invalid and can't\n * be adjusted."
-    - from: validate
-      to: adjusted
-      label: Adjusted
-      label_en: Adjusted
-      evidence:
-      - source: constraints/adjusted
-        sha256: 1305054b4a0655a883d0cef7398ff34824da06ecdbac0dfbf1f06de218bb6ebc
-        quote: "Parameters may have changed for any stream, and stream\n * configurations may have been removed."
-    - from: validate
-      to: valid
-      label: Valid
-      label_en: Valid
-      evidence:
-      - source: constraints/valid
-        sha256: 65317fa08ab2e5bece59b520aadbadd782fc7388215000c59e43e1b1bbf87105
-        quote: "The configuration was already valid and\n * hasn't been adjusted."
+    question: validate()의 Invalid·Adjusted·Valid는 무엇을 뜻하며, Adjusted이면 호출자는 무엇을 다시 확인해야 합니까?
+    prompt: 네 노드는 CameraConfiguration::validate·Invalid·Adjusted·Valid입니다. 가장 중요한 답은 Adjusted에서 호출자가 할 일입니다. Adjusted 노드의
+      label에는 호출자·확인·가능을 모두 넣고 label_en에는 caller·check·may를 모두 넣으세요. 파라미터 변경이나 스트림 삭제는 가능성이며 호출자는 조정된 구성을 주의하여 확인해야 합니다. 영어에서도
+      이 가능성과 의무를 보존하세요. 제공한 원문에 없는 보장은 추가하지 마세요.
+    generation: llm
+    max_nodes: 4
+    required_symbols:
+    - CameraConfiguration::validate
+    - Invalid
+    - Adjusted
+    - Valid
+    answer_contract:
+      basis: description
+      required_terms:
+      - - 확인
+        - 재확인
+      - - 가능
+        - 수 있습니다
+        - 수있습니다
+        - 있을 수
+    answer_contract_en:
+      basis: description
+      required_terms:
+      - - may
+      - - caller
   vendor-integration:
   - id: integration-stages
     topic: integration
@@ -1227,8 +1197,7 @@ sections:
       evidence:
       - source: selection/selection
         sha256: e0bd5192ea24a8b39d3df7b7b93c8b17614663a0144f6dd0741d410fa321d458
-        quote: "if (!proxy->isValid()) {\n\t\t\tLOG(IPAManager, Error) << \"Failed to load proxy\";\n\t\t\treturn\
-          \ nullptr;"
+        quote: "if (!proxy->isValid()) {\n\t\t\tLOG(IPAManager, Error) << \"Failed to load proxy\";\n\t\t\treturn nullptr;"
     - from: valid
       to: success
       label: 예
