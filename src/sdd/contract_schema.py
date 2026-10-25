@@ -50,6 +50,30 @@ def generated_errors(section):
             errors.append(f"{topic['id']}: LLM 모드에서는 statements를 미리 작성할 수 없습니다.")
         if any('sha256' in source for source in topic.get('sources', [])):
             errors.append(f"{topic['id']}: LLM 모드의 근거 해시는 현재 커밋에서 수집합니다.")
+        if 'parts' in topic:
+            parts = topic['parts']
+            if not isinstance(parts, list) or not parts or any(not isinstance(p, dict) for p in parts):
+                errors.append(f"{topic['id']}: parts는 비어 있지 않은 객체 목록이어야 합니다.")
+                continue
+            seen, used = set(), set()
+            source_ids = {s['id'] for s in topic.get('sources', [])}
+            for part in parts:
+                pid = part.get('id')
+                if not isinstance(pid, str) or not pid or pid in seen:
+                    errors.append(f"{topic['id']}: parts id는 비어 있지 않고 고유해야 합니다.")
+                else:
+                    seen.add(pid)
+                if not isinstance(part.get('question'), str) or not part['question'].strip():
+                    errors.append(f"{topic['id']}: parts question이 필요합니다.")
+                refs = part.get('sources')
+                if not isinstance(refs, list) or not refs or any(not isinstance(r, str) or r not in source_ids for r in refs):
+                    errors.append(f"{topic['id']}: parts sources는 현재 주제의 근거 id 목록이어야 합니다.")
+                else:
+                    used.update(refs)
+                if set(part) - {'id', 'question', 'sources'}:
+                    errors.append(f"{topic['id']}: parts에는 id, question, sources만 허용합니다.")
+            if used != source_ids:
+                errors.append(f"{topic['id']}: parts가 모든 소스 근거를 다뤄야 합니다.")
     if sorted(covered) != sorted(ids) or len(ids) != len(set(ids)):
         errors.append('각 필수 질문은 정확히 한 주제의 covers에 연결해야 합니다.')
     return errors

@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**ZIP을 풀고 무결성을 확인한 뒤, 아래 시작 프롬프트를 사내 에이전트에게 전달하세요.** 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[검증된 GitHub 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-24) 링크를 공유하면 됩니다.** 전달용 ZIP을 다시 묶거나 메일에 첨부할 필요가 없습니다. 받은 반입 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달하세요. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -13,6 +13,21 @@
 | 새 버전의 반입 파일을 만듭니다. | [패키지 재생성](#패키지-재생성) |
 
 ## 반입 확인과 설치
+
+### GitHub에서 받기
+
+검증 버전은 `3066527e44f5ee843acb0f192cc7505afdc16c9e`이며, 이동하는 main 대신 `inhouse-2026-10-24` 릴리스에 고정했습니다. 아래 네 파일을 같은 폴더에 받으세요. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+
+| 파일 | 용도 |
+|---|---|
+| [camera-hal-sdd-inhouse-3066527.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-24/camera-hal-sdd-inhouse-3066527.zip) | 검증된 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-24/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [camera-hal-sdd-inhouse-3066527.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-24/camera-hal-sdd-inhouse-3066527.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [published-reader-evaluation.md](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-24/published-reader-evaluation.md) | 최종 공개 배포본의 독립 읽기 평가 기록 |
+
+프롬프트 파일은 이 검증 버전과 함께 보관하는 사본입니다. 이후 버전의 절차는 해당 버전의 이 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
+
+GitHub가 자동 제공하는 `Source code (zip)`이나 일반 clone에는 반입용 `IMPORT-MANIFEST.json`과 대체 `AGENTS.md`가 없습니다. 그 상태에서 `verify_import.py`를 실행하면 검증할 수 없습니다. 저장소로부터 직접 준비하려면 승인된 준비 환경에서 위 기준 커밋을 받아 [패키지 재생성](#패키지-재생성)을 실행하세요. 사내 에이전트는 생성된 반입 디렉터리에서 시작합니다.
 
 ZIP 안의 `camera-hal-sdd-generator/START_HERE.md`가 입구입니다. `IMPORT-MANIFEST.json`에는 생성기 기준 커밋과 파일별 SHA-256이 있습니다. 함께 전달된 `.zip.sha256`과 ZIP 해시를 대조한 뒤 압축을 풉니다. 해시는 전달 중 변경을 검출하며 출처 인증을 대신하지 않습니다. 승인된 전달 경로의 파일·체크섬을 사용하세요.
 

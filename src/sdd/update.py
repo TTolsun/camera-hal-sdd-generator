@@ -16,6 +16,9 @@ from __future__ import annotations
 
 import json
 import shutil
+import os
+import subprocess
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -116,8 +119,31 @@ class Steps:
     """한 커밋을 처리하는 단계. 테스트와 환경별 교체를 위해 주입할 수 있다."""
     checkout: Callable[[Config, str], None] = lambda cfg, sha: source_git.checkout(cfg.source_root, sha)
     prepare_compdb: Callable[[Config, str], None] = lambda cfg, sha: _run_compdb_cmd(cfg)
-    extract: Callable[[Config], KnowledgeModel] = lambda cfg: extract.run(cfg)
+    extract: Callable[[Config], KnowledgeModel] = lambda cfg: _extract(cfg)
     generate: Callable[[Config, KnowledgeModel, impact_mod.ImpactReport], None] = _default_generate
+
+
+def _extract(cfg: Config) -> KnowledgeModel:
+    """Allow extraction in the actual build environment, with staged validation."""
+    command = (cfg.raw.get('update') or {}).get('extract_cmd')
+    if command is None:
+        return extract.run(cfg)
+    if not isinstance(command, list) or not command or any(not isinstance(v, str) or not v for v in command):
+        raise ValueError('update.extract_cmd는 비어 있지 않은 문자열 인자 목록이어야 합니다.')
+    commit = source_git.resolve_commit(cfg.source_root, 'HEAD')
+    cfg.build_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='extract-', dir=cfg.build_dir) as temporary:
+        output = Path(temporary) / 'facts.json'
+        env = dict(os.environ, SDD_SOURCE_COMMIT=commit, SDD_SOURCE_ROOT=str(cfg.source_root),
+                   SDD_FACTS_OUTPUT=str(output))
+        subprocess.run(command, cwd=cfg.root, env=env, check=True)
+        if not output.is_file():
+            raise RuntimeError('외부 추출 명령이 SDD_FACTS_OUTPUT에 facts를 만들지 않았습니다.')
+        model = KnowledgeModel.load(output)
+        if model.meta.get('source_commit') != commit:
+            raise RuntimeError('외부 추출 facts의 source_commit이 대상 커밋과 다릅니다.')
+        model.save(cfg.facts_path)
+        return model
 
 
 def _run_compdb_cmd(cfg: Config) -> None:

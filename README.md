@@ -1,6 +1,6 @@
 # camera-hal-sdd-generator
 
-사내에 전달하려면 [반입 패키지 시작 안내](docs/inhouse/package.md)를 여세요. 시작 프롬프트, 실행 순서, 품질 합격 기준과 복구 절차를 한 곳에 모았습니다.
+사내에 전달하려면 [검증된 GitHub 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-24) 링크를 공유하세요. 메일에 ZIP을 첨부할 필요 없이 반입 파일·시작 프롬프트·체크섬·최종 평가 기록을 각각 받을 수 있습니다. [시작 안내](docs/inhouse/package.md)에 실행 순서, 품질 합격 기준과 복구 절차를 모았습니다.
 
 **사내 Camera HAL에 처음 적용한다면 [1단계: 준비물](docs/inhouse/01-prepare.md)을 여세요.** 전체 문서 지도는 [docs/README.md](docs/README.md)에 있습니다.
 
