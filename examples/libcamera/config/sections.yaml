@@ -234,6 +234,9 @@ sections:
         basis: description
         required_terms:
         - - Invalid
+        reject_patterns:
+        - pattern: (조정|수정).{0,15}없거나
+          message: Invalid의 무효·조정 불가 조건과 극단적인 경우의 예시를 또는 조건으로 바꾸지 마세요.
     - id: adjusted
       question: CameraConfiguration::Adjusted일 때 스트림 파라미터 변경·스트림 구성 제거 가능성과 호출자가 지켜야 할 확인 의무만 한 문단으로 설명하세요.
       sources:
@@ -262,6 +265,8 @@ sections:
         required_terms:
         - - generateConfiguration
         - - roles
+          - 역할 목록
+          - 스트림 용도
         - - 'null'
           - nullptr
         reject_patterns: []
@@ -487,6 +492,8 @@ sections:
         required_terms:
         - - generateConfiguration
         - - roles
+          - 역할 목록
+          - 스트림 용도
         - - 'null'
           - nullptr
         - - 상태

@@ -1,6 +1,8 @@
 import copy
 
 import pytest
+import yaml
+from pathlib import Path
 
 from sdd.answer_contracts import check, configuration_errors, sourced_check_obligation, validate
 
@@ -47,6 +49,16 @@ def test_sourced_caller_check_is_not_uncertainty():
     assert sourced_check_obligation('호출자는 해당 구성이 유효해졌지만 스트림 파라미터가 변경되었거나 일부 스트림 구성이 제거되었을 수 있으므로 반드시 최신 구성을 세심하게 확인해야 합니다.', 'The caller shall check the configuration carefully.')
     check(dict(basis='contract'), [statement('구현자는 요청의 완료를 신호로 보내야 합니다.')], 'completion')
     check(dict(basis='contract'), [statement('이 함수는 지정된 스레드에서 호출되어야 하며 입력 상태를 유지해야 합니다.')], 'context')
+
+
+def test_observed_invalid_disjunction_is_rejected_by_project_rule():
+    config = Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml'
+    section = next(s for s in yaml.safe_load(config.read_text(encoding='utf-8'))['sections'] if s['id']=='vendor-assurance')
+    topic = next(t for t in section['design_topics'] if t['id']=='constraints')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id']=='invalid')
+    with pytest.raises(ValueError, match='또는 조건'):
+        check(rule, [statement('설정이 수정될 수 없거나 극단적인 경우에만 Invalid 상태를 반환합니다.')], 'invalid')
+    check(rule, [statement('Invalid는 구성이 유효하지 않고 조정할 수 없다는 뜻입니다. 빈 구성과 같은 극단적인 경우에만 발생할 수 있습니다.')], 'invalid')
 
 
 @pytest.mark.parametrize('rule', [None, {}, {'basis':'guaranteed'}, {'basis':'contract','answer':'fixed'},
