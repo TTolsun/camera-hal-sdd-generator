@@ -37,6 +37,11 @@ def main():
     out.mkdir(parents=True)
     report = {'schema': 1, 'model': args.model, 'scope': 'Public mini HAL source/excerpt replay; no camera execution or internal HAL validation',
               'human_review': 'pending', 'stages': []}
+    imported = ROOT / 'IMPORT-MANIFEST.json'
+    report['generator'] = ({'mode': 'import-package',
+        'source_commit': json.loads(imported.read_text(encoding='utf-8'))['source_commit'],
+        'import_manifest_sha256': hashlib.sha256(imported.read_bytes()).hexdigest()}
+        if imported.exists() else {'mode': 'workspace', 'source_commit': None})
     def write_report():
         (out / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     def git(*arguments):

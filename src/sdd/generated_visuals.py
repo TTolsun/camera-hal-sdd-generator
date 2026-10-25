@@ -46,7 +46,7 @@ Each value contains ONLY label, label_en, shape, quote_ids. The generator alread
 binds the IDs to source symbols; never repeat id or symbol inside these values.
 Return EVERY bound node and use its exact ID in edges. You still propose all labels
 and connections from the evidence, never invent a relationship to connect nodes.'''
-POLICY += '\nDoxygen return-value descriptions are separate passages; cite each relevant status passage, including its duties and may/must qualifications.'
+POLICY += '\nDoxygen return-value passages retain the function header through the relevant status; cite that status passage, including its duties and may/must qualifications.'
 
 
 def digest(value):
@@ -79,11 +79,23 @@ def source_symbols(passages):
 
 
 def visual_passages(sources):
-    # Preserve contiguous source text inside each passage while exposing each
-    # documented return case independently to small models.
-    separated = {key: re.sub(r'(?m)(?=^[ \t]*\*[ \t]*\\retval\b)', '\n', text)
-                 for key, text in sources.items()}
-    return source_passages(separated)
+    annotated, passages = {}, {}
+    for source, text in sources.items():
+        starts = [m.start() for m in re.finditer(r'(?m)^[ \t]*\*[ \t]*\\retval\b', text)]
+        if not starts:
+            view, quotes = source_passages({source: text})
+            annotated.update(view)
+            passages.update(quotes)
+            continue
+        # Each contiguous prefix retains the documented function identity.
+        # Removing it would force a return edge to cite two unrelated chunks.
+        annotated[source] = []
+        for index, end in enumerate(starts + [len(text)]):
+            quote = text[:end].strip()
+            key = f'{source}:{index}'
+            annotated[source].append({'text': quote, 'quote_id': key})
+            passages[key] = (source, quote)
+    return annotated, passages
 
 
 def plans(cfg, section):

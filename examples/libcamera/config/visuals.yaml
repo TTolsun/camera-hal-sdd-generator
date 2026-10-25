@@ -942,7 +942,7 @@ sections:
       basis: description
       required_terms:
       - [확인, 재확인]
-      - [가능]
+      - [가능, 수 있습니다, 수있습니다, 있을 수]
     answer_contract_en:
       basis: description
       required_terms:
