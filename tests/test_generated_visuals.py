@@ -276,3 +276,26 @@ def test_label_schema_matches_single_line_validator_for_nodes_and_edges():
                 assert not re.fullmatch(rule['pattern'], value)
                 with pytest.raises(ValueError, match='single line'):
                     _text(value, field)
+
+
+def test_visual_source_selection_excludes_unrelated_prose_evidence(tmp_cfg, automatic):
+    from sdd.generated_visuals import inputs, plans
+    section, model, _, _ = automatic
+    topic = section['design_topics'][0]
+    extra = copy.deepcopy(topic['sources'][0]); extra['id'] = 'other'
+    topic['sources'].append(extra)
+    record = copy.deepcopy(model.evidence['device/shutdown/stop'])
+    record['text'] = 'unrelated();'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    extra['sha256'] = record['sha256']; record['selector'] = copy.deepcopy(extra)
+    model.evidence['device/shutdown/other'] = record
+    plan = plans(tmp_cfg, section)[0]
+    plan['sources'] = ['stop']
+    _, records, passages, _, request = inputs(tmp_cfg, model, section, plan)
+    assert set(records) == {'stop'}
+    assert all(source == 'stop' for source, _ in passages.values())
+    assert 'unrelated' not in json.dumps(request)
+    for invalid in ([], ['missing'], ['stop', 'stop'], 'stop', [None]):
+        plan['sources'] = invalid
+        with pytest.raises(ValueError, match='Visual sources'):
+            inputs(tmp_cfg, model, section, plan)
