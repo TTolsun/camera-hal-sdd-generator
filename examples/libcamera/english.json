@@ -9,7 +9,7 @@
     "ipa.html": "551e834792e13d719ffa7f9209fe6f11d82cca1475ec40700821f43081dc4854",
     "ipu3-lsc-flow.html": "aba6074dd957ed175c52dea9b333ea0fe98f9378a1c2c807cdcee34f66204204",
     "ipu3-lsc.html": "a2e7a12d206a05077c2db37104f914be79c59dc7e3a4ab1c38fef1e69b9ea6c9",
-    "overview.html": "1bf808b821250ac8c829e7d34b008d833f2bf62ecf614a08e68c222b350445eb",
+    "overview.html": "ae2fcb217e63af2f702c66af65a75b4d5b8a1a2870fe26bd9478f8202fd7eeac",
     "pipeline-handler.html": "d0ca983e4aba724b2b1f7a9578611aa73a41ebe0aabdb0171e71787b55f15ab4",
     "request-lifecycle.html": "6314b35d9ce1797f1de20f0c51e6fb81a3fd6de1701b82ccf627f71aa93af2d8",
     "rkisp1-dewarp.html": "89813749dee87d17f133245a029dfd0207d3341fd7a674f9daccfefa69da8c9b",
@@ -22,7 +22,7 @@
     "scenarios/queue_request.html": "7155ab4517d65f65d91825052313c601cdcda28362386d627e681dc541956dbb",
     "vendor-assurance.html": "8f1ed6ce5ef77f3f0dde2625614cbedc2bf40a061d86a11c66baa61946d13b37",
     "vendor-integration.html": "719be3b03db3ca4ada1eb87a1f3f0537a457df254dda950dd8858406056c011f",
-    "vendor-overview.html": "a5f5be22723e849613a2203f535b19ea6b56f2266a3b01894f5c2ec9cdaaea72"
+    "vendor-overview.html": "fb6bd732303df74034bd00909c1aaf5abfcfa98d6da6e8c31151cf866ebbbd29"
   },
   "strings": {
     "\"자동 검사 통과\"는 인용한 코드 위치와 문장 형식을 기계로 확인했다는 뜻이며, 사람의 내용 승인이 아닙니다. 문서 상단에 검토 상태를, 아래 생성 근거에 분석 커밋과 자동 검사 결과를 표시합니다. 코드 발췌와 대조한 설명도 내용이 맞는지 사람이 검토해야 합니다.": "\"Automatic checks passed\" means a machine checked the cited code locations and the sentence form; it is not human approval of the content. Each document shows its review status at the top, and its analysis commit and automatic check result in the generation evidence at the bottom. Explanations checked against code excerpts still need a person to confirm that they are correct.",
