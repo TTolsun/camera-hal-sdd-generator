@@ -127,6 +127,10 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: Keeping track of queued requests ensures automatic completion of all requests
       end: signalled by the pipeline handler using the completeRequest() function.
+    - id: notification-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: Request completion shall be
+      end: signalled by the pipeline handler using the completeRequest() function.
     parts:
     - id: queue
       question: 공통 PipelineHandler::queueRequest가 요청을 기다렸다가 전달하는 순서와 maxQueuedRequestsDevice_ 한도는 무엇입니까? 대기 큐 관리의
@@ -166,9 +170,9 @@ sections:
         - pattern: 호출자는.{0,40}추적
           message: 요청 추적은 공통 함수의 처리입니다. 호출자 의무로 바꾸지 마세요.
     - id: notification
-      question: 파이프라인 핸들러가 completeRequest()로 완료를 통지해야 하는 의무만 한 문장으로 설명하세요. stop()의 호출 순서나 자동 완료 후 추가 통지를 추정하지 마세요.
+      question: 이 Request completion 계약에서 완료 통지를 수행할 주체와 사용해야 하는 함수만 설명하세요.
       sources:
-      - completion
+      - notification-contract
       answer_contract:
         basis: contract
         required_terms:
@@ -544,7 +548,7 @@ sections:
         required_terms:
         - - MediaDevice::acquire
     - id: create
-      question: match가 확보한 장치에 대응하는 Camera 인스턴스 생성과 내부 저장에 관한 의무만 설명하세요.
+      question: 한 파이프라인 인스턴스에 필요한 모든 미디어 장치를 확보하는 데 성공했을 때, match가 생성해야 하는 객체만 설명하세요.
       sources:
       - handler
       answer_contract:
@@ -552,7 +556,15 @@ sections:
         required_terms:
         - - Camera
           - 카메라 인스턴스
+    - id: store
+      question: 한 파이프라인 인스턴스에 필요한 모든 미디어 장치를 확보하고 Camera 인스턴스를 생성한 성공 경로에서, 생성한 인스턴스의 보관 의무만 설명하세요.
+      sources:
+      - handler
+      answer_contract:
+        basis: contract
+        required_terms:
         - - 저장
+          - 보관
     - id: register
       question: match 구현에서 생성한 Camera 인스턴스를 누구에게 등록해야 하는지만 설명하세요.
       sources:
@@ -985,14 +997,22 @@ sections:
         - - 중단
           - break
     - id: submit-tracking
-      question: doQueueRequest에서 queuedRequests_와 sequence_에 수행하는 요청 추적 동작만 설명하세요. 취소 분기와 장치 제출은 다루지 마세요.
+      question: doQueueRequest가 queuedRequests_에 요청을 추가하는 동작만 설명하세요. 이 발췌로 컨테이너의 실제 C++ 타입을 추정하지 마세요.
       sources:
       - submit-code
       answer_contract:
         basis: implementation
         required_terms:
         - - queuedRequests_
+    - id: sequence
+      question: doQueueRequest의 sequence_ 대입에서 요청에 저장되는 값과 requestSequence_ 증가 방식만 설명하세요.
+      sources:
+      - submit-code
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - sequence_
+        - - requestSequence_
     - id: cancelled
       question: doQueueRequest의 if (request->_d()->cancelled_) 분기가 참이면 어떤 완료 함수를 호출하고 어디서 반환합니까? 이 조건의 본문만 설명하세요.
       sources:
@@ -1342,13 +1362,22 @@ sections:
         required_terms:
         - - ipa_
     - id: async
-      question: 이 Threaded 비동기 분기가 검사하는 정확한 ASSERT 조건과 invokeMethod의 연결 유형만 설명하세요. 이벤트 Handler 분기와 구분하세요.
+      question: 이 Threaded 비동기 분기가 검사하는 정확한 ASSERT 조건만 설명하세요. 이벤트 Handler의 ASSERT와 구분하고 수명이나 스레드 안전 보장을 추정하지 마세요.
       sources:
       - async-branch
       answer_contract:
         basis: implementation
         required_terms:
         - - ASSERT
+        - - ProxyRunning
+    - id: async-dispatch
+      question: 이 Threaded 비동기 분기의 invokeMethod가 ThreadProxy 메서드를 전달할 때 사용하는 연결 유형만 설명하세요.
+      sources:
+      - async-branch
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - invokeMethod
         - - ConnectionTypeQueued
     - id: constructor
       question: Threaded 생성자에서 모듈 로딩·인터페이스 생성 및 이벤트 Handler 연결을 설명하세요. 생성자나 init이 thread_.start를 호출한다고 추정하지 마세요.
@@ -1636,6 +1665,46 @@ sections:
       end: '} /* namespace ipa::ipu3 */'
     covers:
     - integration
+    parts:
+    - id: build
+      question: Meson의 ipu3_ipa_algorithms 빌드 파일 목록에 포함된 LSC 구현 파일을 설명하세요. 이 목록으로 실제 런타임 활성화를 확인했다고 쓰지 마세요.
+      sources:
+      - build
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - lsc.cpp
+    - id: active
+      question: IPAActiveState의 lsc 필드에 선언된 C++ 타입만 설명하세요. 실행 시점이나 동기화는 추정하지 마세요.
+      sources:
+      - context
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - IPAActiveState
+        - - ActiveState
+        - - lsc
+    - id: frame
+      question: IPAFrameContext의 lsc 필드에 선언된 C++ 타입만 설명하세요.
+      sources:
+      - context
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - IPAFrameContext
+        - - FrameContext
+        - - lsc
+    - id: queue
+      question: IPAContext의 frameContexts 필드 타입과 그 타입 인자로 전달된 프레임 컨텍스트 타입만 설명하세요. 프레임 생성 동작은 추정하지 마세요.
+      sources:
+      - context
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - IPAContext
+        - - frameContexts
+        - - FCQueue
+        - - IPAFrameContext
   - id: setup
     title: 초기화와 크롭 설정
     question: init()의 센서 activeArea, 그리드 최대 셀 수, 셀 크기 반올림과 공통 알고리즘 전달값을 설명하세요. configure()의 analogCrop과 정규화 샘플 위치를
@@ -1896,6 +1965,69 @@ sections:
       end: void ConverterDW100Module::setSensorCrop(
     covers:
     - application
+    parts:
+    - id: configure
+      question: ConverterDW100Module::configure의 출력 스트림 반복문에서 vertexMap의 입력 크기·출력 크기·센서 크롭을 설정하는 세 호출과 인자만 설명하세요.
+      sources:
+      - configure
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - setInputSize
+        - - setOutputSize
+        - - setSensorCrop
+    - id: optional-params
+      question: configure의 출력 스트림 반복문에서 setDewarpParams를 호출하는 조건과 전달하는 값만 설명하세요.
+      sources:
+      - configure
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - dewarpParams
+        - - setDewarpParams
+    - id: support
+      question: updateControlInfos에서 hasDewarpParams_ 조건에 따라 LensDewarpEnable 지원 제어를 등록하는 동작만 설명하세요. isConfigured
+        조건 안의 처리와 섞지 마세요.
+      sources:
+      - controls
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - hasDewarpParams_
+        - - LensDewarpEnable
+    - id: unconfigured-controls
+      question: setControls가 설정되지 않은 스트림을 받았을 때 isConfigured 검사 뒤 하는 일만 설명하세요.
+      sources:
+      - controls
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - setControls
+        - - isConfigured
+        - - 반환
+          - return
+    - id: runtime
+      question: setControls에서 동적 제어 설정 오류 로그를 기록하는 전체 if 조건을 설명하세요. info.update, running_, supportsRequests의 세 항을
+        모두 보존하세요.
+      sources:
+      - controls
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - update
+        - - running_
+        - - supportsRequests
+    - id: metadata
+      question: populateMetadata에서 isConfigured 검사 뒤 크롭과 LensDewarpEnable을 metadata에 기록하는 조건만 설명하세요. 다른 함수의 코드를
+        인용하지 마세요.
+      sources:
+      - metadata
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - populateMetadata
+        - - isConfigured
+        - - LensDewarpEnable
   design_requirements:
   - id: ownership
     question: 여러 카메라의 보정값이 섞이지 않도록 누가 값을 보관하고 전달합니까?

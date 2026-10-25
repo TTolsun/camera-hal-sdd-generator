@@ -16,6 +16,8 @@
 
 이 버전은 [LLM 그림 자동화](../concepts/site.md#사내-llm으로-초안-자동-생성하기)를 포함합니다. `src/sdd/generated_visuals.py`, `examples/inhouse-template/config/visuals.yaml`, `tools/evaluate_visuals.py`가 manifest에 포함돼야 합니다. 반입본에서 실제 승인 모델로 재시험하기 전에는 사내 모델 검증 완료로 기록하지 않습니다.
 
+전체 문서 자동화를 시험할 때는 [사내 LLM 생성 시험](contract-authoring.md#사내-llm-생성-시험)을 사용합니다. `src/sdd/evaluate_pipeline.py`, `src/sdd/provenance.py`, `src/sdd/design_replay.py`도 반입본에 포함됩니다. 운영 원고와 분리된 새 폴더에서 모든 섹션·실제 HTTP 작성 기록·문서 검사·번역·사이트·반복 빌드를 확인합니다. 실패 후에는 원고를 손으로 고치지 않고 설정과 생성기를 개선한 뒤 `--continue-from`으로 현재 기준을 다시 적용합니다. 이 시험은 구조 재추출·사내 HAL 실행·사람 승인을 대신하지 않습니다.
+
 ### GitHub에서 받기
 
 `inhouse-2026-10-25-visuals` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.

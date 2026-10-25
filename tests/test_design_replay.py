@@ -32,6 +32,7 @@ def test_same_evidence_can_reapply_changed_terms_but_never_changed_question(tmp_
     payload['topic'] = 'different question'
     assert not list(store.candidates(request['system'], json.dumps(payload), request['response_schema'], 'page_topic_part'))
     assert not list(store.candidates(request['system'], request['user'], request['response_schema'], 'different_unit'))
+    assert not list(store.candidates(request['system'], request['user'], request['response_schema'], 'page_topic'))
 
 
 @pytest.mark.parametrize('field', ['response', 'model', 'settings', 'length', 'http'])

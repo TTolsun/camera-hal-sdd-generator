@@ -28,7 +28,7 @@ def only_uncertainty(paragraph: str) -> bool:
         # claim, even when Korean ends with "상태 확인이 필요합니다".
         if re.search(r'\b(?:ASSERT|assert|static_assert)\s*\(', sentence):
             return False
-        clauses = [c for c in re.split(r'(?:하고|하며|되고|되며)[,\s]+', sentence) if c.strip()]
+        clauses = [c for c in re.split(r'(?:하고|하며|되고|되며|하지만|지만)[,\s]+', sentence) if c.strip()]
         if len(clauses) > 1:
             return all(uncertain(clause) for clause in clauses)
         # An absence in a branch guard is a concrete condition, not a claim

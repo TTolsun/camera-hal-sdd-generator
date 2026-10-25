@@ -53,7 +53,7 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
             if record.get('reused') and not allow_reused:
                 raise ValueError('A full fresh-model trial cannot reuse previous visual drafts.')
             prefix = f'visual_{sid}_{vid}_'
-            if not any(tag.startswith(prefix) and data == record.get('draft')
+            if not any(re.fullmatch(re.escape(prefix) + r'\d+', tag) and data == record.get('draft')
                        for tag, data in json_responses):
                 raise ValueError(f'No matching HTTP visual response for {sid}/{vid}')
             visuals += 1
@@ -70,7 +70,8 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
             for answer in answers:
                 part = answer.get('part_id')
                 tag_prefix = f'{sid}_{tid}_' + (part + '_' if part else '')
-                possible = [item for tag, result in responses if tag.startswith(tag_prefix) for item in result]
+                possible = [item for tag, result in responses
+                            if re.fullmatch(re.escape(tag_prefix) + r'\d+(?:_revision)?', tag) for item in result]
                 original = {key: value for key, value in answer.items() if key != 'part_id'}
                 if original not in possible:
                     raise ValueError(f'No matching HTTP model response for {sid}/{tid}')

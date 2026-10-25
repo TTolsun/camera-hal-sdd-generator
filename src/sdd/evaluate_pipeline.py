@@ -174,7 +174,8 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
             if previous:
                 from .impact import ImpactReport
                 impact = ImpactReport(base=model.meta['source_commit'], head=model.meta['source_commit'], sections=[sid])
-            paths = Generator(trial, model, agent, replay_http=bool(previous)).run([sid], **({'impact': impact} if impact else {}))
+            paths = Generator(trial, model, agent, replay_http=bool(previous), all_design_units=True).run(
+                [sid], **({'impact': impact} if impact else {}))
             row = {'section': sid, 'automatic_checks': 'passed',
                    'llm_required': section.get('design_generation') == 'llm',
                    'manuscripts': [{'path': p.relative_to(out).as_posix(),

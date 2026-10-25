@@ -6,6 +6,7 @@ Grounding verdicts are reused only for the exact current review request.
 """
 import hashlib
 import json
+import re
 from pathlib import Path
 
 
@@ -59,8 +60,8 @@ class Archive:
         key = context({'system': system, 'user': user, 'response_schema': schema})
         seen = set()
         for record in self.records:
-            if (record['context'] == key and record['tag'].startswith(tag + '_')
-                    and not record['tag'].endswith('_grounding') and record['response_sha256'] not in seen):
+            if (record['context'] == key and re.fullmatch(re.escape(tag) + r'_\d+(?:_revision)?', record['tag'])
+                    and record['response_sha256'] not in seen):
                 seen.add(record['response_sha256'])
                 yield record
 

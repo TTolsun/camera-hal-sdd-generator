@@ -9,6 +9,8 @@ from sdd.facts.model import KnowledgeModel
     '함수는 설정을 조정하고 상태를 반환하며, 호출자는 변경된 설정을 확인해야 합니다.',
     'Adjusted를 반환받은 호출자는 반드시 조정된 설정을 다시 확인해야 합니다.',
     '함수는 요청을 반환하며, 완료 순서는 기기에서 확인해야 합니다.',
+    '빌드 목록에 lsc.cpp가 포함되지만, 실제 활성화는 별도 확인이 필요합니다.',
+    '빌드 목록에 lsc.cpp가 포함됨을 의미하지만, 실행 여부는 확인할 수 없습니다.',
 ])
 def test_concrete_conditions_and_caller_contracts_still_require_evidence(text):
     assert not only_uncertainty(text)

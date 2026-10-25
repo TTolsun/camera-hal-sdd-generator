@@ -40,11 +40,12 @@ _FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
 
 
 class Generator:
-    def __init__(self, cfg: Config, model: KnowledgeModel, agent: ChatPort, *, replay_http=False):
+    def __init__(self, cfg: Config, model: KnowledgeModel, agent: ChatPort, *, replay_http=False, all_design_units=False):
         self.cfg = cfg
         self.model = model
         self.agent = agent
         self.replay_http = replay_http
+        self.all_design_units = all_design_units
         self.allowed = model.citations()
         self.reviews: dict[str, dict] = {}
         self.generated_designs: dict[str, tuple] = {}

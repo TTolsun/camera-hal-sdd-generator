@@ -336,6 +336,7 @@ def generate(generator, section, previous=None):
             unit.pop('parts')
             units.append(unit)
     replayed = []
+    failures = []
     archive = None
     if getattr(generator, 'replay_http', False):
         from .design_replay import Archive
@@ -427,7 +428,13 @@ def generate(generator, section, previous=None):
                         + '\n수정할 오류: ' + last
                         + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
         else:
-            raise ValueError(f"{section['id']}/{topic['id']}: LLM 답변 검증 실패: {last}")
+            unit_id = f"{section['id']}/{topic['id']}" + (f"/{topic['_part_id']}" if '_part_id' in topic else '')
+            failure = f"{unit_id}: LLM 답변 검증 실패: {last}"
+            if not getattr(generator, 'all_design_units', False):
+                raise ValueError(failure)
+            failures.append(failure)
+    if failures:
+        raise ValueError('\n'.join(failures))
     pinned, resolved, report = validate_answers(model, section, answers)
     artifact = {'schema': 1, 'input_fingerprint': fingerprint(model, section), 'answers': answers,
                 'topic_inputs': inputs, 'reused_topics': reused, 'replayed_units': replayed,

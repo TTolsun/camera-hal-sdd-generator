@@ -662,3 +662,28 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
     with pytest.raises(ValueError, match='필수 독자 질문'):
         Generator(tmp_cfg, model, agent).run()
     assert not agent.calls and path.read_bytes() == original
+
+
+def test_full_trial_collects_independent_unit_failures_without_replacing_page(tmp_cfg, generated):
+    section, model, save, agent = generated
+    page = Generator(tmp_cfg, model, agent).run()[0]
+    before = page.read_bytes()
+    section['design_topics'][0]['parts'] = [
+        {'id': 'first', 'question': '첫 책임을 설명하세요.', 'sources': ['stop']},
+        {'id': 'second', 'question': '두 번째 책임을 설명하세요.', 'sources': ['stop']}]
+    save()
+    class Empty:
+        def __init__(self): self.tags = []
+        def chat(self, system, user, **kwargs):
+            self.tags.append(kwargs['tag'])
+            return '{"statements": []}'
+    empty = Empty()
+    with pytest.raises(ValueError) as error:
+        Generator(tmp_cfg, model, empty, all_design_units=True).run()
+    assert 'device/stop/first' in str(error.value) and 'device/stop/second' in str(error.value)
+    assert any('first' in tag for tag in empty.tags) and any('second' in tag for tag in empty.tags)
+    assert page.read_bytes() == before
+    default = Empty()
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, default).run()
+    assert all('first' in tag for tag in default.tags)
