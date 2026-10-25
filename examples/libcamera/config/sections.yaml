@@ -148,6 +148,7 @@ sections:
     - id: validation
       question: CameraConfiguration::validate()의 Invalid·Adjusted·Valid가 각각 뜻하는 조건과 Adjusted를 받은 호출자의 확인 책임은 무엇입니까?
       sources: [validate]
+      required_terms: [Invalid, Adjusted, Valid]
     - id: defaults
       question: PipelineHandler::generateConfiguration()의 roles 입력, 반환 설정과 null 반환 조건은 무엇입니까?
       sources: [configuration]

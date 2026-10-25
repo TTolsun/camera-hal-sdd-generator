@@ -74,7 +74,11 @@ def source_passages(sources):
     for source_id, text in sources.items():
         # Keep the original code, including leading multiplication/dereference
         # operators. Comment decoration is normalized only for quote comparison.
-        chunks = re.split(r'\n(?:[ \t]*\*?[ \t]*\n)+', text)
+        separated = re.split(r'(\n(?:[ \t]*\*?[ \t]*\n)+)', text)
+        chunks = [separated[0]]
+        for index in range(1, len(separated), 2):
+            chunks[-1] += separated[index]
+            chunks.append(separated[index + 1])
         annotated[source_id] = []
         for index, chunk in enumerate(chunks):
             item = {'text': chunk}
@@ -256,7 +260,10 @@ def generate(generator, section, previous=None):
             'Distinguish a source contract from a measured result and from a vendor obligation.'
         )
     from .design_reuse import topic_inputs, reusable
-    inputs = topic_inputs(model, section, system)
+    grounding = (cfg.raw.get('review') or {}).get('design_grounding', False)
+    if type(grounding) is not bool:
+        raise ValueError('review.design_grounding은 boolean이어야 합니다.')
+    inputs = topic_inputs(model, section, system + json.dumps({'design_grounding': grounding}))
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
     reused = list(answers)
     units = []
@@ -271,6 +278,8 @@ def generate(generator, section, previous=None):
                     'sources': [s for s in topic['sources'] if s['id'] in part['sources']]}
             unit.pop('parts')
             unit.pop('required_terms', None)  # Check the complete topic after assembling all parts.
+            if part.get('required_terms'):
+                unit['required_terms'] = part['required_terms']
             units.append(unit)
     for topic in units:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
@@ -336,6 +345,9 @@ def generate(generator, section, previous=None):
                     raise ValueError(' / '.join(errors))
                 subset.pop('reader_profile', None)
                 validate_answers(model, subset, candidate)
+                if grounding:
+                    from .grounding import review as check_grounding
+                    check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}')
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
             except (ValueError, TypeError, KeyError) as exc:
@@ -347,7 +359,8 @@ def generate(generator, section, previous=None):
     artifact = {'schema': 1, 'input_fingerprint': fingerprint(model, section), 'answers': answers,
                 'topic_inputs': inputs, 'reused_topics': reused,
                 'generated_topics': [t['id'] for t in section['design_topics'] if t['id'] not in reused],
-                'topic_agents': {tid: origins.get(tid, f'{cfg.agent.kind}/{cfg.agent.model}') for tid in answers}}
+                'topic_agents': {tid: origins.get(tid, f'{cfg.agent.kind}/{cfg.agent.model}') for tid in answers},
+                'grounding_review': 'passed' if grounding else 'not-run'}
     return pinned, resolved, report, artifact
 
 

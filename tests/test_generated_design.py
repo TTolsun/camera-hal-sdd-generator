@@ -413,6 +413,13 @@ def test_required_terms_match_identifiers_not_longer_names():
     assert not contains_term('Invalidated라는 이름입니다.', 'Invalid')
 
 
+def test_source_paragraph_boundaries_never_delete_operators_or_input_bytes():
+    from sdd.generated_design import source_passages
+    source = 'result = left\n    *\n    right;\n\nfinish();'
+    annotated, _ = source_passages({'code': source})
+    assert ''.join(chunk['text'] for chunk in annotated['code']) == source
+
+
 def test_source_terms_require_actual_input_and_generated_explanation(tmp_cfg, generated):
     section, model, save, agent = generated
     topic = section['design_topics'][0]
@@ -430,6 +437,71 @@ def test_source_terms_require_actual_input_and_generated_explanation(tmp_cfg, ge
     with pytest.raises(ValueError, match='현재 소스 발췌에 없습니다'):
         Generator(tmp_cfg, model, agent).run()
     assert len(agent.calls) == before and path.read_bytes() == original
+
+
+def test_grounding_rejection_retries_the_model_without_replacing_prose(tmp_cfg, generated):
+    section, model, save, base = generated
+    tmp_cfg.raw.setdefault('review', {})['design_grounding'] = True
+    class Agent:
+        calls = []
+        checks = 0
+        def chat(self, system, user, **kwargs):
+            self.calls.append((kwargs['tag'], user))
+            if kwargs['tag'].endswith('_grounding'):
+                self.checks += 1
+                return json.dumps({'reviews': [dict(index=0, supported=self.checks > 1,
+                                                    reason='Unsupported guarantee in the first draft')]})
+            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+    agent = Agent()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert len(agent.calls) == 4
+    assert 'Unsupported guarantee' in agent.calls[2][1]
+    assert 'cancelPending' in agent.calls[1][1]
+    assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
+def test_enabling_grounding_invalidates_unguarded_topic_reuse(tmp_cfg, generated):
+    from sdd.impact import ImpactReport
+    section, model, save, agent = generated
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    before = path.read_bytes()
+    agent.calls.clear()
+    tmp_cfg.raw.setdefault('review', {})['design_grounding'] = True
+    with pytest.raises(ValueError, match='근거 대조'):
+        Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert agent.calls and path.read_bytes() == before
+
+
+def test_parts_must_assign_every_required_source_term(generated):
+    from sdd.contract_schema import configuration_errors
+    section, _, _, _ = generated
+    topic = section['design_topics'][0]
+    topic['required_terms'] = ['cancelPending']
+    topic['parts'] = [dict(id='cancel', question='취소 함수를 설명하세요.', sources=['stop'])]
+    assert any('필수 용어' in error for error in configuration_errors(section))
+    topic['parts'][0]['required_terms'] = ['cancelPending']
+    assert not configuration_errors(section)
+
+
+def test_part_term_omission_is_retried_before_assembling_the_topic(tmp_cfg, generated):
+    section, model, save, base = generated
+    topic = section['design_topics'][0]
+    topic['required_terms'] = ['cancelPending']
+    topic['parts'] = [dict(id='cancel', question='취소 호출을 설명하세요.', sources=['stop'],
+                           required_terms=['cancelPending'])]
+    save()
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kwargs):
+            self.calls.append(user)
+            statement = dict(base.statement)
+            if len(self.calls) > 1:
+                statement['text'] += ' 호출하는 함수의 이름은 `cancelPending()`입니다.'
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+    agent = Agent()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert len(agent.calls) == 2 and '필수 소스 용어' in agent.calls[1]
+    assert verify(model, section, path.read_text(encoding='utf-8'))['status'] == 'documented'
 
 
 @pytest.mark.parametrize('terms', ['text', [''], ['stop', 'stop'], [{}]])

@@ -143,6 +143,13 @@ def evaluate(cfg, out: Path, *, translate: bool = False):
         return report
     if not stage('audit-docs', lambda: enforce(trial, model)):
         return report
+    def preview():
+        korean = copy.deepcopy(trial)
+        korean.raw['site'].pop('english_catalog', None)
+        export_site(korean, out / 'ko-preview')
+        return verify_site(out / 'ko-preview')
+    if not stage('site-preflight', preview):
+        return report
     if previous_catalog:
         def translation():
             from .localization_cli import prepare_catalog

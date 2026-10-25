@@ -34,7 +34,7 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
             data = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
             statements = resolve_passages(data['statements'], passages)
             normalize_answer(model, statements, ['\n'.join(b['text'] for b in blocks) for blocks in sources.values()])
-        except (ValueError, KeyError, TypeError):
+        except (ValueError, KeyError, TypeError, AttributeError):
             continue  # Invalid retry responses cannot establish manuscript provenance.
         responses.append((receipt['tag'], statements))
     documents, topics, statements = 0, 0, 0
