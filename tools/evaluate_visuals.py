@@ -110,7 +110,8 @@ def main():
         assert any(guard in ''.join(e['label'].split()) for e in rec['graph']['edges']), rec['graph']
         assert len(rec['graph']['nodes']) >= 2 and len(rec['graph']['edges']) >= 1
         site = cfg.build_dir / 'site'
-        assert guard in ''.join(html.unescape((site / 'completion.completion-branches.mmd').read_text(encoding='utf-8')).split())
+        diagram_text = (site / 'completion.completion-branches.mmd').read_text(encoding='utf-8').replace('<br/>', '')
+        assert guard in ''.join(html.unescape(diagram_text).split())
         dest = out / name
         shutil.copytree(site, dest / 'site')
         shutil.copyfile(manuscript, dest / 'completion.md')
