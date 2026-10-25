@@ -4,8 +4,8 @@
   1. 할 일 또는 결론 한 문장(lead)  2. 확인할 내용 -> 절 표(routes)  3. 본문
   4. 근거와 검토 정보  5. 다음 단계 하나(next)
 
-본문에서 표, 번호 목록, 다이어그램은 사실(facts)에서 파이프라인이 직접 만든다.
-LLM 은 표만으로 알 수 없는 관계와 순서를 서술하는 문단만 쓴다.
+본문의 표·목록은 추출 사실과 설정에서 만든다. LLM은 설명과 질문별 그림 초안을
+제안하며 생성기가 근거 검사, Mermaid 구성과 문서 배치를 담당한다.
 """
 
 from __future__ import annotations
@@ -48,6 +48,7 @@ class Generator:
         self.allowed = model.citations()
         self.reviews: dict[str, dict] = {}
         self.generated_designs: dict[str, tuple] = {}
+        self.generated_visuals: dict[str, dict] = {}
         # routes 표의 링크 글자: 페이지 링크는 섹션 제목, 앵커 링크는 본문의 ## 제목 원문을 쓴다.
         self.page_titles = {sec.get("output", f"{sec['id']}.md"): sec["title"] for sec in cfg.sections()}
         self.page_titles.update({f"{sid}.md": sc.title for sid, sc in model.scenarios.items()})
@@ -67,9 +68,12 @@ class Generator:
         # Validate every selected contract before replacing any manuscript.
         selected = [s for s in self.cfg.sections()
                     if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)]
-        from .visuals import render as render_visuals
+        from . import generated_visuals
         for section in selected:
-            render_visuals(self.cfg, self.model, section)
+            from .contract_schema import configuration_errors
+            if errors := configuration_errors(section):
+                raise ValueError('\n'.join(errors))
+            generated_visuals.preflight(self.cfg, self.model, section)
         reports = {s['id']: audit_design(self.model, s) for s in selected
                    if (s.get('design_requirements') or s.get('reader_profile')) and not generated_design.enabled(s)}
         # Generate and validate every required LLM answer before replacing any page.
@@ -79,7 +83,6 @@ class Generator:
             if generated_design.enabled(sec):
                 try:
                     section_diagram(self.cfg, self.model, sec)
-                    from .config import section_output
                     previous_path = self.cfg.sdd_dir / section_output(sec)
                     previous = previous_path.read_text(encoding='utf-8') if impact and previous_path.exists() else None
                     self.generated_designs[sec['id']] = generated_design.generate(self, sec, previous)
@@ -95,6 +98,14 @@ class Generator:
             problems = [f"{sid}: {note}" for sid, report in reports.items() for note in report['findings']]
             if problems:
                 raise ValueError('설계 항목 검증 실패:\n' + '\n'.join(problems))
+        # Draft and bind every selected graph before replacing any manuscript.
+        self.generated_visuals = {}
+        for sec in selected:
+            previous_path = self.cfg.sdd_dir / section_output(sec)
+            artifact = generated_visuals.generate(self.cfg, self.model, sec, self.agent,
+                previous_path.read_text(encoding='utf-8') if previous_path.exists() else None)
+            if artifact:
+                self.generated_visuals[sec['id']] = artifact
         for sec in self.cfg.sections():
             kind = sec.get("kind", "prose")
             if section_ids and sec["id"] not in section_ids:
@@ -177,6 +188,16 @@ class Generator:
                     text = "확인 필요: " + " / ".join(gaps)
                     missing, current = [], Verdict(ok=False, notes=gaps)
                     self._record_review(tag, text, current, missing)
+                elif topic.get('narration') == 'facts':
+                    # A source-question view isolates diagram drafting; it must
+                    # never substitute for a required behavioral answer.
+                    citations = []
+                    for source in topic['sources']:
+                        record = evidence_model.evidence[f"{sec['id']}/{topic['id']}/{source['id']}"]
+                        citations.append(f"`{record['file']}:{record['line']}`")
+                    text = topic['question'] + '\n\n' + ', '.join(citations)
+                    missing, current = [], Verdict(ok=True)
+                    self._record_review(tag, text, current, missing, mode='source-question')
                 elif "statements" in topic:
                     text, gaps = contract_text(evidence_model, sec["id"], topic)
                     missing, current = [], Verdict(ok=not gaps, notes=gaps)
@@ -210,8 +231,10 @@ class Generator:
             prose = f"## {sec.get('prose_heading', '구조 설명')}\n\n{text}"
         body = "\n\n".join([prose]
                            + ([diagram] if diagram else []) + tables)
-        from .visuals import render as render_visuals, place
-        body = place(body, render_visuals(self.cfg, self.model, original), original)
+        from .visuals import place
+        from .generated_visuals import render as render_visuals
+        body = place(body, render_visuals(self.cfg, self.model, original,
+                                         self.generated_visuals.get(original['id'])), original)
         if sec.get("needs_human"):
             body += "\n\n확인 필요: 이 절의 내용은 정적 분석 결과입니다. 콜백 실행 스레드와 종료 순서는 코드를 직접 실행해서 확인해야 합니다."
         return self._write_section(original, body, blocks, tables, verdict, omitted)
@@ -522,6 +545,13 @@ class Generator:
             artifact['body_sha256'] = generated_design.digest(_split(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_design: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             generated_design.verify(self.model, sec, page)
+        if sec['id'] in self.generated_visuals:
+            from .export_html import _split
+            from .generated_visuals import from_manuscript
+            artifact = dict(self.generated_visuals[sec['id']])
+            artifact['body_sha256'] = generated_design.digest(_split(page)[1].strip())
+            page = page.replace('\n---\n', '\ngenerated_visuals: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
+            from_manuscript(self.cfg, self.model, sec, page)
         return self._write(path, page)
 
     def _render(self, *args, **kwargs):

@@ -1,5 +1,7 @@
 # 소스에서 계약 작성하기
 
+기본 사내 템플릿의 `design_generation: llm`에서는 에이전트가 질문·`covers`·소스 범위를 작성하고 사내 LLM이 답변을 생성합니다. `statements`를 직접 작성하지 않습니다. 아래의 해시·`statements` 작성 방식은 직접 검토한 고정 계약을 선택할 때 사용하며 그 섹션의 `design_generation`은 제거합니다. 그림은 `config/visuals.yaml`의 `generation: llm` 질문에서 별도로 자동 생성합니다.
+
 **사내 에이전트가 실제 소스를 읽고 `config/sections.yaml`에 계약 초안을 작성합니다.** 빈칸을 사람에게 넘기는 절차가 아닙니다. 작성할 수 없는 답은 근거 부족을 드러내고, 확인 가능한 계약은 계속 완성합니다.
 
 | 지금 할 일 | 이동할 절 |

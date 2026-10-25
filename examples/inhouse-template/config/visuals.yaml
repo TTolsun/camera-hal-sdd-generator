@@ -1,0 +1,36 @@
+schema: 1
+sections:
+  overview:
+    - id: session-states
+      topic: lifecycle
+      kind: state
+      title: 세션의 상태와 허용 전이
+      question: >-
+        실제 HAL의 초기화·구성·시작·정지 상태와 허용 전이를 설명하세요.
+        소스가 확인하는 상태와 조건만 연결하고 없는 전이를 추정하지 마세요.
+      generation: llm
+  vendor-contract:
+    - id: request-flow
+      topic: completion
+      kind: flow
+      title: 요청 제출과 결과 통지
+      question: >-
+        요청 제출의 반환과 결과 통지를 구분해 호출·큐·콜백의 연결을 보여 주세요.
+        정적 호출 목록만으로 실행 순서나 콜백 스레드를 확정하지 마세요.
+      generation: llm
+    - id: buffer-ownership
+      topic: ownership
+      kind: ownership
+      title: 요청과 버퍼를 유지할 기간
+      question: >-
+        실제 소스가 정한 요청·버퍼·fence의 소유자와 참조·반환·재사용 경계를 보여 주세요.
+        제공되지 않은 객체나 안전성 보장을 추가하지 마세요.
+      generation: llm
+    - id: request-failures
+      topic: failure
+      kind: decision
+      title: 입력 오류와 처리 실패의 분기
+      question: >-
+        입력 검사, 큐 거절, 장치 처리 실패, 취소에서 소스가 확인하는 분기를 보여 주세요.
+        제공된 조건 ID로 분기 방향을 선택하고 반환값을 보존하세요.
+      generation: llm

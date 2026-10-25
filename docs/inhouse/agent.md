@@ -30,7 +30,7 @@
 | NDK-build | 템플릿의 `source.ndk_build`를 사용하고 제품과 같은 인자로 `compdb`를 실행합니다. |
 | 다른 빌드 시스템 | `source.ndk_build.enabled: false`로 두고 제품 빌드에서 얻은 DB를 `source.compile_commands`에 지정합니다. 필요하면 `compdb --normalize`를 사용합니다. `simple_compdb`의 시험용 플래그를 제품 빌드 대신 쓰지 않습니다. |
 | 커밋별 갱신 | NDK 자동 재생성을 쓰거나 실제 DB 재생성 명령을 `update.compdb_cmd`에 인자 목록으로 지정합니다. 이전 커밋의 헤더·DB를 재사용하지 않습니다. |
-| 생성기용 모델이 없음 | `agent.kind: dry-run`을 유지합니다. 사내 에이전트가 근거 있는 `statements`를 모두 작성하고 나머지는 facts 기반으로 생성하면 문장 모델을 호출하지 않습니다. 모델 설명용 빈 주제를 dry-run 상태로 남기고 완성했다고 하지 않습니다. |
+| 생성기용 모델이 없음 | 기본 템플릿의 LLM 모드는 생성할 수 없습니다. 직접 검토하는 고정 계약을 선택하려면 `design_generation: llm`을 제거하고 근거 있는 `statements`를 작성합니다. LLM 그림도 직접 검토한 정의로 바꾸거나 미완료로 남깁니다. dry-run을 실제 모델 시험이나 완성 문서로 보고하지 않습니다. |
 | 외부망이 없음 | 사내 패키지 미러 또는 반입한 의존성을 사용합니다. Mermaid는 승인된 tarball을 `fetch-mermaid --tarball <파일>`로 준비합니다. 외부 CDN 기본값에 의존하지 않습니다. |
 
 에이전트 자체도 사내 소스를 처리하도록 허용된 환경에서 실행되어야 합니다. 생성기의 `agent.kind`는 작업 중인 에이전트의 연결 대상을 바꾸지 않습니다.

@@ -68,6 +68,11 @@ def carry_forward(cfg: Config, model: KnowledgeModel,
         body = text[m.end():]
         invalid = sorted({c for c in extract_citations(body) if c not in allowed})
         sec = sections.get(meta.get("section", ""), {})
+        from .generated_visuals import from_manuscript
+        try:
+            from_manuscript(cfg, model, sec, text)
+        except ValueError as exc:
+            invalid.append(str(exc))
         if sec.get("design_requirements") or sec.get("reader_profile"):
             from .design_contracts import audit
             from . import generated_design

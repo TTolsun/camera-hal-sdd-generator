@@ -13,6 +13,8 @@ def configuration_errors(section: dict) -> list[str]:
         if any(not isinstance(v.get('id'), str) or not v['id'].strip() for v in values):
             return [f'{field}의 id는 비어 있지 않은 문자열이어야 합니다.']
     for topic in section.get('design_topics', []):
+        if topic.get('narration') == 'facts' and (section.get('design_requirements') or section.get('reader_profile')):
+            errors.append('Source-question views cannot replace required design answers or reader profiles.')
         errors.extend(answer_contract_errors(topic))
         for field in ('sources', 'statements'):
             values = topic.get(field, [])
