@@ -244,3 +244,18 @@ def test_exact_source_guard_labels_allowed_but_old_guard_rejected(tmp_cfg, autom
     change('ret >= 0')
     with pytest.raises(ValueError, match='differs from cited source guards'):
         Generator(tmp_cfg, model, agent).run()
+
+
+def test_long_bilingual_labels_wrap_without_losing_text_or_escaping():
+    import html
+    from sdd.visuals import wrap_label
+    from sdd.site_localization import english_diagram
+    ko = '호출자는 변경되었을 수 있는 스트림 구성을 주의하여 확인해야 합니다. <source> & 조건'
+    en = 'The caller must carefully check stream configurations that may have changed. <source> & guard'
+    left, right = wrap_label(ko), wrap_label(en)
+    assert '<br/>' in left and '<br/>' in right
+    assert html.unescape(left.replace('<br/>', '')) == ko
+    assert html.unescape(right.replace('<br/>', '')) == en
+    assert '<source>' not in left and '<source>' not in right
+    source = 'flowchart TB\n%% sdd:translations ' + json.dumps({left: right}) + '\n v_n0["' + left + '"]'
+    assert 'v_n0["' + right + '"]' in english_diagram(source)
