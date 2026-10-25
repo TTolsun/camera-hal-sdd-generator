@@ -232,6 +232,14 @@ def generate(generator, section, previous=None):
         'Do not invent advice, rationale, timing, ownership or thread guarantees. '
         'Use a short analysis focused on the question, then produce the answer.'
     )
+    if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
+        system += (
+            '\nThis is part of a vendor adoption and integration guide. Answer this page only: supported capabilities, '
+            'source-backed benefits, integration responsibilities and constraints. '
+            'Tie each benefit to a concrete mechanism and its conditions; do not invent competitive '
+            'superiority, performance numbers, device support or production readiness. '
+            'Distinguish a source contract from a measured result and from a vendor obligation.'
+        )
     from .design_reuse import topic_inputs, reusable
     inputs = topic_inputs(model, section, system)
     answers, origins = reusable(model, section, previous, inputs, validate_answers)

@@ -9,24 +9,67 @@ sections:
   next:
     title: 시스템 개요
     link: overview.md
-- id: vendor-contract
+- id: vendor-overview
   group: For Vendor
-  title: 요청 연동과 구현 계약
-  output: vendor-contract.md
+  title: 제품 개요
+  output: vendor-overview.md
   kind: prose
-  lead: 입력 조건, 요청과 버퍼의 수명, 완료와 실패 처리부터 확인하세요.
-  reader: HAL을 연동하거나 장치 구현을 수정하는 Vendor 개발자
+  lead: 제공 기능과 공통 설계의 강점을 확인하고 도입할 범위를 판단하세요.
+  reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
   facts:
     classes: []
   watch:
   - '**/*.cpp'
   - '**/*.h'
+  reader_profile: vendor-overview
+  show_evidence: true
+  design_requirements:
+  - id: capabilities
+    question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
+    aspects:
+    - capabilities
+  - id: benefits
+    question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
+    aspects:
+    - benefits
+  design_topics:
+  - id: capabilities
+    title: 제공 기능과 지원 범위
+    question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
+    sources: []
+    statements: []
+  - id: benefits
+    title: 구현 근거로 보는 강점
+    question: 공통 구현을 활용할 수 있는 강점과 그 조건은 무엇입니까?
+    sources: []
+    statements: []
+  routes:
+  - q: 연동 가이드에서 필요한 내용을 확인합니다.
+    to: vendor-contract.md
+  - q: 지원 범위와 검증에서 필요한 내용을 확인합니다.
+    to: vendor-assurance.md
   next:
-    title: 시스템 개요
-    link: overview.md
+    title: 연동 가이드
+    link: vendor-contract.md
+- id: vendor-contract
+  group: For Vendor
+  title: 연동 가이드
+  output: vendor-contract.md
+  kind: prose
+  lead: 연동 순서와 구현 책임을 확인하고 설정·요청·정지 계약을 적용하세요.
+  reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
+  facts:
+    classes: []
+  watch:
+  - '**/*.cpp'
+  - '**/*.h'
   reader_profile: vendor
   show_evidence: true
   design_requirements:
+  - id: integration
+    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    aspects:
+    - inputs
   - id: inputs
     question: 입력 조건과 구현 책임은 무엇입니까?
     aspects:
@@ -48,6 +91,11 @@ sections:
     aspects:
     - verification
   design_topics:
+  - id: integration
+    title: 연동 순서와 책임
+    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    sources: []
+    statements: []
   - id: inputs
     title: 입력 조건과 구현 책임
     question: 입력 조건과 구현 책임은 무엇입니까?
@@ -73,6 +121,56 @@ sections:
     question: 어떤 조건을 실행에서 확인해야 합니까?
     sources: []
     statements: []
+  routes:
+  - q: 제품 개요에서 필요한 내용을 확인합니다.
+    to: vendor-overview.md
+  - q: 지원 범위와 검증에서 필요한 내용을 확인합니다.
+    to: vendor-assurance.md
+  next:
+    title: 지원 범위와 검증
+    link: vendor-assurance.md
+- id: vendor-assurance
+  group: For Vendor
+  title: 지원 범위와 검증
+  output: vendor-assurance.md
+  kind: prose
+  lead: 지원 조건과 구성 제약을 확인하고 제품 도입 전에 검증할 범위를 정하세요.
+  reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
+  facts:
+    classes: []
+  watch:
+  - '**/*.cpp'
+  - '**/*.h'
+  reader_profile: vendor-assurance
+  show_evidence: true
+  design_requirements:
+  - id: constraints
+    question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
+    aspects:
+    - constraints
+  - id: verification
+    question: 어떤 조건을 실행에서 확인해야 합니까?
+    aspects:
+    - verification
+  design_topics:
+  - id: constraints
+    title: 지원 조건과 제약
+    question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
+    sources: []
+    statements: []
+  - id: verification
+    title: 실행 확인
+    question: 어떤 조건을 실행에서 확인해야 합니까?
+    sources: []
+    statements: []
+  routes:
+  - q: 제품 개요에서 필요한 내용을 확인합니다.
+    to: vendor-overview.md
+  - q: 연동 가이드에서 필요한 내용을 확인합니다.
+    to: vendor-contract.md
+  next:
+    title: 시스템 개요
+    link: overview.md
 - id: overview
   group: For Developer
   title: 시스템 개요
