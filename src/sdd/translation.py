@@ -19,6 +19,9 @@ def translate_missing(cfg, catalog, agent=None):
               'Adapt terminology capitalization to the sentence. Binding Korean obligations such as 해야 합니다 '
               'must remain must/shall, never the weaker should; prohibitions must remain must not. '
               'Preserve the grammatical subject: a function returns a value; the function itself is not returned. '
+              'Repeat the function subject when a conditional clause describes its return value; avoid ambiguous it. '
+              'For lifecycle sequences, preserve which object starts/stops and which activity finishes. '
+              'Do not turn completion of a processing session into completion of a single request. '
               'Preserve singular/plural and each/all/any; never turn multiple objects into a single object. '
               'Keep every if/when condition and its subject. Never turn a conditional requirement into an unconditional one. '
               'Return only JSON with one string field named text. No explanation or Markdown fences.')

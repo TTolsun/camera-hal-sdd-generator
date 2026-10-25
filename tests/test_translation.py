@@ -68,3 +68,15 @@ def test_translation_retries_weakened_obligation_without_changing_source(tmp_cfg
     result = translate_missing(tmp_cfg, {'strings': {source: ''}}, agent)
     assert agent.calls == 2
     assert 'must' in result['strings'][source] and 'may' in result['strings'][source]
+
+
+def test_bilingual_diagram_labels_are_reused_without_retranslation(tmp_path):
+    from sdd.localization_cli import diagram_translations
+    def write(name, translated):
+        (tmp_path/name).write_text('flowchart TB\n%% sdd:translations ' + json.dumps(
+            {'변경 가능, <br/>확인 의무': translated}, ensure_ascii=False) + '\n', encoding='utf-8')
+    write('one.mmd', 'May have changed; <br/>must check')
+    assert diagram_translations(tmp_path) == {'변경 가능, 확인 의무': 'May have changed; must check'}
+    write('two.mmd', 'Now permitted')
+    with pytest.raises(ValueError, match='Conflicting'):
+        diagram_translations(tmp_path)
