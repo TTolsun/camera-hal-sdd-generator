@@ -242,6 +242,9 @@ def generate(generator, section, previous=None):
         'Name the responsible function or caller. Distinguish API obligations from observed implementation behavior. '
         'Read code in its enclosing control flow: break is not cancellation, and assertions do not guarantee future behavior. '
         'Do not invent advice, rationale, timing, ownership or thread guarantees. '
+        'Instructions about what not to claim are output constraints, not product facts. '
+        'Do not turn them into negative guarantees or invent reasons for them. '
+        'Omit unsupported claims instead of explaining why the product supposedly cannot guarantee them. '
         'Use a short analysis focused on the question, then produce the answer.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):

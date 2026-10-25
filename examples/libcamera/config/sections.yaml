@@ -144,6 +144,16 @@ sections:
       수·성능을 보장하지 마세요.
     covers:
     - constraints
+    parts:
+    - id: validation
+      question: CameraConfiguration::validate()의 Invalid·Adjusted·Valid가 각각 뜻하는 조건과 Adjusted를 받은 호출자의 확인 책임은 무엇입니까?
+      sources: [validate]
+    - id: defaults
+      question: PipelineHandler::generateConfiguration()의 roles 입력, 반환 설정과 null 반환 조건은 무엇입니까?
+      sources: [configuration]
+    - id: configure
+      question: PipelineHandler::configure()의 입력 검증 전제, 추가 검증과 custom 필드 사용 계약, 성공·실패 반환값은 무엇입니까?
+      sources: [configuration]
     sources:
     - id: validate
       file: src/libcamera/camera.cpp
@@ -163,7 +173,7 @@ sections:
     - id: benchmark
       file: Documentation/software-isp-benchmarking.rst
       start: The DebayerCpu class has a builtin benchmark.
-      end: When it runs it will skip
+      end: 'the total and per frame processing time using an info level log message:'
   reader_profile: vendor-assurance
   routes:
   - q: libcamera 제품 개요에서 필요한 내용을 확인합니다.

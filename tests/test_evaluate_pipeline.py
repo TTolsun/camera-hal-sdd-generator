@@ -81,6 +81,22 @@ def test_trial_refuses_canned_answers_and_existing_outputs(tmp_cfg, tmp_path):
 def test_evidence_failure_keeps_machine_readable_report(tmp_cfg, tmp_path):
     tmp_cfg.agent.kind = 'ollama'
     report = evaluate(tmp_cfg, tmp_path / 'trial')
-    assert report['stages'][0]['stage'] == 'evidence'
-    assert report['stages'][0]['status'] == 'failed'
+    assert report['stages'][-1]['stage'] == 'evidence'
+    assert report['stages'][-1]['status'] == 'failed'
     assert report['results'] == [] and report['publishable'] is False
+
+
+def test_trial_validates_output_paths_before_writing_even_without_lifecycle_policy(tmp_cfg, tmp_path):
+    cfg = configure(tmp_cfg)
+    cfg.raw['documentation']['enabled'] = False
+    data = yaml.safe_load(cfg.sections_file.read_text(encoding='utf-8'))
+    data['sections'][0]['output'] = '../../operational.md'
+    cfg.sections_file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    out = tmp_path / 'trial'
+    sentinel = tmp_path / 'operational.md'
+    sentinel.write_text('keep', encoding='utf-8')
+    report = evaluate(cfg, out)
+    assert report['stages'][-1]['stage'] == 'configuration'
+    assert report['stages'][-1]['status'] == 'failed'
+    assert report['results'] == [] and not (out / 'manuscripts').exists()
+    assert sentinel.read_text(encoding='utf-8') == 'keep'

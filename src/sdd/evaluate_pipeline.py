@@ -14,8 +14,8 @@ import time
 from dataclasses import asdict
 import yaml
 
-from .config import load
-from .document_health import enforce
+from .config import load, section_output
+from .document_health import enforce, page_path
 from .evidence import collect
 from .export_site import export_site
 from .facts.model import KnowledgeModel
@@ -91,6 +91,20 @@ def evaluate(cfg, out: Path, *, translate: bool = False):
 
     save()
     model = None
+
+    def configuration():
+        sections = trial.sections()
+        outputs = [section_output(section) for section in sections]
+        if any(section.get('kind') == 'per-scenario' for section in sections):
+            outputs += [f"scenarios/{scenario['id']}.md" for scenario in trial.scenarios()]
+        for output in outputs:
+            page_path(trial, output)
+        if len(outputs) != len(set(outputs)):
+            raise ValueError('Multiple sections would overwrite the same trial document')
+        return {'sections': len(sections), 'outputs': len(outputs)}
+
+    if not stage('configuration', configuration):
+        return report
 
     def evidence():
         nonlocal model
