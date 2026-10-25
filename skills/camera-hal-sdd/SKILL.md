@@ -2,7 +2,7 @@
 name: camera-hal-sdd
 description: camera-hal-sdd-generator를 사내 Camera HAL에 처음 적용하거나 SDD를 갱신할 때 사용합니다. 제품 빌드 설정, 소스에 근거한 Vendor·Developer 계약 작성, 문서·사이트 검증과 변경 후 재검토를 수행합니다. 사람 승인이나 실기기 시험 결과를 대신 만들지 않습니다.
 metadata:
-  version: "8"
+  version: "9"
   repository: camera-hal-sdd-generator
 ---
 
@@ -39,6 +39,8 @@ metadata:
 | 추출·생성·게시가 실패했습니다. | 아래 실패 대응과 [문제 해결](../../docs/inhouse/troubleshooting.md)에서 원인을 좁힙니다. |
 
 처음 계약을 쓰거나 편집할 때는 [집필 규칙](../../style/README.md)의 두 원문과 [독자별 품질](../../docs/concepts/reader-quality.md)을 읽습니다. 필수 항목과 형식은 [sections.yaml 참조](../../docs/reference/sections.md)가 기준입니다. 다른 파일에 스키마를 새로 정의하지 않습니다.
+
+사용자가 실제 LLM으로 자동 생성 시험을 요청하면 에이전트가 작성한 `statements`나 `response-bundle`로 대신하지 않습니다. 실제 모델을 `ollama` 또는 `openai-compatible`로 연결하고 [전체 모델 시험](../../docs/inhouse/contract-authoring.md#사내-llm-생성-시험)을 수행합니다. 기존 원고가 없는 출력 폴더에서 모든 섹션·모델 응답 연결·문서 검사·번역·사이트 검증·반복 빌드를 확인합니다. 소스 구조에서 직접 만드는 색인·그림과 LLM이 쓰는 설명을 구분하고 실패한 실행도 보존합니다. 자동 검사 결과를 의미 검토나 사람 승인으로 기록하지 않습니다.
 
 ## 계약을 작성할 때
 

@@ -7,6 +7,8 @@ from sdd.facts.model import KnowledgeModel
     '파일이 존재하지 않으면 함수는 대체 파일을 검색합니다.',
     '대체 파일이 존재하지 않을 때 함수는 빈 문자열을 반환합니다.',
     '함수는 설정을 조정하고 상태를 반환하며, 호출자는 변경된 설정을 확인해야 합니다.',
+    'Adjusted를 반환받은 호출자는 반드시 조정된 설정을 다시 확인해야 합니다.',
+    '함수는 요청을 반환하며, 완료 순서는 기기에서 확인해야 합니다.',
 ])
 def test_concrete_conditions_and_caller_contracts_still_require_evidence(text):
     assert not only_uncertainty(text)

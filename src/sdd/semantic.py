@@ -8,7 +8,7 @@ from .validate import extract_citations
 
 
 # 확인되지 않았다고 말하는 문장. 이런 문장은 인용할 근거 자체가 없다.
-_UNCERTAIN = re.compile(r"확인이 필요|확인해야|확인할 수 없|확인되지 않|확인하지 못|명시되지 않|"
+_UNCERTAIN = re.compile(r"확인이 필요|확인할 수 없|확인되지 않|확인하지 못|명시되지 않|"
                         r"근거가 부족|근거가 없|보장하지 않|알 수 없|추출되지 않|존재하지 않")
 
 
@@ -21,17 +21,22 @@ def only_uncertainty(paragraph: str) -> bool:
     """
     sentences = [x for x in re.split(r"(?<=[.!?])\s+|\n", paragraph) if x.strip()]
     def uncertain(sentence):
+        clauses = [c for c in re.split(r'(?:하고|하며|되고|되며)[,\s]+', sentence) if c.strip()]
+        if len(clauses) > 1:
+            return all(uncertain(clause) for clause in clauses)
         # An absence in a branch guard is a concrete condition, not a claim
         # that the behavior is unknown ("파일이 존재하지 않으면 ... 반환합니다").
         matches = [m for m in _UNCERTAIN.finditer(sentence)
                    if not re.match(r'\s*(?:으면|면|을\s*때|는\s*경우)', sentence[m.end():])]
         if not matches:
-            return False
+            # "호출자는 설정을 확인해야 합니다" may itself be an explicit
+            # source contract. Only an explicit future runtime investigation
+            # is uncertainty; other obligations still require a citation.
+            return bool(re.search(r'(?:기기|실행|실측|별도 시험|추가 조사|추후).*확인해야', sentence))
         # A caller's obligation can follow an independently stated operation.
         # Do not erase that factual clause merely because the same sentence
         # ends with "호출자는 ... 확인해야 합니다". It still requires evidence.
-        clauses = re.split(r'(?:하고|하며|되고|되며)[,\s]+', sentence)
-        return all(_UNCERTAIN.search(clause) for clause in clauses if clause.strip())
+        return True
     return bool(sentences) and all(uncertain(x) for x in sentences)
 
 

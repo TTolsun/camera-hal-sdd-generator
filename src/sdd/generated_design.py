@@ -20,6 +20,12 @@ def enabled(section):
     return section.get('design_generation') == 'llm'
 
 
+def contains_term(text, term):
+    # Korean particles may immediately follow an identifier, but another
+    # identifier (e.g. Invalidated for Invalid) must not satisfy the check.
+    return re.search(r'(?<![A-Za-z0-9_])' + re.escape(term) + r'(?![A-Za-z0-9_])', text) is not None
+
+
 def preflight(model, section):
     from .design_contracts import configuration_errors as validate_configuration
     errors = validate_configuration(section)
@@ -47,7 +53,7 @@ def preflight(model, section):
         source_text = '\n'.join(model.evidence.get(f"{section['id']}/{topic['id']}/{s['id']}", {}).get('text', '')
                                 for s in topic.get('sources', []))
         for term in topic.get('required_terms', []):
-            if term not in source_text:
+            if not contains_term(source_text, term):
                 errors.append(f"{topic['id']}: 필수 용어가 현재 소스 발췌에 없습니다: {term}")
     if errors:
         raise ValueError(' / '.join(errors))
@@ -199,7 +205,7 @@ def validate_answers(model, section, answers):
     report = enforce(pinned, resolved)
     for topic in resolved['design_topics']:
         missing = [term for term in topic.get('required_terms', [])
-                   if term not in '\n'.join(st['text'] for st in topic['statements'])]
+                   if not contains_term('\n'.join(st['text'] for st in topic['statements']), term)]
         if missing:
             raise ValueError(f"{topic['id']}: 필수 소스 용어 설명이 빠졌습니다: " + ', '.join(missing))
         text, _ = contract_text(pinned, section['id'], topic)

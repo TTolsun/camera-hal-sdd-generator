@@ -407,6 +407,12 @@ def test_doxygen_paragraphs_are_individual_verbatim_passages():
     assert len(annotated['status']) == 2
 
 
+def test_required_terms_match_identifiers_not_longer_names():
+    from sdd.generated_design import contains_term
+    assert contains_term('CameraConfiguration::Invalid이면 실패합니다.', 'Invalid')
+    assert not contains_term('Invalidated라는 이름입니다.', 'Invalid')
+
+
 def test_source_terms_require_actual_input_and_generated_explanation(tmp_cfg, generated):
     section, model, save, agent = generated
     topic = section['design_topics'][0]
