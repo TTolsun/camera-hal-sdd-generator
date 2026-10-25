@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 
 
-BASES = {'contract', 'implementation', 'description', 'measurement'}
+BASES = {'contract', 'implementation', 'description', 'measurement', 'investigation'}
 OBLIGATION = re.compile(r'[가-힣]야\s*(?:합니다|하며|하고|할)|해서는\s*안|하면\s*안|하지\s*말아야|할\s*의무')
 
 
@@ -27,7 +27,7 @@ def configuration_errors(owner):
         return ['answer_contract에는 basis, required_terms, reject_patterns만 지정할 수 있습니다.']
     errors = []
     if rule.get('basis') not in BASES:
-        errors.append('answer_contract.basis는 contract, implementation, description, measurement 중 하나여야 합니다.')
+        errors.append('answer_contract.basis는 contract, implementation, description, measurement, investigation 중 하나여야 합니다.')
     groups = rule.get('required_terms', [])
     if not isinstance(groups, list) or any(not isinstance(g, list) or not g or
             any(not isinstance(t, str) or not t.strip() for t in g) for g in groups):

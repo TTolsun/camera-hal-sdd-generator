@@ -136,7 +136,7 @@ terms:
     definition: CCM 은 libipa 라이브러리에서 사용하는 컬러 보정 행렬 알고리즘을 의미하며, 수동 또는 자동 방식으로 계산된 색 공간
       변환 계수와 오프셋을 관리합니다.
   - term: FBO
-    definition: FBO 는 OpenGL 에서 텍스처를 색상 애태치먼트로 연결하여 렌더링 타겟으로 사용하는 프레임 버퍼 객체입니다.
+    definition: fbo_ 필드는 OpenGL 프레임 버퍼 객체 식별자를 저장합니다.
   - term: EEXIST
     definition: 버퍼에 아직 해제되지 않은 펜스가 남아있거나 동일한 스트림에 이미 버퍼가 등록되어 있을 때 -EEXIST 오류를 반환합니다.
   - term: ETIMEDOUT

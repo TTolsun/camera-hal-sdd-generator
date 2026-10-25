@@ -1936,8 +1936,67 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Start capture from camera
       end: int Camera::start(const ControlList *controls)
+    - id: create-state
+      file: src/libcamera/camera.cpp
+      start: \brief Create a request object for the camera
+      end: std::unique_ptr<Request> Camera::createRequest(uint64_t cookie)
+    - id: queue-state
+      file: src/libcamera/camera.cpp
+      start: \brief Queue a request to the camera
+      end: int Camera::queueRequest(Request *request)
     covers:
     - state
+    parts:
+    - id: transitions
+      question: 상태 그림에서 acquire·configure·start·stop·release로 바뀌는 상태와 Stopping 이후 전이만 설명하세요. 요청 생성·제출 함수는 다음 질문에서 다룹니다.
+      sources:
+      - states
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Available
+        - - Acquired
+        - - Configured
+        - - Running
+        - - Stopping
+    - id: create-state
+      question: createRequest가 허용되는 카메라 상태만 원문 계약에서 설명하세요. queueRequest의 상태와 합치지 마세요.
+      sources:
+      - create-state
+      answer_contract:
+        basis: description
+        required_terms:
+        - - createRequest
+        - - Configured
+        - - Running
+    - id: queue-state
+      question: queueRequest를 호출할 수 있는 카메라 상태는 무엇입니까? 이 함수만 설명하고 createRequest와 같은 조건으로 묶지 마세요.
+      sources:
+      - queue-state
+      answer_contract:
+        basis: description
+        required_terms:
+        - - queueRequest
+        - - Running
+    - id: start-state
+      question: start의 허용 상태와 호출자가 지킬 동기화 의무만 설명하세요.
+      sources:
+      - start
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - start
+        - - Configured
+        - - 동기화
+    - id: state-synchronization
+      question: Camera의 상태 변경 함수들이 스스로 동기화되는지와 호출자의 조건부 동기화 책임만 설명하세요.
+      sources:
+      - states
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - 호출자
+        - - 동기화
   - id: request
     title: 요청 생성과 완료
     question: 요청 생성, 버퍼 연결, 큐잉, 완료 통지의 순서와 제출 조건을 설명하세요.
@@ -1956,6 +2015,55 @@ sections:
       end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
     covers:
     - request
+    parts:
+    - id: create-owner
+      question: createRequest가 반환하는 객체와 요청 삭제·재사용 책임의 주체를 설명하세요.
+      sources:
+      - create
+      answer_contract:
+        basis: description
+        required_terms:
+        - - createRequest
+        - - 호출자
+    - id: attach-buffer
+      question: addBuffer가 스트림에 버퍼를 연결할 때의 스트림당 개수와 버퍼 유효 기간 계약을 설명하세요. 펜스나 큐 제출은 다루지 마세요.
+      sources:
+      - buffer
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - 버퍼
+        - - 콜백
+    - id: queue-input
+      question: queueRequest를 호출하기 전에 호출자가 요청에 채워야 하는 최소 입력 조건만 설명하세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - queueRequest
+        - - 버퍼
+    - id: queue-checks
+      question: queueRequest 구현의 카메라 소속·RequestPending·controls 정보 맵·비어 있는 버퍼·활성 스트림 검사와 실패 반환을 설명하세요. 모두 실제 검사 대상의
+        이름으로 구분하세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - RequestPending
+        - - infoMap
+        - - activeStreams_
+    - id: completion-signal
+      question: queueRequest의 성공 반환과 requestCompleted 완료 통지를 구분하세요. 이 함수가 큐에 넣자마자 완료 신호를 직접 발행한다고 쓰지 마세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: description
+        required_terms:
+        - - queueRequest
+        - - requestCompleted
+        - - 완료
   - id: lifetime
     title: 소유권과 재사용
     question: 요청 소유권, addBuffer()의 버퍼 참조 유효 기간, reuse()의 상태·controls·metadata 초기화와 ReuseBuffers 조건을 설명하세요. fence는
@@ -1979,6 +2087,66 @@ sections:
       end: \typedef Request::BufferMap
     covers:
     - lifetime
+    parts:
+    - id: ownership
+      question: createRequest가 반환한 요청을 누가 삭제하거나 재사용할 책임이 있는지 설명하세요.
+      sources:
+      - create
+      answer_contract:
+        basis: description
+        required_terms:
+        - - createRequest
+        - - 호출자
+    - id: buffer-validity
+      question: addBuffer가 저장하는 버퍼 참조와 완료 콜백까지 호출자가 지켜야 하는 유효 기간만 설명하세요.
+      sources:
+      - buffer
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - 버퍼
+        - - 콜백
+    - id: fence-transfer
+      question: addBuffer 성공 시 유효한 Fence의 소유권이 어느 객체로 이동하고 실패 시 어떤 상태로 남는지 설명하세요. 타임아웃은 다음 질문에서 다룹니다.
+      sources:
+      - buffer
+      answer_contract:
+        basis: description
+        required_terms:
+        - - addBuffer
+        - - Fence
+        - - 버퍼
+        - - 실패
+    - id: fence-timeout
+      question: 버퍼의 펜스가 신호를 보내지 않을 때 어느 요청이 타임아웃으로 실패하며 버퍼 재사용 전에 무엇을 회수해야 하는지 설명하세요. addBuffer 함수 자체의 타임아웃으로 바꾸지 마세요.
+      sources:
+      - buffer
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 요청
+        - - 타임아웃
+        - - releaseFence
+    - id: reset
+      question: Request::reuse 구현이 status·controls·metadata와 버퍼 연결을 어떻게 초기화하는지 ReuseBuffers 유무로 나누어 설명하세요.
+      sources:
+      - reuse
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - RequestPending
+        - - controls_
+        - - metadata_
+        - - ReuseBuffers
+    - id: reuse-fences
+      question: ReuseBuffers의 버퍼 재사용 의미와 펜스를 사용하는 호출자가 지켜야 하는 사용 제한만 설명하세요.
+      sources:
+      - reuse-flags
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - ReuseBuffers
+        - - 펜스
   - id: shutdown
     title: 오류와 종료
     question: queueRequest()의 오류 반환과 RequestPending·controls 정보 맵·활성 스트림 검사를 설명하세요. stop()에서 실행 중이 아닌 경우 실제 반환값,
@@ -2052,6 +2220,7 @@ sections:
     question: 카메라 연결이 끊어지면 상태·API 접근·대기 요청에 어떤 변화와 확인 한계가 있습니까?
   show_evidence: true
   design_generation: llm
+  design_grounding: true
 - id: request-lifecycle
   group: For Developer
   nav_section: 동작 추적과 문제 진단
@@ -2102,6 +2271,66 @@ sections:
       이는 소스 기반 조사 계획이며 실기기 검증 명령이나 복구 보장이 아닙니다.
     covers:
     - configuration-failure
+    parts:
+    - id: entry
+      question: 첫 조사 지점의 파일과 Camera::configure에서 실제 호출한 isAccessAllowed의 반환값을 관찰하는 계획을 설명하세요. 성공이면 다음 검증 단계로 이동하고 상태
+        변경 함수를 재호출하지 마세요.
+      sources:
+      - configure
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - configure
+        - - isAccessAllowed
+    - id: access
+      question: isAccessAllowed의 disconnected·allowDisconnected 및 상태 검사에서 -ENODEV와 -EACCES를 구분해 관찰할 값과 분기를 설명하세요.
+      sources:
+      - access
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - disconnected_
+        - - -ENODEV
+        - - -EACCES
+    - id: validation-effects
+      question: CameraConfiguration::validate가 Adjusted를 돌려줄 때 변경될 수 있는 구성과 호출자가 확인할 책임을 설명하세요. 이 부작용을 관찰하려고 validate를
+        재호출하지 마세요.
+      sources:
+      - validate
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Adjusted
+        - - 호출자
+    - id: validation-result
+      question: configure 내부에서 이미 실행된 validate의 반환값을 관찰해 Valid 이외일 때의 오류와 다음 분기를 구분하는 조사 계획을 설명하세요.
+      sources:
+      - configure
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - validate
+        - - Valid
+        - - -EINVAL
+    - id: device-configure
+      question: 상태·검증을 통과했으면 실제 pipe_의 configure 호출 반환값과 호출 스택의 구체 구현을 관찰해 실패 위치를 좁히는 계획을 설명하세요. 구체 클래스 이름은 추정하지 마세요.
+      sources:
+      - configure
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - pipe_
+        - - configure
+        - - 반환
+    - id: stream-link
+      question: 장치 configure가 성공한 다음 cfg.stream() 연결 결과와 -EINVAL 분기를 어디서 관찰할지 설명하세요. 소스의 실제 스트림 검사를 사용하세요.
+      sources:
+      - configure
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - stream
+        - - -EINVAL
     sources:
     - id: configure
       file: src/libcamera/camera.cpp
@@ -2169,6 +2398,65 @@ sections:
       end: \typedef Request::BufferMap
     covers:
     - resources
+    parts:
+    - id: request-owner
+      question: createRequest가 반환한 요청의 삭제·재사용 책임이 누구에게 있는지만 설명하세요.
+      sources:
+      - create
+      answer_contract:
+        basis: description
+        required_terms:
+        - - createRequest
+        - - 호출자
+    - id: buffer-validity
+      question: addBuffer로 추가한 버퍼를 호출자가 언제까지 유효하게 유지해야 하는지 설명하세요. completeBuffer 호출 시점과 혼동하지 마세요.
+      sources:
+      - buffer
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - 버퍼
+        - - 콜백
+    - id: reset
+      question: reuse 구현의 RequestPending·controls·metadata 초기화와 ReuseBuffers 유무에 따른 버퍼 맵 처리를 설명하세요.
+      sources:
+      - reuse
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - RequestPending
+        - - controls_
+        - - metadata_
+        - - ReuseBuffers
+    - id: reuse-fences
+      question: ReuseBuffers의 버퍼 재사용 의미와 펜스를 사용하는 호출자가 지켜야 하는 주의만 설명하세요.
+      sources:
+      - reuse-flags
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - ReuseBuffers
+        - - 펜스
+    - id: fence
+      question: addBuffer 성공 때의 펜스 소유권 이동과 펜스 미신호로 요청이 타임아웃을 맞은 뒤 버퍼 재사용 전 필요한 회수 절차를 구분하세요.
+      sources:
+      - buffer
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 요청
+        - - 펜스
+        - - releaseFence
+    - id: handler-access
+      question: completeRequest와 cancelRequest가 반환한 뒤 파이프라인 핸들러가 요청에 접근할 수 있는지에 대한 계약을 설명하세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - completeRequest
+        - - cancelRequest
+        - - 접근
   - id: diagnosis
     title: 실패 위치별 확인 순서
     question: 제출 실패와 완료 누락을 조사하는 개발자에게 순서가 있는 짧은 문단으로 설명하세요. 각 단계에 실제 파일·함수와 읽을 값, 그 값에 따른 다음 분기를 적으세요. queueRequest
@@ -2194,6 +2482,89 @@ sections:
       end: \brief Retrieve the absolute path to a platform configuration file
     covers:
     - diagnosis
+    parts:
+    - id: submission
+      question: 첫 단계로 queueRequest의 실제 반환값과 호출 파일을 확인해 실패 반환과 성공 접수를 구분하는 조사 계획을 설명하세요. 성공을 촬영 완료로 바꾸지 마세요.
+      sources:
+      - queue
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - queueRequest
+        - - 반환
+    - id: buffer-error
+      question: addBuffer의 기존 호출 반환값을 관찰하고 -EEXIST가 같은 스트림의 버퍼 또는 남아 있는 펜스 중 어느 조건인지 좁히는 계획을 설명하세요.
+      sources:
+      - buffer
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - addBuffer
+        - - -EEXIST
+        - - 펜스
+    - id: capacity
+      question: 제출 성공 후 doQueueRequests에서 queuedRequests_.size()와 maxQueuedRequestsDevice_를 비교하고 한도에 도달한 분기를 관찰하는 계획을
+        설명하세요.
+      sources:
+      - device-queue
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - queuedRequests_
+        - - maxQueuedRequestsDevice_
+        - - doQueueRequests
+    - id: preparation
+      question: 장치 한도가 남으면 doQueueRequests의 선두 prepared_ 값과 준비되지 않았을 때의 break를 관찰하는 다음 단계를 설명하세요. 아직 요청을 꺼냈다고 쓰지 마세요.
+      sources:
+      - device-queue
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - prepared_
+        - - doQueueRequests
+        - - break
+          - 중단
+    - id: cancelled
+      question: doQueueRequest의 cancelled_ 값과 true 분기에서 completeRequest 후 반환하는 경로를 관찰하는 계획을 설명하세요. 취소 원인이 언제나 사용자의 의도라고
+        추정하지 마세요.
+      sources:
+      - device-queue
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - cancelled_
+        - - completeRequest
+    - id: device-result
+      question: 취소되지 않은 요청의 queueRequestDevice 반환값과 오류 시 cancelRequest 호출을 관찰할 위치를 설명하세요.
+      sources:
+      - device-queue
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - queueRequestDevice
+        - - cancelRequest
+        - - 반환
+    - id: buffer-completion
+      question: completeBuffer의 버퍼 추적 결과와 별도 completeRequest 호출 여부를 구분해 확인하는 계획을 설명하세요. 마지막 버퍼 완료를 자동 요청 완료로 바꾸지 마세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - completeBuffer
+        - - completeRequest
+    - id: pending-head
+      question: completeRequest의 선두 RequestPending 여부와 break를 관찰하는 계획을 설명하세요. Pending을 만나면 완료·제거한다고 쓰지 말고 소스의 다음 분기를
+        구분하세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - RequestPending
+          - Pending
+        - - break
+          - 중단
   - id: stopping
     title: 정지와 연결 해제를 구분하기
     question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을 구분하세요.
@@ -2219,6 +2590,68 @@ sections:
       end: int Camera::exportFrameBuffers(Stream *stream,
     covers:
     - stopping
+    parts:
+    - id: camera-entry
+      question: Camera::stop에서 먼저 실제 상태와 미실행 시 0 반환을 관찰하고 실행 중 경로와 구분하는 조사 계획을 설명하세요.
+      sources:
+      - stop
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - stop
+        - - '0'
+    - id: blocking
+      question: 실행 중 Camera::stop의 Stopping 전환과 PipelineHandler::stop에 대한 Blocking 호출의 진입·복귀를 어디서 관찰할지 설명하세요. Blocking을
+        모든 콜백의 스레드 안전성 보장으로 바꾸지 마세요.
+      sources:
+      - stop
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - Stopping
+        - - Blocking
+    - id: device-entry
+      question: PipelineHandler::stop이 waitingRequests_를 분리하는 지점과 stopDevice 진입·복귀를 비교하여 장치 내부에서 멎은 경우와 반환한 경우를 나누는
+        계획을 설명하세요.
+      sources:
+      - device-stop
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - waitingRequests_
+        - - stopDevice
+    - id: pending
+      question: stopDevice 복귀 후 대기 요청의 cancel·doQueueRequest 처리와 queuedRequests_·waitingRequests_ ASSERT를 관찰하는 계획을 설명하세요.
+        ASSERT를 미래 실행의 보장으로 쓰지 마세요.
+      sources:
+      - device-stop
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - doQueueRequest
+        - - queuedRequests_
+        - - waitingRequests_
+        - - ASSERT
+    - id: completion
+      question: completeRequest 호출과 그 이후 애플리케이션 전달을 조사할 때 함수의 명시된 CameraManager 문맥과 별도 콜백 실행 확인을 구분하세요.
+      sources:
+      - completion
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - completeRequest
+        - - CameraManager
+    - id: disconnect
+      question: disconnect의 내부 처리·disconnected 신호와 남은 요청 처리 TODO를 설명하세요. 연결 해제의 TODO를 stop의 완료 보장이나 기존 요청의 실제 취소로 바꾸지
+        마세요.
+      sources:
+      - notification
+      answer_contract:
+        basis: description
+        required_terms:
+        - - disconnect
+        - - disconnected
+        - - TODO
   - id: review
     title: 변경 검토와 실행 확인
     question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기 요청 처리를 정리하세요. 정상 반복·fence 대기·장치
@@ -2270,6 +2703,7 @@ sections:
     - failure
   reader_profile: vendor
   design_generation: llm
+  design_grounding: true
 - id: scenarios
   group: For Developer
   nav_section: 동작 추적과 문제 진단

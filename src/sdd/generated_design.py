@@ -261,11 +261,23 @@ def generate(generator, section, previous=None):
             'superiority, performance numbers, device support or production readiness. '
             'Distinguish a source contract from a measured result and from a vendor obligation.'
         )
+    if any(owner.get('answer_contract', {}).get('basis') == 'investigation'
+           for topic in section['design_topics'] for owner in [topic, *topic.get('parts', [])]):
+        system += (
+            ' For investigation basis, a source-based debugging plan is explicitly requested. '
+            'Propose observing only variables, return values and next branches present in the supplied code. '
+            'Label it as an investigation plan, not an executed test, timing measurement or guaranteed recovery. '
+            'Do not re-invoke state-changing functions to observe them.'
+        )
     from .design_reuse import topic_inputs, reusable
     grounding = section.get('design_grounding', (cfg.raw.get('review') or {}).get('design_grounding', False))
     if type(grounding) is not bool:
         raise ValueError('review.design_grounding은 boolean이어야 합니다.')
-    inputs = topic_inputs(model, section, system + json.dumps({'design_grounding': grounding}))
+    policy = {'design_grounding': grounding}
+    if grounding:
+        from .grounding import policy_hash
+        policy['grounding_policy'] = policy_hash()
+    inputs = topic_inputs(model, section, system + json.dumps(policy))
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
     reused = list(answers)
     units = []
@@ -286,10 +298,12 @@ def generate(generator, section, previous=None):
             units.append(unit)
     for topic in units:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
+        source_files = {s['id']: s['file'] for s in topic['sources']}
         annotated, passages = source_passages(sources)
         if not passages:
             raise ValueError(f"{section['id']}/{topic['id']}: 인용 가능한 소스 구절이 없습니다.")
-        request = {'reader': section.get('reader', ''), 'sources': annotated, 'topic': topic['question'],
+        request = {'reader': section.get('reader', ''), 'sources': annotated, 'source_files': source_files,
+                   'topic': topic['question'],
                    'requirements': {key: (topic['question'] if '_part_id' in topic else requirements[key])
                                     for key in topic['covers']}}
         if 'answer_contract' in topic:
@@ -358,7 +372,8 @@ def generate(generator, section, previous=None):
                 validate_answers(model, subset, candidate)
                 if grounding:
                     from .grounding import review as check_grounding
-                    check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}')
+                    check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}',
+                                    source_files=source_files)
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
             except (ValueError, TypeError, KeyError) as exc:
@@ -375,7 +390,8 @@ def generate(generator, section, previous=None):
                 'topic_inputs': inputs, 'reused_topics': reused,
                 'generated_topics': [t['id'] for t in section['design_topics'] if t['id'] not in reused],
                 'topic_agents': {tid: origins.get(tid, f'{cfg.agent.kind}/{cfg.agent.model}') for tid in answers},
-                'grounding_review': 'passed' if grounding else 'not-run'}
+                'grounding_review': 'passed' if grounding else 'not-run',
+                'grounding_policy': policy.get('grounding_policy')}
     return pinned, resolved, report, artifact
 
 
@@ -383,6 +399,10 @@ def verify(model, section, manuscript):
     from .export_html import _split
     meta, body = _split(manuscript)
     artifact = meta.get('generated_design')
+    if isinstance(artifact, dict) and artifact.get('grounding_review') == 'passed':
+        from .grounding import policy_hash
+        if artifact.get('grounding_policy') != policy_hash():
+            raise ValueError('근거 대조 정책이 바뀌었습니다. 실제 모델로 다시 검증·생성해야 합니다.')
     if not isinstance(artifact, dict) or artifact.get('schema') != 1:
         raise ValueError('LLM 설계 답변 기록이 없거나 형식이 잘못되었습니다.')
     if artifact.get('input_fingerprint') != fingerprint(model, section):

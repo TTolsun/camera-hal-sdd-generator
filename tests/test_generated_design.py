@@ -541,6 +541,41 @@ def test_json_code_string_literals_survive_without_schema_character_class(tmp_cf
         Generator(tmp_cfg, model, agent).run()
 
 
+def test_investigation_receives_actual_source_paths_and_scope(tmp_cfg, generated):
+    section, model, save, base = generated
+    section['design_topics'][0]['answer_contract'] = {'basis': 'investigation'}
+    save()
+    class Agent:
+        def chat(self, system, user, **kwargs):
+            assert 'source-based debugging plan' in system
+            payload, _ = json.JSONDecoder().raw_decode(user[user.index('{'):])
+            assert payload['source_files'] == {'stop': 'device.cpp'}
+            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+    assert Generator(tmp_cfg, model, Agent()).run()
+
+
+def test_changed_grounding_policy_requires_new_review(tmp_cfg, generated, monkeypatch):
+    from sdd.impact import ImpactReport
+    section, model, save, base = generated
+    tmp_cfg.raw.setdefault('review', {})['design_grounding'] = True
+    class Agent:
+        calls = 0
+        def chat(self, system, user, **kwargs):
+            self.calls += 1
+            if kwargs['tag'].endswith('_grounding'):
+                return json.dumps({'reviews': [{'index': 0, 'supported': True, 'reason': 'Source matches.'}]})
+            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+    agent = Agent()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    old = path.read_text(encoding='utf-8')
+    monkeypatch.setattr('sdd.grounding.policy_hash', lambda: 'new-policy')
+    with pytest.raises(ValueError, match='政策|정책'):
+        verify(model, section, old)
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='a'*40, sections=['device']))
+    assert agent.calls == 4
+    assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
 
 
 
