@@ -321,8 +321,7 @@ sections:
   design_topics:
   - id: constraints
     title: 지원 조건과 제약
-    question: CameraConfiguration::validate의 Invalid·Adjusted·Valid를 구분하고 Adjusted이면 스트림 파라미터 변경이나 스트림 삭제가 가능해 호출자가 다시 확인해야
-      함을 설명하세요. generateConfiguration의 roles와 하드웨어 지원 한계, configure의 검증된 입력과 실패 계약을 설명하세요. 특정 해상도·동시 스트림 수·성능을 보장하지 마세요.
+    question: CameraConfiguration::validate의 Invalid·Adjusted·Valid를 구분하고 Adjusted이면 스트림 파라미터 변경이나 스트림 삭제가 가능해 호출자가 다시 확인해야 함을 설명하세요. generateConfiguration의 roles와 하드웨어 지원 한계, configure의 검증된 입력과 실패 계약을 설명하세요. 특정 해상도·동시 스트림 수·성능을 보장하지 마세요.
     covers:
     - constraints
     sources:
@@ -335,8 +334,7 @@ sections:
       start: The caller shall check the
       end: configuration carefully.
       scope:
-        start: "\\retval CameraConfiguration::Adjusted The configuration has been adjusted\n * and is now valid. Parameters\
-          \ may have changed for any stream, and stream"
+        start: "\\retval CameraConfiguration::Adjusted The configuration has been adjusted\n * and is now valid. Parameters may have changed for any stream, and stream"
         end: configuration carefully.
     - id: valid
       file: src/libcamera/camera.cpp
@@ -345,24 +343,21 @@ sections:
       scope:
         start: \fn CameraConfiguration::validate()
         end: '*/'
-    - &id001
-      id: generate-result
+    - id: generate-result
       file: src/libcamera/pipeline_handler.cpp
       start: \return A valid CameraConfiguration if the requested roles can be satisfied,
       end: or a null pointer otherwise.
       scope:
         start: \fn PipelineHandler::generateConfiguration()
         end: '*/'
-    - &id002
-      id: configure-input
+    - id: configure-input
       file: src/libcamera/pipeline_handler.cpp
       start: The configuration is guaranteed to have been validated with
       end: not perform further validation
       scope:
         start: \fn PipelineHandler::configure()
         end: '*/'
-    - &id003
-      id: configure-result
+    - id: configure-result
       file: src/libcamera/pipeline_handler.cpp
       start: \context This function is called from the CameraManager thread.
       end: \return 0 on success or a negative error code otherwise
@@ -405,8 +400,7 @@ sections:
         - - Adjusted
         - - 유효
     - id: adjusted-changes
-      question: Adjusted에서 어느 스트림의 파라미터가 바뀌었을 수 있는지와 스트림 구성 삭제 가능성을 한 문장으로 설명하세요. 일부 변경 가능성과 모든 스트림의 일괄 변경을 구분하고 any와 may를
-        보존하세요.
+      question: Adjusted에서 어느 스트림의 파라미터가 바뀌었을 수 있는지와 스트림 구성 삭제 가능성을 한 문장으로 설명하세요. 일부 스트림만 바뀔 수 있다는 점과 전체가 한꺼번에 바뀐다는 뜻이 아님을 구분하고 any와 may를 보존하세요.
       sources:
       - adjusted-changes
       answer_contract:
@@ -440,8 +434,7 @@ sections:
         required_terms:
         - - Valid
     - id: roles
-      question: generateConfiguration이 roles를 받아 유효한 구성을 반환하거나 요청 용도를 충족할 수 없을 때 null을 반환하는 지원 조건만 설명하세요. 해상도·동시 스트림 수를 추정하지
-        마세요. 질문의 모든 항목을 한 문장으로 설명하세요.
+      question: generateConfiguration이 roles를 받아 유효한 구성을 반환하거나 요청 용도를 충족할 수 없을 때 null을 반환하는 지원 조건만 설명하세요. 해상도·동시 스트림 수를 추정하지 마세요. 질문의 모든 항목을 한 문장으로 설명하세요.
       sources:
       - generate-result
       answer_contract:
@@ -477,8 +470,7 @@ sections:
         reject_patterns: []
   - id: measurement
     title: 성능 근거를 읽는 기준
-    question: DebayerCpu 벤치마크는 통계 수집과 디베이어 처리만 측정하고 캡처와 출력을 제외합니다. Software ISP를 쓰는 cam 또는 qcam에서 실행되는 참고 절차를 설명하세요. 제품 전체
-      지연이나 이 문서의 실제 측정 결과로 표현하지 마세요.
+    question: DebayerCpu 벤치마크는 통계 수집과 디베이어 처리만 측정하고 캡처와 출력을 제외합니다. Software ISP를 쓰는 cam 또는 qcam에서 실행되는 참고 절차를 설명하세요. 제품 전체 지연이나 이 문서의 실제 측정 결과로 표현하지 마세요.
     covers:
     - measurement
     sources:
@@ -488,8 +480,7 @@ sections:
       end: or "qcam" with a pipeline using the Software ISP.
     parts:
     - id: scope
-      question: DebayerCpu 벤치마크의 통계 수집·디베이어 처리 시간 측정 범위와 캡처·출력 제외를 한 문단으로 설명하세요. 제품 전체 지연 수치로 해석하지 마세요. 질문의 모든 항목을 한 문장으로
-        설명하세요.
+      question: DebayerCpu 벤치마크의 통계 수집·디베이어 처리 시간 측정 범위와 캡처·출력 제외를 한 문단으로 설명하세요. 제품 전체 지연 수치로 해석하지 마세요. 질문의 모든 항목을 한 문장으로 설명하세요.
       sources:
       - benchmark
       answer_contract:
@@ -500,8 +491,7 @@ sections:
         - - 출력
         reject_patterns: []
     - id: procedure
-      question: Software ISP를 사용하는 cam 또는 qcam에서 내장 벤치마크를 이용하는 upstream 절차를 설명하세요. 이 근거는 실행 방법이며 이 문서가 대상 제품을 측정한 결과는 아닙니다.
-        질문의 모든 항목을 한 문장으로 설명하세요.
+      question: Software ISP를 사용하는 cam 또는 qcam에서 내장 벤치마크를 이용하는 upstream 절차를 설명하세요. 이 근거는 실행 방법이며 이 문서가 대상 제품을 측정한 결과는 아닙니다. 질문의 모든 항목을 한 문장으로 설명하세요.
       sources:
       - benchmark
       answer_contract:
