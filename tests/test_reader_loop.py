@@ -54,7 +54,7 @@ def factory(mode='repair'):
         def post(url, body):
             system,user=[m['content'] for m in body['messages']]
             if system in (policy.DIAGNOSIS_POLICY, policy.PLANNING_POLICY):
-                payload=json.loads(user); pool=payload['candidates']
+                payload,_=json.JSONDecoder().raw_decode(user); pool=payload['candidates']
                 expanded='releaseDevice' in pool['s:current']['text']
                 result=verdict()
                 if mode=='insufficient' or (system == policy.DIAGNOSIS_POLICY and not expanded):
@@ -295,3 +295,25 @@ def test_repeated_omission_splits_questions_but_preserves_parent_gate(project,tm
     path=next((tmp_path/'split/round-03/diagnosis-prompts/calls').rglob('*.response.txt'))
     path.write_text('{}',encoding='utf-8')
     with pytest.raises(AssertionError):module.verify(tmp_path/'split')
+
+
+def test_inconsistent_diagnosis_is_reasked_within_shared_budget(project,tmp_path):
+    project.max_retries=1
+    def create(cfg,dump):
+        agent=factory()(cfg,dump);original=agent._post;state={'first':True}
+        def post(url,body):
+            system,user=[m['content'] for m in body['messages']]
+            if system==policy.DIAGNOSIS_POLICY and state['first']:
+                state['first']=False
+                result=verdict('repair')
+                result['findings']=[dict(category='conditions',candidate='s:current',issue='Missing condition')]
+                return {'message':{'content':json.dumps(wire(result,True))},'done':True}
+            if system==policy.DIAGNOSIS_POLICY and 'Rejected diagnosis' in user:
+                assert 'Correction:' in user
+            return original(url,body)
+        agent._post=post
+        return agent
+    result=run(project,['device'],tmp_path/'loop',agent_factory=create)
+    assert result['stop_reason']=='model_review_complete',result
+    assert result['http_attempts']==7
+    assert all(r['reviews'][0]['diagnosis_attempts']==2 for r in result['rounds'])

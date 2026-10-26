@@ -56,7 +56,9 @@ def verify(root):
             if review['reused_review']:
                 assert previously_reviewed[review['review_key']] == review['diagnosis']
             else:
-                raw, payload = model_responses['diagnose_'+target]
+                tag='diagnose_'+target
+                if 'diagnosis_attempts' in review:tag+='_'+str(review['diagnosis_attempts']-1)
+                raw, payload = model_responses[tag]
                 assert all(k.endswith(':current') for k in payload['candidates'])
                 assert policy.decode(raw, payload['candidates'], diagnosis=True) == review['diagnosis']
                 previously_reviewed[review['review_key']] = review['diagnosis']

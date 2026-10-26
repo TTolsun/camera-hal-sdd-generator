@@ -267,19 +267,30 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                 review_key = policy.digest({'policy': policy.DIAGNOSIS_POLICY,
                                             'schema': policy.schema(current_pool, diagnosis=True), 'payload': payload})
                 reused = review_key in reviews
+                diagnosis_attempts = 0
                 if reused:
                     proposal = reviews[review_key]
                 else:
                     # Compatible gateways may ignore response_schema; keep the
                     # same portable JSON contract in their textual request too.
                     user = json.dumps({**payload, 'output_schema': policy.schema(current_pool, diagnosis=True)}, ensure_ascii=False)
-                    raw_review = critic.chat(policy.DIAGNOSIS_POLICY, user, tag='diagnose_' + key.replace('/', '_'),
-                        response_schema=policy.schema(current_pool, diagnosis=True))
-                    proposal = policy.decode(raw_review, current_pool, diagnosis=True)
+                    diagnosis_user = user
+                    for diagnosis_attempt in range(cfg.max_retries + 1):
+                        diagnosis_attempts += 1
+                        raw_review = critic.chat(policy.DIAGNOSIS_POLICY, diagnosis_user,
+                            tag=f"diagnose_{key.replace('/', '_')}_{diagnosis_attempt}",
+                            response_schema=policy.schema(current_pool, diagnosis=True))
+                        try:
+                            proposal = policy.decode(raw_review, current_pool, diagnosis=True)
+                            break
+                        except ValueError as exc:
+                            if diagnosis_attempt == cfg.max_retries:
+                                raise
+                            diagnosis_user = user + '\nRejected diagnosis (not evidence):\n' + raw_review + '\nCorrection: ' + str(exc)
                     reviews[review_key] = proposal
                 record = dict(target=key, response_sha256=receipt['response_sha256'],
                     request_sha256=receipt['request_sha256'], automatic_error=error,
-                    review_key=review_key, reused_review=reused, diagnosis=proposal)
+                    review_key=review_key, reused_review=reused, diagnosis_attempts=diagnosis_attempts, diagnosis=proposal)
                 if receipt.get('assembly'):
                     record['assembly_origins'] = receipt['origins']
                 entry['reviews'].append(record)
