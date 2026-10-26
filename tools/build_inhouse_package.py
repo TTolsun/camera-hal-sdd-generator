@@ -53,6 +53,7 @@ def build(repo, output, ref="HEAD"):
     required = {"docs/inhouse/package.md", "docs/inhouse/import-agent.md", "skills/camera-hal-sdd/SKILL.md",
                 "examples/inhouse-template/sdd.yaml", "examples/inhouse-template/config/visuals.yaml",
                 "src/sdd/generated_visuals.py", "tools/evaluate_visuals.py",
+                "src/sdd/evaluate_pipeline.py", "src/sdd/provenance.py", "src/sdd/design_replay.py",
                 "src/sdd/cli.py", "tools/verify_import.py", "tools/run_sdd.py", "uv.lock"}
     if missing := required - files.keys():
         raise ValueError(f"Missing committed package inputs: {sorted(missing)}")

@@ -95,6 +95,10 @@ class Agent:
             }
             prefix.with_suffix('.receipt.json').write_text(
                 json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        if (self._transport_metadata.get('done_reason') == 'length'
+                or self._transport_metadata.get('finish_reason') == 'length'):
+            raise AgentError('모델이 출력 토큰 한도에 도달했습니다. 부분 답변을 사용하지 않습니다. '
+                             'max_output_tokens 또는 질문·추론 설정을 확인하세요.')
         return text
 
     def ping(self) -> str:
@@ -170,9 +174,6 @@ class Agent:
             'eval_count', 'eval_duration') if k in data}
         try:
             content = str(data["message"]["content"]).strip()
-            if not content and data.get('done_reason') == 'length':
-                raise AgentError('Ollama가 출력 토큰 한도에 도달해 답변을 만들지 못했습니다. '
-                                 'max_output_tokens 또는 모델·추론 설정을 확인하세요.')
             return content
         except (KeyError, TypeError) as e:
             raise AgentError(f"ollama 응답 형식이 예상과 다릅니다: {data}") from e
@@ -188,6 +189,7 @@ class Agent:
         data = self._post(f"{self.cfg.base_url}/v1/chat/completions", body)
         self._transport_metadata = {k: data[k] for k in ('model', 'id', 'usage') if k in data}
         try:
+            self._transport_metadata['finish_reason'] = data['choices'][0].get('finish_reason')
             return str(data["choices"][0]["message"]["content"]).strip()
         except (KeyError, IndexError, TypeError) as e:
             raise AgentError(f"openai-compatible 응답 형식이 예상과 다릅니다: {data}") from e

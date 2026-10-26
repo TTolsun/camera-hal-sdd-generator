@@ -84,6 +84,30 @@ def test_part_coverage_and_source_scope_are_revalidated():
         validate(topic,wrong)
 
 
+def test_actual_qwen_postincrement_error_is_rejected_by_project_contract():
+    root = Path(__file__).resolve().parents[1]
+    data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
+    topic = next(t for s in data['sections'] if s['id'] == 'pipeline-handler'
+                 for t in s['design_topics'] if t['id'] == 'queue')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'sequence')
+    bad = 'requestSequence_ 값을 증가시키고 그 증가된 값을 sequence_에 저장합니다.'
+    with pytest.raises(ValueError):
+        check(rule, [statement(bad)], 'sequence')
+    for text in ['sequence_에는 requestSequence_의 증가 전 값을 저장하고 카운터는 후위 증가합니다.',
+                 'requestSequence_의 이전 값이 sequence_에 대입된 뒤 requestSequence_가 증가합니다.']:
+        check(rule, [statement(text)], 'sequence')
+
+
+def test_reuse_fence_recommendation_is_not_strengthened_to_must_not():
+    root = Path(__file__).resolve().parents[1]
+    data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
+    topic = next(t for s in data['sections'] if s['id'] == 'camera-model'
+                 for t in s['design_topics'] if t['id'] == 'lifetime')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'reuse-advice')
+    assert rule['basis'] == 'description'
+    check(rule, [statement('펜스는 재사용되지 않으며, 펜스를 쓰는 경우 이 플래그를 피하도록 권고합니다.')], 'fence')
+    with pytest.raises(ValueError):
+        check(rule, [statement('펜스를 사용하는 경우 이 플래그 사용은 권고되지 않으며 사용해서는 안 됩니다.')], 'fence')
 def test_explicit_answer_budget_keeps_coverage_and_saved_answer_limit():
     topic = dict(id='branch', parts=[dict(id='flow', sources=['source'], max_statements=3,
         answer_contract=dict(basis='implementation', required_terms=[['condition'], ['return']]))])
@@ -97,3 +121,26 @@ def test_explicit_answer_budget_keeps_coverage_and_saved_answer_limit():
     topic['parts'][0].pop('answer_contract')
     with pytest.raises(ValueError, match='id'):
         validate(topic, [{k:v for k,v in answer.items() if k != 'part_id'} for answer in answers])
+
+
+def test_reader_observed_state_and_void_owner_errors_are_rejected():
+    root = Path(__file__).resolve().parents[1]
+    sections = yaml.safe_load((root/'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
+    section = next(s for s in sections if s['id']=='request-lifecycle')
+    topic = next(t for t in section['design_topics'] if t['id']=='configuration-failure')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id']=='entry')
+    with pytest.raises(ValueError, match='상태 범위'):
+        check(rule, [statement('Camera::configure의 isAccessAllowed 반환을 관찰하면 CameraAcquired이고 CameraConfigured인지 확인합니다.')], 'entry')
+    topic = next(t for t in section['design_topics'] if t['id']=='journey')
+    with pytest.raises(ValueError, match='void'):
+        check(topic['answer_contract'], [statement('PipelineHandler::doQueueRequest() 함수는 성공 시 0을 반환합니다.')], 'journey')
+
+
+@pytest.mark.parametrize('text', ['quote_id 기록 항목은 근거 매핑이 없어 지지하지 않습니다.',
+                                  'source:0의 근거 매핑을 기록하세요.'])
+def test_investigation_rejects_generator_verdict_in_reader_prose(text):
+    rule = dict(basis='investigation')
+    with pytest.raises(ValueError, match='quote_id'):
+        check(rule, [statement(text)], 'record')
+    check(rule, [dict(statement('quote_id 값을 조사 기록 항목으로 제안합니다.'),
+                     quote='int quote_id = 0;')], 'record')

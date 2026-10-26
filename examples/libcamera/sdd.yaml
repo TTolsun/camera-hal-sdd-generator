@@ -43,6 +43,7 @@ review:
   require_citations: true
   max_retries: 1
   design_revision: false
+  design_grounding: true
 
 documentation:
   enabled: true
@@ -50,6 +51,9 @@ documentation:
     # 빌드한 모든 패키지의 클래스 표라서 크다. 산문이 아니라 표이므로 전체 분량 한도만 넓힌다.
     component-index.md:
       max_markdown_chars: 250000
+    # 본문은 약 11,281자이며 18,000자 한도를 유지한다. 원문·응답 복구 기록을 포함한 파일은 약 142,434자다.
+    request-lifecycle.md:
+      max_markdown_chars: 160000
   features:
     - id: request-lifecycle
       primary: request-lifecycle.md

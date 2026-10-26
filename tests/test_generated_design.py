@@ -449,11 +449,12 @@ def test_passage_selection_resolves_real_quote_and_source(tmp_cfg, generated):
 
 
 def test_response_schema_preserves_cpp_operators_but_rejects_html(tmp_cfg, generated):
-    import re
     from sdd.generated_design import response_schema, materialize
     section, model, _, agent = generated
-    pattern = response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text']['pattern']
-    assert re.fullmatch(pattern, '`request->_d()->cancel()`과 `std::unique_ptr<Request>`를 사용합니다.')
+    assert response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text']['type'] == 'string'
+    agent.statement['text'] = '`request->_d()->cancel()`과 `std::unique_ptr<Request>`를 사용합니다.'
+    _, resolved = materialize(model, section, {'stop': [agent.statement]})
+    assert resolved['design_topics'][0]['statements'][0]['text'] == agent.statement['text']
     agent.statement['text'] = '<script>alert(1)</script>'
     with pytest.raises(ValueError, match='HTML'):
         materialize(model, section, {'stop': [agent.statement]})
@@ -524,7 +525,7 @@ def test_passages_keep_context_and_reject_forged_source():
     assert preserved['expression'][0]['text'] == code
     assert code_passages['expression:0'] == ('expression', code)
     key = next(iter(passages))
-    with pytest.raises(ValueError, match='함께 쓸 수'):
+    with pytest.raises(ValueError, match='제공된 소스 ID'):
         resolve_passages([dict(quote_id=key, text='설명합니다.', covers=['q'], kind='behavior', evidence=['forged'])], passages)
 
 
@@ -594,6 +595,137 @@ def test_quote_comparison_ignores_comment_decoration_but_preserves_negation():
     assert quote_text('It must access the request after completion.') not in quote_text(source)
 
 
+
+
+@pytest.mark.parametrize('setting', ['project', 'section'])
+def test_grounding_rejection_retries_the_model_without_replacing_prose(tmp_cfg, generated, setting):
+    section, model, save, base = generated
+    tmp_cfg.raw.setdefault('review', {})['design_grounding'] = setting == 'project'
+    if setting == 'section':
+        section['design_grounding'] = True
+        save()
+    class Agent:
+        calls = []
+        checks = 0
+        def chat(self, system, user, **kwargs):
+            self.calls.append((kwargs['tag'], user))
+            if kwargs['tag'].endswith('_grounding'):
+                self.checks += 1
+                return json.dumps({'reviews': [dict(index=0, supported=self.checks > 1,
+                                                    reason='Unsupported guarantee in the first draft')]})
+            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+    agent = Agent()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert len(agent.calls) == 4
+    assert 'Unsupported guarantee' in agent.calls[2][1]
+    assert 'cancelPending' in agent.calls[1][1]
+    assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
+def test_enabling_grounding_invalidates_unguarded_topic_reuse(tmp_cfg, generated):
+    from sdd.impact import ImpactReport
+    section, model, save, agent = generated
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    before = path.read_bytes()
+    agent.calls.clear()
+    tmp_cfg.raw.setdefault('review', {})['design_grounding'] = True
+    with pytest.raises(ValueError, match='근거 대조'):
+        Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert agent.calls and path.read_bytes() == before
+
+
+@pytest.mark.parametrize('reason', ['', 'x' * 401])
+def test_grounding_requires_bounded_verdict_reasons(tmp_cfg, reason):
+    from types import SimpleNamespace
+    from sdd.grounding import review
+    class Agent:
+        def chat(self, *args, **kwargs):
+            return json.dumps({'reviews': [{'index': 0, 'supported': True, 'reason': reason}]})
+    with pytest.raises(ValueError, match='근거 대조 응답'):
+        review(SimpleNamespace(cfg=tmp_cfg, agent=Agent()), {'question': 'What happens?'},
+               [{'text': 'A claim', 'quote': 'Source statement', 'evidence': ['s']}],
+               {'s': 'Source statement'}, 'bounded')
+
+
+def test_json_code_string_literals_survive_without_schema_character_class(tmp_cfg, generated):
+    from sdd.generated_design import response_schema
+    section, model, save, agent = generated
+    assert response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text'] == {'type': 'string'}
+    agent.statement['text'] += ' 코드 문자열의 표기는 `"diagnostic"`입니다.'
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert '`"diagnostic"`' in path.read_text(encoding='utf-8')
+    agent.statement['text'] += '\n별도 문단입니다.'
+    with pytest.raises(ValueError, match='한 문단'):
+        Generator(tmp_cfg, model, agent).run()
+
+
+def test_investigation_receives_actual_source_paths_and_scope(tmp_cfg, generated):
+    section, model, save, base = generated
+    section['design_topics'][0]['answer_contract'] = {'basis': 'investigation'}
+    save()
+    class Agent:
+        def chat(self, system, user, **kwargs):
+            assert 'source-based debugging plan' in system
+            payload, _ = json.JSONDecoder().raw_decode(user[user.index('{'):])
+            assert payload['source_files'] == {'stop': 'device.cpp'}
+            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+    assert Generator(tmp_cfg, model, Agent()).run()
+
+
+def test_changed_grounding_policy_requires_new_review(tmp_cfg, generated, monkeypatch):
+    from sdd.impact import ImpactReport
+    section, model, save, base = generated
+    tmp_cfg.raw.setdefault('review', {})['design_grounding'] = True
+    class Agent:
+        calls = 0
+        def chat(self, system, user, **kwargs):
+            self.calls += 1
+            if kwargs['tag'].endswith('_grounding'):
+                return json.dumps({'reviews': [{'index': 0, 'supported': True, 'reason': 'Source matches.'}]})
+            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+    agent = Agent()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    old = path.read_text(encoding='utf-8')
+    monkeypatch.setattr('sdd.grounding.policy_hash', lambda: 'new-policy')
+    with pytest.raises(ValueError, match='政策|정책'):
+        verify(model, section, old)
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='a'*40, sections=['device']))
+    assert agent.calls == 4
+    assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
+def test_quote_anchor_can_have_additional_real_source_evidence():
+    from sdd.generated_design import resolve_passages
+    passages = {'a:0': ('a', 'A real source passage.'), 'b:0': ('b', 'Another real passage.')}
+    row = dict(text='두 입력을 설명합니다.', quote_id='a:0', evidence=['a', 'b'], covers=['flow'], kind='behavior')
+    resolved = resolve_passages([row], passages)[0]
+    assert resolved['quote'] == 'A real source passage.' and resolved['evidence'] == ['a', 'b']
+    for invalid in (['b'], ['a', 'invented'], ['a', 'a']):
+        with pytest.raises(ValueError, match='제공된 소스 ID'):
+            resolve_passages([{**row, 'evidence': invalid}], passages)
+
+
+def test_parts_preserve_focus_source_before_supporting_context(tmp_cfg, generated):
+    section, model, save, base = generated
+    topic = section['design_topics'][0]
+    extra = dict(id='context', file='context.cpp', start='void context()', end='}')
+    text = 'void context() { inspect(); }'
+    topic['sources'].append(extra)
+    model.evidence['device/stop/context'] = dict(selector=extra, commit='a'*40, file='context.cpp',
+        line=1, end_line=1, text=text, sha256=hashlib.sha256(text.encode()).hexdigest(), status='available')
+    topic['parts'] = [dict(id='focus', question='종료 호출을 설명하세요.', sources=['context', 'stop'])]
+    save()
+    class Agent:
+        def chat(self, system, user, **kwargs):
+            payload, _ = json.JSONDecoder().raw_decode(user[user.index('{'):])
+            assert list(payload['sources']) == ['context', 'stop']
+            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+    assert Generator(tmp_cfg, model, Agent()).run()
+
+
+
+
+
 def test_libcamera_design_documents_have_no_fixed_answers():
     from pathlib import Path
     from sdd.contract_schema import configuration_errors
@@ -650,6 +782,59 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
     assert not agent.calls and path.read_bytes() == original
 
 
+def test_full_trial_collects_independent_unit_failures_without_replacing_page(tmp_cfg, generated):
+    section, model, save, agent = generated
+    page = Generator(tmp_cfg, model, agent).run()[0]
+    before = page.read_bytes()
+    section['design_topics'][0]['parts'] = [
+        {'id': 'first', 'question': '첫 책임을 설명하세요.', 'sources': ['stop']},
+        {'id': 'second', 'question': '두 번째 책임을 설명하세요.', 'sources': ['stop']}]
+    save()
+    class Empty:
+        def __init__(self): self.tags = []
+        def chat(self, system, user, **kwargs):
+            self.tags.append(kwargs['tag'])
+            return '{"statements": []}'
+    empty = Empty()
+    with pytest.raises(ValueError) as error:
+        Generator(tmp_cfg, model, empty, all_design_units=True).run()
+    assert 'device/stop/first' in str(error.value) and 'device/stop/second' in str(error.value)
+    assert any('first' in tag for tag in empty.tags) and any('second' in tag for tag in empty.tags)
+    assert page.read_bytes() == before
+    default = Empty()
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, default).run()
+    assert all('first' in tag for tag in default.tags)
+
+
+def test_unrendered_source_documentation_command_is_rejected(tmp_cfg, generated):
+    _, model, _, agent = generated
+    agent.statement['text'] = r'`stop()`은 대기 요청을 취소하며 \ref camera_operation 설명을 따릅니다.'
+    with pytest.raises(ValueError, match='Doxygen'):
+        Generator(tmp_cfg, model, agent).run()
+
+
+@pytest.mark.parametrize('tamper', [False, True])
+def test_grounding_uses_verified_full_scope_without_inventing_context(tmp_cfg, tamper):
+    from types import SimpleNamespace
+    from sdd.grounding import review
+    selected = 'return result;'
+    surrounding = 'void Owner::method() { if (ready) { return result; } }'
+    record = {'context': {'text': surrounding, 'sha256': hashlib.sha256(surrounding.encode()).hexdigest()}}
+    class Agent:
+        def chat(self, system, user, **kwargs):
+            assert json.loads(user)['source_context']['s'] == surrounding
+            return json.dumps({'reviews': [{'index': 0, 'supported': True, 'reason': 'Bounded source method.'}]})
+    if tamper:
+        record['context']['text'] = 'Different scope'
+    args = (SimpleNamespace(cfg=tmp_cfg, agent=Agent()), {'question': 'What does this method do?'},
+            [{'text': 'A statement', 'quote': selected, 'evidence': ['s']}], {'s': selected}, 'scoped')
+    options = {'source_scopes': {'s': {'start': 'void Owner::method()', 'end': '}'}}, 'context_records': {'s': record}}
+    if tamper:
+        with pytest.raises(ValueError, match='전체 원문'):
+            review(*args, **options)
+    else:
+        review(*args, **options)
 def test_source_backed_cpp_template_typography_preserves_model_words():
     from sdd.generated_design import normalize_answer
     from sdd.facts.model import KnowledgeModel
@@ -688,6 +873,37 @@ def test_topic_prompt_override_is_used_and_invalidates_its_answers(tmp_cfg, gene
     assert len(agent.calls) == 1 and not agent.calls[0].startswith('근거:')
 
 
+def test_part_typography_matches_other_verified_sources_in_same_topic(tmp_cfg, generated):
+    from sdd.generated_design import decode_unit
+    from sdd.facts.model import ClassInfo
+    section, model, save, agent = generated
+    model.classes['ns::Fence'] = ClassInfo('ns::Fence')
+    model.evidence['device/stop/other'] = {'status': 'available', 'text': 'class Fence;'}
+    unit = section['design_topics'][0]
+    statement = copy.deepcopy(agent.statement)
+    statement['text'] = 'Fence 사용 시 stop()은 종료 요청을 취소하는 함수를 호출합니다.'
+    raw = json.dumps({'statements': [statement]}, ensure_ascii=False)
+    source = model.evidence['device/stop/stop']['text']
+    answer = decode_unit(model, section, unit, raw, {'stop': source}, {})[0]
+    assert answer['text'] == '`Fence` 사용 시 stop()은 종료 요청을 취소하는 함수를 호출합니다.'
+    assert answer['text'].replace('`', '') == statement['text']
+
+
+def test_focused_investigation_prompt_allows_proposals_without_claiming_execution(tmp_cfg, generated):
+    section, model, save, agent = generated
+    topic = section['design_topics'][0]
+    topic['design_prompt'] = 'focused'
+    topic['answer_contract'] = {'basis': 'investigation'}
+    (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스만 사용합니다.', encoding='utf-8')
+    save()
+    class PlanAgent:
+        def chat(self, system, user, **kwargs):
+            assert 'optional source-based observation plan' in system
+            assert 'not an existing test log' in system
+            return json.dumps({'statements': [agent.statement]}, ensure_ascii=False)
+    assert Generator(tmp_cfg, model, PlanAgent()).run()
+
+
 @pytest.mark.parametrize('selection', ['runner', 'model', 'args', 'default'])
 def test_cli_selection_invalidates_topic_reuse(tmp_cfg, generated, selection):
     from sdd.impact import ImpactReport
@@ -705,3 +921,34 @@ def test_cli_selection_invalidates_topic_reuse(tmp_cfg, generated, selection):
         tmp_cfg.agent.args = ['--provider', 'other']
     Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
     assert len(agent.calls) == 1
+
+
+def test_source_member_underscores_render_verbatim_without_rewriting_model_text(tmp_cfg, generated):
+    from sdd.generated_design import normalize_answer
+    _, model, _, _ = generated
+    statement = {'text': '조사에서 _d()->metadata_ 변수를 기록 항목으로 제안합니다.'}
+    original = statement['text']
+    normalize_answer(model, [statement], ['_d()->metadata_.clear();'])
+    assert statement['text'].replace('`', '') == original
+    import html, re, markdown
+    rendered = markdown.markdown(statement['text'])
+    assert '_d()->metadata_' in html.unescape(re.sub('<[^>]+>', '', rendered))
+    assert '<em>' not in rendered
+
+
+def test_new_typography_keeps_source_identical_saved_answers(tmp_cfg, generated):
+    from sdd.impact import ImpactReport
+    import sdd.generated_design as design
+    section, model, save, agent = generated
+    agent.statement['text'] = 'stop()은 status_ 값을 확인합니다.'
+    model.evidence['device/stop/stop']['text'] += '\nint status_ = 0;'
+    model.evidence['device/stop/stop']['sha256'] = design.digest(model.evidence['device/stop/stop']['text'])
+    save()
+    from unittest.mock import patch
+    # Create a valid legacy manuscript under its original typography rules.
+    with patch.object(design, 'normalize_answer'), patch.object(design, 'source_names', return_value=set()):
+        Generator(tmp_cfg, model, agent).run()
+    agent.calls.clear()
+    paths = Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert not agent.calls
+    assert '`status_`' in paths[0].read_text(encoding='utf-8')

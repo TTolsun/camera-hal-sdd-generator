@@ -43,6 +43,8 @@ metadata:
 
 처음 계약을 쓰거나 편집할 때는 [집필 규칙](../../style/README.md)의 두 원문과 [독자별 품질](../../docs/concepts/reader-quality.md)을 읽습니다. 필수 항목과 형식은 [sections.yaml 참조](../../docs/reference/sections.md)가 기준입니다. 다른 파일에 스키마를 새로 정의하지 않습니다.
 
+사용자가 실제 LLM으로 자동 생성 시험을 요청하면 에이전트가 작성한 `statements`나 `response-bundle`로 대신하지 않습니다. 실제 모델을 `ollama` 또는 `openai-compatible`로 연결하고 [전체 모델 시험](../../docs/inhouse/contract-authoring.md#사내-llm-생성-시험)을 수행합니다. 기존 원고가 없는 출력 폴더에서 모든 섹션·모델 응답 연결·문서 검사·번역·사이트 검증·반복 빌드를 확인합니다. 소스 구조에서 직접 만드는 색인·그림과 LLM이 쓰는 설명을 구분하고 실패한 실행도 보존합니다. 자동 검사 결과를 의미 검토나 사람 승인으로 기록하지 않습니다.
+
 ## 계약을 작성할 때
 
 독자는 **For Vendor(연동·구현 담당자)**와 **For Developer(신입·타팀 개발자)**입니다. Developer가 기존 HAL 구조를 안다고 가정하지 않습니다. 첫 파일·진입점 → 요청과 결과 흐름 → 증상별 코드 탐색 → 수정 후 확인 순서로 안내하고, 상세 수명·스레드 계약은 필요한 자리에서 연결합니다.

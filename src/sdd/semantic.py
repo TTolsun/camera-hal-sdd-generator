@@ -22,15 +22,30 @@ def only_uncertainty(paragraph: str) -> bool:
     사실을 하나라도 주장하는 문단은 그대로 인용을 요구한다.
     """
     sentences = [x for x in re.split(r"(?<=[.!?])\s+|\n", paragraph) if x.strip()]
-    # A negative guarantee (e.g. no automatic synchronization) is also a
-    # factual claim and needs a citation. It is not evidence uncertainty.
-    # "The caller must ensure ..." asserts an API obligation. It needs
-    # evidence just like other factual claims; it is not an admission that
-    # evidence is missing. This classification does not approve that claim.
-    # "If the module does not exist, return nullptr" describes a branch. If
-    # the same sentence also says its behavior is unknown, retain that warning.
-    return bool(sentences) and all(_UNCERTAIN.search(_ABSENCE_CONDITION.sub('', x)) and not _CHECK_OBLIGATION.search(x)
-                                   for x in sentences)
+    def uncertain(sentence):
+        if _CHECK_OBLIGATION.search(sentence):
+            return False
+        # Naming a concrete assertion and its checked expression is a code
+        # claim, even when Korean ends with "상태 확인이 필요합니다".
+        if re.search(r'\b(?:ASSERT|assert|static_assert)\s*\(', sentence):
+            return False
+        clauses = [c for c in re.split(r'(?:하고|하며|되고|되며|하지만|지만)[,\s]+', sentence) if c.strip()]
+        if len(clauses) > 1:
+            return all(uncertain(clause) for clause in clauses)
+        # An absence in a branch guard is a concrete condition, not a claim
+        # that the behavior is unknown ("파일이 존재하지 않으면 ... 반환합니다").
+        matches = [m for m in _UNCERTAIN.finditer(sentence)
+                   if not re.match(r'\s*(?:으면|면|을\s*때|는\s*경우)', sentence[m.end():])]
+        if not matches:
+            # "호출자는 설정을 확인해야 합니다" may itself be an explicit
+            # source contract. Only an explicit future runtime investigation
+            # is uncertainty; other obligations still require a citation.
+            return bool(re.search(r'(?:기기|실행|실측|별도 시험|추가 조사|추후).*확인해야', sentence))
+        # A caller's obligation can follow an independently stated operation.
+        # Do not erase that factual clause merely because the same sentence
+        # ends with "호출자는 ... 확인해야 합니다". It still requires evidence.
+        return True
+    return bool(sentences) and all(uncertain(x) for x in sentences)
 
 
 def known_names(model: KnowledgeModel) -> set[str]:

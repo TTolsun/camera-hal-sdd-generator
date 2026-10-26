@@ -91,6 +91,12 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
                                   sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
                                   # 발췌 밖에 공백뿐이면 파일 전체를 고정한 근거다. 범위 검사가 이 표시를 쓴다.
                                   whole_file=not text[:begin].strip() and not text[finish:].strip())
+                    if 'scope' in source:
+                        left, right = select_span(text, source['scope'])
+                        context = text[left:right]
+                        first = text[:left].count('\n') + 1
+                        record['context'] = {'text': context, 'sha256': hashlib.sha256(context.encode()).hexdigest(),
+                                             'line': first, 'end_line': first + context.count('\n')}
                     if source.get("sha256") and record["sha256"] != source["sha256"]:
                         record.update(status="needs-review", reason="근거 본문이 변경됐습니다. 연결된 설계 설명을 재검토하세요.")
                 except (OSError, ValueError) as exc:
