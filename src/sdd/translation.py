@@ -151,7 +151,11 @@ def _batched(cfg, catalog, agent, size):
                       'properties': {'translations': {'type': 'object', 'required': list(pending),
                          'additionalProperties': False, 'properties': {key: {'type': 'string'} for key in pending}}}}
             options = {'response_schema': schema} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
-            raw = agent.chat(system, user, tag=f'translation_batch_{offset}_{attempt}', **options)
+            # Eligible archived strings were already revalidated above. Only
+            # missing/rejected strings remain, so do not replay a rejected batch
+            # again and consume the live retry budget without making a call.
+            chat = getattr(agent, 'fresh_chat', agent.chat)
+            raw = chat(system, user, tag=f'translation_batch_{offset}_{attempt}', **options)
             try:
                 result = json.loads(raw)
                 values = result['translations']

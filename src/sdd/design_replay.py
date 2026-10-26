@@ -83,10 +83,14 @@ class Archive:
                     try:
                         request, _ = json.JSONDecoder().raw_decode(record['request']['user'])
                         sources = request['texts']
-                        values = json.loads(record['raw'])['translations']
+                        response = json.loads(record['raw'])
+                        if not isinstance(response, dict) or set(response) != {'translations'}:
+                            continue
+                        values = response['translations']
                         fields = record['request']['response_schema']['properties']['translations']['properties']
                         if (not isinstance(sources, dict) or not isinstance(values, dict)
                                 or sources.keys() != values.keys() or fields.keys() != sources.keys()
+                                or any(not isinstance(s, str) for s in sources.values())
                                 or any(fields[k].get('type') != 'string' for k in sources)):
                             continue
                         yield record, sources, values
@@ -97,6 +101,8 @@ class Archive:
                 self.translation_replays.append({key: record[key] for key in
                     ('receipt', 'request_sha256', 'response_sha256')} |
                     {'source_sha256': [hashlib.sha256(s.encode()).hexdigest() for s in sources]})
+            def fresh_chat(self, system, user, **kwargs):
+                return agent.chat(system, user, **kwargs)
             def chat(self, system, user, **kwargs):
                 key = sha({'system': system, 'user': user, 'response_schema': kwargs.get('response_schema')})
                 rows = archive.exact.get(key, [])

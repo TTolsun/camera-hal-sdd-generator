@@ -4187,6 +4187,7 @@ sections:
       reject_patterns:
       - pattern: doQueueRequest(?!Device).{0,35}(?:성공\s*시|성공하면).{0,15}0.{0,15}반환
         message: doQueueRequest는 void입니다. queueRequestDevice의 반환 계약과 바꾸지 마세요.
+    design_prompt: focused
   - id: resources
     title: 요청·버퍼·fence의 수명
     question: 요청과 버퍼의 소유권·유효 기간, reuse()가 초기화하는 상태·controls·metadata 및 ReuseBuffers 조건, fence 소유권과 재사용 주의, completeRequest()/cancelRequest()
@@ -4959,6 +4960,7 @@ sections:
         required_terms:
         - - waitingRequests_
         - - 기록
+    design_prompt: focused
   design_requirements:
   - id: journey
     question: 제출 성공 이후의 대기 조건과 완료 책임은 무엇입니까?

@@ -222,3 +222,26 @@ def test_batch_retries_only_failed_item_with_exact_missing_placeholder(tmp_cfg):
     agent = Agent()
     result = translate_missing(tmp_cfg, {'strings': {'첫 문장': '', '{{0}} 에 {{2}} 대입': ''}}, agent)
     assert agent.calls == 2 and result['strings']['첫 문장'] == 'First.'
+
+
+def test_translation_replay_does_not_adopt_invalid_batch_extra_fields(tmp_cfg, monkeypatch):
+    from sdd.llm import Agent
+    from sdd.design_replay import Archive
+    tmp_cfg.agent.kind = 'ollama'
+    tmp_cfg.raw['site'] = {'translation_batch_size': 6}
+    calls, invalid = [], [True]
+    def respond(self, system, user, response_schema=None):
+        calls.append(user)
+        texts, _ = json.JSONDecoder().raw_decode(user)
+        response = {'translations': {k: 'English.' for k in texts['texts']}}
+        if invalid[0]: response['extra'] = 'Not permitted by the current validator'
+        return json.dumps(response)
+    monkeypatch.setattr(Agent, '_ollama', respond)
+    dump = tmp_cfg.build_dir/'translation-prompts'
+    with pytest.raises(ValueError, match='batch failed'):
+        translate_missing(tmp_cfg, {'strings': {'문장': ''}}, Agent(tmp_cfg.agent, dump))
+    before = len(calls)
+    invalid[0] = False
+    replay = Archive(dump/'calls', tmp_cfg.agent).reviewer(Agent(tmp_cfg.agent, dump))
+    assert translate_missing(tmp_cfg, {'strings': {'문장': ''}}, replay)['strings']['문장'] == 'English.'
+    assert len(calls) == before + 1 and replay.replayed_http_calls == 0
