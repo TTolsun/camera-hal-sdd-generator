@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import Config
+from .state_io import save as save_json
 
 LEDGER_NAME = "approvals.json"
 
@@ -47,9 +48,7 @@ def load(cfg: Config) -> dict[str, Any]:
 
 def save(cfg: Config, data: dict[str, Any]) -> Path:
     path = ledger_path(cfg)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, sort_keys=True, indent=1) + "\n",
-                    encoding="utf-8", newline="\n")
+    save_json(path, data, sort_keys=True, indent=1, newline="\n")
     return path
 
 

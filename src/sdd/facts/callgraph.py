@@ -21,7 +21,8 @@ from clang import cindex
 
 from ..config import Config
 from ..matching import package_of
-from .comments import _CLASS_KINDS, _FUNCTION_KINDS, _METHOD_KINDS, _loc, _qualified, _under, parse_args
+from .clang_support import (CLASS_KINDS, FUNCTION_KINDS, METHOD_KINDS, SourceScope,
+                            cursor_location, parse_args, qualified_name)
 from .model import ClassInfo, KnowledgeModel, Location, Message, PackageInfo, Relation, Scenario, relpath
 
 _MAX_MESSAGES = 120
@@ -64,15 +65,15 @@ def _short(qualified: str) -> str:
     return qualified.rsplit("::", 1)[-1]
 
 
-def _owner_of(cursor: cindex.Cursor, root: Path) -> str:
+def _owner_of(cursor: cindex.Cursor) -> str:
     parent = cursor.semantic_parent
-    if parent is not None and parent.kind in _CLASS_KINDS:
-        return _short(_qualified(parent))
+    if parent is not None and parent.kind in CLASS_KINDS:
+        return _short(qualified_name(parent))
     f = cursor.location.file
     return Path(f.name).stem if f else "?"
 
 
-def _type_decl(t: cindex.Type, root: Path, depth: int = 0) -> cindex.Cursor | None:
+def _type_decl(t: cindex.Type, scope: SourceScope, depth: int = 0) -> cindex.Cursor | None:
     """std::unique_ptr<Foo>, std::vector<std::unique_ptr<Foo>>, Foo*, const Foo& 에서
     소스 루트 안에 선언된 Foo 를 찾는다. 루트 밖 템플릿(std::)은 인자를 차례로 들여다본다."""
     if depth > 4:
@@ -84,11 +85,11 @@ def _type_decl(t: cindex.Type, root: Path, depth: int = 0) -> cindex.Cursor | No
             continue
         break
     decl = t.get_declaration()
-    if decl is not None and decl.kind in _CLASS_KINDS and decl.spelling and _under(decl, root):
+    if decl is not None and decl.kind in CLASS_KINDS and decl.spelling and scope.contains(decl):
         return decl
     n = t.get_num_template_arguments()
     for i in range(max(n, 0)):
-        found = _type_decl(t.get_template_argument_type(i), root, depth + 1)
+        found = _type_decl(t.get_template_argument_type(i), scope, depth + 1)
         if found is not None:
             return found
     return None
@@ -114,37 +115,37 @@ def _callee_expr_name(node: cindex.Cursor) -> str:
     return ""
 
 
-def _walk_all(cursor: cindex.Cursor, root: Path):
+def _walk_all(cursor: cindex.Cursor, scope: SourceScope):
     for child in cursor.get_children():
-        if not _under(child, root):
+        if not scope.contains(child):
             continue
         yield child
-        yield from _walk_all(child, root)
+        yield from _walk_all(child, scope)
 
 
 def _classify_call(node: cindex.Cursor, ref: cindex.Cursor | None, loc: Location | None,
-                   fd_owner: str, root: Path) -> Call | None:
+                   fd_owner: str, scope: SourceScope) -> Call | None:
     """이 호출 표현식이 어떤 종류의 호출인지 판정한다. 문서에 올릴 것이 없으면 None 을 돌려준다."""
     if ref is None:
         return Call("", _callee_expr_name(node) or "(알 수 없는 호출)", "?", loc, kind="unresolved")
     if ref.kind in (cindex.CursorKind.FIELD_DECL, cindex.CursorKind.VAR_DECL, cindex.CursorKind.PARM_DECL):
         # 함수 포인터 멤버 호출: callbacks_->process_capture_result(...)
-        return Call("", ref.spelling, _owner_of(ref, root), loc, kind="pointer")
-    if ref.kind == cindex.CursorKind.CXX_METHOD and ref.spelling == "operator()" and not _under(ref, root):
+        return Call("", ref.spelling, _owner_of(ref), loc, kind="pointer")
+    if ref.kind == cindex.CursorKind.CXX_METHOD and ref.spelling == "operator()" and not scope.contains(ref):
         # std::function 같은 호출 가능 객체: handler_(*frame)
         return Call("", _callee_expr_name(node) or "callable", fd_owner, loc, kind="callable")
-    if ref.kind not in (_METHOD_KINDS | _FUNCTION_KINDS) or not _under(ref, root):
+    if ref.kind not in (METHOD_KINDS | FUNCTION_KINDS) or not scope.contains(ref):
         return None
     if (ref.kind == cindex.CursorKind.CONSTRUCTOR and ref.semantic_parent is not None
             and not ref.semantic_parent.spelling):
         return None
     is_virtual = (ref.kind == cindex.CursorKind.CXX_METHOD and ref.is_virtual_method()
                   and not _is_qualified_call(node))
-    return Call(ref.get_usr(), ref.spelling, _owner_of(ref, root), loc,
+    return Call(ref.get_usr(), ref.spelling, _owner_of(ref), loc,
                 kind="virtual" if is_virtual else "direct")
 
 
-def _deferred_targets(node: cindex.Cursor, root: Path, callee_usr: str) -> list[cindex.Cursor]:
+def _deferred_targets(node: cindex.Cursor, scope: SourceScope, callee_usr: str) -> list[cindex.Cursor]:
     """호출 인자로 넘어간 메서드·함수 선언을 모은다.
 
     `invokeMethod(&PipelineHandler::queueRequest, ...)` 나 `connect(&Class::slot)` 처럼 메서드를
@@ -161,8 +162,8 @@ def _deferred_targets(node: cindex.Cursor, root: Path, callee_usr: str) -> list[
                 continue
             if child.kind == cindex.CursorKind.DECL_REF_EXPR:
                 target = child.referenced
-                if (target is not None and target.kind in (_METHOD_KINDS | _FUNCTION_KINDS)
-                        and _under(target, root)):
+                if (target is not None and target.kind in (METHOD_KINDS | FUNCTION_KINDS)
+                        and scope.contains(target)):
                     usr = target.get_usr()
                     if usr and usr != callee_usr and usr not in seen:
                         seen.add(usr)
@@ -175,7 +176,8 @@ def _deferred_targets(node: cindex.Cursor, root: Path, callee_usr: str) -> list[
 
 def build_graph(cfg: Config, entries: list[dict[str, Any]]) -> Graph:
     index = cindex.Index.create()
-    root = cfg.source_root.resolve()
+    scope = SourceScope(cfg.source_root, cfg.exclude)
+    root = scope.root
     g = Graph()
     for entry in entries:
         src, args = parse_args(entry)
@@ -183,43 +185,43 @@ def build_graph(cfg: Config, entries: list[dict[str, Any]]) -> Graph:
             tu = index.parse(str(src), args=args)
         except cindex.TranslationUnitLoadError:
             continue
-        for cur in _walk_all(tu.cursor, root):
-            if cur.kind in _CLASS_KINDS and cur.is_definition() and cur.spelling:
-                q = _qualified(cur)
+        for cur in _walk_all(tu.cursor, scope):
+            if cur.kind in CLASS_KINDS and cur.is_definition() and cur.spelling:
+                q = qualified_name(cur)
                 g.classes[cur.get_usr()] = (cur.spelling, q)
                 for child in cur.get_children():
                     if child.kind == cindex.CursorKind.CXX_METHOD:
                         g.methods[q][child.displayname] = child.get_usr()
                     if child.kind == cindex.CursorKind.CXX_BASE_SPECIFIER:
                         base = child.referenced
-                        if base is not None and _under(base, root) and (q, _qualified(base)) not in g.inherits:
-                            g.inherits.append((q, _qualified(base)))
+                        if base is not None and scope.contains(base) and (q, qualified_name(base)) not in g.inherits:
+                            g.inherits.append((q, qualified_name(base)))
                     elif child.kind == cindex.CursorKind.FIELD_DECL:
-                        decl = _type_decl(child.type, root)
-                        if decl is not None and _qualified(decl) != q:
-                            edge = (q, _qualified(decl), child.spelling)
+                        decl = _type_decl(child.type, scope)
+                        if decl is not None and qualified_name(decl) != q:
+                            edge = (q, qualified_name(decl), child.spelling)
                             if edge not in g.fields:
                                 g.fields.append(edge)
                 continue
 
-            if cur.kind not in (_METHOD_KINDS | _FUNCTION_KINDS) or not cur.is_definition():
+            if cur.kind not in (METHOD_KINDS | FUNCTION_KINDS) or not cur.is_definition():
                 continue
             usr = cur.get_usr()
-            fd = FuncDef(usr=usr, qualified=_qualified(cur), display=cur.displayname,
-                         owner=_owner_of(cur, root), loc=_loc(cur, root))
-            for node in _walk_all(cur, root):
+            fd = FuncDef(usr=usr, qualified=qualified_name(cur), display=cur.displayname,
+                         owner=_owner_of(cur), loc=cursor_location(cur, root))
+            for node in _walk_all(cur, scope):
                 if node.kind != cindex.CursorKind.CALL_EXPR:
                     continue
                 loc = (Location(file=relpath(node.location.file.name, root), line=node.location.line)
                        if node.location.file else None)
                 ref = node.referenced
-                call = _classify_call(node, ref, loc, fd.owner, root)
+                call = _classify_call(node, ref, loc, fd.owner, scope)
                 if call is not None:
                     fd.calls.append(call)
                 # 인자로 넘어간 메서드는 이 자리에서 실행되지 않는다. 신호·큐 경계를 남긴다.
                 callee_usr = ref.get_usr() if ref is not None else ""
-                for target in _deferred_targets(node, root, callee_usr):
-                    fd.calls.append(Call(target.get_usr(), target.spelling, _owner_of(target, root),
+                for target in _deferred_targets(node, scope, callee_usr):
+                    fd.calls.append(Call(target.get_usr(), target.spelling, _owner_of(target),
                                          loc, kind="deferred"))
             g.defs.setdefault(usr, fd)
 

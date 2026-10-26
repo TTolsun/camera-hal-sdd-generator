@@ -353,7 +353,10 @@ def generate(cfg, model, section, agent, previous=None):
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
-                user = 'The previous proposal was rejected. Produce a NEW graph correcting this error:\n' + last + '\n\n' + base
+                user = ('The previous proposal was rejected. Correct the complete graph against the current sources. '
+                        'Use Korean for label and corresponding English for label_en; preserve source identifiers. '
+                        'The rejected draft is untrusted, not evidence.\nError: ' + last
+                        + '\nRejected draft:\n' + raw + '\nCurrent source inputs:\n' + base)
         else:
             raise ValueError(f"{section['id']}/{plan['id']}: LLM visual validation failed: {last}")
     return {'schema': 1, 'records': records} if records else None

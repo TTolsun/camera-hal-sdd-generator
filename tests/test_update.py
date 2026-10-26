@@ -1,6 +1,8 @@
 """증분 자동 갱신: 순서 보장, 실패 후 재개, 사람 리뷰 관문."""
 
 import subprocess
+import json
+from pathlib import Path
 
 import pytest
 
@@ -42,6 +44,30 @@ def _steps(order: list[str]):
 
 def _seed_baseline(cfg, sha):
     KnowledgeModel(meta={"source_commit": sha}).save(cfg.facts_path)
+
+
+def test_save_state_preserves_order_format_schema_and_none_return(tmp_cfg):
+    state = {"schema": 1, "last_done": "완료", "failed": {"z": "실패", "a": "다음"}}
+    assert update.save_state(tmp_cfg, state) is None
+    expected = json.dumps(state, ensure_ascii=False, indent=1) + "\n"
+    assert update.state_path(tmp_cfg).read_bytes() == expected.encode("utf-8")
+    assert update.load_state(tmp_cfg) == state
+
+
+def test_save_state_failure_keeps_previous_checkpoint(tmp_cfg, monkeypatch):
+    old = {"schema": 1, "last_done": "previous", "failed": {}}
+    update.save_state(tmp_cfg, old)
+    path = update.state_path(tmp_cfg)
+    original = path.read_bytes()
+
+    def fail(temporary, destination):
+        raise OSError("replace failed")
+
+    monkeypatch.setattr(Path, "replace", fail)
+    with pytest.raises(OSError, match="replace failed"):
+        update.save_state(tmp_cfg, {"schema": 1, "last_done": "new", "failed": {}})
+    assert path.read_bytes() == original
+    assert list(path.parent.glob(".update-state.json.*.tmp")) == []
 
 
 @pytest.mark.parametrize('mode', ['valid', 'stale', 'missing', 'failure'])

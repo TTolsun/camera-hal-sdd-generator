@@ -236,8 +236,8 @@ sections:
       label: reuse() 후 다시 제출
       label_en: Reset before requeue
       evidence:
-      - source: resources/reuse-contract
-        sha256: 682e5dd28db68751cb79b570375c7065dc7731dc55359b439c81405136bcebdf
+      - source: resources/reuse
+        sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
         quote: be reused and requeued without destruction.
     edges:
     - from: caller
@@ -255,8 +255,7 @@ sections:
       evidence:
       - source: resources/buffer
         sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
-        quote: "for ensuring that the buffer will remain valid until the request complete\n\
-          \ * callback is called."
+        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
     - from: callback
       to: delete
       label: 완료 핸들러에서 삭제 가능
@@ -270,10 +269,9 @@ sections:
       label: 재사용 전 상태 초기화
       label_en: Reset state before reuse
       evidence:
-      - source: resources/reuse-contract
-        sha256: 682e5dd28db68751cb79b570375c7065dc7731dc55359b439c81405136bcebdf
-        quote: "This function shall be called\n * prior to queueing the request to the\
-          \ camera"
+      - source: resources/reuse
+        sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
+        quote: "This function shall be called\n * prior to queueing the request to the camera"
   - id: queue-gates
     topic: diagnosis
     kind: decision
@@ -284,213 +282,208 @@ sections:
       label: waitingRequests_
       label_en: waitingRequests_
       evidence:
-      - source: diagnosis/prepare
-        sha256: 30cf5da13ae3a4f74c8404f767c03dd36002e4d24350b3a33f371ca817514ea0
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: data->waitingRequests_.push(request);
     - id: ready
       label: 선두 요청이 prepared_인가?
       label_en: Is the front request prepared?
       evidence:
-      - source: diagnosis/waiting
-        sha256: 2bcae42fd283195880204cc5f4cfa46a3cb50981efd559abfebb1f8c163f920a
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: if (!request->_d()->prepared_)
       shape: decision
     - id: limit
       label: 장치 큐 한도에 도달했는가?
       label_en: Device queue at its limit?
       evidence:
-      - source: diagnosis/waiting
-        sha256: 2bcae42fd283195880204cc5f4cfa46a3cb50981efd559abfebb1f8c163f920a
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
       shape: decision
     - id: hold
       label: 대기열에 유지
       label_en: Stay in waiting queue
       evidence:
-      - source: diagnosis/waiting
-        sha256: 2bcae42fd283195880204cc5f4cfa46a3cb50981efd559abfebb1f8c163f920a
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     - id: device
       label: queueRequestDevice()
       label_en: queueRequestDevice()
       evidence:
-      - source: diagnosis/dispatch
-        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: int ret = queueRequestDevice(camera, request);
     - id: cancel
       label: 취소·완료 경로
       label_en: Cancellation and completion
       evidence:
-      - source: diagnosis/dispatch
-        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
-        quote: "if (ret)\n\t\tcancelRequest(request);"
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: fails in queuing the request to the hardware the request is cancelled.
     edges:
     - from: wait
       to: limit
       label: doQueueRequests()에서 확인
       label_en: Check in doQueueRequests()
       evidence:
-      - source: diagnosis/waiting
-        sha256: 2bcae42fd283195880204cc5f4cfa46a3cb50981efd559abfebb1f8c163f920a
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: while (!data->waitingRequests_.empty()) {
     - from: limit
       to: hold
       label: '예: 새 요청을 전달하지 않음'
       label_en: 'Yes: stop forwarding'
       evidence:
-      - source: diagnosis/waiting
-        sha256: 2bcae42fd283195880204cc5f4cfa46a3cb50981efd559abfebb1f8c163f920a
-        quote: "if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)\n\t\t\t\
-          break;"
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)\n\t\t\tbreak;"
     - from: limit
       to: ready
       label: '아니오: 선두 요청 확인'
       label_en: 'No: inspect front request'
       evidence:
-      - source: diagnosis/waiting
-        sha256: 2bcae42fd283195880204cc5f4cfa46a3cb50981efd559abfebb1f8c163f920a
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: Request *request = data->waitingRequests_.front();
     - from: ready
       to: hold
       label: '아니오: 준비를 기다림'
       label_en: 'No: wait for preparation'
       evidence:
-      - source: diagnosis/waiting
-        sha256: 2bcae42fd283195880204cc5f4cfa46a3cb50981efd559abfebb1f8c163f920a
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     - from: ready
       to: device
       label: '예: 준비 실패로 취소되지 않은 요청'
       label_en: 'Yes: unless cancelled during preparation'
       evidence:
-      - source: diagnosis/dispatch
-        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\t\
-          return;\n\t}\n\n\tint ret = queueRequestDevice(camera, request);"
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
+          \ request);"
     - from: device
       to: cancel
       label: 장치 제출 실패
       label_en: Device queue failure
       evidence:
-      - source: diagnosis/dispatch
-        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (ret)\n\t\tcancelRequest(request);"
     - from: ready
       to: cancel
       label: 준비 중 취소된 요청은 장치 제출 생략
       label_en: Skip device for cancelled request
       evidence:
-      - source: diagnosis/dispatch
-        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\t\
-          return;\n\t}"
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}"
   - id: request-stages
     topic: journey
     kind: flow
     title: 제출·준비·장치 처리·완료의 연결
-    question: 접수 성공 뒤에도 준비 대기와 장치 처리가 남습니다. 정상 촬영 경로의 계약을 연결한 그림이며 실제 실행 시간이나 전체 실패
-      경로를 나타내지 않습니다.
+    question: 접수 성공 뒤에도 준비 대기와 장치 처리가 남습니다. 정상 촬영 경로의 계약을 연결한 그림이며 실제 실행 시간이나 전체 실패 경로를 나타내지 않습니다.
     nodes:
     - id: queue
       label: Camera::queueRequest()
       label_en: Camera::queueRequest()
       evidence:
-      - source: journey/queue-success
-        sha256: 165f055384e52ece575e47f3dd511dfc3a45023e00b08a1fb28594da5cb19534
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
         quote: int Camera::queueRequest(Request *request)
     - id: waiting
       label: 대기열과 준비 단계
       label_en: Waiting queue and preparation
       evidence:
-      - source: journey/prepare
-        sha256: 30cf5da13ae3a4f74c8404f767c03dd36002e4d24350b3a33f371ca817514ea0
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: data->waitingRequests_.push(request);
     - id: device
       label: queueRequestDevice()
       label_en: queueRequestDevice()
       evidence:
-      - source: journey/dispatch
-        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: int ret = queueRequestDevice(camera, request);
     - id: buffer
       label: completeBuffer()
       label_en: completeBuffer()
       evidence:
-      - source: journey/buffer-completion
-        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+      - source: journey/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
     - id: remaining
       label: 버퍼 추적 상태 갱신
       label_en: Update buffer completion tracking
       evidence:
-      - source: journey/buffer-completion
-        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+      - source: journey/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: completion and updates the request's internal buffer tracking.
     - id: request
       label: completeRequest()
       label_en: completeRequest()
       evidence:
-      - source: journey/request-contract
-        sha256: ee38212c166d6623869b4f2b78c843e9025d173682ecf94f344a987761d47218
+      - source: journey/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: void PipelineHandler::completeRequest(Request *request)
     - id: application
       label: 제출 순서로 애플리케이션 반환
       label_en: Return to application in submission order
       evidence:
-      - source: journey/request-contract
-        sha256: ee38212c166d6623869b4f2b78c843e9025d173682ecf94f344a987761d47218
-        quote: "This function ensures that requests will be returned to the application\
-          \ in\n * submission order"
+      - source: journey/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
     edges:
     - from: queue
       to: waiting
       label: 핸들러 호출을 큐에 예약
       label_en: Queue the handler invocation
       evidence:
-      - source: journey/queue-success
-        sha256: 165f055384e52ece575e47f3dd511dfc3a45023e00b08a1fb28594da5cb19534
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
         quote: ConnectionTypeQueued, request);
     - from: waiting
       to: device
       label: 준비·큐 한도 통과, 취소되지 않은 요청
       label_en: Prepared, within queue limit and not cancelled
       evidence:
-      - source: journey/dispatch
-        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\t\
-          return;\n\t}\n\n\tint ret = queueRequestDevice(camera, request);"
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
+          \ request);"
     - from: device
       to: buffer
       label: 장치 구현자가 버퍼 완료 통지
       label_en: Device handler signals buffer completion
       evidence:
-      - source: journey/buffer-completion
-        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
-        quote: This function shall be called by pipeline handlers to signal completion
-          of
+      - source: journey/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: This function shall be called by pipeline handlers to signal completion of
     - from: buffer
       to: remaining
       label: 버퍼 완료 알림
       label_en: Notify buffer completion
       evidence:
-      - source: journey/buffer-implementation
-        sha256: 54525292749afc2e145687fa1031d697bb00c018d2e9cb2c5cbcba278dbbf75d
+      - source: journey/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: camera->bufferCompleted.emit(request, buffer);
     - from: remaining
       to: request
       label: 후처리 뒤 구현자가 명시적으로 호출
       label_en: Handler explicitly completes after remaining work
       evidence:
-      - source: journey/buffer-completion
-        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+      - source: journey/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: They shall complete requests explicitly with completeRequest().
     - from: request
       to: application
       label: 선두 미완료 요청 뒤의 반환은 대기
       label_en: Wait behind an incomplete head request
       evidence:
-      - source: journey/request-completion
-        sha256: 06aba06c3d636ad21e1409ac329ab9c3853776a2eef8ca443acbb49c8893e90b
+      - source: journey/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
   - id: configure-failures
     topic: configuration-failure
@@ -594,28 +587,28 @@ sections:
       label_en: Detach waiting queue
       evidence:
       - source: stopping/device-stop
-        sha256: 43962342db73d223e196b6bae1c49c79db3d3a68de4893cba3ddad50945c23d2
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: waitingRequests.swap(data->waitingRequests_);
     - id: stop
       label: stopDevice()
       label_en: stopDevice()
       evidence:
       - source: stopping/device-stop
-        sha256: 43962342db73d223e196b6bae1c49c79db3d3a68de4893cba3ddad50945c23d2
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: stopDevice(camera);
     - id: cancel
       label: 대기 요청 취소·완료
       label_en: Cancel and complete waiting requests
       evidence:
       - source: stopping/device-stop
-        sha256: 43962342db73d223e196b6bae1c49c79db3d3a68de4893cba3ddad50945c23d2
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: "request->_d()->cancel();\n\t\tdoQueueRequest(request);"
     - id: configured
       label: Configured로 복귀
       label_en: Return to Configured
       evidence:
       - source: stopping/stop
-        sha256: 8a1acdc0c0263c5453e024b1fc0c119960d8c291dc3ff6dffa38f38ff37af63d
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
         quote: d->setState(Private::CameraConfigured);
     edges:
     - from: detach
@@ -624,16 +617,16 @@ sections:
       label_en: Stop device after detaching
       evidence:
       - source: stopping/device-stop
-        sha256: 43962342db73d223e196b6bae1c49c79db3d3a68de4893cba3ddad50945c23d2
-        quote: "waitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline\
-          \ handler and let the queued requests complete. */\n\tstopDevice(camera);"
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "waitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests\
+          \ complete. */\n\tstopDevice(camera);"
     - from: stop
       to: cancel
       label: 장치 요청 뒤 대기 요청 취소
       label_en: Cancel waiting requests after device requests
       evidence:
       - source: stopping/device-stop
-        sha256: 43962342db73d223e196b6bae1c49c79db3d3a68de4893cba3ddad50945c23d2
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: after the device to keep them in order.
     - from: cancel
       to: configured
@@ -641,7 +634,7 @@ sections:
       label_en: After handler stop returns
       evidence:
       - source: stopping/stop
-        sha256: 8a1acdc0c0263c5453e024b1fc0c119960d8c291dc3ff6dffa38f38ff37af63d
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
         quote: "ASSERT(!d->pipe_->hasPendingRequests(this));\n\n\td->setState(Private::CameraConfigured);"
   overview:
   - id: discovery-map
@@ -774,45 +767,45 @@ sections:
       label: waitingRequests_
       label_en: waitingRequests_
       evidence:
-      - source: queue/enqueue
-        sha256: 94dc76217ffb6f15b346216b0baaf049ce1939346bb1ec517589f26682f0092f
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: data->waitingRequests_.push(request);
     - id: ready
       label: 선두 요청이 prepared_인가?
       label_en: Is the front request prepared?
       evidence:
-      - source: queue/drain
-        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: if (!request->_d()->prepared_)
       shape: decision
     - id: limit
       label: 장치 큐 한도에 도달했는가?
       label_en: Device queue at its limit?
       evidence:
-      - source: queue/drain
-        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
       shape: decision
     - id: hold
       label: 대기열에 유지
       label_en: Stay in waiting queue
       evidence:
-      - source: queue/drain
-        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     - id: device
       label: queueRequestDevice()
       label_en: queueRequestDevice()
       evidence:
-      - source: queue/dispatch
-        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: int ret = queueRequestDevice(camera, request);
     - id: cancel
       label: 취소·완료 경로
       label_en: Cancellation and completion
       evidence:
-      - source: queue/dispatch
-        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (ret)\n\t\tcancelRequest(request);"
     edges:
     - from: wait
@@ -820,40 +813,40 @@ sections:
       label: doQueueRequests()에서 확인
       label_en: Check in doQueueRequests()
       evidence:
-      - source: queue/drain
-        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: while (!data->waitingRequests_.empty()) {
     - from: limit
       to: hold
       label: '예: 새 요청을 전달하지 않음'
       label_en: 'Yes: stop forwarding'
       evidence:
-      - source: queue/drain
-        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)\n\t\t\tbreak;"
     - from: limit
       to: ready
       label: '아니오: 선두 요청 확인'
       label_en: 'No: inspect front request'
       evidence:
-      - source: queue/drain
-        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: Request *request = data->waitingRequests_.front();
     - from: ready
       to: hold
       label: '아니오: 준비를 기다림'
       label_en: 'No: wait for preparation'
       evidence:
-      - source: queue/drain
-        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     - from: ready
       to: device
       label: '예: 준비 실패로 취소되지 않은 요청'
       label_en: 'Yes: unless cancelled during preparation'
       evidence:
-      - source: queue/dispatch
-        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
           \ request);"
     - from: device
@@ -861,16 +854,16 @@ sections:
       label: 장치 제출 실패
       label_en: Device queue failure
       evidence:
-      - source: queue/dispatch
-        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (ret)\n\t\tcancelRequest(request);"
     - from: ready
       to: cancel
       label: 준비 중 취소된 요청은 장치 제출 생략
       label_en: Skip device for cancelled request
       evidence:
-      - source: queue/dispatch
-        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+      - source: queue/queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}"
   - id: buffer-request-completion
     topic: completion
