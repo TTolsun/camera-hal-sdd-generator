@@ -12,9 +12,11 @@ from sdd.llm import Agent
 from sdd.facts.model import KnowledgeModel
 
 
-def wire(value):
+def wire(value, diagnosis=False):
     value=copy.deepcopy(value)
     for finding in value.get('findings', []):finding.pop('quote',None)
+    if diagnosis:
+        value.pop('clarification',None);value.pop('expand',None)
     return value
 
 
@@ -71,7 +73,7 @@ def factory(mode='repair'):
                 text=('`stop()`은 대기 요청을 취소한 뒤 장치 해제 함수를 호출합니다.' if expanded and mode!='repeat'
                       else '대기 요청을 취소하는 함수가 호출됩니다.')
                 result={'statements':[dict(text=text,quote_id=quote,covers=['stop'],kind='behavior')]}
-            return {'message':{'content':json.dumps(wire(result),ensure_ascii=False)},'done':True}
+            return {'message':{'content':json.dumps(wire(result,system==policy.DIAGNOSIS_POLICY),ensure_ascii=False)},'done':True}
         agent._post=post
         return agent
     return create
@@ -169,7 +171,7 @@ def test_no_progress_and_transport_failure_are_explicit_stops(project,tmp_path):
                 p=verdict('repair');p['checks']['coverage']='fail'
                 p.update(expand=['s:current'],findings=[dict(category='coverage',candidate='s:current',
                     quote='cancelPending();',issue='Needs clarification')])
-                return {'message':{'content':json.dumps(wire(p))},'done':True}
+                return {'message':{'content':json.dumps(wire(p,body['messages'][0]['content']==policy.DIAGNOSIS_POLICY))},'done':True}
             return original(url,body)
         agent._post=post
         return agent
@@ -193,7 +195,7 @@ def test_model_acceptance_does_not_override_production_failure(project,tmp_path)
         agent=factory()(cfg,dump);original=agent._post
         def post(url,body):
             if body['messages'][0]['content'] in (policy.DIAGNOSIS_POLICY, policy.PLANNING_POLICY):
-                return {'message':{'content':json.dumps(verdict())},'done':True}
+                return {'message':{'content':json.dumps(wire(verdict(),body['messages'][0]['content']==policy.DIAGNOSIS_POLICY))},'done':True}
             return original(url,body)
         agent._post=post
         return agent

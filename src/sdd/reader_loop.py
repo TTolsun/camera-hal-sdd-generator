@@ -243,17 +243,17 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                     answer=answer_text, required_terms_found=found_terms, automatic_error=error, evidence_gaps=gaps,
                     candidates={k: {f:v for f,v in c.items() if f != 'selector'} for k,c in current_pool.items()})
                 review_key = policy.digest({'policy': policy.DIAGNOSIS_POLICY,
-                                            'schema': policy.schema(current_pool), 'payload': payload})
+                                            'schema': policy.schema(current_pool, diagnosis=True), 'payload': payload})
                 reused = review_key in reviews
                 if reused:
                     proposal = reviews[review_key]
                 else:
                     # Compatible gateways may ignore response_schema; keep the
                     # same portable JSON contract in their textual request too.
-                    user = json.dumps({**payload, 'output_schema': policy.schema(current_pool)}, ensure_ascii=False)
+                    user = json.dumps({**payload, 'output_schema': policy.schema(current_pool, diagnosis=True)}, ensure_ascii=False)
                     raw_review = critic.chat(policy.DIAGNOSIS_POLICY, user, tag='diagnose_' + key.replace('/', '_'),
-                        response_schema=policy.schema(current_pool))
-                    proposal = policy.decode(raw_review, current_pool)
+                        response_schema=policy.schema(current_pool, diagnosis=True))
+                    proposal = policy.decode(raw_review, current_pool, diagnosis=True)
                     reviews[review_key] = proposal
                 record = dict(target=key, response_sha256=receipt['response_sha256'],
                     request_sha256=receipt['request_sha256'], automatic_error=error,
