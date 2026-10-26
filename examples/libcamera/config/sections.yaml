@@ -76,7 +76,7 @@ sections:
       end: the scope of the libcamera project.
     parts:
     - id: what
-      question: libcamera가 어떤 종류의 라이브러리이고 어떤 시스템을 대상으로 하는지 한 문단으로 설명하세요. 제품 성능이나 기종 목록은 이 질문의 범위가 아닙니다.
+      question: libcamera가 어떤 종류의 라이브러리이고 어떤 시스템을 대상으로 하는지 한 문단으로 설명하세요. 제품 성능이나 기종 목록은 이 질문의 범위가 아닙니다. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - what
       answer_contract:
@@ -86,15 +86,15 @@ sections:
         - - libcamera
         reject_patterns: []
     - id: problem
-      question: 카메라 하드웨어를 쓰려는 쪽이 기기마다 어떤 문제를 겪는지, 그 일을 누가 맡아 왔는지 한 문단으로 설명하세요. 이유나 영향을 추측하지 마세요.
+      question: 카메라 하드웨어를 쓰려는 쪽이 기기마다 어떤 문제를 겪는지, 그 일을 누가 맡아 왔는지 한 문단으로 설명하세요. 이유나 영향을 추측하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - problem
     - id: easier
-      question: libcamera를 쓰면 하드웨어 구성과 이미지 제어 알고리즘을 다루는 일이 개발자에게 어떻게 달라지는지 한 문단으로 설명하세요. 성능이나 개발 기간 절감량은 추정하지 마세요.
+      question: libcamera를 쓰면 하드웨어 구성과 이미지 제어 알고리즘을 다루는 일이 개발자에게 어떻게 달라지는지 한 문단으로 설명하세요. 성능이나 개발 기간 절감량은 추정하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - for
     - id: layers
-      question: 카메라 스택의 네 계층을 아래에서 위 순서로, 각 계층이 맡는 일과 함께 설명하세요. 계층에 들어가는 구체적인 도구는 소스가 예로 든 것만 쓰세요.
+      question: 카메라 스택의 네 계층을 아래에서 위 순서로, 각 계층이 맡는 일과 함께 설명하세요. 계층에 들어가는 구체적인 도구는 소스가 예로 든 것만 쓰세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - stack
       max_statements: 4
@@ -2909,7 +2909,7 @@ sections:
       end: the scope of the libcamera project.
     parts:
     - id: what
-      question: 이 프로젝트가 무엇을 하는 소프트웨어인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 이 프로젝트가 무엇을 하는 소프트웨어인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - what
       answer_contract:
@@ -2918,7 +2918,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: problem
-      question: 카메라를 쓰려는 쪽이 어떤 어려움을 겪는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 카메라를 쓰려는 쪽이 어떤 어려움을 겪는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - problem
       answer_contract:
@@ -2927,7 +2927,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: easier
-      question: 이 프로젝트를 쓰면 그 일이 어떻게 단순해지는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 이 프로젝트를 쓰면 그 일이 어떻게 단순해지는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - for
       answer_contract:
@@ -2936,7 +2936,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: layers
-      question: 카메라를 쓰는 소프트웨어가 네 계층으로 나뉘는 모습을 아래에서 위 순서로 쉽게 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 카메라를 쓰는 소프트웨어가 네 계층으로 나뉘는 모습을 아래에서 위 순서로 쉽게 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - stack
       max_statements: 1
@@ -2960,7 +2960,7 @@ sections:
       end: application can take control of a camera device at once.
     parts:
     - id: below
-      question: 이 프로젝트가 아래 계층에서 무엇을 받아 카메라를 제어하는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 이 프로젝트가 아래 계층에서 무엇을 받아 카메라를 제어하는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - kernel
       answer_contract:
@@ -2969,7 +2969,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: discover
-      question: 카메라를 누가 찾고 한 번에 몇 곳이 제어권을 가질 수 있는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 카메라를 누가 찾고 한 번에 몇 곳이 제어권을 가질 수 있는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - manager
       answer_contract:
@@ -2997,7 +2997,7 @@ sections:
       end: repository (for instance the gstreamer libcamera element).
     parts:
     - id: api
-      question: 애플리케이션이 이 프로젝트에서 받아 쓰는 것이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 애플리케이션이 이 프로젝트에서 받아 쓰는 것이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - framework
       - camera
@@ -3007,7 +3007,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: adapters
-      question: 다른 프레임워크가 이 프로젝트에 연결되는 방법의 예를 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 다른 프레임워크가 이 프로젝트에 연결되는 방법의 예를 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - adaptation
       answer_contract:
@@ -3039,7 +3039,7 @@ sections:
       end: not include source code from the libcamera project.
     parts:
     - id: outside
-      question: 이 프로젝트의 범위 밖에 있는 것이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 이 프로젝트의 범위 밖에 있는 것이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - apps
       answer_contract:
@@ -3048,7 +3048,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: vendors
-      question: 장치 제조사가 이 프로젝트에 직접 기여하거나 따로 제공하는 부분이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      question: 장치 제조사가 이 프로젝트에 직접 기여하거나 따로 제공하는 부분이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - handler
       - ipa
