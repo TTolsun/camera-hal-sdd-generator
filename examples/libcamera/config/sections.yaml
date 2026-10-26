@@ -3267,6 +3267,30 @@ sections:
       file: src/libcamera/camera.cpp
       start: int Camera::queueRequest(Request *request)
       end: \brief Start capture from camera
+    - id: queue-owner-guard
+      file: src/libcamera/camera.cpp
+      start: if (request->_d()->camera() != this) {
+      end: return -EXDEV;
+      scope: &id013
+        start: int Camera::queueRequest(Request *request)
+        end: '
+
+          }'
+    - id: queue-controls-guard
+      file: src/libcamera/camera.cpp
+      start: if (request->controls().infoMap() != &controls()) {
+      end: return -EINVAL;
+      scope: *id013
+    - id: queue-buffers-guard
+      file: src/libcamera/camera.cpp
+      start: if (request->buffers().empty()) {
+      end: return -EINVAL;
+      scope: *id013
+    - id: queue-stream-guard
+      file: src/libcamera/camera.cpp
+      start: if (d->activeStreams_.find(stream) == d->activeStreams_.end()) {
+      end: return -EINVAL;
+      scope: *id013
     covers:
     - request
     parts:
@@ -3309,9 +3333,9 @@ sections:
         - - queueRequest
         - - 버퍼
     - id: queue-owner
-      question: Camera::queueRequest에서 요청이 다른 카메라에 속하는 조건과 이때 반환하는 오류만 설명하세요.
+      question: Camera::queueRequest의 이 if 분기가 검사하는 대상과 반환하는 오류 코드를 함께 설명하세요. 코드에 적힌 오류 식별자를 그대로 쓰세요.
       sources:
-      - queue-code
+      - queue-owner-guard
       answer_contract:
         basis: implementation
         required_terms:
@@ -3327,27 +3351,27 @@ sections:
         - - RequestPending
         - - -EINVAL
     - id: queue-controls
-      question: Camera::queueRequest에서 controls의 infoMap을 어떤 값과 비교하며 불일치 때 어떻게 반환하는지 설명하세요.
+      question: Camera::queueRequest의 이 if 분기가 검사하는 대상과 반환하는 오류 코드를 함께 설명하세요. 코드에 적힌 오류 식별자를 그대로 쓰세요.
       sources:
-      - queue-code
+      - queue-controls-guard
       answer_contract:
         basis: implementation
         required_terms:
         - - infoMap
         - - -EINVAL
     - id: queue-buffers
-      question: Camera::queueRequest에서 buffers가 비었을 때의 검사와 반환값만 설명하세요.
+      question: Camera::queueRequest의 이 if 분기가 검사하는 대상과 반환하는 오류 코드를 함께 설명하세요. 코드에 적힌 오류 식별자를 그대로 쓰세요.
       sources:
-      - queue-code
+      - queue-buffers-guard
       answer_contract:
         basis: implementation
         required_terms:
         - - buffers
         - - -EINVAL
     - id: queue-stream
-      question: Camera::queueRequest의 activeStreams_ 검사에서 거절하는 스트림 조건과 반환값만 설명하세요.
+      question: Camera::queueRequest의 이 if 분기가 검사하는 대상과 반환하는 오류 코드를 함께 설명하세요. 코드에 적힌 오류 식별자를 그대로 쓰세요.
       sources:
-      - queue-code
+      - queue-stream-guard
       answer_contract:
         basis: implementation
         required_terms:
@@ -3384,6 +3408,40 @@ sections:
       file: src/libcamera/request.cpp
       start: \enum Request::ReuseFlag
       end: \typedef Request::BufferMap
+    - id: fence-move
+      file: src/libcamera/request.cpp
+      start: When a valid Fence is provided to this function
+      end: be left unmodified.
+      scope: &id014
+        start: \brief Add a FrameBuffer with its associated Stream to the Request
+        end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: fence-expiry
+      file: src/libcamera/request.cpp
+      start: If the \a fence associated with \a buffer isn't signalled, the request will
+      end: be reused in another request.
+      scope: *id014
+    - id: reuse-status
+      file: src/libcamera/request.cpp
+      start: status_ =
+      end: RequestPending;
+      scope: &id015
+        start: void Request::reuse(ReuseFlag flags)
+        end: \fn Request::controls()
+    - id: reuse-controls
+      file: src/libcamera/request.cpp
+      start: controls_.clear
+      end: ();
+      scope: *id015
+    - id: reuse-metadata
+      file: src/libcamera/request.cpp
+      start: _d()->metadata_.clear
+      end: ();
+      scope: *id015
+    - id: reuse-buffers
+      file: src/libcamera/request.cpp
+      start: if (flags & ReuseBuffers) {
+      end: status_ = RequestPending;
+      scope: *id015
     covers:
     - lifetime
     parts:
@@ -3406,47 +3464,119 @@ sections:
         - - 버퍼
         - - 콜백
     - id: fence-transfer
-      question: addBuffer 성공 시 유효한 Fence의 소유권이 어느 객체로 이동하고 실패 시 어떤 상태로 남는지 설명하세요. 타임아웃은 다음 질문에서 다룹니다.
+      question: addBuffer가 성공하면 유효한 Fence의 소유권은 어느 객체로 이동합니까? 성공 경로만 설명하세요.
       sources:
-      - buffer
+      - fence-move
       answer_contract:
         basis: description
         required_terms:
         - - addBuffer
         - - Fence
+          - 펜스
         - - 버퍼
-        - - 실패
-    - id: fence-timeout
-      question: 버퍼의 펜스가 신호를 보내지 않을 때 어느 요청이 타임아웃으로 실패하며 버퍼 재사용 전에 무엇을 회수해야 하는지 설명하세요. addBuffer 함수 자체의 타임아웃으로 바꾸지
-        마세요.
+          - buffer
+    - id: fence-failure
+      question: addBuffer가 실패하면 전달받은 fence의 상태를 어떻게 남깁니까? 실패 경로만 설명하세요.
       sources:
-      - buffer
+      - fence-move
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 실패
+        - - 변경
+          - 유지
+          - 그대로
+    - id: fence-timeout
+      question: 펜스 신호를 받지 못했을 때 타임아웃으로 실패하는 대상과, 버퍼에 펜스가 남는지를 설명하세요.
+      sources:
+      - fence-expiry
       answer_contract:
         basis: description
         required_terms:
         - - 요청
         - - 타임아웃
-        - - releaseFence
-    - id: reset
-      question: Request::reuse 구현이 status·controls·metadata와 버퍼 연결을 어떻게 초기화하는지 ReuseBuffers 유무로 나누어 설명하세요.
+    - id: release-fence
+      question: 타임아웃 뒤 다른 요청에서 버퍼를 재사용하기 전에 호출자가 펜스를 회수할 때 쓰는 함수만 설명하세요.
       sources:
+      - fence-expiry
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - releaseFence
+    - id: reset-buffer-link
+      question: ReuseBuffers 분기에서 기존 버퍼를 현재 요청에 연결하는 호출만 설명하세요.
+      sources:
+      - reuse-buffers
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ReuseBuffers
+        - - setRequest
+    - id: reset-pending
+      question: ReuseBuffers 분기에서 기존 버퍼를 pending_에 추가하는 동작만 설명하세요.
+      sources:
+      - reuse-buffers
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - pending_
+    - id: reset-buffer-clear
+      question: ReuseBuffers가 없는 else 분기에서 bufferMap_에 수행하는 동작만 설명하세요.
+      sources:
+      - reuse-buffers
       - reuse
       answer_contract:
         basis: implementation
         required_terms:
+        - - bufferMap_
+    - id: reset
+      question: Request::reuse의 이 대입문이 status_에 저장하는 상태만 설명하세요.
+      sources:
+      - reuse-status
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - RequestPending
+    - id: reset-controls
+      question: Request::reuse의 이 controls_ 호출이 수행하는 초기화만 설명하세요.
+      sources:
+      - reuse-controls
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - controls_
+    - id: reset-metadata
+      question: Request::reuse의 이 metadata_ 호출이 수행하는 초기화만 설명하세요.
+      sources:
+      - reuse-metadata
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - metadata_
-        - - ReuseBuffers
     - id: reuse-fences
-      question: ReuseBuffers의 버퍼 재사용 의미와 펜스를 사용하는 호출자가 지켜야 하는 사용 제한만 설명하세요.
+      question: ReuseBuffers 플래그의 기존 버퍼 재사용 의미만 설명하세요. 펜스 권고는 다음 질문에서 다룹니다.
       sources:
       - reuse-flags
       answer_contract:
-        basis: contract
+        basis: description
         required_terms:
         - - ReuseBuffers
+        - - 버퍼
+    - id: fence-reuse-caution
+      question: ReuseBuffers가 펜스를 재사용하는지와, 펜스를 쓸 때 이 플래그를 피하라는 should not 권고를 원문의 강도로 설명하세요.
+      sources:
+      - reuse-flags
+      answer_contract:
+        basis: description
+        required_terms:
         - - 펜스
+          - Fence
+          - fence
+        - - 권고
+          - 권장
+        reject_patterns:
+        - pattern: 해서는\s*안|사용하면\s*안|반드시
+          message: 원문의 should not 권고를 must not 의무로 강화하지 마세요.
   - id: shutdown
     title: 오류와 종료
     question: queueRequest()의 오류 반환과 RequestPending·controls 정보 맵·활성 스트림 검사를 설명하세요. stop()에서 실행 중이 아닌 경우 실제 반환값,
@@ -3596,7 +3726,7 @@ sections:
       question: -EACCES 반환을 이미 확인했다면 상태 범위 비교를 위해 currentState·low·high의 어떤 값을 관찰합니까? 연결 해제 검사를 통과한 뒤의 상태 검사만 조사
         계획으로 설명하세요.
       sources:
-      - access
+      - state-range
       answer_contract:
         basis: investigation
         required_terms:
@@ -3604,20 +3734,30 @@ sections:
         - - low
         - - high
     - id: validation-effects
-      question: CameraConfiguration::validate가 Adjusted를 돌려줄 때 변경될 수 있는 구성과 호출자가 확인할 책임을 설명하세요. 이 부작용을 관찰하려고 validate를
-        재호출하지 마세요.
+      question: Adjusted에서 파라미터 변경과 스트림 구성 삭제가 가능한 범위를 설명하세요. 원래 validate 호출의 결과를 관찰하며 재호출하지 마세요.
       sources:
+      - validation-changes
       - validate
       answer_contract:
         basis: description
         required_terms:
         - - Adjusted
+        - - 가능
+          - 수 있
+          - 수있
+    - id: validation-caller
+      question: Adjusted의 호출자가 지켜야 하는 확인 의무만 설명하세요.
+      sources:
+      - validation-caller
+      answer_contract:
+        basis: contract
+        required_terms:
         - - 호출자
+        - - 확인
     - id: validation-result
       question: configure 내부에서 이미 실행된 validate의 반환값을 관찰해 Valid 이외일 때의 오류와 다음 분기를 구분하는 조사 계획을 설명하세요.
       sources:
-      - configure-code
-      - configure
+      - validation-check
       answer_contract:
         basis: investigation
         required_terms:
@@ -3637,10 +3777,9 @@ sections:
         - - configure
         - - 반환
     - id: stream-link
-      question: 장치 configure가 성공한 다음 cfg.stream() 연결 결과와 -EINVAL 분기를 어디서 관찰할지 설명하세요. 소스의 실제 스트림 검사를 사용하세요.
+      question: 이 cfg.stream() 결과와 null 검사, Fatal 로그 및 소스의 -EINVAL 경로를 관찰할 위치를 설명하세요. 실제 복구나 반환이 검증됐다고 쓰지 마세요.
       sources:
-      - configure-code
-      - configure
+      - stream-check
       answer_contract:
         basis: investigation
         required_terms:
@@ -3663,6 +3802,42 @@ sections:
       file: src/libcamera/camera.cpp
       start: int Camera::configure(CameraConfiguration *config)
       end: \brief Create a request object for the camera
+    - id: state-range
+      file: src/libcamera/camera.cpp
+      start: State currentState =
+      end: return -EACCES;
+      scope:
+        start: int Camera::Private::isAccessAllowed(State low, State high,
+        end: void Camera::Private::disconnect()
+    - id: validation-changes
+      file: src/libcamera/camera.cpp
+      start: Parameters may have changed for any stream
+      end: removed.
+      scope:
+        start: \fn CameraConfiguration::validate()
+        end: '*/'
+    - id: validation-caller
+      file: src/libcamera/camera.cpp
+      start: The caller shall check the
+      end: configuration carefully.
+      scope:
+        start: "\\retval CameraConfiguration::Adjusted The configuration has been adjusted\n * and is now valid.\
+          \ Parameters may have changed for any stream, and stream"
+        end: configuration carefully.
+    - id: validation-check
+      file: src/libcamera/camera.cpp
+      start: if (config->validate() != CameraConfiguration::Valid) {
+      end: return -EINVAL;
+      scope: &id016
+        start: int Camera::configure(CameraConfiguration *config)
+        end: '
+
+          }'
+    - id: stream-check
+      file: src/libcamera/camera.cpp
+      start: Stream *stream = cfg.stream();
+      end: return -EINVAL;
+      scope: *id016
   - id: journey
     title: 제출에서 완료까지
     question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임,
@@ -3715,6 +3890,69 @@ sections:
       file: src/libcamera/request.cpp
       start: \enum Request::ReuseFlag
       end: \typedef Request::BufferMap
+    - id: fence-move
+      file: src/libcamera/request.cpp
+      start: When a valid Fence is provided to this function
+      end: be left unmodified.
+      scope:
+        start: \brief Add a FrameBuffer with its associated Stream to the Request
+        end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: fence-expiry
+      file: src/libcamera/request.cpp
+      start: If the \a fence associated with \a buffer isn't signalled, the request will
+      end: be reused in another request.
+      scope:
+        start: \brief Add a FrameBuffer with its associated Stream to the Request
+        end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: reuse-status
+      file: src/libcamera/request.cpp
+      start: status_ =
+      end: RequestPending;
+      scope:
+        start: void Request::reuse(ReuseFlag flags)
+        end: \fn Request::controls()
+    - id: reuse-controls
+      file: src/libcamera/request.cpp
+      start: controls_.clear
+      end: ();
+      scope:
+        start: void Request::reuse(ReuseFlag flags)
+        end: \fn Request::controls()
+    - id: reuse-metadata
+      file: src/libcamera/request.cpp
+      start: _d()->metadata_.clear
+      end: ();
+      scope:
+        start: void Request::reuse(ReuseFlag flags)
+        end: \fn Request::controls()
+    - id: reuse-buffers
+      file: src/libcamera/request.cpp
+      start: if (flags & ReuseBuffers) {
+      end: status_ = RequestPending;
+      scope:
+        start: void Request::reuse(ReuseFlag flags)
+        end: \fn Request::controls()
+    - id: buffer-duty
+      file: src/libcamera/request.cpp
+      start: A reference to the buffer is stored in the request.
+      end: callback is called.
+      scope:
+        start: \brief Add a FrameBuffer with its associated Stream to the Request
+        end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: complete-access
+      file: src/libcamera/pipeline_handler.cpp
+      start: The request is no longer managed by the pipeline
+      end: once this function returns.
+      scope:
+        start: \brief Signal request completion
+        end: \brief Cancel request and signal its completion
+    - id: cancel-rules
+      file: src/libcamera/pipeline_handler.cpp
+      start: This function cancels and completes the request.
+      end: completeRequest() apply.
+      scope:
+        start: \brief Cancel request and signal its completion
+        end: \brief Retrieve the absolute path to a platform configuration file
     covers:
     - resources
     parts:
@@ -3728,52 +3966,147 @@ sections:
         - - createRequest
         - - 호출자
     - id: buffer-validity
-      question: addBuffer로 추가한 버퍼를 호출자가 언제까지 유효하게 유지해야 하는지 설명하세요. completeBuffer 호출 시점과 혼동하지 마세요.
+      question: addBuffer가 저장하는 버퍼 참조와 완료 콜백까지 호출자가 지켜야 하는 유효 기간만 설명하세요.
       sources:
+      - buffer-duty
       - buffer
       answer_contract:
         basis: contract
         required_terms:
         - - 버퍼
         - - 콜백
-    - id: reset
-      question: reuse 구현의 RequestPending·controls·metadata 초기화와 ReuseBuffers 유무에 따른 버퍼 맵 처리를 설명하세요.
+    - id: fence-transfer
+      question: addBuffer가 성공하면 유효한 Fence의 소유권은 어느 객체로 이동합니까? 성공 경로만 설명하세요.
       sources:
-      - reuse
+      - fence-move
       answer_contract:
-        basis: implementation
+        basis: description
         required_terms:
-        - - RequestPending
-        - - controls_
-        - - metadata_
-        - - ReuseBuffers
-    - id: reuse-fences
-      question: ReuseBuffers의 버퍼 재사용 의미와 펜스를 사용하는 호출자가 지켜야 하는 주의만 설명하세요.
+        - - addBuffer
+        - - Fence
+          - 펜스
+        - - 버퍼
+          - buffer
+    - id: fence-failure
+      question: addBuffer가 실패하면 전달받은 fence의 상태를 어떻게 남깁니까? 실패 경로만 설명하세요.
       sources:
-      - reuse-flags
+      - fence-move
       answer_contract:
-        basis: contract
+        basis: description
         required_terms:
-        - - ReuseBuffers
-        - - 펜스
-    - id: fence
-      question: addBuffer 성공 때의 펜스 소유권 이동과 펜스 미신호로 요청이 타임아웃을 맞은 뒤 버퍼 재사용 전 필요한 회수 절차를 구분하세요.
+        - - 실패
+        - - 변경
+          - 유지
+          - 그대로
+    - id: fence-timeout
+      question: 펜스 신호를 받지 못했을 때 타임아웃으로 실패하는 대상과, 버퍼에 펜스가 남는지를 설명하세요.
       sources:
-      - buffer
+      - fence-expiry
       answer_contract:
         basis: description
         required_terms:
         - - 요청
-        - - 펜스
-        - - releaseFence
-    - id: handler-access
-      question: completeRequest와 cancelRequest가 반환한 뒤 파이프라인 핸들러가 요청에 접근할 수 있는지에 대한 계약을 설명하세요.
+        - - 타임아웃
+    - id: release-fence
+      question: 타임아웃 뒤 다른 요청에서 버퍼를 재사용하기 전에 호출자가 펜스를 회수할 때 쓰는 함수만 설명하세요.
       sources:
+      - fence-expiry
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - releaseFence
+    - id: reset-buffer-link
+      question: ReuseBuffers 분기에서 기존 버퍼를 현재 요청에 연결하는 호출만 설명하세요.
+      sources:
+      - reuse-buffers
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ReuseBuffers
+        - - setRequest
+    - id: reset-pending
+      question: ReuseBuffers 분기에서 기존 버퍼를 pending_에 추가하는 동작만 설명하세요.
+      sources:
+      - reuse-buffers
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - pending_
+    - id: reset-buffer-clear
+      question: ReuseBuffers가 없는 else 분기에서 bufferMap_에 수행하는 동작만 설명하세요.
+      sources:
+      - reuse-buffers
+      - reuse
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - bufferMap_
+    - id: reset
+      question: Request::reuse의 이 대입문이 status_에 저장하는 상태만 설명하세요.
+      sources:
+      - reuse-status
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - RequestPending
+    - id: reset-controls
+      question: Request::reuse의 이 controls_ 호출이 수행하는 초기화만 설명하세요.
+      sources:
+      - reuse-controls
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - controls_
+    - id: reset-metadata
+      question: Request::reuse의 이 metadata_ 호출이 수행하는 초기화만 설명하세요.
+      sources:
+      - reuse-metadata
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - metadata_
+    - id: reuse-fences
+      question: ReuseBuffers 플래그의 기존 버퍼 재사용 의미만 설명하세요. 펜스 권고는 다음 질문에서 다룹니다.
+      sources:
+      - reuse-flags
+      answer_contract:
+        basis: description
+        required_terms:
+        - - ReuseBuffers
+        - - 버퍼
+    - id: fence-reuse-caution
+      question: ReuseBuffers가 펜스를 재사용하는지와, 펜스를 쓸 때 이 플래그를 피하라는 should not 권고를 원문의 강도로 설명하세요.
+      sources:
+      - reuse-flags
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 펜스
+          - Fence
+          - fence
+        - - 권고
+          - 권장
+        reject_patterns:
+        - pattern: 해서는\s*안|사용하면\s*안|반드시
+          message: 원문의 should not 권고를 must not 의무로 강화하지 마세요.
+    - id: handler-access
+      question: completeRequest가 반환한 뒤 파이프라인 핸들러의 요청 접근 금지 계약만 설명하세요.
+      sources:
+      - complete-access
       - completion
       answer_contract:
         basis: contract
         required_terms:
         - - completeRequest
+        - - 접근
+    - id: cancel-access
+      question: cancelRequest가 참조하는 completeRequest 규칙을 적용하면 반환 후 요청 접근에 어떤 의무가 있습니까? 두 근거를 함께 사용하세요.
+      sources:
+      - cancel-rules
+      - complete-access
+      answer_contract:
+        basis: contract
+        required_terms:
         - - cancelRequest
         - - 접근
   - id: diagnosis
@@ -3799,6 +4132,29 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
       end: \brief Retrieve the absolute path to a platform configuration file
+    - id: prepared-branch
+      file: src/libcamera/pipeline_handler.cpp
+      start: Request *request = data->waitingRequests_.front();
+      end: break;
+      scope:
+        start: void PipelineHandler::doQueueRequests(Camera *camera)
+        end: '
+
+          }'
+    - id: cancelled-branch
+      file: src/libcamera/pipeline_handler.cpp
+      start: if (request->_d()->cancelled_) {
+      end: return;
+      scope: &id017
+        start: void PipelineHandler::doQueueRequest(Request *request)
+        end: '
+
+          }'
+    - id: device-result-branch
+      file: src/libcamera/pipeline_handler.cpp
+      start: int ret = queueRequestDevice(camera, request);
+      end: cancelRequest(request);
+      scope: *id017
     covers:
     - diagnosis
     parts:
@@ -3836,7 +4192,7 @@ sections:
       question: 장치 한도가 남으면 doQueueRequests의 선두 prepared_ 값과 준비되지 않았을 때의 break를 관찰하는 다음 단계를 설명하세요. 아직 요청을 꺼냈다고 쓰지
         마세요.
       sources:
-      - device-queue
+      - prepared-branch
       answer_contract:
         basis: investigation
         required_terms:
@@ -3848,7 +4204,7 @@ sections:
       question: doQueueRequest의 cancelled_ 값과 true 분기에서 completeRequest 후 반환하는 경로를 관찰하는 계획을 설명하세요. 취소 원인이 언제나 사용자의
         의도라고 추정하지 마세요.
       sources:
-      - device-queue
+      - cancelled-branch
       answer_contract:
         basis: investigation
         required_terms:
@@ -3857,7 +4213,7 @@ sections:
     - id: device-result
       question: 취소되지 않은 요청의 queueRequestDevice 반환값과 오류 시 cancelRequest 호출을 관찰할 위치를 설명하세요.
       sources:
-      - device-queue
+      - device-result-branch
       answer_contract:
         basis: investigation
         required_terms:
@@ -3909,6 +4265,31 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Notify camera disconnection
       end: int Camera::exportFrameBuffers(Stream *stream,
+    - id: stopping-call
+      file: src/libcamera/camera.cpp
+      start: d->setState(Private::CameraStopping);
+      end: this);
+      scope:
+        start: int Camera::stop()
+        end: '
+
+          }'
+    - id: stop-assertions
+      file: src/libcamera/pipeline_handler.cpp
+      start: ASSERT(data->queuedRequests_.empty());
+      end: ASSERT(data->waitingRequests_.empty());
+      scope:
+        start: void PipelineHandler::stop(Camera *camera)
+        end: '
+
+          }'
+    - id: disconnect-todo
+      file: src/libcamera/camera.cpp
+      start: \todo Deal with pending requests if the camera is disconnected in a
+      end: running state.
+      scope:
+        start: \brief Notify camera disconnection
+        end: int Camera::exportFrameBuffers(Stream *stream,
     covers:
     - stopping
     parts:
@@ -3922,15 +4303,22 @@ sections:
         - - stop
         - - '0'
     - id: blocking
-      question: 실행 중 Camera::stop의 Stopping 전환과 PipelineHandler::stop에 대한 Blocking 호출의 진입·복귀를 어디서 관찰할지 설명하세요. Blocking을
-        모든 콜백의 스레드 안전성 보장으로 바꾸지 마세요.
+      question: 실행 중 stop의 setState가 전달하는 상태 값을 관찰하는 지점만 설명하세요.
       sources:
-      - stop
+      - stopping-call
       answer_contract:
         basis: investigation
         required_terms:
-        - - Stopping
-        - - Blocking
+        - - CameraStopping
+          - Stopping
+    - id: blocking-call
+      question: PipelineHandler::stop에 대한 ConnectionTypeBlocking 호출의 진입과 복귀를 관찰하는 지점만 설명하세요.
+      sources:
+      - stopping-call
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - ConnectionTypeBlocking
     - id: device-entry
       question: PipelineHandler::stop이 waitingRequests_를 분리하는 지점과 stopDevice 진입·복귀를 비교하여 장치 내부에서 멎은 경우와 반환한 경우를
         나누는 계획을 설명하세요.
@@ -3942,14 +4330,20 @@ sections:
         - - waitingRequests_
         - - stopDevice
     - id: pending
-      question: stopDevice 복귀 후 대기 요청의 cancel·doQueueRequest 처리와 queuedRequests_·waitingRequests_ ASSERT를 관찰하는 계획을
-        설명하세요. ASSERT를 미래 실행의 보장으로 쓰지 마세요.
+      question: stopDevice 복귀 후 대기 요청의 cancel·doQueueRequest 처리 지점을 관찰하는 계획만 설명하세요.
       sources:
       - device-stop
       answer_contract:
         basis: investigation
         required_terms:
         - - doQueueRequest
+    - id: queue-assertions
+      question: stop의 두 ASSERT가 검사하는 큐와 실제 검사 지점을 관찰하는 계획을 설명하세요. 미래 실행의 보장으로 쓰지 마세요.
+      sources:
+      - stop-assertions
+      answer_contract:
+        basis: investigation
+        required_terms:
         - - queuedRequests_
         - - waitingRequests_
         - - ASSERT
@@ -3963,8 +4357,7 @@ sections:
         - - completeRequest
         - - CameraManager
     - id: disconnect
-      question: disconnect의 내부 처리·disconnected 신호와 남은 요청 처리 TODO를 설명하세요. 연결 해제의 TODO를 stop의 완료 보장이나 기존 요청의 실제 취소로
-        바꾸지 마세요.
+      question: disconnect가 내부 처리를 호출하고 disconnected 신호를 발행하는 두 동작만 설명하세요.
       sources:
       - notification
       answer_contract:
@@ -3972,7 +4365,15 @@ sections:
         required_terms:
         - - disconnect
         - - disconnected
+    - id: disconnect-todo
+      question: 이 TODO가 남겨 둔 요청 처리 대상과 발생 조건을 설명하세요. 이미 실행된 취소·완료 동작으로 쓰지 마세요.
+      sources:
+      - disconnect-todo
+      answer_contract:
+        basis: description
+        required_terms:
         - - TODO
+        - - 요청
   - id: review
     title: 변경 검토와 실행 확인
     question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기 요청 처리를 정리하세요. 정상 반복·fence 대기·장치

@@ -96,3 +96,15 @@ def test_actual_qwen_postincrement_error_is_rejected_by_project_contract():
     for text in ['sequence_에는 requestSequence_의 증가 전 값을 저장하고 카운터는 후위 증가합니다.',
                  'requestSequence_의 이전 값이 sequence_에 대입된 뒤 requestSequence_가 증가합니다.']:
         check(rule, [statement(text)], 'sequence')
+
+
+def test_reuse_fence_recommendation_is_not_strengthened_to_must_not():
+    root = Path(__file__).resolve().parents[1]
+    data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
+    topic = next(t for s in data['sections'] if s['id'] == 'camera-model'
+                 for t in s['design_topics'] if t['id'] == 'lifetime')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'fence-reuse-caution')
+    assert rule['basis'] == 'description'
+    check(rule, [statement('펜스는 재사용되지 않으며, 펜스를 쓰는 경우 이 플래그를 피하도록 권고합니다.')], 'fence')
+    with pytest.raises(ValueError):
+        check(rule, [statement('펜스를 사용하는 경우 이 플래그 사용은 권고되지 않으며 사용해서는 안 됩니다.')], 'fence')
