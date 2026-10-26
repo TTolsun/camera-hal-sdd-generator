@@ -72,6 +72,10 @@ def check(rule, statements, label):
         for st, prose in zip(statements, texts):
             if st.get('kind', 'behavior') == 'behavior' and not OBLIGATION.search(prose):
                 errors.append('구현 의무는 해야 합니다/해서는 안 됩니다로 표현하세요. 관측된 구현이나 시험 보장으로 바꾸지 마세요.')
+    if rule['basis'] == 'investigation':
+        for st, prose in zip(statements, texts):
+            if 'quote_id' in prose and 'quote_id' not in st.get('quote', ''):
+                errors.append('조사 계획 본문에는 생성기 검증 키 quote_id를 쓰지 마세요. 소스의 관측 지점과 제안할 기록 항목을 설명하세요.')
     for item in rule.get('reject_patterns', []):
         if re.search(item['pattern'], text):
             errors.append(item['message'])

@@ -4933,7 +4933,7 @@ sections:
         - - status
         - - 기록
     - id: stop-record
-      question: 이 호출지점에 도달했는지 조사 기록에 남길 함수 식별자 항목을 제안하세요. 함수 진입·복귀를 보장한다고 쓰지 마세요.
+      question: 제안하는 조사 계획으로, stopDevice 호출지점의 도달 여부를 기록 항목에 넣으세요. 기존 기록 기능의 유무를 평가하는 질문이 아닙니다.
       sources:
       - record-device
       max_statements: 1
@@ -4943,7 +4943,7 @@ sections:
         - - stopDevice
         - - 기록
     - id: stop-queued-record
-      question: 이 ASSERT가 검사하는 큐를 식별하고 검사 결과를 소스 기반 조사 기록 항목으로 제안하세요.
+      question: 제안하는 조사 계획으로, 이 ASSERT가 검사하는 큐의 식과 비어 있는지 여부를 기록 항목에 넣으세요. API 보장이나 기존 기록 기능의 유무를 평가하는 질문이 아닙니다.
       sources:
       - record-queued
       max_statements: 1
@@ -4953,7 +4953,7 @@ sections:
         - - queuedRequests_
         - - 기록
     - id: stop-waiting-record
-      question: 이 ASSERT가 검사하는 큐를 식별하고 검사 결과를 소스 기반 조사 기록 항목으로 제안하세요.
+      question: 제안하는 조사 계획으로, 이 ASSERT가 검사하는 큐의 식과 비어 있는지 여부를 기록 항목에 넣으세요. API 보장이나 기존 기록 기능의 유무를 평가하는 질문이 아닙니다.
       sources:
       - record-waiting
       max_statements: 1

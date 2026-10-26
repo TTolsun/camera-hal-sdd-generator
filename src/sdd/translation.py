@@ -175,7 +175,10 @@ def _batched(cfg, catalog, agent, size):
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last_error = str(exc)
-                feedback = '\nCorrect the previous output: ' + last_error
+                feedback = ('\nCorrect the previous output: ' + last_error +
+                            '\nEvery placeholder is required content, including a leading function subject. '
+                            'Keep that subject in its own English clause even if omitting it sounds fluent. '
+                            'Before returning, compare the placeholder list in each source and translation.')
         else:
             raise ValueError('Translation batch failed validation at offset ' + str(offset) + ': ' + last_error)
         offset += len(batch)

@@ -134,3 +134,11 @@ def test_reader_observed_state_and_void_owner_errors_are_rejected():
     topic = next(t for t in section['design_topics'] if t['id']=='journey')
     with pytest.raises(ValueError, match='void'):
         check(topic['answer_contract'], [statement('PipelineHandler::doQueueRequest() 함수는 성공 시 0을 반환합니다.')], 'journey')
+
+
+def test_investigation_rejects_generator_verdict_in_reader_prose():
+    rule = dict(basis='investigation')
+    with pytest.raises(ValueError, match='quote_id'):
+        check(rule, [statement('quote_id 기록 항목은 근거 매핑이 없어 지지하지 않습니다.')], 'record')
+    check(rule, [dict(statement('quote_id 값을 조사 기록 항목으로 제안합니다.'),
+                     quote='int quote_id = 0;')], 'record')
