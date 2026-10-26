@@ -127,6 +127,10 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: Keeping track of queued requests ensures automatic completion of all requests
       end: signalled by the pipeline handler using the completeRequest() function.
+    - id: notification-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: Request completion shall be
+      end: signalled by the pipeline handler using the completeRequest() function.
     parts:
     - id: queue
       question: 공통 PipelineHandler::queueRequest가 요청을 기다렸다가 전달하는 순서와 maxQueuedRequestsDevice_ 한도는 무엇입니까? 대기 큐 관리의
@@ -166,9 +170,9 @@ sections:
         - pattern: 호출자는.{0,40}추적
           message: 요청 추적은 공통 함수의 처리입니다. 호출자 의무로 바꾸지 마세요.
     - id: notification
-      question: 파이프라인 핸들러가 completeRequest()로 완료를 통지해야 하는 의무만 한 문장으로 설명하세요. stop()의 호출 순서나 자동 완료 후 추가 통지를 추정하지 마세요.
+      question: 이 Request completion 계약에서 완료 통지를 수행할 주체와 사용해야 하는 함수만 설명하세요.
       sources:
-      - completion
+      - notification-contract
       answer_contract:
         basis: contract
         required_terms:
@@ -269,11 +273,12 @@ sections:
       end: configuration is empty.
     - id: adjusted
       file: src/libcamera/camera.cpp
-      start: '\retval CameraConfiguration::Adjusted '
+      start: The caller shall check the
       end: configuration carefully.
       scope:
-        start: \fn CameraConfiguration::validate()
-        end: '*/'
+        start: "\\retval CameraConfiguration::Adjusted The configuration has been adjusted\n * and is now valid.\
+          \ Parameters may have changed for any stream, and stream"
+        end: configuration carefully.
     - id: valid
       file: src/libcamera/camera.cpp
       start: \fn CameraConfiguration::validate()
@@ -685,8 +690,8 @@ sections:
     - id: generate-context
       file: src/libcamera/pipeline_handler.cpp
       start: \context This function may be called from any thread and shall be
-      end: "handler.\n *"
-      scope:
+      end: \threadsafe.
+      scope: &id004
         start: \fn PipelineHandler::generateConfiguration()
         end: '*/'
     - *id002
@@ -705,6 +710,11 @@ sections:
       scope:
         start: \fn PipelineHandler::configure()
         end: '*/'
+    - id: generate-state
+      file: src/libcamera/pipeline_handler.cpp
+      start: It shall not modify the state
+      end: handler.
+      scope: *id004
     parts:
     - id: generate
       question: generateConfiguration 호출자가 roles에 채워야 하는 내용을 한 문장으로 설명하세요.
@@ -740,7 +750,16 @@ sections:
         - - 'null'
           - nullptr
     - id: generate-context
-      question: generateConfiguration의 호출 가능 스레드 범위와 함수에 요구되는 스레드 안전성을 함께 한 문장으로 설명하세요.
+      question: generateConfiguration은 어떤 스레드에서 호출할 수 있습니까? 호출 가능 범위만 설명하세요.
+      sources:
+      - generate-context
+      answer_contract:
+        basis: description
+        required_terms:
+        - - generateConfiguration
+        - - 스레드
+    - id: generate-safety
+      question: generateConfiguration 구현에 요구되는 스레드 안전성 계약만 설명하세요. 호출 가능 범위나 카메라 상태 변경 금지로 대신하지 마세요.
       sources:
       - generate-context
       answer_contract:
@@ -752,7 +771,7 @@ sections:
     - id: generate-state
       question: generateConfiguration 구현자는 파이프라인 핸들러 내의 camera 상태를 변경할 수 있습니까? 해당 의무를 함수 이름과 함께 한 문장으로 설명하세요.
       sources:
-      - generate-context
+      - generate-state
       answer_contract:
         basis: contract
         required_terms:
@@ -932,19 +951,19 @@ sections:
       file: include/libcamera/internal/ipa_manager.h
       start: IPAModule *m = module(
       end: maxVersion);
-      scope: &id004
+      scope: &id005
         start: template<typename T>
         end: "return proxy;\n\t}"
     - id: module-missing
       file: include/libcamera/internal/ipa_manager.h
       start: IPAModule *m = module(
       end: return nullptr;
-      scope: *id004
+      scope: *id005
     - id: proxy-result
       file: include/libcamera/internal/ipa_manager.h
       start: if (!proxy->isValid()) {
       end: return proxy;
-      scope: *id004
+      scope: *id005
     - id: module-lookup
       file: src/libcamera/ipa_manager.cpp
       start: \brief Retrieve an IPA module that matches a given pipeline handler
@@ -1143,14 +1162,14 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: This function ensures that requests will be returned to the application in
       end: without any ordering constraint.
-      scope: &id005
+      scope: &id006
         start: \brief Signal request completion
         end: void PipelineHandler::completeRequest
     - id: completion-thread
       file: src/libcamera/pipeline_handler.cpp
       start: \context This function shall be called from the CameraManager thread.
       end: '*/'
-      scope: *id005
+      scope: *id006
     parts:
     - id: lifetime
       question: completeRequest 반환 뒤 요청 접근에 관한 파이프라인 구현자의 금지 의무를 설명하세요. 애플리케이션 소유권을 추정하지 마세요. 질문의 모든 항목을 한 문장으로
@@ -1247,7 +1266,7 @@ sections:
     - id: configuration
       file: src/libcamera/pipeline_handler.cpp
       start: \fn PipelineHandler::generateConfiguration()
-      end: \fn PipelineHandler::exportFrameBuffers()
+      end: negative error code otherwise
     covers:
     - configuration
   - id: queue
@@ -1280,6 +1299,47 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: void PipelineHandler::doQueueRequests(Camera *camera)
       end: \fn PipelineHandler::queueRequestDevice()
+    - id: tracking-call
+      file: src/libcamera/pipeline_handler.cpp
+      start: data->queuedRequests_.push_back
+      end: (request);
+      scope: &id007
+        start: void PipelineHandler::doQueueRequest(Request *request)
+        end: '
+
+          }'
+    - id: sequence-assignment
+      file: src/libcamera/pipeline_handler.cpp
+      start: request->_d()->sequence_ =
+      end: requestSequence_++;
+      scope: *id007
+    - id: waiting-call
+      file: src/libcamera/pipeline_handler.cpp
+      start: data->waitingRequests_.push
+      end: (request);
+      scope:
+        start: void PipelineHandler::queueRequest(Request *request)
+        end: '
+
+          }'
+    - id: capacity-branch
+      file: src/libcamera/pipeline_handler.cpp
+      start: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
+      end: break;
+      scope:
+        start: void PipelineHandler::doQueueRequests(Camera *camera)
+        end: '
+
+          }'
+    - id: submit-result
+      file: src/libcamera/pipeline_handler.cpp
+      start: int ret = queueRequestDevice(camera, request);
+      end: cancelRequest(request);
+      scope:
+        start: void PipelineHandler::doQueueRequest(Request *request)
+        end: '
+
+          }'
     covers:
     - queue
     parts:
@@ -1303,7 +1363,7 @@ sections:
     - id: waiting
       question: queueRequest가 요청을 추가하는 내부 목록만 설명하세요. prepare의 인자는 다음 질문에서 다룹니다.
       sources:
-      - waiting-code
+      - waiting-call
       answer_contract:
         basis: implementation
         required_terms:
@@ -1332,7 +1392,7 @@ sections:
     - id: capacity
       question: doQueueRequests가 장치 큐 크기를 어떤 한도와 비교하며 한도에 도달하면 반복을 어떻게 처리합니까? 이 분기만 설명하세요.
       sources:
-      - iterate-code
+      - capacity-branch
       answer_contract:
         basis: implementation
         required_terms:
@@ -1353,22 +1413,31 @@ sections:
         - - 중단
           - break
     - id: submit-tracking
-      question: doQueueRequest가 queuedRequests_에 요청을 추가하는 동작만 설명하세요. 이 발췌로 컨테이너의 실제 C++ 타입을 추정하지 마세요.
+      question: doQueueRequest의 이 원문 호출에서 어느 컨테이너에 무엇을 추가합니까? 접근자나 컨테이너 타입은 추정하지 마세요.
       sources:
-      - submit-code
+      - tracking-call
       answer_contract:
         basis: implementation
         required_terms:
         - - queuedRequests_
     - id: sequence
-      question: doQueueRequest의 sequence_ 대입에서 요청에 저장되는 값과 requestSequence_ 증가 방식만 설명하세요.
+      question: 후위 ++ 연산자를 사용하는 이 대입문에서 sequence_에 저장되는 값은 requestSequence_ 증가 전과 후 중 어느 시점의 값입니까? 대입값과 후위 증가 순서만
+        설명하세요.
       sources:
-      - submit-code
+      - sequence-assignment
       answer_contract:
         basis: implementation
         required_terms:
         - - sequence_
         - - requestSequence_
+        - - 증가 전
+          - 이전 값
+          - 이전값
+          - 기존 값
+          - 기존값
+        reject_patterns:
+        - pattern: 증가(?:된|한)\s*값.{0,80}(?:저장|대입)
+          message: 원문은 후위 증가이므로 sequence_에는 증가 전 값이 대입됩니다. 증가된 값을 저장한다고 쓰지 마세요.
     - id: cancelled
       question: doQueueRequest의 if (request->_d()->cancelled_) 분기가 참이면 어떤 완료 함수를 호출하고 어디서 반환합니까? 이 조건의 본문만 설명하세요.
       sources:
@@ -1381,7 +1450,7 @@ sections:
     - id: device-failure
       question: doQueueRequest에서 취소되지 않은 요청의 장치 제출과 오류 반환 시 처리만 설명하세요.
       sources:
-      - submit-code
+      - submit-result
       answer_contract:
         basis: implementation
         required_terms:
@@ -1421,17 +1490,29 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Cancel request and signal its completion
       end: \brief Retrieve the absolute path to a platform configuration file
+    - id: ordering-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: This function ensures that requests will be returned
+      end: without any ordering constraint.
     covers:
     - completion
     parts:
     - id: buffer
-      question: completeBuffer가 버퍼 추적과 알림을 수행하는 역할, 마지막 버퍼 이후에도 필요한 명시적 요청 완료 호출을 구분하세요.
+      question: completeBuffer가 버퍼 완료 알림과 요청의 내부 버퍼 추적에 수행하는 역할만 설명하세요.
       sources:
       - buffer-contract
       answer_contract:
         basis: description
         required_terms:
         - - completeBuffer
+        - - 버퍼
+    - id: buffer-not-request
+      question: 마지막 버퍼가 끝났을 때 completeBuffer가 요청을 자동 완료하는지와 구현자가 별도로 호출해야 하는 요청 완료 함수만 설명하세요.
+      sources:
+      - buffer-contract
+      answer_contract:
+        basis: contract
+        required_terms:
         - - completeRequest
     - id: lifetime
       question: completeRequest가 반환한 뒤 파이프라인 핸들러가 해당 요청에 접근할 수 있는지에 관한 계약만 설명하세요.
@@ -1443,9 +1524,9 @@ sections:
         - - completeRequest
         - - 접근
     - id: ordering
-      question: completeRequest의 호출 순서와 애플리케이션에 요청을 반환하는 순서는 어떻게 다릅니까? 이 순서 계약만 설명하세요.
+      question: completeRequest가 제출 순서대로 반환하는 대상과 파이프라인 핸들러의 완료 호출 순서 제약을 구분하세요. 코드의 Pending 분기는 이 계약 설명에 섞지 마세요.
       sources:
-      - request-contract
+      - ordering-contract
       answer_contract:
         basis: description
         required_terms:
@@ -1516,13 +1597,20 @@ sections:
     - shutdown
     parts:
     - id: detach
-      question: stop이 waitingRequests_를 분리한 뒤 stopDevice를 호출하는 순서와 분리하는 이유를 소스의 주석 범위에서 설명하세요.
+      question: PipelineHandler::stop에서 waitingRequests_를 별도 목록으로 분리하는 동작과 주석에 적힌 분리 이유만 설명하세요.
       sources:
       - stop
       answer_contract:
         basis: implementation
         required_terms:
         - - waitingRequests_
+    - id: device-call
+      question: waitingRequests_를 분리한 다음 호출하는 장치 정지 함수의 이름만 설명하세요.
+      sources:
+      - stop
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - stopDevice
     - id: pending
       question: stopDevice가 반환한 뒤 분리해 둔 대기 요청 각각을 취소하고 doQueueRequest로 처리하는 순서만 설명하세요. 하드웨어에 재제출한다고 쓰지 마세요.

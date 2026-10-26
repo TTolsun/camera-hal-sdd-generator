@@ -82,3 +82,17 @@ def test_part_coverage_and_source_scope_are_revalidated():
     wrong=copy.deepcopy(answers);wrong[1]['part_id']={}
     with pytest.raises(ValueError, match='id'):
         validate(topic,wrong)
+
+
+def test_actual_qwen_postincrement_error_is_rejected_by_project_contract():
+    root = Path(__file__).resolve().parents[1]
+    data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
+    topic = next(t for s in data['sections'] if s['id'] == 'pipeline-handler'
+                 for t in s['design_topics'] if t['id'] == 'queue')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'sequence')
+    bad = 'requestSequence_ 값을 증가시키고 그 증가된 값을 sequence_에 저장합니다.'
+    with pytest.raises(ValueError):
+        check(rule, [statement(bad)], 'sequence')
+    for text in ['sequence_에는 requestSequence_의 증가 전 값을 저장하고 카운터는 후위 증가합니다.',
+                 'requestSequence_의 이전 값이 sequence_에 대입된 뒤 requestSequence_가 증가합니다.']:
+        check(rule, [statement(text)], 'sequence')
