@@ -5633,8 +5633,8 @@ sections:
         - pattern: ret\s*(?:<=|==)\s*0|0\s*이하
           message: 실패 조건은 ret < 0이며 0을 실패로 처리하지 않습니다.
     - id: export-failure
-      question: FrameBufferAllocator::allocate에서 exportFrameBuffers의 ret에 따라 buffers_ 항목이 언제 제거되는지 한 문장으로 설명하세요.
-        항목 제거 조건만 다루고 최종 반환은 덧붙이지 마세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
+      question: 값을 반환하는 함수 exportFrameBuffers()와 그 값을 저장하는 변수 ret를 구분하세요. ret가 음수일 때 FrameBufferAllocator::allocate()가
+        buffers_ 항목을 어떻게 처리하는지 한 문장으로 설명하세요. 최종 반환은 덧붙이지 마세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
       sources:
       - allocation-body
       max_statements: 1
