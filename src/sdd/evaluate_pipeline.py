@@ -165,7 +165,8 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
             prior_authorship = verify_calls(model, trial.sdd_dir, previous / 'build/prompts/calls',
                                              provider=trial.agent.kind, model_name=trial.agent.model,
                                              allow_reused=True)
-            for name, destination in [('build/prompts/calls', trial.build_dir / 'prompts/calls')]:
+            for name, destination in [('build/prompts/calls', trial.build_dir / 'prompts/calls'),
+                                      ('build/translation-prompts/calls', trial.build_dir / 'translation-prompts/calls')]:
                 source = previous / name
                 if source.exists():
                     if source.is_symlink() or any(p.is_symlink() for p in source.rglob('*')):
@@ -234,7 +235,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
             from .localization_cli import prepare_catalog
             catalog = out / 'english.json'
             catalog.write_bytes((cfg.root / previous_catalog).read_bytes())
-            return prepare_catalog(trial, catalog, translate=translate)
+            return prepare_catalog(trial, catalog, translate=translate, replay_http=bool(previous))
         if not stage('translation', translation):
             return report
     if not stage('export-site', lambda: export_site(trial, out / 'site')):

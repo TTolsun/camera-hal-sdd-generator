@@ -23,7 +23,7 @@ def diagram_translations(directory):
                 values[source] = translated
     return values
 
-def prepare_catalog(config, destination: Path, *, translate: bool = False) -> dict:
+def prepare_catalog(config, destination: Path, *, translate: bool = False, replay_http: bool = False) -> dict:
     """Prepare through the same path in CLI runs and isolated pipeline trials."""
     import copy
     import tempfile
@@ -48,14 +48,21 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False) -> di
                 units.update(v.strip() for v in [item['term'], item['definition'], *item['names']] if KOREAN.search(v))
     catalog = {'schema': 1, 'review_status': 'human-review-pending', 'pages': pages,
                'strings': {key: declared_labels.get(key, previous.get('strings', {}).get(key, '')) for key in sorted(units)}}
+    translation_agent = None
     if translate:
         from .translation import translate_missing
-        catalog = translate_missing(cfg, catalog)
+        if replay_http:
+            from .llm import Agent
+            from .design_replay import Archive
+            directory = cfg.build_dir / 'translation-prompts'
+            translation_agent = Archive(directory / 'calls', cfg.agent).reviewer(Agent(cfg.agent, directory))
+        catalog = translate_missing(cfg, catalog, translation_agent)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     return {'pages': len(pages), 'strings': len(units),
             'missing_translations': sum(not value for value in catalog['strings'].values()),
-            'human_review': 'pending'}
+            'human_review': 'pending',
+            'replayed_http_calls': getattr(translation_agent, 'replayed_http_calls', 0)}
 
 
 def main() -> None:

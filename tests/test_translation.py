@@ -172,3 +172,12 @@ def test_batch_preserves_binding_obligations_like_single_translation(tmp_cfg):
     agent = Agent()
     translated = translate_missing(tmp_cfg, {'strings': {source: ''}}, agent)
     assert agent.calls == 2 and 'must' in translated['strings'][source]
+
+
+def test_reported_documentation_request_is_not_a_binding_api_obligation():
+    from sdd.translation import _check_obligation
+    source = '{{0}} 주석은 타이밍 정보를 문서화해야 함을 요청합니다.'
+    translated = 'The {{0}} comment requests that timing information be documented.'
+    _check_obligation(source, translated)
+    with pytest.raises(ValueError, match='binding obligation'):
+        _check_obligation(source + ' 호출자는 버퍼를 유지해야 합니다.', translated)

@@ -71,10 +71,13 @@ class Archive:
     def reviewer(self, agent):
         archive = self
         class Reviewer:
+            def __init__(self):
+                self.replayed_http_calls = 0
             def chat(self, system, user, **kwargs):
                 key = sha({'system': system, 'user': user, 'response_schema': kwargs.get('response_schema')})
                 rows = archive.exact.get(key, [])
                 if rows:
+                    self.replayed_http_calls += 1
                     return max(rows, key=lambda row: row['completed_at'])['raw']
                 return agent.chat(system, user, **kwargs)
         return Reviewer()

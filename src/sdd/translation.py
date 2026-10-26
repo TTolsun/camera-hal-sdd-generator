@@ -7,6 +7,9 @@ from .site_localization import KOREAN
 
 
 def _check_obligation(source, text):
+    # Reported requests (e.g. a TODO comment requesting documentation) are
+    # descriptions, not a new unconditional caller/implementer obligation.
+    source = re.sub(r'해야\s*함을\s*요청', '요청', source)
     if re.search(r'해야\s*(?:합니다|한다|함)|해서는\s*안\s*(?:됩니다|된다)', source) and not re.search(
             r'\b(?:must|shall)\b|\b(?:is|are) required to\b', text, re.I):
         raise ValueError('The source states a binding obligation or prohibition. '
@@ -139,8 +142,9 @@ def _batched(cfg, catalog, agent, size):
                 print(f'Translation: {offset + len(batch)}/{len(missing)} strings', flush=True)
                 break
             except (ValueError, TypeError, KeyError) as exc:
+                last_error = str(exc)
                 user += '\nCorrect the previous output: ' + str(exc)
         else:
-            raise ValueError('Translation batch failed validation at offset ' + str(offset))
+            raise ValueError('Translation batch failed validation at offset ' + str(offset) + ': ' + last_error)
         offset += len(batch)
     return {**catalog, 'strings': translated, 'review_status': 'human-review-pending'}
