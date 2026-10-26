@@ -144,6 +144,30 @@
     syncWidth();
   });
   syncWidth();
+
+  // Keep navigation context within this tab, including language switches and history.
+  const scrollKey = `sdd.sidebar.scroll:${storageRoot.pathname}`;
+  function saveSidebarScroll() {
+    if (!desktop.matches) return;
+    try { sessionStorage.setItem(scrollKey, String(sidebar.scrollTop)); }
+    catch (_) { /* Navigation remains usable when session storage is blocked. */ }
+  }
+  function restoreSidebarScroll() {
+    if (!desktop.matches) return;
+    try {
+      const saved = sessionStorage.getItem(scrollKey);
+      if (saved === null) return;
+      const value = Number(saved);
+      // The browser clamps the offset if the new page has a shorter menu.
+      if (Number.isFinite(value) && value >= 0) sidebar.scrollTop = value;
+    } catch (_) { /* Keep the browser's normal position. */ }
+  }
+  sidebar.addEventListener('click', saveSidebarScroll);
+  sidebar.addEventListener('auxclick', saveSidebarScroll);
+  window.addEventListener('pagehide', saveSidebarScroll);
+  window.addEventListener('pageshow', restoreSidebarScroll);
+  desktop.addEventListener('change', restoreSidebarScroll);
+  restoreSidebarScroll();
   document.querySelectorAll('dialog [data-close]').forEach(button => {
     button.addEventListener('click', () => button.closest('dialog').close());
   });
