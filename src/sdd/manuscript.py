@@ -119,7 +119,7 @@ def bare_symbols(line: str, names: set[str]) -> list[str]:
     return [t for t in _IDENTIFIER.findall(outside) if t in names]
 
 
-def lint(body: str, names: set[str] | None = None) -> list[Finding]:
+def lint(body: str, names: set[str] | None = None, *, check_duplicates: bool = True) -> list[Finding]:
     findings: list[Finding] = []
     fenced = False
     fence_line, fence_text = 0, ""
@@ -145,8 +145,9 @@ def lint(body: str, names: set[str] | None = None) -> list[Finding]:
                     "코드 표기 없는 클래스 이름",
                     "클래스 이름은 본문에서도 코드 표기로 감쌉니다: " + ", ".join(f"`{b}`" for b in dict.fromkeys(bare)),
                     i + 1, line.strip()))
-    for line_number, sentence, detail in duplicates.body_findings(body):
-        findings.append(Finding("의미 중복 문장", detail, line_number, sentence))
+    if check_duplicates:
+        for line_number, sentence, detail in duplicates.body_findings(body):
+            findings.append(Finding("의미 중복 문장", detail, line_number, sentence))
     if fenced:
         # 닫히지 않은 펜스는 이후 줄 전체를 검사 불능으로 만들므로 그 자체를 위반으로 잡는다.
         findings.append(Finding("닫히지 않은 코드 펜스",
