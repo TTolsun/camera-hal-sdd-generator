@@ -77,7 +77,7 @@ def verify(root):
     spec = importlib.util.spec_from_file_location('vendor_trial_proof', Path(__file__).with_name('verify_vendor_trial.py'))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    manuscript = module.verify(root/report['candidate_trial'])
+    manuscript = module.verify(root/report['candidate_trial'].replace('\\', '/'))
     return dict(rounds=len(report['rounds']), new_http_receipts=len(actual), http_attempts=report['http_attempts'],
         diagnosed_targets=len(report['targets']), excluded_units=len(report['excluded_units']),
         manuscript=manuscript, semantic_approval=False, human_approval=False)

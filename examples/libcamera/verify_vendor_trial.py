@@ -52,7 +52,7 @@ def verify(root):
     for result in report['results']:
         assert result['automatic_checks'] == 'passed', result
         for item in result['manuscripts']:
-            path = root / item['path']
+            path = root / item['path'].replace('\\', '/')
             assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256']
             match = re.fullmatch(r'---\n(.*?)\n---\n(.*)', path.read_text(encoding='utf-8'), re.S)
             assert match, path

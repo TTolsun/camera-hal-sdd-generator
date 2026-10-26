@@ -292,6 +292,16 @@ def test_repeated_omission_splits_questions_but_preserves_parent_gate(project,tm
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     proof=module.verify(tmp_path/'split')
     assert proof['diagnosed_targets']==1 and proof['manuscript']['answers']==2
+    # Windows-created evidence bundles must also verify on Linux hosts.
+    loop_path=tmp_path/'split/loop.json'
+    portable=json.loads(loop_path.read_text(encoding='utf-8'))
+    portable['candidate_trial']=portable['candidate_trial'].replace('/', '\\')
+    loop_path.write_text(json.dumps(portable),encoding='utf-8')
+    evaluation_path=tmp_path/'split/round-03/trial/evaluation.json'
+    evaluation=json.loads(evaluation_path.read_text(encoding='utf-8'))
+    for item in evaluation['results'][0]['manuscripts']:item['path']=item['path'].replace('/', '\\')
+    evaluation_path.write_text(json.dumps(evaluation),encoding='utf-8')
+    assert module.verify(tmp_path/'split')['manuscript']['answers']==2
     path=next((tmp_path/'split/round-03/diagnosis-prompts/calls').rglob('*.response.txt'))
     path.write_text('{}',encoding='utf-8')
     with pytest.raises(AssertionError):module.verify(tmp_path/'split')
