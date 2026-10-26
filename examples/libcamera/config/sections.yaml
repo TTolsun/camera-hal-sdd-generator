@@ -5514,6 +5514,72 @@ sections:
   - id: reference-lifetime
     question: buffers를 호출할 수 있는 시점과 반환 참조의 유효기간은 무엇입니까?
   design_topics:
+  - id: reference-lifetime
+    title: buffers 반환 참조의 유효기간
+    question: FrameBufferAllocator::buffers의 API 문서에 있는 호출 전제조건과 반환 버퍼의 유효기간을 설명하세요. 성공 결과를 따로 검사하는 절차나 자동 완료 대기를
+      추가하지 마세요.
+    covers:
+    - reference-lifetime
+    sources:
+    - id: buffers-precondition
+      file: src/libcamera/framebuffer_allocator.cpp
+      start: This function shall only be called after successfully allocating buffers for
+      end: \a stream with allocate().
+      scope:
+        start: \brief Retrieve the buffers allocated for a \a stream
+        end: '
+
+          }'
+    - id: buffers-validity
+      file: src/libcamera/framebuffer_allocator.cpp
+      start: The returned buffers are valid until free() is
+      end: called for the same stream or the FrameBufferAllocator instance is destroyed.
+      scope:
+        start: \brief Retrieve the buffers allocated for a \a stream
+        end: '
+
+          }'
+    answer_contract:
+      basis: description
+      required_terms:
+      - - allocate
+      - - 성공
+      - - free
+      - - 같은 스트림
+        - 동일한 스트림
+        - 동일 스트림
+      - - 파괴
+        - 소멸
+      - - 해야
+    parts:
+    - id: successful-allocation
+      question: buffers() 호출 전에 해당 스트림의 allocate() 성공에 관해 어떤 전제조건을 지켜야 합니까? 의무를 해야 합니다 문체로 한 문장으로 설명하세요. 코드 식별자는
+        백틱으로 표시하세요.
+      sources:
+      - buffers-precondition
+      max_statements: 1
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - allocate
+        - - 성공
+        - - 해야
+        - - 스트림
+    - id: valid-until
+      question: buffers()가 반환하는 버퍼가 언제까지 유효한지 한 문장으로 설명하세요. 같은 스트림에 대한 free() 호출 또는 FrameBufferAllocator 인스턴스 파괴라는
+        두 조건을 보존하세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - buffers-validity
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - free
+        - - 같은 스트림
+          - 동일한 스트림
+          - 동일 스트림
+        - - 파괴
+          - 소멸
   - id: allocation-failure
     title: 중복 할당과 내보내기 실패를 구분하기
     design_prompt: standard
@@ -5647,72 +5713,6 @@ sections:
         reject_patterns:
         - pattern: EACCES
           message: 현재 free 구현에는 EACCES를 반환하는 경로가 없습니다.
-  - id: reference-lifetime
-    title: buffers 반환 참조의 유효기간
-    question: FrameBufferAllocator::buffers의 API 문서에 있는 호출 전제조건과 반환 버퍼의 유효기간을 설명하세요. 성공 결과를 따로 검사하는 절차나 자동 완료 대기를
-      추가하지 마세요.
-    covers:
-    - reference-lifetime
-    sources:
-    - id: buffers-precondition
-      file: src/libcamera/framebuffer_allocator.cpp
-      start: This function shall only be called after successfully allocating buffers for
-      end: \a stream with allocate().
-      scope:
-        start: \brief Retrieve the buffers allocated for a \a stream
-        end: '
-
-          }'
-    - id: buffers-validity
-      file: src/libcamera/framebuffer_allocator.cpp
-      start: The returned buffers are valid until free() is
-      end: called for the same stream or the FrameBufferAllocator instance is destroyed.
-      scope:
-        start: \brief Retrieve the buffers allocated for a \a stream
-        end: '
-
-          }'
-    answer_contract:
-      basis: description
-      required_terms:
-      - - allocate
-      - - 성공
-      - - free
-      - - 같은 스트림
-        - 동일한 스트림
-        - 동일 스트림
-      - - 파괴
-        - 소멸
-      - - 해야
-    parts:
-    - id: successful-allocation
-      question: buffers()를 호출할 수 있는 전제조건을 한 문장으로 설명하세요. 해당 스트림의 allocate() 성공 뒤에만 호출해야 한다는 의무를 보존하세요. 별도로 반환값을 검사하는
-        절차를 추정하지 말고 Doxygen 표식은 쓰지 마세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
-      sources:
-      - buffers-precondition
-      max_statements: 1
-      answer_contract:
-        basis: contract
-        required_terms:
-        - - allocate
-        - - 성공
-        - - 해야
-        - - 스트림
-    - id: valid-until
-      question: buffers()가 반환하는 버퍼가 언제까지 유효한지 한 문장으로 설명하세요. 같은 스트림에 대한 free() 호출 또는 FrameBufferAllocator 인스턴스 파괴라는
-        두 조건을 보존하세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
-      sources:
-      - buffers-validity
-      max_statements: 1
-      answer_contract:
-        basis: description
-        required_terms:
-        - - free
-        - - 같은 스트림
-          - 동일한 스트림
-          - 동일 스트림
-        - - 파괴
-          - 소멸
   next:
     title: Camera·Request와 버퍼 참조의 책임
     link: camera-model.md
