@@ -1,7 +1,9 @@
 """Recorded HTTP paragraph selection never rewrites an input or calls a model."""
 import copy
 import hashlib
+import importlib.util
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -10,8 +12,13 @@ from sdd.document_metadata import split_frontmatter
 from sdd.evidence import fingerprint
 from sdd.generate import Generator
 from sdd.generated_design import verify
-from tools.consolidate_recorded_answers import NoCalls, consolidate, statement_sha256
 from test_generated_design import generated
+
+_spec = importlib.util.spec_from_file_location(
+    'consolidate_recorded_answers', Path(__file__).resolve().parents[1] / 'tools/consolidate_recorded_answers.py')
+_tool = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_tool)
+NoCalls, consolidate, statement_sha256 = _tool.NoCalls, _tool.consolidate, _tool.statement_sha256
 
 
 def _write_page(path, meta, body):
