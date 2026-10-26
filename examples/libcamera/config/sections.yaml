@@ -3194,10 +3194,6 @@ sections:
       end: '
 
         }'
-    - id: completion-assert
-      file: src/libcamera/pipeline_handler.cpp
-      start: ASSERT(!req->hasPendingBuffers());
-      end: camera->requestComplete(req);
     covers:
     - journey
     design_prompt: focused
@@ -3277,19 +3273,6 @@ sections:
       sources:
       - buffer-completion
       max_statements: 1
-    - id: completion-assert
-      question: 이 발췌의 ASSERT 식이 검사하는 대상과 뒤이은 pop_front 및 requestComplete 호출을 순서대로
-        설명하세요. 이 발췌 밖의 상태 비교나 매크로 구현의 동작은 추정하지 마세요.
-      sources:
-      - completion-assert
-      max_statements: 1
-      answer_contract:
-        basis: implementation
-        required_terms:
-        - - ASSERT
-        - - hasPendingBuffers
-        - - pop_front
-        - - requestComplete
   - id: resources
     title: 요청·버퍼·fence의 수명
     question: 요청과 버퍼의 소유권·유효 기간, reuse()가 초기화하는 상태·controls·metadata 및 ReuseBuffers
@@ -3605,10 +3588,6 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: /* Make sure no requests are pending. */
       end: data->requestSequence_ = 0;
-    - id: completion-assert
-      file: src/libcamera/pipeline_handler.cpp
-      start: ASSERT(!req->hasPendingBuffers());
-      end: camera->requestComplete(req);
     covers:
     - stopping
     design_prompt: focused
@@ -3643,19 +3622,6 @@ sections:
       sources:
       - notification
       max_statements: 1
-    - id: completion-assert
-      question: 이 발췌의 ASSERT 식이 검사하는 대상과 뒤이은 pop_front 및 requestComplete 호출을 순서대로
-        설명하세요. 이 발췌 밖의 상태 비교나 매크로 구현의 동작은 추정하지 마세요.
-      sources:
-      - completion-assert
-      max_statements: 1
-      answer_contract:
-        basis: implementation
-        required_terms:
-        - - ASSERT
-        - - hasPendingBuffers
-        - - pop_front
-        - - requestComplete
     - id: stop-cancel
       question: 분리한 waitingRequests 큐의 각 요청을 꺼낸 뒤 호출하는 cancel과 doQueueRequest의 순서
         및 주석의 이유를 설명하세요.
@@ -3702,18 +3668,10 @@ sections:
       end: '
 
         }'
-    - id: stop-cancel
-      file: src/libcamera/pipeline_handler.cpp
-      start: while (!waitingRequests.empty()) {
-      end: "\n\t}"
     - id: stop-check
       file: src/libcamera/pipeline_handler.cpp
       start: /* Make sure no requests are pending. */
       end: data->requestSequence_ = 0;
-    - id: completion-assert
-      file: src/libcamera/pipeline_handler.cpp
-      start: ASSERT(!req->hasPendingBuffers());
-      end: camera->requestComplete(req);
     covers:
     - review
     design_prompt: focused
@@ -3753,25 +3711,6 @@ sections:
         반환값 검사 의무를 추가하지 마세요.
       sources:
       - buffer-completion
-      max_statements: 1
-    - id: completion-assert
-      question: 이 발췌의 ASSERT 식이 검사하는 대상과 뒤이은 pop_front 및 requestComplete 호출을 순서대로
-        설명하세요. 이 발췌 밖의 상태 비교나 매크로 구현의 동작은 추정하지 마세요.
-      sources:
-      - completion-assert
-      max_statements: 1
-      answer_contract:
-        basis: implementation
-        required_terms:
-        - - ASSERT
-        - - hasPendingBuffers
-        - - pop_front
-        - - requestComplete
-    - id: stop-cancel
-      question: 분리한 waitingRequests 큐의 각 요청을 꺼낸 뒤 호출하는 cancel과 doQueueRequest의 순서
-        및 주석의 이유를 설명하세요.
-      sources:
-      - stop-cancel
       max_statements: 1
     - id: stop-check
       question: 이 발췌에서 ASSERT로 확인하는 두 큐와 requestSequence_ 대입값을 설명하세요. 해당 ASSERT를 stopDevice
