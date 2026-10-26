@@ -776,9 +776,13 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
     section['design_topics'] = []
     section['design_requirements'] = []
     for aspect, question in PROFILES[profile].items():
-        section['design_topics'].append({**template, 'id': aspect, 'covers': [aspect]})
+        section['design_topics'].append({**copy.deepcopy(template), 'id': aspect, 'covers': [aspect]})
         section['design_requirements'].append(dict(id=aspect, question=question, aspects=[aspect]))
-        model.evidence[f'device/{aspect}/stop'] = copy.deepcopy(model.evidence['device/stop/stop'])
+        # 주제마다 다른 발췌를 근거로 삼아야 같은 근거의 중복 설명으로 반려되지 않는다.
+        record = copy.deepcopy(model.evidence['device/stop/stop'])
+        record['text'] = record['text'] + f' /* {aspect} */'
+        record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+        model.evidence[f'device/{aspect}/stop'] = record
     save()
 
     class ProfileAgent:
@@ -791,6 +795,7 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
             statement = copy.deepcopy(base_agent.statement)
             statement_schema = kw['response_schema']['properties']['statements']['items']
             statement['covers'] = statement_schema['properties']['covers']['items']['enum']
+            statement['quote'] = statement['quote'] + f' /* {statement["covers"][0]} */'
             if len(self.calls) == 1:
                 statement['text'] = '요청을 취소합니다. ' * 80
             return json.dumps({'statements': [statement]}, ensure_ascii=False)
@@ -949,6 +954,42 @@ def test_cli_selection_invalidates_topic_reuse(tmp_cfg, generated, selection):
         tmp_cfg.agent.args = ['--provider', 'other']
     Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
     assert len(agent.calls) == 1
+
+
+def test_A1_같은_근거를_되풀이한_답변은_재요청_사유와_함께_반려한다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='first', question='종료 시 호출 함수는 무엇입니까?', sources=['stop']),
+                      dict(id='second', question='종료 진입점에서 확인할 책임은 무엇입니까?', sources=['stop'])]
+    save()
+    distinct = '`stop()`의 본문에는 `cancelPending()`을 호출하는 문장 한 줄만 있습니다.'
+
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            if len(self.calls) == 3:
+                statement['text'] = distinct
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+
+    agent = Agent()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert len(agent.calls) == 3
+    assert '[의미 중복]' in agent.calls[2] and '[의미 중복]' not in agent.calls[1]
+    body = path.read_text(encoding='utf-8').split('\n---\n', 1)[1]
+    assert body.count('종료 시 대기 중인 요청을 취소하는 함수를 호출합니다') == 1 and distinct in body
+
+
+def test_A1_다시_써도_되풀이하면_생성을_실패시키고_기존_원고를_보존한다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='first', question='종료 시 호출 함수는 무엇입니까?', sources=['stop']),
+                      dict(id='second', question='종료 진입점에서 확인할 책임은 무엇입니까?', sources=['stop'])]
+    save()
+    with pytest.raises(ValueError, match='의미 중복'):
+        Generator(tmp_cfg, model, base_agent).run()
+    assert not (tmp_cfg.sdd_dir / 'device.md').exists()
 
 
 def test_source_member_underscores_render_verbatim_without_rewriting_model_text(tmp_cfg, generated):

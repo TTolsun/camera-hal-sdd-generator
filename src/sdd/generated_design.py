@@ -11,6 +11,7 @@ import json
 import re
 
 from .evidence import fingerprint, topic_blocks, contract_text
+from . import duplicates
 from .llm import SCHEMA_KINDS
 from .manuscript import lint, describe
 from .semantic import review as semantic_review, only_uncertainty, known_names
@@ -191,6 +192,9 @@ def materialize(model, section, answers):
             record = model.evidence[key]
             source['sha256'] = record['sha256']
             pinned.evidence[key] = {**record, 'selector': copy.deepcopy(source)}
+    repeated = duplicates.statement_findings(model, section['id'], {t['id']: answers[t['id']] for t in section['design_topics']})
+    if repeated:
+        raise ValueError(' / '.join(repeated))
     return pinned, resolved
 
 
@@ -384,6 +388,8 @@ def _prepare_generation(cfg, model, section, previous):
         if topic_policy != prompt_policy:
             inputs[topic['id']] = topic_inputs(model, section, topic_policy + json.dumps(policy))[topic['id']]
     answers, origins = reusable(model, section, previous, inputs, _validate_retained)
+    for tid in duplicates.repeated_topics(model, section, answers):
+        answers.pop(tid), origins.pop(tid, None)
     return topic_prompts, policy, inputs, answers, origins
 
 
@@ -465,8 +471,15 @@ def _unit_tag(section, topic):
 
 
 def _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages, tag,
-                            grounding, source_files, scopes, context_records, *, reviewer=None):
+                            grounding, source_files, scopes, context_records, *, reviewer=None, prior_answers=None):
     statements = decode_unit(model, section, topic, raw, sources, passages)
+    if prior_answers is not None:
+        prior = {tid: list(values) for tid, values in prior_answers.items()}
+        repeated = duplicates.statement_findings(
+            model, section['id'], {**prior, topic['id']: prior.get(topic['id'], []) + statements},
+            only_after={**{tid: len(v) for tid, v in prior.items()}, topic['id']: len(prior.get(topic['id'], []))})
+        if repeated:
+            raise ValueError(' / '.join(repeated))
     if grounding:
         from .grounding import review as check_grounding
         # The existing grounding consumer needs only configuration and chat.
@@ -481,7 +494,7 @@ class _UnitRejected(ValueError):
     """Exhausted response validation, eligible for all-design-units collection."""
 
 
-def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive):
+def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive, answers):
     focused_system, system, unit_policy = prompt
     sources, source_files, context_records, scopes, passages, base_user = _unit_request(
         model, section, topic, focused_system)
@@ -492,7 +505,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive)
             try:
                 statements = _validate_unit_response(cfg, model, agent,
                     section, topic, record['raw'], sources, passages, tag + '_replay',
-                    grounding, source_files, scopes, context_records, reviewer=archive.reviewer)
+                    grounding, source_files, scopes, context_records, reviewer=archive.reviewer, prior_answers=answers)
                 replayed = {key: record[key] for key in ('receipt', 'request_sha256', 'response_sha256')} | {
                     'topic': topic['id'], 'part': topic.get('_part_id')}
                 return statements, replayed
@@ -526,7 +539,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive)
             raw = agent.chat(system, revision, tag=f"{tag}_{attempt}_revision", **options)
         try:
             statements = _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages,
-                                                 f'{tag}_{attempt}', grounding, source_files, scopes, context_records)
+                                                 f'{tag}_{attempt}', grounding, source_files, scopes, context_records, prior_answers=answers)
             answer_cache.save(cached_path, raw)
             return statements, None
         except (ValueError, TypeError, KeyError) as exc:
@@ -571,7 +584,7 @@ def generate(cfg, model, agent, section, previous=None, *, replay_http=False, al
     for topic in units:
         try:
             statements, record = _request_unit(cfg, model, agent, section, topic,
-                topic_prompts[topic['id']], policy['design_grounding'], archive)
+                topic_prompts[topic['id']], policy['design_grounding'], archive, answers)
         except _UnitRejected as exc:
             if not all_design_units:
                 raise ValueError(str(exc)) from None
