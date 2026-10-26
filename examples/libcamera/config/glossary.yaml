@@ -169,6 +169,9 @@ terms:
 - term: ETIMEDOUT
   definition: ETIMEDOUT는 IPC 통신 과정에서 응답을 기다리는 동안 지정된 시간 (이 파일 기준 2000ms) 이 초과되어 호출이 완료되지 않았음을 나타내는 오류 코드입니다.
   aliases: []
+- term: EBUSY
+  definition: 이미 버퍼가 할당된 스트림에 대해 FrameBufferAllocator::allocate()를 다시 호출하면 -EBUSY를 반환합니다.
+  aliases: []
 common:
 - API
 - CPU

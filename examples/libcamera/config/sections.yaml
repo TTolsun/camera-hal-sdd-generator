@@ -800,15 +800,6 @@ sections:
         - - roles
         - - 'null'
           - nullptr
-    - id: generate-context
-      question: generateConfiguration은 어떤 스레드에서 호출할 수 있습니까? 호출 가능 범위만 설명하세요.
-      sources:
-      - generate-context
-      answer_contract:
-        basis: description
-        required_terms:
-        - - generateConfiguration
-        - - 스레드
     - id: generate-safety
       question: generateConfiguration 구현에 요구되는 스레드 안전성 계약만 설명하세요. 호출 가능 범위나 카메라 상태 변경 금지로 대신하지 마세요.
       sources:
@@ -819,6 +810,9 @@ sections:
         - - generateConfiguration
         - - 스레드
         - - 안전
+        - - 어떤 스레드에서든
+          - 임의의 스레드
+          - 모든 스레드
     - id: generate-state
       question: generateConfiguration 구현자는 파이프라인 핸들러 내의 camera 상태를 변경할 수 있습니까? 해당 의무를 함수 이름과 함께 한 문장으로 설명하세요.
       sources:
@@ -943,15 +937,6 @@ sections:
       - buffer
       answer_contract:
         basis: contract
-        required_terms:
-        - - completeBuffer
-        - - 버퍼
-    - id: buffer-tracking
-      question: completeBuffer가 수행하는 버퍼 완료 알림과 요청 내부의 버퍼 추적 갱신을 한 문장으로 설명하세요.
-      sources:
-      - buffer
-      answer_contract:
-        basis: description
         required_terms:
         - - completeBuffer
         - - 버퍼
@@ -5504,3 +5489,230 @@ sections:
     title: IPA 관리와 구현 진입점
     link: ipa.md
   design_prompt: focused
+- id: framebuffer-allocator-boundary
+  group: For Developer
+  nav_section: 코드 탐색
+  title: FrameBufferAllocator의 실패와 참조 수명
+  output: framebuffer-allocator.md
+  kind: prose
+  lead: 중복 할당·버퍼 내보내기 실패와 반환 버퍼의 유효기간을 확인하세요.
+  reader: FrameBufferAllocator를 호출하거나 관련 코드를 수정하는 개발자
+  watch:
+  - src/libcamera/framebuffer_allocator.cpp
+  - include/libcamera/framebuffer_allocator.h
+  diagram:
+    enabled: false
+  design_generation: llm
+  design_grounding: true
+  design_prompt: focused
+  show_evidence: true
+  design_requirements:
+  - id: allocation-failure
+    question: 중복 할당과 버퍼 내보내기 실패는 반환값과 할당 항목 처리에서 어떻게 다릅니까?
+  - id: free-result
+    question: free는 모르는 스트림과 등록된 스트림에 각각 무엇을 반환합니까?
+  - id: reference-lifetime
+    question: buffers를 호출할 수 있는 시점과 반환 참조의 유효기간은 무엇입니까?
+  design_topics:
+  - id: reference-lifetime
+    title: buffers 반환 참조의 유효기간
+    question: FrameBufferAllocator::buffers의 API 문서에 있는 호출 전제조건과 반환 버퍼의 유효기간을 설명하세요. 성공 결과를 따로 검사하는 절차나 자동 완료 대기를
+      추가하지 마세요.
+    covers:
+    - reference-lifetime
+    sources:
+    - id: buffers-precondition
+      file: src/libcamera/framebuffer_allocator.cpp
+      start: This function shall only be called after successfully allocating buffers for
+      end: \a stream with allocate().
+      scope:
+        start: \brief Retrieve the buffers allocated for a \a stream
+        end: '
+
+          }'
+    - id: buffers-validity
+      file: src/libcamera/framebuffer_allocator.cpp
+      start: The returned buffers are valid until free() is
+      end: called for the same stream or the FrameBufferAllocator instance is destroyed.
+      scope:
+        start: \brief Retrieve the buffers allocated for a \a stream
+        end: '
+
+          }'
+    answer_contract:
+      basis: description
+      required_terms:
+      - - allocate
+      - - 성공
+      - - free
+      - - 같은 스트림
+        - 동일한 스트림
+        - 동일 스트림
+      - - 파괴
+        - 소멸
+      - - 해야
+    parts:
+    - id: successful-allocation
+      question: buffers() 호출 전에 해당 스트림의 allocate() 성공에 관해 어떤 전제조건을 지켜야 합니까? 한 문장으로 설명하고 해야 합니다로 끝내세요. 소스의 \a는 Doxygen
+        서식 표식이므로 복사하지 말고, 매개변수 stream의 일반 명칭은 스트림으로 쓰세요. 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - buffers-precondition
+      max_statements: 1
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - allocate
+        - - 성공
+        - - 해야
+        - - 스트림
+    - id: valid-until
+      question: buffers()가 반환하는 버퍼가 언제까지 유효한지 한 문장으로 설명하세요. 같은 스트림에 대한 free() 호출 또는 FrameBufferAllocator 인스턴스 파괴라는
+        두 조건을 보존하세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - buffers-validity
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - free
+        - - 같은 스트림
+          - 동일한 스트림
+          - 동일 스트림
+        - - 파괴
+          - 소멸
+  - id: allocation-failure
+    title: 중복 할당과 내보내기 실패를 구분하기
+    design_prompt: standard
+    question: FrameBufferAllocator::allocate에서 buffers_.try_emplace의 inserted가 false인 경로와 exportFrameBuffers의 ret가
+      음수인 경로를 구분하여 반환값과 buffers_ 항목 처리를 한 문단으로 설명하세요. 중복 할당 경로에서 기존 항목을 삭제한다고 추정하지 말고, 실패 비교의 ret < 0을 0 이하로 바꾸지
+      마세요.
+    covers:
+    - allocation-failure
+    sources:
+    - id: allocation-body
+      file: src/libcamera/framebuffer_allocator.cpp
+      start: int FrameBufferAllocator::allocate(Stream *stream)
+      end: '
+
+        }'
+    - id: export-return-code
+      file: src/libcamera/framebuffer_allocator.cpp
+      start: int ret = camera_->exportFrameBuffers(stream, &it->second);
+      end: return ret;
+      scope:
+        start: int FrameBufferAllocator::allocate(Stream *stream)
+        end: '
+
+          }'
+    answer_contract:
+      basis: implementation
+      required_terms:
+      - - EBUSY
+      - - exportFrameBuffers
+      - - 음수
+        - 0 미만
+        - ret < 0
+      - - erase
+        - 제거
+        - 삭제
+      reject_patterns:
+      - pattern: ret\s*(?:<=|==)\s*0|0\s*이하
+        message: 실패 조건은 ret < 0이며 0을 실패로 처리하지 않습니다.
+    parts:
+    - id: duplicate-allocation
+      question: FrameBufferAllocator::allocate에서 try_emplace의 inserted가 false이면 어떤 값을 반환합니까? 이 분기에 있는 코드만 한 문장으로
+        설명하고 다른 실패 분기나 새 스트림 처리는 덧붙이지 마세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - allocation-body
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - EBUSY
+        reject_patterns:
+        - pattern: ret\s*(?:<=|==)\s*0|0\s*이하
+          message: 실패 조건은 ret < 0이며 0을 실패로 처리하지 않습니다.
+    - id: export-failure
+      question: 값을 반환하는 함수 exportFrameBuffers()와 그 값을 저장하는 변수 ret를 구분하세요. ret가 음수일 때 FrameBufferAllocator::allocate()가
+        buffers_ 항목을 어떻게 처리하는지 한 문장으로 설명하세요. 최종 반환은 덧붙이지 마세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - allocation-body
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - exportFrameBuffers
+        - - 음수
+          - 0 미만
+          - ret < 0
+        - - erase
+          - 제거
+          - 삭제
+        - - ret
+        reject_patterns:
+        - pattern: ret\s*(?:<=|==)\s*0|0\s*이하
+          message: 실패 조건은 ret < 0이며 0을 실패로 처리하지 않습니다.
+    - id: export-return
+      question: FrameBufferAllocator::allocate에서 exportFrameBuffers 호출 이후 마지막 return ret 자체는 ret의 부호를 검사하는 조건문의
+        본문에 속합니까? 주변 if문의 범위와 반환 위치를 대조하여 최종 반환의 조건 유무와 반환값만 한 문장으로 설명하세요. 항목 제거 조건을 반환 조건으로 대신하지 마세요. 한국어 합니다체로
+        쓰고 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - export-return-code
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - exportFrameBuffers
+        - - ret
+        - - 음수 여부와 관계없이
+          - 음수인지와 관계없이
+          - ret의 부호와 관계없이
+          - 무조건
+        reject_patterns:
+        - pattern: ret\s*(?:<=|==)\s*0|0\s*이하
+          message: 실패 조건은 ret < 0이며 0을 실패로 처리하지 않습니다.
+  - id: free-result
+    title: free의 스트림 조회와 반환값
+    question: FrameBufferAllocator::free에서 buffers_.find로 스트림을 찾지 못한 경우의 반환값과 찾은 항목을 지운 뒤의 반환값을 한 문단으로 설명하세요. 함수
+      본문에 없는 카메라 상태 검사, 요청 완료 대기와 -EACCES 반환을 만들지 마세요.
+    covers:
+    - free-result
+    sources:
+    - id: free-body
+      file: src/libcamera/framebuffer_allocator.cpp
+      start: int FrameBufferAllocator::free(Stream *stream)
+      end: '
+
+        }'
+    answer_contract:
+      basis: implementation
+      required_terms:
+      - - EINVAL
+      - - '0'
+      - - erase
+        - 제거
+        - 삭제
+      reject_patterns:
+      - pattern: EACCES
+        message: 현재 free 구현에는 EACCES를 반환하는 경로가 없습니다.
+    parts:
+    - id: stream-result
+      question: FrameBufferAllocator::free에서 스트림을 찾지 못한 경우와 찾은 경우에 각각 어떤 정수를 반환하며 buffers_ 항목은 어떻게 처리합니까? 한 문단으로
+        설명하고 함수 본문 밖의 상태 검사나 완료 대기를 추정하지 마세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - free-body
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - EINVAL
+        - - '0'
+        - - erase
+          - 제거
+          - 삭제
+        reject_patterns:
+        - pattern: EACCES
+          message: 현재 free 구현에는 EACCES를 반환하는 경로가 없습니다.
+  next:
+    title: Camera·Request와 버퍼 참조의 책임
+    link: camera-model.md
