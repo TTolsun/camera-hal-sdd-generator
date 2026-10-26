@@ -284,6 +284,7 @@ def decode_unit(model, section, topic, raw, sources, passages):
             and len(data['statements']) > topic['_max_statements']):
         raise ValueError(f"분할 질문은 {topic['_max_statements']}문단 이내로 답해야 합니다.")
     data['statements'] = resolve_passages(data['statements'], passages)
+    original_texts = [statement.get('text') for statement in data['statements']]
     if topic.get('_statement_kind'):
         for statement in data['statements']:
             statement['kind'] = topic['_statement_kind']
@@ -313,7 +314,27 @@ def decode_unit(model, section, topic, raw, sources, passages):
     if errors:
         raise ValueError(' / '.join(errors))
     subset.pop('reader_profile', None)
-    validate_answers(model, subset, candidate, allow_limited=bool(topic.get('_statement_kind')))
+    try:
+        validate_answers(model, subset, candidate, allow_limited=bool(topic.get('_statement_kind')))
+    except ValueError as exc:
+        # Diagnose only an already-rejected answer. Inspect model text before
+        # typography normalization and generated citations, without repairing it.
+        for text in original_texts:
+            if not isinstance(text, str):
+                continue
+            delimiter = 0
+            for mark in re.finditer(r'(?<!\\)(?:\\\\)*(`+)', text):
+                width = len(mark[1])
+                if not delimiter:
+                    delimiter = width
+                elif width == delimiter:
+                    delimiter = 0
+            if delimiter:
+                raise ValueError(
+                    f'{exc} / 코드 표기의 백틱 쌍이 맞지 않을 수 있습니다. '
+                    '식별자마다 여는 백틱과 닫는 백틱을 모두 쓰고, 설명 문장은 백틱 밖에 쓰세요.'
+                ) from exc
+        raise
     return candidate[topic['id']]
 
 
