@@ -930,4 +930,25 @@ def test_source_member_underscores_render_verbatim_without_rewriting_model_text(
     original = statement['text']
     normalize_answer(model, [statement], ['_d()->metadata_.clear();'])
     assert statement['text'].replace('`', '') == original
-    assert '`_d()`->`metadata_`' in statement['text']
+    import html, re, markdown
+    rendered = markdown.markdown(statement['text'])
+    assert '_d()->metadata_' in html.unescape(re.sub('<[^>]+>', '', rendered))
+    assert '<em>' not in rendered
+
+
+def test_new_typography_keeps_source_identical_saved_answers(tmp_cfg, generated):
+    from sdd.impact import ImpactReport
+    import sdd.generated_design as design
+    section, model, save, agent = generated
+    agent.statement['text'] = 'stop()은 status_ 값을 확인합니다.'
+    model.evidence['device/stop/stop']['text'] += '\nint status_ = 0;'
+    model.evidence['device/stop/stop']['sha256'] = design.digest(model.evidence['device/stop/stop']['text'])
+    save()
+    from unittest.mock import patch
+    # Create a valid legacy manuscript under its original typography rules.
+    with patch.object(design, 'normalize_answer'), patch.object(design, 'source_names', return_value=set()):
+        Generator(tmp_cfg, model, agent).run()
+    agent.calls.clear()
+    paths = Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert not agent.calls
+    assert '`status_`' in paths[0].read_text(encoding='utf-8')

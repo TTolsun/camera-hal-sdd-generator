@@ -63,11 +63,12 @@ def reusable(model, section, previous, inputs, validate=None):
             continue
         pinned, selected = subset(model, section, [tid])
         selected.pop('reader_profile', None)
+        selected_answers = copy.deepcopy(answers[tid])
         try:
             if validate:
-                validate(pinned, selected, {tid: answers[tid]})
+                validate(pinned, selected, {tid: selected_answers})
         except (ValueError, TypeError, KeyError):
             continue
-        retained[tid] = copy.deepcopy(answers[tid])
+        retained[tid] = selected_answers
         origins[tid] = artifact.get('topic_agents', {}).get(tid, meta.get('agent', 'unknown'))
     return retained, origins
