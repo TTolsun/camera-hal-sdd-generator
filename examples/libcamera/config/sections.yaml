@@ -2912,19 +2912,38 @@ sections:
       question: 이 프로젝트가 무엇을 하는 소프트웨어인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - what
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
     - id: problem
       question: 카메라를 쓰려는 쪽이 어떤 어려움을 겪는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - problem
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
     - id: easier
       question: 이 프로젝트를 쓰면 그 일이 어떻게 단순해지는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - for
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
     - id: layers
       question: 카메라를 쓰는 소프트웨어가 네 계층으로 나뉘는 모습을 아래에서 위 순서로 쉽게 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - stack
-      max_statements: 4
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
   - id: inputs
     title: 받는 것
     covers:
@@ -2944,10 +2963,20 @@ sections:
       question: 이 프로젝트가 아래 계층에서 무엇을 받아 카메라를 제어하는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - kernel
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
     - id: discover
       question: 카메라를 누가 찾고 한 번에 몇 곳이 제어권을 가질 수 있는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - manager
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
   - id: outputs
     title: 내놓는 것
     covers:
@@ -2972,10 +3001,20 @@ sections:
       sources:
       - framework
       - camera
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
     - id: adapters
       question: 다른 프레임워크가 이 프로젝트에 연결되는 방법의 예를 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - adaptation
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
   - id: boundaries
     title: 다른 팀·계층과의 경계
     covers:
@@ -3003,13 +3042,22 @@ sections:
       question: 이 프로젝트의 범위 밖에 있는 것이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - apps
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
     - id: vendors
       question: 장치 제조사가 이 프로젝트에 직접 기여하거나 따로 제공하는 부분이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
       sources:
       - handler
       - ipa
       - licensing
-      max_statements: 3
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
   next:
     title: 시스템 개요
     link: overview.md
@@ -3472,6 +3520,11 @@ sections:
       question: queueRequest를 부르기 전에 요청에 무엇이 있어야 하고, 큐에 넣은 뒤 완료는 어떻게 알려 주는지 한 문단으로 설명하세요.
       sources:
       - accept
+      answer_contract:
+        basis: description
+        required_terms: []
+        reject_patterns: []
+      max_statements: 1
     - id: buffer
       question: 마지막 버퍼가 완료돼도 요청이 자동으로 완료되지 않는 이유로 소스가 밝힌 것과 그 대신 파이프라인 핸들러가 해야 할 일을 한 문단으로 설명하세요.
       sources:
