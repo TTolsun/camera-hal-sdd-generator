@@ -132,10 +132,16 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
             old_bytes = (previous / 'evaluation.json').read_bytes()
             old = json.loads(old_bytes)
             expected = {s['id'] for s in trial.sections()}
+            recorded = [row['section'] for row in old.get('results', [])]
             if (old.get('schema') != 1 or old.get('source_commit') != model.meta['source_commit']
                     or old.get('provider') != trial.agent.kind or old.get('model') != trial.agent.model
-                    or {row['section'] for row in old.get('results', [])} != expected):
-                raise ValueError('같은 소스·모델의 모든 섹션 결과가 기록된 이전 시험만 재개할 수 있습니다.')
+                    or not recorded or len(set(recorded)) != len(recorded) or not set(recorded) <= expected):
+                raise ValueError('같은 소스·모델의 섹션 결과가 하나 이상 기록된 이전 시험만 재개할 수 있습니다.')
+            for name in ('manuscripts', 'build/prompts/calls'):
+                source = previous / name
+                if source.is_symlink() or any(p.is_symlink() for p in source.rglob('*')):
+                    raise ValueError('재개 입력에는 심볼릭 링크를 사용할 수 없습니다.')
+            verified = []
             for row in old['results']:
                 if row['automatic_checks'] != 'passed':
                     continue
@@ -149,12 +155,18 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
                             value != f'{trial.agent.kind}/{trial.agent.model}'
                             for value in meta['generated_design'].get('topic_agents', {}).values()):
                         raise ValueError('이전 원고의 모델 작성자가 시험 설정과 다릅니다.')
+                    verified.append(source)
+            # A crash may leave a file before its result was atomically recorded.
+            # Only hash-checked, recorded manuscripts can be reused.
+            for source in verified:
+                target = trial.sdd_dir / source.relative_to(previous / 'manuscripts')
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
             from .provenance import verify_calls
-            prior_authorship = verify_calls(model, previous / 'manuscripts', previous / 'build/prompts/calls',
+            prior_authorship = verify_calls(model, trial.sdd_dir, previous / 'build/prompts/calls',
                                              provider=trial.agent.kind, model_name=trial.agent.model,
                                              allow_reused=True)
-            for name, destination in [('manuscripts', trial.sdd_dir),
-                                      ('build/prompts/calls', trial.build_dir / 'prompts/calls')]:
+            for name, destination in [('build/prompts/calls', trial.build_dir / 'prompts/calls')]:
                 source = previous / name
                 if source.exists():
                     if source.is_symlink() or any(p.is_symlink() for p in source.rglob('*')):
@@ -162,6 +174,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
                     shutil.copytree(source, destination, dirs_exist_ok=True)
             report['continued_from_sha256'] = hashlib.sha256(old_bytes).hexdigest()
             return {'previous_results': len(old['results']), 'source_commit': old['source_commit'],
+                    'previous_generation_complete': set(recorded) == expected,
                     'previous_authorship': prior_authorship}
         if not stage('resume-input', resume):
             return report
@@ -239,7 +252,7 @@ def main():
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--translate', action='store_true')
-    parser.add_argument('--continue-from', type=Path, help='Repair a completed generation trial in a new directory')
+    parser.add_argument('--continue-from', type=Path, help='Repair an interrupted or completed generation trial in a new directory')
     args = parser.parse_args()
     report = evaluate(load(args.config), args.out, translate=args.translate, previous=args.continue_from)
     success = report['stages'][-1]['stage'] == 'repeat-site' and report['stages'][-1]['status'] == 'passed'

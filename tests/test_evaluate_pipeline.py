@@ -163,6 +163,22 @@ def test_failed_section_can_revalidate_real_http_units_on_repair(tmp_cfg, tmp_pa
     assert report['publishable'] is False and report['human_approval'] == 'pending'
 
 
+def test_interrupted_trial_reuses_only_recorded_hash_checked_manuscripts(tmp_cfg, tmp_path):
+    cfg = configure(tmp_cfg)
+    first = tmp_path / 'first'
+    report = evaluate(cfg, first)
+    unrecorded = report['results'].pop()
+    for item in unrecorded['manuscripts']:
+        (first / item['path']).write_text('UNRECORDED CONTENT', encoding='utf-8')
+    (first / 'evaluation.json').write_text(json.dumps(report), encoding='utf-8')
+    second = tmp_path / 'repair'
+    repaired = evaluate(cfg, second, previous=first)
+    resume = next(row for row in repaired['stages'] if row['stage'] == 'resume-input')
+    assert resume['status'] == 'passed' and resume['result']['previous_generation_complete'] is False
+    assert all(row['status'] == 'passed' for row in repaired['stages'])
+    assert all('UNRECORDED CONTENT' not in p.read_text(encoding='utf-8') for p in (second / 'manuscripts').rglob('*.md'))
+
+
 @pytest.mark.parametrize('change', ['manuscript', 'response', 'source', 'model', 'incomplete'])
 def test_repair_refuses_tampered_mismatched_or_incomplete_trials(tmp_cfg, tmp_path, monkeypatch, change):
     cfg, calls = model_config(tmp_cfg, monkeypatch)

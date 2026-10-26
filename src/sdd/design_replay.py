@@ -57,7 +57,10 @@ class Archive:
         self.records.sort(key=lambda row: row['completed_at'], reverse=True)
 
     def candidates(self, system, user, schema, tag):
-        key = context({'system': system, 'user': user, 'response_schema': schema})
+        try:
+            key = context({'system': system, 'user': user, 'response_schema': schema})
+        except (ValueError, TypeError, KeyError):
+            return  # An unsupported prompt format must make a new real call.
         seen = set()
         for record in self.records:
             if (record['context'] == key and re.fullmatch(re.escape(tag) + r'_\d+(?:_revision)?', record['tag'])

@@ -45,6 +45,20 @@ def test_model_authorship_matches_exact_saved_response(tmp_path):
         verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')
 
 
+def test_focused_prompt_still_requires_actual_http_authorship(tmp_path):
+    model, manuscripts, calls, artifact, save = setup(tmp_path)
+    path = calls / '001.request.json'
+    request = json.loads(path.read_text(encoding='utf-8'))
+    payload = json.loads(request['user'].split('Answer: ', 1)[1])
+    request['user'] = '근거:\n' + json.dumps(payload['sources']) + '\n질문: 종료 책임은 무엇입니까?\n출력: JSON'
+    path.write_text(json.dumps(request), encoding='utf-8')
+    path = calls / '001.receipt.json'
+    receipt = json.loads(path.read_text(encoding='utf-8'))
+    receipt['request_sha256'] = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+    path.write_text(json.dumps(receipt), encoding='utf-8')
+    assert verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')['statements'] == 1
+
+
 @pytest.mark.parametrize('change', ['response', 'provider', 'reuse'])
 def test_tampered_or_imported_responses_cannot_establish_authorship(tmp_path, change):
     model, manuscripts, calls, artifact, save = setup(tmp_path)

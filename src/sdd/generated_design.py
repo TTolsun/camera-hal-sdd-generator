@@ -58,16 +58,17 @@ def quote_text(text):
     return ' '.join(re.sub(r'^\s*\*(?: |$)', '', text, flags=re.M).split())
 
 
-def source_passages(sources):
+def source_passages(sources, *, whole_source=False, scopes=None):
     """Send each source once, with stable local IDs for verbatim paragraphs."""
     annotated, passages = {}, {}
     for source_id, text in sources.items():
         # Keep the original code, including leading multiplication/dereference
         # operators. Comment decoration is normalized only for quote comparison.
-        chunks = re.split(r'\n\s*\n', text)
+        chunks = [text] if whole_source or (scopes and source_id in scopes) else re.split(r'\n\s*\n', text)
         annotated[source_id] = []
         for index, chunk in enumerate(chunks):
-            item = {'text': chunk}
+            item = {'scope': scopes[source_id]} if scopes and source_id in scopes else {}
+            item['text'] = chunk
             if len(quote_text(chunk)) >= 12:
                 key = f'{source_id}:{index}'
                 item['quote_id'] = key
@@ -109,6 +110,10 @@ def response_schema(topic, passages=None):
     def ids(values):
         return {'type': 'array', 'minItems': 1, 'maxItems': len(values), 'uniqueItems': True,
                 'items': {'type': 'string', 'enum': values}}
+    # A checked part has exactly one required factual/contract answer. Offering
+    # limitation here asks the model to choose an option the validator rejects,
+    # especially for negative but fully sourced API obligations.
+    kinds = ['behavior'] if topic.get('_max_statements') == 1 and topic.get('answer_contract') else ['behavior', 'limitation']
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'quote_id', 'evidence', 'covers', 'kind'], 'properties': {
                      # C++ expressions such as request->_d()->cancel() and
@@ -122,7 +127,7 @@ def response_schema(topic, passages=None):
                      'evidence': ids(sorted({sid for sid, _ in passages.values()}) if passages
                                      else [source['id'] for source in topic.get('sources', [])]),
                      'covers': ids(topic['covers']),
-                     'kind': {'type': 'string', 'enum': ['behavior', 'limitation']}}}
+                     'kind': {'type': 'string', 'enum': kinds}}}
     return {'type': 'object', 'additionalProperties': False, 'required': ['statements'],
             'properties': {'statements': {'type': 'array', 'maxItems': topic.get('_max_statements', 8), 'items': statement}}}
 
@@ -272,6 +277,8 @@ def generate(generator, section, previous=None):
     if cfg.agent.kind == 'dry-run':
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
+    from . import focused_prompt
+    focused_system = focused_prompt.system_prompt(cfg)
     from .prompting import compose_system_prompt
     system = compose_system_prompt(cfg, structured=True) + (
         '\n\nFor this call, override earlier Markdown, citation and two-paragraph instructions. '
@@ -288,9 +295,8 @@ def generate(generator, section, previous=None):
         'Keep an outcome and its necessary caller/implementer obligation together. '
         'A required call context does not prove thread safety or ordering. '
         'A reference measurement procedure is not a test result for this product. '
-        'For example, source "the caller shall retain the buffer until completion" supports '
-        '"호출자는 완료될 때까지 버퍼를 유지해야 합니다", not "라이브러리가 버퍼 수명을 보장합니다". '
-        'Do not infer the same claims about this project from that example. Return only the requested JSON.'
+        'Preserve the scope of any/all/only together with may and negation. '
+        'Use factual content only from the current source passages. Return only the requested JSON.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
         system += (
@@ -309,6 +315,8 @@ def generate(generator, section, previous=None):
             'Do not re-invoke state-changing functions to observe them.'
         )
     from .design_reuse import topic_inputs, reusable
+    if focused_system is not None:
+        system = focused_system
     grounding = section.get('design_grounding', (cfg.raw.get('review') or {}).get('design_grounding', False))
     if type(grounding) is not bool:
         raise ValueError('review.design_grounding은 boolean이어야 합니다.')
@@ -316,7 +324,8 @@ def generate(generator, section, previous=None):
     if grounding:
         from .grounding import policy_hash
         policy['grounding_policy'] = policy_hash()
-    inputs = topic_inputs(model, section, system + json.dumps(policy))
+    prompt_policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
+    inputs = topic_inputs(model, section, prompt_policy + json.dumps(policy))
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
     reused = list(answers)
     units = []
@@ -344,7 +353,10 @@ def generate(generator, section, previous=None):
     for topic in units:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
         source_files = {s['id']: s['file'] for s in topic['sources']}
-        annotated, passages = source_passages(sources)
+        # A focused answer can relate a guard, loop and final check. Splitting
+        # those on blank lines makes one quote_id insufficient for that claim.
+        scopes = {s['id']: s['scope'] for s in topic['sources'] if 'scope' in s}
+        annotated, passages = source_passages(sources, whole_source=focused_system is not None, scopes=scopes)
         if not passages:
             raise ValueError(f"{section['id']}/{topic['id']}: 인용 가능한 소스 구절이 없습니다.")
         request = {'reader': section.get('reader', ''), 'sources': annotated, 'source_files': source_files,
@@ -369,6 +381,9 @@ def generate(generator, section, previous=None):
             'Return only a JSON object with a statements array. Return an empty array if the source cannot answer.\n'
         )
         base_user = instruction + json.dumps(request, ensure_ascii=False)
+        if focused_system is not None:
+            base_user = focused_prompt.user_prompt(topic, annotated,
+                request['requirements'] if '_part_id' not in topic else None)
         tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
         schema = response_schema(topic, passages) if cfg.agent.kind in ('ollama', 'response-bundle') else None
         retained = False
@@ -381,7 +396,8 @@ def generate(generator, section, previous=None):
                         from .grounding import review as check_grounding
                         reviewer = copy.copy(generator)
                         reviewer.agent = archive.reviewer(generator.agent)
-                        check_grounding(reviewer, topic, statements, sources, tag + '_replay', source_files=source_files)
+                        check_grounding(reviewer, topic, statements, sources, tag + '_replay',
+                                        source_files=source_files, source_scopes=scopes)
                     answers.setdefault(topic['id'], []).extend(statements)
                     replayed.append({key: record[key] for key in ('receipt', 'request_sha256', 'response_sha256')} |
                                     {'topic': topic['id'], 'part': topic.get('_part_id')})
@@ -417,7 +433,7 @@ def generate(generator, section, previous=None):
                 if grounding:
                     from .grounding import review as check_grounding
                     check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}',
-                                    source_files=source_files)
+                                    source_files=source_files, source_scopes=scopes)
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
             except (ValueError, TypeError, KeyError) as exc:

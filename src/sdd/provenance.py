@@ -35,7 +35,13 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
             data = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
             json_responses.append((receipt['tag'], data))
             payload, _ = json.JSONDecoder().raw_decode(user[user.index('{'):])
-            sources = payload['sources']
+            if 'sources' in payload:
+                sources = payload['sources']
+            elif user.startswith('근거:\n'):
+                sources = payload
+                payload = {'topic': user.split('\n질문: ', 1)[1].split('\n출력: ', 1)[0]}
+            else:
+                continue
             passages = {item['quote_id']: (sid, item['text'].strip())
                         for sid, blocks in sources.items() for item in blocks if item.get('quote_id')}
             statements = resolve_passages(data['statements'], passages)

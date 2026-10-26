@@ -98,6 +98,7 @@ agent:
 | `max_retries` | `1` | 검사 실패 시 재시도 횟수. 넘으면 `status: needs-review`로 남깁니다. |
 | `design_revision` | `false` | 필수 설계 답변마다 소스와 초안을 다시 보내 수정 답변을 받습니다. 호출 수가 늘며 입력 한도 초과 시 근거를 생략하지 않고 실패합니다. 모델의 재검토는 사람 승인이 아닙니다. |
 | `design_grounding` | `false` | 필수 설계 답변을 별도 모델 호출에서 연결된 소스와 대조합니다. 근거 없는 문단이나 누락된 판정은 재시도·실패로 처리합니다. 재사용 지문에 이 설정을 포함하며 자동 판정을 사람 승인으로 표시하지 않습니다. |
+| `design_prompt` | `standard` | `focused`는 `paths.prompts/focused-design-system.md`의 짧은 문단 작성 지침과 해당 질문·근거만 모델에 보냅니다. 파일이 없거나 모드가 잘못되면 실패합니다. 페이지 편집·용어·근거·누락 검사는 그대로 적용하며, 집필 규칙이 바뀌면 이전 답변을 재사용하지 않습니다. |
 | `coverage_triage.enabled` | `false` | 사람이 승인하지 않은 범위 검토 항목을 모델이 먼저 판정합니다. |
 | `coverage_triage.pass_gate` | `false` | `true`이면 "범위 밖" 판정이 관문을 통과시킵니다. YAML 불리언만 받습니다. |
 | `coverage_triage.agent` | `agent` 값 | 판정 모델만 다르게 할 때 `kind`, `model`, `base_url` 등을 적습니다. `base_url`이 `agent.base_url`과 다르면 토큰은 `SDD_TRIAGE_API_KEY`에서만 읽습니다. |

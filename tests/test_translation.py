@@ -12,6 +12,9 @@ def test_translation_keeps_existing_text_and_retries_placeholders(tmp_cfg):
         calls = 0
         def chat(self, system, user, **kwargs):
             self.calls += 1
+            if self.calls == 2:
+                assert "Missing: ['{{0}}']" in user
+                assert 'unexpected or repeated: []' in user
             return json.dumps({'text': 'Returns on failure.' if self.calls == 1 else '{{0}} returns on failure.'})
     agent = Agent()
     output = translate_missing(tmp_cfg, catalog, agent)
@@ -35,13 +38,48 @@ def test_invalid_translation_does_not_replace_catalog(tmp_cfg):
 
 def test_translation_receives_existing_terminology(tmp_cfg):
     tmp_cfg.agent.kind = 'ollama'
-    catalog = {'strings': {'디베이어': 'Debayering', '디베이어를 확인하세요.': ''}}
+    from sdd.glossary import glossary_file
+    path = glossary_file(tmp_cfg)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('terms:\n- term: 디베이어\n  definition: 색 정보를 복원합니다.\n', encoding='utf-8')
+    # A UI action label is not terminology for the noun used in prose.
+    catalog = {'strings': {'디베이어': 'Debayering', '구성': 'Configure', '디베이어 구성을 확인하세요.': ''}}
     class Agent:
         def chat(self, system, user, **kwargs):
             request = json.loads(user)
             assert request['known_terms'] == {'디베이어': 'Debayering'}
             return '{"text": "Check debayering."}'
-    assert translate_missing(tmp_cfg, catalog, Agent())['strings']['디베이어를 확인하세요.'] == 'Check debayering.'
+    assert translate_missing(tmp_cfg, catalog, Agent())['strings']['디베이어 구성을 확인하세요.'] == 'Check debayering.'
+
+
+def test_translation_retries_weakened_obligation_without_changing_source(tmp_cfg):
+    tmp_cfg.agent.kind = 'ollama'
+    source = '호출자는 변경되었을 수 있는 구성을 확인해야 합니다.'
+    class Agent:
+        calls = 0
+        def chat(self, system, user, **kwargs):
+            self.calls += 1
+            if self.calls == 2:
+                assert 'should weakens the contract' in user
+                assert source in user
+            return json.dumps({'text': 'The caller ' + ('should' if self.calls == 1 else 'must') +
+                               ' check the configuration, which may have changed.'})
+    agent = Agent()
+    result = translate_missing(tmp_cfg, {'strings': {source: ''}}, agent)
+    assert agent.calls == 2
+    assert 'must' in result['strings'][source] and 'may' in result['strings'][source]
+
+
+def test_bilingual_diagram_labels_are_reused_without_retranslation(tmp_path):
+    from sdd.localization_cli import diagram_translations
+    def write(name, translated):
+        (tmp_path/name).write_text('flowchart TB\n%% sdd:translations ' + json.dumps(
+            {'변경 가능, <br/>확인 의무': translated}, ensure_ascii=False) + '\n', encoding='utf-8')
+    write('one.mmd', 'May have changed; <br/>must check')
+    assert diagram_translations(tmp_path) == {'변경 가능, 확인 의무': 'May have changed; must check'}
+    write('two.mmd', 'Now permitted')
+    with pytest.raises(ValueError, match='Conflicting'):
+        diagram_translations(tmp_path)
 
 
 def test_batch_preserves_placeholders_per_string_and_retries(tmp_cfg):
@@ -93,3 +131,20 @@ def test_batch_splits_on_budget_without_truncation(tmp_cfg):
     result = translate_missing(tmp_cfg, catalog, agent)
     assert len(agent.sizes) > 1 and sum(agent.sizes) == 4
     assert all(result['strings'].values())
+
+
+def test_batch_preserves_binding_obligations_like_single_translation(tmp_cfg):
+    tmp_cfg.agent.kind = 'ollama'
+    tmp_cfg.raw['site'] = {'translation_batch_size': 6}
+    source = '호출자는 변경된 구성을 확인해야 합니다.'
+    class Agent:
+        calls = 0
+        def chat(self, system, user, **kwargs):
+            self.calls += 1
+            if self.calls == 2:
+                assert 'Translation ID 0' in user and 'should weakens the contract' in user
+            return json.dumps({'translations': {'0': 'The caller ' +
+                ('should' if self.calls == 1 else 'must') + ' check the changed configuration.'}})
+    agent = Agent()
+    translated = translate_missing(tmp_cfg, {'strings': {source: ''}}, agent)
+    assert agent.calls == 2 and 'must' in translated['strings'][source]
