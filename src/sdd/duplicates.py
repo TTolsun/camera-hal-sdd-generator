@@ -118,13 +118,27 @@ def body_findings(body: str) -> list[tuple[int, str, str]]:
     for number, block, citations in paragraphs:
         for sentence in _sentences(block):
             for other_number, other, other_citations in sentences:
-                if citations & other_citations and similar(sentence, other):
+                if _near(citations, other_citations) and similar(sentence, other):
                     findings.append((number, sentence,
                                      f"{other_number}행의 문장과 같은 근거로 같은 내용을 되풀이합니다. "
                                      "앞 문장에 없는 조건·예외·호출 책임만 쓰고 같은 설명은 한 번만 씁니다."))
                     break
             sentences.append((number, sentence, citations))
     return findings
+
+
+NEAR_LINES = 10
+
+
+def _near(left: frozenset[str], right: frozenset[str]) -> bool:
+    """같은 파일에서 인용한 줄이 가까우면 같은 구절을 뒷받침하는 것으로 본다(본문에는 시작 줄만 적힌다)."""
+    for a in left:
+        file_a, _, line_a = a.strip("`").rpartition(":")
+        for b in right:
+            file_b, _, line_b = b.strip("`").rpartition(":")
+            if file_a == file_b and line_a.isdigit() and line_b.isdigit() and abs(int(line_a) - int(line_b)) <= NEAR_LINES:
+                return True
+    return False
 
 
 def _blocks(body: str) -> Iterable[tuple[int, str]]:

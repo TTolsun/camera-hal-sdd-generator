@@ -1036,3 +1036,4 @@ def test_B5_statement_kind는_limitation만_허용하고_답변_계약과_함께
     save()
     with pytest.raises(ValueError, match='statement_kind'):
         Generator(tmp_cfg, model, agent).run()
+

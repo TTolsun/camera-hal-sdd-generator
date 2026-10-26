@@ -222,3 +222,10 @@ def test_A6_문단은_네_문장과_길이_상한을_넘지_않는다():
     assert [p.count('설명입니다.') for p in paragraphs] == [PARAGRAPH_SENTENCES, PARAGRAPH_SENTENCES, 1]
     long = [('behavior', '가' * (PARAGRAPH_CHARS - 20) + '입니다.', ['`a.cpp:1`']), ('behavior', '나' * 40 + '입니다.', ['`a.cpp:2`'])]
     assert len(_paragraphs(long)) == 2
+
+
+def test_A6_이전_배치의_원고도_검증을_통과한다():
+    from sdd.evidence import _paragraphs
+    entries = [('behavior', '첫 설명입니다.', ['`a.cpp:1`']), ('behavior', '둘째 설명입니다.', ['`a.cpp:2`'])]
+    assert _paragraphs(entries, grouped=False) == ['첫 설명입니다. `a.cpp:1`', '둘째 설명입니다. `a.cpp:2`']
+    assert len(_paragraphs(entries)) == 1

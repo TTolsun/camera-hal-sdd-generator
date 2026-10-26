@@ -583,6 +583,7 @@ def verify(model, section, manuscript):
     body = strip_blocks(body)
     for topic in resolved['design_topics']:
         text, _ = contract_text(pinned, section['id'], topic)
-        if f"## {topic['title']}\n\n{text}" not in body:
+        legacy, _ = contract_text(pinned, section['id'], topic, grouped=False)
+        if all(f"## {topic['title']}\n\n{candidate}" not in body for candidate in (text, legacy)):
             raise ValueError('LLM 설계 답변이 원고에 없습니다.')
     return report

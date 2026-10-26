@@ -513,12 +513,9 @@ sections:
         reject_patterns: []
   reader_profile: vendor-assurance
   routes:
-  - q: libcamera 제품 개요에서 필요한 내용을 확인합니다.
-    to: vendor-overview.md
-  - q: 연동 가이드에서 필요한 내용을 확인합니다.
-    to: vendor-integration.md
-  - q: 장치별 파이프라인을 구현합니다.
-    to: pipeline-handler.md
+  - to: vendor-overview.md
+  - to: vendor-integration.md
+  - to: pipeline-handler.md
   next:
     title: 요청 처리와 문제 진단
     link: request-lifecycle.md
@@ -1253,12 +1250,9 @@ sections:
         - - CameraManager
   reader_profile: vendor
   routes:
-  - q: libcamera 제품 개요에서 필요한 내용을 확인합니다.
-    to: vendor-overview.md
-  - q: 지원 범위와 검증에서 필요한 내용을 확인합니다.
-    to: vendor-assurance.md
-  - q: 장치별 파이프라인을 구현합니다.
-    to: pipeline-handler.md
+  - to: vendor-overview.md
+  - to: vendor-assurance.md
+  - to: pipeline-handler.md
   next:
     title: 지원 범위와 검증
     link: vendor-assurance.md
@@ -3047,12 +3041,10 @@ sections:
     to: '#요청-제출과-완료'
   - q: 구성 실패의 원인을 좁힙니다.
     to: request-lifecycle.md#구성-실패를-좁히는-순서
-  - q: 완료가 오지 않는 요청을 조사합니다.
-    to: request-lifecycle.md
+  - to: request-lifecycle.md
   - q: 수정 전에 상태와 종료 순서를 확인합니다.
     to: '#캡처-세션의-상태와-자원'
-  - q: 전체 클래스와 패키지를 찾습니다.
-    to: component-index.md
+  - to: component-index.md
   watch:
   - src/**
   - include/libcamera/**
