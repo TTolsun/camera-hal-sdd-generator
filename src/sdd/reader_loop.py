@@ -157,8 +157,10 @@ def automatic_error(cfg, model, unit, raw):
 def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_factory=Agent):
     limits = limits or Limits()
     limits.validate()
-    if cfg.agent.kind not in ('ollama', 'openai-compatible'):
+    if cfg.agent.kind not in ('cli', 'ollama', 'openai-compatible'):
         raise ValueError('The loop requires an actual local or internal model connection')
+    if cfg.agent.kind == 'cli' and seed is not None:
+        raise ValueError('CLI 시험에는 HTTP --seed 재사용을 적용하지 않습니다. 새 CLI 시험을 실행하세요.')
     original = cfg.sections()
     selected = [s for s in original if s['id'] in section_ids]
     if (not section_ids or len(set(section_ids)) != len(section_ids) or len(selected) != len(section_ids)

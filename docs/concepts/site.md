@@ -184,7 +184,7 @@ site:
 
 ### 사내 LLM으로 초안 자동 생성하기
 
-**사내 템플릿의 `config/visuals.yaml`에는 질문만 적습니다. 노드·화살표·근거 해시를 손으로 작성하지 않습니다. 꼭 포함할 실제 함수·상태는 선택적인 required_symbols로 지정할 수 있으며 소스나 그림에 없으면 실패합니다.** 각 질문에 `generation: llm`을 지정하면 `generate`, `run`, `update`가 기존 `agent` 연결을 사용해 그림 JSON 초안을 요청합니다. `ollama`는 Local Qwen 시험용이며 사내 게이트웨이는 `openai-compatible`로 바꿀 수 있습니다. 토큰은 기존 환경 변수로 전달합니다. 실제 HAL과 모델에서 별도 검증하기 전에는 사내 적용 완료로 판단하지 않습니다.
+**사내 템플릿의 `config/visuals.yaml`에는 질문만 적습니다. 노드·화살표·근거 해시를 손으로 작성하지 않습니다. 꼭 포함할 실제 함수·상태는 선택적인 required_symbols로 지정할 수 있으며 소스나 그림에 없으면 실패합니다.** 각 질문에 `generation: llm`을 지정하면 `generate`, `run`, `update`가 기존 `agent` 연결을 사용해 그림 JSON 초안을 요청합니다. 기본 `agent.kind: cli`는 Hermes를 실행하며 OpenCode·Claude Code로 바꿀 수 있습니다. 모델·제공자·인증은 선택한 CLI에서 관리합니다. [CLI 선택 안내](../inhouse/cli-agents.md)를 따릅니다. 실제 HAL과 모델에서 별도 검증하기 전에는 사내 적용 완료로 판단하지 않습니다.
 
 ```yaml
 schema: 1
@@ -208,7 +208,7 @@ LLM은 노드의 소스 심볼과 레이블, 연결, 원문 구절 ID를 JSON으
 
 원고 frontmatter의 `generated_visuals`에 입력 지문, 실제 초안, 근거가 연결된 그림, 작성 모델, 생성 커밋과 본문 해시를 보관합니다. 같은 질문·정책·모델 연결·발췌이면 검증 후 재사용합니다. 소스나 질문이 바뀌면 새 모델 호출이 필요하며 `export-site`는 오래된 그림의 게시를 중단합니다. `generate --from-impact`와 `update`는 선택된 섹션에서 이를 다시 생성합니다. 영향 밖 원고를 이월할 때도 그림 기록을 재검증합니다. 원고와 facts의 커밋이 다른 채로 게시하지 않습니다.
 
-실제 Local Qwen 시험은 `python tools/evaluate_visuals.py --out <새 출력 경로> --model qwen3.5:9b`로 실행합니다. 공개 mini HAL의 실제 함수를 두 Git 커밋으로 만들고 조건 변경, 이전 사이트 보존, 그림 재생성, 영수증·초안 일치를 검사합니다. 반입 ZIP에서도 같은 명령을 실행합니다. 이 공개 예제 시험은 실제 카메라 실행이나 사내 HAL 검증이 아닙니다.
+실제 Local Qwen 시험은 `python tools/evaluate_visuals.py --out <새 출력 경로> --runner hermes --with-prose`로 실행합니다. 공개 mini HAL의 실제 함수를 두 Git 커밋으로 만들고 조건 변경, 이전 사이트 보존, 그림 재생성, 영수증·초안 일치를 검사합니다. 반입 ZIP에서도 같은 명령을 실행합니다. 이 공개 예제 시험은 실제 카메라 실행이나 사내 HAL 검증이 아닙니다.
 
 질문의 핵심 용어가 빠지는 알려진 실패는 그림 계획의 선택적 `answer_contract`로 검사할 수 있습니다. 문단과 같은 `basis`, `required_terms`, `reject_patterns`를 사용하되 한국어 노드·화살표 레이블 전체에 적용합니다. 용어가 있다는 사실은 의미 정확성의 판정이 아닙니다. 공개 예제는 Adjusted의 변경 가능성과 호출자 재확인 누락을 검사합니다.
 

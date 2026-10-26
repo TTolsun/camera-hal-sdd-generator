@@ -24,7 +24,7 @@ def model_digest(agent):
 
 
 def checkpoint(cfg, commit, system, user, options):
-    if cfg.agent.kind != 'ollama' or not (cfg.raw.get('review') or {}).get('answer_cache', False):
+    if cfg.agent.kind != 'ollama' or not cfg.agent.allow_direct_api or not (cfg.raw.get('review') or {}).get('answer_cache', False):
         return None
     digest = model_digest(cfg.agent)
     if not digest:

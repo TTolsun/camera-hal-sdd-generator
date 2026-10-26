@@ -180,7 +180,9 @@ def inputs(cfg, model, section, plan):
     if len(required_symbols) > limit:
         raise ValueError('Visual required_symbols exceed the node limit')
     pin = digest({'plan': plan, 'policy': system, 'limit': limit,
-                  'agent': {'kind': cfg.agent.kind, 'model': cfg.agent.model, 'base_url': cfg.agent.base_url},
+                  'agent': {'kind': cfg.agent.kind, 'model': cfg.agent.model, 'base_url': cfg.agent.base_url,
+                            **({'runner': cfg.agent.runner, 'command': cfg.agent.command, 'args': cfg.agent.args}
+                               if cfg.agent.kind == 'cli' else {})},
                   'sources': {k: {f: r[f] for f in ('file', 'line', 'sha256', 'selector')} for k, r in records.items()}})
     return pin, records, passages, system, {'question': plan['question'], 'kind': plan['kind'],
                                          'instructions': plan.get('prompt', ''),
@@ -313,7 +315,7 @@ def render(cfg, model, section, artifact=None):
 def generate(cfg, model, section, agent, previous=None):
     from .export_html import _split
     prior = {}
-    if previous:
+    if previous and not (cfg.agent.kind == 'cli' and not cfg.agent.model):
         meta, body = _split(previous)
         saved = meta.get('generated_visuals', {})
         if (isinstance(saved, dict) and isinstance(saved.get('records'), dict)
@@ -339,11 +341,12 @@ def generate(cfg, model, section, agent, previous=None):
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Visual evidence input exceeds budget; evidence is not truncated')
-            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'))} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
+            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'))} if cfg.agent.kind in ('cli', 'ollama', 'response-bundle') else {}
             raw = agent.chat(system, user, tag=f"visual_{section['id']}_{plan['id']}_{attempt}", **options)
             try:
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
-                producer = f'{cfg.agent.kind}/{cfg.agent.model}'
+                producer = (f'cli/{cfg.agent.runner}/{cfg.agent.model or "cli-default"}' if cfg.agent.kind == 'cli'
+                            else f'{cfg.agent.kind}/{cfg.agent.model}')
                 graph = materialize(cfg, model, section, plan, draft, producer)
                 records[plan['id']] = {'input_fingerprint': pin, 'draft': draft, 'graph': graph,
                                        'producer': producer, 'generation_commit': model.meta['source_commit'], 'reused': False}

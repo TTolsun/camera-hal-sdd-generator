@@ -69,6 +69,14 @@ def _ask(cfg, prompt, options, work):
     if len(prompt) > int(options.get("max_input_chars", 24000)):
         raise ValueError("누락 점검 입력 한도를 초과했습니다. 점검 범위 또는 발췌 크기를 줄이세요.")
     (work / "prompt.txt").write_text(prompt, encoding="utf-8")
+    if cfg.agent.kind == 'cli' and 'command' in options:
+        raise ValueError('CLI 모드에서는 automation.hermes.command 대신 agent.command를 사용하세요.')
+    if cfg.agent.kind == 'cli':
+        from .llm import Agent
+        text = Agent(replace(cfg.agent, timeout_sec=int(options.get('timeout_sec', cfg.agent.timeout_sec))), work).chat(
+            'Review only the supplied evidence. Return only the requested JSON.', prompt, tag='idle-review')
+        (work / 'response.txt').write_text(text, encoding='utf-8')
+        return json.loads(text)
     command = options.get("command", ["hermes", "--ignore-rules", "--toolsets", "todo", "--reasoning", "none", "-z", "{prompt}"])
     if (not isinstance(command, list) or not command or any(not isinstance(a, str) or not a for a in command)
             or not any("{prompt}" in a for a in command)):

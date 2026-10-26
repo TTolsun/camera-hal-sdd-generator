@@ -13,7 +13,7 @@ def test_http_receipts_survive_retries_and_omit_credentials(tmp_path, monkeypatc
         return {'model': 'qwen-local', 'done_reason': 'stop', 'eval_count': 35,
                 'message': {'content': 'generated\nanswer', 'thinking': 'private reasoning'}}
     monkeypatch.setattr(Agent, '_post', post)
-    cfg = AgentConfig(kind='ollama', model='qwen-local')
+    cfg = AgentConfig(kind='ollama', allow_direct_api=True, model='qwen-local')
     for _ in range(2):
         Agent(cfg, tmp_path).chat('source rules', 'source', tag='same', response_schema={'type': 'object'})
     receipts = list(tmp_path.glob('calls/*/*.receipt.json'))

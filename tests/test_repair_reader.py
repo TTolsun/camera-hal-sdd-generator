@@ -11,7 +11,7 @@ from sdd.repair_reader import import_calls, repair, digest
 
 @pytest.fixture
 def recorded(tmp_path):
-    cfg = AgentConfig(kind='ollama', model='test-model')
+    cfg = AgentConfig(kind='ollama', allow_direct_api=True, model='test-model')
     seed = tmp_path / 'seed'
     agent = Agent(cfg, seed / 'prompts')
     # Synthetic transport response for provenance unit tests, never an eval.

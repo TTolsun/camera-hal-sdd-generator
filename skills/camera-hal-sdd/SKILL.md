@@ -12,6 +12,8 @@ metadata:
 
 반입 ZIP을 받은 경우 [패키지 시작 안내](../../docs/inhouse/package.md)의 무결성 검사·실행 순서·합격 기준·복구 진입점을 먼저 사용합니다. 안내와 CLI는 같은 커밋의 파일을 사용하며 설치된 스킬만 최신 것으로 바꾸지 않습니다.
 
+기본 모델 실행은 Hermes CLI이며 사용자가 선택하면 OpenCode 또는 Claude Code CLI로 바꿉니다. `agent.kind: cli`와 `agent.runner`를 사용하고 `docs/inhouse/cli-agents.md`를 따릅니다. 모델과 제공자는 선택한 CLI에서 설정합니다. CLI 실패를 Ollama 직접 호출이나 다른 CLI로 대체하지 않습니다.
+
 ## 저장소와 실행 환경 찾기
 
 1. 사용자에게 받은 생성기 저장소 경로를 확인합니다. 경로가 없으면 현재 작업 공간에서 `pyproject.toml`, `src/sdd/`, `docs/inhouse/agent.md`가 함께 있는 곳을 찾습니다. 없으면 반입된 생성기 위치를 요청합니다. 이 스킬만으로 생성기를 설치하거나 공개 원격을 임의로 복제하지 않습니다.

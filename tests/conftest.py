@@ -55,4 +55,7 @@ def tmp_cfg(tmp_path: Path):
         "review:\n  require_citations: true\n  max_retries: 1\n",
         encoding="utf-8")
     (root / "hal").mkdir()
-    return load(root / "sdd.yaml")
+    cfg = load(root / "sdd.yaml")
+    # Legacy transport tests supply synthetic HTTP responses; no model call is made.
+    cfg.agent.allow_direct_api = True
+    return cfg

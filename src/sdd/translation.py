@@ -44,7 +44,7 @@ def translate_missing(cfg, catalog, agent=None):
                  and 0 < len(value) <= 80 and '{{' not in key and '{{' not in value and key in source}
         user = json.dumps({'source': source, 'known_terms': terms}, ensure_ascii=False)
         base_user = user
-        options = {'response_schema': schema} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
+        options = {'response_schema': schema} if cfg.agent.kind in ('cli', 'ollama', 'response-bundle') else {}
         # Translations depend on the exact display string and terminology,
         # not a source-code commit. Revalidate checkpoints before using them.
         cached_path = answer_cache.checkpoint(cfg, None, system, user,

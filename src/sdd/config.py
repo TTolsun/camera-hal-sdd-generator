@@ -14,8 +14,12 @@ import yaml
 
 @dataclass
 class AgentConfig:
-    kind: str = "dry-run"
-    model: str = "qwen3.5:4b"
+    kind: str = "cli"
+    model: str = ""
+    runner: str = "hermes"
+    command: list[str] = field(default_factory=list)
+    args: list[str] = field(default_factory=list)
+    allow_direct_api: bool = False
     base_url: str = "http://localhost:11434"
     max_input_chars: int = 18000
     temperature: float = 0.1
@@ -32,6 +36,11 @@ class AgentConfig:
     response_dir: str = ""
     # 인증 토큰을 읽을 환경 변수. 설정 파일로 바꿀 수 없고, 다른 엔드포인트로 갈 때만 코드가 바꾼다.
     api_key_env: str = "SDD_AGENT_API_KEY"
+
+    @property
+    def label(self):
+        return (f'cli/{self.runner}/{self.model or "cli-default"}' if self.kind == 'cli'
+                else f'{self.kind}/{self.model}')
 
 
 @dataclass
@@ -158,6 +167,18 @@ def load(path: Path | None = None) -> Config:
     tools = raw.get("tools", {}) or {}
     agent_raw = raw.get("agent", {}) or {}
     review = raw.get("review", {}) or {}
+    for key in ('command', 'args'):
+        value = agent_raw.get(key, [])
+        if not isinstance(value, list) or any(not isinstance(a, str) or not a for a in value):
+            raise ValueError(f'agent.{key}는 비어 있지 않은 문자열의 인자 목록이어야 합니다.')
+    kind = str(agent_raw.get('kind', 'cli'))
+    if kind not in ('cli', 'dry-run', 'response-bundle', 'ollama', 'openai-compatible'):
+        raise ValueError('agent.kind는 cli, dry-run, response-bundle, ollama, openai-compatible 중 하나여야 합니다.')
+    runner = str(agent_raw.get('runner', 'hermes'))
+    if kind == 'cli' and runner not in ('hermes', 'opencode', 'claude'):
+        raise ValueError('agent.runner는 hermes, opencode, claude 중 하나여야 합니다.')
+    if 'allow_direct_api' in agent_raw and not isinstance(agent_raw['allow_direct_api'], bool):
+        raise ValueError('agent.allow_direct_api는 boolean이어야 합니다.')
 
     ndk = dict(src.get("ndk_build", {}) or {})
     if ndk.get("project_dir"):
@@ -167,8 +188,12 @@ def load(path: Path | None = None) -> Config:
         ndk["clang"] = str(rel(ndk["clang"], "."))
 
     agent = AgentConfig(
-        kind=str(agent_raw.get("kind", "dry-run")),
-        model=str(agent_raw.get("model", "qwen3.5:4b")),
+        kind=kind,
+        model=str(agent_raw.get("model", "" if kind == 'cli' else "qwen3.5:4b")),
+        runner=runner,
+        command=list(agent_raw.get('command', [])),
+        args=list(agent_raw.get('args', [])),
+        allow_direct_api=agent_raw.get('allow_direct_api', False),
         base_url=str(agent_raw.get("base_url", "http://localhost:11434")).rstrip("/"),
         max_input_chars=int(agent_raw.get("max_input_chars", 18000)),
         temperature=float(agent_raw.get("temperature", 0.1)),
