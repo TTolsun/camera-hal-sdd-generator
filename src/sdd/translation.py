@@ -32,6 +32,16 @@ def _validate_text(source, text):
     return text.strip()
 
 
+# "파일:줄 발췌" 라벨은 번역할 문장이 아니라 위치 표기다. 모델에 맡기면 파일 읽기 요청으로 오해해 실패하는 경우가 있어
+# (예: Documentation/introduction.rst:10 발췌) 기존 번역과 같은 형식으로 결정적으로 만든다.
+_LOCATION_LABEL = re.compile(r"^(\S+:\d+) 발췌$")
+
+
+def fixed_translation(source):
+    match = _LOCATION_LABEL.match(source)
+    return f"{match[1]} excerpt" if match else None
+
+
 def translate_missing(cfg, catalog, agent=None):
     if cfg.agent.kind == 'dry-run':
         raise ValueError('Translation requires an actual LLM response.')
@@ -39,6 +49,8 @@ def translate_missing(cfg, catalog, agent=None):
     if type(size) is not int or not 1 <= size <= 16:
         raise ValueError('site.translation_batch_size must be an integer from 1 to 16.')
     agent = agent or Agent(cfg.agent, cfg.build_dir / 'translation-prompts')
+    catalog = {**catalog, 'strings': {source: value or fixed_translation(source) or value
+                                      for source, value in catalog['strings'].items()}}
     if size > 1:
         return _batched(cfg, catalog, agent, size)
     system = ('Translate Korean technical documentation into clear English. '
