@@ -9,9 +9,12 @@ import json
 import re
 from pathlib import Path
 
+from .call_records import canonical_request_hash, iter_records
+from .trial_workspace import reject_symlinks
+
 
 def sha(value):
-    return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+    return canonical_request_hash(value)
 
 
 def context(request):
@@ -37,20 +40,17 @@ class Archive:
     def __init__(self, root: Path, cfg):
         self.records = []
         self.exact = {}
+        root = reject_symlinks(root).resolve()
         settings = {key: getattr(cfg, key) for key in ('temperature', 'think', 'num_ctx', 'max_output_tokens')}
-        for path in sorted(root.rglob('*.receipt.json')):
-            receipt = json.loads(path.read_text(encoding='utf-8'))
-            prefix = path.name.removesuffix('.receipt.json')
-            request = json.loads(path.with_name(prefix + '.request.json').read_text(encoding='utf-8'))
-            raw = path.with_name(prefix + '.response.txt').read_bytes().decode('utf-8')
-            if receipt['request_sha256'] != sha(request) or receipt['response_sha256'] != hashlib.sha256(raw.encode()).hexdigest():
-                raise ValueError('HTTP replay archive checksum mismatch: ' + path.name)
-            if (receipt.get('http_call') is not True or receipt.get('transport') != cfg.kind
+        for loaded in iter_records(root):
+            receipt, request, raw = loaded.receipt, loaded.request, loaded.raw
+            if (receipt.get('http_call') is not True or receipt.get('cli_call') is True
+                    or receipt.get('transport') != cfg.kind
                     or receipt.get('model') != cfg.model or receipt.get('settings') != settings
                     or receipt.get('provider', {}).get('done_reason') == 'length'
                     or receipt.get('provider', {}).get('finish_reason') == 'length'):
                 continue
-            record = {'raw': raw, 'request': request, 'receipt': path.relative_to(root).as_posix(),
+            record = {'raw': raw, 'request': request, 'receipt': loaded.receipt_path.relative_to(root).as_posix(),
                       'request_sha256': receipt['request_sha256'], 'response_sha256': receipt['response_sha256'],
                       'tag': receipt['tag'], 'completed_at': receipt.get('completed_at', '')}
             self.exact.setdefault(receipt['request_sha256'], []).append(record)

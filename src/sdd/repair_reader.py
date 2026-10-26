@@ -16,10 +16,12 @@ import shutil
 import time
 
 from .config import load
+from .call_records import iter_records
 from .evidence import collect
 from .facts.model import KnowledgeModel
 from .generate import Generator
 from .llm import Agent
+from .trial_workspace import clone_config, contained_path, reject_symlinks, validate_output, write_snapshot
 
 
 def digest(text):
@@ -31,24 +33,27 @@ def import_calls(seed, agent_cfg, destination, bundle):
     calls = seed / 'calls'
     if not calls.exists():
         calls = seed / 'prompts' / 'calls'
+    calls = reject_symlinks(calls).resolve()
+    reject_symlinks(destination, recursive=True)
+    reject_symlinks(bundle, recursive=True)
     records, unique = [], {}
-    for path in sorted(calls.rglob('*.receipt.json')):
-        prefix = str(path).removesuffix('.receipt.json')
-        request_path, response_path = Path(prefix + '.request.json'), Path(prefix + '.response.txt')
-        receipt = json.loads(path.read_text(encoding='utf-8'))
-        request = json.loads(request_path.read_text(encoding='utf-8'))
-        response = response_path.read_text(encoding='utf-8')
-        key = digest(json.dumps(request, ensure_ascii=False, sort_keys=True))
-        if (receipt.get('http_call') is not True or receipt.get('transport') != agent_cfg.kind
-                or receipt.get('model') != agent_cfg.model or receipt.get('request_sha256') != key
-                or receipt.get('response_sha256') != digest(response)
+    for record in iter_records(calls):
+        receipt, response = record.receipt, record.raw
+        key = receipt['request_sha256']
+        if (receipt.get('http_call') is not True or receipt.get('cli_call') is True
+                or receipt.get('transport') != agent_cfg.kind
+                or receipt.get('model') != agent_cfg.model
                 or any(receipt.get('settings', {}).get(k) != getattr(agent_cfg, k)
                        for k in ('temperature', 'think', 'num_ctx', 'max_output_tokens'))):
-            raise ValueError(f'HTTP origin, request, response, model or settings mismatch: {path.name}')
+            raise ValueError(f'HTTP origin, request, response, model or settings mismatch: {record.receipt_path.name}')
+        provider = receipt.get('provider') or {}
+        if (not isinstance(provider, dict)
+                or any(provider.get(key) == 'length' for key in ('done_reason', 'finish_reason'))):
+            raise ValueError(f'Incomplete HTTP response cannot be imported: {record.receipt_path.name}')
         if key in unique and unique[key] != response:
             raise ValueError('Conflicting responses for the same request; select a non-conflicting seed.')
         unique[key] = response
-        records.append((path, request_path, response_path))
+        records.append((record.receipt_path, record.request_path, record.response_path))
     if not records:
         raise ValueError('The seed has no verified HTTP responses.')
     for paths in records:
@@ -69,34 +74,31 @@ def repair(cfg, seed, section_ids, out, *, agent_factory=Agent):
     sections = {s['id']: s for s in cfg.sections()}
     if not section_ids or any(s not in sections or sections[s].get('design_generation') != 'llm' for s in section_ids):
         raise ValueError('Select configured LLM design sections.')
-    seed, out = seed.resolve(), out.resolve()
-    protected = [cfg.root, cfg.source_root, cfg.sdd_dir, cfg.facts_dir, seed]
-    if out.exists() or any(p.resolve().is_relative_to(out) for p in protected) or any(
-            out.is_relative_to(p.resolve()) for p in protected[1:]):
-        raise ValueError('Repair requires a new isolated output directory.')
-    before = json.loads((seed / 'evaluation.json').read_text(encoding='utf-8'))
+    try:
+        out = validate_output(cfg, out, previous=[seed])
+    except ValueError as exc:
+        raise ValueError(f'Repair requires a new isolated output directory. {exc}') from exc
+    seed = reject_symlinks(seed).resolve()
+    before = json.loads(contained_path(seed, 'evaluation.json').read_text(encoding='utf-8'))
     model = KnowledgeModel.load(cfg.facts_path)
     if before['source_commit'] != model.meta['source_commit']:
         raise ValueError('This repair path requires the same source commit; use update for source changes.')
     out.mkdir(parents=True)
     bundle = out / 'responses'
     imported = import_calls(seed, cfg.agent, out / 'calls', bundle)
-    trial = copy.deepcopy(cfg)
     snapshot = out / 'sections.yaml'
     snapshot.write_bytes(cfg.sections_file.read_bytes())
-    trial.paths = {**trial.paths, 'sections_file': snapshot, 'scenarios_file': cfg.scenarios_file,
-                   'prompts': cfg.prompts_dir, 'templates': cfg.templates_dir, 'style': cfg.style_dir}
-    trial.root, trial.sdd_dir, trial.facts_dir = out, out / 'manuscripts', out / 'facts'
-    trial.diagrams_dir = trial.sdd_dir / 'diagrams'
-    trial.raw.setdefault('site', {})['enabled'] = False
+    trial = clone_config(cfg, out, sections_file=snapshot)
     collect(trial, model)
     model.save(trial.facts_path)
     live = agent_factory(copy.deepcopy(cfg.agent), out / 'new-prompts')
     trial.agent.kind, trial.agent.response_dir = 'response-bundle', str(bundle)
+    write_snapshot(trial, out / 'sdd.yaml')
     replay = Agent(trial.agent, out / 'replay-prompts')
 
     class RepairAgent:
         reused = 0
+        new_attempts = 0
         def chat(self, system, user, tag='prompt', response_schema=None):
             request = dict(system=system, user=user, response_schema=response_schema)
             key = digest(json.dumps(request, ensure_ascii=False, sort_keys=True))
@@ -104,6 +106,7 @@ def repair(cfg, seed, section_ids, out, *, agent_factory=Agent):
             if path.exists():
                 self.reused += 1
             else:
+                self.new_attempts += 1
                 response = live.chat(system, user, tag=tag, response_schema=response_schema)
                 path.write_text(json.dumps(dict(schema=1, model=cfg.agent.model,
                     request_sha256=key, response=response), ensure_ascii=False), encoding='utf-8')
@@ -123,14 +126,15 @@ def repair(cfg, seed, section_ids, out, *, agent_factory=Agent):
         shutil.copytree(out / 'new-prompts/calls', out / 'calls', dirs_exist_ok=True)
     report = dict(schema=1, source_commit=model.meta['source_commit'], provider=cfg.agent.kind, model=cfg.agent.model,
         execution_mode='verified-http-replay-and-live-repair', manuscript_agent='response-bundle/' + cfg.agent.model,
-        seed_report_sha256=hashlib.sha256((seed / 'evaluation.json').read_bytes()).hexdigest(),
-        imported_requests=imported, reused_responses=agent.reused, new_http_attempts=live._counter,
+        seed_report_sha256=hashlib.sha256(contained_path(seed, 'evaluation.json').read_bytes()).hexdigest(),
+        imported_requests=imported, reused_responses=agent.reused, new_http_attempts=agent.new_attempts,
         new_http_calls=len(list((out / 'new-prompts/calls').rglob('*.receipt.json'))),
         settings={**{k: getattr(cfg.agent, k) for k in ('temperature', 'think', 'num_ctx', 'max_output_tokens')},
                   'max_retries': cfg.max_retries, 'design_prompt': cfg.raw.get('review', {}).get('design_prompt', 'standard')},
         sections_sha256=hashlib.sha256(snapshot.read_bytes()).hexdigest(),
         generator_files_sha256={n: hashlib.sha256(Path(__file__).with_name(n).read_bytes()).hexdigest()
-            for n in ('repair_reader.py', 'generated_design.py', 'evidence.py', 'focused_prompt.py', 'prompting.py')},
+            for n in ('repair_reader.py', 'generated_design.py', 'evidence.py', 'focused_prompt.py', 'prompting.py',
+                      'trial_workspace.py', 'call_records.py')},
         results=results, semantic_review='pending', human_approval='pending', publishable=False,
         checks_scope='Exact HTTP provenance and configured checks, not a fresh full-model run or semantic approval.')
     (out / 'evaluation.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

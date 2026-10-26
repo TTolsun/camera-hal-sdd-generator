@@ -74,9 +74,13 @@ class Budget:
 
 
 def latest_response(trial, key):
+    from .call_records import load_record
+    from .trial_workspace import reject_symlinks
+
     folder = trial / 'replay-prompts/calls'
     if not folder.exists():
         folder = trial / 'prompts/calls'
+    folder = reject_symlinks(folder, recursive=True)
     prefix = key.replace('/', '_') + '_'
     found = []
     for path in folder.rglob('*.receipt.json'):
@@ -84,14 +88,8 @@ def latest_response(trial, key):
         # Numeric suffix avoids prefix collisions between topic/part IDs.
         tag_match = re.fullmatch(re.escape(prefix) + r'(?:sub(\d+)_)?\d+(?:_revision)?', receipt['tag'])
         if tag_match:
-            stem = str(path).removesuffix('.receipt.json')
-            response = Path(stem + '.response.txt').read_text(encoding='utf-8')
-            request = json.loads(Path(stem + '.request.json').read_text(encoding='utf-8'))
-            from .repair_reader import digest
-            if (receipt['response_sha256'] != digest(response)
-                    or receipt['request_sha256'] != policy.digest(request)):
-                raise ValueError('Trial response or request hash mismatch')
-            found.append((receipt['completed_at'], receipt, response, tag_match[1]))
+            record = load_record(path, root=folder)
+            found.append((receipt['completed_at'], record.receipt, record.raw, tag_match[1]))
     children = {item[3] for item in found if item[3] is not None}
     if children:
         chosen = [max((item for item in found if item[3] == child), key=lambda item:item[0])
