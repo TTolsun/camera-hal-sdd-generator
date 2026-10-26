@@ -209,7 +209,7 @@ def test_고를_수_있는_클래스는_계속_보고한다(tmp_cfg):
     assert [f['name'] for f in report.coverage['findings']] == ['Ctx']
 
 
-def test_impact_config_changes_옵션은_원고가_없는_설계_섹션을_영향_섹션에_넣는다(tmp_cfg):
+def test_impact_config_changes_option_adds_design_section_without_manuscript(tmp_cfg):
     import yaml
     base, head = revision_pair(tmp_cfg)
     KnowledgeModel(meta={'source_commit': head}).save(tmp_cfg.facts_path)
