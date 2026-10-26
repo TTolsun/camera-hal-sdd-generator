@@ -257,7 +257,10 @@ def validate_answers(model, section, answers):
         # A narrow question may have one short complete answer; do not pad it.
         findings = check(text, allowed, require=True, min_chars=1).notes
         names = source_names(model, [b.text for b in blocks])
-        findings += describe(lint(text, names))
+        # materialize has already checked repeated statements with their exact
+        # source records. Do not discard that evidence by applying the weaker
+        # citation-only heuristic again; all other manuscript rules still apply.
+        findings += describe(lint(text, names, check_duplicates=False))
         # Excerpts can contain standard-library types and aliases absent from
         # extracted ClassInfo. Accept only exact identifiers in this topic's
         # verified source; this does not add inheritance/relationship facts.
