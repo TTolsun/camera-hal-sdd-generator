@@ -2202,39 +2202,6 @@ sections:
   show_evidence: true
   design_generation: llm
   design_grounding: true
-- id: ipu3-lsc
-  group: For Vendor
-  nav_section: 장치별 기능 구현
-  title: IPU3 LSC와 상태 연결
-  output: ipu3-lsc.md
-  kind: prose
-  lead: 현재 커밋의 LSC 구현과 IPU3 상태 연결을 확인하세요.
-  reader: IPU3 변경을 검토하는 개발자
-  semantic_review: true
-  answers:
-  - Lsc가 현재 facts에 존재합니까? 없으면 구현이 있다고 서술하지 마세요.
-  - 직접 상속과 필드 참조를 구분하고 IPU3 상태의 LSC 연결을 설명하세요.
-  - LSC 자유 함수의 역할은 추출된 근거 범위에서만 설명하세요.
-  facts:
-    classes:
-    - libcamera::ipa::ipu3::algorithms::Lsc
-    - libcamera::ipa::ipu3::IPAActiveState
-    - libcamera::ipa::ipu3::IPAFrameContext
-    - libcamera::ipa::lsc::ActiveState
-    - libcamera::ipa::lsc::FrameContext
-    - libcamera::ipa::LscAlgorithm
-    - libcamera::ipa::ipu3::IPAContext
-    - libcamera::ipa::ipu3::IPASessionConfiguration
-    functions:
-    - libcamera::ipa::ipu3::algorithms::quantize
-    - libcamera::ipa::ipu3::algorithms::logCategoryIPU3Lsc
-  watch:
-  - src/ipa/ipu3/**
-  - src/ipa/libipa/lsc*
-  next:
-    title: IPU3 LSC의 설정과 프레임 처리
-    link: ipu3-lsc-flow.md
-  narration: facts
 - id: ipu3-lsc-flow
   group: For Vendor
   nav_section: 장치별 기능 구현
@@ -5394,9 +5361,42 @@ sections:
   next:
     title: 시스템 개요
     link: overview.md
+- id: ipu3-lsc
+  group: For Developer
+  nav_section: 코드 탐색
+  title: IPU3 LSC와 상태 연결
+  output: ipu3-lsc.md
+  kind: prose
+  lead: 현재 커밋의 LSC 구현과 IPU3 상태 연결을 확인하세요.
+  reader: IPU3 변경을 검토하는 개발자
+  semantic_review: true
+  answers:
+  - Lsc가 현재 facts에 존재합니까? 없으면 구현이 있다고 서술하지 마세요.
+  - 직접 상속과 필드 참조를 구분하고 IPU3 상태의 LSC 연결을 설명하세요.
+  - LSC 자유 함수의 역할은 추출된 근거 범위에서만 설명하세요.
+  facts:
+    classes:
+    - libcamera::ipa::ipu3::algorithms::Lsc
+    - libcamera::ipa::ipu3::IPAActiveState
+    - libcamera::ipa::ipu3::IPAFrameContext
+    - libcamera::ipa::lsc::ActiveState
+    - libcamera::ipa::lsc::FrameContext
+    - libcamera::ipa::LscAlgorithm
+    - libcamera::ipa::ipu3::IPAContext
+    - libcamera::ipa::ipu3::IPASessionConfiguration
+    functions:
+    - libcamera::ipa::ipu3::algorithms::quantize
+    - libcamera::ipa::ipu3::algorithms::logCategoryIPU3Lsc
+  watch:
+  - src/ipa/ipu3/**
+  - src/ipa/libipa/lsc*
+  next:
+    title: IPU3 LSC의 설정과 프레임 처리
+    link: ipu3-lsc-flow.md
+  narration: facts
 - id: ipa-module-validation
-  group: For Vendor
-  nav_section: 연동 구현
+  group: For Developer
+  nav_section: 동작 추적과 문제 진단
   title: IPA 모듈 정보 검사와 서명 파일 누락
   output: ipa-module-validation.md
   kind: prose
