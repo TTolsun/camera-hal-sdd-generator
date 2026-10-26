@@ -199,7 +199,7 @@ def source_names(model, records):
     names |= {name.rsplit('::', 1)[-1] for name in names}
     tokens = set(re.findall(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*', '\n'.join(records)))
     tokens |= {name.split('::', 1)[0] for name in tokens}
-    return names & tokens
+    return (names & tokens) | {name for name in tokens if '_' in name}
 
 
 def normalize_answer(model, statements, sources):
@@ -374,6 +374,14 @@ def generate(generator, section, previous=None):
         if topic_policy != prompt_policy:
             inputs[topic['id']] = topic_inputs(model, section, topic_policy + json.dumps(policy))[topic['id']]
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
+    # Typography is mechanical: retain the model's words while preventing
+    # source identifiers with underscores from becoming Markdown emphasis.
+    for topic in section['design_topics']:
+        if topic['id'] in answers:
+            prefix = f"{section['id']}/{topic['id']}/"
+            normalize_answer(model, answers[topic['id']], [record['text']
+                for key, record in model.evidence.items()
+                if key.startswith(prefix) and record.get('status') == 'available'])
     reused = list(answers)
     units = []
     for topic in section['design_topics']:

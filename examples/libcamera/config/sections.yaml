@@ -5036,7 +5036,7 @@ sections:
     link: overview.md
 - id: ipa-module-validation
   group: For Vendor
-  nav_section: 구현 상세
+  nav_section: 연동 구현
   title: IPA 모듈 정보 검사와 서명 파일 누락
   output: ipa-module-validation.md
   kind: prose

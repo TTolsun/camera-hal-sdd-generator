@@ -40,7 +40,7 @@ def test_truncated_responses_are_archived_but_never_accepted(tmp_path, monkeypat
         return {'choices': [{'message': {'content': content}, 'finish_reason': 'length'}]}
     monkeypatch.setattr(Agent, '_post', post)
     with pytest.raises(AgentError, match='출력 토큰 한도'):
-        Agent(AgentConfig(kind=provider), tmp_path).chat('rules', 'source')
+        Agent(AgentConfig(kind=provider, allow_direct_api=True), tmp_path).chat('rules', 'source')
     receipt = next(tmp_path.glob('calls/*/*.receipt.json'))
     prefix = receipt.with_name(receipt.name.removesuffix('.receipt.json'))
     assert prefix.with_suffix('.response.txt').read_text() == content

@@ -921,3 +921,13 @@ def test_cli_selection_invalidates_topic_reuse(tmp_cfg, generated, selection):
         tmp_cfg.agent.args = ['--provider', 'other']
     Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
     assert len(agent.calls) == 1
+
+
+def test_source_member_underscores_render_verbatim_without_rewriting_model_text(tmp_cfg, generated):
+    from sdd.generated_design import normalize_answer
+    _, model, _, _ = generated
+    statement = {'text': '조사에서 _d()->metadata_ 변수를 기록 항목으로 제안합니다.'}
+    original = statement['text']
+    normalize_answer(model, [statement], ['_d()->metadata_.clear();'])
+    assert statement['text'].replace('`', '') == original
+    assert '`_d()`->`metadata_`' in statement['text']
