@@ -12,6 +12,12 @@ from sdd.llm import Agent
 from sdd.facts.model import KnowledgeModel
 
 
+def wire(value):
+    value=copy.deepcopy(value)
+    for finding in value.get('findings', []):finding.pop('quote',None)
+    return value
+
+
 def verdict(kind='acceptable'):
     return dict(verdict=kind, checks={k:'pass' for k in policy.CHECKS}, findings=[], clarification='', expand=[])
 
@@ -65,7 +71,7 @@ def factory(mode='repair'):
                 text=('`stop()`은 대기 요청을 취소한 뒤 장치 해제 함수를 호출합니다.' if expanded and mode!='repeat'
                       else '대기 요청을 취소하는 함수가 호출됩니다.')
                 result={'statements':[dict(text=text,quote_id=quote,covers=['stop'],kind='behavior')]}
-            return {'message':{'content':json.dumps(result,ensure_ascii=False)},'done':True}
+            return {'message':{'content':json.dumps(wire(result),ensure_ascii=False)},'done':True}
         agent._post=post
         return agent
     return create
@@ -163,7 +169,7 @@ def test_no_progress_and_transport_failure_are_explicit_stops(project,tmp_path):
                 p=verdict('repair');p['checks']['coverage']='fail'
                 p.update(expand=['s:current'],findings=[dict(category='coverage',candidate='s:current',
                     quote='cancelPending();',issue='Needs clarification')])
-                return {'message':{'content':json.dumps(p)},'done':True}
+                return {'message':{'content':json.dumps(wire(p))},'done':True}
             return original(url,body)
         agent._post=post
         return agent
@@ -210,3 +216,23 @@ def test_input_change_stops_before_next_round_and_never_exposes_candidate(projec
     r=run(project,['device'],tmp_path/'loop',agent_factory=edits_input)
     assert r['stop_reason']=='inputs_changed' and 'candidate_trial' not in r
     assert len(r['rounds'])==1
+
+
+def test_source_ids_resolve_exact_quotes_and_cannot_smuggle_rewritten_evidence():
+    pool={'s:current':dict(source='s',text='return ready && permitted;')}
+    p=verdict('repair');p['checks']['conditions']='fail'
+    p.update(clarification='두 조건을 함께 설명하세요.',findings=[dict(
+        category='conditions',candidate='s:current',issue='Missing conjunction')])
+    decoded=policy.decode(json.dumps(p),pool)
+    assert decoded['findings'][0]['quote']==pool['s:current']['text']
+    p['findings'][0]['quote']='a model-invented quote'
+    with pytest.raises(ValueError,match='quotes are generated'):policy.decode(json.dumps(p),pool)
+
+
+def test_cut_boolean_expression_requires_smallest_authorized_complete_scope():
+    pool={'s:current':dict(source='s',text='return ready &&'),
+          's:scope0':dict(source='s',text='bool submit() { return ready && permitted; }'),
+          's:scope1':dict(source='s',text='surrounding context bool submit() { return ready && permitted; } more context')}
+    gaps,required=policy.incomplete_expressions(pool)
+    assert len(gaps)==1 and required==['s:scope0']
+    assert policy.incomplete_expressions({'s:current':pool['s:scope0']})==([],[])

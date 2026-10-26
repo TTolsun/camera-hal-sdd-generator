@@ -12,6 +12,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 import time
 
 import yaml
@@ -228,9 +229,18 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                 error = automatic_error(current, model, mapping[key], raw)
                 pool = pools[key]
                 current_pool = {k:v for k,v in pool.items() if k.endswith(':current')}
+                gaps, required_expansions = policy.incomplete_expressions(pool)
+                try:
+                    decoded_answer = json.loads(raw)['statements']
+                    answer_text = [st['text'] for st in decoded_answer]
+                except (ValueError, TypeError, KeyError):
+                    answer_text = raw
+                answer_contract = (part or topic).get('answer_contract')
+                found_terms = [[term for term in group if term in str(answer_text)]
+                               for group in (answer_contract or {}).get('required_terms', [])]
                 payload = dict(original_question=(old_part or old_topic)['question'],
-                    current_question=(part or topic)['question'], answer_contract=(part or topic).get('answer_contract'),
-                    answer=raw, automatic_error=error,
+                    current_question=(part or topic)['question'], answer_contract=answer_contract,
+                    answer=answer_text, required_terms_found=found_terms, automatic_error=error, evidence_gaps=gaps,
                     candidates={k: {f:v for f,v in c.items() if f != 'selector'} for k,c in current_pool.items()})
                 review_key = policy.digest({'policy': policy.DIAGNOSIS_POLICY,
                                             'schema': policy.schema(current_pool), 'payload': payload})
@@ -243,23 +253,33 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                     user = json.dumps({**payload, 'output_schema': policy.schema(current_pool)}, ensure_ascii=False)
                     raw_review = critic.chat(policy.DIAGNOSIS_POLICY, user, tag='diagnose_' + key.replace('/', '_'),
                         response_schema=policy.schema(current_pool))
-                    proposal = json.loads(raw_review)
-                    policy.validate(proposal, current_pool)
+                    proposal = policy.decode(raw_review, current_pool)
                     reviews[review_key] = proposal
                 record = dict(target=key, response_sha256=receipt['response_sha256'],
                     request_sha256=receipt['request_sha256'], automatic_error=error,
                     review_key=review_key, reused_review=reused, diagnosis=proposal)
                 entry['reviews'].append(record)
-                if proposal['verdict'] != 'acceptable':
+                if proposal['verdict'] != 'acceptable' or gaps:
                     planning = {**payload, 'diagnosis': proposal,
                         'candidates': {k:{f:v for f,v in c.items() if f != 'selector'} for k,c in pool.items()},
+                        'required_expansions': required_expansions,
                         'output_schema': policy.schema(pool)}
-                    raw_plan = critic.chat(policy.PLANNING_POLICY, json.dumps(planning, ensure_ascii=False),
-                        tag='plan_' + key.replace('/', '_'), response_schema=policy.schema(pool))
-                    proposal = json.loads(raw_plan)
-                    policy.validate(proposal, pool)
-                    if proposal['verdict'] == 'acceptable':
-                        raise ValueError('A plan cannot approve an answer before regeneration')
+                    plan_user = json.dumps(planning, ensure_ascii=False)
+                    for attempt in range(cfg.max_retries + 1):
+                        raw_plan = critic.chat(policy.PLANNING_POLICY, plan_user,
+                            tag=f"plan_{key.replace('/', '_')}_{attempt}", response_schema=policy.schema(pool))
+                        try:
+                            proposal = policy.decode(raw_plan, pool)
+                            if proposal['verdict'] == 'acceptable':
+                                raise ValueError('A plan cannot approve an answer before regeneration')
+                            if proposal['verdict'] == 'repair' and not set(required_expansions) <= set(proposal['expand']):
+                                raise ValueError('Repair must select required_expansions: ' + repr(required_expansions))
+                            break
+                        except ValueError as exc:
+                            if attempt == cfg.max_retries:
+                                raise
+                            plan_user = json.dumps(planning, ensure_ascii=False) + '\nRejected proposal (not evidence):\n' + raw_plan + '\nCorrection: ' + str(exc)
+                    record['plan_attempts'] = attempt + 1
                 record['proposal'] = proposal
                 if proposal['verdict'] == 'insufficient_evidence':
                     report['stop_reason'] = 'insufficient_evidence'
@@ -269,7 +289,7 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                     completed += not bool(error)
                     unresolved |= bool(error)
                     continue
-                signature = policy.digest(sorted((f['category'], f['candidate'].split(':')[0], f['quote'])
+                signature = policy.digest(sorted((f['category'], pool[f['candidate']]['source'], f['quote'])
                                                   for f in proposal['findings']))
                 previous, count = failures.get(key, (None, 0))
                 failures[key] = (signature, count + 1 if signature == previous else 1)
@@ -308,7 +328,7 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
         check_inputs()
     except BudgetExceeded as exc:
         report['stop_reason'] = str(exc)
-    except (ValueError, KeyError, TypeError, OSError, AgentError) as exc:
+    except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError, AgentError) as exc:
         report['stop_reason'], report['error'] = 'invalid_or_unavailable', str(exc)
     except KeyboardInterrupt:
         report['stop_reason'] = 'interrupted'
