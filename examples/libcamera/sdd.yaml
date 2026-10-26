@@ -82,5 +82,6 @@ diagrams:
   strip_namespace: 'libcamera::'
 
 visuals:
+  on_stale: omit
   file: config/visuals.yaml
   max_nodes: 12

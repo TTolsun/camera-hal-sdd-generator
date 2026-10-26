@@ -90,7 +90,7 @@ def validate(topic, statements):
             raise ValueError('정의되지 않은 세부 질문의 답변입니다.')
         return
     # Old parts without checks have no stored identities; preserve that format.
-    if not any('answer_contract' in p or p.get('subquestions') for p in parts) and not any('part_id' in st for st in statements):
+    if not any('answer_contract' in p or 'max_statements' in p or p.get('subquestions') for p in parts) and not any('part_id' in st for st in statements):
         return
     ids = {p['id'] for p in parts}
     if any(not isinstance(st.get('part_id'), str) or st['part_id'] not in ids for st in statements):
@@ -98,7 +98,7 @@ def validate(topic, statements):
     for part in parts:
         selected = [st for st in statements if st['part_id'] == part['id']]
         subquestions = part.get('subquestions', [])
-        maximum = len(subquestions) if subquestions else (1 if part.get('answer_contract') else 2)
+        maximum = len(subquestions) if subquestions else part.get('max_statements', 1 if part.get('answer_contract') else 2)
         sub_ids = [st.get('subpart_id') for st in selected]
         if (not 1 <= len(selected) <= maximum or
                 (subquestions and (any(type(i) is not int for i in sub_ids)

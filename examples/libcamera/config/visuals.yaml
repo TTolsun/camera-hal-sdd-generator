@@ -767,86 +767,86 @@ sections:
       label: waitingRequests_
       label_en: waitingRequests_
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/enqueue
+        sha256: 94dc76217ffb6f15b346216b0baaf049ce1939346bb1ec517589f26682f0092f
         quote: data->waitingRequests_.push(request);
     - id: ready
       label: 선두 요청이 prepared_인가?
       label_en: Is the front request prepared?
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/drain
+        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
         quote: if (!request->_d()->prepared_)
       shape: decision
     - id: limit
       label: 장치 큐 한도에 도달했는가?
       label_en: Device queue at its limit?
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/drain
+        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
         quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
       shape: decision
     - id: hold
       label: 대기열에 유지
       label_en: Stay in waiting queue
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/drain
+        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
         quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     - id: device
       label: queueRequestDevice()
       label_en: queueRequestDevice()
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/dispatch
+        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
         quote: int ret = queueRequestDevice(camera, request);
     - id: cancel
       label: 취소·완료 경로
       label_en: Cancellation and completion
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: fails in queuing the request to the hardware the request is cancelled.
+      - source: queue/dispatch
+        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+        quote: "if (ret)\n\t\tcancelRequest(request);"
     edges:
     - from: wait
       to: limit
       label: doQueueRequests()에서 확인
       label_en: Check in doQueueRequests()
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/drain
+        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
         quote: while (!data->waitingRequests_.empty()) {
     - from: limit
       to: hold
       label: '예: 새 요청을 전달하지 않음'
       label_en: 'Yes: stop forwarding'
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/drain
+        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
         quote: "if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)\n\t\t\tbreak;"
     - from: limit
       to: ready
       label: '아니오: 선두 요청 확인'
       label_en: 'No: inspect front request'
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/drain
+        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
         quote: Request *request = data->waitingRequests_.front();
     - from: ready
       to: hold
       label: '아니오: 준비를 기다림'
       label_en: 'No: wait for preparation'
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/drain
+        sha256: b2d2d134eaa639300cae5e7660d8453da545646bcc100bf640a981fa1371899d
         quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     - from: ready
       to: device
       label: '예: 준비 실패로 취소되지 않은 요청'
       label_en: 'Yes: unless cancelled during preparation'
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/dispatch
+        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
         quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera,\
           \ request);"
     - from: device
@@ -854,16 +854,16 @@ sections:
       label: 장치 제출 실패
       label_en: Device queue failure
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/dispatch
+        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
         quote: "if (ret)\n\t\tcancelRequest(request);"
     - from: ready
       to: cancel
       label: 준비 중 취소된 요청은 장치 제출 생략
       label_en: Skip device for cancelled request
       evidence:
-      - source: queue/queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: queue/dispatch
+        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
         quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}"
   - id: buffer-request-completion
     topic: completion

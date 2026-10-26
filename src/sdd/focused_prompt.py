@@ -7,8 +7,9 @@ import json
 OUTPUT = ('질문의 모든 조건에 답하는 한 문단. 여러 문장을 써도 됩니다.')
 
 
-def system_prompt(cfg):
-    mode = (cfg.raw.get('review') or {}).get('design_prompt', 'standard')
+def system_prompt(cfg, mode=None):
+    if mode is None:
+        mode = (cfg.raw.get('review') or {}).get('design_prompt', 'standard')
     if mode not in ('standard', 'focused'):
         raise ValueError('review.design_prompt는 standard 또는 focused여야 합니다.')
     if mode == 'standard':

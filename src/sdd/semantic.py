@@ -9,8 +9,9 @@ from .validate import extract_citations
 
 # 확인되지 않았다고 말하는 문장. 이런 문장은 인용할 근거 자체가 없다.
 _UNCERTAIN = re.compile(r"확인이 필요|확인해야|확인할 수 없|확인되지 않|확인하지 못|명시되지 않|"
-                        r"근거가 부족|근거가 없|보장하지 않|알 수 없|추출되지 않|존재하지 않")
+                        r"근거가 부족|근거가 없|알 수 없|추출되지 않|존재하지 않")
 _CHECK_OBLIGATION = re.compile(r"(?:호출자|구현자|구현체).*(?:확인해야)")
+_ABSENCE_CONDITION = re.compile(r"(?:존재하지 않|추출되지 않)(?:으면|을\s*(?:때|경우)|는\s*경우)")
 
 
 def only_uncertainty(paragraph: str) -> bool:
@@ -21,10 +22,14 @@ def only_uncertainty(paragraph: str) -> bool:
     사실을 하나라도 주장하는 문단은 그대로 인용을 요구한다.
     """
     sentences = [x for x in re.split(r"(?<=[.!?])\s+|\n", paragraph) if x.strip()]
+    # A negative guarantee (e.g. no automatic synchronization) is also a
+    # factual claim and needs a citation. It is not evidence uncertainty.
     # "The caller must ensure ..." asserts an API obligation. It needs
     # evidence just like other factual claims; it is not an admission that
     # evidence is missing. This classification does not approve that claim.
-    return bool(sentences) and all(_UNCERTAIN.search(x) and not _CHECK_OBLIGATION.search(x)
+    # "If the module does not exist, return nullptr" describes a branch. If
+    # the same sentence also says its behavior is unknown, retain that warning.
+    return bool(sentences) and all(_UNCERTAIN.search(_ABSENCE_CONDITION.sub('', x)) and not _CHECK_OBLIGATION.search(x)
                                    for x in sentences)
 
 
@@ -79,7 +84,9 @@ def review(text: str, model: KnowledgeModel, supplied: set[str], *, source_ident
             candidate = resolve(name)
             tail = sentence.split(f'`{name}`', 1)[1].split('`', 1)[0]
             absence = bool(re.search(r"존재하지 않|추출되지 않|포함되지 않|포함되어 있지 않", tail))
-            if absence and candidate:
+            # Conditional absence of an option is not a claim that the named
+            # enclosing class is missing from facts.
+            if absence and candidate and not _ABSENCE_CONDITION.search(tail):
                 findings.append(f"현재 facts에 있는 클래스를 없다고 서술했습니다: {name}")
             if "::" in name and not candidate and name not in model.functions and name not in (source_identifiers or set()):
                 # Qualified methods and enumerators may not be class entities.

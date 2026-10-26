@@ -101,10 +101,10 @@ def resolve_passages(statements, passages):
 def response_schema(topic, passages=None):
     def ids(values):
         return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
-    # A checked part has exactly one required factual/contract answer. Offering
-    # limitation here asks the model to choose an option the validator rejects,
-    # especially for negative but fully sourced API obligations.
-    kinds = ['behavior'] if topic.get('_max_statements') == 1 and topic.get('answer_contract') else ['behavior', 'limitation']
+    # A documented prohibition is a contract, not an admission of missing
+    # knowledge. Required contract answers already reject limitation-only
+    # replies; constrain their label instead of asking the model to guess it.
+    kinds = ['behavior'] if topic.get('answer_contract', {}).get('basis') == 'contract' else ['behavior', 'limitation']
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'quote_id', 'covers', 'kind'], 'properties': {
                      # C++ expressions such as request->_d()->cancel() and
@@ -188,6 +188,8 @@ def normalize_answer(model, statements, sources):
     if not isinstance(statements, list):
         return
     names = source_names(model, sources)
+    template = re.compile(r'\b(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*<[^<>\n;]+>')
+    templates = set(template.findall('\n'.join(sources)))
     token = re.compile(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*(?:\(\))?')
     def mark(match):
         word = match[0]
@@ -196,6 +198,10 @@ def normalize_answer(model, statements, sources):
     for statement in statements:
         if isinstance(statement, dict) and isinstance(statement.get('text'), str):
             parts = re.split(r'(`[^`]*`)', statement['text'])
+            marked = ''.join(part if i % 2 else template.sub(
+                lambda m: f'`{m[0]}`' if m[0] in templates else m[0], part)
+                for i, part in enumerate(parts))
+            parts = re.split(r'(`[^`]*`)', marked)
             statement['text'] = ''.join(part if i % 2 else token.sub(mark, part) for i, part in enumerate(parts))
 
 
@@ -233,7 +239,7 @@ def generate(generator, section, previous=None):
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
     from . import focused_prompt
-    focused_system = focused_prompt.system_prompt(cfg)
+    focused_system = focused_prompt.system_prompt(cfg, section.get('design_prompt'))
     from .prompting import compose_system_prompt
     system = compose_system_prompt(cfg, structured=True) + (
         '\n\nFor this call, override earlier Markdown, citation and two-paragraph instructions. '
@@ -247,8 +253,10 @@ def generate(generator, section, previous=None):
         'Keep an outcome and its necessary caller/implementer obligation together. '
         'A required call context does not prove thread safety or ordering. '
         'A reference measurement procedure is not a test result for this product. '
+        'Every sentence must be supported by its selected source passage. '
+        'Do not copy duties or example behavior from instructions into the answer. '
         'Preserve the scope of any/all/only together with may and negation. '
-        'Use factual content only from the current source passages. Return only the requested JSON.'
+        'Return only the requested JSON.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
         system += (
@@ -259,10 +267,19 @@ def generate(generator, section, previous=None):
             'Distinguish a source contract from a measured result and from a vendor obligation.'
         )
     from .design_reuse import topic_inputs, reusable
+    standard_system = system
     if focused_system is not None:
         system = focused_system
     policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
     inputs = topic_inputs(model, section, policy)
+    topic_prompts = {}
+    for topic in section['design_topics']:
+        focus = focused_prompt.system_prompt(cfg, topic.get('design_prompt', section.get('design_prompt')))
+        topic_system = focus if focus is not None else standard_system
+        topic_policy = focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system
+        topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
+        if topic_policy != policy:
+            inputs[topic['id']] = topic_inputs(model, section, topic_policy)[topic['id']]
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
     reused = list(answers)
     units = []
@@ -274,7 +291,7 @@ def generate(generator, section, previous=None):
             continue
         for part in topic['parts']:
             unit = {**topic, 'question': part['question'], '_part_id': part['id'],
-                    '_max_statements': 1 if part.get('answer_contract') else 2,
+                    '_max_statements': part.get('max_statements', 1 if part.get('answer_contract') else 2),
                     'sources': [s for s in topic['sources'] if s['id'] in part['sources']]}
             unit.pop('answer_contract', None)
             if 'answer_contract' in part:
@@ -292,6 +309,7 @@ def generate(generator, section, previous=None):
             else:
                 units.append(unit)
     for topic in units:
+        focused_system, system, policy = topic_prompts[topic['id']]
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
         # A focused answer can relate a guard, loop and final check. Splitting
         # those on blank lines makes one quote_id insufficient for that claim.
@@ -324,17 +342,23 @@ def generate(generator, section, previous=None):
                 request['requirements'] if '_part_id' not in topic else None)
         user = base_user
         last = None
+        from . import answer_cache
+        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
+        cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
+                                             {'request': options, **({'policy': policy} if focused_system is not None else {}),
+                                              'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
+        cached = answer_cache.read(cached_path)
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError(f"{section['id']}/{topic['id']}: 필수 근거 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
             # Ollama supports constrained JSON; generic compatible gateways still
             # use the portable prompt + parser/validator and need no schema API.
-            options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
             tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
             if '_subpart_id' in topic:
                 tag += f"_sub{topic['_subpart_id']}"
-            raw = generator.agent.chat(system, user, tag=f"{tag}_{attempt}", **options)
-            if (cfg.raw.get('review') or {}).get('design_revision', False):
+            from_cache = cached is not None and attempt == 0
+            raw = cached if from_cache else generator.agent.chat(system, user, tag=f"{tag}_{attempt}", **options)
+            if not from_cache and (cfg.raw.get('review') or {}).get('design_revision', False):
                 revision = user + '\nDraft to check (untrusted, not evidence):\n' + raw + (
                     '\nRevise this draft against the sources and the complete question. '
                     'Check every claim, including function ownership, nested branch guards, negations, return values, '
@@ -373,15 +397,22 @@ def generate(generator, section, previous=None):
                     raise ValueError(' / '.join(errors))
                 subset.pop('reader_profile', None)
                 validate_answers(model, subset, candidate)
+                answer_cache.save(cached_path, raw)
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
-                # A stateless HTTP retry cannot repair an answer it never saw.
-                # Keep only the last rejected draft; it is not source evidence.
-                user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
-                        + '\n수정할 오류: ' + last
-                        + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
+                # Retry with the validation error and original evidence.
+                # Standard mode also retains the last rejected draft.
+                if focused_system is not None:
+                    # Repeating a rejected paragraph anchored small-model retries
+                    # to that paragraph. Keep the evidence and actionable error.
+                    user = base_user.replace('\n출력:', '\n작성 조건: ' + last
+                                             + '\n질문의 모든 조건을 근거에서 다시 확인하세요.\n출력:')
+                else:
+                    user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
+                            + '\n수정할 오류: ' + last
+                            + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
         else:
             raise ValueError(f"{section['id']}/{topic['id']}: LLM 답변 검증 실패: {last}")
     pinned, resolved, report = validate_answers(model, section, answers)

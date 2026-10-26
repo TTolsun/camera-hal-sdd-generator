@@ -17,10 +17,16 @@ import yaml
 from .config import section_output
 
 
+class StaleVisualEvidence(ValueError):
+    """A well-formed authored diagram no longer matches current source text."""
+
+
 def definitions(cfg, section):
     settings = cfg.raw.get('visuals', {})
-    if not isinstance(settings, dict) or set(settings) - {'file', 'max_nodes'}:
-        raise ValueError('visuals accepts file and max_nodes')
+    if not isinstance(settings, dict) or set(settings) - {'file', 'max_nodes', 'on_stale'}:
+        raise ValueError('visuals accepts file, max_nodes and on_stale')
+    if settings.get('on_stale', 'error') not in {'error', 'omit'}:
+        raise ValueError('visuals.on_stale must be error or omit')
     if not settings.get('file'):
         return []
     path = cfg.root / settings['file']
@@ -71,7 +77,7 @@ def _records(model, section, item):
     refs = item.get('evidence')
     if not isinstance(refs, list) or not refs or any(not isinstance(r, dict) for r in refs):
         raise ValueError('Every visual node and edge needs evidence')
-    records = []
+    records, stale = [], []
     sources = {f"{t['id']}/{s['id']}": s for t in section.get('design_topics', []) for s in t.get('sources', [])}
     for ref in refs:
         if set(ref) != {'source', 'sha256', 'quote'} or not isinstance(ref.get('source'), str):
@@ -84,10 +90,14 @@ def _records(model, section, item):
                 or record.get('selector') != sources.get(ref['source'])
                 or ref['source'] not in sources
                 or hashlib.sha256(text.encode()).hexdigest() != record.get('sha256')
-                or record.get('sha256') != ref['sha256']
-                or not isinstance(quote, str) or not quote.strip() or text.count(quote) != 1):
+                or not isinstance(quote, str) or not quote.strip()
+                or not isinstance(ref['sha256'], str) or not re.fullmatch(r'[0-9a-f]{64}', ref['sha256'])):
             raise ValueError(f"Visual evidence changed or quote is not unique: {section['id']}/{ref['source']}")
+        if record.get('sha256') != ref['sha256'] or text.count(quote) != 1:
+            stale.append(f"{section['id']}/{ref['source']}")
         records.append(record)
+    if stale:
+        raise StaleVisualEvidence('Visual evidence changed or quote is not unique: ' + ', '.join(stale))
     return records
 
 
@@ -130,6 +140,7 @@ def render_values(cfg, model, section, values):
         if len(nodes) > limit:
             raise ValueError(f'Visual {ident} has {len(nodes)} nodes (limit {limit}); split the diagram')
         ids, translations, rows, proof = set(), {}, ['flowchart TB'], []
+        stale = []
         def label(item):
             ko = wrap_label(_text(item.get('label'), 'label'))
             en = wrap_label(_text(item.get('label_en'), 'label_en'))
@@ -138,7 +149,13 @@ def render_values(cfg, model, section, values):
             translations[ko] = en
             return ko
         def evidence(item, name):
-            records = _records(model, section, item)
+            try:
+                records = _records(model, section, item)
+            except StaleVisualEvidence as exc:
+                if cfg.raw.get('visuals', {}).get('on_stale', 'error') != 'omit':
+                    raise
+                stale.append(str(exc))
+                return
             links = []
             for record in records:
                 key = f"{record['file']}:{record['line']}:{record['sha256']}"
@@ -163,6 +180,15 @@ def render_values(cfg, model, section, values):
                 raise ValueError('Visual edge references an unknown node')
             rows.append(f'  v_{edge["from"]} -->|"{label(edge)}"| v_{edge["to"]}')
             evidence(edge, edge['label'])
+        if stale:
+            # Validate all nodes and edges above, even after the first stale pin.
+            # Do not emit the old interpretation, its links, or a Mermaid file.
+            block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n'
+                     '소스 근거가 달라져 이 질문의 그림을 제외했습니다. 그림은 재검토가 필요합니다. '
+                     '현재 설명과 소스 근거를 확인하세요.\n'
+                     f'<!-- /sdd:visual:{ident} -->')
+            result.append((visual, block, ''))
+            continue
         rows.insert(1, '%% sdd:translations ' + json.dumps(translations, ensure_ascii=False, sort_keys=True))
         source = '\n'.join(rows)
         proof = ['| 요소·전이 | 소스 근거 |', '|---|---|'] + proof

@@ -36,6 +36,30 @@ def test_invalid_translation_does_not_replace_catalog(tmp_cfg):
     assert catalog['strings']['설명'] == ''
 
 
+def test_translation_retry_preserves_only_validated_checkpoint(tmp_cfg, monkeypatch):
+    tmp_cfg.agent.kind = 'ollama'
+    tmp_cfg.raw.setdefault('review', {})['answer_cache'] = True
+    monkeypatch.setattr('sdd.answer_cache.model_digest', lambda _: 'weights-v1')
+    catalog = {'strings': {'첫 문장': '', '{{0}} 두 번째 문장': ''}}
+    class Agent:
+        def __init__(self, fail):
+            self.fail, self.calls = fail, []
+        def chat(self, system, user, **kwargs):
+            self.calls.append(user)
+            source = json.JSONDecoder().raw_decode(user)[0]['source']
+            return json.dumps({'text': 'First sentence.' if source == '첫 문장' else
+                               'Missing placeholder.' if self.fail else '{{0}} second sentence.'})
+    with pytest.raises(ValueError, match='failed validation'):
+        translate_missing(tmp_cfg, catalog, Agent(True))
+    assert len(list((tmp_cfg.build_dir/'validated-answers').glob('*.json'))) == 1
+    retry = Agent(False)
+    assert translate_missing(tmp_cfg, catalog, retry)['strings']['첫 문장'] == 'First sentence.'
+    assert len(retry.calls) == 1
+    # A source change needs a new translation, even with the same checkpoint.
+    translate_missing(tmp_cfg, {'strings': {'{{0}} 수정한 문장': ''}}, retry)
+    assert len(retry.calls) == 2
+
+
 def test_translation_receives_existing_terminology(tmp_cfg):
     tmp_cfg.agent.kind = 'ollama'
     from sdd.glossary import glossary_file
