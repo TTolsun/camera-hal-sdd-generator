@@ -30,14 +30,12 @@ tools:
 agent:
   kind: cli
   runner: hermes
-  # 모델과 제공자는 Hermes 설정을 사용하며 실행별 model/args로 바꿀 수 있다.
+  # 공개 libcamera 시험 프로필이며 사내 모델·제공자·reasoning은 model/args로 바꾼다.
+  model: qwen3.5:9b-ctx64k
+  args: [--provider, custom, --reasoning, high]
   max_input_chars: 40000
-  num_ctx: 16384
   timeout_sec: 600
   full_style_guides: false
-  # 상세 질문의 여러 조건을 담은 JSON 답변을 수용한다.
-  max_output_tokens: 6000
-  think: false
 
 review:
   require_citations: true

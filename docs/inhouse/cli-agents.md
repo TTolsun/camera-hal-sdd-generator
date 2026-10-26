@@ -23,11 +23,27 @@ agent:
 agent:
   kind: cli
   runner: hermes
-  model: qwen3.5:9b
-  args: [--provider, custom, --reasoning, none]
+  model: qwen3.5:9b-ctx64k
+  args: [--provider, custom, --reasoning, high]
 ```
 
 OpenCode에서는 `runner: opencode`와 해당 CLI의 `provider/model` ID를, Claude Code에서는 `runner: claude`와 해당 CLI가 지원하는 모델 ID를 사용합니다. 모델 제공자와 지원 모델은 CLI별로 다르므로 모든 CLI가 모든 모델을 지원한다고 가정하지 않습니다. 위 Qwen 설정은 공개 시험 예제이며 사내 기본 모델을 지정하지 않습니다.
+
+`qwen3.5:9b-ctx64k`는 공개 시험 환경에 준비한 모델 프리셋 이름입니다. 해당 환경에서는 같은 9B 가중치에 `num_ctx=65536`을 설정했습니다. 다른 환경에서는 준비한 모델 ID와 컨텍스트 설정을 사용하세요. 생성기의 `agent.num_ctx`는 Hermes에 전달되지 않으며, `--reasoning high`는 컨텍스트 크기와 별도로 지정하는 추론 강도입니다.
+
+공개 libcamera의 기본 프로필은 [예제 설정](../../examples/libcamera/sdd.yaml)에 저장합니다. 같은 환경에서 새 Qwen 시험을 실행할 때는 이 모델과 `high`를 사용합니다. 기존 HTTP·CLI 시험 기록의 모델이나 추론 설정은 바꾸지 않습니다.
+
+사내에서는 자체 `sdd.yaml`을 사용하거나 `sdd.local.yaml`로 모델·제공자·추론 강도를 교체할 수 있습니다. 예를 들어 다음 값은 공개 예제의 `model`과 `args`를 대체합니다. `args`는 목록 전체가 교체되므로 사용할 실행기의 인자를 모두 적으세요.
+
+```yaml
+agent:
+  kind: cli
+  runner: hermes
+  model: approved-internal-model
+  args: [--provider, approved-provider, --reasoning, high]
+```
+
+OpenCode나 Claude Code로 바꿀 때도 해당 CLI의 모델 ID와 인자를 함께 지정합니다. 추가 인자가 없으면 `args: []`로 Hermes 전용 인자를 지웁니다. 공통 생성기에는 공개 Qwen 모델을 하드코딩하지 않습니다.
 
 CLI 실행 파일이나 사내 실행 래퍼를 지정해야 한다면 `command: ["/approved/path/hermes"]`처럼 실행 접두사를 인자 목록으로 적습니다. 생성기가 각 CLI의 비대화형 옵션을 이어 붙입니다. 셸 명령 문자열을 넣지 않으며 인증 토큰은 `args`나 `command`에 넣지 않습니다. 각 CLI에서 승인된 인증 수단으로 관리합니다.
 
@@ -50,7 +66,7 @@ CLI 실행 파일이나 사내 실행 래퍼를 지정해야 한다면 `command:
 저장소 또는 반입본에서 새 출력 경로로 실행합니다. Qwen 공개 시험에만 필요한 옵션을 명시하며, CLI의 기본 모델로 시험하려면 모델·추가 인자를 생략합니다.
 
 ```bash
-python tools/evaluate_visuals.py --out build/hermes-replay --runner hermes --model qwen3.5:9b --cli-arg=--provider --cli-arg=custom --cli-arg=--reasoning --cli-arg=none --with-prose
+python tools/evaluate_visuals.py --out build/hermes-replay --runner hermes --model qwen3.5:9b-ctx64k --cli-arg=--provider --cli-arg=custom --cli-arg=--reasoning --cli-arg=high --with-prose
 ```
 
 공개 mini HAL의 두 Git 커밋에서 문서 답변과 그림을 생성하고, 조건 변경 후 재생성·이전 사이트 보존·원응답 해시를 검사합니다. 실제 CLI 호출 결과와 테스트 대역의 자동 검사를 구분합니다. 이 시험은 사내 HAL·실기기·사람 승인 검증이 아닙니다.
