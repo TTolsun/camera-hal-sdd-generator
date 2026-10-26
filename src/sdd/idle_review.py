@@ -77,7 +77,7 @@ def _ask(cfg, prompt, options, work):
             'Review only the supplied evidence. Return only the requested JSON.', prompt, tag='idle-review')
         (work / 'response.txt').write_text(text, encoding='utf-8')
         return json.loads(text)
-    command = options.get("command", ["hermes", "--ignore-rules", "--toolsets", "todo", "--reasoning", "none", "-z", "{prompt}"])
+    command = options.get("command", ["hermes", "--ignore-rules", "--toolsets", "todo", "--reasoning", "high", "-z", "{prompt}"])
     if (not isinstance(command, list) or not command or any(not isinstance(a, str) or not a for a in command)
             or not any("{prompt}" in a for a in command)):
         raise ValueError("Hermes 명령은 {prompt}를 포함한 인자 목록이어야 합니다.")

@@ -76,7 +76,7 @@ def revise(cfg, model, report, options):
                 result = subprocess.CompletedProcess([], 0, result_text, '')
                 command = None
             else:
-                command = options.get("command", ["hermes", "--ignore-rules", "--toolsets", "todo", "--reasoning", "none", "-z", "{prompt}"])
+                command = options.get("command", ["hermes", "--ignore-rules", "--toolsets", "todo", "--reasoning", "high", "-z", "{prompt}"])
             if command is not None and (not isinstance(command, list) or not command or any(not isinstance(a, str) for a in command)):
                 raise ValueError("automation.hermes.command는 명령 인자 목록이어야 합니다.")
             if command is not None and not any("{prompt}" in arg for arg in command):
