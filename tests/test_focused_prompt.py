@@ -67,3 +67,12 @@ def test_whole_source_keeps_guard_and_final_check_in_one_citable_passage():
     # Standard prompts also keep a scoped contract/control flow together.
     standard, standard_passages = source_passages({'stop': code}, scopes={'stop': scope})
     assert standard == annotated and standard_passages == passages
+
+
+def test_section_override_preserves_project_default(tmp_cfg):
+    enable(tmp_cfg)
+    assert focused_prompt.system_prompt(tmp_cfg, 'standard') is None
+    assert focused_prompt.system_prompt(tmp_cfg) is not None
+    tmp_cfg.raw['review']['design_prompt'] = 'standard'
+    assert focused_prompt.system_prompt(tmp_cfg, 'focused') is not None
+    assert focused_prompt.system_prompt(tmp_cfg) is None

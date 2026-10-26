@@ -45,7 +45,8 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
             passages = {item['quote_id']: (sid, item['text'].strip())
                         for sid, blocks in sources.items() for item in blocks if item.get('quote_id')}
             statements = resolve_passages(data['statements'], passages)
-            normalize_answer(model, statements, ['\n'.join(b['text'] for b in blocks) for blocks in sources.values()] + [payload.get('topic', '')])
+            normalize_answer(model, statements, ['\n'.join(b['text'] for b in blocks) for blocks in sources.values()] + [payload.get('topic', ''), *[value for blocks in sources.values() for block in blocks
+                for value in block.get('scope', {}).values()]])
         except (ValueError, KeyError, TypeError, AttributeError):
             continue  # Invalid retry responses cannot establish manuscript provenance.
         responses.append((receipt['tag'], statements))
@@ -78,7 +79,11 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
                 tag_prefix = f'{sid}_{tid}_' + (part + '_' if part else '')
                 possible = [item for tag, result in responses
                             if re.fullmatch(re.escape(tag_prefix) + r'\d+(?:_revision)?', tag) for item in result]
-                original = {key: value for key, value in answer.items() if key != 'part_id'}
+                if 'subpart_id' in answer:
+                    tag_prefix += f"sub{answer['subpart_id']}_"
+                    possible = [item for tag, result in responses
+                                if re.fullmatch(re.escape(tag_prefix) + r'\d+(?:_revision)?', tag) for item in result]
+                original = {key: value for key, value in answer.items() if key not in ('part_id', 'subpart_id')}
                 if original not in possible:
                     raise ValueError(f'No matching HTTP model response for {sid}/{tid}')
                 statements += 1

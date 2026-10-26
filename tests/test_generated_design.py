@@ -14,6 +14,49 @@ from sdd.facts.model import KnowledgeModel
 from sdd.impact import compute
 
 
+def test_opt_in_answer_checkpoint_is_bound_to_revision_and_question(generated, tmp_cfg, monkeypatch):
+    monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'original-weights')
+    section, model, save, agent = generated
+    tmp_cfg.raw.setdefault('review', {})['answer_cache'] = True
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 1
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 1
+    model.meta['source_commit'] = 'b' * 40
+    for record in model.evidence.values():
+        record['commit'] = 'b' * 40
+    save()
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 2
+    section['design_topics'][0]['question'] = '종료 시 대기 요청이 어떻게 취소됩니까?'
+    save()
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 3
+    monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'updated-weights')
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 4
+
+
+def test_cached_answer_is_revalidated_not_treated_as_approval(generated, tmp_cfg, monkeypatch):
+    monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'original-weights')
+    _, model, _, agent = generated
+    tmp_cfg.raw.setdefault('review', {})['answer_cache'] = True
+    Generator(tmp_cfg, model, agent).run()
+    cache = next((tmp_cfg.build_dir/'validated-answers').glob('*.json'))
+    raw = json.dumps({'statements': []})
+    cache.write_text(json.dumps({'response': raw, 'sha256': hashlib.sha256(raw.encode()).hexdigest()}))
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 2
+
+
+def test_answer_checkpoint_is_disabled_by_default(generated, tmp_cfg):
+    _, model, _, agent = generated
+    Generator(tmp_cfg, model, agent).run()
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == 2
+    assert not (tmp_cfg.build_dir/'validated-answers').exists()
+
+
 def test_single_required_contract_cannot_decode_as_only_a_limitation():
     from sdd.generated_design import response_schema
     topic = dict(covers=['lifetime'], _max_statements=1, answer_contract=dict(basis='contract'))
@@ -21,7 +64,8 @@ def test_single_required_contract_cannot_decode_as_only_a_limitation():
         return response_schema(t)['properties']['statements']['items']['properties']['kind']['enum']
     assert kinds(topic) == ['behavior']
     # Optional uncertainty still belongs in genuinely multi-statement answers.
-    assert kinds({**topic, '_max_statements': 2}) == ['behavior', 'limitation']
+    assert kinds({**topic, '_max_statements': 2}) == ['behavior']
+    assert kinds({**topic, '_max_statements': 2, 'answer_contract': {'basis': 'description'}}) == ['behavior', 'limitation']
     assert kinds(dict(covers=['lifetime'])) == ['behavior', 'limitation']
 
 
@@ -110,7 +154,28 @@ def test_response_bundle_generates_then_rejects_changed_source(tmp_cfg, generate
         export_site(tmp_cfg)
 
 
-def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated):
+def test_required_contract_schema_does_not_mislabel_prohibitions_as_unknown():
+    from sdd.generated_design import response_schema
+    topic = {'covers':['lifetime'], 'answer_contract':{'basis':'contract'}}
+    schema = response_schema(topic, {'source:0': ('source', 'shall not access the request')})
+    assert schema['properties']['statements']['items']['properties']['kind']['enum'] == ['behavior']
+    assert 'minItems' not in schema['properties']['statements']  # No evidence can still return no answer.
+    topic['answer_contract']['basis'] = 'description'
+    assert response_schema(topic)['properties']['statements']['items']['properties']['kind']['enum'] == ['behavior','limitation']
+
+
+@pytest.mark.parametrize('bad', [0, 9, True, '3'])
+def test_invalid_part_answer_budget_fails_before_generation(tmp_cfg, generated, bad):
+    section, model, save, agent = generated
+    section['design_topics'][0]['parts'] = [dict(id='one', question='종료 동작은 무엇입니까?',
+        sources=['stop'], max_statements=bad)]
+    save()
+    with pytest.raises(ValueError, match='max_statements'):
+        Generator(tmp_cfg, model, agent).run()
+
+
+@pytest.mark.parametrize('maximum', [None, 4])
+def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated, maximum):
     section, model, save, base_agent = generated
     topic = section['design_topics'][0]
     second = dict(id='drain', file='device.cpp', start='void drain()', end='}')
@@ -120,13 +185,16 @@ def test_parts_limit_sources_and_keep_all_answers(tmp_cfg, generated):
         line=20, end_line=20, text=source, sha256=hashlib.sha256(source.encode()).hexdigest(), status='available')
     topic['parts'] = [dict(id='cancel', question='취소 책임은 무엇입니까?', sources=['stop']),
                       dict(id='drain', question='비우는 책임은 무엇입니까?', sources=['drain'])]
+    if maximum is not None:
+        for part in topic['parts']:
+            part['max_statements'] = maximum
     save()
     class PartAgent:
         calls = []
         def chat(self, system, user, **kw):
             self.calls.append(user)
             assert '대기 요청은 어떻게 반환됩니까?' not in user
-            assert kw['response_schema']['properties']['statements']['maxItems'] == 2
+            assert kw['response_schema']['properties']['statements']['maxItems'] == (maximum or 2)
             statement = copy.deepcopy(base_agent.statement)
             if 'drainQueue' in user:
                 assert 'cancelPending' not in user
@@ -172,7 +240,9 @@ def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated, p
             return json.dumps({'statements': [response]}, ensure_ascii=False)
     retry = RetryAgent()
     path = Generator(tmp_cfg, model, retry).run()[0]
-    assert len(retry.calls) == 2 and rejected in retry.calls[1]
+    assert len(retry.calls) == 2
+    assert (rejected in retry.calls[1]) is (prompt_mode == 'standard')
+    assert '원문' in retry.calls[1] or '근거:' in retry.calls[1]
     assert '필수 용어 누락' in retry.calls[1]
     manuscript = path.read_text(encoding='utf-8')
     meta, body = _split(manuscript)
@@ -250,6 +320,33 @@ def test_legacy_reuse_requires_full_old_fingerprint_and_intact_body(tmp_cfg, gen
     assert not reusable(model, section, legacy + 'tampered', inputs)[0]
     section['design_topics'][0]['question'] += ' changed'
     assert not reusable(model, section, legacy, topic_inputs(model, section, 'policy'))[0]
+
+
+def test_structural_change_rebuilds_page_without_rewriting_unchanged_source_prose(tmp_cfg, generated):
+    from sdd.facts.model import ClassInfo
+    from sdd.impact import ImpactReport
+    section, model, save, agent = generated
+    section['facts'] = {'classes': ['Device'], 'class_table': False}
+    model.classes['Device'] = ClassInfo('Device', brief='Before structural extraction')
+    save()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    old_fingerprint = fingerprint(model, section)
+    model.classes['Device'].brief = 'After structural extraction'
+    record = model.evidence['device/stop/stop']
+    record.update(line=11, end_line=11)
+    save()
+    assert fingerprint(model, section) != old_fingerprint
+    agent.calls.clear()
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert not agent.calls
+    verify(model, section, path.read_text(encoding='utf-8'))
+    assert 'device.cpp:11' in path.read_text(encoding='utf-8')
+    record = model.evidence['device/stop/stop']
+    record['text'] += ' // Changed evidence still requires generation'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    save()
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert len(agent.calls) == 1
 
 
 @pytest.mark.parametrize('extension', ['frag', 'vert', 'comp'])
@@ -738,3 +835,39 @@ def test_grounding_uses_verified_full_scope_without_inventing_context(tmp_cfg, t
             review(*args, **options)
     else:
         review(*args, **options)
+def test_source_backed_cpp_template_typography_preserves_model_words():
+    from sdd.generated_design import normalize_answer
+    from sdd.facts.model import KnowledgeModel
+    text = 'std::vector<double> 값을 반환합니다. <script>와 std::evil<script>는 근거에 없습니다.'
+    answers = [{'text': text}]
+    normalize_answer(KnowledgeModel(), answers, ['std::vector<double> positions;'])
+    assert answers[0]['text'] == '`std::vector<double>` 값을 반환합니다. <script>와 std::evil<script>는 근거에 없습니다.'
+    assert answers[0]['text'].replace('`', '') == text
+    once = answers[0]['text']
+    normalize_answer(KnowledgeModel(), answers, ['std::vector<double> positions;'])
+    assert answers[0]['text'] == once
+
+
+def test_unqualified_source_template_is_code_not_html():
+    from sdd.generated_design import normalize_answer
+    from sdd.facts.model import KnowledgeModel
+    answers = [{'text': 'Matrix<double, 3, 3> 행렬을 읽습니다.'}]
+    normalize_answer(KnowledgeModel(), answers, ['Matrix<double, 3, 3> cm;'])
+    assert answers[0]['text'] == '`Matrix<double, 3, 3>` 행렬을 읽습니다.'
+
+
+def test_topic_prompt_override_is_used_and_invalidates_its_answers(tmp_cfg, generated):
+    from sdd.impact import ImpactReport
+    section, model, save, agent = generated
+    tmp_cfg.raw['review'] = {'design_prompt': 'standard'}
+    (tmp_cfg.prompts_dir / 'focused-design-system.md').write_text('근거만 설명하세요.', encoding='utf-8')
+    topic = section['design_topics'][0]
+    topic['design_prompt'] = 'focused'
+    save()
+    Generator(tmp_cfg, model, agent).run()
+    assert agent.calls[0].startswith('근거:')
+    topic['design_prompt'] = 'standard'
+    save()
+    agent.calls.clear()
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='a'*40, sections=['device']))
+    assert len(agent.calls) == 1 and not agent.calls[0].startswith('근거:')

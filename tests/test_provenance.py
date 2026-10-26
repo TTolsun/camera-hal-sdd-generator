@@ -123,3 +123,18 @@ def test_visual_draft_requires_same_real_http_response_and_model(tmp_path):
     save_visual()
     with pytest.raises(ValueError, match='No matching HTTP visual'):
         verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')
+
+
+def test_subquestion_identity_must_match_real_http_tag(tmp_path):
+    model, manuscripts, calls, artifact, save = setup(tmp_path)
+    artifact['answers']['stop'][0].update(part_id='cancel', subpart_id=0)
+    path = calls / '001.receipt.json'
+    receipt = json.loads(path.read_text())
+    receipt['tag'] = 'device_stop_cancel_sub0_0'
+    path.write_text(json.dumps(receipt))
+    save()
+    assert verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')['statements'] == 1
+    artifact['answers']['stop'][0]['subpart_id'] = 1
+    save()
+    with pytest.raises(ValueError, match='No matching HTTP'):
+        verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')

@@ -92,6 +92,24 @@ def test_same_page_repetition_and_table_size(tmp_cfg, sample_model):
     assert "page-artifact-too-long" in rules(health.audit(tmp_cfg))
 
 
+def test_scoped_source_inspectors_do_not_count_as_prose_growth(tmp_cfg, sample_model):
+    from sdd.contract_render import _source_detail
+    setup(tmp_cfg, sample_model)
+    text = 'Reader explanation of the actual contract.'
+    page(tmp_cfg, body=text)
+    health.checkpoint(tmp_cfg, health.audit(tmp_cfg))
+    details = '\n\n'.join(_source_detail(dict(file='device.cpp', line=i,
+        end_line=i+1, sha256='a'*64, text='void stop();'), f'device.cpp:{i}') for i in range(30))
+    page(tmp_cfg, body=text + '\n\n' + details)
+    assert health.paragraphs((tmp_cfg.sdd_dir/'overview.md').read_text(encoding='utf-8')) == [text]
+    assert health.audit(tmp_cfg)['status'] == 'ok'
+    # Extra prose and total artifact size remain checked.
+    page(tmp_cfg, body=text + '\n\n' + details + '\n\n    Real explanation. ' * 200)
+    assert 'page-growth' in rules(health.audit(tmp_cfg))
+    tmp_cfg.raw['documentation']['limits'] = {'max_markdown_chars': 1000}
+    assert 'page-artifact-too-long' in rules(health.audit(tmp_cfg))
+
+
 def test_missing_deleted_and_stale_contracts(tmp_cfg, sample_model):
     setup(tmp_cfg, sample_model, ("overview", "detail"))
     page(tmp_cfg, commit="old")

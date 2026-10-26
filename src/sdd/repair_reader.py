@@ -63,7 +63,7 @@ def import_calls(seed, agent_cfg, destination, bundle):
     return len(unique)
 
 
-def repair(cfg, seed, section_ids, out):
+def repair(cfg, seed, section_ids, out, *, agent_factory=Agent):
     if cfg.agent.kind not in ('ollama', 'openai-compatible'):
         raise ValueError('Repair requires a real model connection for changed requests.')
     sections = {s['id']: s for s in cfg.sections()}
@@ -91,7 +91,7 @@ def repair(cfg, seed, section_ids, out):
     trial.raw.setdefault('site', {})['enabled'] = False
     collect(trial, model)
     model.save(trial.facts_path)
-    live = Agent(copy.deepcopy(cfg.agent), out / 'new-prompts')
+    live = agent_factory(copy.deepcopy(cfg.agent), out / 'new-prompts')
     trial.agent.kind, trial.agent.response_dir = 'response-bundle', str(bundle)
     replay = Agent(trial.agent, out / 'replay-prompts')
 

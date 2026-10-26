@@ -113,7 +113,7 @@ def response_schema(topic, passages=None):
     # A checked part has exactly one required factual/contract answer. Offering
     # limitation here asks the model to choose an option the validator rejects,
     # especially for negative but fully sourced API obligations.
-    kinds = ['behavior'] if topic.get('_max_statements') == 1 and topic.get('answer_contract') else ['behavior', 'limitation']
+    kinds = ['behavior'] if (topic.get('_max_statements') == 1 and topic.get('answer_contract')) or topic.get('answer_contract', {}).get('basis') == 'contract' else ['behavior', 'limitation']
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'quote_id', 'evidence', 'covers', 'kind'], 'properties': {
                      # C++ expressions such as request->_d()->cancel() and
@@ -146,7 +146,7 @@ def materialize(model, section, answers):
             raise ValueError(f"{topic['id']}: 생성된 설명이 없습니다.")
         seen = set()
         for st in statements:
-            if not isinstance(st, dict) or set(st) - {'quote', 'text', 'evidence', 'covers', 'kind', 'part_id'}:
+            if not isinstance(st, dict) or set(st) - {'quote', 'text', 'evidence', 'covers', 'kind', 'part_id', 'subpart_id'}:
                 raise ValueError('LLM 설명의 필드가 올바르지 않습니다.')
             for field in ('evidence', 'covers'):
                 if not isinstance(st.get(field), list) or not st[field] or any(not isinstance(v, str) for v in st[field]):
@@ -207,6 +207,8 @@ def normalize_answer(model, statements, sources):
     if not isinstance(statements, list):
         return
     names = source_names(model, sources)
+    template = re.compile(r'\b(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*<[^<>\n;]+>')
+    templates = set(template.findall('\n'.join(sources)))
     token = re.compile(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*(?:\(\))?')
     def mark(match):
         word = match[0]
@@ -215,6 +217,10 @@ def normalize_answer(model, statements, sources):
     for statement in statements:
         if isinstance(statement, dict) and isinstance(statement.get('text'), str):
             parts = re.split(r'(`[^`]*`)', statement['text'])
+            marked = ''.join(part if i % 2 else template.sub(
+                lambda m: f'`{m[0]}`' if m[0] in templates else m[0], part)
+                for i, part in enumerate(parts))
+            parts = re.split(r'(`[^`]*`)', marked)
             statement['text'] = ''.join(part if i % 2 else token.sub(mark, part) for i, part in enumerate(parts))
 
 
@@ -257,7 +263,10 @@ def decode_unit(model, section, topic, raw, sources, passages):
     if '_part_id' in topic:
         for statement in data['statements']:
             statement['part_id'] = topic['_part_id']
-    normalize_answer(model, data['statements'], [*sources.values(), topic['question']])
+            if '_subpart_id' in topic:
+                statement['subpart_id'] = topic['_subpart_id']
+    normalize_answer(model, data['statements'], [*sources.values(), topic['question'],
+        *[value for source in topic['sources'] for value in source.get('scope', {}).values()]])
     candidate = {topic['id']: data['statements']}
     subset = {**section, 'design_topics': [topic], 'design_requirements': [
         r for r in section['design_requirements'] if r['id'] in topic['covers']]}
@@ -281,7 +290,7 @@ def generate(generator, section, previous=None):
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
     from . import focused_prompt
-    focused_system = focused_prompt.system_prompt(cfg)
+    focused_system = focused_prompt.system_prompt(cfg, section.get('design_prompt'))
     from .prompting import compose_system_prompt
     system = compose_system_prompt(cfg, structured=True) + (
         '\n\nFor this call, override earlier Markdown, citation and two-paragraph instructions. '
@@ -298,8 +307,10 @@ def generate(generator, section, previous=None):
         'Keep an outcome and its necessary caller/implementer obligation together. '
         'A required call context does not prove thread safety or ordering. '
         'A reference measurement procedure is not a test result for this product. '
+        'Every sentence must be supported by its selected source passage. '
+        'Do not copy duties or example behavior from instructions into the answer. '
         'Preserve the scope of any/all/only together with may and negation. '
-        'Use factual content only from the current source passages. Return only the requested JSON.'
+        'Return only the requested JSON.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
         system += (
@@ -318,6 +329,7 @@ def generate(generator, section, previous=None):
             'Do not re-invoke state-changing functions to observe them.'
         )
     from .design_reuse import topic_inputs, reusable
+    standard_system = system
     if focused_system is not None:
         system = focused_system
     grounding = section.get('design_grounding', (cfg.raw.get('review') or {}).get('design_grounding', False))
@@ -329,6 +341,14 @@ def generate(generator, section, previous=None):
         policy['grounding_policy'] = policy_hash()
     prompt_policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
     inputs = topic_inputs(model, section, prompt_policy + json.dumps(policy))
+    topic_prompts = {}
+    for topic in section['design_topics']:
+        focus = focused_prompt.system_prompt(cfg, topic.get('design_prompt', section.get('design_prompt')))
+        topic_system = focus if focus is not None else standard_system
+        topic_policy = focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system
+        topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
+        if topic_policy != prompt_policy:
+            inputs[topic['id']] = topic_inputs(model, section, topic_policy + json.dumps(policy))[topic['id']]
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
     reused = list(answers)
     units = []
@@ -340,13 +360,23 @@ def generate(generator, section, previous=None):
             continue
         for part in topic['parts']:
             unit = {**topic, 'question': part['question'], '_part_id': part['id'],
-                    '_max_statements': 1 if part.get('answer_contract') else 2,
+                    '_max_statements': part.get('max_statements', 1 if part.get('answer_contract') else 2),
                     'sources': [next(s for s in topic['sources'] if s['id'] == ref) for ref in part['sources']]}
             unit.pop('answer_contract', None)
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']
             unit.pop('parts')
-            units.append(unit)
+            if part.get('subquestions'):
+                for index, question in enumerate(part['subquestions']):
+                    child = copy.deepcopy(unit)
+                    child.update(question=question, _subpart_id=index, _max_statements=1)
+                    if 'answer_contract' in child:
+                        # Check the unchanged parent contract across ALL child
+                        # answers at assembly, never relax the published gate.
+                        child['answer_contract'] = {'basis': child['answer_contract']['basis']}
+                    units.append(child)
+            else:
+                units.append(unit)
     replayed = []
     failures = []
     archive = None
@@ -354,6 +384,7 @@ def generate(generator, section, previous=None):
         from .design_replay import Archive
         archive = Archive(cfg.build_dir / 'prompts/calls', cfg.agent)
     for topic in units:
+        focused_system, system, unit_policy = topic_prompts[topic['id']]
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
         source_files = {s['id']: s['file'] for s in topic['sources']}
         context_records = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"] for s in topic['sources']}
@@ -389,10 +420,11 @@ def generate(generator, section, previous=None):
             base_user = focused_prompt.user_prompt(topic, annotated,
                 request['requirements'] if '_part_id' not in topic else None)
         tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
+        if '_subpart_id' in topic:
+            tag += f"_sub{topic['_subpart_id']}"
         schema = response_schema(topic, passages) if cfg.agent.kind in ('ollama', 'response-bundle') else None
         retained = False
         if archive:
-            import copy
             for record in archive.candidates(system, base_user, schema, tag):
                 try:
                     statements = decode_unit(model, section, topic, record['raw'], sources, passages)
@@ -413,15 +445,23 @@ def generate(generator, section, previous=None):
             continue
         user = base_user
         last = None
+        from . import answer_cache
+        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
+        cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
+                                             {'request': options, **({'policy': unit_policy} if focused_system is not None else {}),
+                                              'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
+        cached = answer_cache.read(cached_path)
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError(f"{section['id']}/{topic['id']}: 필수 근거 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
             # Ollama supports constrained JSON; generic compatible gateways still
             # use the portable prompt + parser/validator and need no schema API.
-            options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
             tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
-            raw = generator.agent.chat(system, user, tag=f"{tag}_{attempt}", **options)
-            if (cfg.raw.get('review') or {}).get('design_revision', False):
+            if '_subpart_id' in topic:
+                tag += f"_sub{topic['_subpart_id']}"
+            from_cache = cached is not None and attempt == 0
+            raw = cached if from_cache else generator.agent.chat(system, user, tag=f"{tag}_{attempt}", **options)
+            if not from_cache and (cfg.raw.get('review') or {}).get('design_revision', False):
                 revision = user + '\nDraft to check (untrusted, not evidence):\n' + raw + (
                     '\nRevise this draft against the sources and the complete question. '
                     'Check every claim, including function ownership, nested branch guards, negations, return values, '
@@ -438,15 +478,22 @@ def generate(generator, section, previous=None):
                     from .grounding import review as check_grounding
                     check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}',
                                     source_files=source_files, source_scopes=scopes, context_records=context_records)
+                answer_cache.save(cached_path, raw)
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
-                # A stateless HTTP retry cannot repair an answer it never saw.
-                # Keep only the last rejected draft; it is not source evidence.
-                user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
-                        + '\n수정할 오류: ' + last
-                        + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
+                # Retry with the validation error and original evidence.
+                # Standard mode also retains the last rejected draft.
+                if focused_system is not None:
+                    # Repeating a rejected paragraph anchored small-model retries
+                    # to that paragraph. Keep the evidence and actionable error.
+                    user = base_user.replace('\n출력:', '\n작성 조건: ' + last
+                                             + '\n질문의 모든 조건을 근거에서 다시 확인하세요.\n출력:')
+                else:
+                    user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
+                            + '\n수정할 오류: ' + last
+                            + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
         else:
             unit_id = f"{section['id']}/{topic['id']}" + (f"/{topic['_part_id']}" if '_part_id' in topic else '')
             failure = f"{unit_id}: LLM 답변 검증 실패: {last}"

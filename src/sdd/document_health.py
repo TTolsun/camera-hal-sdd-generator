@@ -78,6 +78,13 @@ def paragraphs(text):
     """
     _, body = _split(text)
     body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+    # SourceDetails adds one inspector per scoped excerpt. Its location/hash
+    # boilerplate is evidence metadata, not an expanding reader explanation.
+    # Match only generated lines, retaining any real prose inside a note.
+    body = re.sub(r'(?m)^\?\?\? note "소스 근거: [^"\n]+"\s*$', '', body)
+    body = re.sub(r'(?m)^    `[^`\n]+:\d+`에서 시작하는 발췌입니다\. '
+                  r'종료 줄은 \d+이며, 아래 원문을 설명과 대조할 수 있습니다\.\s*$', '', body)
+    body = re.sub(r'(?m)^    SHA-256: `[0-9a-f]{64}`\s*$', '', body)
     body = re.sub(r"(?ms)^\s*(`{3,}|~{3,})[^\n]*\n.*?^\s*\1\s*$", "", body)
     body = re.split(r'(?m)^(?:\?\?\? note "근거와 검토 정보"|## (?:근거와 검토 정보|다음 단계)\s*$)', body)[0]
     # Reused source navigation is not prose. Match only the generated link list,

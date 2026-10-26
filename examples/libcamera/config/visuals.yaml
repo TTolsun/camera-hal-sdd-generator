@@ -806,7 +806,7 @@ sections:
       evidence:
       - source: queue/queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: fails in queuing the request to the hardware the request is cancelled.
+        quote: "if (ret)\n\t\tcancelRequest(request);"
     edges:
     - from: wait
       to: limit

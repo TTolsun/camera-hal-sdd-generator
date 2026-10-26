@@ -1386,6 +1386,9 @@ sections:
         required_terms:
         - - doQueueRequests
         - - maxQueuedRequestsDevice_
+        reject_patterns:
+        - pattern: 크거나|이상|>=
+          message: 코드의 비교 연산자를 정확히 읽으세요. 같음과 크거나 같음을 바꾸지 마세요.
     - id: capacity-exit
       question: 표시된 if 조건이 참일 때 실행하는 제어문 이름과 반복 처리만 설명하세요. 조건 비교 설명으로 대신하지 마세요.
       sources:
@@ -4372,6 +4375,9 @@ sections:
         - - queuedRequests_
         - - maxQueuedRequestsDevice_
         - - doQueueRequests
+        reject_patterns:
+        - pattern: 크거나|이상|>=
+          message: 코드의 비교 연산자를 정확히 읽으세요. 같음과 크거나 같음을 바꾸지 마세요.
     - id: preparation
       question: doQueueRequests에서 선두 요청의 prepared_ 값을 관찰하는 위치만 설명하세요.
       sources:

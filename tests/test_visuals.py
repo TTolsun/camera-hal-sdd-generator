@@ -33,6 +33,41 @@ from test_design_contracts import contract
 from test_generated_design import generated
 
 
+def test_opt_in_omits_stale_interpretation_and_removes_old_download(tmp_cfg, visual):
+    section, model, graph, write = visual
+    Generator(tmp_cfg, model, None).run()
+    site = export_site(tmp_cfg)
+    assert (site/'device.stop-flow.mmd').exists()
+    tmp_cfg.raw['visuals']['on_stale'] = 'omit'
+    graph['nodes'][0]['evidence'][0]['sha256'] = '0' * 64
+    write()
+    result = render(tmp_cfg, model, section)
+    assert result[0][2] == ''
+    assert '재검토가 필요' in result[0][1]
+    assert '```mermaid' not in result[0][1]
+    export_site(tmp_cfg)
+    assert not (site/'device.stop-flow.mmd').exists()
+    html = (site/'device.html').read_text(encoding='utf-8')
+    assert '재검토가 필요' in html
+    assert 'href="device.stop-flow.mmd"' not in html
+
+
+@pytest.mark.parametrize('invalid', ['commit', 'limit', 'edge'])
+def test_stale_omission_does_not_bypass_structural_or_commit_checks(tmp_cfg, visual, invalid):
+    section, model, graph, write = visual
+    tmp_cfg.raw['visuals']['on_stale'] = 'omit'
+    graph['nodes'][0]['evidence'][0]['sha256'] = '0' * 64
+    if invalid == 'commit':
+        model.meta['source_commit'] = 'b' * 40
+    elif invalid == 'limit':
+        tmp_cfg.raw['visuals']['max_nodes'] = 1
+    else:
+        graph['edges'][0]['to'] = 'missing'
+    write()
+    with pytest.raises(ValueError):
+        render(tmp_cfg, model, section)
+
+
 def test_diagrams_stay_near_explanation_in_markdown_html_and_english(tmp_cfg, visual):
     section, model, graph, _ = visual
     Generator(tmp_cfg, model, None).run()
@@ -96,6 +131,19 @@ def test_replaces_changed_edges_and_removes_deleted_diagrams(tmp_cfg, visual):
     export_site(tmp_cfg)
     assert not (site / 'device.stop-flow.mmd').exists()
     assert '종료의 분기' not in (site / 'device.html').read_text(encoding='utf-8')
+
+
+def test_stale_first_reference_cannot_hide_invalid_later_reference(tmp_cfg, visual):
+    section, model, graph, write = visual
+    tmp_cfg.raw['visuals']['on_stale'] = 'omit'
+    refs = graph['nodes'][0]['evidence']
+    invalid = copy.deepcopy(refs[0])
+    refs[0]['sha256'] = '0' * 64
+    invalid['source'] = 'missing/source'
+    refs.append(invalid)
+    write()
+    with pytest.raises(ValueError, match='missing/source'):
+        render(tmp_cfg, model, section)
 
 
 def test_missing_heading_and_unsafe_labels(tmp_cfg, visual):

@@ -9,6 +9,8 @@
 | [작업과 함께 공개 문서 갱신하기](workflow.md) | upstream 동기화, 누락 보완, 동반 배포 절차 |
 | [가정용 검증 환경](home-lab.md) | 환경 구성과 두 커밋 검증 방법 |
 | [WSL 실행 기록](wsl-run.md) | 실제 WSL 빌드·추출·배포 기록 |
+| [두 개요의 로컬 Qwen 갱신](qwen-overviews.md) | Vendor·Developer 개요의 소스 변경·복원 시험 |
+| [나머지 문서의 로컬 Qwen 갱신](qwen-documents.md) | 설명 문서와 추출 구조 문서의 갱신 검증 절차 |
 
 ## 검증 기록
 

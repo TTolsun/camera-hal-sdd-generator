@@ -19,8 +19,21 @@ def subset(model, section, ids):
 
 
 def topic_inputs(model, section, policy):
-    return {t['id']: hashlib.sha256((fingerprint(*subset(model, section, [t['id']])) + policy).encode()).hexdigest()
-            for t in section['design_topics']}
+    from .facts.model import KnowledgeModel
+    inputs = {}
+    for topic in section['design_topics']:
+        pinned, selected = subset(model, section, [topic['id']])
+        # Drafting receives the selected excerpts, not the page's class tables
+        # or call graph. Structural changes must rebuild those tables without
+        # unnecessarily replacing source-identical prose. The assembled page
+        # retains its full structural fingerprint and answers are revalidated
+        # against the current model before reuse.
+        evidence_only = KnowledgeModel(evidence={
+            key: {k: v for k, v in record.items() if k not in ('line', 'end_line')}
+            for key, record in pinned.evidence.items()})
+        inputs[topic['id']] = hashlib.sha256(
+            (fingerprint(evidence_only, selected) + policy).encode()).hexdigest()
+    return inputs
 
 
 def reusable(model, section, previous, inputs, validate=None):

@@ -74,7 +74,7 @@ def test_part_coverage_and_source_scope_are_revalidated():
     answers=[statement('호출자는 자원을 확보해야 합니다.',part_id='acquire'),
              dict(text='호출자는 자원을 반환해야 합니다.',kind='behavior',evidence=['other'],part_id='release')]
     validate(topic,answers)
-    with pytest.raises(ValueError, match='한두 문단'):
+    with pytest.raises(ValueError, match='답변 수'):
         validate(topic,answers[:1])
     wrong=copy.deepcopy(answers);wrong[1]['evidence']=['source']
     with pytest.raises(ValueError, match='다른 분할'):
@@ -108,3 +108,16 @@ def test_reuse_fence_recommendation_is_not_strengthened_to_must_not():
     check(rule, [statement('펜스는 재사용되지 않으며, 펜스를 쓰는 경우 이 플래그를 피하도록 권고합니다.')], 'fence')
     with pytest.raises(ValueError):
         check(rule, [statement('펜스를 사용하는 경우 이 플래그 사용은 권고되지 않으며 사용해서는 안 됩니다.')], 'fence')
+def test_explicit_answer_budget_keeps_coverage_and_saved_answer_limit():
+    topic = dict(id='branch', parts=[dict(id='flow', sources=['source'], max_statements=3,
+        answer_contract=dict(basis='implementation', required_terms=[['condition'], ['return']]))])
+    answers = [statement('condition을 검사합니다.', part_id='flow'),
+               statement('조건이 참이면 return을 실행합니다.', part_id='flow')]
+    validate(topic, answers)
+    with pytest.raises(ValueError, match='필수 용어'):
+        validate(topic, answers[:1])
+    with pytest.raises(ValueError, match='답변 수'):
+        validate(topic, answers * 2)
+    topic['parts'][0].pop('answer_contract')
+    with pytest.raises(ValueError, match='id'):
+        validate(topic, [{k:v for k,v in answer.items() if k != 'part_id'} for answer in answers])
