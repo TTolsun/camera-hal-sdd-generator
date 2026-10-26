@@ -185,9 +185,16 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
             impact = None
             if previous:
                 from .impact import ImpactReport
-                impact = ImpactReport(base=model.meta['source_commit'], head=model.meta['source_commit'], sections=[sid])
+                impact = ImpactReport(base=model.meta['source_commit'], head=model.meta['source_commit'],
+                    sections={sid: ['full repair trial']}, packages=list(model.packages),
+                    scenarios={key: ['full repair trial'] for key in model.scenarios})
             paths = Generator(trial, model, agent, replay_http=bool(previous), all_design_units=True).run(
                 [sid], **({'impact': impact} if impact else {}))
+            if section.get('kind') == 'per-scenario':
+                expected = {section_output(section), *[f"scenarios/{s['id']}.md" for s in trial.scenarios()]}
+                actual = {p.relative_to(trial.sdd_dir).as_posix() for p in paths}
+                if not expected <= actual:
+                    raise ValueError('전체 시험에서 호출 시나리오 원고가 누락됐습니다: ' + ', '.join(sorted(expected - actual)))
             row = {'section': sid, 'automatic_checks': 'passed',
                    'llm_required': section.get('design_generation') == 'llm',
                    'manuscripts': [{'path': p.relative_to(out).as_posix(),

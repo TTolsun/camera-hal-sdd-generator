@@ -201,3 +201,31 @@ def test_repair_refuses_tampered_mismatched_or_incomplete_trials(tmp_cfg, tmp_pa
     assert report['stages'][-1]['stage'] == 'resume-input'
     assert report['stages'][-1]['status'] == 'failed' and len(calls) == 1
     assert not (tmp_path / 'repair/site').exists()
+
+
+def test_repair_generates_all_scenario_children_when_prior_report_only_has_index(tmp_cfg, tmp_path, sample_model):
+    cfg = configure(tmp_cfg)
+    data = yaml.safe_load(cfg.sections_file.read_text(encoding='utf-8'))
+    data['sections'].append(dict(id='flows', title='호출 흐름', kind='per-scenario',
+        output='scenarios/index.md', narration='facts', diagram={'enabled': False}))
+    cfg.sections_file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    cfg.scenarios_file.write_text(yaml.safe_dump({'scenarios': [dict(id='process_capture_request',
+        title='캡처 요청 처리', entry='CameraDevice::processCaptureRequest(camera3_capture_request_t *)')]}), encoding='utf-8')
+    model = KnowledgeModel.load(cfg.facts_path)
+    model.scenarios = sample_model.scenarios
+    model.save(cfg.facts_path)
+    first = tmp_path / 'first'
+    report = evaluate(cfg, first)
+    assert all(s['status'] == 'passed' for s in report['stages']), [s for s in report['stages'] if s['status'] != 'passed']
+    row = next(r for r in report['results'] if r['section'] == 'flows')
+    assert len(row['manuscripts']) == 2
+    # Reproduce the old repair bug's recorded index-only output.
+    child = first / 'manuscripts/scenarios/process_capture_request.md'
+    child.unlink()
+    row['manuscripts'] = [m for m in row['manuscripts'] if m['path'].endswith('/index.md')]
+    (first / 'evaluation.json').write_text(json.dumps(report), encoding='utf-8')
+    second = tmp_path / 'repair'
+    repaired = evaluate(cfg, second, previous=first)
+    assert all(s['status'] == 'passed' for s in repaired['stages'])
+    assert (second / 'manuscripts/scenarios/process_capture_request.md').exists()
+    assert len(next(r for r in repaired['results'] if r['section'] == 'flows')['manuscripts']) == 2
