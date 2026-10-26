@@ -1,8 +1,9 @@
 """Translate new display text with the configured local or internal agent."""
 import json
 import re
+from collections import Counter
 
-from .llm import Agent
+from .llm import Agent, SCHEMA_KINDS
 from .site_localization import KOREAN
 
 
@@ -14,6 +15,21 @@ def _check_obligation(source, text):
             r'\b(?:must|shall)\b|\b(?:is|are) required to\b', text, re.I):
         raise ValueError('The source states a binding obligation or prohibition. '
                          'Preserve it with must/shall or must not; should weakens the contract.')
+
+
+def _validate_text(source, text):
+    """Validate one source/translation pair, independent of its JSON envelope."""
+    if not isinstance(text, str) or not text.strip() or KOREAN.search(text):
+        raise ValueError('Return a nonempty English text field only.')
+    expected = Counter(re.findall(r'\{\{\d+\}\}', source))
+    actual = Counter(re.findall(r'\{\{\d+\}\}', text))
+    if expected != actual:
+        raise ValueError('Preserve every original placeholder with its exact count in its own text. '
+                         f'Missing: {list((expected - actual).elements())}; '
+                         f'unexpected or repeated: {list((actual - expected).elements())}. '
+                         'A generic term such as function cannot replace a placeholder.')
+    _check_obligation(source, text)
+    return text.strip()
 
 
 def translate_missing(cfg, catalog, agent=None):
@@ -59,7 +75,7 @@ def translate_missing(cfg, catalog, agent=None):
                  and 0 < len(value) <= 80 and '{{' not in key and '{{' not in value and key in source}
         user = json.dumps({'source': source, 'known_terms': terms}, ensure_ascii=False)
         base_user = user
-        options = {'response_schema': schema} if cfg.agent.kind in ('cli', 'ollama', 'response-bundle') else {}
+        options = {'response_schema': schema} if cfg.agent.kind in SCHEMA_KINDS else {}
         # Translations depend on the exact display string and terminology,
         # not a source-code commit. Revalidate checkpoints before using them.
         cached_path = answer_cache.checkpoint(cfg, None, system, user,
@@ -73,19 +89,9 @@ def translate_missing(cfg, catalog, agent=None):
                 tag=f'translation_{index}_{attempt}', **options)
             try:
                 result = json.loads(raw)
-                text = result['text']
-                if set(result) != {'text'} or not isinstance(text, str) or not text.strip() or KOREAN.search(text):
-                    raise ValueError('Return a nonempty English text field only.')
-                if sorted(re.findall(r'\{\{\d+\}\}', text)) != sorted(re.findall(r'\{\{\d+\}\}', source)):
-                    from collections import Counter
-                    expected = Counter(re.findall(r'\{\{\d+\}\}', source))
-                    actual = Counter(re.findall(r'\{\{\d+\}\}', text))
-                    raise ValueError('Preserve every original placeholder exactly once. '
-                                     f'Missing: {list((expected - actual).elements())}; '
-                                     f'unexpected or repeated: {list((actual - expected).elements())}. '
-                                     'A generic term such as function cannot replace a placeholder.')
-                _check_obligation(source, text)
-                translated[source] = text.strip()
+                if not isinstance(result, dict) or set(result) != {'text'}:
+                    raise ValueError('Return a text field only.')
+                translated[source] = _validate_text(source, result['text'])
                 answer_cache.save(cached_path, raw)
                 break
             except (ValueError, TypeError, KeyError) as exc:
@@ -104,16 +110,6 @@ def _batched(cfg, catalog, agent, size):
               'Preserve grammatical subjects, conditional scope and may versus must. '
               'Return JSON with a translations object containing every input ID and English string only.')
     translated = dict(catalog['strings'])
-    def validate(source, text):
-        from collections import Counter
-        if not isinstance(text, str) or not text.strip() or KOREAN.search(text):
-            raise ValueError('Every translation must be nonempty English.')
-        expected = Counter(re.findall(r'\{\{\d+\}\}', source))
-        actual = Counter(re.findall(r'\{\{\d+\}\}', text))
-        if expected != actual:
-            raise ValueError(f'Preserve each placeholder in its own text. Missing: {list((expected-actual).elements())}; unexpected: {list((actual-expected).elements())}. Do not replace a placeholder with generic prose.')
-        _check_obligation(source, text)
-        return text.strip()
     # A batch ID/order can change after a source-backed prose repair. Each
     # translation is independent under the unchanged system instruction.
     # Revalidate exact source strings from verified real HTTP records only.
@@ -124,7 +120,7 @@ def _batched(cfg, catalog, agent, size):
                 if source not in translated or translated[source]:
                     continue
                 try:
-                    translated[source] = validate(source, values[key])
+                    translated[source] = _validate_text(source, values[key])
                     reused.append(source)
                 except (ValueError, TypeError, KeyError):
                     continue
@@ -150,7 +146,7 @@ def _batched(cfg, catalog, agent, size):
             schema = {'type': 'object', 'required': ['translations'], 'additionalProperties': False,
                       'properties': {'translations': {'type': 'object', 'required': list(pending),
                          'additionalProperties': False, 'properties': {key: {'type': 'string'} for key in pending}}}}
-            options = {'response_schema': schema} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
+            options = {'response_schema': schema} if cfg.agent.kind in SCHEMA_KINDS else {}
             # Eligible archived strings were already revalidated above. Only
             # missing/rejected strings remain, so do not replay a rejected batch
             # again and consume the live retry budget without making a call.
@@ -164,7 +160,7 @@ def _batched(cfg, catalog, agent, size):
                 errors = []
                 for key, source in list(pending.items()):
                     try:
-                        accepted[key] = validate(source, values[key])
+                        accepted[key] = _validate_text(source, values[key])
                         del pending[key]
                     except (ValueError, TypeError, KeyError) as exc:
                         errors.append(f'Translation ID {key}: {exc}')
