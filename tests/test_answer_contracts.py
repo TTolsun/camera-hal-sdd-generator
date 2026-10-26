@@ -74,7 +74,7 @@ def test_part_coverage_and_source_scope_are_revalidated():
     answers=[statement('호출자는 자원을 확보해야 합니다.',part_id='acquire'),
              dict(text='호출자는 자원을 반환해야 합니다.',kind='behavior',evidence=['other'],part_id='release')]
     validate(topic,answers)
-    with pytest.raises(ValueError, match='답변이 필요'):
+    with pytest.raises(ValueError, match='답변 수'):
         validate(topic,answers[:1])
     wrong=copy.deepcopy(answers);wrong[1]['evidence']=['source']
     with pytest.raises(ValueError, match='다른 분할'):
@@ -92,7 +92,7 @@ def test_explicit_answer_budget_keeps_coverage_and_saved_answer_limit():
     validate(topic, answers)
     with pytest.raises(ValueError, match='필수 용어'):
         validate(topic, answers[:1])
-    with pytest.raises(ValueError, match='답변이 필요'):
+    with pytest.raises(ValueError, match='답변 수'):
         validate(topic, answers * 2)
     topic['parts'][0].pop('answer_contract')
     with pytest.raises(ValueError, match='id'):

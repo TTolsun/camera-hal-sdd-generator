@@ -83,8 +83,14 @@ def generated_errors(section):
                 maximum = part.get('max_statements', 1 if part.get('answer_contract') else 2)
                 if isinstance(maximum, bool) or not isinstance(maximum, int) or not 1 <= maximum <= 8:
                     errors.append(f"{topic['id']}: max_statements는 1부터 8까지의 정수여야 합니다.")
-                if set(part) - {'id', 'question', 'sources', 'answer_contract', 'max_statements'}:
-                    errors.append(f"{topic['id']}: parts에는 id, question, sources, answer_contract, max_statements만 허용합니다.")
+                subquestions = part.get('subquestions', [])
+                if (not isinstance(subquestions, list) or (subquestions and not 2 <= len(subquestions) <= 4)
+                        or any(not isinstance(q, str) or not q.strip() or len(q) > 800 for q in subquestions)
+                        or (isinstance(subquestions, list) and all(isinstance(q, str) for q in subquestions)
+                            and len(set(subquestions)) != len(subquestions))):
+                    errors.append(f"{topic['id']}: subquestions에는 중복 없는 짧은 질문 2~4개가 필요합니다.")
+                if set(part) - {'id', 'question', 'sources', 'answer_contract', 'subquestions', 'max_statements'}:
+                    errors.append(f"{topic['id']}: 지원하지 않는 parts 필드입니다.")
             if used != source_ids:
                 errors.append(f"{topic['id']}: parts가 모든 소스 근거를 다뤄야 합니다.")
     if sorted(covered) != sorted(ids) or len(ids) != len(set(ids)):

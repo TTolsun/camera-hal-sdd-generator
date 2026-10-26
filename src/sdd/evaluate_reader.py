@@ -18,7 +18,7 @@ from .generate import Generator
 from .llm import Agent
 
 
-def evaluate(cfg, section_ids, out: Path):
+def evaluate(cfg, section_ids, out: Path, *, agent_factory=Agent):
     if cfg.agent.kind not in ('ollama', 'openai-compatible'):
         raise ValueError('모델 자동 생성 시험에는 ollama 또는 openai-compatible 연결이 필요합니다.')
     sections = {s['id']: s for s in cfg.sections()}
@@ -50,7 +50,7 @@ def evaluate(cfg, section_ids, out: Path):
     model = KnowledgeModel.load(cfg.facts_path)
     collect(cfg, model)
     model.save(trial.facts_path)
-    agent = Agent(trial.agent, out / 'prompts')
+    agent = agent_factory(trial.agent, out / 'prompts')
     results = []
     for sid in section_ids:
         start = time.monotonic()

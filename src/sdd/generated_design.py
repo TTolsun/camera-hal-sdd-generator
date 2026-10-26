@@ -132,7 +132,7 @@ def materialize(model, section, answers):
             raise ValueError(f"{topic['id']}: 생성된 설명이 없습니다.")
         seen = set()
         for st in statements:
-            if not isinstance(st, dict) or set(st) - {'quote', 'text', 'evidence', 'covers', 'kind', 'part_id'}:
+            if not isinstance(st, dict) or set(st) - {'quote', 'text', 'evidence', 'covers', 'kind', 'part_id', 'subpart_id'}:
                 raise ValueError('LLM 설명의 필드가 올바르지 않습니다.')
             for field in ('evidence', 'covers'):
                 if not isinstance(st.get(field), list) or not st[field] or any(not isinstance(v, str) for v in st[field]):
@@ -297,7 +297,17 @@ def generate(generator, section, previous=None):
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']
             unit.pop('parts')
-            units.append(unit)
+            if part.get('subquestions'):
+                for index, question in enumerate(part['subquestions']):
+                    child = copy.deepcopy(unit)
+                    child.update(question=question, _subpart_id=index, _max_statements=1)
+                    if 'answer_contract' in child:
+                        # Check the unchanged parent contract across ALL child
+                        # answers at assembly, never relax the published gate.
+                        child['answer_contract'] = {'basis': child['answer_contract']['basis']}
+                    units.append(child)
+            else:
+                units.append(unit)
     for topic in units:
         focused_system, system, policy = topic_prompts[topic['id']]
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
@@ -344,6 +354,8 @@ def generate(generator, section, previous=None):
             # Ollama supports constrained JSON; generic compatible gateways still
             # use the portable prompt + parser/validator and need no schema API.
             tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
+            if '_subpart_id' in topic:
+                tag += f"_sub{topic['_subpart_id']}"
             from_cache = cached is not None and attempt == 0
             raw = cached if from_cache else generator.agent.chat(system, user, tag=f"{tag}_{attempt}", **options)
             if not from_cache and (cfg.raw.get('review') or {}).get('design_revision', False):
@@ -369,6 +381,8 @@ def generate(generator, section, previous=None):
                 if '_part_id' in topic:
                     for statement in data['statements']:
                         statement['part_id'] = topic['_part_id']
+                        if '_subpart_id' in topic:
+                            statement['subpart_id'] = topic['_subpart_id']
                 normalize_answer(model, data['statements'], [*sources.values(), topic['question']])
                 candidate = {topic['id']: data['statements']}
                 subset = {**section, 'design_topics': [topic], 'design_requirements': [

@@ -52,7 +52,7 @@ def verify(root):
     for result in report['results']:
         assert result['automatic_checks'] == 'passed', result
         for item in result['manuscripts']:
-            path = root / item['path']
+            path = root / item['path'].replace('\\', '/')
             assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256']
             match = re.fullmatch(r'---\n(.*?)\n---\n(.*)', path.read_text(encoding='utf-8'), re.S)
             assert match, path
@@ -66,6 +66,8 @@ def verify(root):
             for topic, answers in artifact['answers'].items():
                 for answer in answers:
                     tag = f"{result['section']}_{topic}_{answer['part_id']}_"
+                    if 'subpart_id' in answer:
+                        tag += f"sub{answer['subpart_id']}_"
                     matched = False
                     for receipt, request, response in calls:
                         if not receipt['tag'].startswith(tag):
