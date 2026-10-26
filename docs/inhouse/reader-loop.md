@@ -64,6 +64,6 @@ review:
 
 질문을 나눈 답변은 `assembly_origins`에 세부 답변의 요청·응답 해시를 기록합니다. 조립한 JSON은 생성기가 만든 전달 형식이며 새로운 모델 HTTP 응답으로 표시하지 않습니다. 공개 예제의 `examples/libcamera/verify_reader_loop.py <시험 폴더>`는 설정 연결, 실제 호출 해시, 진단·보완 응답과 최종 원고 출처를 다시 확인합니다. 이 검증에는 설치된 생성기와 PyYAML이 필요하며 의미 정확성을 승인하지 않습니다.
 
-`model_review_complete`도 의미 정확성 보장이나 사람 승인이 아닙니다. 같은 모델이 작성과 검토를 맡으면 같은 오류를 놓칠 수 있습니다. `publishable: false`, `human_approval: pending`은 종료 사유와 관계없이 유지합니다. 검토자가 원래 요구와 소스에 대조한 뒤 설정 변경을 반영하고 기존 생성·배포 절차를 진행하세요. 사내 모델 주소와 인증은 기존 `agent.kind: ollama` 또는 `openai-compatible` 설정을 사용하며 외부 서비스는 필요하지 않습니다.
+`model_review_complete`도 의미 정확성 보장이나 사람 승인이 아닙니다. 같은 모델이 작성과 검토를 맡으면 같은 오류를 놓칠 수 있습니다. `publishable: false`, `human_approval: pending`은 종료 사유와 관계없이 유지합니다. 검토자가 원래 요구와 소스에 대조한 뒤 설정 변경을 반영하고 기존 생성·배포 절차를 진행하세요. 사내 모델·인증은 기본 Hermes 또는 선택한 OpenCode·Claude Code CLI에서 설정합니다. `agent.kind: cli`와 `agent.runner`로 선택하며 [CLI 선택 안내](cli-agents.md)를 따릅니다. CLI 시험은 HTTP 응답의 `--seed` 재사용을 지원하지 않습니다.
 
 다음 단계: [문서와 화면 검증](agent.md#3-문서와-화면-검증)으로 이동합니다.

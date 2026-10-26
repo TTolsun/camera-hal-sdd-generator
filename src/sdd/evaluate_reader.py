@@ -19,8 +19,8 @@ from .llm import Agent
 
 
 def evaluate(cfg, section_ids, out: Path, *, agent_factory=Agent):
-    if cfg.agent.kind not in ('ollama', 'openai-compatible'):
-        raise ValueError('모델 자동 생성 시험에는 ollama 또는 openai-compatible 연결이 필요합니다.')
+    if cfg.agent.kind not in ('cli', 'ollama', 'openai-compatible'):
+        raise ValueError('모델 자동 생성 시험에는 실제 CLI 또는 명시적으로 허용한 API 연결이 필요합니다.')
     sections = {s['id']: s for s in cfg.sections()}
     if not section_ids or any(s not in sections or sections[s].get('design_generation') != 'llm'
                               for s in section_ids):

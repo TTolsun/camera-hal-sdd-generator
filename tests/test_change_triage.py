@@ -305,7 +305,7 @@ def test_200_응답이_JSON_이_아니면_AgentError_로_바꾼다(monkeypatch):
 
     monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=0: Response(b"<html>proxy</html>"))
     with pytest.raises(AgentError, match="JSON"):
-        Agent(AgentConfig(kind="ollama")).chat("s", "u")
+        Agent(AgentConfig(kind="ollama", allow_direct_api=True)).chat("s", "u")
 
 
 def test_diff_는_파일_이름을_pathspec_문법으로_해석하지_않는다(monkeypatch, tmp_path):

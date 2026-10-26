@@ -1,7 +1,8 @@
 """사내 LLM 호출 계층.
 
-- ollama            : 로컬 Ollama (`/api/chat`). Qwen, Hermes 모두 이 경로로 운영 가능하다.
-- openai-compatible : Hermes 서비스나 vLLM 처럼 `/v1/chat/completions` 를 제공하는 사내 게이트웨이.
+- cli               : 기본 Hermes CLI. OpenCode 또는 Claude Code를 독립적으로 선택한다.
+- ollama            : 명시적으로 허용한 API 비교 시험 (`/api/chat`).
+- openai-compatible : 명시적으로 허용한 `/v1/chat/completions` API 비교 시험.
                       토큰이 필요하면 환경 변수 SDD_AGENT_API_KEY 로 넘긴다. 설정 파일에는 두지 않는다.
 - dry-run           : 호출하지 않고 build/prompts/ 에 프롬프트를 기록한다. 파이프라인 점검용.
 - response-bundle   : 입력 해시에 연결된 LLM 응답을 파일로 교환한다. 모델 실행은 별도 실행기 책임이다.
@@ -21,6 +22,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import AgentConfig
+
+LIVE_KINDS = ('cli', 'ollama', 'openai-compatible')
+SCHEMA_KINDS = ('cli', 'ollama', 'response-bundle')
 
 
 class AgentError(RuntimeError):
@@ -44,13 +48,21 @@ class Agent:
             self.dump_dir.mkdir(parents=True, exist_ok=True)
             (self.dump_dir / f"{self._counter:03d}_{tag}.md").write_text(
                 f"<!-- system -->\n{system}\n\n<!-- user -->\n{user}\n", encoding="utf-8")
-            if response_schema and self.cfg.kind in ('ollama', 'response-bundle'):
+            if response_schema and self.cfg.kind in SCHEMA_KINDS:
                 (self.dump_dir / f"{self._counter:03d}_{tag}.schema.json").write_text(
                     json.dumps(response_schema, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         kind = self.cfg.kind
+        if kind in ('ollama', 'openai-compatible') and not self.cfg.allow_direct_api:
+            raise AgentError('직접 모델 API 호출은 비활성화되어 있습니다. agent.kind: cli를 사용하세요. 별도 비교 시험에만 allow_direct_api: true를 명시하세요.')
         if kind == "dry-run":
             return f"(dry-run) {tag}: LLM 을 호출하지 않았습니다. 프롬프트는 build/prompts/ 에 기록했습니다."
-        if kind == "ollama":
+        if kind == 'cli':
+            from . import cli_agent
+            try:
+                text, self._transport_metadata = cli_agent.chat(self.cfg, system, user, response_schema, self.dump_dir)
+            except (OSError, ValueError, RuntimeError) as exc:
+                raise AgentError(str(exc)) from exc
+        elif kind == "ollama":
             text = self._ollama(system, user, response_schema) if response_schema else self._ollama(system, user)
         elif kind == "openai-compatible":
             text = self._openai(system, user)
@@ -73,6 +85,7 @@ class Agent:
                 'schema': 1, 'tag': tag, 'completed_at': datetime.now(timezone.utc).isoformat(),
                 'transport': kind, 'model': self.cfg.model,
                 'http_call': kind in ('ollama', 'openai-compatible'),
+                'cli_call': kind == 'cli',
                 'request_sha256': request_hash,
                 'response_sha256': hashlib.sha256(text.encode()).hexdigest(),
                 'settings': {k: getattr(self.cfg, k) for k in (
@@ -92,10 +105,20 @@ class Agent:
         """doctor 용. 도달 가능하면 한 줄 요약, 아니면 예외."""
         if self.cfg.kind == "dry-run":
             return "dry-run (호출 없음)"
+        if self.cfg.kind == 'cli':
+            from . import cli_agent
+            try:
+                return cli_agent.check(self.cfg)
+            except (OSError, ValueError, RuntimeError) as exc:
+                raise AgentError(str(exc)) from exc
+        if self.cfg.kind in ('ollama', 'openai-compatible') and not self.cfg.allow_direct_api:
+            raise AgentError('직접 모델 API 호출은 비활성화되어 있습니다. agent.kind: cli를 사용하세요.')
         if self.cfg.kind == 'response-bundle':
             if not self.cfg.response_dir:
                 raise AgentError('response-bundle에는 agent.response_dir가 필요합니다.')
             return f'response-bundle/{self.cfg.model} (파일 교환; 모델 접속 검사는 아님)'
+        if self.cfg.kind not in ('ollama', 'openai-compatible'):
+            raise AgentError(f'알 수 없는 agent.kind: {self.cfg.kind}')
         if self.cfg.kind == "ollama":
             data = self._get(f"{self.cfg.base_url}/api/tags")
             names = [m.get("name", "") for m in data.get("models", [])]

@@ -28,14 +28,16 @@ def main():
     from sdd.generated_visuals import expand_draft
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True, help='New public-fixture output directory')
-    parser.add_argument('--model', default='qwen3.5:9b')
-    parser.add_argument('--base-url', default='http://localhost:11434')
+    parser.add_argument('--runner', choices=('hermes', 'opencode', 'claude'), default='hermes')
+    parser.add_argument('--model', default='')
+    parser.add_argument('--cli-arg', action='append', default=[])
+    parser.add_argument('--with-prose', action='store_true', help='Also generate a source-bound answer through the CLI')
     args = parser.parse_args()
     if args.out.exists():
         raise ValueError('Use a new output directory; previous evidence is preserved')
     out = args.out.resolve()
     out.mkdir(parents=True)
-    report = {'schema': 1, 'model': args.model, 'scope': 'Public mini HAL source/excerpt replay; no camera execution or internal HAL validation',
+    report = {'schema': 1, 'runner': args.runner, 'model': args.model or 'cli-default', 'scope': 'Public mini HAL source/excerpt replay; no camera execution or internal HAL validation',
               'human_review': 'pending', 'stages': []}
     imported = ROOT / 'IMPORT-MANIFEST.json'
     report['generator'] = ({'mode': 'import-package',
@@ -81,14 +83,35 @@ def main():
     # Isolate the requested graph subsystem. Natural-language Qwen answers are
     # evaluated elsewhere; source questions do not claim behavioral coverage.
     report['prose_mode'] = 'source-question view; no generated behavioral answer and no prose substitute'
+    if args.with_prose:
+        section.pop('narration')
+        section['design_generation'] = 'llm'
+        section['design_requirements'] = [{'id': 'completion-rule', 'question': section['design_topics'][0]['question']}]
+        section['design_topics'][0].pop('narration')
+        section['design_topics'][0]['covers'] = ['completion-rule']
+        section['design_topics'][0]['question'] += (' 답변은 세 문장 이내로 작성하세요. '
+            'runPipes와 sendResult의 현재 조건, 음수 반환 때의 호출 여부, '
+            'if 블록 밖 onFrameDone의 무조건 호출을 각각 명시하세요. '
+            '전체 오류 처리가 미정이라고 추정하지 마세요.')
+        section['design_topics'][0]['answer_contract'] = {
+            'basis': 'implementation',
+            'required_terms': [['runPipes'], ['sendResult'], ['onFrameDone']],
+            'reject_patterns': [{'pattern': r'오류\s*처리[^.\n]*(?:정의되지|미정)',
+                                 'message': '이 함수 밖의 전체 오류 처리 상태를 추정하지 마세요.'}]}
+        topic = section['design_topics'][0]
+        topic['parts'] = [{'id': 'completion-rule', 'question': topic['question'],
+                           'sources': ['on-frame'], 'max_statements': 1,
+                           'answer_contract': topic['answer_contract']}]
+        report['prose_mode'] = 'CLI-generated source-bound answer; not human approval'
     (project / 'sections.yaml').write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
     shutil.copyfile(ROOT / 'examples/mini-hal/config/visual-questions.yaml', project / 'visuals.yaml')
     data = {'source': {'root': str(source), 'compile_commands': 'unused.json'},
             'paths': {'sections_file': 'sections.yaml', 'prompts': str(ROOT / 'prompts'), 'templates': str(ROOT / 'templates'), 'style': str(ROOT / 'style')},
             'output': {'facts_dir': 'facts', 'sdd_dir': 'sdd'}, 'visuals': {'file': 'visuals.yaml', 'max_nodes': 3},
-            'agent': {'kind': 'ollama', 'model': args.model, 'base_url': args.base_url, 'max_input_chars': 30000,
+            'agent': {'kind': 'cli', 'runner': args.runner, 'model': args.model, 'args': args.cli_arg, 'max_input_chars': 30000,
                       'num_ctx': 16384, 'max_output_tokens': 6000, 'think': False, 'timeout_sec': 600},
-            'review': {'require_citations': True, 'max_retries': 1}, 'site': {'enabled': False, 'title': '공개 모델 재생성 시험'}}
+            'review': {'require_citations': True, 'max_retries': 2, 'design_prompt': 'focused'},
+            'site': {'enabled': False, 'title': '공개 모델 재생성 시험'}}
     config = project / 'sdd.yaml'
     config.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
     cfg = load(config)
@@ -121,8 +144,8 @@ def main():
                 'source_sha256': hashlib.sha256(original).hexdigest(),
                 'draft': rec['draft'], 'graph': rec['graph'], 'producer': rec['producer'], 'reused': rec['reused']}
     try:
-        with urllib.request.urlopen(args.base_url + '/api/tags', timeout=15) as response:
-            report['runtime'] = json.load(response)
+        from sdd.llm import Agent
+        report['runtime'] = Agent(cfg.agent).ping()
         facts(before)
         command('generate')
         command('export-site'); command('verify-site')
@@ -144,7 +167,8 @@ def main():
         receipts, graph_drafts = [], []
         for path in sorted((cfg.build_dir / 'prompts/calls').rglob('*.receipt.json')):
             receipt = json.loads(path.read_text(encoding='utf-8'))
-            assert receipt['http_call'] and receipt['transport'] == 'ollama'
+            assert receipt['cli_call'] and not receipt['http_call'] and receipt['transport'] == 'cli'
+            assert receipt['provider']['runner'] == args.runner
             request = path.with_name(path.name.replace('.receipt.json', '.request.json'))
             response = path.with_name(path.name.replace('.receipt.json', '.response.txt'))
             assert hashlib.sha256(response.read_bytes()).hexdigest() == receipt['response_sha256']
@@ -157,7 +181,7 @@ def main():
         graph_calls = [r for r in receipts if r['tag'].startswith('visual_')]
         assert len(graph_calls) >= 2
         assert report['before']['draft'] in graph_drafts and report['after']['draft'] in graph_drafts
-        report.update(status='passed', graph_http_calls=len(graph_calls), total_http_calls=len(receipts),
+        report.update(status='passed', graph_cli_calls=len(graph_calls), total_cli_calls=len(receipts),
                       repeat_build_identical=True, stale_export_preserved=True,
                       fixture_branch_checks='Result send requires true guard; frame cleanup also reached outside true guard', receipts=receipts)
     except Exception as exc:
@@ -165,7 +189,7 @@ def main():
         raise
     finally:
         write_report()
-    print(json.dumps({k: report[k] for k in ('status', 'graph_http_calls', 'total_http_calls')}, ensure_ascii=False))
+    print(json.dumps({k: report[k] for k in ('status', 'graph_cli_calls', 'total_cli_calls')}, ensure_ascii=False))
 
 
 if __name__ == '__main__':

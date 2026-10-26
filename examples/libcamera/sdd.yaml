@@ -28,9 +28,9 @@ tools:
   clang_uml: none
 
 agent:
-  kind: ollama
-  model: qwen3.5:9b
-  base_url: http://localhost:11434
+  kind: cli
+  runner: hermes
+  # 모델과 제공자는 Hermes 설정을 사용하며 실행별 model/args로 바꿀 수 있다.
   max_input_chars: 40000
   num_ctx: 16384
   timeout_sec: 600

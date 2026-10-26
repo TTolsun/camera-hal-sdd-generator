@@ -334,6 +334,14 @@ def generate(generator, section, previous=None):
             'Do not re-invoke state-changing functions to observe them.'
         )
     from .design_reuse import topic_inputs, reusable
+    execution_identity = ''
+    if cfg.agent.kind == 'cli':
+        # Default CLI model/provider settings can change outside this config.
+        # Keep old provenance only when the caller explicitly selected a model.
+        execution_identity = json.dumps({'runner': cfg.agent.runner, 'model': cfg.agent.model,
+                               'command': cfg.agent.command, 'args': cfg.agent.args}, sort_keys=True)
+        if not cfg.agent.model:
+            previous = None
     standard_system = system
     if focused_system is not None:
         system = focused_system
@@ -345,6 +353,7 @@ def generate(generator, section, previous=None):
         from .grounding import policy_hash
         policy['grounding_policy'] = policy_hash()
     prompt_policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
+    prompt_policy += execution_identity
     inputs = topic_inputs(model, section, prompt_policy + json.dumps(policy))
     topic_prompts = {}
     for topic in section['design_topics']:
@@ -360,6 +369,7 @@ def generate(generator, section, previous=None):
                 'measurements, runtime guarantees or new API obligations.'
             )
         topic_policy = focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system
+        topic_policy += execution_identity
         topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
         if topic_policy != prompt_policy:
             inputs[topic['id']] = topic_inputs(model, section, topic_policy + json.dumps(policy))[topic['id']]
@@ -460,7 +470,7 @@ def generate(generator, section, previous=None):
         user = base_user
         last = None
         from . import answer_cache
-        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
+        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('cli', 'ollama', 'response-bundle') else {}
         cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
                                              {'request': options, **({'policy': unit_policy} if focused_system is not None else {}),
                                               'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
@@ -520,7 +530,8 @@ def generate(generator, section, previous=None):
     artifact = {'schema': 1, 'input_fingerprint': fingerprint(model, section), 'answers': answers,
                 'topic_inputs': inputs, 'reused_topics': reused, 'replayed_units': replayed,
                 'generated_topics': [t['id'] for t in section['design_topics'] if t['id'] not in reused],
-                'topic_agents': {tid: origins.get(tid, f'{cfg.agent.kind}/{cfg.agent.model}') for tid in answers},
+                'topic_agents': {tid: origins.get(tid, (f'cli/{cfg.agent.runner}/{cfg.agent.model or "cli-default"}'
+                                    if cfg.agent.kind == 'cli' else f'{cfg.agent.kind}/{cfg.agent.model}')) for tid in answers},
                 'grounding_review': 'passed' if grounding else 'not-run',
                 'grounding_policy': policy.get('grounding_policy')}
     return pinned, resolved, report, artifact

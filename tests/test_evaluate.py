@@ -26,7 +26,7 @@ def evaluation_config(tmp_cfg):
             'sources': [{'id': 'owner', 'file': 'camera.cpp', 'start': 'START', 'end': 'END'}]}]}]}), encoding='utf-8')
     path = tmp_cfg.root / 'sdd.yaml'
     cfg = yaml.safe_load(path.read_text(encoding='utf-8'))
-    cfg['agent'].update(kind='openai-compatible', max_input_chars=18000)
+    cfg['agent'].update(kind='openai-compatible', allow_direct_api=True, max_input_chars=18000)
     path.write_text(yaml.safe_dump(cfg), encoding='utf-8')
     return path
 

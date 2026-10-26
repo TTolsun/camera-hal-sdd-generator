@@ -124,7 +124,7 @@ python -m sdd.provenance --facts build/repaired-model-trial/facts/facts.json --m
 python -m sdd.evaluate_reader --config project/sdd.yaml --section vendor-overview --section vendor-integration --section vendor-assurance --out build/reader-trial
 ```
 
-`--section`에는 해당 설정의 id를 사용합니다. 사내 템플릿의 연동 가이드 id는 `vendor-contract`입니다. `agent.kind`는 `ollama` 또는 `openai-compatible`이어야 합니다. 시험마다 새 폴더를 지정하면 해당 커밋의 근거를 다시 읽고 실제 모델을 호출하여 원고·원응답·검사 결과를 보관합니다. 운영 원고는 덮어쓰지 않습니다. 보고서의 자동 검사 통과는 의미 검토나 게시 승인이 아니며 `publishable`은 항상 false입니다.
+`--section`에는 해당 설정의 id를 사용합니다. 사내 템플릿의 연동 가이드 id는 `vendor-contract`입니다. `agent.kind: cli`와 선택한 `agent.runner`를 사용합니다. 직접 API 비교 시험은 별도 허용 설정이 필요합니다. [CLI 선택 안내](cli-agents.md)를 따릅니다. 시험마다 새 폴더를 지정하면 해당 커밋의 근거를 다시 읽고 실제 모델을 호출하여 원고·원응답·검사 결과를 보관합니다. 운영 원고는 덮어쓰지 않습니다. 보고서의 자동 검사 통과는 의미 검토나 게시 승인이 아니며 `publishable`은 항상 false입니다.
 
 질문은 책임 주체 하나와 성공·실패 조건 하나를 중심으로 나눕니다. 선언의 `shall`을 실제 장치가 이미 수행한 동작으로 바꾸거나, 특정 스레드에서 호출하라는 의무를 스레드 안전성의 증거로 확대하지 않도록 질문에 근거 유형을 명시하세요. 결과와 필수 통지 의무는 모두 질문 목록에 남깁니다. 소형 모델이 둘 중 하나를 계속 빠뜨리면 같은 주제 안에서 책임별 질문으로 나누고 두 답변을 함께 게시합니다. 여러 반환 상태를 계속 빠뜨리면 상태마다 질문을 나누되 전체 상태를 빠짐없이 유지합니다.
 
