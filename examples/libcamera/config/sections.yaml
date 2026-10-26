@@ -4933,7 +4933,7 @@ sections:
         - - status
         - - 기록
     - id: stop-record
-      question: 제안하는 조사 계획으로, stopDevice 호출지점의 도달 여부를 기록 항목에 넣으세요. 기존 기록 기능의 유무를 평가하는 질문이 아닙니다.
+      question: 조사 계획으로 PipelineHandler::stop 안의 stopDevice(camera) 호출지점 도달 여부를 기록하도록 제안하세요. 기록할 함수와 관측 내용만 한 문장에 쓰세요. 인용 ID나 함수 범위 표시를 본문에 쓰지 마세요.
       sources:
       - record-device
       max_statements: 1
