@@ -47,13 +47,13 @@ class RecordingAgent(Agent):
         write_json(self.dump_dir / "transport-response.json", self.response)
         return self.response
 
-    def chat(self, system: str, user: str, tag: str = "prompt") -> str:
+    def chat(self, system: str, user: str, tag: str = "prompt", response_schema: dict | None = None) -> str:
         prompt = json.dumps([system, user], ensure_ascii=False)
         self.prompt_hash = digest(prompt)
         if tag in self.expected and self.expected[tag] != self.prompt_hash:
             raise ValueError(f"Prompt changed between candidates: {tag}")
         self.expected[tag] = self.prompt_hash
-        return super().chat(system, user, tag)
+        return super().chat(system, user, tag, response_schema=response_schema)
 
 
 def run(config: Path, models: list[str], cases: list[str], out: Path, repeats: int = 2) -> dict:

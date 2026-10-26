@@ -542,18 +542,18 @@ class Generator:
                             evidence=self._evidence_lines(blocks, tables, verdict, omitted, self._entity_files(sec)),
                             next_link=_next_of(sec), status=status, omitted=omitted, extra=extra, page_path=path)
         if generated_design.enabled(sec):
-            from .export_html import _split
+            from .document_metadata import split_frontmatter
             artifact = dict(self.generated_designs[sec['id']][3])
             agents = sorted(set(artifact['topic_agents'].values()))
             page = re.sub(r'^agent:.*$', 'agent: ' + ', '.join(agents), page, count=1, flags=re.M)
-            artifact['body_sha256'] = generated_design.digest(_split(page)[1].strip())
+            artifact['body_sha256'] = generated_design.digest(split_frontmatter(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_design: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             generated_design.verify(self.model, sec, page)
         if sec['id'] in self.generated_visuals:
-            from .export_html import _split
+            from .document_metadata import split_frontmatter
             from .generated_visuals import from_manuscript
             artifact = dict(self.generated_visuals[sec['id']])
-            artifact['body_sha256'] = generated_design.digest(_split(page)[1].strip())
+            artifact['body_sha256'] = generated_design.digest(split_frontmatter(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_visuals: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             from_manuscript(self.cfg, self.model, sec, page)
         return self._write(path, page)
