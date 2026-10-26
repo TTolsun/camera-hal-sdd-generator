@@ -68,6 +68,15 @@ def _question_leak(line: str) -> bool:
                 or any(_QUESTION_ENDING.search(s) for s in re.split(r"(?<=[.!])\s+", prose.strip())))
 
 
+# 한국어 문장에 한자·중국어·일본어 글자가 섞인 경우("우산術어", "闭上소")는 모델의 언어 혼입이다. 코드 표기 안은 원문이므로
+# 제외하고, 본문 문장에 남은 것만 반려한다. 한국어 설명에서 한자 병기가 필요하면 코드 표기나 인용으로 쓴다.
+_FOREIGN_SCRIPT = re.compile("[぀-ヿ㐀-䶿一-鿿]")
+
+
+def _foreign_script(line: str) -> bool:
+    return bool(_FOREIGN_SCRIPT.search(_INLINE_CODE.sub(" ", line)))
+
+
 def _json_residue(line: str) -> bool:
     return bool(re.search(r'["”]\s*}+\s*$', line) or re.search(r"^\s*}+\s*$", line)
                 or "\\n" in _INLINE_CODE.sub(" ", line))
@@ -96,6 +105,9 @@ _RULES = [
     _Rule("질문 문형 누출",
           "설계 질문의 문형(\"~ 있는지는,\", \"~입니까?\")이 답변에 섞였습니다. 질문을 되풀이하지 말고 근거가 말하는 사실만 평서문으로 씁니다.",
           _question_leak, sentence=True),
+    _Rule("외국 문자 혼입",
+          "한국어 문장에 한자·중국어·일본어 글자가 섞였습니다. 해당 낱말을 한국어나 영어 원어로 다시 씁니다.",
+          _foreign_script, sentence=True),
     _Rule("종결어미",
           '모든 문장은 "~합니다", "~입니다" 로 끝냅니다. "~한다", "~이다", "~함", "~없음" 같은 형태로 끝내지 않습니다.',
           _bad_ending, sentence=True),

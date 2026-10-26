@@ -43,7 +43,7 @@ def test_paths_and_json_residue_are_rejected():
     assert [f.rule for f in lint("로그는 /var/log/camera 에 남습니다.")] == ["절대 경로·줄 번호 링크"]
     assert [f.rule for f in lint("원본은 `/tmp/CameraDevice.cpp:12` 에 있습니다.")] == ["절대 경로·줄 번호 링크"]
     assert [f.rule for f in lint("홈 로그는 /~user/log 에 남습니다.")] == ["절대 경로·줄 번호 링크"]
-    assert [f.rule for f in lint("설정은 /日本語/구성 아래에 있습니다.")] == ["절대 경로·줄 번호 링크"]
+    assert [f.rule for f in lint("설정은 /구성파일/설정 아래에 있습니다.")] == ["절대 경로·줄 번호 링크"]
     assert [f.rule for f in lint("공유 폴더 \\\\build-server\\out 을 사용합니다.")] == ["절대 경로·줄 번호 링크"]
     assert [f.rule for f in lint("공유 폴더 \\\\-build\\out 을 사용합니다.")] == ["절대 경로·줄 번호 링크"]
     # 상대 경로 인용, 산술식의 빗금, C++ 주석 표기는 위반이 아니다.
@@ -121,3 +121,11 @@ def test_A1_같은_인용을_공유한_중복_문장은_린트에서_반려한�
               "요청 완료를 신호로 전달합니다. `src/p.cpp:10`")
     assert [f.rule for f in lint(first + "\n\n" + second)] == ["의미 중복 문장"]
     assert lint(first) == []
+
+
+def test_한자_중국어_혼입은_본문에서_반려하고_코드_표기와_영문은_통과한다():
+    assert [f.rule for f in lint("별도의闭上소로 배포할 수도 있습니다.")] == ["외국 문자 혼입"]
+    assert [f.rule for f in lint("이를 우산術어라고 부릅니다.")] == ["외국 문자 혼입"]
+    assert [f.rule for f in lint("かな도 섞이면 안 됩니다.")] == ["외국 문자 혼입"]
+    assert lint("원문 `闭上` 표기는 코드이므로 통과합니다.") == []
+    assert lint("libcamera adaptation은 다른 프레임워크와 연결하는 구성요소입니다.") == []
