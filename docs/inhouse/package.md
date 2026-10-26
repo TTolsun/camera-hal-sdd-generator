@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**[LLM 그림 자동화 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-25-visuals) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[전체 문서 자동화 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-26-qwen-full) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -20,14 +20,14 @@
 
 ### GitHub에서 받기
 
-`inhouse-2026-10-25-visuals` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+`inhouse-2026-10-26-qwen-full` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
 
 | 파일 | 용도 |
 |---|---|
-| [camera-hal-sdd-inhouse-llm-visuals.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/camera-hal-sdd-inhouse-llm-visuals.zip) | 생성기·가이드·스킬·설정 템플릿 |
-| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
-| [camera-hal-sdd-inhouse-llm-visuals.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/camera-hal-sdd-inhouse-llm-visuals.zip.sha256) | 반입 ZIP의 SHA-256 |
-| [visual-replay-report.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/visual-replay-report.json) | 이 반입본으로 실행한 Local Qwen 소스 변경 전후 그림 시험 기록 |
+| [camera-hal-sdd-inhouse-qwen-full.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-26-qwen-full/camera-hal-sdd-inhouse-qwen-full.zip) | 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-26-qwen-full/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [camera-hal-sdd-inhouse-qwen-full.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-26-qwen-full/camera-hal-sdd-inhouse-qwen-full.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [qwen-full-report.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-26-qwen-full/qwen-full-report.json) | 공개 libcamera 입력과 Local Qwen으로 수행한 전체 문서·사이트 시험 기록 |
 
 프롬프트 파일은 이 검증 버전과 함께 보관하는 사본입니다. 이후 버전의 절차는 해당 버전의 이 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
 
@@ -194,7 +194,7 @@ python tools/build_inhouse_package.py --ref HEAD --out build/import/camera-hal-s
 
 ## 이 패키지에서 확인한 범위
 
-LLM 그림 자동화 버전은 Git 이력이 없는 실제 ZIP에서 Local Qwen을 호출해 공개 소스 조건 변경 전후의 그림·원고·사이트를 검사합니다. 입력 지문 변경, 새 실제 응답 사용, 오래된 그림 게시 차단과 기존 사이트 보존도 확인합니다. [시험 범위와 실제 실패 기록](records/llm-visual-replay.md)을 읽고, 릴리스의 `visual-replay-report.json`에서 반입본 실행 결과를 대조하세요.
+LLM 그림 자동화 버전은 Git 이력이 없는 실제 ZIP에서 Local Qwen을 호출해 공개 소스 조건 변경 전후의 그림·원고·사이트를 검사합니다. 입력 지문 변경, 새 실제 응답 사용, 오래된 그림 게시 차단과 기존 사이트 보존도 확인합니다. [시험 범위와 실제 실패 기록](records/llm-visual-replay.md)을 읽고, [이전 그림 반입 시험 기록](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-25-visuals/visual-replay-report.json)에서 해당 버전의 결과를 대조하세요.
 
 최초 반입 패키지 검증에서는 공개 mini HAL의 기존 검증 입력으로, ZIP을 공백이 있는 다른 경로에 풀어 동봉한 생성기를 실행했습니다. 반입 파일 해시와 안내 문서의 로컬 링크를 검사했고 doctor·generate·audit-docs·export-site·verify-site가 통과했습니다. 반복 manifest는 같았고, 필수 답변을 제거한 시험에서는 생성·사이트 반영이 차단되면서 기존 파일 123개가 보존됐습니다. 설정을 복구한 뒤 같은 명령으로 정상 재개했습니다.
 

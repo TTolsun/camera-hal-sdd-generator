@@ -167,7 +167,7 @@ terms:
   definition: 버퍼에 아직 해제되지 않은 펜스가 남아있거나 동일한 스트림에 이미 버퍼가 등록되어 있을 때 -EEXIST 오류를 반환합니다.
   aliases: []
 - term: ETIMEDOUT
-  definition: 2 초 동안 응답이 도착하지 않으면 -ETIMEDOUT 코드를 반환합니다.
+  definition: ETIMEDOUT는 IPC 통신 과정에서 응답을 기다리는 동안 지정된 시간 (이 파일 기준 2000ms) 이 초과되어 호출이 완료되지 않았음을 나타내는 오류 코드입니다.
   aliases: []
 common:
 - API

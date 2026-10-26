@@ -4137,7 +4137,7 @@ sections:
         - - createRequest
         - - 호출자
     - id: buffer-validity
-      question: 이 호출자 의무에서 버퍼를 유효하게 유지해야 하는 마지막 시점은 어느 콜백 호출까지입니까? 완료 콜백을 명시하세요.
+      question: 이 근거에 명시된 호출자의 버퍼 유효 기간 의무를 해야 합니다 표현으로 설명하세요. 언제까지 유효하게 유지해야 하는지 요청 완료 콜백을 명시하세요.
       sources:
       - buffer-duty
       - buffer
@@ -4556,7 +4556,7 @@ sections:
         - - waitingRequests_
         - - stopDevice
     - id: pending
-      question: 정지 함수의 이 대기 요청 처리 호출에서 관찰할 함수 이름만 설명하세요.
+      question: 발췌의 함수 호출 이름과 전달하는 요청 인자를 기록하는 조사 계획을 설명하세요. 정지 경로의 전체 함수를 열거하는 질문은 아닙니다.
       sources:
       - pending-requeue
       answer_contract:
