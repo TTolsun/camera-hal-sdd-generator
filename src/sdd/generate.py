@@ -444,7 +444,7 @@ class Generator:
 
     def _flags_table(self, sec: dict[str, Any]) -> Path:
         lines = ["## 플래그 표", "",
-                 "이 표는 compile DB(NDK-build 구성)의 `-D` 목록과 소스의 `#if` 분기 위치를 그대로 옮긴 것입니다. LLM 을 거치지 않았습니다.",
+                 "이 표는 compile DB에 기록된 빌드 구성의 `-D` 목록과 소스의 `#if` 분기 위치를 그대로 옮긴 것입니다. LLM 을 거치지 않았습니다.",
                  "", "| 플래그 | 값 | 분기 위치 (최대 20) |", "|---|---|---|"]
         for name in sorted(self.model.defines):
             d = self.model.defines[name]

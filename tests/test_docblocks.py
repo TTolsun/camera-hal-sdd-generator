@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from sdd.facts import comments, docblocks
+from sdd.facts import docblocks
 
 NL = chr(10)
 from sdd.facts.model import ClassInfo, KnowledgeModel, Location
@@ -116,7 +116,6 @@ def test_선언에_붙은_주석을_덮어쓰지_않는다(tmp_path, tmp_cfg):
     (src / "device").mkdir(parents=True)
     (src / "device" / "camera.cpp").write_text(DOC, encoding="utf-8")
     tmp_cfg.source_root = src
-    comments.set_excludes([])
     model = _model()
     model.classes["hal::Camera"].brief = "헤더에 적힌 설명"
     entries = [{"file": str(src / "device" / "camera.cpp"), "directory": str(src)}]
@@ -132,13 +131,12 @@ def test_제외한_경로는_읽지_않는다(tmp_path, tmp_cfg):
     (src / "third_party").mkdir(parents=True)
     (src / "third_party" / "camera.cpp").write_text(DOC, encoding="utf-8")
     tmp_cfg.source_root = src
-    comments.set_excludes(["third_party/**"])
+    tmp_cfg.exclude = ["third_party/**"]
     model = _model()
     entries = [{"file": str(src / "third_party" / "camera.cpp"), "directory": str(src)}]
     stats = docblocks.collect(model, tmp_cfg, entries)
     assert stats["files"] == 0 and stats["filled"] == 0
     assert model.classes["hal::Camera"].brief == ""
-    comments.set_excludes([])
 
 
 def test_멤버_설명을_클래스_설명으로_붙이지_않는다():

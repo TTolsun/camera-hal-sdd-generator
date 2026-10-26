@@ -41,7 +41,6 @@ def run(cfg: Config, skip_comments: bool = False, skip_clang_uml: bool = False,
     for w in compdb.check(entries):
         print(f"[compdb] 경고: {w}")
 
-    comments.set_excludes(cfg.exclude)
     backend = "none" if skip_clang_uml else structure_backend(cfg)
     model = KnowledgeModel(meta={
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
