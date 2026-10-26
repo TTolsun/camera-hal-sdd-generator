@@ -191,7 +191,7 @@ def cmd_accept(args: argparse.Namespace) -> int:
                     print(f"- {key}: {entry['state']} ({entry.get('by')} {entry.get('at', '')})")
             print("\n승인: sdd accept <문서.md> [--by 이름], 범위 항목: sdd accept --finding <키> [--defer]")
             return 0
-        from .export_html import _split
+        from .document_metadata import split_frontmatter
         by = _reviewer_name(cfg, args.by)
         for rel in pages:
             # 장부 키는 사이트·이월과 같은 posix 상대 경로여야 한다. Windows 백슬래시나 ./ 가
@@ -201,7 +201,7 @@ def cmd_accept(args: argparse.Namespace) -> int:
             if not path.is_file():
                 raise RuntimeError(f"승인할 문서가 없습니다: {rel} (sdd_dir 기준 상대 경로)")
             text = path.read_text(encoding="utf-8")
-            meta, _ = _split(text)
+            meta, _ = split_frontmatter(text)
             entry = approvals_mod.approve_page(ledger, rel, text, by,
                                                source_commit=str(meta.get("source_commit", "")),
                                                note=args.note or "")
