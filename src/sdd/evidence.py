@@ -129,7 +129,7 @@ def _sentence_count(text: str) -> int:
     return max(1, len(re.findall(r"[.!?](?=" + chr(92) + "s|$)", re.sub(r"`[^`]*`", " ", text))))
 
 
-def _paragraphs(entries: list[tuple[str, str, list[str]]]) -> list[str]:
+def _paragraphs(entries: list[tuple[str, str, list[str]]], *, grouped: bool = True) -> list[str]:
     """설명 문장을 문단으로 묶는다. 같은 주제의 이어지는 설명 2~4문장이 한 문단이 되고 인용은 문단 끝에 모은다.
 
     문장마다 근거는 그대로 연결되어 있다(답변 기록의 evidence·quote). 여기서는 표시만 묶으며
@@ -144,12 +144,13 @@ def _paragraphs(entries: list[tuple[str, str, list[str]]]) -> list[str]:
         nonlocal group, cites, sentences
         if group:
             prefix = '실행 확인 항목: ' if kind == 'limitation' else ''
-            paragraphs.append(prefix + ' '.join(group) + ' ' + ', '.join(dict.fromkeys(cites)))
+            citations = list(dict.fromkeys(cites)) if grouped else cites
+            paragraphs.append(prefix + ' '.join(group) + ' ' + ', '.join(citations))
         group, cites, sentences = [], [], 0
 
     for entry_kind, text, citations in entries:
         count = _sentence_count(text)
-        if group and (entry_kind != kind or entry_kind == 'limitation'
+        if group and (not grouped or entry_kind != kind or entry_kind == 'limitation'
                       or sentences + count > PARAGRAPH_SENTENCES
                       or sum(len(t) for t in group) + len(text) > PARAGRAPH_CHARS):
             flush()
@@ -161,12 +162,15 @@ def _paragraphs(entries: list[tuple[str, str, list[str]]]) -> list[str]:
     return paragraphs
 
 
-def contract_text(model: KnowledgeModel, section: str, topic: dict) -> tuple[str, list[str]]:
+def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: bool = True) -> tuple[str, list[str]]:
     """Render authored statements only while every linked excerpt matches its pin.
 
     A pin verifies unchanged source, not the truth of the authored interpretation.
     Human approval is deliberately not represented by this mechanism.
+    grouped=False preserves the old one-paragraph-per-statement layout.
     """
+    if type(grouped) is not bool:
+        raise ValueError('grouped must be a boolean')
     entries, gaps = [], []
     sources = {s['id']: s for s in topic.get('sources', [])}
     for statement in topic.get('statements', []):
@@ -188,7 +192,7 @@ def contract_text(model: KnowledgeModel, section: str, topic: dict) -> tuple[str
         if not statement.get('evidence'):
             gaps.append('근거가 연결되지 않은 설계 설명이 있습니다.')
         entries.append((statement.get('kind', 'behavior'), str(statement.get('text', '')), citations))
-    paragraphs = _paragraphs(entries)
+    paragraphs = _paragraphs(entries, grouped=grouped)
     if not paragraphs:
         gaps.append('설계 설명이 없습니다.')
     return ('확인 필요: ' + ' / '.join(gaps) if gaps else '\n\n'.join(paragraphs)), gaps
