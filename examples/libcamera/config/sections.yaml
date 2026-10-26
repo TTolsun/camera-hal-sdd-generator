@@ -4053,6 +4053,22 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Signal request completion
       end: \brief Cancel request and signal its completion
+    - id: waiting-prepared
+      file: src/libcamera/pipeline_handler.cpp
+      start: Request *request = data->waitingRequests_.front();
+      end: break;
+      scope:
+        start: void PipelineHandler::doQueueRequests(Camera *camera)
+        end: '
+
+          }'
+    - id: request-duty
+      file: src/libcamera/pipeline_handler.cpp
+      start: "The request\n * is not completed automatically"
+      end: explicitly with completeRequest().
+      scope:
+        start: \brief Complete a buffer for a request
+        end: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
     covers:
     - journey
     parts:
@@ -4087,16 +4103,24 @@ sections:
         - - queueRequest
         - - 완료
     - id: waiting
-      question: 대기 큐와 준비 상태·장치 큐 한도가 요청 전달을 제한하는 경로를 설명하세요.
+      question: 대기 큐와 장치 큐 한도로 요청 전달을 제한하는 두 변수 이름을 설명하세요.
       sources:
       - device-queue
-      max_statements: 3
+      max_statements: 1
       answer_contract:
         basis: implementation
         required_terms:
         - - waitingRequests_
-        - - prepared_
         - - maxQueuedRequestsDevice_
+    - id: waiting-prepared
+      question: 이 코드에서 선두 요청이 준비되었는지 확인하는 멤버 이름을 설명하세요.
+      sources:
+      - waiting-prepared
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - prepared_
     - id: dispatch
       question: 이 void 함수의 취소 여부 분기와 각 호출을 설명하세요. 반환값을 지어내지 마세요.
       sources:
@@ -4110,7 +4134,7 @@ sections:
         - - completeRequest
         - - queueRequestDevice
     - id: device-result
-      question: 이 반환 계약이 속한 함수 이름과 성공·실패 반환값을 설명하세요.
+      question: 이 함수의 이름과 성공 시 반환값을 설명하세요.
       sources:
       - device-contract
       max_statements: 1
@@ -4119,19 +4143,35 @@ sections:
         required_terms:
         - - queueRequestDevice
         - - '0'
+    - id: device-error
+      question: 이 반환 주석에서 오류 시 반환하는 정수의 부호를 설명하세요.
+      sources:
+      - device-contract
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
         - - 음수
     - id: buffer-complete
-      question: 버퍼 완료 통지 의무와 마지막 버퍼 이후 별도 요청 완료 의무를 설명하세요.
+      question: 버퍼 완료를 알릴 때 호출해야 하는 함수 의무를 설명하세요.
       sources:
       - buffer-notice
       - completion
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: contract
         required_terms:
         - - completeBuffer
-        - - completeRequest
         - - 완료
+    - id: request-duty
+      question: 마지막 버퍼가 완료된 후 핸들러가 명시적으로 호출해야 하는 요청 완료 함수 의무를 설명하세요.
+      sources:
+      - request-duty
+      max_statements: 1
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - completeRequest
     - id: request-complete
       question: 요청 완료 함수의 선두 Pending 검사와 애플리케이션 반환 순서를 설명하세요.
       sources:
@@ -4616,9 +4656,7 @@ sections:
       end: running state.
       scope:
         start: \brief Notify camera disconnection
-        end: '
-
-          }'
+        end: void Camera::disconnect()
     - id: pending-requeue
       file: src/libcamera/pipeline_handler.cpp
       start: doQueueRequest(request
@@ -4644,6 +4682,10 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Notify camera disconnection
       end: int Camera::exportFrameBuffers(Stream *stream,
+    - id: disconnect-todo-owner
+      file: src/libcamera/camera.cpp
+      start: \brief Notify camera disconnection
+      end: void Camera::disconnect()
     covers:
     - stopping
     parts:
@@ -4727,18 +4769,31 @@ sections:
         required_terms:
         - - disconnected
     - id: disconnect-todo
-      question: 이 TODO 주석이 속한 함수 이름과 남겨 둔 요청 처리 대상·발생 조건을 설명하세요. 다음 함수의 소속으로 바꾸지 마세요.
+      question: 이 TODO가 아직 처리 대상으로 남겨 둔 자원은 무엇입니까?
       sources:
       - disconnect-todo
       answer_contract:
         basis: description
         required_terms:
-        - - TODO
         - - 요청
+          - Request
+          - request
+        reject_patterns:
+        - pattern: exportFrameBuffers
+          message: 발췌 끝의 다음 함수를 TODO 소속으로 바꾸지 마세요.
+      max_statements: 1
+    - id: disconnect-todo-owner
+      question: 이 TODO가 속한 함수 이름을 코드 선언에서 읽어 설명하세요.
+      sources:
+      - disconnect-todo-owner
+      answer_contract:
+        basis: description
+        required_terms:
         - - disconnect
         reject_patterns:
         - pattern: exportFrameBuffers
           message: 발췌 끝의 다음 함수를 TODO 소속으로 바꾸지 마세요.
+      max_statements: 1
   - id: review
     title: 변경 검토와 실행 확인
     question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기 요청 처리를 정리하세요. 정상 반복·fence 대기·장치 오류·미완료
@@ -4760,6 +4815,63 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Stop capturing from all running streams and cancel pending requests
       end: \brief Determine if the camera has any requests pending
+    - id: record-status
+      file: src/libcamera/request.cpp
+      start: status_ =
+      end: RequestPending;
+      scope:
+        start: void Request::reuse(ReuseFlag flags)
+        end: \fn Request::controls()
+    - id: record-controls
+      file: src/libcamera/request.cpp
+      start: controls_.clear
+      end: ();
+      scope:
+        start: void Request::reuse(ReuseFlag flags)
+        end: \fn Request::controls()
+    - id: record-metadata
+      file: src/libcamera/request.cpp
+      start: _d()->metadata_.clear
+      end: ();
+      scope:
+        start: void Request::reuse(ReuseFlag flags)
+        end: \fn Request::controls()
+    - id: record-head-status
+      file: src/libcamera/pipeline_handler.cpp
+      start: if (req->status() == Request::RequestPending)
+      end: break;
+      scope:
+        start: void PipelineHandler::completeRequest(Request *request)
+        end: '
+
+          }'
+    - id: record-device
+      file: src/libcamera/pipeline_handler.cpp
+      start: stopDevice(camera)
+      end: ;
+      scope:
+        start: void PipelineHandler::stop(Camera *camera)
+        end: '
+
+          }'
+    - id: record-queued
+      file: src/libcamera/pipeline_handler.cpp
+      start: ASSERT(data->queuedRequests_.empty())
+      end: ;
+      scope:
+        start: void PipelineHandler::stop(Camera *camera)
+        end: '
+
+          }'
+    - id: record-waiting
+      file: src/libcamera/pipeline_handler.cpp
+      start: ASSERT(data->waitingRequests_.empty())
+      end: ;
+      scope:
+        start: void PipelineHandler::stop(Camera *camera)
+        end: '
+
+          }'
     covers:
     - review
     parts:
@@ -4775,9 +4887,9 @@ sections:
         - - 반환
         - - 기록
     - id: reuse-state-record
-      question: reuse 호출 전후 status_ 값을 기록하는 소스 기반 조사 계획을 설명하세요.
+      question: 소스 기반 조사 기록에 넣을 이 대입문의 대상 변수 이름과 기록 항목을 제안하세요.
       sources:
-      - reuse
+      - record-status
       max_statements: 1
       answer_contract:
         basis: investigation
@@ -4785,37 +4897,66 @@ sections:
         - - status_
         - - 기록
     - id: reuse-data-record
-      question: reuse 호출 전후 controls_와 metadata_ 초기화 여부를 기록하는 소스 기반 조사 계획을 설명하세요.
+      question: 소스 기반 조사에서 이 clear 호출의 대상 변수를 기록 항목으로 제안하세요.
       sources:
+      - record-controls
       - reuse
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: investigation
         required_terms:
         - - controls_
-        - - metadata_
         - - 기록
-    - id: completion-record
-      question: completeRequest 진입 시 대상 요청과 선두 요청 상태, RequestPending 분기의 검사 결과를 기록하는 소스 기반 조사 계획을 설명하세요.
+    - id: reuse-metadata-record
+      question: 소스 기반 조사에서 이 clear 호출의 대상 변수를 기록 항목으로 제안하세요.
       sources:
-      - completion
-      max_statements: 2
+      - record-metadata
+      max_statements: 1
       answer_contract:
         basis: investigation
         required_terms:
-        - - completeRequest
-        - - RequestPending
+        - - metadata_
+        - - 기록
+    - id: completion-record
+      question: 소스 기반 조사 기록에 넣을 선두 요청의 상태 조회식을 코드 그대로 명시하고 기록할 항목으로 제안하세요.
+      sources:
+      - record-head-status
+      - completion
+      max_statements: 1
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - status
         - - 기록
     - id: stop-record
-      question: stopDevice 진입·복귀 여부와 queuedRequests_·waitingRequests_ 검사 결과를 기록하는 소스 기반 조사 계획을 설명하세요. 실제 정지 성공을 주장하지 마세요.
+      question: 이 stopDevice 호출의 진입·복귀 여부를 소스 기반 조사 기록의 항목으로 제안하세요.
       sources:
+      - record-device
       - device-stop
-      max_statements: 3
+      max_statements: 1
       answer_contract:
         basis: investigation
         required_terms:
         - - stopDevice
+        - - 기록
+    - id: stop-queued-record
+      question: 이 ASSERT가 검사하는 큐를 식별하고 검사 결과를 소스 기반 조사 기록 항목으로 제안하세요.
+      sources:
+      - record-queued
+      max_statements: 1
+      answer_contract:
+        basis: investigation
+        required_terms:
         - - queuedRequests_
+        - - 기록
+    - id: stop-waiting-record
+      question: 이 ASSERT가 검사하는 큐를 식별하고 검사 결과를 소스 기반 조사 기록 항목으로 제안하세요.
+      sources:
+      - record-waiting
+      max_statements: 1
+      answer_contract:
+        basis: investigation
+        required_terms:
         - - waitingRequests_
         - - 기록
   design_requirements:

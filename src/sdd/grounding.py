@@ -25,6 +25,14 @@ def review(generator, topic, statements, sources, tag, *, source_files=None, sou
         'Give one concise reason per verdict, at most 400 characters, without deliberation. '
         'Return only the requested JSON reviews.'
     )
+    if topic.get('answer_contract', {}).get('basis') == 'investigation':
+        system += (
+            ' This basis requests an optional source-based observation plan, not a new API duty. '
+            'A proposal to record a shown variable or check immediately before/after a shown '
+            'assignment or call is allowed; the code need not itself mandate that recording. '
+            'Still reject nonexistent variables, invented capture commands, re-invoking mutating '
+            'calls, negative guarantees, claimed measurements and guaranteed recovery.'
+        )
     context = dict(sources)
     for sid, scope in (source_scopes or {}).items():
         record = (context_records or {}).get(sid, {}).get('context')
