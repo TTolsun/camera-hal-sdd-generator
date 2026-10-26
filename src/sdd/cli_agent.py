@@ -96,6 +96,8 @@ def chat(cfg, system, user, schema, dump_dir):
               '<system>\n' + system + '\n</system>\n<user>\n' + user + '\n</user>')
     if schema:
         prompt += '\nReturn ONLY JSON matching this schema, with no Markdown fences:\n' + json.dumps(schema, ensure_ascii=False)
+        prompt += ('\nThe schema is an output constraint, not the answer. '
+                   'Answer the user question using the supplied sources now. Do not repeat the schema.')
     if len(prompt) > cfg.max_input_chars:
         raise ValueError('CLI 입력 한도를 초과했습니다. 규칙·근거·schema를 포함한 질문을 나누세요.')
     # Each call starts in an empty workspace; no HAL checkout or AGENTS.md is loaded.

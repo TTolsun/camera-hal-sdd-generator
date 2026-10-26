@@ -3789,3 +3789,100 @@ sections:
   next:
     title: 시스템 개요
     link: overview.md
+- id: ipa-module-validation
+  group: For Vendor
+  nav_section: 구현 상세
+  title: IPA 모듈 정보 검사와 서명 파일 누락
+  output: ipa-module-validation.md
+  kind: prose
+  lead: IPA 모듈 정보가 잘못된 경우와 서명 파일만 없는 경우를 구분하세요.
+  watch:
+  - src/libcamera/ipa_module.cpp
+  diagram:
+    enabled: false
+  design_generation: llm
+  show_evidence: true
+  design_requirements:
+  - id: metadata
+    question: 모듈 정보 크기와 API 버전 검사에 실패하면 어떻게 반환합니까?
+  - id: signature
+    question: 서명 파일을 열지 못하면 어떤 값을 반환하며 이 값은 생성자의 valid_ 설정에 어떤 영향을 줍니까?
+  design_topics:
+  - id: metadata
+    title: 메타데이터 오류를 구분하기
+    question: IPAModule::loadIPAModuleInfo는 ipaModuleInfo의 크기가 sizeof(info_)보다 작거나 moduleAPIVersion이 IPA_MODULE_API_VERSION과
+      다르면 어떤 int 오류 코드를 반환합니까? 두 실패 조건과 반환값을 함께 한 문장으로 설명하세요. 반환 타입이나 템플릿을 추정하지 마세요.
+    covers:
+    - metadata
+    sources:
+    - id: info-checks
+      file: src/libcamera/ipa_module.cpp
+      start: int IPAModule::loadIPAModuleInfo()
+      end: "/*\n\t * Validate the IPA module name."
+    answer_contract:
+      basis: implementation
+      required_terms:
+      - - ipaModuleInfo
+      - - moduleAPIVersion
+      - - EINVAL
+    parts:
+    - id: checks
+      question: IPAModule::loadIPAModuleInfo는 ipaModuleInfo의 크기가 sizeof(info_)보다 작거나 moduleAPIVersion이 IPA_MODULE_API_VERSION과
+        다르면 어떤 int 오류 코드를 반환합니까? 두 실패 조건과 반환값을 함께 한 문장으로 설명하세요. 반환 타입이나 템플릿을 추정하지 마세요.
+      sources:
+      - info-checks
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ipaModuleInfo
+        - - moduleAPIVersion
+        - - EINVAL
+  - id: signature
+    title: 서명 파일 누락과 유효성 판정
+    question: 서명 파일을 열지 못하는 경우 loadIPAModuleInfo의 반환값과, 그 반환값을 받은 생성자의 valid_ 설정을 두 문장 이내로 설명하세요. 서명 검증 통과나 공유 라이브러리의
+      dlopen 성공이라고 확대하지 마세요.
+    covers:
+    - signature
+    sources:
+    - id: signature-file
+      file: src/libcamera/ipa_module.cpp
+      start: /* Load the signature. Failures are not fatal. */
+      end: data = sign.map(0, -1, File::MapFlag::Private);
+    - id: constructor
+      file: src/libcamera/ipa_module.cpp
+      start: IPAModule::IPAModule(const std::string &libPath)
+      end: IPAModule::~IPAModule()
+    answer_contract:
+      basis: implementation
+      required_terms:
+      - - '0'
+      - - valid_
+      reject_patterns:
+      - pattern: '[一-龥]'
+        message: 한국어 설명에 중국어 단어를 섞지 마세요.
+    parts:
+    - id: file-result
+      question: 서명 파일을 열지 못하면 loadIPAModuleInfo가 반환하는 정수 값을 한 문장으로 설명하세요. 한국어로 작성하고 소스의 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - signature-file
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - '0'
+    - id: constructor-result
+      question: loadIPAModuleInfo가 0을 반환했을 때 생성자에서 < 0 분기는 실행됩니까? 이어서 valid_에 저장하는 최종 값을 소스의 리터럴 이름으로 명시하세요. 한 문장으로
+        답하고 코드 식별자는 백틱으로 표시하세요.
+      sources:
+      - constructor
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - valid_
+        - - 'true'
+  next:
+    title: IPA 관리와 구현 진입점
+    link: ipa.md
+  design_prompt: focused

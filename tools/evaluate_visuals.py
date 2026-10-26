@@ -98,6 +98,10 @@ def main():
             'required_terms': [['runPipes'], ['sendResult'], ['onFrameDone']],
             'reject_patterns': [{'pattern': r'오류\s*처리[^.\n]*(?:정의되지|미정)',
                                  'message': '이 함수 밖의 전체 오류 처리 상태를 추정하지 마세요.'}]}
+        topic = section['design_topics'][0]
+        topic['parts'] = [{'id': 'completion-rule', 'question': topic['question'],
+                           'sources': ['on-frame'], 'max_statements': 1,
+                           'answer_contract': topic['answer_contract']}]
         report['prose_mode'] = 'CLI-generated source-bound answer; not human approval'
     (project / 'sections.yaml').write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
     shutil.copyfile(ROOT / 'examples/mini-hal/config/visual-questions.yaml', project / 'visuals.yaml')
@@ -106,7 +110,8 @@ def main():
             'output': {'facts_dir': 'facts', 'sdd_dir': 'sdd'}, 'visuals': {'file': 'visuals.yaml', 'max_nodes': 3},
             'agent': {'kind': 'cli', 'runner': args.runner, 'model': args.model, 'args': args.cli_arg, 'max_input_chars': 30000,
                       'num_ctx': 16384, 'max_output_tokens': 6000, 'think': False, 'timeout_sec': 600},
-            'review': {'require_citations': True, 'max_retries': 1}, 'site': {'enabled': False, 'title': '공개 모델 재생성 시험'}}
+            'review': {'require_citations': True, 'max_retries': 2, 'design_prompt': 'focused'},
+            'site': {'enabled': False, 'title': '공개 모델 재생성 시험'}}
     config = project / 'sdd.yaml'
     config.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
     cfg = load(config)

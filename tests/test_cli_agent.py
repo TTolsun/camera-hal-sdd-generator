@@ -78,7 +78,7 @@ def test_cli_stdin_unicode_long_prompt_and_receipt(tmp_path, runner, output, mon
 
 def test_cli_default_model_is_not_overridden(tmp_path):
     cfg = AgentConfig(command=fake_cli(tmp_path, 'answer'))
-    Agent(cfg).chat('system', 'user')
+    Agent(cfg, tmp_path / 'prompts').chat('system', 'user')
     captured = json.loads((tmp_path / 'input.json').read_text(encoding='utf-8'))
     assert '--model' not in captured['argv']
 
@@ -104,7 +104,8 @@ def test_cli_failures_preserve_raw_output_without_success_receipt(tmp_path, runn
 
 def test_cli_timeout_stops_instead_of_using_another_runner(tmp_path):
     with pytest.raises(AgentError, match='초과'):
-        Agent(AgentConfig(command=fake_cli(tmp_path, 'late', delay=30), timeout_sec=0.3)).chat('s', 'u')
+        Agent(AgentConfig(command=fake_cli(tmp_path, 'late', delay=30), timeout_sec=0.3),
+              tmp_path / 'prompts').chat('s', 'u')
 
 
 def test_automation_uses_selected_cli(tmp_cfg, tmp_path, monkeypatch):
