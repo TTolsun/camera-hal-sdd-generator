@@ -207,7 +207,8 @@ def test_repair_generates_all_scenario_children_when_prior_report_only_has_index
     cfg = configure(tmp_cfg)
     data = yaml.safe_load(cfg.sections_file.read_text(encoding='utf-8'))
     data['sections'].append(dict(id='flows', title='호출 흐름', kind='per-scenario',
-        output='scenarios/index.md', narration='facts', diagram={'enabled': False}))
+        output='scenarios/index.md', narration='facts', diagram={'enabled': False},
+        next={'title': '제품 개요', 'link': 'vendor-overview.md'}))
     cfg.sections_file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
     cfg.scenarios_file.write_text(yaml.safe_dump({'scenarios': [dict(id='process_capture_request',
         title='캡처 요청 처리', entry='CameraDevice::processCaptureRequest(camera3_capture_request_t *)')]}), encoding='utf-8')
