@@ -48,9 +48,9 @@ def load_state(cfg: Config) -> dict[str, Any]:
 
 
 def save_state(cfg: Config, state: dict[str, Any]) -> None:
-    path = state_path(cfg)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
+    from .state_io import save
+
+    save(state_path(cfg), state, indent=1, newline="\n")
 
 
 def _baseline(cfg: Config, state: dict[str, Any]) -> str:
