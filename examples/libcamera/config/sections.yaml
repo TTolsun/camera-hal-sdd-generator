@@ -5491,7 +5491,7 @@ sections:
   design_prompt: focused
 - id: framebuffer-allocator-boundary
   group: For Developer
-  nav_section: 코드 탐색
+  nav_section: 동작 추적과 문제 진단
   title: FrameBufferAllocator의 실패와 참조 수명
   output: framebuffer-allocator.md
   kind: prose
