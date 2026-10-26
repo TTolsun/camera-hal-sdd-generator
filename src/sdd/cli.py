@@ -124,11 +124,13 @@ def cmd_impact(args: argparse.Namespace) -> int:
     if base_model and base_model.meta.get("source_commit") != base:
         raise RuntimeError("--base-facts의 source_commit이 --base와 다릅니다.")
     files = changed_files(cfg.source_root, base, head)
-    if getattr(args, "config_changes", False) and any(s.get("design_topics") for s in cfg.sections()):
+    # `run`도 이 함수를 거치지만 --config-changes 옵션이 없으므로 속성이 없을 수 있다.
+    config_changes = getattr(args, "config_changes", False)
+    if config_changes and any(s.get("design_topics") for s in cfg.sections()):
         from .evidence import collect as collect_evidence
         collect_evidence(cfg, model)
     report = impact_mod.compute(cfg, model, files, base, head, base_model)
-    if getattr(args, "config_changes", False):
+    if config_changes:
         for sid, reasons in impact_mod.config_changes(cfg, model).items():
             report.sections.setdefault(sid, []).extend(reasons)
     out = cfg.build_dir / "impact.json"

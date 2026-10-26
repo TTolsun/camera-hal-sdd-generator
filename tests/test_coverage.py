@@ -207,3 +207,17 @@ def test_고를_수_있는_클래스는_계속_보고한다(tmp_cfg):
     model = KnowledgeModel(classes={'Ctx': ClassInfo('Ctx', Location('src/ctx.h', 10))})
     report = compute(tmp_cfg, model, ['src/ctx.h'], 'a', 'b')
     assert [f['name'] for f in report.coverage['findings']] == ['Ctx']
+
+
+def test_impact_config_changes_옵션은_원고가_없는_설계_섹션을_영향_섹션에_넣는다(tmp_cfg):
+    import yaml
+    base, head = revision_pair(tmp_cfg)
+    KnowledgeModel(meta={'source_commit': head}).save(tmp_cfg.facts_path)
+    section = dict(id='device', title='장치', design_requirements=[dict(id='stop', question='종료는 무엇입니까?')],
+                   design_topics=[dict(id='stop', title='종료', question='종료를 설명하세요.', covers=['stop'], sources=[])])
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
+    args = ['--config', str(tmp_cfg.root / 'sdd.yaml'), 'impact', '--base', base]
+    assert main(args) == 0
+    assert 'device' not in ImpactReport.load(tmp_cfg.build_dir / 'impact.json').sections
+    assert main(args + ['--config-changes']) == 0
+    assert ImpactReport.load(tmp_cfg.build_dir / 'impact.json').sections['device'] == ['원고가 아직 없음']

@@ -130,12 +130,10 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
     다음 문서)은 지문에 들어가지 않아 재생성을 요구하지 않는다. 모델에 쓰는 evidence 는 먼저 수집해 두어야 한다."""
     from .config import section_output
     from .document_metadata import split_frontmatter
-    from .evidence import fingerprint, requires_fingerprint
+    from .evidence import fingerprint
     changed: dict[str, list[str]] = {}
     for sec in cfg.sections():
         if sec.get("kind") == "manual" or not (sec.get("design_topics") or sec.get("reader_profile")):
-            continue
-        if not requires_fingerprint(sec):
             continue
         path = cfg.sdd_dir / section_output(sec)
         if not path.is_file():
