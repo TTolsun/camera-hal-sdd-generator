@@ -11,6 +11,7 @@ import json
 import re
 
 from .evidence import fingerprint, topic_blocks, contract_text
+from . import duplicates
 from .manuscript import lint, describe
 from .semantic import review as semantic_review, only_uncertainty, known_names
 from .validate import extract_citations, check
@@ -171,6 +172,9 @@ def materialize(model, section, answers):
             record = model.evidence[key]
             source['sha256'] = record['sha256']
             pinned.evidence[key] = {**record, 'selector': copy.deepcopy(source)}
+    repeated = duplicates.statement_findings(model, section['id'], {t['id']: answers[t['id']] for t in section['design_topics']})
+    if repeated:
+        raise ValueError(' / '.join(repeated))
     return pinned, resolved
 
 
@@ -289,6 +293,8 @@ def generate(generator, section, previous=None):
         if topic_policy != policy:
             inputs[topic['id']] = topic_inputs(model, section, topic_policy)[topic['id']]
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
+    for tid in duplicates.repeated_topics(model, section, answers):
+        answers.pop(tid), origins.pop(tid, None)
     reused = list(answers)
     units = []
     for topic in section['design_topics']:
@@ -405,6 +411,12 @@ def generate(generator, section, previous=None):
                     raise ValueError(' / '.join(errors))
                 subset.pop('reader_profile', None)
                 validate_answers(model, subset, candidate)
+                prior = {tid: list(statements) for tid, statements in answers.items()}
+                repeated = duplicates.statement_findings(
+                    model, section['id'], {**prior, topic['id']: prior.get(topic['id'], []) + candidate[topic['id']]},
+                    only_after={**{tid: len(v) for tid, v in prior.items()}, topic['id']: len(prior.get(topic['id'], []))})
+                if repeated:
+                    raise ValueError(' / '.join(repeated))
                 answer_cache.save(cached_path, raw)
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
