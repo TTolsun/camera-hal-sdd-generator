@@ -1531,10 +1531,6 @@ sections:
     title: 모듈 탐색과 격리 조건
     question: 모듈 검색 경로와 우선순위, 이름·버전 매칭, createIPA()의 모듈 없음·프록시 무효 분기를 설명하세요. 서명 실패는 isolated 선택인지 nullptr 반환인지 코드를 대조하세요.
     sources:
-    - id: modules
-      file: src/libcamera/ipa_manager.cpp
-      start: IPAManager::IPAManager(
-      end: IPAManager::~IPAManager() = default;
     - id: match
       file: src/libcamera/ipa_module.cpp
       start: \brief Verify if the IPA module matches a given name
@@ -1559,21 +1555,51 @@ sections:
       file: include/libcamera/internal/ipa_manager.h
       start: auto proxy =
       end: '}();'
+    - id: paths
+      file: src/libcamera/ipa_manager.cpp
+      start: const auto modulePaths =
+      end: if (!modulePaths.empty() && !ipaCount)
+    - id: build-path
+      file: src/libcamera/ipa_manager.cpp
+      start: std::string root = utils::libcameraBuildPath();
+      end: ipaCount += addDir(ipaBuildPath.c_str(), maxDepth);
+    - id: installed-path
+      file: src/libcamera/ipa_manager.cpp
+      start: /* Finally try to load IPAs from the installed system path. */
+      end: ipaCount += addDir(IPA_MODULE_DIR);
     covers:
     - selection
     parts:
     - id: paths
-      question: IPAManager 생성자의 IPA 검색 경로 순서를 한 문장으로 설명하고, 빌드 경로를 추가하는 if 조건식을 코드 그대로 별도 문장에 쓰세요. 사용자 경로 검색 결과를 설치 여부 판정으로
-        해석하지 마세요.
+      question: modulePaths를 순회할 때 비어 있는 경로 처리와 addDir에 전달하는 경로를 설명하세요.
       sources:
-      - modules
-      max_statements: 3
+      - paths
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - modulePaths
+        - - addDir
+        reject_patterns: []
+    - id: build-path
+      question: 빌드 경로 추가를 감싸는 if 조건식 전체를 코드 그대로 적고, 그 안에서 조합하는 경로와 maxDepth 값을 설명하세요.
+      sources:
+      - build-path
+      max_statements: 1
       answer_contract:
         basis: implementation
         required_terms:
         - - '!root.empty()'
+        reject_patterns: []
+    - id: installed-path
+      question: 마지막 addDir 호출이 인자로 받는 설치 경로 식별자를 코드 그대로 적어 설명하세요.
+      sources:
+      - installed-path
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - IPA_MODULE_DIR
-        - - modulePaths
         reject_patterns: []
     - id: match
       question: IPAModule::match의 return 식을 코드 그대로 인용하고 이름과 최소·최대 버전 범위 조건을 설명하세요. 버전 조건을 빠뜨리지 마세요.
@@ -2132,14 +2158,30 @@ sections:
       max_statements: 2
   - id: metadata
     title: 메타데이터와 확인 범위
+    design_prompt: focused
     question: process() 래퍼가 공통 알고리즘에 전달하는 프레임 상태와 metadata, 직접 사용하는 통계가 있는지, 파일 끝의 알고리즘 등록을 설명하세요. 장치 실행 결과는 추정하지 마세요.
     sources:
     - id: process
       file: src/ipa/ipu3/algorithms/lsc.cpp
       start: void Lsc::process(
-      end: REGISTER_IPA_ALGORITHM(Lsc, "Lsc")
+      end: "\n}"
+    - id: registration
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: REGISTER_IPA_ALGORITHM(Lsc,
+      end: )
     covers:
     - metadata
+    parts:
+    - id: process
+      question: process() 함수 본문이 공통 알고리즘에 전달하는 두 인자와 stats 인자의 사용 여부를 설명하세요.
+      sources:
+      - process
+      max_statements: 1
+    - id: registration
+      question: 파일 범위의 등록 매크로에 전달하는 클래스와 이름을 설명하세요. 함수 실행 동작으로 설명하지 마세요.
+      sources:
+      - registration
+      max_statements: 1
   design_requirements:
   - id: integration
     question: LSC 구현 파일과 공유 상태 및 프레임별 상태는 어떻게 연결됩니까?

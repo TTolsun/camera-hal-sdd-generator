@@ -1,0 +1,156 @@
+{
+  "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+  "evidence": {
+    "CCM": {
+      "file": "src/ipa/ipu3/algorithms/ccm.h",
+      "line": 1,
+      "text": "/* SPDX-License-Identifier: LGPL-2.1-or-later */\n/*\n * Copyright (C) 2026, Ideas On Board\n *\n * IPU3 Colour correction matrix algorithm\n */\n"
+    },
+    "FBO": {
+      "file": "src/libcamera/egl.cpp",
+      "line": 119,
+      "text": "/**\n * \\brief Attach a texture to a frame-buffer-object\n *\n * \\param[in,out] eglImage EGL image containing texture to attach to FBO\n *\n * Helper function to make attachment of texture to FBO easy to reuse.\n *\n * \\return 0 on success, or -ENODEV on failure\n */"
+    },
+    "GR": {
+      "file": "include/linux/intel-ipu3.h",
+      "line": 1199,
+      "text": "/**\n * struct ipu3_uapi_shd_lut - Shading gain factor lookup table.\n *\n * @sets: array\n * @sets.r_and_gr: Red and GreenR Lookup table.\n * @sets.r_and_gr.r: Red shading factor.\n * @sets.r_and_gr.gr: GreenR shading factor.\n * @sets.reserved1: reserved\n * @sets.gb_and_b: GreenB and Blue Lookup table.\n * @sets.gb_and_b.gb: GreenB shading factor.\n * @sets.gb_and_b.b: Blue shading factor.\n * @sets.reserved2: reserved\n *\n * Map to shading correction LUT register set.\n */\nstruct ipu3_uapi_shd_lut {\n\tstruct {"
+    },
+    "GB": {
+      "file": "include/linux/intel-ipu3.h",
+      "line": 1199,
+      "text": "/**\n * struct ipu3_uapi_shd_lut - Shading gain factor lookup table.\n *\n * @sets: array\n * @sets.r_and_gr: Red and GreenR Lookup table.\n * @sets.r_and_gr.r: Red shading factor.\n * @sets.r_and_gr.gr: GreenR shading factor.\n * @sets.reserved1: reserved\n * @sets.gb_and_b: GreenB and Blue Lookup table.\n * @sets.gb_and_b.gb: GreenB shading factor.\n * @sets.gb_and_b.b: Blue shading factor.\n * @sets.reserved2: reserved\n *\n * Map to shading correction LUT register set.\n */\nstruct ipu3_uapi_shd_lut {\n\tstruct {"
+    },
+    "LOG": {
+      "file": "include/libcamera/base/log.h",
+      "line": 136,
+      "text": "#define _LOG(cat, sev)                                        \\\n\tswitch (const auto &_logCategory = (cat);             \\\n\t\tisLogSeverityEnabled<Log##sev>(_logCategory)) \\\n\tcase 1:                                               \\\n\t\t(LogMessageAbortGuard<Log##sev>(),            \\\n\t\t _log(_logCategory, Log##sev).stream())\n\n#define _LOG1(severity) \\\n\t_LOG(LogCategory::defaultCategory(), severity)\n#define _LOG2(category, severity) \\\n\t_LOG(_LOG_CATEGORY(category)(), severity)\n\n/*\n * Expand the LOG() macro to _LOG1() or _LOG2() based on the number of\n * arguments.\n */\n#define _LOG_MACRO(_1, _2, NAME, ...) NAME\n#define LOG(...) _LOG_MACRO(__VA_ARGS__, _LOG2, _LOG1)(__VA_ARGS__)\n#else /* __DOXYGEN___ */\n#define LOG(category, severity)\n#endif /* __DOXYGEN__ */\n"
+    }
+  },
+  "definitions": {
+    "CCM": "IPU3 컬러 교정 행렬 알고리즘을 의미합니다.",
+    "FBO": "텍처를 부착할 프레임 버퍼 객체를 의미합니다.",
+    "GR": "렌즈 음영 보정 표의 녹색 R 음영 계수를 의미합니다.",
+    "GB": "렌즈 음영 보정 표의 녹색 B 음영 계수를 의미합니다.",
+    "LOG": "호출자가 지정하는 카테고리와 심각도 수준을 사용합니다."
+  },
+  "actual_call": {
+    "receipt": {
+      "schema": 1,
+      "tag": "glossary_terms",
+      "completed_at": "2026-10-26T10:26:52.212105+00:00",
+      "transport": "ollama",
+      "model": "qwen3.5:9b",
+      "http_call": true,
+      "request_sha256": "d3dad62af70f1e4c6a79355bac19b83c4a945e04b7888f811c61507623ff4454",
+      "response_sha256": "58eb5a8c53490494cc8530a20e856fbcc2eea6bc9532d88bee2b37f54153e40a",
+      "settings": {
+        "temperature": 0.1,
+        "think": false,
+        "num_ctx": 16384,
+        "max_output_tokens": 2000
+      },
+      "provider": {
+        "model": "qwen3.5:9b",
+        "created_at": "2026-10-26T10:26:52.2068551Z",
+        "done": true,
+        "done_reason": "stop",
+        "total_duration": 10549153300,
+        "load_duration": 9845000,
+        "prompt_eval_count": 977,
+        "prompt_eval_duration": 475865000,
+        "eval_count": 110,
+        "eval_duration": 3705339000
+      },
+      "human_review": "pending"
+    },
+    "request": {
+      "system": "제공된 공개 소스의 의미만 한국어로 설명하세요. 원문에 없는 보장이나 약어 풀이를 만들지 마세요.",
+      "user": "근거: {\"CCM\": {\"file\": \"src/ipa/ipu3/algorithms/ccm.h\", \"line\": 1, \"text\": \"/* SPDX-License-Identifier: LGPL-2.1-or-later */\\n/*\\n * Copyright (C) 2026, Ideas On Board\\n *\\n * IPU3 Colour correction matrix algorithm\\n */\\n\"}, \"FBO\": {\"file\": \"src/libcamera/egl.cpp\", \"line\": 119, \"text\": \"/**\\n * \\\\brief Attach a texture to a frame-buffer-object\\n *\\n * \\\\param[in,out] eglImage EGL image containing texture to attach to FBO\\n *\\n * Helper function to make attachment of texture to FBO easy to reuse.\\n *\\n * \\\\return 0 on success, or -ENODEV on failure\\n */\"}, \"GR\": {\"file\": \"include/linux/intel-ipu3.h\", \"line\": 1199, \"text\": \"/**\\n * struct ipu3_uapi_shd_lut - Shading gain factor lookup table.\\n *\\n * @sets: array\\n * @sets.r_and_gr: Red and GreenR Lookup table.\\n * @sets.r_and_gr.r: Red shading factor.\\n * @sets.r_and_gr.gr: GreenR shading factor.\\n * @sets.reserved1: reserved\\n * @sets.gb_and_b: GreenB and Blue Lookup table.\\n * @sets.gb_and_b.gb: GreenB shading factor.\\n * @sets.gb_and_b.b: Blue shading factor.\\n * @sets.reserved2: reserved\\n *\\n * Map to shading correction LUT register set.\\n */\\nstruct ipu3_uapi_shd_lut {\\n\\tstruct {\"}, \"GB\": {\"file\": \"include/linux/intel-ipu3.h\", \"line\": 1199, \"text\": \"/**\\n * struct ipu3_uapi_shd_lut - Shading gain factor lookup table.\\n *\\n * @sets: array\\n * @sets.r_and_gr: Red and GreenR Lookup table.\\n * @sets.r_and_gr.r: Red shading factor.\\n * @sets.r_and_gr.gr: GreenR shading factor.\\n * @sets.reserved1: reserved\\n * @sets.gb_and_b: GreenB and Blue Lookup table.\\n * @sets.gb_and_b.gb: GreenB shading factor.\\n * @sets.gb_and_b.b: Blue shading factor.\\n * @sets.reserved2: reserved\\n *\\n * Map to shading correction LUT register set.\\n */\\nstruct ipu3_uapi_shd_lut {\\n\\tstruct {\"}, \"LOG\": {\"file\": \"include/libcamera/base/log.h\", \"line\": 136, \"text\": \"#define _LOG(cat, sev)                                        \\\\\\n\\tswitch (const auto &_logCategory = (cat);             \\\\\\n\\t\\tisLogSeverityEnabled<Log##sev>(_logCategory)) \\\\\\n\\tcase 1:                                               \\\\\\n\\t\\t(LogMessageAbortGuard<Log##sev>(),            \\\\\\n\\t\\t _log(_logCategory, Log##sev).stream())\\n\\n#define _LOG1(severity) \\\\\\n\\t_LOG(LogCategory::defaultCategory(), severity)\\n#define _LOG2(category, severity) \\\\\\n\\t_LOG(_LOG_CATEGORY(category)(), severity)\\n\\n/*\\n * Expand the LOG() macro to _LOG1() or _LOG2() based on the number of\\n * arguments.\\n */\\n#define _LOG_MACRO(_1, _2, NAME, ...) NAME\\n#define LOG(...) _LOG_MACRO(__VA_ARGS__, _LOG2, _LOG1)(__VA_ARGS__)\\n#else /* __DOXYGEN___ */\\n#define LOG(category, severity)\\n#endif /* __DOXYGEN__ */\\n\"}}\n각 약어 자체가 가리키는 대상을 완전한 한국어 한 문장으로 설명하세요. CCM은 헤더 이름이 아니라 알고리즘 이름을, FBO는 attach 함수를 제외한 객체를 설명하세요. GR과 GB는 렌즈 음영 보정 표의 gr과 gb를 각각 설명하세요. shading은 이 프로젝트 용어집에서 음영 보정이라는 용어를 사용합니다. LOG는 호출자가 지정하는 카테고리와 severity 사용만 설명하세요. 입니다 또는 합니다로 문장을 끝내세요. JSON 객체만 반환하세요.",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "CCM": {
+            "type": "string"
+          },
+          "FBO": {
+            "type": "string"
+          },
+          "GR": {
+            "type": "string"
+          },
+          "GB": {
+            "type": "string"
+          },
+          "LOG": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "CCM",
+          "FBO",
+          "GR",
+          "GB",
+          "LOG"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "response": "{\n  \"CCM\": \"IPU3 컬러 교정 행렬 알고리즘을 의미합니다.\",\n  \"FBO\": \"텍처를 부착할 프레임 버퍼 객체를 의미합니다.\",\n  \"GR\": \"렌즈 음영 보정 표의 녹색 R 음영 계수를 의미합니다.\",\n  \"GB\": \"렌즈 음영 보정 표의 녹색 B 음영 계수를 의미합니다.\",\n  \"LOG\": \"호출자가 지정하는 카테고리와 심각도 수준을 사용합니다.\"\n}"
+  },
+  "note": "Supplementary glossary configuration generated by actual local Qwen from public excerpts. This is not part of the eight-page source-mutation proof and is not human approval.",
+  "fps": {
+    "file": "src/android/camera_capabilities.cpp",
+    "line": 670,
+    "evidence": "\t\t\tint64_t minFrameDuration = frameDurations->second.min().get<int64_t>() * 1000;\n\t\t\tint64_t maxFrameDuration = frameDurations->second.max().get<int64_t>() * 1000;\n\n\t\t\t/*\n\t\t\t * Cap min frame duration to 30 FPS with 1% tolerance.\n\t\t\t *\n\t\t\t * 30 frames per second has been validated as the most\n\t\t\t * opportune frame rate for quality tuning, and power\n\t\t\t * vs performances budget on Intel IPU3-based\n\t\t\t * Chromebooks.\n\t\t\t *\n\t\t\t * \\todo This is a platform-specific decision that needs\n\t\t\t * to be abstracted and delegated to the configuration\n\t\t\t * file.",
+    "definition": "FPS 는 초당 프레임 수를 의미합니다.",
+    "call": {
+      "receipt": {
+        "schema": 1,
+        "tag": "glossary_fps",
+        "completed_at": "2026-10-26T11:04:47.382448+00:00",
+        "transport": "ollama",
+        "model": "qwen3.5:9b",
+        "http_call": true,
+        "request_sha256": "fd4b02895210a5d4df39b201ed474aa1690960cf36d22e704578c1e004d4283f",
+        "response_sha256": "03cc770215eeec22372b169caabf012f09bcacab4c0fe8fc2cfc843d7e59833b",
+        "settings": {
+          "temperature": 0.1,
+          "think": false,
+          "num_ctx": 16384,
+          "max_output_tokens": 2000
+        },
+        "provider": {
+          "model": "qwen3.5:9b",
+          "created_at": "2026-10-26T11:04:47.3798835Z",
+          "done": true,
+          "done_reason": "stop",
+          "total_duration": 755154400,
+          "load_duration": 3945100,
+          "prompt_eval_count": 221,
+          "prompt_eval_duration": 297991000,
+          "eval_count": 16,
+          "eval_duration": 381651000
+        },
+        "human_review": "pending"
+      },
+      "request": {
+        "system": "공개 코드 근거만 사용하여 약어를 한국어 한 문장으로 설명하세요. JSON text 필드만 반환하세요.",
+        "user": "\t\t\tint64_t minFrameDuration = frameDurations->second.min().get<int64_t>() * 1000;\n\t\t\tint64_t maxFrameDuration = frameDurations->second.max().get<int64_t>() * 1000;\n\n\t\t\t/*\n\t\t\t * Cap min frame duration to 30 FPS with 1% tolerance.\n\t\t\t *\n\t\t\t * 30 frames per second has been validated as the most\n\t\t\t * opportune frame rate for quality tuning, and power\n\t\t\t * vs performances budget on Intel IPU3-based\n\t\t\t * Chromebooks.\n\t\t\t *\n\t\t\t * \\todo This is a platform-specific decision that needs\n\t\t\t * to be abstracted and delegated to the configuration\n\t\t\t * file.\nFPS라는 단위의 뜻만 설명하세요. 장치의 실제 성능을 보장하지 마세요.",
+        "response_schema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "response": "{\"text\": \"FPS 는 초당 프레임 수를 의미합니다.\"}"
+    }
+  }
+}
