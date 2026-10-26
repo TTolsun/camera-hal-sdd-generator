@@ -373,15 +373,16 @@ def generate(generator, section, previous=None):
         topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
         if topic_policy != prompt_policy:
             inputs[topic['id']] = topic_inputs(model, section, topic_policy + json.dumps(policy))[topic['id']]
-    answers, origins = reusable(model, section, previous, inputs, validate_answers)
-    # Typography is mechanical: retain the model's words while preventing
-    # source identifiers with underscores from becoming Markdown emphasis.
-    for topic in section['design_topics']:
-        if topic['id'] in answers:
-            prefix = f"{section['id']}/{topic['id']}/"
-            normalize_answer(model, answers[topic['id']], [record['text']
-                for key, record in model.evidence.items()
+    def validate_retained(pinned, selected, retained):
+        # Normalize only typography before revalidation, so an added code
+        # marking rule does not discard otherwise source-identical answers.
+        for topic in selected['design_topics']:
+            prefix = f"{selected['id']}/{topic['id']}/"
+            normalize_answer(pinned, retained[topic['id']], [record['text']
+                for key, record in pinned.evidence.items()
                 if key.startswith(prefix) and record.get('status') == 'available'])
+        return validate_answers(pinned, selected, retained)
+    answers, origins = reusable(model, section, previous, inputs, validate_retained)
     reused = list(answers)
     units = []
     for topic in section['design_topics']:
