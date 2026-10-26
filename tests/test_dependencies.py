@@ -4,6 +4,24 @@ import importlib.util
 from pathlib import Path
 from graphlib import TopologicalSorter
 
+import pytest
+
+
+@pytest.mark.parametrize('module', [
+    'generate', 'generated_design', 'generated_visuals', 'design_reuse', 'update', 'provenance',
+])
+def test_core_metadata_consumers_do_not_import_html_renderers(module):
+    path = Path(__file__).resolve().parents[1] / 'src' / 'sdd' / (module + '.py')
+    for node in ast.walk(ast.parse(path.read_text(encoding='utf-8'))):
+        if isinstance(node, ast.ImportFrom):
+            target = (importlib.util.resolve_name('.' * node.level + (node.module or ''), 'sdd')
+                      if node.level else node.module or '')
+            assert target not in {'sdd.export_html', 'sdd.export_site'}, (module, node.lineno, target)
+            if target == 'sdd':
+                assert not {'export_html', 'export_site'} & {alias.name for alias in node.names}
+        elif isinstance(node, ast.Import):
+            assert not {'sdd.export_html', 'sdd.export_site'} & {alias.name for alias in node.names}
+
 
 def test_runtime_modules_have_no_import_cycle():
     root = Path(__file__).resolve().parents[1] / 'src' / 'sdd'
