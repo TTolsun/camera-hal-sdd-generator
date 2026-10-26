@@ -60,7 +60,6 @@ def review(generator, topic, statements, sources, tag, *, source_files=None, sou
                     'properties': {'index': {'type': 'integer', 'enum': list(range(len(statements)))},
                                    'supported': {'type': 'boolean'},
                                    'reason': {'type': 'string', 'minLength': 1, 'maxLength': 400}}}}}}
-    # CLI 실행기도 schema를 요청문에 실어 보낸다. 빠뜨리면 모델이 입력을 되풀이한 배열을 돌려주는 경우가 있다.
     options = {'response_schema': schema} if generator.cfg.agent.kind in SCHEMA_KINDS else {}
     raw = generator.agent.chat(system, user, tag=tag + '_grounding', **options)
     data = json.loads(raw)
