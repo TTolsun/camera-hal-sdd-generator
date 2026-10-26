@@ -15,6 +15,23 @@ def digest(text):
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
 
+@pytest.mark.parametrize('tail', [
+    {'type': 'step_finish', 'part': {'reason': 'length'}},
+    {'type': 'text', 'part': {'text': 'unfinished next step'}},
+])
+def test_opencode_requires_completion_of_the_final_step(archive, tail):
+    args = archive('opencode')
+    provider = args['receipt']['provider']
+    path = args['calls'].parent / provider['stdout_path']
+    raw = path.read_bytes().decode('utf-8') + '\n' + json.dumps(tail)
+    path.write_text(raw, encoding='utf-8', newline='\n')
+    provider['stdout_sha256'] = digest(raw)
+    with pytest.raises(ValueError, match='completion event'):
+        cli_agent.decode_response('opencode', raw)
+    with pytest.raises(ValueError, match='completed response'):
+        verify_cli_receipt(**args)
+
+
 @pytest.fixture
 def archive(tmp_path, monkeypatch):
     monkeypatch.setattr(Agent, '_post', lambda *a: pytest.fail('CLI must not call HTTP'))

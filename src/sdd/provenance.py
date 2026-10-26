@@ -48,7 +48,8 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
             request_hash = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
             if (receipt.get('request_sha256') != request_hash
                     or receipt.get('response_sha256') != hashlib.sha256(raw.encode()).hexdigest()
-                    or receipt.get('http_call') is not True or receipt.get('transport') != provider
+                    or receipt.get('http_call') is not True or receipt.get('cli_call') is True
+                    or receipt.get('transport') != provider
                     or receipt.get('model') != model_name):
                 raise ValueError(f'Model call receipt mismatch: {receipt_path.name}')
             verified_http += 1

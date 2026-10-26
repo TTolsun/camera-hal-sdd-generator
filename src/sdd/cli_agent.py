@@ -78,10 +78,10 @@ def decode_response(runner, stdout):
             raise ValueError('OpenCode returned an error event')
         part = event.get('part') or {}
         if event.get('type') == 'text':
+            finished = False
             parts.append(part['text'])
         if event.get('type') == 'step_finish':
-            if part.get('reason') in ('stop', 'end_turn'):
-                finished = True
+            finished = part.get('reason') in ('stop', 'end_turn')
             metadata = {k: event[k] for k in ('sessionID',) if k in event}
             metadata.update({k: part[k] for k in ('reason', 'tokens', 'cost') if k in part})
     if not finished:
