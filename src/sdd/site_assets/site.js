@@ -111,10 +111,9 @@
   }
   resizer.addEventListener('pointerdown', event => {
     if (!desktop.matches || event.button !== 0 || !event.isPrimary) return;
-    event.preventDefault();
     drag = {id: event.pointerId, x: event.clientX, width: sidebar.getBoundingClientRect().width};
     resizer.setPointerCapture(event.pointerId);
-    resizer.focus({preventScroll: true});
+    // Native pointer focus preserves the browser's keyboard-only focus ring.
     document.body.classList.add('resizing-sidebar');
   });
   resizer.addEventListener('pointermove', event => {
