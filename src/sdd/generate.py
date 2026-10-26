@@ -139,7 +139,7 @@ class Generator:
 
     # ---- 종류별 --------------------------------------------------------------
 
-    def _prose(self, sec: dict[str, Any]) -> Path:
+    def _prose(self, sec: dict[str, Any], *, grouped: bool = True) -> Path:
         original = sec
         evidence_model = self.model
         if generated_design.enabled(sec):
@@ -204,7 +204,7 @@ class Generator:
                     missing, current = [], Verdict(ok=True)
                     self._record_review(tag, text, current, missing, mode='source-question')
                 elif "statements" in topic:
-                    text, gaps = contract_text(evidence_model, sec["id"], topic)
+                    text, gaps = contract_text(evidence_model, sec["id"], topic, grouped=grouped)
                     missing, current = [], Verdict(ok=not gaps, notes=gaps)
                     self._record_review(tag, text, current, missing,
                                         mode="generated-prose" if generated_design.enabled(original) else "source-bound-contract")
