@@ -5553,8 +5553,8 @@ sections:
       - - 해야
     parts:
     - id: successful-allocation
-      question: buffers() 호출 전에 해당 스트림의 allocate() 성공에 관해 어떤 전제조건을 지켜야 합니까? 의무를 해야 합니다 문체로 한 문장으로 설명하세요. 코드 식별자는
-        백틱으로 표시하세요.
+      question: buffers() 호출 전에 해당 스트림의 allocate() 성공에 관해 어떤 전제조건을 지켜야 합니까? 한 문장으로 설명하고 해야 합니다로 끝내세요. 소스의 \a는 Doxygen
+        서식 표식이므로 복사하지 말고, 매개변수 stream의 일반 명칭은 스트림으로 쓰세요. 코드 식별자는 백틱으로 표시하세요.
       sources:
       - buffers-precondition
       max_statements: 1
