@@ -11,6 +11,7 @@ import json
 import re
 
 from .evidence import fingerprint, topic_blocks, contract_text
+from .llm import SCHEMA_KINDS
 from .manuscript import lint, describe
 from .semantic import review as semantic_review, only_uncertainty, known_names
 from .validate import extract_citations, check
@@ -455,7 +456,7 @@ def generate(generator, section, previous=None):
         tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
         if '_subpart_id' in topic:
             tag += f"_sub{topic['_subpart_id']}"
-        schema = response_schema(topic, passages) if cfg.agent.kind in ('ollama', 'response-bundle') else None
+        schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
         retained = False
         if archive:
             for record in archive.candidates(system, base_user, schema, tag):
@@ -479,7 +480,7 @@ def generate(generator, section, previous=None):
         user = base_user
         last = None
         from . import answer_cache
-        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('cli', 'ollama', 'response-bundle') else {}
+        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in SCHEMA_KINDS else {}
         cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
                                              {'request': options, **({'policy': unit_policy} if focused_system is not None else {}),
                                               'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
@@ -539,16 +540,15 @@ def generate(generator, section, previous=None):
     artifact = {'schema': 1, 'input_fingerprint': fingerprint(model, section), 'answers': answers,
                 'topic_inputs': inputs, 'reused_topics': reused, 'replayed_units': replayed,
                 'generated_topics': [t['id'] for t in section['design_topics'] if t['id'] not in reused],
-                'topic_agents': {tid: origins.get(tid, (f'cli/{cfg.agent.runner}/{cfg.agent.model or "cli-default"}'
-                                    if cfg.agent.kind == 'cli' else f'{cfg.agent.kind}/{cfg.agent.model}')) for tid in answers},
+                'topic_agents': {tid: origins.get(tid, cfg.agent.label) for tid in answers},
                 'grounding_review': 'passed' if grounding else 'not-run',
                 'grounding_policy': policy.get('grounding_policy')}
     return pinned, resolved, report, artifact
 
 
 def verify(model, section, manuscript):
-    from .export_html import _split
-    meta, body = _split(manuscript)
+    from .document_metadata import split_frontmatter
+    meta, body = split_frontmatter(manuscript)
     artifact = meta.get('generated_design')
     if isinstance(artifact, dict) and artifact.get('grounding_review') == 'passed':
         from .grounding import policy_hash
