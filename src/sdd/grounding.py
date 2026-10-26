@@ -6,6 +6,10 @@ from pathlib import Path
 from .llm import SCHEMA_KINDS
 
 
+class GroundingFormatError(ValueError):
+    """A completed review response lacks the required verdict structure."""
+
+
 def policy_hash():
     return hashlib.sha256(Path(__file__).read_text(encoding='utf-8').encode()).hexdigest()
 
@@ -62,9 +66,12 @@ def review(generator, topic, statements, sources, tag, *, source_files=None, sou
                                    'reason': {'type': 'string', 'minLength': 1, 'maxLength': 400}}}}}}
     options = {'response_schema': schema} if generator.cfg.agent.kind in SCHEMA_KINDS else {}
     raw = generator.agent.chat(system, user, tag=tag + '_grounding', **options)
-    data = json.loads(raw)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise GroundingFormatError(str(exc)) from exc
     if not isinstance(data, dict):
-        raise ValueError('근거 대조 응답은 reviews JSON 객체여야 합니다.')
+        raise GroundingFormatError('근거 대조 응답은 reviews JSON 객체여야 합니다.')
     rows = data.get('reviews')
     if (set(data) != {'reviews'} or not isinstance(rows, list) or len(rows) != len(statements)
             or any(not isinstance(row, dict) or set(row) != {'index', 'supported', 'reason'}
@@ -72,7 +79,7 @@ def review(generator, topic, statements, sources, tag, *, source_files=None, sou
                    or not isinstance(row['reason'], str) or not 1 <= len(row['reason'].strip()) <= 400
                    for row in rows)
             or sorted(row['index'] for row in rows) != list(range(len(statements)))):
-        raise ValueError('근거 대조 응답은 모든 설명 문단을 중복 없이 판정해야 합니다.')
+        raise GroundingFormatError('근거 대조 응답은 모든 설명 문단을 중복 없이 판정해야 합니다.')
     findings = [f"paragraph {row['index'] + 1}: {row['reason']}" for row in rows if not row['supported']]
     if findings:
         raise ValueError('모델 근거 대조 실패 (승인 아님): ' + ' / '.join(findings))

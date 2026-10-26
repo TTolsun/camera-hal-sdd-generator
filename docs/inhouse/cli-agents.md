@@ -57,6 +57,8 @@ CLI 실행 파일이나 사내 실행 래퍼를 지정해야 한다면 `command:
 | 실패 | 실행 파일 누락·시간 초과·종료 코드 오류·빈 응답·JSON 완료 상태 오류는 실패합니다. CLI가 생성한 내용에도 기존 문서·근거·노드 한도 검사를 적용합니다. |
 | 증거 | `build/prompts/calls/`의 요청·응답·receipt와 `build/prompts/cli/`의 CLI 출력을 보관합니다. receipt의 `transport: cli`, `cli_call: true`, `http_call: false`는 생성기가 CLI를 실행했다는 뜻입니다. CLI 내부의 HTTP 호출 수는 뜻하지 않습니다. 모델 생략 시에는 `model_selection: cli-default`로 기록합니다. |
 
+설계 답변의 본문·근거 구조 검사는 통과했지만 출처 대조 응답의 JSON 형식만 잘못된 경우에는, 같은 실행의 후보를 메모리에 유지하고 기존 재시도 한도 안에서 CLI로 대조만 다시 요청합니다. 근거가 부족하다는 판정은 기존처럼 답변을 다시 생성합니다. 이전 실행의 저장 응답을 실패한 CLI 대신 사용하는 동작은 아닙니다.
+
 `automation.hermes`라는 기존 설정 키는 호환성을 위해 유지합니다. `agent.kind: cli`이면 설명 재검토와 누락 보완도 선택한 `agent.runner`를 사용합니다. 예전에 지정한 `automation.hermes.command`는 CLI 모드에서 거절합니다. 해당 값을 제거하고 실행 경로를 `agent.command`로 통일합니다.
 
 직접 API 비교 시험은 별도 설정에 `kind: ollama` 또는 `openai-compatible`과 `allow_direct_api: true`를 모두 명시해야 합니다. CLI 실패의 대체 경로로 사용하지 않습니다. `dry-run`과 `response-bundle`은 모델을 자동 호출하지 않으므로 CLI 재현 성공으로 보고하지 않습니다. 기존 HTTP 응답을 가져오는 `repair_reader --seed`는 CLI 원응답 재사용을 지원하지 않습니다.

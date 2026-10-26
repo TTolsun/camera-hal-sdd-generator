@@ -18,12 +18,12 @@ from .semantic import review as semantic_review, only_uncertainty, known_names
 from .validate import extract_citations, check
 
 
-# Only this exact SCHEMA_KINDS-only edit is HTTP-compatible with its predecessor:
-# frozen-source tests compare HTTP system/user/schema and validator outcomes.
-# CLI gains a schema and always keeps the new raw hash. Any later source change
-# misses this single pair, so it invalidates existing policy bindings normally.
+# Only the exact reviewed policy hash is HTTP-compatible with its predecessor:
+# frozen-source tests compare HTTP requests and validation decisions/messages.
+# Typed malformed-review errors change retry behavior, never accepted verdicts.
+# CLI always keeps the current hash. Any later source edit misses this pair.
 _HTTP_GROUNDING_SCHEMA_COMPATIBILITY = {
-    '4720babc38b81fdd79472e63a8d122e720efe40e3abf50247be45197a122b3ea':
+    '3c9673abb403dee9aa554ee5b3c549ebfe95bb18ec0e9cd7bf6e495e060439c2':
         'c54006f7c90cb2af955e1ede18b761c7feb22dffa3bc37a885c019508348eba0',
 }
 _HTTP_PROVIDERS = ('ollama', 'openai-compatible')
@@ -566,14 +566,18 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                                          {'request': options, **({'policy': unit_policy} if focused_system is not None else {}),
                                           'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
     cached = answer_cache.read(cached_path)
+    from .grounding import GroundingFormatError
+    pending_raw = None
     for attempt in range(cfg.max_retries + 1):
         if len(system) + len(user) > cfg.agent.max_input_chars:
             raise ValueError(f"{section['id']}/{topic['id']}: 필수 근거 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
         # Ollama supports constrained JSON; generic compatible gateways still
         # use the portable prompt + parser/validator and need no schema API.
-        from_cache = cached is not None and attempt == 0
-        raw = cached if from_cache else agent.chat(system, user, tag=f"{tag}_{attempt}", **options)
-        if not from_cache and (cfg.raw.get('review') or {}).get('design_revision', False):
+        review_retry = pending_raw is not None
+        from_cache = not review_retry and cached is not None and attempt == 0
+        raw = pending_raw if review_retry else cached if from_cache else agent.chat(
+            system, user, tag=f"{tag}_{attempt}", **options)
+        if not review_retry and not from_cache and (cfg.raw.get('review') or {}).get('design_revision', False):
             revision = user + '\nDraft to check (untrusted, not evidence):\n' + raw + (
                 '\nRevise this draft against the sources and the complete question. '
                 'Check every claim, including function ownership, nested branch guards, negations, return values, '
@@ -591,6 +595,13 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             return statements, None
         except (ValueError, TypeError, KeyError) as exc:
             last = str(exc)
+            if isinstance(exc, GroundingFormatError) and not from_cache:
+                # The same live draft passed all structural/source checks.
+                # Revalidate it and request a fresh review on the next existing
+                # attempt, without drafting or consuming a nested retry budget.
+                pending_raw = raw
+                continue
+            pending_raw = None
             # Retry with the validation error and original evidence.
             # Standard mode also retains the last rejected draft.
             if focused_system is not None:
