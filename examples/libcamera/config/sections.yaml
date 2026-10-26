@@ -3027,10 +3027,12 @@ sections:
   design_topics:
   - id: configuration-failure
     title: 구성 실패를 좁히는 순서
-    question: 구성 실패를 처음 조사하는 개발자가 src/libcamera/camera.cpp의 Camera::configure에서 상태 검사, validate 결과, 실제 PipelineHandler::configure
-      반환, stream 연결 결과 순서로 원인을 좁히도록 설명하세요. 각 단계에서 읽을 값과 다음 분기, 실제 반환 오류 코드와 각각의 원인을 구분하세요. API 주석과 구현의 반환값이 다르면 실제 분기를 우선하세요.
-      validate를 디버거에서 재호출하지 말고 원래 호출의 결과를 관찰하세요. validate 후보 목록을 모두 실행하지 말고 실제 config 동적 타입과 pipe_의 구체 구현을 호출 스택에서 확인하도록 안내하세요.
-      이는 소스 기반 조사 계획이며 실기기 검증 명령이나 복구 보장이 아닙니다.
+    question: 구성 실패를 처음 조사하는 개발자가 src/libcamera/camera.cpp의 Camera::configure에서 상태
+      검사, validate 결과, 실제 PipelineHandler::configure 반환, stream 연결 결과 순서로 원인을 좁히도록
+      설명하세요. 각 단계에서 읽을 값과 다음 분기, 실제 반환 오류 코드와 각각의 원인을 구분하세요. API 주석과 구현의 반환값이 다르면
+      실제 분기를 우선하세요. validate를 디버거에서 재호출하지 말고 원래 호출의 결과를 관찰하세요. validate 후보 목록을 모두
+      실행하지 말고 실제 config 동적 타입과 pipe_의 구체 구현을 호출 스택에서 확인하도록 안내하세요. 이는 소스 기반 조사 계획이며
+      실기기 검증 명령이나 복구 보장이 아닙니다.
     covers:
     - configuration-failure
     sources:
@@ -3072,17 +3074,20 @@ sections:
       - access-entry
       max_statements: 1
     - id: access-disconnected
-      question: isAccessAllowed에서 연결 해제로 오류를 반환하는 전체 if 조건식과 반환값을 설명하세요. allowDisconnected 조건을 생략하지 마세요.
+      question: isAccessAllowed에서 연결 해제로 오류를 반환하는 전체 if 조건식과 반환값을 설명하세요. allowDisconnected
+        조건을 생략하지 마세요.
       sources:
       - access
       max_statements: 1
     - id: access-state
-      question: 이 상태 범위 검사에 도달한 경우 if 조건식과 성공·실패의 실제 반환값을 설명하세요. 앞서 끝난 연결 해제 분기는 설명에 섞지 마세요.
+      question: 이 상태 범위 검사에 도달한 경우 if 조건식과 성공·실패의 실제 반환값을 설명하세요. 앞서 끝난 연결 해제 분기는 설명에
+        섞지 마세요.
       sources:
       - state-return
       max_statements: 2
     - id: validation
-      question: Camera::configure는 validate 결과가 Valid가 아닌 경우 어떤 오류 식별자를 반환합니까? 조건과 Camera::configure의 반환값을 함께 한 문장으로 적으세요.
+      question: Camera::configure는 validate 결과가 Valid가 아닌 경우 어떤 오류 식별자를 반환합니까? 조건과
+        Camera::configure의 반환값을 함께 한 문장으로 적으세요.
       sources:
       - validation-branch
       answer_contract:
@@ -3094,12 +3099,13 @@ sections:
         - pattern: validate\(\).{0,30}-EINVAL.{0,10}반환
           message: validate의 Status와 Camera::configure의 오류 코드를 구분하세요.
     - id: validation-status
-      question: CameraConfiguration::validate()의 반환 상태와 구성 조정 가능성을 설명하세요. errno 정수 반환과 구분하세요.
+      question: CameraConfiguration::validate()의 반환 상태와 구성 조정 가능성을 설명하세요. errno 정수
+        반환과 구분하세요.
       sources:
       - validate
     - id: pipeline
-      question: Camera::configure가 PipelineHandler::configure를 invokeMethod로 호출한 뒤 ret를 검사하는 분기만 설명하세요. 반환값이 변환되는지 그대로 반환되는지
-        실제 코드를 읽으세요. 특정 장치 오류 코드를 추정하지 마세요.
+      question: Camera::configure가 PipelineHandler::configure를 invokeMethod로 호출한 뒤
+        ret를 검사하는 분기만 설명하세요. 반환값이 변환되는지 그대로 반환되는지 실제 코드를 읽으세요. 특정 장치 오류 코드를 추정하지 마세요.
       max_statements: 2
       sources:
       - configure
@@ -3111,8 +3117,8 @@ sections:
         - pattern: EINVAL
           message: 이 질문은 파이프라인 호출 결과 ret 분기만 다룹니다. 다른 분기의 EINVAL을 옮기지 마세요.
     - id: stream
-      question: Camera::configure의 if (!stream) 블록이 반환하기 전에 어떤 컨테이너 연산을 하고 어떤 오류를 반환합니까? 두 동작을 설명하고 컨테이너 타입이나 물리 장치 장애를 추정하지
-        마세요.
+      question: Camera::configure의 if (!stream) 블록이 반환하기 전에 어떤 컨테이너 연산을 하고 어떤 오류를
+        반환합니까? 두 동작을 설명하고 컨테이너 타입이나 물리 장치 장애를 추정하지 마세요.
       sources:
       - stream-failure
       max_statements: 2
@@ -3126,35 +3132,151 @@ sections:
         reject_patterns: []
   - id: journey
     title: 제출에서 완료까지
-    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임, 버퍼 완료와 요청
-      완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션 콜백 스레드의 확인 범위를 구분하세요.
+    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐
+      한도, queueRequestDevice()의 책임, 버퍼 완료와 요청 완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션
+      콜백 스레드의 확인 범위를 구분하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
       start: \brief Create a request object for the camera
       end: std::unique_ptr<Request> Camera::createRequest(uint64_t cookie)
-    - id: queue
-      file: src/libcamera/camera.cpp
-      start: \brief Queue a request to the camera
-      end: \brief Start capture from camera
     - id: buffer
       file: src/libcamera/request.cpp
       start: \brief Add a FrameBuffer with its associated Stream to the Request
       end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
-    - id: device-queue
+    - id: queue-success
+      file: src/libcamera/camera.cpp
+      start: int Camera::queueRequest(Request *request)
+      end: '
+
+        }'
+    - id: register
       file: src/libcamera/pipeline_handler.cpp
-      start: \fn PipelineHandler::registerRequest()
-      end: \brief Complete a buffer for a request
-    - id: completion
+      start: void PipelineHandler::registerRequest(Request *request)
+      end: '
+
+        }'
+    - id: prepare
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::queueRequest(Request *request)
+      end: '
+
+        }'
+    - id: waiting
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequests(Camera *camera)
+      end: '
+
+        }'
+    - id: dispatch
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequest(Request *request)
+      end: '
+
+        }'
+    - id: buffer-completion
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
-      end: \brief Retrieve the absolute path to a platform configuration file
+      end: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
+    - id: request-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Signal request completion
+      end: void PipelineHandler::completeRequest(Request *request)
+    - id: request-completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::completeRequest(Request *request)
+      end: '
+
+        }'
+    - id: buffer-implementation
+      file: src/libcamera/pipeline_handler.cpp
+      start: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
+      end: '
+
+        }'
     covers:
     - journey
+    design_prompt: focused
+    parts:
+    - id: create
+      question: createRequest의 호출 가능한 상태와 반환된 요청의 소유권·삭제 책임을 설명하세요.
+      sources:
+      - create
+      max_statements: 1
+    - id: buffer
+      question: addBuffer에서 버퍼 참조의 유효 기간과 호출자의 책임을 설명하세요. 버퍼 소유권 이전을 추정하지 마세요.
+      sources:
+      - buffer
+      max_statements: 1
+    - id: queue-success
+      question: 이 호출에서 invokeMethod로 예약하는 함수, 연결 타입, 인자와 Camera::queueRequest의 성공
+        반환값을 설명하세요. 촬영 완료를 뜻한다고 확대하지 마세요.
+      sources:
+      - queue-success
+      max_statements: 1
+    - id: register
+      question: registerRequest가 연결하는 신호와 신호가 발생했을 때 호출하는 함수 및 인자를 설명하세요.
+      sources:
+      - register
+      max_statements: 1
+    - id: prepare
+      question: PipelineHandler::queueRequest가 요청을 넣는 큐와 prepare()에 전달하는 현재 인자를 설명하세요.
+        고정 시간만큼 반드시 대기한다고 해석하지 마세요.
+      sources:
+      - prepare
+      max_statements: 1
+    - id: waiting
+      question: doQueueRequests의 두 break 조건과 pop 및 doQueueRequest 호출 순서를 설명하세요.
+      sources:
+      - waiting
+      max_statements: 1
+    - id: dispatch
+      question: doQueueRequest에서 cancelled_가 참일 때 호출하는 함수와 return, queueRequestDevice
+        호출 뒤 if(ret)가 의미하는 조건과 호출하는 함수를 설명하세요. ret의 0과 0이 아닌 값을 명확히 구분하세요. 호출한 함수의
+        내부 동작은 추정하지 마세요.
+      sources:
+      - dispatch
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - cancelled_
+        - - completeRequest
+        - - queueRequestDevice
+        - - cancelRequest
+        - - '0'
+    - id: buffer-completion
+      question: completeBuffer API 주석의 버퍼 완료 알림·추적 갱신, 명시적 completeRequest 호출 책임과
+        호출 스레드를 설명하세요. 반환값을 검사할 의무를 추가하지 마세요.
+      sources:
+      - buffer-completion
+      max_statements: 1
+    - id: request-contract
+      question: completeRequest 호출 책임, 반환 후 접근 금지, 애플리케이션 반환 순서와 호출 순서 제약의 차이를 설명하세요.
+      sources:
+      - request-contract
+      max_statements: 1
+    - id: request-completion
+      question: completeRequest의 while 루프에서 break하는 if 조건을 설명하세요. ASSERT를 대기 분기로 바꾸지
+        마세요.
+      sources:
+      - request-completion
+      max_statements: 1
+    - id: buffer-implementation
+      question: completeBuffer 본문이 보내는 신호와 실제 반환식만 설명하세요. 내부 호출의 동작은 추정하지 마세요.
+      sources:
+      - buffer-implementation
+      max_statements: 1
+    - id: buffer-result
+      question: completeBuffer API 주석의 return 문장에서 정의한 bool 반환값의 참·거짓 조건만 설명하세요. 호출자에게
+        반환값 검사 의무를 추가하지 마세요.
+      sources:
+      - buffer-completion
+      max_statements: 1
   - id: resources
     title: 요청·버퍼·fence의 수명
-    question: 요청과 버퍼의 소유권·유효 기간, reuse()가 초기화하는 상태·controls·metadata 및 ReuseBuffers 조건, fence 소유권과 재사용 주의, completeRequest()/cancelRequest()
-      반환 후 핸들러의 접근 규칙을 설명하세요.
+    question: 요청과 버퍼의 소유권·유효 기간, reuse()가 초기화하는 상태·controls·metadata 및 ReuseBuffers
+      조건, fence 소유권과 재사용 주의, completeRequest()/cancelRequest() 반환 후 핸들러의 접근 규칙을 설명하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -3164,92 +3286,438 @@ sections:
       file: src/libcamera/request.cpp
       start: \brief Add a FrameBuffer with its associated Stream to the Request
       end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
-    - id: reuse
+    - id: reuse-contract
       file: src/libcamera/request.cpp
       start: \brief Reset the request for reuse
-      end: \fn Request::controls()
-    - id: completion
-      file: src/libcamera/pipeline_handler.cpp
-      start: \brief Complete a buffer for a request
-      end: \brief Retrieve the absolute path to a platform configuration file
+      end: void Request::reuse(ReuseFlag flags)
+    - id: reuse
+      file: src/libcamera/request.cpp
+      start: void Request::reuse(ReuseFlag flags)
+      end: '
+
+        }'
     - id: reuse-flags
       file: src/libcamera/request.cpp
       start: \enum Request::ReuseFlag
       end: \typedef Request::BufferMap
+    - id: request-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Signal request completion
+      end: void PipelineHandler::completeRequest(Request *request)
+    - id: cancel
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Cancel request and signal its completion
+      end: '
+
+        }'
+    - id: fence-ownership
+      file: src/libcamera/request.cpp
+      start: Ownership of the
+      end: be left unmodified.
+    - id: fence-wait
+      file: src/libcamera/request.cpp
+      start: When a valid Fence is provided
+      end: fences of all its buffers have been correctly signalled.
+    - id: fence-timeout
+      file: src/libcamera/request.cpp
+      start: If the \a fence associated with \a buffer
+      end: returning -EEXIST.
     covers:
     - resources
+    design_prompt: focused
+    parts:
+    - id: create
+      question: createRequest의 호출 가능한 상태와 반환된 요청의 소유권·삭제 책임을 설명하세요.
+      sources:
+      - create
+      max_statements: 1
+    - id: buffer
+      question: addBuffer에서 버퍼 참조의 유효 기간과 호출자의 책임을 설명하세요. 버퍼 소유권 이전을 추정하지 마세요.
+      sources:
+      - buffer
+      max_statements: 1
+    - id: reuse-contract
+      question: Request::reuse는 어떤 동작 전에 호출해야 합니까? before/prior to 뒤의 동작을 정확히 구분하고
+        자기 자신 전에 호출한다고 쓰지 마세요.
+      sources:
+      - reuse-contract
+      max_statements: 1
+    - id: reuse
+      question: Request::reuse 함수의 ReuseBuffers 분기와 그 밖의 분기, 두 분기 뒤 status_·controls_·metadata_에
+        수행하는 동작을 설명하세요.
+      sources:
+      - reuse
+      max_statements: 1
+    - id: reuse-flags
+      question: ReuseBuffers가 재사용하는 대상과 fence를 사용할 때 이 플래그에 적용되는 주의사항을 설명하세요.
+      sources:
+      - reuse-flags
+      max_statements: 1
+    - id: request-contract
+      question: completeRequest 호출 책임, 반환 후 접근 금지, 애플리케이션 반환 순서와 호출 순서 제약의 차이를 설명하세요.
+      sources:
+      - request-contract
+      max_statements: 1
+    - id: cancel
+      question: cancelRequest가 수행하는 두 호출을 순서대로 설명하고 적용되는 completeRequest의 규칙을 구분하세요.
+      sources:
+      - cancel
+      max_statements: 1
+    - id: fence-ownership
+      question: 이 문장에서 fence 소유권을 취하는 성공 시점과 실패 시 처리를 설명하세요. fence 신호 완료 조건으로 바꾸지
+        마세요.
+      sources:
+      - fence-ownership
+      max_statements: 1
+    - id: fence-wait
+      question: valid Fence를 어디로 이동하고 어떤 신호 조건을 만족해야 장치에 요청이 제출되는지 설명하세요.
+      sources:
+      - fence-wait
+      max_statements: 1
+    - id: fence-timeout
+      question: fence 신호가 오지 않아 timeout이 난 뒤 버퍼에 남는 것, 재사용 전 호출할 함수와 남은 fence를 가진
+        버퍼를 추가할 때의 오류를 설명하세요.
+      sources:
+      - fence-timeout
+      max_statements: 1
   - id: diagnosis
     title: 실패 위치별 확인 순서
-    question: 제출 실패와 완료 누락을 조사하는 개발자에게 순서가 있는 짧은 문단으로 설명하세요. 각 단계에 실제 파일·함수와 읽을 값, 그 값에 따른 다음 분기를 적으세요. queueRequest 반환 오류,
-      doQueueRequests의 prepared_ 및 queuedRequests_.size()와 maxQueuedRequestsDevice_, doQueueRequest의 cancelled_와 queueRequestDevice
-      반환값, completeBuffer/completeRequest와 선두 RequestPending을 구분하세요. 관측 지점은 디버거 중단점이나 계측을 추가할 위치로 제안하되 검증된 실행 명령·실제 관측 결과·지연
-      기준으로 쓰지 마세요.
+    question: 제출 실패와 완료 누락을 조사하는 개발자에게 순서가 있는 짧은 문단으로 설명하세요. 각 단계에 실제 파일·함수와 읽을 값,
+      그 값에 따른 다음 분기를 적으세요. queueRequest 반환 오류, doQueueRequests의 prepared_ 및 queuedRequests_.size()와
+      maxQueuedRequestsDevice_, doQueueRequest의 cancelled_와 queueRequestDevice 반환값,
+      completeBuffer/completeRequest와 선두 RequestPending을 구분하세요. 관측 지점은 디버거 중단점이나 계측을
+      추가할 위치로 제안하되 검증된 실행 명령·실제 관측 결과·지연 기준으로 쓰지 마세요.
     sources:
-    - id: queue
-      file: src/libcamera/camera.cpp
-      start: \brief Queue a request to the camera
-      end: \brief Start capture from camera
-    - id: buffer
-      file: src/libcamera/request.cpp
-      start: \brief Add a FrameBuffer with its associated Stream to the Request
-      end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
-    - id: device-queue
+    - id: waiting
       file: src/libcamera/pipeline_handler.cpp
-      start: \fn PipelineHandler::registerRequest()
-      end: \brief Complete a buffer for a request
-    - id: completion
+      start: void PipelineHandler::doQueueRequests(Camera *camera)
+      end: '
+
+        }'
+    - id: dispatch
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequest(Request *request)
+      end: '
+
+        }'
+    - id: cancel
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Cancel request and signal its completion
+      end: '
+
+        }'
+    - id: buffer-completion
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
-      end: \brief Retrieve the absolute path to a platform configuration file
+      end: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
+    - id: request-completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::completeRequest(Request *request)
+      end: '
+
+        }'
+    - id: prepare
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::queueRequest(Request *request)
+      end: '
+
+        }'
+    - id: queue-access
+      file: src/libcamera/camera.cpp
+      start: int Camera::queueRequest(Request *request)
+      end: return ret;
+    - id: queue-camera
+      file: src/libcamera/camera.cpp
+      start: if (request->_d()->camera() != this) {
+      end: "\n\t}"
+    - id: queue-status
+      file: src/libcamera/camera.cpp
+      start: if (request->status() != Request::RequestPending) {
+      end: "\n\t}"
+    - id: queue-controls
+      file: src/libcamera/camera.cpp
+      start: if (request->controls().infoMap() != &controls()) {
+      end: "\n\t}"
+    - id: queue-buffers
+      file: src/libcamera/camera.cpp
+      start: if (request->buffers().empty()) {
+      end: "\n\t}"
+    - id: queue-stream
+      file: src/libcamera/camera.cpp
+      start: if (d->activeStreams_.find(stream) == d->activeStreams_.end()) {
+      end: "\n\t\t}"
+    - id: completion-assert
+      file: src/libcamera/pipeline_handler.cpp
+      start: ASSERT(!req->hasPendingBuffers());
+      end: camera->requestComplete(req);
     covers:
     - diagnosis
+    design_prompt: focused
+    parts:
+    - id: waiting
+      question: doQueueRequests의 두 break 조건과 pop 및 doQueueRequest 호출 순서를 설명하세요.
+      sources:
+      - waiting
+      max_statements: 1
+    - id: dispatch
+      question: doQueueRequest에서 cancelled_가 참일 때 호출하는 함수와 return, queueRequestDevice
+        호출 뒤 if(ret)가 의미하는 조건과 호출하는 함수를 설명하세요. ret의 0과 0이 아닌 값을 명확히 구분하세요. 호출한 함수의
+        내부 동작은 추정하지 마세요.
+      sources:
+      - dispatch
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - cancelled_
+        - - completeRequest
+        - - queueRequestDevice
+        - - cancelRequest
+        - - '0'
+    - id: cancel
+      question: cancelRequest가 수행하는 두 호출을 순서대로 설명하고 적용되는 completeRequest의 규칙을 구분하세요.
+      sources:
+      - cancel
+      max_statements: 1
+    - id: buffer-completion
+      question: completeBuffer API 주석의 버퍼 완료 알림·추적 갱신, 명시적 completeRequest 호출 책임과
+        호출 스레드를 설명하세요. 반환값을 검사할 의무를 추가하지 마세요.
+      sources:
+      - buffer-completion
+      max_statements: 1
+    - id: request-completion
+      question: completeRequest의 while 루프에서 break하는 if 조건을 설명하세요. ASSERT를 대기 분기로 바꾸지
+        마세요.
+      sources:
+      - request-completion
+      max_statements: 1
+    - id: prepare
+      question: PipelineHandler::queueRequest가 요청을 넣는 큐와 prepare()에 전달하는 현재 인자를 설명하세요.
+        고정 시간만큼 반드시 대기한다고 해석하지 마세요.
+      sources:
+      - prepare
+      max_statements: 1
+    - id: buffer-result
+      question: completeBuffer API 주석의 return 문장에서 정의한 bool 반환값의 참·거짓 조건만 설명하세요. 호출자에게
+        반환값 검사 의무를 추가하지 마세요.
+      sources:
+      - buffer-completion
+      max_statements: 1
+    - id: completion-assert
+      question: 이 발췌의 ASSERT 식이 검사하는 대상과 뒤이은 pop_front 및 requestComplete 호출을 순서대로
+        설명하세요. 이 발췌 밖의 상태 비교나 매크로 구현의 동작은 추정하지 마세요.
+      sources:
+      - completion-assert
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ASSERT
+        - - hasPendingBuffers
+        - - pop_front
+        - - requestComplete
+    - id: queue-access
+      question: Camera::queueRequest가 isAccessAllowed에 전달하는 상태와 ret < 0 분기의 반환식을 설명하세요.
+      sources:
+      - queue-access
+      max_statements: 1
+    - id: queue-camera
+      question: 요청의 소속 카메라를 검사하는 if 조건과 실패 반환값을 설명하세요.
+      sources:
+      - queue-camera
+      max_statements: 1
+    - id: queue-status
+      question: 요청 상태를 검사하는 if 조건과 실패 반환값을 설명하세요.
+      sources:
+      - queue-status
+      max_statements: 1
+    - id: queue-controls
+      question: controls의 infoMap을 검사하는 if 조건과 실패 반환값을 설명하세요. 버퍼 검사와 섞지 마세요.
+      sources:
+      - queue-controls
+      max_statements: 1
+    - id: queue-buffers
+      question: 버퍼 목록을 검사하는 if 조건과 실패 반환값을 설명하세요. controls 검사와 섞지 마세요.
+      sources:
+      - queue-buffers
+      max_statements: 1
+    - id: queue-stream
+      question: 스트림을 검사하는 if 조건과 실패 반환값을 설명하세요.
+      sources:
+      - queue-stream
+      max_statements: 1
   - id: stopping
     title: 정지와 연결 해제를 구분하기
-    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을 구분하세요. PipelineHandler::stop의
-      waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소, queuedRequests_/waitingRequests_ ASSERT를 조사 지점에 연결하세요. stopDevice
-      내부에서 멎음과 반환 후 큐가 남음, 별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요. 실행 시험 결과나 보장된 타임아웃을 만들지 마세요.
+    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과
+      실행 중 Stopping·blocking 호출을 구분하세요. PipelineHandler::stop의 waitingRequests_ 분리,
+      stopDevice 진입/복귀 여부, 대기 요청 취소, queuedRequests_/waitingRequests_ ASSERT를 조사 지점에
+      연결하세요. stopDevice 내부에서 멎음과 반환 후 큐가 남음, 별도 스레드 콜백 미처리를 구분하고 disconnect TODO를
+      보장으로 바꾸지 마세요. 실행 시험 결과나 보장된 타임아웃을 만들지 마세요.
     sources:
     - id: stop
       file: src/libcamera/camera.cpp
-      start: \brief Stop capture from camera
-      end: \brief Handle request completion and notify application
+      start: int Camera::stop()
+      end: '
+
+        }'
     - id: device-stop
       file: src/libcamera/pipeline_handler.cpp
-      start: \brief Stop capturing from all running streams and cancel pending requests
-      end: \brief Determine if the camera has any requests pending
-    - id: completion
+      start: void PipelineHandler::stop(Camera *camera)
+      end: '
+
+        }'
+    - id: device-contract
       file: src/libcamera/pipeline_handler.cpp
-      start: \brief Complete a buffer for a request
-      end: \brief Retrieve the absolute path to a platform configuration file
+      start: \fn PipelineHandler::stopDevice()
+      end: \brief Determine if the camera has any requests pending
+    - id: request-completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::completeRequest(Request *request)
+      end: '
+
+        }'
     - id: notification
       file: src/libcamera/camera.cpp
       start: \brief Notify camera disconnection
       end: int Camera::exportFrameBuffers(Stream *stream,
+    - id: stop-cancel
+      file: src/libcamera/pipeline_handler.cpp
+      start: while (!waitingRequests.empty()) {
+      end: "\n\t}"
+    - id: stop-check
+      file: src/libcamera/pipeline_handler.cpp
+      start: /* Make sure no requests are pending. */
+      end: data->requestSequence_ = 0;
     covers:
     - stopping
+    design_prompt: focused
+    parts:
+    - id: stop
+      question: Camera::stop의 즉시 반환 조건과 반환값, Stopping 설정 뒤 Blocking 호출과 Configured
+        복귀 순서를 설명하세요.
+      sources:
+      - stop
+      max_statements: 1
+    - id: device-stop
+      question: PipelineHandler::stop에서 waitingRequests_를 임시 큐로 분리하는 동작과 그 다음 stopDevice
+        호출을 설명하세요.
+      sources:
+      - device-stop
+      max_statements: 1
+    - id: device-contract
+      question: stopDevice API 주석이 구현자에게 요구하는 정지와 미완료 요청 처리만 설명하세요. 공통 stop 함수의 ASSERT를
+        이 함수의 동작으로 옮기지 마세요.
+      sources:
+      - device-contract
+      max_statements: 1
+    - id: request-completion
+      question: completeRequest의 while 루프에서 break하는 if 조건을 설명하세요. ASSERT를 대기 분기로 바꾸지
+        마세요.
+      sources:
+      - request-completion
+      max_statements: 1
+    - id: notification
+      question: disconnect가 알리는 연결 해제와 TODO로 남은 미완료 요청 처리를 구분하세요. TODO를 구현된 보장으로 바꾸지
+        마세요.
+      sources:
+      - notification
+      max_statements: 1
+    - id: stop-cancel
+      question: 분리한 waitingRequests 큐의 각 요청을 꺼낸 뒤 호출하는 cancel과 doQueueRequest의 순서
+        및 주석의 이유를 설명하세요.
+      sources:
+      - stop-cancel
+      max_statements: 1
+    - id: stop-check
+      question: 이 발췌에서 ASSERT로 확인하는 두 큐와 requestSequence_ 대입값을 설명하세요. 해당 ASSERT를 stopDevice
+        내부의 검사라고 쓰지 마세요.
+      sources:
+      - stop-check
+      max_statements: 1
   - id: review
     title: 변경 검토와 실행 확인
-    question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기 요청 처리를 정리하세요. 정상 반복·fence 대기·장치 오류·미완료
-      요청 정지의 실행 확인은 limitation으로 구분하고 실제 시험 결과를 만들지 마세요.
+    question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기
+      요청 처리를 정리하세요. 정상 반복·fence 대기·장치 오류·미완료 요청 정지의 실행 확인은 limitation으로 구분하고 실제 시험
+      결과를 만들지 마세요.
     sources:
-    - id: queue
+    - id: queue-success
       file: src/libcamera/camera.cpp
-      start: \brief Queue a request to the camera
-      end: \brief Start capture from camera
-    - id: reuse
-      file: src/libcamera/request.cpp
-      start: \brief Reset the request for reuse
-      end: \fn Request::controls()
-    - id: completion
+      start: int Camera::queueRequest(Request *request)
+      end: '
+
+        }'
+    - id: buffer-completion
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
-      end: \brief Retrieve the absolute path to a platform configuration file
+      end: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
+    - id: request-completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::completeRequest(Request *request)
+      end: '
+
+        }'
+    - id: reuse
+      file: src/libcamera/request.cpp
+      start: void Request::reuse(ReuseFlag flags)
+      end: '
+
+        }'
     - id: device-stop
       file: src/libcamera/pipeline_handler.cpp
-      start: \brief Stop capturing from all running streams and cancel pending requests
-      end: \brief Determine if the camera has any requests pending
+      start: void PipelineHandler::stop(Camera *camera)
+      end: '
+
+        }'
+    - id: stop-check
+      file: src/libcamera/pipeline_handler.cpp
+      start: /* Make sure no requests are pending. */
+      end: data->requestSequence_ = 0;
     covers:
     - review
+    design_prompt: focused
+    parts:
+    - id: queue-success
+      question: 이 호출에서 invokeMethod로 예약하는 함수, 연결 타입, 인자와 Camera::queueRequest의 성공
+        반환값을 설명하세요. 촬영 완료를 뜻한다고 확대하지 마세요.
+      sources:
+      - queue-success
+      max_statements: 1
+    - id: buffer-completion
+      question: completeBuffer API 주석의 버퍼 완료 알림·추적 갱신, 명시적 completeRequest 호출 책임과
+        호출 스레드를 설명하세요. 반환값을 검사할 의무를 추가하지 마세요.
+      sources:
+      - buffer-completion
+      max_statements: 1
+    - id: request-completion
+      question: completeRequest의 while 루프에서 break하는 if 조건을 설명하세요. ASSERT를 대기 분기로 바꾸지
+        마세요.
+      sources:
+      - request-completion
+      max_statements: 1
+    - id: reuse
+      question: Request::reuse 함수의 ReuseBuffers 분기와 그 밖의 분기, 두 분기 뒤 status_·controls_·metadata_에
+        수행하는 동작을 설명하세요.
+      sources:
+      - reuse
+      max_statements: 1
+    - id: device-stop
+      question: PipelineHandler::stop에서 waitingRequests_를 임시 큐로 분리하는 동작과 그 다음 stopDevice
+        호출을 설명하세요.
+      sources:
+      - device-stop
+      max_statements: 1
+    - id: buffer-result
+      question: completeBuffer API 주석의 return 문장에서 정의한 bool 반환값의 참·거짓 조건만 설명하세요. 호출자에게
+        반환값 검사 의무를 추가하지 마세요.
+      sources:
+      - buffer-completion
+      max_statements: 1
+    - id: stop-check
+      question: 이 발췌에서 ASSERT로 확인하는 두 큐와 requestSequence_ 대입값을 설명하세요. 해당 ASSERT를 stopDevice
+        내부의 검사라고 쓰지 마세요.
+      sources:
+      - stop-check
+      max_statements: 1
   design_requirements:
   - id: journey
     question: 제출 성공 이후의 대기 조건과 완료 책임은 무엇입니까?
@@ -3278,6 +3746,7 @@ sections:
     - failure
   reader_profile: vendor
   design_generation: llm
+
 - id: scenarios
   group: For Developer
   nav_section: 동작 추적과 문제 진단
