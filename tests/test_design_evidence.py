@@ -196,3 +196,29 @@ def test_설명에_쓰는_설정이_바뀌면_지문이_달라진다(sample_mode
     assert fingerprint(sample_model, dict(sec, answers=['무엇을 책임집니까?'])) != original
     assert fingerprint(sample_model, dict(sec, facts={'classes': ['PipeThread']})) != original
     assert fingerprint(sample_model, dict(sec, lead='먼저 확인하세요.')) != original
+
+
+def test_A6_이어지는_설명은_한_문단으로_묶고_인용은_문단_끝에_한_번씩만_모은다():
+    from sdd.evidence import _paragraphs
+    entries = [
+        ('behavior', '`start()`는 카메라를 시작합니다.', ['`a.cpp:1`']),
+        ('behavior', '시작 전에는 구성이 끝나 있어야 합니다.', ['`a.cpp:1`', '`a.cpp:9`']),
+        ('behavior', '정지하면 요청이 완료됩니다.', ['`b.cpp:5`']),
+        ('limitation', '실행에서 확인할 항목입니다.', ['`c.cpp:2`']),
+        ('limitation', '또 다른 확인 항목입니다.', ['`c.cpp:3`']),
+    ]
+    assert _paragraphs(entries) == [
+        '`start()`는 카메라를 시작합니다. 시작 전에는 구성이 끝나 있어야 합니다. 정지하면 요청이 완료됩니다. '
+        '`a.cpp:1`, `a.cpp:9`, `b.cpp:5`',
+        '실행 확인 항목: 실행에서 확인할 항목입니다. `c.cpp:2`',
+        '실행 확인 항목: 또 다른 확인 항목입니다. `c.cpp:3`',
+    ]
+
+
+def test_A6_문단은_네_문장과_길이_상한을_넘지_않는다():
+    from sdd.evidence import _paragraphs, PARAGRAPH_SENTENCES, PARAGRAPH_CHARS
+    entries = [('behavior', f'{i}번째 설명입니다.', [f'`a.cpp:{i}`']) for i in range(9)]
+    paragraphs = _paragraphs(entries)
+    assert [p.count('설명입니다.') for p in paragraphs] == [PARAGRAPH_SENTENCES, PARAGRAPH_SENTENCES, 1]
+    long = [('behavior', '가' * (PARAGRAPH_CHARS - 20) + '입니다.', ['`a.cpp:1`']), ('behavior', '나' * 40 + '입니다.', ['`a.cpp:2`'])]
+    assert len(_paragraphs(long)) == 2
