@@ -18,6 +18,11 @@ def context(request):
     user = request['user']
     start = user.index('{')
     payload, _ = json.JSONDecoder().raw_decode(user[start:])
+    if user.startswith('근거:\n'):
+        # Focused prompts put sources first and questions after that JSON.
+        # Retain the entire message, including its question/output suffix;
+        # changing any of it requires a new real call.
+        return sha(request)
     if 'sources' not in payload or 'topic' not in payload:
         raise ValueError('Not a generation request')
     # Terms and known-error patterns are validation policy, not evidence.

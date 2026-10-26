@@ -64,3 +64,16 @@ def test_review_replay_requires_exact_request_and_otherwise_calls_real_agent(tmp
     reviewer = Archive(tmp_path, tmp_cfg.agent).reviewer(Agent())
     assert reviewer.chat(request['system'], request['user'], response_schema=request['response_schema']) == 'actual model answer'
     assert reviewer.chat(request['system'], 'changed review', response_schema=request['response_schema']) == 'new actual review'
+
+
+def test_focused_replay_requires_entire_source_first_message_and_schema(tmp_cfg, tmp_path):
+    user = '근거:\n' + json.dumps({'src': [{'quote_id':'src:0','text':'void stop();'}]}) + '\n질문: 종료 함수는?\n출력: JSON만'
+    request, _ = archive(tmp_path, tmp_cfg.agent, user=user)
+    store = Archive(tmp_path, tmp_cfg.agent)
+    def candidates(message, schema=None):
+        return list(store.candidates('system', message, schema or request['response_schema'], 'page_topic_part'))
+    assert len(candidates(user)) == 1
+    assert not candidates(user.replace('종료 함수는?', '다른 함수는?'))
+    assert not candidates(user.replace('void stop();', 'void start();'))
+    assert not candidates(user.replace('JSON만', '다른 출력'))
+    assert not candidates(user, {'type':'array'})
