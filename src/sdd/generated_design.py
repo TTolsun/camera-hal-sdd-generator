@@ -350,6 +350,15 @@ def generate(generator, section, previous=None):
     for topic in section['design_topics']:
         focus = focused_prompt.system_prompt(cfg, topic.get('design_prompt', section.get('design_prompt')))
         topic_system = focus if focus is not None else standard_system
+        if focus is not None and any(owner.get('answer_contract', {}).get('basis') == 'investigation'
+                                     for owner in [topic, *topic.get('parts', [])]):
+            topic_system += (
+                '\nThis question requests an optional source-based observation plan, not an existing test log. '
+                'Propose record fields (기록 항목) using the shown variables and code points. '
+                'Recording may be proposed even when the source does not mandate it. '
+                'Preserve the proposed nature; never claim completed tests, invented commands, '
+                'measurements, runtime guarantees or new API obligations.'
+            )
         topic_policy = focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system
         topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
         if topic_policy != prompt_policy:

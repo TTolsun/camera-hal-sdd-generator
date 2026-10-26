@@ -887,3 +887,18 @@ def test_part_typography_matches_other_verified_sources_in_same_topic(tmp_cfg, g
     answer = decode_unit(model, section, unit, raw, {'stop': source}, {})[0]
     assert answer['text'] == '`Fence` 사용 시 stop()은 종료 요청을 취소하는 함수를 호출합니다.'
     assert answer['text'].replace('`', '') == statement['text']
+
+
+def test_focused_investigation_prompt_allows_proposals_without_claiming_execution(tmp_cfg, generated):
+    section, model, save, agent = generated
+    topic = section['design_topics'][0]
+    topic['design_prompt'] = 'focused'
+    topic['answer_contract'] = {'basis': 'investigation'}
+    (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스만 사용합니다.', encoding='utf-8')
+    save()
+    class PlanAgent:
+        def chat(self, system, user, **kwargs):
+            assert 'optional source-based observation plan' in system
+            assert 'not an existing test log' in system
+            return json.dumps({'statements': [agent.statement]}, ensure_ascii=False)
+    assert Generator(tmp_cfg, model, PlanAgent()).run()

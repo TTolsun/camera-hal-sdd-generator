@@ -4069,6 +4069,15 @@ sections:
       scope:
         start: \brief Complete a buffer for a request
         end: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
+    - id: completed-head
+      file: src/libcamera/pipeline_handler.cpp
+      start: if (req->status() == Request::RequestPending)
+      end: break;
+      scope:
+        start: void PipelineHandler::completeRequest(Request *request)
+        end: '
+
+          }'
     covers:
     - journey
     parts:
@@ -4173,7 +4182,7 @@ sections:
         required_terms:
         - - completeRequest
     - id: request-complete
-      question: 요청 완료 함수의 선두 Pending 검사와 애플리케이션 반환 순서를 설명하세요.
+      question: 요청 완료 함수가 애플리케이션에 요청을 반환하는 순서를 설명하세요.
       sources:
       - request-notice
       max_statements: 2
@@ -4181,6 +4190,14 @@ sections:
         basis: implementation
         required_terms:
         - - completeRequest
+    - id: request-head
+      question: 이 분기가 판단하는 요청 상태 상수를 코드 그대로 설명하세요.
+      sources:
+      - completed-head
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - RequestPending
     answer_contract:
       basis: description
@@ -4804,18 +4821,6 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Queue a request to the camera
       end: \brief Start capture from camera
-    - id: reuse
-      file: src/libcamera/request.cpp
-      start: \brief Reset the request for reuse
-      end: \fn Request::controls()
-    - id: completion
-      file: src/libcamera/pipeline_handler.cpp
-      start: \brief Complete a buffer for a request
-      end: \brief Retrieve the absolute path to a platform configuration file
-    - id: device-stop
-      file: src/libcamera/pipeline_handler.cpp
-      start: \brief Stop capturing from all running streams and cancel pending requests
-      end: \brief Determine if the camera has any requests pending
     - id: record-status
       file: src/libcamera/request.cpp
       start: status_ =
@@ -4877,7 +4882,7 @@ sections:
     - review
     parts:
     - id: submission-record
-      question: queueRequest 기존 호출의 반환값과 다음 완료 통지 여부를 어떤 항목으로 기록할지 소스 기반 조사 계획을 설명하세요. 실행한 결과를 만들지 마세요.
+      question: 조사자가 남길 기록 항목 중 이 함수의 반환값 항목을 제안하세요. 호출을 실행한 결과로 쓰지 마세요.
       sources:
       - queue
       max_statements: 2
@@ -4901,7 +4906,6 @@ sections:
       question: 소스 기반 조사에서 이 clear 호출의 대상 변수를 기록 항목으로 제안하세요.
       sources:
       - record-controls
-      - reuse
       max_statements: 1
       answer_contract:
         basis: investigation
@@ -4922,7 +4926,6 @@ sections:
       question: 소스 기반 조사 기록에 넣을 선두 요청의 상태 조회식을 코드 그대로 명시하고 기록할 항목으로 제안하세요.
       sources:
       - record-head-status
-      - completion
       max_statements: 1
       answer_contract:
         basis: investigation
@@ -4930,10 +4933,9 @@ sections:
         - - status
         - - 기록
     - id: stop-record
-      question: 이 stopDevice 호출의 진입·복귀 여부를 소스 기반 조사 기록의 항목으로 제안하세요.
+      question: 이 호출지점에 도달했는지 조사 기록에 남길 함수 식별자 항목을 제안하세요. 함수 진입·복귀를 보장한다고 쓰지 마세요.
       sources:
       - record-device
-      - device-stop
       max_statements: 1
       answer_contract:
         basis: investigation
