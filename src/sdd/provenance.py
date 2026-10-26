@@ -6,8 +6,12 @@ import json
 from pathlib import Path
 import re
 
-from .export_html import _split
+from .document_metadata import split_frontmatter as _split
 from .generated_design import normalize_answer, resolve_passages
+from .config import AgentConfig
+from .cli_agent import RUNNERS
+from .cli_provenance import verify_cli_receipt
+from .llm import LIVE_KINDS
 
 
 def same_answer(left, right):
@@ -20,9 +24,16 @@ def same_answer(left, right):
 
 
 def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_name: str,
-                 allow_reused: bool = False) -> dict:
+                 allow_reused: bool = False, runner: str | None = None) -> dict:
+    if provider not in LIVE_KINDS:
+        raise ValueError('Provenance requires real CLI or HTTP call archives')
+    if provider == 'cli' and (runner not in RUNNERS or allow_reused):
+        raise ValueError('CLI provenance requires a selected runner and fresh calls; reuse is unsupported')
+    expected = AgentConfig(kind=provider, model=model_name, runner=runner or 'hermes')
+    transport_label = 'CLI' if provider == 'cli' else 'HTTP'
     responses = []
     json_responses = []
+    verified_http, verified_cli = 0, 0
     for receipt_path in sorted(calls.rglob('*.receipt.json')):
         prefix = receipt_path.name.removesuffix('.receipt.json')
         request_path = receipt_path.with_name(prefix + '.request.json')
@@ -30,12 +41,17 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
         receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
         request = json.loads(request_path.read_text(encoding='utf-8'))
         raw = response_path.read_bytes().decode('utf-8')
-        request_hash = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
-        if (receipt.get('request_sha256') != request_hash
-                or receipt.get('response_sha256') != hashlib.sha256(raw.encode()).hexdigest()
-                or receipt.get('http_call') is not True or receipt.get('transport') != provider
-                or receipt.get('model') != model_name):
-            raise ValueError(f'Model call receipt mismatch: {receipt_path.name}')
+        if provider == 'cli':
+            verify_cli_receipt(request, raw, receipt, calls, expected)
+            verified_cli += 1
+        else:
+            request_hash = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+            if (receipt.get('request_sha256') != request_hash
+                    or receipt.get('response_sha256') != hashlib.sha256(raw.encode()).hexdigest()
+                    or receipt.get('http_call') is not True or receipt.get('transport') != provider
+                    or receipt.get('model') != model_name):
+                raise ValueError(f'Model call receipt mismatch: {receipt_path.name}')
+            verified_http += 1
         user = request['user']
         if (receipt.get('provider', {}).get('done_reason') == 'length'
                 or receipt.get('provider', {}).get('finish_reason') == 'length'):
@@ -64,14 +80,14 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
         metadata, _ = _split(path.read_text(encoding='utf-8'))
         sid = metadata.get('section')
         for vid, record in metadata.get('generated_visuals', {}).get('records', {}).items():
-            if not sid or record.get('producer') != f'{provider}/{model_name}':
+            if not sid or record.get('producer') != expected.label:
                 raise ValueError(f'Visual model identity mismatch: {path.name}/{vid}')
             if record.get('reused') and not allow_reused:
                 raise ValueError('A full fresh-model trial cannot reuse previous visual drafts.')
             prefix = f'visual_{sid}_{vid}_'
             if not any(re.fullmatch(re.escape(prefix) + r'\d+', tag) and data == record.get('draft')
                        for tag, data in json_responses):
-                raise ValueError(f'No matching HTTP visual response for {sid}/{vid}')
+                raise ValueError(f'No matching {transport_label} visual response for {sid}/{vid}')
             visuals += 1
         artifact = metadata.get('generated_design')
         if not artifact:
@@ -80,6 +96,10 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
             raise ValueError('A full fresh-model trial cannot reuse previous topic answers.')
         if not sid:
             raise ValueError(f'Missing manuscript section identity: {path.name}')
+        origins = artifact.get('topic_agents', {})
+        if (provider == 'cli' and set(origins) != set(artifact['answers'])) or any(
+                value != expected.label for value in origins.values()):
+            raise ValueError(f'Topic model identity mismatch: {path.name}')
         documents += 1
         for tid, answers in artifact['answers'].items():
             topics += 1
@@ -94,11 +114,12 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
                                 if re.fullmatch(re.escape(tag_prefix) + r'\d+(?:_revision)?', tag) for item in result]
                 original = {key: value for key, value in answer.items() if key not in ('part_id', 'subpart_id')}
                 if not any(same_answer(original, item) for item in possible):
-                    raise ValueError(f'No matching HTTP model response for {sid}/{tid}')
+                    raise ValueError(f'No matching {transport_label} model response for {sid}/{tid}')
                 statements += 1
     return {'documents': documents, 'topics': topics, 'statements': statements, 'visuals': visuals,
             'previous_http_answers_allowed': allow_reused,
-            'verified_http_calls': len(list(calls.rglob('*.receipt.json'))),
+            'verified_http_calls': verified_http, 'verified_cli_calls': verified_cli,
+            'producer': expected.label,
             'scope': 'Exact request/response hashes and model authorship, allowing code backtick typography only; not semantic or human approval.'}
 
 
@@ -109,12 +130,18 @@ def main():
     parser.add_argument('--facts', type=Path, required=True)
     parser.add_argument('--manuscripts', type=Path, required=True)
     parser.add_argument('--calls', type=Path, required=True)
-    parser.add_argument('--provider', choices=('ollama', 'openai-compatible'), required=True)
-    parser.add_argument('--model', required=True)
+    parser.add_argument('--provider', choices=LIVE_KINDS, required=True)
+    parser.add_argument('--model', default='', help='Configured model; omit only for the CLI default')
+    parser.add_argument('--runner', choices=RUNNERS, help='Required with --provider cli')
     parser.add_argument('--allow-reused', action='store_true', help='Also verify retained answers against archived HTTP calls')
     args = parser.parse_args()
+    if args.provider == 'cli' and not args.runner:
+        parser.error('--provider cli requires --runner')
+    if args.provider != 'cli' and not args.model:
+        parser.error('HTTP provenance requires --model')
     report = verify_calls(KnowledgeModel.load(args.facts), args.manuscripts, args.calls,
-                          provider=args.provider, model_name=args.model, allow_reused=args.allow_reused)
+                          provider=args.provider, model_name=args.model, runner=args.runner,
+                          allow_reused=args.allow_reused)
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
 

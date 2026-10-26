@@ -66,6 +66,7 @@ def test_failed_section_is_recorded_and_does_not_build_or_replace_inputs(tmp_cfg
 
 
 def test_trial_refuses_canned_answers_and_existing_outputs(tmp_cfg, tmp_path):
+    tmp_cfg.agent.kind = 'dry-run'
     with pytest.raises(ValueError, match='실제'):
         evaluate(tmp_cfg, tmp_path / 'trial')
     tmp_cfg.agent.kind = 'response-bundle'
