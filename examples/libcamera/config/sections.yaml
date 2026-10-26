@@ -1775,18 +1775,69 @@ sections:
         }
 
         {% endfor %}'
+    - id: init-branch
+      file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
+      start: '{%- elif method.mojom_name == "init" %}'
+      end: '{%- elif method.mojom_name == "start" %}'
+    - id: async-assert
+      file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
+      start: ASSERT(
+      end: ProxyRunning);
+      scope:
+        start: "{% elif method|is_async %}\n\tASSERT(state_ == ProxyRunning);"
+        end: '{%- endif %}
+
+          }
+
+          {% endfor %}'
+    - id: ctor-load
+      file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
+      start: if (!ipam->load())
+      end: return;
+      scope: &id008
+        start: '{{proxy_name}}Threaded::{{proxy_name}}Threaded('
+        end: '{{proxy_name}}Threaded::~{{proxy_name}}Threaded() = default;'
+    - id: ctor-interface
+      file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
+      start: IPAInterface *ipai = ipam->createInterface();
+      end: return;
+      scope: *id008
+    - id: ctor-events
+      file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
+      start: '{% for method in interface_event.methods %}'
+      end: '{%- endfor %}'
+      scope: *id008
+    - id: isolated-valid
+      file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
+      start: ipc->recv.connect
+      end: valid_ = true;
+      scope:
+        start: '{{proxy_name}}Isolated::{{proxy_name}}Isolated('
+        end: '{{proxy_name}}Isolated::~{{proxy_name}}Isolated()'
+    - id: send-async
+      file: src/libcamera/ipc_pipe_unixsocket.cpp
+      start: int IPCPipeUnixSocket::sendAsync(const IPCMessage &data)
+      end: void IPCPipeUnixSocket::readyRead()
     covers:
     - execution
     parts:
     - id: init
-      question: Threaded 템플릿의 init 분기에서 IPA 메서드를 직접 호출하는지와 그 뒤 proxy_.moveToThread 호출을 설명하세요. start 분기와 구분하세요.
+      question: Threaded init 템플릿에서 IPA 메서드를 직접 호출하는 경로만 설명하세요. 스레드 이동은 다음 질문에서 다룹니다.
       sources:
-      - dispatch
+      - init-branch
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ipa_
+    - id: init-move
+      question: init의 IPA 메서드 호출 뒤 proxy_.moveToThread 호출에 전달하는 스레드 객체만 설명하세요.
+      sources:
+      - init-branch
       answer_contract:
         basis: implementation
         required_terms:
         - - moveToThread
-        - - ipa_
+        - - thread_
     - id: start
       question: 이 Threaded start 템플릿 분기에서 worker 스레드를 시작한 뒤 ThreadProxy::start를 어떤 연결 유형으로 호출합니까? 코드에 쓰인 두 호출과 순서를
         설명하세요.
@@ -1806,9 +1857,9 @@ sections:
         required_terms:
         - - ipa_
     - id: async
-      question: 이 Threaded 비동기 분기가 검사하는 정확한 ASSERT 조건만 설명하세요. 이벤트 Handler의 ASSERT와 구분하고 수명이나 스레드 안전 보장을 추정하지 마세요.
+      question: 이 원문 단언문에 사용된 매크로 이름과 검사식을 코드 식별자로 그대로 설명하세요. 실행 수명이나 안전 보장은 추정하지 마세요.
       sources:
-      - async-branch
+      - async-assert
       answer_contract:
         basis: implementation
         required_terms:
@@ -1824,24 +1875,49 @@ sections:
         - - invokeMethod
         - - ConnectionTypeQueued
     - id: constructor
-      question: Threaded 생성자에서 모듈 로딩·인터페이스 생성 및 이벤트 Handler 연결을 설명하세요. 생성자나 init이 thread_.start를 호출한다고 추정하지 마세요.
+      question: Threaded 생성자의 ipam->load() 호출과 실패 시 처리를 설명하세요. 인터페이스 생성은 다음 질문에서 다룹니다.
       sources:
+      - ctor-load
       - threaded
       answer_contract:
         basis: implementation
         required_terms:
         - - load
+          - 로드
+    - id: constructor-interface
+      question: Threaded 생성자의 createInterface 호출과 반환 포인터가 없을 때의 처리만 설명하세요.
+      sources:
+      - ctor-interface
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - createInterface
+    - id: constructor-events
+      question: Threaded 생성자의 interface_event 반복문에서 IPA 이벤트를 어떤 Handler에 연결하는지 설명하세요.
+      sources:
+      - ctor-events
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - connect
+        - - Handler
     - id: isolated
-      question: Isolated 프록시 생성자가 worker 경로로 IPCPipeUnixSocket을 만들고 recv 연결 뒤 유효해지는 경계를 설명하세요. 모든 애플리케이션 콜백의 실행
-        스레드를 추정하지 마세요.
+      question: Isolated 생성자가 worker 경로로 IPCPipeUnixSocket을 생성하고 연결 실패를 처리하는 경로만 설명하세요.
       sources:
       - isolated
       answer_contract:
         basis: implementation
         required_terms:
         - - IPCPipeUnixSocket
+    - id: isolated-valid
+      question: Isolated 생성자에서 recv 신호 연결 이후 ipc_ 저장과 valid_ 설정을 설명하세요.
+      sources:
+      - isolated-valid
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - valid_
+        - - recv
     - id: worker
       question: resolvePath의 worker 경로 검색과 찾지 못했을 때 반환을 설명하세요. 메시지 전달이나 콜백 스레드 보장으로 확대하지 마세요.
       sources:
@@ -1851,14 +1927,23 @@ sections:
         required_terms:
         - - resolvePath
     - id: ipc
-      question: IPCPipeUnixSocket에서 sendSync와 sendAsync의 응답 대기 차이를 설명하세요. 소스에 없는 실행 결과는 쓰지 마세요.
+      question: IPCPipeUnixSocket::sendSync의 call 호출과 응답 반환 경로만 설명하세요. 응답 대기는 함께 제공된 call 구현의 범위에서 설명하세요.
       sources:
       - ipc
       answer_contract:
         basis: implementation
         required_terms:
         - - sendSync
+        - - call
+    - id: ipc-async
+      question: IPCPipeUnixSocket::sendAsync의 소켓 전송과 반환 경로만 설명하세요. 동기 응답 처리로 바꾸지 마세요.
+      sources:
+      - send-async
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - sendAsync
+        - - send
   - id: interface
     title: 프레임 입력과 결과 인터페이스
     question: IPU3와 RKISP1 인터페이스에 선언된 요청·통계 입력 및 paramsComputed·metadataReady 결과를 각각 함수 이름과 인자에서 설명하세요. [async]
@@ -1999,6 +2084,13 @@ sections:
         #endif
 
         }'
+      scope:
+        start: void main(void)
+        end: 'gl_FragColor = vec4(rgb, 1.0);
+
+          #endif
+
+          }'
     - id: unpacked-shader
       file: src/libcamera/shaders/bayer_unpacked.frag
       start: rgb = (rgb - blacklevel) / (1.0 - blacklevel);
@@ -2007,6 +2099,13 @@ sections:
         #endif
 
         }'
+      scope:
+        start: void main(void)
+        end: 'gl_FragColor = vec4(rgb, 1.0);
+
+          #endif
+
+          }'
     - id: softisp-interface
       file: include/libcamera/ipa/softisp.mojom
       start: '/* SPDX-License-Identifier: LGPL-2.1-or-later */'
@@ -2169,22 +2268,39 @@ sections:
       file: src/ipa/ipu3/algorithms/lsc.cpp
       start: void Lsc::queueRequest(
       end: static unsigned int quantize(
+      scope: &id009
+        start: void Lsc::queueRequest(
+        end: static unsigned int quantize(
+    - id: delegate-call
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: lscAlgo_.queueRequest(
+      end: controls);
+      scope: *id009
     covers:
     - request
     parts:
     - id: default
-      question: Lsc::queueRequest에서 frame이 0이고 LensShadingCorrectionEnable 제어가 없을 때 변경하는 두 필드만 설명하세요.
+      question: 첫 프레임이고 LensShadingCorrectionEnable 제어가 없을 때 enabled에 쓰는 값만 설명하세요.
       sources:
       - request
       answer_contract:
         basis: implementation
         required_terms:
         - - enabled
-        - - update
-    - id: delegate
-      question: 첫 프레임 기본값 처리 뒤 모든 요청에 대해 호출하는 공통 알고리즘 함수와 그 인자만 설명하세요.
+        - - 'true'
+    - id: default-update
+      question: 첫 프레임이고 LensShadingCorrectionEnable 제어가 없을 때 update에 쓰는 값만 설명하세요.
       sources:
       - request
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - update
+        - - 'true'
+    - id: delegate
+      question: 이 공통 queueRequest 호출식에 전달하는 세 인자를 각각 코드 표현으로 설명하세요.
+      sources:
+      - delegate-call
       answer_contract:
         basis: implementation
         required_terms:
@@ -2205,6 +2321,33 @@ sections:
       file: src/ipa/ipu3/algorithms/lsc.cpp
       start: static constexpr unsigned int kMaxNumHCells
       end: int Lsc::init(
+    - id: enable-branch
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: config->general.shd_enable =
+      end: return;
+      scope: &id010
+        start: void Lsc::prepare(
+        end: void Lsc::process(
+    - id: black-levels
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: config->black_level.bl_r =
+      end: config->black_level.bl_b = 0;
+      scope: *id010
+    - id: interpolation
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: const auto &set = lscAlgo_.interpolateComponents(
+      end: quantizedCt);
+      scope: *id010
+    - id: lut-writes
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: for (unsigned int s = 0; s < numSets; s++) {
+      end: lastAppliedCt_ = ct;
+      scope: *id010
+    - id: stored-ct
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: lastAppliedCt_ = ct;
+      end: lastAppliedQuantizedCt_ = quantizedCt;
+      scope: *id010
     covers:
     - prepare
     parts:
@@ -2248,13 +2391,21 @@ sections:
         - - acc_shd
         - - '1'
     - id: enable
-      question: 커널에 전달하는 shd_enable 값과 그 뒤 비활성 상태에서 반환하는 분기만 설명하세요.
+      question: 이 코드 지점에서 config->general.shd_enable에 대입하는 값만 설명하세요.
       sources:
-      - prepare
+      - enable-branch
       answer_contract:
         basis: implementation
         required_terms:
         - - shd_enable
+        - - enabled
+    - id: disabled-exit
+      question: shd_enable 대입 뒤 enabled가 false이면 어떤 제어문을 실행합니까? 이 분기만 설명하세요.
+      sources:
+      - enable-branch
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - enabled
         - - 반환
           - return
@@ -2279,30 +2430,45 @@ sections:
         - - x_start
         - - y_start
     - id: gain
-      question: 활성 경로에서 gain_factor와 black_level 필드에 설정하는 값을 설명하세요. 주석의 해석을 장치에서 검증한 사실로 바꾸지 마세요.
+      question: 활성 경로에서 gain_factor에 설정하는 값만 설명하세요. 주석의 해석을 실기기에서 확인했다고 쓰지 마세요.
       sources:
       - prepare
       answer_contract:
         basis: implementation
         required_terms:
         - - gain_factor
+        - - '0'
+    - id: black-level
+      question: 이 코드의 black_level 색상 필드들에 설정하는 값만 설명하세요.
+      sources:
+      - black-levels
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - black_level
         - - '0'
     - id: lut
-      question: lscAlgo_.interpolateComponents에 전달하는 색온도와 각 LUT 세트에 채우는 r·gr·gb·b 채널을 설명하세요.
+      question: interpolateComponents 호출에 전달하는 색온도 값만 설명하세요.
       sources:
-      - prepare
+      - interpolation
       answer_contract:
         basis: implementation
         required_terms:
         - - interpolateComponents
         - - quantizedCt
-        - - LUT
-          - lut
-    - id: remember
-      question: LUT 기록 뒤 lastAppliedCt_와 lastAppliedQuantizedCt_에 저장하는 두 값만 설명하세요.
+    - id: lut-channels
+      question: LUT의 lut->sets 배열에 set의 r·gr·gb·b 채널을 어디로 대입하는지 설명하세요. 루프 한도나 저장 색온도는 이 질문의 범위가 아닙니다.
       sources:
-      - prepare
+      - lut-writes
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - lut
+          - LUT
+    - id: remember
+      question: 이 코드 지점의 lastAppliedCt_와 lastAppliedQuantizedCt_에 각각 대입하는 원본 값만 설명하세요.
+      sources:
+      - stored-ct
       answer_contract:
         basis: implementation
         required_terms:
@@ -2407,19 +2573,73 @@ sections:
       file: src/libcamera/converter/converter_dw100.cpp
       start: void ConverterDW100Module::populateMetadata(
       end: void ConverterDW100Module::setSensorCrop(
+    - id: input-size
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: vertexMap.setInputSize
+      end: (inputCfg.size);
+      scope: &id011
+        start: int ConverterDW100Module::configure(
+        end: bool ConverterDW100Module::isConfigured(
+    - id: output-size
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: vertexMap.setOutputSize
+      end: (outputCfg.size);
+      scope: *id011
+    - id: sensor-crop
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: vertexMap.setSensorCrop
+      end: (sensorCrop_);
+      scope: *id011
+    - id: controls-entry
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: if (!isConfigured(stream))
+      end: return;
+      scope:
+        start: void ConverterDW100Module::setControls(
+        end: void ConverterDW100Module::populateMetadata(
+    - id: crop-metadata
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: meta.set(controls::ScalerCrop,
+      end: vertexMap.effectiveScalerCrop());
+      scope: &id012
+        start: void ConverterDW100Module::populateMetadata(
+        end: void ConverterDW100Module::setSensorCrop(
+    - id: dewarp-metadata
+      file: src/libcamera/converter/converter_dw100.cpp
+      start: if (hasDewarpParams_)
+      end: meta.set(controls::LensDewarpEnable, vertexMap.lensDewarpEnable());
+      scope: *id012
     covers:
     - application
     parts:
     - id: configure
-      question: ConverterDW100Module::configure의 출력 스트림 반복문에서 vertexMap의 입력 크기·출력 크기·센서 크롭을 설정하는 세 호출과 인자만 설명하세요.
+      question: 이 setInputSize 호출에 전달하는 입력 크기 값만 설명하세요.
       sources:
+      - input-size
       - configure
       answer_contract:
         basis: implementation
         required_terms:
         - - setInputSize
+        - - inputCfg
+    - id: output-size
+      question: 이 setOutputSize 호출에 전달하는 값만 설명하세요.
+      sources:
+      - output-size
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - setOutputSize
+        - - outputCfg
+    - id: sensor-crop
+      question: 이 setSensorCrop 호출에 전달하는 값만 설명하세요.
+      sources:
+      - sensor-crop
+      answer_contract:
+        basis: implementation
+        required_terms:
         - - setSensorCrop
+        - - sensorCrop_
     - id: optional-params
       question: configure의 출력 스트림 반복문에서 setDewarpParams를 호출하는 조건과 전달하는 값만 설명하세요.
       sources:
@@ -2440,16 +2660,16 @@ sections:
         - - hasDewarpParams_
         - - LensDewarpEnable
     - id: unconfigured-controls
-      question: setControls가 설정되지 않은 스트림을 받았을 때 isConfigured 검사 뒤 하는 일만 설명하세요.
+      question: setControls의 이 isConfigured 검사에서 설정되지 않은 스트림이면 실행하는 제어문을 설명하세요.
       sources:
-      - controls
+      - controls-entry
       answer_contract:
         basis: implementation
         required_terms:
-        - - setControls
         - - isConfigured
         - - 반환
           - return
+          - 종료
     - id: runtime
       question: setControls에서 동적 제어 설정 오류 로그를 기록하는 전체 if 조건을 설명하세요. info.update, running_, supportsRequests의 세 항을
         모두 보존하세요.
@@ -2462,8 +2682,7 @@ sections:
         - - running_
         - - supportsRequests
     - id: metadata
-      question: populateMetadata에서 isConfigured 검사 뒤 크롭과 LensDewarpEnable을 metadata에 기록하는 조건만 설명하세요. 다른 함수의 코드를
-        인용하지 마세요.
+      question: populateMetadata가 isConfigured 검사에서 설정되지 않은 스트림이면 하는 일만 설명하세요.
       sources:
       - metadata
       answer_contract:
@@ -2471,6 +2690,26 @@ sections:
         required_terms:
         - - populateMetadata
         - - isConfigured
+        - - 반환
+          - return
+          - 종료
+    - id: crop-metadata
+      question: 이 meta.set 호출이 ScalerCrop 메타데이터에 기록하는 값만 설명하세요.
+      sources:
+      - crop-metadata
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ScalerCrop
+        - - effectiveScalerCrop
+    - id: dewarp-metadata
+      question: 이 hasDewarpParams_ 분기에서 LensDewarpEnable 메타데이터를 기록하는 조건과 값만 설명하세요.
+      sources:
+      - dewarp-metadata
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - hasDewarpParams_
         - - LensDewarpEnable
   design_requirements:
   - id: ownership
@@ -2551,9 +2790,21 @@ sections:
       end: \brief Search and acquire a MediaDevice
     parts:
     - id: entry
-      question: CameraManager의 진입점 역할과 장치 열거·파이프라인 연결·카메라 접근 기능을 설명하세요.
+      question: CameraManager의 진입점 역할과 장치 열거·PipelineHandler 연결·카메라 접근 기능을 설명하세요. 실제 구성 요소 이름을 사용하세요.
       sources:
       - manager
+      answer_contract:
+        basis: description
+        required_terms:
+        - - CameraManager
+          - 카메라 매니저
+          - 카메라 관리자
+        - - PipelineHandler
+          - 파이프라인 핸들러
+          - 파이프라인핸들러
+        reject_patterns:
+        - pattern: 파이프라인\s*(?:매니저|관리자)
+          message: 이 근거의 구성 요소는 PipelineHandler입니다. 파이프라인 매니저라는 다른 구성 요소를 만들지 마세요.
     - id: singleton
       question: 동시에 존재할 수 있는 CameraManager 인스턴스 수와 기존 인스턴스를 삭제하지 않고 추가 생성할 때의 계약을 설명하세요.
       sources:
@@ -2570,6 +2821,19 @@ sections:
       question: PipelineHandler::match() 구현자의 장치 획득과 Camera 생성·등록 책임을 두 문장 이내로 설명하세요. 실패와 반복 호출은 다루지 마세요.
       sources:
       - match
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - match
+        - - Camera
+          - 카메라
+        - - 획득
+          - 확보
+          - acquire
+        - - 등록
+        reject_patterns:
+        - pattern: 생성.{0,12}실패
+          message: 이 질문은 match의 장치 획득·카메라 생성·등록 의무만 다룹니다. 객체 생성 실패의 정리 경로를 추정하지 마세요.
   - id: responsibility
     title: 컴포넌트별 책임
     question: Camera가 공개하는 기능과 객체 수명 관리 방식을 설명하세요.
@@ -2728,17 +2992,26 @@ sections:
       end: int Camera::start
     - id: timing
       file: src/libcamera/camera.cpp
-      start: \todo Add documentation for camera start timings.
-      end: The Camera class models a camera
+      start: \todo Add documentation
+      end: for camera start timings.
     parts:
     - id: contracts
       question: Camera::start()의 허용 상태와 호출자 동기화 계약만 설명하세요.
       sources:
       - start
     - id: timing
-      question: Camera 클래스 주석에 남은 시작 타이밍 문서화 TODO를 한 문장으로 설명하세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.
+      question: 이 TODO 주석이 문서화를 요청한 대상은 무엇입니까? 대상만 한 문장으로 설명하세요.
       sources:
       - timing
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 타이밍
+          - 시점
+          - 시간
+        reject_patterns:
+        - pattern: 파이프라인.{0,40}(?:메서드|메소드)
+          message: 원문의 TODO는 카메라 시작 타이밍 문서화입니다. 파이프라인 핸들러 메서드 계약 전체의 누락으로 확대하지 마세요.
   - id: queue-limit
     title: 장치 요청 한도와 대기 큐
     question: PipelineHandler 생성자의 장치 요청 한도 기본값과 장치 큐·대기 큐의 구분을 설명하세요.

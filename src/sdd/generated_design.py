@@ -179,6 +179,9 @@ def materialize(model, section, answers):
                 raise ValueError('LLM은 구조·링크·HTML 없이 설명 문단만 작성해야 합니다.')
             if re.search(r'<(?:/?[a-zA-Z]|!)', re.sub(r'`[^`]*`', '', st['text'])):
                 raise ValueError('LLM 설명에 HTML을 넣을 수 없습니다.')
+            if re.search(r'\\(?:ref|brief|param|retval|todo|context|threadsafe|class|fn)\b',
+                         re.sub(r'`[^`]*`', '', st['text'])):
+                raise ValueError('렌더링되지 않는 Doxygen 명령을 설명 문단에 복사할 수 없습니다. 문서 표식 대신 질문의 내용을 설명하세요.')
         from .answer_contracts import validate as validate_answer_contract
         validate_answer_contract(topic, statements)
         topic['statements'] = statements

@@ -708,3 +708,10 @@ def test_full_trial_collects_independent_unit_failures_without_replacing_page(tm
     with pytest.raises(ValueError):
         Generator(tmp_cfg, model, default).run()
     assert all('first' in tag for tag in default.tags)
+
+
+def test_unrendered_source_documentation_command_is_rejected(tmp_cfg, generated):
+    _, model, _, agent = generated
+    agent.statement['text'] = r'`stop()`은 대기 요청을 취소하며 \ref camera_operation 설명을 따릅니다.'
+    with pytest.raises(ValueError, match='Doxygen'):
+        Generator(tmp_cfg, model, agent).run()
