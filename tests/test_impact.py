@@ -57,3 +57,27 @@ def test_contract_source_change_selects_page_without_watch_or_symbols(tmp_cfg, s
     assert set(report.sections) == {"contract"}
     assert report.sections["contract"] == [f"설계 근거 파일 변경: {source_file}"]
     assert report.base == "a" and report.head == "b"
+
+
+def test_설계_질문이_바뀌면_소스_diff_없이도_영향_섹션이_된다(tmp_cfg):
+    import yaml
+    from sdd.evidence import fingerprint
+    from sdd.facts.model import KnowledgeModel
+    from sdd.impact import config_changes
+    section = dict(id='device', title='장치', design_requirements=[dict(id='stop', question='종료는 무엇입니까?')],
+                   design_topics=[dict(id='stop', title='종료', question='종료를 설명하세요.', covers=['stop'], sources=[])],
+                   routes=[dict(q='이동', to='device.md')])
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
+    model = KnowledgeModel(meta={'source_commit': 'a' * 40})
+    assert config_changes(tmp_cfg, model) == {'device': ['원고가 아직 없음']}
+    tmp_cfg.sdd_dir.mkdir(parents=True, exist_ok=True)
+    page = tmp_cfg.sdd_dir / 'device.md'
+    page.write_text(f"---\nevidence_fingerprint: {fingerprint(model, section)}\n---\n\n# 장치\n", encoding='utf-8')
+    assert config_changes(tmp_cfg, model) == {}
+    # 이동 안내는 표시용 설정이라 재생성을 요구하지 않는다.
+    section['routes'] = [dict(q='다른 문구', to='device.md')]
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
+    assert config_changes(tmp_cfg, model) == {}
+    section['design_topics'][0]['question'] = '종료 책임과 호출자 의무를 설명하세요.'
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
+    assert list(config_changes(tmp_cfg, model)) == ['device']

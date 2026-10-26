@@ -127,3 +127,13 @@ def test_public_and_portable_vendor_entry_pages_require_adoption_answers():
             r['id'] for r in entry['design_requirements']}
         for profile in ('vendor', 'vendor-assurance'):
             assert not configuration_errors(next(s for s in sections if s.get('reader_profile') == profile))
+
+
+def test_B4_team_프로필은_역할_입력_출력_경계_질문을_요구한다():
+    from sdd.reader_profiles import PROFILES, profile_errors
+    assert set(PROFILES['team']) == {'role', 'inputs', 'outputs', 'boundaries'}
+    section = {'reader_profile': 'team', 'design_requirements': [
+        {'id': key, 'question': q, 'aspects': [key]} for key, q in PROFILES['team'].items()]}
+    assert profile_errors(section) == []
+    section['design_requirements'].pop()
+    assert any('team/boundaries' in e for e in profile_errors(section))

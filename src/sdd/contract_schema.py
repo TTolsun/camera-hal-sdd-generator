@@ -91,8 +91,13 @@ def generated_errors(section):
                         or (isinstance(subquestions, list) and all(isinstance(q, str) for q in subquestions)
                             and len(set(subquestions)) != len(subquestions))):
                     errors.append(f"{topic['id']}: subquestions에는 중복 없는 짧은 질문 2~4개가 필요합니다.")
-                if set(part) - {'id', 'question', 'sources', 'answer_contract', 'subquestions', 'max_statements'}:
+                if 'statement_kind' in part and (part['statement_kind'] != 'limitation' or 'answer_contract' in part):
+                    errors.append(f"{topic['id']}: statement_kind는 limitation만 쓸 수 있고 answer_contract와 함께 쓸 수 없습니다.")
+                if set(part) - {'id', 'question', 'sources', 'answer_contract', 'subquestions', 'max_statements', 'statement_kind'}:
                     errors.append(f"{topic['id']}: 지원하지 않는 parts 필드입니다.")
+            if all(part.get('statement_kind') == 'limitation' for part in parts if isinstance(part, dict)):
+                # 실행 확인 항목만으로는 필수 질문에 답한 것이 아니다. 모델을 부르기 전에 설정 오류로 막는다.
+                errors.append(f"{topic['id']}: 모든 parts가 statement_kind: limitation이면 필수 질문의 사실 답변이 없습니다.")
             if used != source_ids:
                 errors.append(f"{topic['id']}: parts가 모든 소스 근거를 다뤄야 합니다.")
     if sorted(covered) != sorted(ids) or len(ids) != len(set(ids)):

@@ -759,7 +759,7 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     from sdd.contract_schema import configuration_errors
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
-    assert len(designs) == 11
+    assert len(designs) == 13
     for section in designs:
         assert section['design_generation'] == 'llm'
         assert not configuration_errors(section)
@@ -775,13 +775,14 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
     template = section['design_topics'][0]
     section['design_topics'] = []
     section['design_requirements'] = []
-    for aspect, question in PROFILES[profile].items():
+    for number, (aspect, question) in enumerate(PROFILES[profile].items()):
         section['design_topics'].append({**copy.deepcopy(template), 'id': aspect, 'covers': [aspect]})
         section['design_requirements'].append(dict(id=aspect, question=question, aspects=[aspect]))
         # 주제마다 다른 발췌를 근거로 삼아야 같은 근거의 중복 설명으로 반려되지 않는다.
         record = copy.deepcopy(model.evidence['device/stop/stop'])
         record['text'] = record['text'] + f' /* {aspect} */'
         record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+        record['line'] = record['end_line'] = 100 * (number + 1)
         model.evidence[f'device/{aspect}/stop'] = record
     save()
 
@@ -1021,3 +1022,55 @@ def test_new_typography_keeps_source_identical_saved_answers(tmp_cfg, generated)
     paths = Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
     assert not agent.calls
     assert '`status_`' in paths[0].read_text(encoding='utf-8')
+
+
+def test_B5_statement_kind를_지정한_질문은_모델이_고르지_않고_실행_확인_항목으로_고정된다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='what', question='종료 진입점은 무엇을 호출합니까?', sources=['stop']),
+                      dict(id='try', question='종료 동작을 직접 확인하려면 무엇을 실행합니까?', sources=['stop'],
+                           statement_kind='limitation')]
+    save()
+    from sdd.generated_design import response_schema
+    assert response_schema({**topic, '_statement_kind': 'limitation'})['properties']['statements']['items'][
+        'properties']['kind']['enum'] == ['limitation']
+
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            if len(self.calls) == 2:
+                assert kw['response_schema']['properties']['statements']['items']['properties']['kind']['enum'] == ['limitation']
+                statement['text'] = '`stop()`을 호출한 뒤 `cancelPending()`이 대기 요청을 취소하는지 로그로 확인합니다.'
+                statement['kind'] = 'behavior'  # 모델이 잘못 고른 경우에도 생성기가 고정한다
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+
+    path = Generator(tmp_cfg, model, Agent()).run()[0]
+    body = path.read_text(encoding='utf-8').split('\n---\n', 1)[1]
+    assert '실행 확인 항목: `stop()`을 호출한 뒤' in body
+    assert '실행 확인 항목: `stop()`은 종료 시' not in body
+
+
+def test_B5_statement_kind는_limitation만_허용하고_답변_계약과_함께_쓸_수_없다(tmp_cfg, generated):
+    section, model, save, agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='x', question='실행 방법은 무엇입니까?', sources=['stop'], statement_kind='behavior')]
+    save()
+    with pytest.raises(ValueError, match='statement_kind'):
+        Generator(tmp_cfg, model, agent).run()
+    topic['parts'] = [dict(id='x', question='실행 방법은 무엇입니까?', sources=['stop'], statement_kind='limitation',
+                           answer_contract=dict(basis='description'))]
+    save()
+    with pytest.raises(ValueError, match='statement_kind'):
+        Generator(tmp_cfg, model, agent).run()
+
+
+
+def test_B5_모든_parts가_limitation이면_모델을_부르기_전에_설정_오류로_막는다(tmp_cfg, generated):
+    section, model, save, agent = generated
+    section['design_topics'][0]['parts'] = [dict(id='x', question='실행 방법은 무엇입니까?', sources=['stop'], statement_kind='limitation')]
+    save()
+    with pytest.raises(ValueError, match='사실 답변이 없습니다'):
+        Generator(tmp_cfg, model, agent).run()
+    assert agent.calls == []

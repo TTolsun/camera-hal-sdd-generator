@@ -52,6 +52,10 @@ documentation:
     # 본문은 약 11,281자이며 18,000자 한도를 유지한다. 원문·응답 복구 기록을 포함한 파일은 약 142,434자다.
     request-lifecycle.md:
       max_markdown_chars: 160000
+    # #107 B2: 첫 절을 제품 설명(무엇인가·누구의 문제·계층)과 지원 범위로 넓혀 본문이 기존의 약 1.7배가 된다.
+    # 필요한 증가인지 검토한 결과이며, 중복 문장·분량은 사람 검토 전 상태로 남는다.
+    vendor-overview.md:
+      max_growth_ratio: 2.0
   features:
     - id: request-lifecycle
       primary: request-lifecycle.md
