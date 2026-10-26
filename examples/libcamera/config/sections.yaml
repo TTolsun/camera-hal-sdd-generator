@@ -2203,8 +2203,8 @@ sections:
   design_generation: llm
   design_grounding: true
 - id: ipu3-lsc
-  group: For Vendor
-  nav_section: 장치별 기능 구현
+  group: For Developer
+  nav_section: 코드 탐색
   title: IPU3 LSC와 상태 연결
   output: ipu3-lsc.md
   kind: prose
@@ -5395,8 +5395,8 @@ sections:
     title: 시스템 개요
     link: overview.md
 - id: ipa-module-validation
-  group: For Vendor
-  nav_section: 연동 구현
+  group: For Developer
+  nav_section: 동작 추적과 문제 진단
   title: IPA 모듈 정보 검사와 서명 파일 누락
   output: ipa-module-validation.md
   kind: prose
