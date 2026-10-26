@@ -30,3 +30,30 @@ def test_invalid_scope_fails_configuration(scope):
     section = {'design_topics': [{'id': 't', 'sources': [dict(id='s', file='source.cpp',
                     start='context:', end='returns zero', scope=scope)]}]}
     assert any('scope' in error for error in configuration_errors(section))
+
+
+def test_collect_pins_full_scope_and_invalidates_when_only_context_changes(tmp_cfg, monkeypatch):
+    import hashlib
+    from types import SimpleNamespace
+    import yaml
+    from sdd.evidence import collect, fingerprint
+    from sdd.facts.model import KnowledgeModel
+    source = dict(id='s', file='source.cpp', start='context:', end='returns error',
+                  scope=dict(start='second {', end='}'))
+    section = {'id': 'device', 'design_topics': [{'id': 't', 'sources': [source]}]}
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section]}), encoding='utf-8')
+    contents = [TEXT]
+    monkeypatch.setattr('sdd.evidence.subprocess.run', lambda *a, **k: SimpleNamespace(returncode=0, stdout=contents[0]))
+    model = KnowledgeModel(meta={'source_commit': 'a' * 40})
+    collect(tmp_cfg, model)
+    record = model.evidence['device/t/s']
+    assert record['text'] == 'context: caller\nreturns error'
+    context = record['context']
+    assert context['text'] == 'second {\ncontext: caller\nreturns error\n}'
+    assert context['sha256'] == hashlib.sha256(context['text'].encode()).hexdigest()
+    before = fingerprint(model, section)
+    selected_hash = record['sha256']
+    contents[0] = TEXT.replace('second {', 'second { // changed guard')
+    collect(tmp_cfg, model)
+    assert model.evidence['device/t/s']['sha256'] == selected_hash
+    assert fingerprint(model, section) != before

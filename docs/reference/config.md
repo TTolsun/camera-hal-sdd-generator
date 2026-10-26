@@ -100,7 +100,8 @@ agent:
 | `require_citations` | `true` | 모델이 쓴 모든 `파일:줄` 인용이 facts에 있어야 통과합니다. |
 | `max_retries` | `1` | 검사 실패 시 재시도 횟수. 넘으면 `status: needs-review`로 남깁니다. |
 | `design_revision` | `false` | 필수 설계 답변마다 소스와 초안을 다시 보내 수정 답변을 받습니다. 호출 수가 늘며 입력 한도 초과 시 근거를 생략하지 않고 실패합니다. 모델의 재검토는 사람 승인이 아닙니다. |
-| `design_prompt` | `standard` | `focused`이면 프로젝트의 `focused-design-system.md`로 짧은 문단 작성 지침을 사용합니다. 집필 규칙은 계속 적용되며 규칙·질문·근거 변경 시 이월과 캐시를 무효화합니다. 구조·계약 검사를 생략하지 않습니다. |
+| `design_grounding` | `false` | 필수 설계 답변을 별도 모델 호출에서 연결된 소스와 대조합니다. 근거 없는 문단이나 누락된 판정은 재시도·실패로 처리합니다. 재사용 지문에 이 설정을 포함하며 자동 판정을 사람 승인으로 표시하지 않습니다. |
+| `design_prompt` | `standard` | `focused`는 `paths.prompts/focused-design-system.md`의 짧은 문단 작성 지침과 해당 질문·근거만 모델에 보냅니다. 파일이 없거나 모드가 잘못되면 실패합니다. 페이지 편집·용어·근거·누락 검사는 그대로 적용하며, 집필 규칙이 바뀌면 이전 답변을 재사용하지 않습니다. |
 | `answer_cache` | `false` | Ollama의 검사 통과한 설계 답변을 같은 커밋의 재시도에서 재사용합니다. 소스 커밋·질문·발췌·프롬프트·모델 설정·모델 digest가 같아야 하며, 재사용 응답도 다시 검사합니다. 모델 digest를 조회할 수 없으면 캐시를 사용하지 않습니다. 강제 재호출이 필요하면 끕니다. |
 | `coverage_triage.enabled` | `false` | 사람이 승인하지 않은 범위 검토 항목을 모델이 먼저 판정합니다. |
 | `coverage_triage.pass_gate` | `false` | `true`이면 "범위 밖" 판정이 관문을 통과시킵니다. YAML 불리언만 받습니다. |
@@ -164,6 +165,7 @@ agent:
 | `nav_groups` | `[]` | 왼쪽 메뉴 그룹 순서. |
 | `undefined_terms` | 용어집이 있으면 `fail`, 없으면 `warn` | 뜻을 적지 않은 약어의 처리. `fail`, `warn`, `off`. [약어 검사](glossary.md#약어-검사). |
 | `english_catalog` | 없음 | 영어판 번역 목록. 공개 libcamera에서만 씁니다. |
+| `translation_batch_size` | `1` | 번역 호출당 문장 수. 1~16을 허용하며 입력 예산에 맞게 묶음을 줄입니다. 각 문장의 ID·코드 자리표시자·영어 응답을 검사하고 실패한 묶음은 반영하지 않습니다. |
 
 ## update
 

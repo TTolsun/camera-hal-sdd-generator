@@ -5,7 +5,6 @@ python -m sdd.evaluate_reader --config project/sdd.yaml --section overview --out
 from __future__ import annotations
 
 import argparse
-import copy
 import hashlib
 import json
 import time
@@ -15,40 +14,33 @@ from .config import load
 from .evidence import collect
 from .facts.model import KnowledgeModel
 from .generate import Generator
-from .llm import Agent
+from .llm import Agent, LIVE_KINDS
+from .trial_workspace import clone_config, validate_output, write_snapshot
 
 
 def evaluate(cfg, section_ids, out: Path, *, agent_factory=Agent):
-    if cfg.agent.kind not in ('cli', 'ollama', 'openai-compatible'):
+    if cfg.agent.kind not in LIVE_KINDS:
         raise ValueError('모델 자동 생성 시험에는 실제 CLI 또는 명시적으로 허용한 API 연결이 필요합니다.')
     sections = {s['id']: s for s in cfg.sections()}
     if not section_ids or any(s not in sections or sections[s].get('design_generation') != 'llm'
                               for s in section_ids):
         raise ValueError('시험할 LLM 설계 섹션을 명시해야 합니다.')
-    out = out.resolve()
-    # An explicit new directory prevents reruns from mixing models or revisions
-    # and cannot replace the operational manuscript, source or configuration.
-    protected = [cfg.root, cfg.source_root, cfg.sdd_dir, cfg.facts_dir]
-    if (out.exists() or any(p.resolve().is_relative_to(out) for p in protected)
-            or any(out.is_relative_to(p.resolve()) for p in protected[1:])):
-        raise ValueError('평가 출력에는 기존 입력·원고를 포함하지 않는 새 디렉터리가 필요합니다.')
+    try:
+        out = validate_output(cfg, out)
+    except ValueError as exc:
+        raise ValueError(f'평가 출력에는 기존 입력·원고를 포함하지 않는 새 디렉터리가 필요합니다. {exc}') from exc
     out.mkdir(parents=True)
     sections_bytes = cfg.sections_file.read_bytes()
     sections_hash = hashlib.sha256(sections_bytes).hexdigest()
     (out/'sections.yaml').write_bytes(sections_bytes)
     generator_hashes = {name:hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
                        for name in ('generated_design.py','focused_prompt.py','prompting.py','evidence.py',
-                                    'answer_contracts.py','contract_schema.py','evaluate_reader.py','validate.py')}
-    trial = copy.deepcopy(cfg)
-    trial.paths = {**trial.paths, 'sections_file':out/'sections.yaml', 'scenarios_file':cfg.scenarios_file,
-                   'prompts':cfg.prompts_dir, 'templates':cfg.templates_dir, 'style':cfg.style_dir}
-    trial.root = out
-    trial.sdd_dir = out / 'manuscripts'
-    trial.diagrams_dir = trial.sdd_dir / 'diagrams'
-    trial.facts_dir = out / 'facts'
-    trial.raw.setdefault('site', {})['enabled'] = False
+                                    'answer_contracts.py','contract_schema.py','evaluate_reader.py','validate.py',
+                                    'trial_workspace.py')}
+    trial = clone_config(cfg, out, sections_file=out/'sections.yaml')
+    write_snapshot(trial, out/'sdd.yaml')
     model = KnowledgeModel.load(cfg.facts_path)
-    collect(cfg, model)
+    collect(trial, model)
     model.save(trial.facts_path)
     agent = agent_factory(trial.agent, out / 'prompts')
     results = []

@@ -16,7 +16,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from ..config import Config
-from .comments import is_excluded
+from .clang_support import SourceScope
 from .model import KnowledgeModel, relpath
 
 # `/** ... */` 한 덩어리. 여는 기호가 `/**` 인 것만 문서 주석으로 본다.
@@ -116,7 +116,8 @@ def resolve(name: str, model: KnowledgeModel, near: str = "",
 
 def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]]) -> dict[str, int]:
     """빌드에 들어간 파일의 문서 주석 블록으로 비어 있는 클래스 설명을 채운다."""
-    root = cfg.source_root.resolve()
+    scope = SourceScope(cfg.source_root, cfg.exclude)
+    root = scope.root
     # 빌드에 들어간 파일만 본다: compile DB 의 translation unit 과 이미 사실에 오른 선언 파일.
     files: set[Path] = set()
     for entry in entries:
@@ -129,7 +130,7 @@ def collect(model: KnowledgeModel, cfg: Config, entries: list[dict[str, Any]]) -
     stats = {"files": 0, "blocks": 0, "filled": 0, "ambiguous": 0, "unknown": 0}
     for path in sorted(files):
         rel = relpath(str(path), root)
-        if is_excluded(rel) or not path.is_file():
+        if scope.is_excluded(rel) or not path.is_file():
             continue
         try:
             text = path.read_text(encoding="utf-8", errors="replace")

@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 
 
-BASES = {'contract', 'implementation', 'description', 'measurement'}
+BASES = {'contract', 'implementation', 'description', 'measurement', 'investigation'}
 OBLIGATION = re.compile(r'[가-힣]야\s*(?:합니다|하며|하고|할)|해서는\s*안|하면\s*안|하지\s*말아야|할\s*의무')
 
 
@@ -27,7 +27,7 @@ def configuration_errors(owner):
         return ['answer_contract에는 basis, required_terms, reject_patterns만 지정할 수 있습니다.']
     errors = []
     if rule.get('basis') not in BASES:
-        errors.append('answer_contract.basis는 contract, implementation, description, measurement 중 하나여야 합니다.')
+        errors.append('answer_contract.basis는 contract, implementation, description, measurement, investigation 중 하나여야 합니다.')
     groups = rule.get('required_terms', [])
     if not isinstance(groups, list) or any(not isinstance(g, list) or not g or
             any(not isinstance(t, str) or not t.strip() for t in g) for g in groups):
@@ -72,6 +72,14 @@ def check(rule, statements, label):
         for st, prose in zip(statements, texts):
             if st.get('kind', 'behavior') == 'behavior' and not OBLIGATION.search(prose):
                 errors.append('구현 의무는 해야 합니다/해서는 안 됩니다로 표현하세요. 관측된 구현이나 시험 보장으로 바꾸지 마세요.')
+    if rule['basis'] == 'investigation':
+        for st, prose in zip(statements, texts):
+            leaked = 'quote_id' in prose and 'quote_id' not in st.get('quote', '')
+            leaked |= any(re.search(re.escape(ref) + r':\d+(?!\d)', prose)
+                          and not re.search(re.escape(ref) + r':\d+(?!\d)', st.get('quote', ''))
+                          for ref in st.get('evidence', []))
+            if leaked:
+                errors.append('조사 계획 본문에는 quote_id나 내부 근거 ID를 쓰지 마세요. 소스의 관측 지점과 제안할 기록 항목만 설명하세요.')
     for item in rule.get('reject_patterns', []):
         if re.search(item['pattern'], text):
             errors.append(item['message'])

@@ -163,52 +163,59 @@ def _reviewer_name(cfg: Config, given: str | None) -> str:
 def cmd_accept(args: argparse.Namespace) -> int:
     """사람 검토 승인을 장부에 기록한다. 파이프라인은 이 명령을 자동으로 실행하지 않는다."""
     cfg = _cfg(args)
-    ledger = approvals_mod.load(cfg)
     pages = [p for chunk in (args.pages or []) for p in chunk.split(",") if p]
     findings = [f for chunk in (args.finding or []) for f in chunk.split(",") if f]
-    if not pages and not findings:
-        print(f"승인 장부: {approvals_mod.ledger_path(cfg)}")
-        print("", "## 문서", sep="\n")
-        for path in sorted(cfg.sdd_dir.rglob("*.md")):
-            rel = path.relative_to(cfg.sdd_dir).as_posix()
+    from contextlib import ExitStack
+    from .locking import locked
+
+    with ExitStack() as locks:
+        if pages or findings:
+            locks.enter_context(locked(approvals_mod.ledger_path(cfg).with_suffix(".lock"),
+                                       "같은 승인 장부의 갱신"))
+        ledger = approvals_mod.load(cfg)
+        if not pages and not findings:
+            print(f"승인 장부: {approvals_mod.ledger_path(cfg)}")
+            print("", "## 문서", sep="\n")
+            for path in sorted(cfg.sdd_dir.rglob("*.md")):
+                rel = path.relative_to(cfg.sdd_dir).as_posix()
+                text = path.read_text(encoding="utf-8")
+                state = approvals_mod.page_status(ledger, rel, text)
+                entry = ledger["pages"].get(rel, {})
+                detail = {"approved": f"승인: {entry.get('approved_by')} {entry.get('approved_at', '')}",
+                          "stale": f"승인 이후 본문 변경 (승인: {entry.get('approved_by')} {entry.get('approved_at', '')})",
+                          "unreviewed": "사람 검토 전"}[state]
+                print(f"- {rel}: {detail}")
+            if ledger["findings"]:
+                print("", "## 범위 검토 항목", sep="\n")
+                for key, entry in sorted(ledger["findings"].items()):
+                    print(f"- {key}: {entry['state']} ({entry.get('by')} {entry.get('at', '')})")
+            print("\n승인: sdd accept <문서.md> [--by 이름], 범위 항목: sdd accept --finding <키> [--defer]")
+            return 0
+        from .document_metadata import split_frontmatter
+        by = _reviewer_name(cfg, args.by)
+        for rel in pages:
+            # 장부 키는 사이트·이월과 같은 posix 상대 경로여야 한다. Windows 백슬래시나 ./ 가
+            # 섞인 입력을 그대로 저장하면 승인이 영원히 일치하지 않는다.
+            rel = str(PurePosixPath(rel.replace("\\", "/")))
+            path = cfg.sdd_dir / rel
+            if not path.is_file():
+                raise RuntimeError(f"승인할 문서가 없습니다: {rel} (sdd_dir 기준 상대 경로)")
             text = path.read_text(encoding="utf-8")
-            state = approvals_mod.page_status(ledger, rel, text)
-            entry = ledger["pages"].get(rel, {})
-            detail = {"approved": f"승인: {entry.get('approved_by')} {entry.get('approved_at', '')}",
-                      "stale": f"승인 이후 본문 변경 (승인: {entry.get('approved_by')} {entry.get('approved_at', '')})",
-                      "unreviewed": "사람 검토 전"}[state]
-            print(f"- {rel}: {detail}")
-        if ledger["findings"]:
-            print("", "## 범위 검토 항목", sep="\n")
-            for key, entry in sorted(ledger["findings"].items()):
-                print(f"- {key}: {entry['state']} ({entry.get('by')} {entry.get('at', '')})")
-        print("\n승인: sdd accept <문서.md> [--by 이름], 범위 항목: sdd accept --finding <키> [--defer]")
+            meta, _ = split_frontmatter(text)
+            entry = approvals_mod.approve_page(ledger, rel, text, by,
+                                               source_commit=str(meta.get("source_commit", "")),
+                                               note=args.note or "")
+            if str(meta.get("status", "")) == "needs-review":
+                print(f"주의: {rel} 은 자동 검사 확인 필요(needs-review) 상태입니다. 검토 후 승인했는지 확인하세요.")
+            print(f"승인 기록: {rel} ({by}, {entry['approved_at']})")
+        state = "deferred" if args.defer else "accepted"
+        for key in findings:
+            approvals_mod.record_finding(ledger, key, state, by, note=args.note or "")
+            print(f"범위 검토 항목 {state}: {key} ({by})")
+            if state == "deferred":
+                print("  보류는 관문(--fail-on-coverage-gap)을 통과시키지 않습니다. 범위를 정리한 뒤 accepted 로 바꾸세요.")
+        approvals_mod.save(cfg, ledger)
         return 0
-    from .export_html import _split
-    by = _reviewer_name(cfg, args.by)
-    for rel in pages:
-        # 장부 키는 사이트·이월과 같은 posix 상대 경로여야 한다. Windows 백슬래시나 ./ 가
-        # 섞인 입력을 그대로 저장하면 승인이 영원히 일치하지 않는다.
-        rel = str(PurePosixPath(rel.replace("\\", "/")))
-        path = cfg.sdd_dir / rel
-        if not path.is_file():
-            raise RuntimeError(f"승인할 문서가 없습니다: {rel} (sdd_dir 기준 상대 경로)")
-        text = path.read_text(encoding="utf-8")
-        meta, _ = _split(text)
-        entry = approvals_mod.approve_page(ledger, rel, text, by,
-                                           source_commit=str(meta.get("source_commit", "")),
-                                           note=args.note or "")
-        if str(meta.get("status", "")) == "needs-review":
-            print(f"주의: {rel} 은 자동 검사 확인 필요(needs-review) 상태입니다. 검토 후 승인했는지 확인하세요.")
-        print(f"승인 기록: {rel} ({by}, {entry['approved_at']})")
-    state = "deferred" if args.defer else "accepted"
-    for key in findings:
-        approvals_mod.record_finding(ledger, key, state, by, note=args.note or "")
-        print(f"범위 검토 항목 {state}: {key} ({by})")
-        if state == "deferred":
-            print("  보류는 관문(--fail-on-coverage-gap)을 통과시키지 않습니다. 범위를 정리한 뒤 accepted 로 바꾸세요.")
-    approvals_mod.save(cfg, ledger)
-    return 0
 
 
 def cmd_generate(args: argparse.Namespace) -> int:

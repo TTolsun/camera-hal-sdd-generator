@@ -40,10 +40,12 @@ _FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
 
 
 class Generator:
-    def __init__(self, cfg: Config, model: KnowledgeModel, agent: ChatPort):
+    def __init__(self, cfg: Config, model: KnowledgeModel, agent: ChatPort, *, replay_http=False, all_design_units=False):
         self.cfg = cfg
         self.model = model
         self.agent = agent
+        self.replay_http = replay_http
+        self.all_design_units = all_design_units
         self.allowed = model.citations()
         self.reviews: dict[str, dict] = {}
         self.generated_designs: dict[str, tuple] = {}
@@ -396,11 +398,14 @@ class Generator:
             index_verdict.notes.append(reason)
             index_body += "\n\n확인 필요: " + reason + ". 진입점과 추출 범위를 확인하세요."
         index_path = self.cfg.sdd_dir / sec.get("output", "scenarios/index.md")
+        index_extra = {"section": sec["id"], "generation_method": "deterministic"}
+        if requires_fingerprint(sec):
+            index_extra["evidence_fingerprint"] = fingerprint(self.model, sec)
         index_page = self._render(
             title=sec["title"], lead=sec.get("lead", ""), body=index_body, routes=routes,
             evidence=self._evidence_lines([], [], index_verdict, []),
             next_link=_next_of(sec), status=_status(index_verdict), omitted=[],
-            extra={"section": sec["id"], "generation_method": "deterministic"}, page_path=index_path)
+            extra=index_extra, page_path=index_path)
         out.append(self._write(index_path, index_page))
         return out
 
@@ -443,7 +448,7 @@ class Generator:
 
     def _flags_table(self, sec: dict[str, Any]) -> Path:
         lines = ["## 플래그 표", "",
-                 "이 표는 compile DB(NDK-build 구성)의 `-D` 목록과 소스의 `#if` 분기 위치를 그대로 옮긴 것입니다. LLM 을 거치지 않았습니다.",
+                 "이 표는 compile DB에 기록된 빌드 구성의 `-D` 목록과 소스의 `#if` 분기 위치를 그대로 옮긴 것입니다. LLM 을 거치지 않았습니다.",
                  "", "| 플래그 | 값 | 분기 위치 (최대 20) |", "|---|---|---|"]
         for name in sorted(self.model.defines):
             d = self.model.defines[name]
@@ -541,18 +546,18 @@ class Generator:
                             evidence=self._evidence_lines(blocks, tables, verdict, omitted, self._entity_files(sec)),
                             next_link=_next_of(sec), status=status, omitted=omitted, extra=extra, page_path=path)
         if generated_design.enabled(sec):
-            from .export_html import _split
+            from .document_metadata import split_frontmatter
             artifact = dict(self.generated_designs[sec['id']][3])
             agents = sorted(set(artifact['topic_agents'].values()))
             page = re.sub(r'^agent:.*$', 'agent: ' + ', '.join(agents), page, count=1, flags=re.M)
-            artifact['body_sha256'] = generated_design.digest(_split(page)[1].strip())
+            artifact['body_sha256'] = generated_design.digest(split_frontmatter(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_design: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             generated_design.verify(self.model, sec, page)
         if sec['id'] in self.generated_visuals:
-            from .export_html import _split
+            from .document_metadata import split_frontmatter
             from .generated_visuals import from_manuscript
             artifact = dict(self.generated_visuals[sec['id']])
-            artifact['body_sha256'] = generated_design.digest(_split(page)[1].strip())
+            artifact['body_sha256'] = generated_design.digest(split_frontmatter(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_visuals: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             from_manuscript(self.cfg, self.model, sec, page)
         return self._write(path, page)

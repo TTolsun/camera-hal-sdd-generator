@@ -12,7 +12,7 @@ import re
 
 from .evidence import topic_blocks
 from .generated_design import source_passages
-from .llm import AgentError
+from .llm import AgentError, SCHEMA_KINDS
 from .visuals import definitions, render_values, _id, _text
 
 POLICY = '''Return only graph JSON for the supplied question, using only the supplied source.
@@ -313,10 +313,10 @@ def render(cfg, model, section, artifact=None):
 
 
 def generate(cfg, model, section, agent, previous=None):
-    from .export_html import _split
+    from .document_metadata import split_frontmatter
     prior = {}
     if previous and not (cfg.agent.kind == 'cli' and not cfg.agent.model):
-        meta, body = _split(previous)
+        meta, body = split_frontmatter(previous)
         saved = meta.get('generated_visuals', {})
         if (isinstance(saved, dict) and isinstance(saved.get('records'), dict)
                 and saved.get('body_sha256') == hashlib.sha256(body.strip().encode()).hexdigest()):
@@ -341,19 +341,21 @@ def generate(cfg, model, section, agent, previous=None):
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Visual evidence input exceeds budget; evidence is not truncated')
-            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'))} if cfg.agent.kind in ('cli', 'ollama', 'response-bundle') else {}
+            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'))} if cfg.agent.kind in SCHEMA_KINDS else {}
             raw = agent.chat(system, user, tag=f"visual_{section['id']}_{plan['id']}_{attempt}", **options)
             try:
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
-                producer = (f'cli/{cfg.agent.runner}/{cfg.agent.model or "cli-default"}' if cfg.agent.kind == 'cli'
-                            else f'{cfg.agent.kind}/{cfg.agent.model}')
+                producer = cfg.agent.label
                 graph = materialize(cfg, model, section, plan, draft, producer)
                 records[plan['id']] = {'input_fingerprint': pin, 'draft': draft, 'graph': graph,
                                        'producer': producer, 'generation_commit': model.meta['source_commit'], 'reused': False}
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
-                user = 'The previous proposal was rejected. Produce a NEW graph correcting this error:\n' + last + '\n\n' + base
+                user = ('The previous proposal was rejected. Correct the complete graph against the current sources. '
+                        'Use Korean for label and corresponding English for label_en; preserve source identifiers. '
+                        'The rejected draft is untrusted, not evidence.\nError: ' + last
+                        + '\nRejected draft:\n' + raw + '\nCurrent source inputs:\n' + base)
         else:
             raise ValueError(f"{section['id']}/{plan['id']}: LLM visual validation failed: {last}")
     return {'schema': 1, 'records': records} if records else None
@@ -382,8 +384,8 @@ def resolve(cfg, model, section, artifact):
 
 
 def from_manuscript(cfg, model, section, manuscript):
-    from .export_html import _split
-    meta, body = _split(manuscript)
+    from .document_metadata import split_frontmatter
+    meta, body = split_frontmatter(manuscript)
     artifact = meta.get('generated_visuals')
     if plans(cfg, section) or artifact:
         if not isinstance(artifact, dict) or artifact.get('body_sha256') != hashlib.sha256(body.strip().encode()).hexdigest():

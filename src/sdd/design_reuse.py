@@ -37,10 +37,10 @@ def topic_inputs(model, section, policy):
 
 
 def reusable(model, section, previous, inputs, validate=None):
-    from .export_html import _split
+    from .document_metadata import split_frontmatter
     if not previous:
         return {}, {}
-    meta, body = _split(previous)
+    meta, body = split_frontmatter(previous)
     artifact = meta.get('generated_design', {})
     if not isinstance(artifact, dict) or artifact.get('body_sha256') != hashlib.sha256(body.strip().encode()).hexdigest():
         return {}, {}
@@ -63,11 +63,12 @@ def reusable(model, section, previous, inputs, validate=None):
             continue
         pinned, selected = subset(model, section, [tid])
         selected.pop('reader_profile', None)
+        selected_answers = copy.deepcopy(answers[tid])
         try:
             if validate:
-                validate(pinned, selected, {tid: answers[tid]})
+                validate(pinned, selected, {tid: selected_answers})
         except (ValueError, TypeError, KeyError):
             continue
-        retained[tid] = copy.deepcopy(answers[tid])
+        retained[tid] = selected_answers
         origins[tid] = artifact.get('topic_agents', {}).get(tid, meta.get('agent', 'unknown'))
     return retained, origins

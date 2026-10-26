@@ -12,6 +12,7 @@ import re
 
 from .evidence import fingerprint, topic_blocks, contract_text
 from . import duplicates
+from .llm import SCHEMA_KINDS
 from .manuscript import lint, describe
 from .semantic import review as semantic_review, only_uncertainty, known_names
 from .validate import extract_citations, check
@@ -19,6 +20,7 @@ from .validate import extract_citations, check
 
 def enabled(section):
     return section.get('design_generation') == 'llm'
+
 
 
 def preflight(model, section):
@@ -88,31 +90,44 @@ def resolve_passages(statements, passages):
             # Legacy quoted responses still undergo the same strict source check.
             result.append(statement)
             continue
-        if set(statement) != {'quote_id', 'text', 'covers', 'kind'}:
-            raise ValueError('quote_id 답변에는 text, covers, kind만 함께 쓸 수 있습니다.')
+        if (set(statement) - {'quote_id', 'text', 'covers', 'kind', 'evidence'}
+                or not {'quote_id', 'text', 'covers', 'kind'} <= set(statement)):
+            raise ValueError('quote_id 답변에는 text, covers, kind와 선택적 evidence만 함께 쓸 수 있습니다.')
         key = statement['quote_id']
         if not isinstance(key, str) or key not in passages:
             raise ValueError('제공되지 않은 quote_id입니다.')
         source_id, quote = passages[key]
+        evidence = statement.get('evidence', [source_id])
+        allowed = {sid for sid, _ in passages.values()}
+        if (not isinstance(evidence, list) or any(not isinstance(sid, str) for sid in evidence)
+                or len(evidence) != len(set(evidence)) or source_id not in evidence
+                or not set(evidence) <= allowed):
+            raise ValueError('evidence는 quote_id의 소스를 포함하는 제공된 소스 ID 목록이어야 합니다.')
         result.append({k: v for k, v in statement.items() if k != 'quote_id'} | {
-            'quote': quote, 'evidence': [source_id]})
+            'quote': quote, 'evidence': evidence})
     return result
 
 
 def response_schema(topic, passages=None):
     def ids(values):
-        return {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': values}}
-    # A documented prohibition is a contract, not an admission of missing
-    # knowledge. Required contract answers already reject limitation-only
-    # replies; constrain their label instead of asking the model to guess it.
-    kinds = ['behavior'] if topic.get('answer_contract', {}).get('basis') == 'contract' else ['behavior', 'limitation']
+        return {'type': 'array', 'minItems': 1, 'maxItems': len(values), 'uniqueItems': True,
+                'items': {'type': 'string', 'enum': values}}
+    # A checked part has exactly one required factual/contract answer. Offering
+    # limitation here asks the model to choose an option the validator rejects,
+    # especially for negative but fully sourced API obligations.
+    kinds = ['behavior'] if (topic.get('_max_statements') == 1 and topic.get('answer_contract')) or topic.get('answer_contract', {}).get('basis') == 'contract' else ['behavior', 'limitation']
     statement = {'type': 'object', 'additionalProperties': False,
-                 'required': ['text', 'quote_id', 'covers', 'kind'], 'properties': {
+                 'required': ['text', 'quote_id', 'evidence', 'covers', 'kind'], 'properties': {
                      # C++ expressions such as request->_d()->cancel() and
                      # std::unique_ptr<Request> need angle brackets. HTML is
                      # rejected outside code spans by materialize().
-                     'text': {'type': 'string', 'pattern': r'^[^\n\r\[\]\\]*$'},
+                    # Let the JSON grammar escape quotes/backslashes normally.
+                    # A character-class pattern here can emit unescaped code
+                    # string literals in constrained Ollama responses.
+                    'text': {'type': 'string'},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
+                     'evidence': ids(sorted({sid for sid, _ in passages.values()}) if passages
+                                     else [source['id'] for source in topic.get('sources', [])]),
                      'covers': ids(topic['covers']),
                      'kind': {'type': 'string', 'enum': kinds}}}
     return {'type': 'object', 'additionalProperties': False, 'required': ['statements'],
@@ -142,6 +157,8 @@ def materialize(model, section, answers):
                 raise ValueError(f"{topic['id']}: 다른 주제의 질문에 답할 수 없습니다.")
             if not isinstance(st.get('text'), str) or not st['text'].strip():
                 raise ValueError('LLM 설명이 비었습니다.')
+            if '\n' in st['text'] or '\r' in st['text']:
+                raise ValueError('각 설명은 줄바꿈 없는 한 문단이어야 합니다.')
             normalized = ' '.join(st['text'].split())
             if normalized in seen:
                 raise ValueError('LLM 설명 문단이 중복됐습니다. 각 문단은 서로 다른 내용을 설명해야 합니다.')
@@ -164,6 +181,9 @@ def materialize(model, section, answers):
                 raise ValueError('LLM은 구조·링크·HTML 없이 설명 문단만 작성해야 합니다.')
             if re.search(r'<(?:/?[a-zA-Z]|!)', re.sub(r'`[^`]*`', '', st['text'])):
                 raise ValueError('LLM 설명에 HTML을 넣을 수 없습니다.')
+            if re.search(r'\\(?:ref|brief|param|retval|todo|context|threadsafe|class|fn)\b',
+                         re.sub(r'`[^`]*`', '', st['text'])):
+                raise ValueError('렌더링되지 않는 Doxygen 명령을 설명 문단에 복사할 수 없습니다. 문서 표식 대신 질문의 내용을 설명하세요.')
         from .answer_contracts import validate as validate_answer_contract
         validate_answer_contract(topic, statements)
         topic['statements'] = statements
@@ -184,7 +204,7 @@ def source_names(model, records):
     names |= {name.rsplit('::', 1)[-1] for name in names}
     tokens = set(re.findall(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*', '\n'.join(records)))
     tokens |= {name.split('::', 1)[0] for name in tokens}
-    return names & tokens
+    return (names & tokens) | {name for name in tokens if '_' in name}
 
 
 def normalize_answer(model, statements, sources):
@@ -236,6 +256,45 @@ def validate_answers(model, section, answers):
     return pinned, resolved, report
 
 
+def decode_unit(model, section, topic, raw, sources, passages):
+    cleaned = re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip())
+    data = json.loads(cleaned)
+    if not isinstance(data, dict) or set(data) != {'statements'}:
+        raise ValueError('statements만 가진 JSON 객체가 필요합니다.')
+    if ('_part_id' in topic and isinstance(data['statements'], list)
+            and len(data['statements']) > topic['_max_statements']):
+        raise ValueError(f"분할 질문은 {topic['_max_statements']}문단 이내로 답해야 합니다.")
+    data['statements'] = resolve_passages(data['statements'], passages)
+    if '_part_id' in topic:
+        for statement in data['statements']:
+            statement['part_id'] = topic['_part_id']
+            if '_subpart_id' in topic:
+                statement['subpart_id'] = topic['_subpart_id']
+    # Parts share a page's typography rules. A source-backed class name can
+    # occur in another part of the same topic (e.g. Fence versus fences).
+    # These records only identify code names; drafting and grounding still use
+    # the selected part's evidence, and no model words are added or changed.
+    prefix = f"{section['id']}/{topic['id']}/"
+    names_context = [record['text'] for key, record in model.evidence.items()
+                     if key.startswith(prefix) and record.get('status') == 'available']
+    normalize_answer(model, data['statements'], [*sources.values(), *names_context, topic['question'],
+        *[value for source in topic['sources'] for value in source.get('scope', {}).values()]])
+    candidate = {topic['id']: data['statements']}
+    subset = {**section, 'design_topics': [topic], 'design_requirements': [
+        r for r in section['design_requirements'] if r['id'] in topic['covers']]}
+    # A topic covers only part of a reader profile. Check its prose
+    # against the full section's requirements; coverage is checked
+    # before calls and again after assembling every topic.
+    from .reader_profiles import profile_errors
+    errors = profile_errors({**section, 'design_topics': [
+        {**topic, 'statements': data['statements']}]})
+    if errors:
+        raise ValueError(' / '.join(errors))
+    subset.pop('reader_profile', None)
+    validate_answers(model, subset, candidate)
+    return candidate[topic['id']]
+
+
 def generate(generator, section, previous=None):
     model, cfg = generator.model, generator.cfg
     preflight(model, section)
@@ -253,14 +312,15 @@ def generate(generator, section, previous=None):
         'Name the responsible function or caller. Distinguish API obligations from observed implementation behavior. '
         'Read code in its enclosing control flow: break is not cancellation, and assertions do not guarantee future behavior. '
         'Do not invent advice, rationale, timing, ownership or thread guarantees. '
+        'Instructions about what not to claim are output constraints, not product facts. '
+        'Do not turn them into negative guarantees or invent reasons for them. '
+        'Omit unsupported claims instead of explaining why the product supposedly cannot guarantee them. '
         'Answer only the requested question; a declaration at an excerpt boundary is context, not a request to explain it. '
         'Keep an outcome and its necessary caller/implementer obligation together. '
         'A required call context does not prove thread safety or ordering. '
         'A reference measurement procedure is not a test result for this product. '
-        'Every sentence must be supported by its selected source passage. '
-        'Do not copy duties or example behavior from instructions into the answer. '
         'Preserve the scope of any/all/only together with may and negation. '
-        'Return only the requested JSON.'
+        'Use factual content only from the current source passages. Return only the requested JSON.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
         system += (
@@ -269,6 +329,14 @@ def generate(generator, section, previous=None):
             'Tie each benefit to a concrete mechanism and its conditions; do not invent competitive '
             'superiority, performance numbers, device support or production readiness. '
             'Distinguish a source contract from a measured result and from a vendor obligation.'
+        )
+    if any(owner.get('answer_contract', {}).get('basis') == 'investigation'
+           for topic in section['design_topics'] for owner in [topic, *topic.get('parts', [])]):
+        system += (
+            ' For investigation basis, a source-based debugging plan is explicitly requested. '
+            'Propose observing only variables, return values and next branches present in the supplied code. '
+            'Label it as an investigation plan, not an executed test, timing measurement or guaranteed recovery. '
+            'Do not re-invoke state-changing functions to observe them.'
         )
     from .design_reuse import topic_inputs, reusable
     execution_identity = ''
@@ -282,17 +350,44 @@ def generate(generator, section, previous=None):
     standard_system = system
     if focused_system is not None:
         system = focused_system
-    policy = (focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system) + execution_identity
-    inputs = topic_inputs(model, section, policy)
+    grounding = section.get('design_grounding', (cfg.raw.get('review') or {}).get('design_grounding', False))
+    if type(grounding) is not bool:
+        raise ValueError('review.design_grounding은 boolean이어야 합니다.')
+    policy = {'design_grounding': grounding}
+    if grounding:
+        from .grounding import policy_hash
+        policy['grounding_policy'] = policy_hash()
+    prompt_policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
+    prompt_policy += execution_identity
+    inputs = topic_inputs(model, section, prompt_policy + json.dumps(policy))
     topic_prompts = {}
     for topic in section['design_topics']:
         focus = focused_prompt.system_prompt(cfg, topic.get('design_prompt', section.get('design_prompt')))
         topic_system = focus if focus is not None else standard_system
-        topic_policy = (focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system) + execution_identity
+        if focus is not None and any(owner.get('answer_contract', {}).get('basis') == 'investigation'
+                                     for owner in [topic, *topic.get('parts', [])]):
+            topic_system += (
+                '\nThis question requests an optional source-based observation plan, not an existing test log. '
+                'Propose record fields (기록 항목) using the shown variables and code points. '
+                'Recording may be proposed even when the source does not mandate it. '
+                'Preserve the proposed nature; never claim completed tests, invented commands, '
+                'measurements, runtime guarantees or new API obligations.'
+            )
+        topic_policy = focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system
+        topic_policy += execution_identity
         topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
-        if topic_policy != policy:
-            inputs[topic['id']] = topic_inputs(model, section, topic_policy)[topic['id']]
-    answers, origins = reusable(model, section, previous, inputs, validate_answers)
+        if topic_policy != prompt_policy:
+            inputs[topic['id']] = topic_inputs(model, section, topic_policy + json.dumps(policy))[topic['id']]
+    def validate_retained(pinned, selected, retained):
+        # Normalize only typography before revalidation, so an added code
+        # marking rule does not discard otherwise source-identical answers.
+        for topic in selected['design_topics']:
+            prefix = f"{selected['id']}/{topic['id']}/"
+            normalize_answer(pinned, retained[topic['id']], [record['text']
+                for key, record in pinned.evidence.items()
+                if key.startswith(prefix) and record.get('status') == 'available'])
+        return validate_answers(pinned, selected, retained)
+    answers, origins = reusable(model, section, previous, inputs, validate_retained)
     for tid in duplicates.repeated_topics(model, section, answers):
         answers.pop(tid), origins.pop(tid, None)
     reused = list(answers)
@@ -306,7 +401,7 @@ def generate(generator, section, previous=None):
         for part in topic['parts']:
             unit = {**topic, 'question': part['question'], '_part_id': part['id'],
                     '_max_statements': part.get('max_statements', 1 if part.get('answer_contract') else 2),
-                    'sources': [s for s in topic['sources'] if s['id'] in part['sources']]}
+                    'sources': [next(s for s in topic['sources'] if s['id'] == ref) for ref in part['sources']]}
             unit.pop('answer_contract', None)
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']
@@ -322,16 +417,25 @@ def generate(generator, section, previous=None):
                     units.append(child)
             else:
                 units.append(unit)
+    replayed = []
+    failures = []
+    archive = None
+    if getattr(generator, 'replay_http', False):
+        from .design_replay import Archive
+        archive = Archive(cfg.build_dir / 'prompts/calls', cfg.agent)
     for topic in units:
-        focused_system, system, policy = topic_prompts[topic['id']]
+        focused_system, system, unit_policy = topic_prompts[topic['id']]
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
+        source_files = {s['id']: s['file'] for s in topic['sources']}
+        context_records = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"] for s in topic['sources']}
         # A focused answer can relate a guard, loop and final check. Splitting
         # those on blank lines makes one quote_id insufficient for that claim.
         scopes = {s['id']: s['scope'] for s in topic['sources'] if 'scope' in s}
         annotated, passages = source_passages(sources, whole_source=focused_system is not None, scopes=scopes)
         if not passages:
             raise ValueError(f"{section['id']}/{topic['id']}: 인용 가능한 소스 구절이 없습니다.")
-        request = {'reader': section.get('reader', ''), 'sources': annotated, 'topic': topic['question'],
+        request = {'reader': section.get('reader', ''), 'sources': annotated, 'source_files': source_files,
+                   'topic': topic['question'],
                    'requirements': {key: (topic['question'] if '_part_id' in topic else requirements[key])
                                     for key in topic['covers']}}
         if 'answer_contract' in topic:
@@ -346,7 +450,8 @@ def generate(generator, section, previous=None):
             'Cover required_terms from the source, without inventing relations merely to include keywords. '
             'Do not invent advice, rationale, guarantees or cleanup behavior. Preserve may/can versus must/shall and all negations. '
             'Each statement has text (one Korean paragraph without newlines), quote_id (the ID of the source passage directly supporting it), '
-            'covers (answered requirement IDs), and kind (behavior or limitation). Required answers must have behavior, not just a limitation. '
+            'evidence (all supporting source IDs, including the quote_id source), covers (answered requirement IDs), '
+            'and kind (behavior or limitation). Required answers must have behavior, not just a limitation. '
             'Put code identifiers in backticks. Do not output citations, links, tables or headings. '
             'Return only a JSON object with a statements array. Return an empty array if the source cannot answer.\n'
         )
@@ -354,12 +459,36 @@ def generate(generator, section, previous=None):
         if focused_system is not None:
             base_user = focused_prompt.user_prompt(topic, annotated,
                 request['requirements'] if '_part_id' not in topic else None)
+        tag = f"{section['id']}_{topic['id']}" + (f"_{topic['_part_id']}" if '_part_id' in topic else '')
+        if '_subpart_id' in topic:
+            tag += f"_sub{topic['_subpart_id']}"
+        schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
+        retained = False
+        if archive:
+            for record in archive.candidates(system, base_user, schema, tag):
+                try:
+                    statements = decode_unit(model, section, topic, record['raw'], sources, passages)
+                    if grounding:
+                        from .grounding import review as check_grounding
+                        reviewer = copy.copy(generator)
+                        reviewer.agent = archive.reviewer(generator.agent)
+                        check_grounding(reviewer, topic, statements, sources, tag + '_replay',
+                                        source_files=source_files, source_scopes=scopes, context_records=context_records)
+                    answers.setdefault(topic['id'], []).extend(statements)
+                    replayed.append({key: record[key] for key in ('receipt', 'request_sha256', 'response_sha256')} |
+                                    {'topic': topic['id'], 'part': topic.get('_part_id')})
+                    retained = True
+                    break
+                except (ValueError, TypeError, KeyError):
+                    continue  # Rejected old output does not consume a fresh retry.
+        if retained:
+            continue
         user = base_user
         last = None
         from . import answer_cache
-        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('cli', 'ollama', 'response-bundle') else {}
+        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in SCHEMA_KINDS else {}
         cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
-                                             {'request': options, **({'policy': policy} if focused_system is not None else {}),
+                                             {'request': options, **({'policy': unit_policy} if focused_system is not None else {}),
                                               'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
         cached = answer_cache.read(cached_path)
         for attempt in range(cfg.max_retries + 1):
@@ -384,39 +513,17 @@ def generate(generator, section, previous=None):
                     raise ValueError(f"{section['id']}/{topic['id']}: 재검토 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
                 raw = generator.agent.chat(system, revision, tag=f"{tag}_{attempt}_revision", **options)
             try:
-                cleaned = re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip())
-                data = json.loads(cleaned)
-                if not isinstance(data, dict) or set(data) != {'statements'}:
-                    raise ValueError('statements만 가진 JSON 객체가 필요합니다.')
-                if ('_part_id' in topic and isinstance(data['statements'], list)
-                        and len(data['statements']) > topic['_max_statements']):
-                    raise ValueError(f"분할 질문은 {topic['_max_statements']}문단 이내로 답해야 합니다.")
-                data['statements'] = resolve_passages(data['statements'], passages)
-                if '_part_id' in topic:
-                    for statement in data['statements']:
-                        statement['part_id'] = topic['_part_id']
-                        if '_subpart_id' in topic:
-                            statement['subpart_id'] = topic['_subpart_id']
-                normalize_answer(model, data['statements'], [*sources.values(), topic['question']])
-                candidate = {topic['id']: data['statements']}
-                subset = {**section, 'design_topics': [topic], 'design_requirements': [
-                    r for r in section['design_requirements'] if r['id'] in topic['covers']]}
-                # A topic covers only part of a reader profile. Check its prose
-                # against the full section's requirements; coverage is checked
-                # before calls and again after assembling every topic.
-                from .reader_profiles import profile_errors
-                errors = profile_errors({**section, 'design_topics': [
-                    {**topic, 'statements': data['statements']}]})
-                if errors:
-                    raise ValueError(' / '.join(errors))
-                subset.pop('reader_profile', None)
-                validate_answers(model, subset, candidate)
+                candidate = {topic['id']: decode_unit(model, section, topic, raw, sources, passages)}
                 prior = {tid: list(statements) for tid, statements in answers.items()}
                 repeated = duplicates.statement_findings(
                     model, section['id'], {**prior, topic['id']: prior.get(topic['id'], []) + candidate[topic['id']]},
                     only_after={**{tid: len(v) for tid, v in prior.items()}, topic['id']: len(prior.get(topic['id'], []))})
                 if repeated:
                     raise ValueError(' / '.join(repeated))
+                if grounding:
+                    from .grounding import review as check_grounding
+                    check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}',
+                                    source_files=source_files, source_scopes=scopes, context_records=context_records)
                 answer_cache.save(cached_path, raw)
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
@@ -434,20 +541,31 @@ def generate(generator, section, previous=None):
                             + '\n수정할 오류: ' + last
                             + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
         else:
-            raise ValueError(f"{section['id']}/{topic['id']}: LLM 답변 검증 실패: {last}")
+            unit_id = f"{section['id']}/{topic['id']}" + (f"/{topic['_part_id']}" if '_part_id' in topic else '')
+            failure = f"{unit_id}: LLM 답변 검증 실패: {last}"
+            if not getattr(generator, 'all_design_units', False):
+                raise ValueError(failure)
+            failures.append(failure)
+    if failures:
+        raise ValueError('\n'.join(failures))
     pinned, resolved, report = validate_answers(model, section, answers)
     artifact = {'schema': 1, 'input_fingerprint': fingerprint(model, section), 'answers': answers,
-                'topic_inputs': inputs, 'reused_topics': reused,
+                'topic_inputs': inputs, 'reused_topics': reused, 'replayed_units': replayed,
                 'generated_topics': [t['id'] for t in section['design_topics'] if t['id'] not in reused],
-                'topic_agents': {tid: origins.get(tid, (f'cli/{cfg.agent.runner}/{cfg.agent.model or "cli-default"}'
-                                    if cfg.agent.kind == 'cli' else f'{cfg.agent.kind}/{cfg.agent.model}')) for tid in answers}}
+                'topic_agents': {tid: origins.get(tid, cfg.agent.label) for tid in answers},
+                'grounding_review': 'passed' if grounding else 'not-run',
+                'grounding_policy': policy.get('grounding_policy')}
     return pinned, resolved, report, artifact
 
 
 def verify(model, section, manuscript):
-    from .export_html import _split
-    meta, body = _split(manuscript)
+    from .document_metadata import split_frontmatter
+    meta, body = split_frontmatter(manuscript)
     artifact = meta.get('generated_design')
+    if isinstance(artifact, dict) and artifact.get('grounding_review') == 'passed':
+        from .grounding import policy_hash
+        if artifact.get('grounding_policy') != policy_hash():
+            raise ValueError('근거 대조 정책이 바뀌었습니다. 실제 모델로 다시 검증·생성해야 합니다.')
     if not isinstance(artifact, dict) or artifact.get('schema') != 1:
         raise ValueError('LLM 설계 답변 기록이 없거나 형식이 잘못되었습니다.')
     if artifact.get('input_fingerprint') != fingerprint(model, section):

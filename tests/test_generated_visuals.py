@@ -52,6 +52,26 @@ def test_automatic_graph_generation_reuse_export_and_carryover(tmp_cfg, automati
     assert _split(path.read_text(encoding='utf-8'))[0]['generated_visuals']['records']['stop-flow']['generation_commit']=='a'*40
 
 
+def test_visual_retry_supplies_rejected_draft_and_current_evidence(tmp_cfg, automatic):
+    _, model, _, original = automatic
+    good = json.dumps(original.draft, ensure_ascii=False)
+    bad = copy.deepcopy(original.draft)
+    bad['edges'][0]['quote_ids'] = ['missing:9']
+    rejected = json.dumps(bad, ensure_ascii=False)
+    class RepairingAgent:
+        def __init__(self): self.calls = 0
+        def chat(self, system, user, **kwargs):
+            self.calls += 1
+            if self.calls == 1:
+                return rejected
+            assert rejected in user and 'missing:9' in user
+            assert 'Current source inputs:' in user and 'stop:0' in user
+            return good
+    agent = RepairingAgent()
+    paths = Generator(tmp_cfg, model, agent).run()
+    assert agent.calls == 2 and paths[0].exists()
+
+
 @pytest.mark.parametrize('mutation',['node-symbol','edge-symbol','quote-id','hash','empty','over-limit','condition','invented-hash'])
 def test_invalid_model_draft_preserves_existing_outputs(tmp_cfg, automatic, mutation):
     section, model, save, agent=automatic
