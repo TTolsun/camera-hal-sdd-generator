@@ -1,7 +1,6 @@
 """Bind generated explanations to archived real model calls, without rewriting text."""
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 import re
@@ -12,6 +11,7 @@ from .config import AgentConfig
 from .cli_agent import RUNNERS
 from .cli_provenance import verify_cli_receipt
 from .llm import LIVE_KINDS
+from .call_records import iter_records
 
 
 def same_answer(left, right):
@@ -34,24 +34,16 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
     responses = []
     json_responses = []
     verified_http, verified_cli = 0, 0
-    for receipt_path in sorted(calls.rglob('*.receipt.json')):
-        prefix = receipt_path.name.removesuffix('.receipt.json')
-        request_path = receipt_path.with_name(prefix + '.request.json')
-        response_path = receipt_path.with_name(prefix + '.response.txt')
-        receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
-        request = json.loads(request_path.read_text(encoding='utf-8'))
-        raw = response_path.read_bytes().decode('utf-8')
+    for record in iter_records(calls):
+        receipt, request, raw = record.receipt, record.request, record.raw
         if provider == 'cli':
             verify_cli_receipt(request, raw, receipt, calls, expected)
             verified_cli += 1
         else:
-            request_hash = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
-            if (receipt.get('request_sha256') != request_hash
-                    or receipt.get('response_sha256') != hashlib.sha256(raw.encode()).hexdigest()
-                    or receipt.get('http_call') is not True or receipt.get('cli_call') is True
+            if (receipt.get('http_call') is not True or receipt.get('cli_call') is True
                     or receipt.get('transport') != provider
                     or receipt.get('model') != model_name):
-                raise ValueError(f'Model call receipt mismatch: {receipt_path.name}')
+                raise ValueError(f'Model call receipt mismatch: {record.receipt_path.name}')
             verified_http += 1
         user = request['user']
         if (receipt.get('provider', {}).get('done_reason') == 'length'

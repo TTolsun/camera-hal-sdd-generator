@@ -12,8 +12,6 @@ import json
 from pathlib import Path
 import shutil
 import time
-from dataclasses import asdict
-import yaml
 
 from .config import load, section_output
 from .document_health import enforce, page_path
@@ -25,6 +23,7 @@ from .generate import Generator
 from .llm import Agent, LIVE_KINDS
 from .site_build import verify_site
 from .state_io import save as save_state
+from .trial_workspace import clone_config, contained_path, reject_symlinks, validate_output, write_snapshot
 
 
 def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None = None):
@@ -34,49 +33,26 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
         raise ValueError('직접 모델 API 시험에는 allow_direct_api: true를 명시해야 합니다.')
     if cfg.agent.kind == 'cli' and previous is not None:
         raise ValueError('CLI 전체 시험은 재개를 지원하지 않습니다. --continue-from 없이 새 시험을 실행하세요.')
-    out = out.resolve()
-    protected = [cfg.root, cfg.source_root, cfg.sdd_dir, cfg.facts_dir]
-    if (out.exists() or any(p.resolve().is_relative_to(out) for p in protected)
-            or any(out.is_relative_to(p.resolve()) for p in protected[1:])):
-        raise ValueError('시험 출력에는 기존 입력·원고를 포함하지 않는 새 디렉터리가 필요합니다.')
+    try:
+        out = validate_output(cfg, out, previous=[previous] if previous else [])
+    except ValueError as exc:
+        raise ValueError(f'시험 출력에는 기존 입력·원고를 포함하지 않는 새 디렉터리가 필요합니다. {exc}') from exc
     if previous:
-        previous = previous.resolve()
-        if previous.is_symlink() or out.is_relative_to(previous) or previous.is_relative_to(out):
-            raise ValueError('재개 시험은 이전 시험과 분리된 새 디렉터리가 필요합니다.')
+        previous = reject_symlinks(previous).resolve()
     out.mkdir(parents=True)
-    trial = copy.deepcopy(cfg)
-    trial.paths.update(sections_file=cfg.sections_file, scenarios_file=cfg.scenarios_file,
-                       prompts=cfg.prompts_dir, templates=cfg.templates_dir, style=cfg.style_dir)
-    trial.paths['glossary_file'] = cfg.paths.get('glossary_file', cfg.root / 'config/glossary.yaml')
-    trial.root = out
-    trial.sdd_dir = out / 'manuscripts'
-    trial.diagrams_dir = trial.sdd_dir / 'diagrams'
-    trial.facts_dir = out / 'facts'
-    site = trial.raw.setdefault('site', {})
-    site['enabled'] = False
-    for key in ('intro', 'mermaid_dir'):
-        if site.get(key):
-            site[key] = str((cfg.root / site[key]).resolve())
-    visuals = trial.raw.get('visuals', {})
-    if visuals.get('file'):
-        visuals['file'] = str((cfg.root / visuals['file']).resolve())
+    sections_snapshot = out / 'sections.yaml'
+    sections_snapshot.write_bytes(cfg.sections_file.read_bytes())
+    trial = clone_config(cfg, out, sections_file=sections_snapshot)
     previous_catalog = cfg.raw.get('site', {}).get('english_catalog')
     if previous_catalog:
-        site['english_catalog'] = str(out / 'english.json')
-    snapshot = copy.deepcopy(trial.raw)
-    snapshot['source'] = {**snapshot.get('source', {}), 'root': str(trial.source_root),
-                          'compile_commands': str(trial.compile_commands)}
-    snapshot['output'] = {'facts_dir': str(trial.facts_dir), 'sdd_dir': str(trial.sdd_dir),
-                          'diagrams_dir': str(trial.diagrams_dir)}
-    snapshot['paths'] = {key: str(value) for key, value in trial.paths.items()}
-    snapshot['agent'] = asdict(trial.agent)
-    (out / 'sdd.yaml').write_text(yaml.safe_dump(snapshot, allow_unicode=True), encoding='utf-8')
+        trial.raw['site']['english_catalog'] = str(out / 'english.json')
+    write_snapshot(trial, out / 'sdd.yaml')
     report = {
         'schema': 1, 'source_commit': None, 'provider': cfg.agent.kind, 'model': cfg.agent.model,
         'runner': cfg.agent.runner if cfg.agent.kind == 'cli' else None,
         'model_selection': 'cli-default' if cfg.agent.kind == 'cli' and not cfg.agent.model else 'explicit',
         'agent_label': cfg.agent.label,
-        'sections_sha256': hashlib.sha256(cfg.sections_file.read_bytes()).hexdigest(),
+        'sections_sha256': hashlib.sha256(sections_snapshot.read_bytes()).hexdigest(),
         'engine_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                           for p in sorted(Path(__file__).parent.glob('*.py'))},
         'settings': {key: getattr(cfg.agent, key) for key in
@@ -135,7 +111,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
         return report
     if previous:
         def resume():
-            old_bytes = (previous / 'evaluation.json').read_bytes()
+            old_bytes = contained_path(previous, 'evaluation.json').read_bytes()
             old = json.loads(old_bytes)
             expected = {s['id'] for s in trial.sections()}
             recorded = [row['section'] for row in old.get('results', [])]
@@ -145,14 +121,13 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
                 raise ValueError('같은 소스·모델의 섹션 결과가 하나 이상 기록된 이전 시험만 재개할 수 있습니다.')
             for name in ('manuscripts', 'build/prompts/calls'):
                 source = previous / name
-                if source.is_symlink() or any(p.is_symlink() for p in source.rglob('*')):
-                    raise ValueError('재개 입력에는 심볼릭 링크를 사용할 수 없습니다.')
+                reject_symlinks(source, recursive=True)
             verified = []
             for row in old['results']:
                 if row['automatic_checks'] != 'passed':
                     continue
                 for item in row['manuscripts']:
-                    source = (previous / item['path']).resolve()
+                    source = contained_path(previous, item['path'])
                     if (not source.is_relative_to((previous / 'manuscripts').resolve())
                             or hashlib.sha256(source.read_bytes()).hexdigest() != item['sha256']):
                         raise ValueError('이전 시험 원고가 기록된 해시와 다릅니다.')
@@ -176,8 +151,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
                                       ('build/translation-prompts/calls', trial.build_dir / 'translation-prompts/calls')]:
                 source = previous / name
                 if source.exists():
-                    if source.is_symlink() or any(p.is_symlink() for p in source.rglob('*')):
-                        raise ValueError('재개 입력에는 심볼릭 링크를 사용할 수 없습니다.')
+                    reject_symlinks(source, recursive=True)
                     shutil.copytree(source, destination, dirs_exist_ok=True)
             report['continued_from_sha256'] = hashlib.sha256(old_bytes).hexdigest()
             return {'previous_results': len(old['results']), 'source_commit': old['source_commit'],
