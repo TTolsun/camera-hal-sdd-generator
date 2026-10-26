@@ -267,10 +267,19 @@ def generate(generator, section, previous=None):
             'Distinguish a source contract from a measured result and from a vendor obligation.'
         )
     from .design_reuse import topic_inputs, reusable
+    standard_system = system
     if focused_system is not None:
         system = focused_system
     policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
     inputs = topic_inputs(model, section, policy)
+    topic_prompts = {}
+    for topic in section['design_topics']:
+        focus = focused_prompt.system_prompt(cfg, topic.get('design_prompt', section.get('design_prompt')))
+        topic_system = focus if focus is not None else standard_system
+        topic_policy = focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system
+        topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
+        if topic_policy != policy:
+            inputs[topic['id']] = topic_inputs(model, section, topic_policy)[topic['id']]
     answers, origins = reusable(model, section, previous, inputs, validate_answers)
     reused = list(answers)
     units = []
@@ -290,6 +299,7 @@ def generate(generator, section, previous=None):
             unit.pop('parts')
             units.append(unit)
     for topic in units:
+        focused_system, system, policy = topic_prompts[topic['id']]
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
         # A focused answer can relate a guard, loop and final check. Splitting
         # those on blank lines makes one quote_id insufficient for that claim.
@@ -378,11 +388,17 @@ def generate(generator, section, previous=None):
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
-                # A stateless HTTP retry cannot repair an answer it never saw.
-                # Keep only the last rejected draft; it is not source evidence.
-                user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
-                        + '\n수정할 오류: ' + last
-                        + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
+                # Retry with the validation error and original evidence.
+                # Standard mode also retains the last rejected draft.
+                if focused_system is not None:
+                    # Repeating a rejected paragraph anchored small-model retries
+                    # to that paragraph. Keep the evidence and actionable error.
+                    user = base_user.replace('\n출력:', '\n작성 조건: ' + last
+                                             + '\n질문의 모든 조건을 근거에서 다시 확인하세요.\n출력:')
+                else:
+                    user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
+                            + '\n수정할 오류: ' + last
+                            + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
         else:
             raise ValueError(f"{section['id']}/{topic['id']}: LLM 답변 검증 실패: {last}")
     pinned, resolved, report = validate_answers(model, section, answers)

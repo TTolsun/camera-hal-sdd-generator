@@ -240,7 +240,9 @@ def test_part_contract_retry_and_saved_answer_revalidation(tmp_cfg, generated, p
             return json.dumps({'statements': [response]}, ensure_ascii=False)
     retry = RetryAgent()
     path = Generator(tmp_cfg, model, retry).run()[0]
-    assert len(retry.calls) == 2 and rejected in retry.calls[1]
+    assert len(retry.calls) == 2
+    assert (rejected in retry.calls[1]) is (prompt_mode == 'standard')
+    assert '원문' in retry.calls[1] or '근거:' in retry.calls[1]
     assert '필수 용어 누락' in retry.calls[1]
     manuscript = path.read_text(encoding='utf-8')
     meta, body = _split(manuscript)
@@ -640,3 +642,20 @@ def test_unqualified_source_template_is_code_not_html():
     answers = [{'text': 'Matrix<double, 3, 3> 행렬을 읽습니다.'}]
     normalize_answer(KnowledgeModel(), answers, ['Matrix<double, 3, 3> cm;'])
     assert answers[0]['text'] == '`Matrix<double, 3, 3>` 행렬을 읽습니다.'
+
+
+def test_topic_prompt_override_is_used_and_invalidates_its_answers(tmp_cfg, generated):
+    from sdd.impact import ImpactReport
+    section, model, save, agent = generated
+    tmp_cfg.raw['review'] = {'design_prompt': 'standard'}
+    (tmp_cfg.prompts_dir / 'focused-design-system.md').write_text('근거만 설명하세요.', encoding='utf-8')
+    topic = section['design_topics'][0]
+    topic['design_prompt'] = 'focused'
+    save()
+    Generator(tmp_cfg, model, agent).run()
+    assert agent.calls[0].startswith('근거:')
+    topic['design_prompt'] = 'standard'
+    save()
+    agent.calls.clear()
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='a'*40, sections=['device']))
+    assert len(agent.calls) == 1 and not agent.calls[0].startswith('근거:')
