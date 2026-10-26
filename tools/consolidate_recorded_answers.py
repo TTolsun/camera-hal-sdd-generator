@@ -112,7 +112,7 @@ def _select(section, entry, original):
     return selected, changed
 
 
-def _prepare(cfg, model, section, entry, source_commit):
+def _prepare(cfg, model, section, entry, source_commit, *, paragraph_layout):
     _exact_fields(entry, ('original_page_sha256', 'before_section', 'remove_statements', 'remove_parts'), 'section plan')
     if not isinstance(entry['remove_statements'], list) or not isinstance(entry['remove_parts'], list):
         raise ValueError('Removal selections must be lists')
@@ -151,6 +151,7 @@ def _prepare(cfg, model, section, entry, source_commit):
     selected, changed = _select(section, entry, artifact)
     pinned, resolved, validation = generated_design.validate_answers(model, section, selected)
     lineage = {'mode': 'recorded-http-answer-selection', 'source_commit': source_commit,
+               'paragraph_layout': paragraph_layout,
                'maintained_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
                'original_page_sha256': page_sha, 'original_body_sha256': artifact['body_sha256'],
                'before_input_fingerprint': artifact['input_fingerprint'],
@@ -187,8 +188,11 @@ def _preserve_producer_metadata(path, original):
     path.write_text(text, encoding='utf-8', newline='\n')
 
 
-def consolidate(cfg, model, plan, out):
+def consolidate(cfg, model, plan, out, *, grouped=True):
     """Validate every selection, render in isolation, then promote the whole batch."""
+    if type(grouped) is not bool:
+        raise ValueError('grouped must be a boolean')
+    paragraph_layout = 'grouped' if grouped else 'legacy'
     _exact_fields(plan, ('schema', 'source_commit', 'sections'), 'plan')
     commit = plan['source_commit']
     if (type(plan['schema']) is not int or plan['schema'] != 1 or not isinstance(commit, str)
@@ -212,7 +216,8 @@ def consolidate(cfg, model, plan, out):
             raise ValueError('Selected pages have conflicting output paths')
         contained_path(out / 'manuscripts', relative)
         outputs.add(relative)
-        prepared[sid], visual, reports[sid], original_meta = _prepare(cfg, model, sections[sid], entry, commit)
+        prepared[sid], visual, reports[sid], original_meta = _prepare(
+            cfg, model, sections[sid], entry, commit, paragraph_layout=paragraph_layout)
         prepared[sid] = (prepared[sid], visual, original_meta)
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.recorded-answers-', dir=out.parent) as temporary:
@@ -223,7 +228,7 @@ def consolidate(cfg, model, plan, out):
             generator.generated_designs[sid] = design
             if visual:
                 generator.generated_visuals[sid] = visual
-            path = generator._prose(sections[sid])
+            path = generator._prose(sections[sid], grouped=grouped)
             _preserve_producer_metadata(path, original_meta)
             text = path.read_text(encoding='utf-8')
             generated_design.verify(model, sections[sid], text)
@@ -233,6 +238,7 @@ def consolidate(cfg, model, plan, out):
             reports[sid] = {**reports[sid], 'output': path.relative_to(stage).as_posix(),
                             'output_sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
         report = {'schema': 1, 'mode': 'recorded-http-answer-selection', 'source_commit': commit,
+                  'paragraph_layout': paragraph_layout,
                   'sections': reports, 'zero_model_calls': True, 'human_review': 'pending', 'publishable': False}
         (stage / 'recomposition.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
         if out.exists():
@@ -247,10 +253,13 @@ def main():
     parser.add_argument('--facts', type=Path)
     parser.add_argument('--plan', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--legacy-paragraphs', action='store_true',
+                        help='Preserve the legacy one-statement-per-paragraph layout and citation order')
     args = parser.parse_args()
     cfg = load(args.config)
     report = consolidate(cfg, KnowledgeModel.load(args.facts or cfg.facts_path),
-                         json.loads(args.plan.read_text(encoding='utf-8')), args.out)
+                         json.loads(args.plan.read_text(encoding='utf-8')), args.out,
+                         grouped=not args.legacy_paragraphs)
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
 

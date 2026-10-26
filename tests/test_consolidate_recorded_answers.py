@@ -165,10 +165,10 @@ def test_partial_render_failure_preserves_all_inputs_and_no_destination(recorded
     plan['sections']['other'] = _plan_entry(other, second)
     originals = {p: p.read_bytes() for p in (path, second)}
     render, visited = Generator._prose, []
-    def fail_second(self, selected):
+    def fail_second(self, selected, **options):
         visited.append(selected['id'])
         if selected['id'] == 'other': raise OSError('Second staged output failed')
-        return render(self, selected)
+        return render(self, selected, **options)
     monkeypatch.setattr(Generator, '_prose', fail_second)
     with pytest.raises(OSError): consolidate(cfg, model, plan, out)
     assert visited == ['device', 'other']
@@ -343,3 +343,76 @@ def test_current_node_limit_is_not_bypassed(recorded):
 
 def test_no_calls_port_always_raises():
     with pytest.raises(RuntimeError, match='cannot call'): NoCalls().chat('system', 'question')
+
+
+def _recorded_layout_case(recorded):
+    cfg, model, section, path, plan, out = recorded
+    source = {'id': 'context', 'file': 'api.h', 'start': 'void stop()', 'end': '}'}
+    section['design_topics'][0]['sources'].append(source)
+    record = copy.deepcopy(model.evidence['device/stop/stop'])
+    record.update(selector=source, file='api.h', line=3, end_line=3)
+    model.evidence['device/stop/context'] = record
+    meta, _ = split_frontmatter(path.read_text(encoding='utf-8'))
+    first = copy.deepcopy(meta['generated_design']['answers']['stop'][0])
+    first['evidence'] = ['context', 'stop']
+    second = {**copy.deepcopy(first), 'text': '호출이 끝나면 제어가 호출자에게 돌아갑니다.',
+              'evidence': ['stop', 'context']}
+    meta['generated_design']['answers']['stop'] = [first, copy.deepcopy(first), second]
+    meta['evidence_fingerprint'] = meta['generated_design']['input_fingerprint'] = fingerprint(model, section)
+    first_paragraph = first['text'] + ' `api.h:3`, `device.cpp:10`'
+    second_paragraph = second['text'] + ' `device.cpp:10`, `api.h:3`'
+    old_body = '# 장치 개요\n\n## 종료 책임\n\n' + '\n\n'.join([first_paragraph, first_paragraph, second_paragraph]) + '\n'
+    _write_page(path, meta, old_body)
+    cfg.sections_file.write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
+    plan['sections']['device'] = _plan_entry(section, path)
+    return meta, [first, second], first_paragraph + '\n\n' + second_paragraph
+
+
+@pytest.mark.parametrize('grouped', [False, True, 'default'])
+def test_paragraph_layout_preserves_legacy_text_or_default_grouping(recorded, grouped):
+    original_meta, selected, legacy = _recorded_layout_case(recorded)
+    cfg, model, section, path, plan, out = recorded
+    original = path.read_bytes()
+    options = {} if grouped == 'default' else {'grouped': grouped}
+    report = consolidate(cfg, model, plan, out, **options)
+    result, body = split_frontmatter((out / 'manuscripts/device.md').read_text(encoding='utf-8'))
+    topic_body = body.split('## 종료 책임\n\n', 1)[1].split('\n\n근거 원문:', 1)[0]
+    if grouped is False:
+        assert topic_body == legacy
+        layout = 'legacy'
+    else:
+        assert topic_body == selected[0]['text'] + ' ' + selected[1]['text'] + ' `api.h:3`, `device.cpp:10`'
+        assert legacy not in body
+        layout = 'grouped'
+    assert report['paragraph_layout'] == report['sections']['device']['paragraph_layout'] == layout
+    assert result['generated_design']['maintenance_lineage'][-1]['paragraph_layout'] == layout
+    assert result['generated_design']['answers']['stop'] == selected
+    for key in ('agent', 'generated_at', 'generation_method'):
+        assert result[key] == original_meta[key]
+    assert path.read_bytes() == original
+    assert verify(model, section, (out / 'manuscripts/device.md').read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
+def test_invalid_layout_flag_fails_before_output(recorded):
+    cfg, model, _, path, plan, out = recorded
+    original = path.read_bytes()
+    with pytest.raises(ValueError, match='grouped must be a boolean'):
+        consolidate(cfg, model, plan, out, grouped=0)
+    assert path.read_bytes() == original and not out.exists()
+
+
+def test_cli_legacy_paragraph_option_is_explicit_and_default_remains_grouped(recorded, monkeypatch):
+    import sys
+    cfg, _, _, _, _, out = recorded
+    monkeypatch.setattr(_tool, 'load', lambda _: cfg)
+    monkeypatch.setattr(_tool.KnowledgeModel, 'load', lambda _: object())
+    monkeypatch.setattr(_tool.json, 'loads', lambda _: {'schema': 1})
+    monkeypatch.setattr(Path, 'read_text', lambda *a, **k: '{}')
+    calls = []
+    monkeypatch.setattr(_tool, 'consolidate', lambda *a, **kw: calls.append(kw) or {})
+    argv = ['consolidate_recorded_answers', '--config', 'config.yaml', '--plan', 'plan.json', '--out', str(out)]
+    monkeypatch.setattr(sys, 'argv', argv)
+    _tool.main()
+    monkeypatch.setattr(sys, 'argv', [*argv, '--legacy-paragraphs'])
+    _tool.main()
+    assert calls == [{'grouped': True}, {'grouped': False}]
