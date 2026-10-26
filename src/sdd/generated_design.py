@@ -356,6 +356,7 @@ def generate(generator, section, previous=None):
     for topic in units:
         sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
         source_files = {s['id']: s['file'] for s in topic['sources']}
+        context_records = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"] for s in topic['sources']}
         # A focused answer can relate a guard, loop and final check. Splitting
         # those on blank lines makes one quote_id insufficient for that claim.
         scopes = {s['id']: s['scope'] for s in topic['sources'] if 'scope' in s}
@@ -400,7 +401,7 @@ def generate(generator, section, previous=None):
                         reviewer = copy.copy(generator)
                         reviewer.agent = archive.reviewer(generator.agent)
                         check_grounding(reviewer, topic, statements, sources, tag + '_replay',
-                                        source_files=source_files, source_scopes=scopes)
+                                        source_files=source_files, source_scopes=scopes, context_records=context_records)
                     answers.setdefault(topic['id'], []).extend(statements)
                     replayed.append({key: record[key] for key in ('receipt', 'request_sha256', 'response_sha256')} |
                                     {'topic': topic['id'], 'part': topic.get('_part_id')})
@@ -436,7 +437,7 @@ def generate(generator, section, previous=None):
                 if grounding:
                     from .grounding import review as check_grounding
                     check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}',
-                                    source_files=source_files, source_scopes=scopes)
+                                    source_files=source_files, source_scopes=scopes, context_records=context_records)
                 answers.setdefault(topic['id'], []).extend(candidate[topic['id']])
                 break
             except (ValueError, TypeError, KeyError) as exc:

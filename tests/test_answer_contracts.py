@@ -103,7 +103,7 @@ def test_reuse_fence_recommendation_is_not_strengthened_to_must_not():
     data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
     topic = next(t for s in data['sections'] if s['id'] == 'camera-model'
                  for t in s['design_topics'] if t['id'] == 'lifetime')
-    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'fence-reuse-caution')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'reuse-advice')
     assert rule['basis'] == 'description'
     check(rule, [statement('펜스는 재사용되지 않으며, 펜스를 쓰는 경우 이 플래그를 피하도록 권고합니다.')], 'fence')
     with pytest.raises(ValueError):

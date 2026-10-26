@@ -715,3 +715,26 @@ def test_unrendered_source_documentation_command_is_rejected(tmp_cfg, generated)
     agent.statement['text'] = r'`stop()`은 대기 요청을 취소하며 \ref camera_operation 설명을 따릅니다.'
     with pytest.raises(ValueError, match='Doxygen'):
         Generator(tmp_cfg, model, agent).run()
+
+
+@pytest.mark.parametrize('tamper', [False, True])
+def test_grounding_uses_verified_full_scope_without_inventing_context(tmp_cfg, tamper):
+    from types import SimpleNamespace
+    from sdd.grounding import review
+    selected = 'return result;'
+    surrounding = 'void Owner::method() { if (ready) { return result; } }'
+    record = {'context': {'text': surrounding, 'sha256': hashlib.sha256(surrounding.encode()).hexdigest()}}
+    class Agent:
+        def chat(self, system, user, **kwargs):
+            assert json.loads(user)['source_context']['s'] == surrounding
+            return json.dumps({'reviews': [{'index': 0, 'supported': True, 'reason': 'Bounded source method.'}]})
+    if tamper:
+        record['context']['text'] = 'Different scope'
+    args = (SimpleNamespace(cfg=tmp_cfg, agent=Agent()), {'question': 'What does this method do?'},
+            [{'text': 'A statement', 'quote': selected, 'evidence': ['s']}], {'s': selected}, 'scoped')
+    options = {'source_scopes': {'s': {'start': 'void Owner::method()', 'end': '}'}}, 'context_records': {'s': record}}
+    if tamper:
+        with pytest.raises(ValueError, match='전체 원문'):
+            review(*args, **options)
+    else:
+        review(*args, **options)

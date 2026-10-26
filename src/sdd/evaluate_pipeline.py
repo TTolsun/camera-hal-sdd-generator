@@ -23,6 +23,7 @@ from .facts.model import KnowledgeModel
 from .generate import Generator
 from .llm import Agent
 from .site_build import verify_site
+from .state_io import save as save_state
 
 
 def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None = None):
@@ -78,9 +79,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
     }
 
     def save():
-        temp = out / 'evaluation.tmp'
-        temp.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-        temp.replace(out / 'evaluation.json')
+        save_state(out / 'evaluation.json', report)
 
     def stage(name, action):
         start = time.monotonic()
