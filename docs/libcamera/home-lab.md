@@ -54,7 +54,7 @@ libcamera의 모든 설계 이유를 코드에서 복원하는 것이 목표는 
 | 소스 | upstream libcamera의 전용 clone | 자동 checkout이 개인 작업에 영향을 주지 않게 합니다. |
 | 빌드 | Meson + Ninja + C++ 툴체인 | 실제 구성의 compile DB와 생성 헤더를 준비합니다. |
 | 문서 생성기 | 이 저장소 + Python 3.11 이상 + uv | 현재 의존성은 `uv.lock`으로 고정합니다. |
-| LLM | 설계 설명은 로컬 Ollama | 설치된 모델과 입력 예산을 기록합니다. |
+| LLM | 기본 Hermes CLI와 해당 CLI의 모델 | 실행기·모델·제공자와 입력 예산을 기록합니다. |
 | 결과 | 로컬 Markdown과 HTML | 리뷰 후 승인된 결과를 별도로 보관합니다. |
 
 GPU와 메모리 요구량은 선택한 모델과 컨텍스트에 따라 달라지므로 고정된 최소 사양을 제시하지 않습니다. 첫 실험에서 최대 메모리, 생성 시간, 입력 생략량을 측정합니다. 예제는 `qwen3.5:9b`를 사용합니다. 실제 변경 전후 검증 범위와 한계는 [로컬 Qwen 갱신 검증](local-qwen-replay.md)에 기록합니다. 다른 함수의 설명 품질까지 일괄 보증하지 않습니다.
@@ -167,16 +167,16 @@ Meson 설정만으로 멈추지 않고 빌드까지 수행하는 이유는 분�
 
    결과는 `examples/libcamera/build/facts/facts.json`, `build/prompts/`, `build/sdd/*.md`, `build/sdd.html`에 생깁니다. 필수 설계 설명은 `dry-run`에서 생성되지 않습니다. 모델 없이 확인할 수 있는 범위는 앞 단계의 facts 추출·검증입니다.
 
-4. 로컬 Ollama 모델이 준비되면 `examples/libcamera/sdd.local.yaml`의 기존 `source` 설정을 유지하면서 `agent` 설정을 추가합니다.
+4. Hermes CLI에 모델·제공자·인증이 준비되면 `examples/libcamera/sdd.local.yaml`의 기존 `source` 설정을 유지하면서 `agent` 설정을 추가합니다.
 
    ```yaml
    agent:
-     kind: ollama
-     model: qwen3.5:9b
-     base_url: http://localhost:11434
+     kind: cli
+     runner: hermes
+     # model을 생략하면 Hermes 설정을 사용합니다.
    ```
 
-   설치된 모델 이름에 맞춰 값을 변경하고 `generate`를 섹션 제한 없이 실행합니다. Vendor·Developer 개요와 상세 설계 문서는 실제 LLM이 필수 질문에 답하므로 `dry-run`에서는 전체 생성이 실패합니다. 자동 검사 실패 시 기존 원고를 보존하며, 모델 출력의 의미는 별도 검토해야 합니다. 번역 카탈로그를 갱신한 뒤 `site.enabled: true`로 사이트 생성도 연결합니다. 주소는 **파이프라인을 실행하는 Linux에서 접속 가능한 주소**여야 합니다. Windows에서 Ollama를 실행한다면 `localhost`로 접근 가능한지 별도로 확인합니다. 위 설정 파일은 Git에서 제외됩니다.
+   설치된 모델 이름에 맞춰 값을 변경하고 `generate`를 섹션 제한 없이 실행합니다. Vendor·Developer 개요와 상세 설계 문서는 실제 LLM이 필수 질문에 답하므로 `dry-run`에서는 전체 생성이 실패합니다. 자동 검사 실패 시 기존 원고를 보존하며, 모델 출력의 의미는 별도 검토해야 합니다. 번역 카탈로그를 갱신한 뒤 `site.enabled: true`로 사이트 생성도 연결합니다. 모델은 **Hermes가 실행되는 환경에서 접속 가능**해야 합니다. [CLI 선택 안내](../inhouse/cli-agents.md)에 따라 OpenCode 또는 Claude Code로 바꿀 수 있습니다. 위 설정 파일은 Git에서 제외됩니다.
 
 ### 3-2. 생성 직후 확인할 항목
 

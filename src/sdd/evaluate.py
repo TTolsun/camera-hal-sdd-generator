@@ -64,8 +64,10 @@ def run(config: Path, models: list[str], cases: list[str], out: Path, repeats: i
     if out.exists():
         raise ValueError("Use a new output directory; failed samples must be preserved")
     cfg = load(config)
-    if cfg.agent.kind not in ("ollama", "openai-compatible"):
+    if cfg.agent.kind not in ("cli", "ollama", "openai-compatible"):
         raise ValueError("A real configured model endpoint is required")
+    if cfg.agent.kind != 'cli' and not cfg.agent.allow_direct_api:
+        raise ValueError('Direct API evaluation requires explicit allow_direct_api: true')
     cfg.max_retries = 0  # Repair prompts would invalidate the fixed-input comparison.
     model = KnowledgeModel.load(cfg.facts_path)
     if not re.fullmatch(r"[0-9a-f]{40}", str(model.meta.get("source_commit", ""))):

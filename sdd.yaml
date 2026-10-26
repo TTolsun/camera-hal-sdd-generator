@@ -36,12 +36,12 @@ tools:
   clang_uml: clang-uml
 
 agent:
-  # ollama | openai-compatible | dry-run
-  # dry-run 은 LLM 을 호출하지 않고 build/prompts/ 에 프롬프트만 기록한다.
-  kind: ollama
-  # 사내 운영 모델. Hermes 서비스를 쓰면 kind 를 openai-compatible 로 바꾸고 base_url 을 그 엔드포인트로 지정한다.
-  model: qwen3.5:4b
-  base_url: http://localhost:11434
+  # CLI 실행이 기본이다. runner: hermes | opencode | claude.
+  # 모델을 생략하면 선택한 CLI의 모델·제공자 설정을 그대로 사용한다.
+  kind: cli
+  runner: hermes
+  # model: <선택한 CLI가 받는 모델 ID>
+  # args: [--provider, <Hermes 제공자>]
   # 소형 모델 기준 입력 상한. 한국어+코드 혼합에서 약 3 자 = 1 토큰으로 보고 6k 토큰에 맞춘 값이다.
   # 초과분은 budget.py 가 우선순위 낮은 사실 블록부터 통째로 제외하고, 제외 목록을 문서 frontmatter 에 남긴다.
   max_input_chars: 18000

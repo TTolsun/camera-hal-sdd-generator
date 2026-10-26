@@ -67,13 +67,23 @@ def revise(cfg, model, report, options):
             # Numeric names cannot escape the audit directory through configured IDs.
             stem = f"{len(changed):04d}"
             (audit_dir / f"{stem}.prompt.txt").write_text(prompt, encoding="utf-8")
-            command = options.get("command", ["hermes", "--ignore-rules", "--toolsets", "todo", "--reasoning", "none", "-z", "{prompt}"])
-            if not isinstance(command, list) or not command or any(not isinstance(a, str) for a in command):
+            if cfg.agent.kind == 'cli' and 'command' in options:
+                raise ValueError('CLI 모드에서는 automation.hermes.command 대신 agent.command를 사용하세요.')
+            if cfg.agent.kind == 'cli':
+                from .llm import Agent
+                result_text = Agent(replace(cfg.agent, timeout_sec=int(options.get('timeout_sec', cfg.agent.timeout_sec))),
+                                    audit_dir).chat('Review only the supplied evidence.', prompt, tag=stem)
+                result = subprocess.CompletedProcess([], 0, result_text, '')
+                command = None
+            else:
+                command = options.get("command", ["hermes", "--ignore-rules", "--toolsets", "todo", "--reasoning", "none", "-z", "{prompt}"])
+            if command is not None and (not isinstance(command, list) or not command or any(not isinstance(a, str) for a in command)):
                 raise ValueError("automation.hermes.command는 명령 인자 목록이어야 합니다.")
-            if not any("{prompt}" in arg for arg in command):
+            if command is not None and not any("{prompt}" in arg for arg in command):
                 raise ValueError("Hermes command에 {prompt} 인자가 필요합니다.")
             try:
-                result = subprocess.run([arg.replace("{prompt}", prompt) for arg in command],
+                if command is not None:
+                    result = subprocess.run([arg.replace("{prompt}", prompt) for arg in command],
                                         cwd=audit_dir, capture_output=True, text=True, encoding="utf-8",
                                         timeout=int(options.get("timeout_sec", 600)), check=True)
             except subprocess.TimeoutExpired as exc:

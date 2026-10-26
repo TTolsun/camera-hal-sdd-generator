@@ -59,8 +59,11 @@
 
 | 키 | 기본값 | 뜻 |
 |---|---|---|
-| `kind` | `dry-run` | `ollama`, `openai-compatible`, `response-bundle`, `dry-run`. `dry-run`은 모델을 부르지 않고 프롬프트만 `build/prompts/`에 남깁니다. |
-| `model` | `qwen3.5:4b` | 모델 이름. |
+| `kind` | `cli` | 기본은 CLI 실행입니다. `ollama`, `openai-compatible`, `response-bundle`, `dry-run`도 명시적으로 선택할 수 있습니다. `dry-run`은 모델을 호출하지 않습니다. |
+| `runner` | `hermes` | CLI 실행기입니다. `hermes`, `opencode`, `claude`를 독립적으로 선택합니다. 실패 시 자동 전환하지 않습니다. |
+| `model` | CLI는 빈 문자열 | CLI 모드에서는 생략 시 CLI 기본 모델을 사용합니다. 명시하면 `--model`로 전달합니다. API·파일 교환 모드의 기존 기본값은 `qwen3.5:4b`입니다. |
+| `command`, `args` | `[]` | CLI 실행 접두사와 추가 인자 목록입니다. 인증 토큰이나 셸 명령 문자열을 넣지 않습니다. |
+| `allow_direct_api` | `false` | 별도 비교 시험에서만 직접 API 호출을 명시적으로 허용합니다. CLI 실패 시 자동으로 켜지지 않습니다. |
 | `base_url` | `http://localhost:11434` | 엔드포인트. 인증 토큰은 환경 변수 `SDD_AGENT_API_KEY`로만 전달합니다. |
 | `max_input_chars` | `18000` | 입력 상한. 넘으면 우선순위 낮은 사실부터 빼고 그 목록을 원고에 남깁니다. |
 | `temperature` | `0.1` | 샘플링 온도. |
@@ -77,7 +80,7 @@
 
 ### 파일로 LLM 응답 교환하기
 
-`response-bundle`은 네트워크 호출 없이 별도 LLM 실행기가 만든 응답을 같은 생성·검증 경로로 가져옵니다. 생성기는 `<해시>.request.json`을 기록하고 대응하는 `<해시>.response.json`을 읽습니다. 응답이 없으면 기존 원고를 보존하고 실패합니다. 별도 실행기가 응답을 만든 뒤 같은 생성 명령을 다시 실행하세요. 여러 주제는 순서대로 요청되므로 새 요청이 나오면 이 과정을 반복합니다. 이 방식 자체가 LLM을 실행하거나 새 응답을 자동 작성하지는 않습니다. 연결된 모델의 자동 호출에는 `ollama` 또는 `openai-compatible`을 사용합니다.
+`response-bundle`은 네트워크 호출 없이 별도 LLM 실행기가 만든 응답을 같은 생성·검증 경로로 가져옵니다. 생성기는 `<해시>.request.json`을 기록하고 대응하는 `<해시>.response.json`을 읽습니다. 응답이 없으면 기존 원고를 보존하고 실패합니다. 별도 실행기가 응답을 만든 뒤 같은 생성 명령을 다시 실행하세요. 여러 주제는 순서대로 요청되므로 새 요청이 나오면 이 과정을 반복합니다. 이 방식 자체가 LLM을 실행하거나 새 응답을 자동 작성하지는 않습니다. 모델 자동 호출은 기본 `cli`와 선택한 `runner`를 사용합니다. 직접 API 비교 시험에는 별도 허용 설정이 필요합니다. [CLI 선택 안내](../inhouse/cli-agents.md)를 따릅니다.
 
 요청 해시는 `system`, `user`, `response_schema`를 `json.dumps(..., ensure_ascii=False, sort_keys=True)`로 직렬화한 UTF-8의 SHA-256입니다. 응답에는 요청의 `schema`, `model`, `request_sha256`을 그대로 복사하고, `response`에 모델 출력 문자열을 넣습니다. 프롬프트·근거·응답 스키마가 바뀌면 이전 응답을 사용할 수 없습니다. `model`은 생성 주체를 기록하는 이름이며 인증된 신원이나 품질 보증이 아닙니다.
 

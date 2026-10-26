@@ -25,7 +25,7 @@ class PageWriter:
         }
         method = extra.get("generation_method", "")
         if method in ("facts-and-llm", "mixed"):
-            meta["agent"] = f"{self.cfg.agent.kind}/{self.cfg.agent.model}"
+            meta["agent"] = self.cfg.agent.label
         label, scope = generation_info(method)
         evidence = f"    - 생성 방식: {label}\n    - 검증 범위: {scope}\n" + evidence
         fm = "\n".join(f"{k}: {v}" for k, v in meta.items())

@@ -686,3 +686,22 @@ def test_topic_prompt_override_is_used_and_invalidates_its_answers(tmp_cfg, gene
     agent.calls.clear()
     Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='a'*40, sections=['device']))
     assert len(agent.calls) == 1 and not agent.calls[0].startswith('근거:')
+
+
+@pytest.mark.parametrize('selection', ['runner', 'model', 'args', 'default'])
+def test_cli_selection_invalidates_topic_reuse(tmp_cfg, generated, selection):
+    from sdd.impact import ImpactReport
+    section, model, save, agent = generated
+    tmp_cfg.agent.kind = 'cli'
+    tmp_cfg.agent.runner = 'hermes'
+    tmp_cfg.agent.model = 'approved-model' if selection != 'default' else ''
+    Generator(tmp_cfg, model, agent).run()
+    agent.calls.clear()
+    if selection == 'runner':
+        tmp_cfg.agent.runner = 'claude'
+    elif selection == 'model':
+        tmp_cfg.agent.model = 'other-model'
+    elif selection == 'args':
+        tmp_cfg.agent.args = ['--provider', 'other']
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert len(agent.calls) == 1

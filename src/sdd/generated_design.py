@@ -267,16 +267,24 @@ def generate(generator, section, previous=None):
             'Distinguish a source contract from a measured result and from a vendor obligation.'
         )
     from .design_reuse import topic_inputs, reusable
+    execution_identity = ''
+    if cfg.agent.kind == 'cli':
+        # Default CLI model/provider settings can change outside this config.
+        # Keep old provenance only when the caller explicitly selected a model.
+        execution_identity = json.dumps({'runner': cfg.agent.runner, 'model': cfg.agent.model,
+                               'command': cfg.agent.command, 'args': cfg.agent.args}, sort_keys=True)
+        if not cfg.agent.model:
+            previous = None
     standard_system = system
     if focused_system is not None:
         system = focused_system
-    policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
+    policy = (focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system) + execution_identity
     inputs = topic_inputs(model, section, policy)
     topic_prompts = {}
     for topic in section['design_topics']:
         focus = focused_prompt.system_prompt(cfg, topic.get('design_prompt', section.get('design_prompt')))
         topic_system = focus if focus is not None else standard_system
-        topic_policy = focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system
+        topic_policy = (focused_prompt.reuse_policy(cfg, topic_system) if focus is not None else topic_system) + execution_identity
         topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
         if topic_policy != policy:
             inputs[topic['id']] = topic_inputs(model, section, topic_policy)[topic['id']]
@@ -343,7 +351,7 @@ def generate(generator, section, previous=None):
         user = base_user
         last = None
         from . import answer_cache
-        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
+        options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in ('cli', 'ollama', 'response-bundle') else {}
         cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
                                              {'request': options, **({'policy': policy} if focused_system is not None else {}),
                                               'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
@@ -419,7 +427,8 @@ def generate(generator, section, previous=None):
     artifact = {'schema': 1, 'input_fingerprint': fingerprint(model, section), 'answers': answers,
                 'topic_inputs': inputs, 'reused_topics': reused,
                 'generated_topics': [t['id'] for t in section['design_topics'] if t['id'] not in reused],
-                'topic_agents': {tid: origins.get(tid, f'{cfg.agent.kind}/{cfg.agent.model}') for tid in answers}}
+                'topic_agents': {tid: origins.get(tid, (f'cli/{cfg.agent.runner}/{cfg.agent.model or "cli-default"}'
+                                    if cfg.agent.kind == 'cli' else f'{cfg.agent.kind}/{cfg.agent.model}')) for tid in answers}}
     return pinned, resolved, report, artifact
 
 
