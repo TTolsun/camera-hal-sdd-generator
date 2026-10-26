@@ -1,4 +1,12 @@
 terms:
+# Public source 2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f:
+# src/libcamera/request.cpp:422-428; src/libcamera/framebuffer.cpp:31-59,224-256.
+- term: 메타데이터
+  definition: 영상 픽셀과 함께 확인하는 촬영 정보입니다. Request의 메타데이터는 ControlList로 제공되며, FrameBuffer의 FrameMetadata는 촬영 상태·타임스탬프·사용한 바이트 수 등을 담습니다. FrameMetadata의 다른 필드가 유효한지는 촬영 상태에 따라 달라집니다.
+  aliases: []
+- term: 프레임 버퍼
+  definition: 영상 데이터를 저장할 메모리 영역을 나타내는 FrameBuffer 객체입니다. 각 메모리 평면의 파일 기술자·오프셋·길이와 프레임별 메타데이터를 제공합니다. 촬영 성공·오류·취소에 따라 데이터와 메타데이터의 유효 범위가 달라집니다.
+  aliases: []
 - term: CCM
   definition: IPU3 컬러 교정 행렬 알고리즘을 의미합니다.
   aliases: []

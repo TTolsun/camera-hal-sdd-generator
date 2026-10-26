@@ -57,6 +57,94 @@
     const open = document.querySelector('#sidebar').classList.toggle('is-open');
     menu.setAttribute('aria-expanded', String(open));
   });
+  // Share the preference across pages and editions, but not across hosted sites.
+  const sidebar = document.querySelector('#sidebar');
+  const layout = sidebar.parentElement;
+  const desktop = window.matchMedia('(min-width: 761px)');
+  const storageRoot = english ? new URL('../', root) : root;
+  const widthKey = `sdd.sidebar.width:${storageRoot.pathname}`;
+  const resizer = document.createElement('div');
+  resizer.className = 'sidebar-resizer';
+  resizer.tabIndex = 0;
+  resizer.setAttribute('role', 'separator');
+  resizer.setAttribute('aria-orientation', 'vertical');
+  resizer.setAttribute('aria-controls', 'sidebar');
+  const resizeHelp = t('메뉴 너비 조절: 드래그 또는 좌우 방향키. 두 번 클릭하면 기본 너비로 돌아갑니다.',
+    'Resize menu: drag or use the left and right arrow keys. Double-click to reset.');
+  resizer.setAttribute('aria-label', resizeHelp);
+  resizer.title = resizeHelp;
+  sidebar.after(resizer);
+  const bounds = () => ({min: 180, max: Math.floor(Math.min(420, layout.clientWidth * .45))});
+  function syncWidth() {
+    if (!desktop.matches) return;
+    const {min, max} = bounds();
+    resizer.setAttribute('aria-valuemin', String(min));
+    resizer.setAttribute('aria-valuemax', String(max));
+    resizer.setAttribute('aria-valuenow', String(Math.round(sidebar.getBoundingClientRect().width)));
+  }
+  function setWidth(value) {
+    const {min, max} = bounds();
+    layout.style.setProperty('--preferred-sidebar-width', `${Math.max(min, Math.min(max, value))}px`);
+    syncWidth();
+  }
+  function saveWidth() {
+    try {
+      const value = layout.style.getPropertyValue('--preferred-sidebar-width');
+      if (value) localStorage.setItem(widthKey, String(parseFloat(value)));
+      else localStorage.removeItem(widthKey);
+    } catch (_) { /* Resizing still works when storage is unavailable. */ }
+  }
+  try {
+    const saved = Number(localStorage.getItem(widthKey));
+    if (Number.isFinite(saved) && saved >= 180 && saved <= 420) {
+      layout.style.setProperty('--preferred-sidebar-width', `${saved}px`);
+    }
+  } catch (_) { /* Keep the stylesheet default. */ }
+  let drag = null;
+  function finishResize() {
+    if (!drag) return;
+    const {id} = drag;
+    drag = null;
+    document.body.classList.remove('resizing-sidebar');
+    if (resizer.hasPointerCapture(id)) resizer.releasePointerCapture(id);
+    saveWidth();
+  }
+  resizer.addEventListener('pointerdown', event => {
+    if (!desktop.matches || event.button !== 0 || !event.isPrimary) return;
+    event.preventDefault();
+    drag = {id: event.pointerId, x: event.clientX, width: sidebar.getBoundingClientRect().width};
+    resizer.setPointerCapture(event.pointerId);
+    resizer.focus({preventScroll: true});
+    document.body.classList.add('resizing-sidebar');
+  });
+  resizer.addEventListener('pointermove', event => {
+    if (drag && event.pointerId === drag.id) setWidth(drag.width + event.clientX - drag.x);
+  });
+  for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    resizer.addEventListener(name, finishResize);
+  }
+  window.addEventListener('blur', finishResize);
+  resizer.addEventListener('keydown', event => {
+    if (!desktop.matches) return;
+    const {min, max} = bounds();
+    const width = sidebar.getBoundingClientRect().width;
+    const step = event.shiftKey ? 40 : 10;
+    const values = {ArrowLeft: width - step, ArrowRight: width + step, Home: min, End: max};
+    if (!(event.key in values)) return;
+    event.preventDefault();
+    setWidth(values[event.key]);
+    saveWidth();
+  });
+  resizer.addEventListener('dblclick', () => {
+    layout.style.removeProperty('--preferred-sidebar-width');
+    syncWidth();
+    saveWidth();
+  });
+  window.addEventListener('resize', () => {
+    finishResize();
+    syncWidth();
+  });
+  syncWidth();
   document.querySelectorAll('dialog [data-close]').forEach(button => {
     button.addEventListener('click', () => button.closest('dialog').close());
   });
