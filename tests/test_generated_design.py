@@ -871,3 +871,19 @@ def test_topic_prompt_override_is_used_and_invalidates_its_answers(tmp_cfg, gene
     agent.calls.clear()
     Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='a'*40, sections=['device']))
     assert len(agent.calls) == 1 and not agent.calls[0].startswith('근거:')
+
+
+def test_part_typography_matches_other_verified_sources_in_same_topic(tmp_cfg, generated):
+    from sdd.generated_design import decode_unit
+    from sdd.facts.model import ClassInfo
+    section, model, save, agent = generated
+    model.classes['ns::Fence'] = ClassInfo('ns::Fence')
+    model.evidence['device/stop/other'] = {'status': 'available', 'text': 'class Fence;'}
+    unit = section['design_topics'][0]
+    statement = copy.deepcopy(agent.statement)
+    statement['text'] = 'Fence 사용 시 stop()은 종료 요청을 취소하는 함수를 호출합니다.'
+    raw = json.dumps({'statements': [statement]}, ensure_ascii=False)
+    source = model.evidence['device/stop/stop']['text']
+    answer = decode_unit(model, section, unit, raw, {'stop': source}, {})[0]
+    assert answer['text'] == '`Fence` 사용 시 stop()은 종료 요청을 취소하는 함수를 호출합니다.'
+    assert answer['text'].replace('`', '') == statement['text']

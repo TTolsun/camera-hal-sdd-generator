@@ -265,7 +265,14 @@ def decode_unit(model, section, topic, raw, sources, passages):
             statement['part_id'] = topic['_part_id']
             if '_subpart_id' in topic:
                 statement['subpart_id'] = topic['_subpart_id']
-    normalize_answer(model, data['statements'], [*sources.values(), topic['question'],
+    # Parts share a page's typography rules. A source-backed class name can
+    # occur in another part of the same topic (e.g. Fence versus fences).
+    # These records only identify code names; drafting and grounding still use
+    # the selected part's evidence, and no model words are added or changed.
+    prefix = f"{section['id']}/{topic['id']}/"
+    names_context = [record['text'] for key, record in model.evidence.items()
+                     if key.startswith(prefix) and record.get('status') == 'available']
+    normalize_answer(model, data['statements'], [*sources.values(), *names_context, topic['question'],
         *[value for source in topic['sources'] for value in source.get('scope', {}).values()]])
     candidate = {topic['id']: data['statements']}
     subset = {**section, 'design_topics': [topic], 'design_requirements': [
