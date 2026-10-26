@@ -102,6 +102,34 @@ def generated(tmp_cfg):
     return section, model, save, Agent()
 
 
+@pytest.mark.parametrize('kind,structured,label', [
+    ('cli', True, 'cli/hermes/test-model'),
+    ('ollama', True, 'ollama/test-model'),
+    ('response-bundle', True, 'response-bundle/test-model'),
+    ('openai-compatible', False, 'openai-compatible/test-model'),
+])
+def test_generate_uses_explicit_dependencies_and_transport_policy(tmp_cfg, generated, kind, structured, label):
+    from sdd.generated_design import generate
+    section, model, _, agent = generated
+    tmp_cfg.agent.kind = kind
+    tmp_cfg.agent.model = 'test-model'
+    calls = []
+    chat = agent.chat
+    def capture(system, user, **kwargs):
+        calls.append(kwargs)
+        return chat(system, user, **kwargs)
+    agent.chat = capture
+    pinned, resolved, report, artifact = generate(tmp_cfg, model, agent, section)
+    assert len(calls) == 1
+    assert ('response_schema' in calls[0]) is structured
+    assert calls[0]['tag'] == 'device_stop_0'
+    assert pinned is not model
+    assert resolved['design_topics'][0]['statements'][0]['quote'] == 'void stop() { cancelPending(); }'
+    assert report['human_review'] == 'pending'
+    assert artifact['topic_agents'] == {'stop': label}
+    assert not tmp_cfg.sdd_dir.exists()
+
+
 def test_generate_export_and_carryover_required_llm_answers(tmp_cfg, generated):
     section, model, save, agent = generated
     path = Generator(tmp_cfg, model, agent).run()[0]

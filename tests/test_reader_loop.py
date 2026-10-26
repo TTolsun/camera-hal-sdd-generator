@@ -115,7 +115,7 @@ def test_budget_counts_failed_calls_and_checks_elapsed_time_before_http():
     class Broken:
         cfg=type('Cfg',(),dict(max_input_chars=100,timeout_sec=100))()
         def chat(self,*args,**kw):raise OSError('offline')
-    wrapped=budget.wrap(Broken())
+    wrapped=budget.wrap(Broken(), Broken.cfg)
     with pytest.raises(OSError):wrapped.chat('x','y')
     with pytest.raises(BudgetExceeded,match='call_limit'):wrapped.chat('x','y')
     now[0]=5
@@ -327,3 +327,21 @@ def test_inconsistent_diagnosis_is_reasked_within_shared_budget(project,tmp_path
     assert result['stop_reason']=='model_review_complete',result
     assert result['http_attempts']==7
     assert all(r['reviews'][0]['diagnosis_attempts']==2 for r in result['rounds'])
+
+
+def test_budget_needs_only_chat_and_explicit_settings():
+    from sdd.config import AgentConfig
+    now = [1]
+    budget = Budget(Limits(max_calls=2, max_seconds=5), clock=lambda: now[0])
+    settings = AgentConfig(max_input_chars=10, timeout_sec=100)
+    class ChatOnly:
+        def chat(self, system, user, **kwargs):
+            return system + user
+    wrapped = budget.wrap(ChatOnly(), settings)
+    now[0] = 3
+    assert wrapped.chat('a', 'b', response_schema={}) == 'ab'
+    assert settings.timeout_sec == 3
+    assert budget.calls == 1
+    with pytest.raises(BudgetExceeded, match='input_limit'):
+        wrapped.chat('123456', '123456')
+    assert budget.calls == 1

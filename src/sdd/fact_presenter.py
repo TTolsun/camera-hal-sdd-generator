@@ -8,14 +8,15 @@ from .matching import is_anonymous, matches_symbol, package_of, package_selected
 
 _MAX_DEPS = 20
 
+
 class FactPresenter:
     def __init__(self, model, package_depth):
         self.model, self.package_depth = model, package_depth
 
-    def _sorted_classes(self) -> list[ClassInfo]:
+    def sorted_classes(self) -> list[ClassInfo]:
         return sorted(self.model.classes.values(), key=lambda x: x.name)
 
-    def _package_table(self, pats: list[str]) -> str:
+    def package_table(self, pats: list[str]) -> str:
         rows = ["| 패키지 | 클래스 수 | 대표 클래스 |", "|---|---|---|"]
         for name in sorted(self.model.packages):
             if not _pkg_selected(name, pats):
@@ -27,7 +28,7 @@ class FactPresenter:
             rows.append(f"| `{name}` | {len(p.classes)} | {reps} |")
         return "\n".join(rows)
 
-    def _package_deps_table(self, pats: list[str]) -> str:
+    def package_deps_table(self, pats: list[str]) -> str:
         # 패키지 표에 없는 이름은 의존 표에서도 뺀다. 두 표의 기준이 다르면 읽는 사람이
         # 표에 없는 패키지를 근거 없이 추측하게 된다.
         pkg_of = {name: c.package for name, c in self.model.classes.items() if c.package}
@@ -53,7 +54,7 @@ class FactPresenter:
                         " `facts.json` 의 `relations` 에 있습니다.")
         return "\n".join(rows)
 
-    def _entrypoint_table(self, pats: list[str]) -> str:
+    def entrypoint_table(self, pats: list[str]) -> str:
         rows = ["| 함수 | 위치 | 설명 |", "|---|---|---|"]
         for name in sorted(self.model.functions):
             if not matches_symbol(name, pats):
@@ -63,7 +64,7 @@ class FactPresenter:
             rows.append(f"| `{name}()` | {f'`{loc.cite()}`' if loc else '위치 없음'} | {fn.brief or '확인 필요'} |")
         return "\n".join(rows) if len(rows) > 2 else ""
 
-    def _entity_files(self, sec: dict[str, Any]) -> set[str]:
+    def entity_files(self, sec: dict[str, Any]) -> set[str]:
         """표에 file:line 이 없는 절(개요)에서도 근거 파일을 남기기 위해, 표에 오른 엔티티의 파일을 모은다."""
         facts = sec.get("facts", {})
         files: set[str] = set()
@@ -89,9 +90,6 @@ class FactPresenter:
             files.update(m.loc.file for m in sc.messages if m.loc)
         return files
 
+
 def _pkg_selected(name: str, pats: list[str]) -> bool:
     return package_selected(name, pats)
-
-def _match_class(c: ClassInfo, sec: dict[str, Any]) -> bool:
-    pats = sec.get("facts", {}).get("classes") or []
-    return matches_symbol(c.name, pats)
