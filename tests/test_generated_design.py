@@ -731,7 +731,7 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     from sdd.contract_schema import configuration_errors
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
-    assert len(designs) == 11
+    assert len(designs) == 13
     for section in designs:
         assert section['design_generation'] == 'llm'
         assert not configuration_errors(section)
@@ -747,13 +747,14 @@ def test_reader_profile_validates_full_coverage_and_retries_dense_topic(tmp_cfg,
     template = section['design_topics'][0]
     section['design_topics'] = []
     section['design_requirements'] = []
-    for aspect, question in PROFILES[profile].items():
+    for number, (aspect, question) in enumerate(PROFILES[profile].items()):
         section['design_topics'].append({**copy.deepcopy(template), 'id': aspect, 'covers': [aspect]})
         section['design_requirements'].append(dict(id=aspect, question=question, aspects=[aspect]))
         # 주제마다 다른 발췌를 근거로 삼아야 같은 근거의 중복 설명으로 반려되지 않는다.
         record = copy.deepcopy(model.evidence['device/stop/stop'])
         record['text'] = record['text'] + f' /* {aspect} */'
         record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+        record['line'] = record['end_line'] = 100 * (number + 1)
         model.evidence[f'device/{aspect}/stop'] = record
     save()
 

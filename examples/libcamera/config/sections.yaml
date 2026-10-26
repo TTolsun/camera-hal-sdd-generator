@@ -5,7 +5,7 @@ sections:
   title: libcamera 제품 개요
   output: vendor-overview.md
   kind: prose
-  lead: 제공 기능과 공통 설계의 강점을 확인하고 도입할 범위를 판단하세요.
+  lead: 제품이 무엇이고 어디까지 지원하는지, 공통 설계가 구현자에게 해 주는 일을 확인하고 도입할 범위를 판단하세요.
   reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
   design_generation: llm
   semantic_review: true
@@ -30,11 +30,17 @@ sections:
   - include/libcamera/internal/ipa_manager.h
   - src/libcamera/camera.cpp
   - Documentation/introduction.rst
+  - Documentation/platform_support.rst
+  - meson_options.txt
   design_requirements:
   - id: value
     question: 어떤 고객 문제를 해결하며 어떤 환경을 대상으로 합니까?
     aspects:
     - benefits
+  - id: support
+    question: 어디까지 지원하며 지원 대상은 어떻게 고릅니까?
+    aspects:
+    - capabilities
   - id: capabilities
     question: 어떤 기능을 제공하며 지원 범위는 어떤 구현에 달려 있습니까?
     aspects:
@@ -47,32 +53,104 @@ sections:
     question: 장치에 동시에 제출하는 요청 수의 기본 한도와 대기 요청의 처리는 무엇입니까?
   design_topics:
   - id: value
-    title: 복잡한 카메라를 공통 API로 제어하기
-    question: Linux 기반 카메라의 하드웨어 구성과 이미지 제어 알고리즘을 공통 방법으로 다루는 가치를 설명하세요. 제품 성능이나 지원 기종을 보장하지 마세요.
+    title: 무엇이며 누구의 어떤 문제를 푸는가
+    question: libcamera가 무엇인지, 누구의 어떤 문제를 푸는지, 사용하면 무엇이 쉬워지는지, 어떤 계층 위에 놓이는지 설명하세요. 제품 성능이나 지원 기종을 보장하지 마세요.
     covers:
     - value
     sources:
-    - id: introduction
+    - id: what
       file: Documentation/introduction.rst
-      start: 'What is libcamera for?
-
-        '
-      end: '.. graphviz:: mali-c55.dot'
+      start: libcamera is an open source complex camera support library
+      end: involved in capturing images from complex cameras on Linux systems.
+    - id: problem
+      file: Documentation/introduction.rst
+      start: The usage of these drivers to provide a functioning camera stack is a
+      end: necessitate bespoke handling.
+    - id: for
+      file: Documentation/introduction.rst
+      start: libcamera provides a complete camera stack for Linux-based systems to abstract
+      end: 'having to deal with this:'
+    - id: stack
+      file: Documentation/introduction.rst
+      start: 'The camera stack comprises four software layers. From bottom to top:'
+      end: the scope of the libcamera project.
     parts:
-    - id: purpose
-      question: 공식 소개가 설명하는 Linux 기반 하드웨어 구성·이미지 제어 알고리즘의 공통화 목적을 한 문단으로 설명하세요. 제품 성능이나 기종 목록은 이 질문의 범위가 아닙니다.
+    - id: what
+      question: libcamera가 어떤 종류의 라이브러리이고 어떤 시스템을 대상으로 하는지 한 문단으로 설명하세요. 제품 성능이나 기종 목록은 이 질문의 범위가 아닙니다.
       sources:
-      - introduction
+      - what
       answer_contract:
         basis: description
         required_terms:
         - - Linux
         - - libcamera
         reject_patterns: []
+    - id: problem
+      question: 카메라 하드웨어를 쓰려는 쪽이 기기마다 어떤 문제를 겪는지, 그 일을 누가 맡아 왔는지 한 문단으로 설명하세요. 이유나 영향을 추측하지 마세요.
+      sources:
+      - problem
+    - id: easier
+      question: libcamera를 쓰면 하드웨어 구성과 이미지 제어 알고리즘을 다루는 일이 개발자에게 어떻게 달라지는지 한 문단으로 설명하세요. 성능이나 개발 기간 절감량은 추정하지 마세요.
+      sources:
+      - for
+    - id: layers
+      question: 카메라 스택의 네 계층을 아래에서 위 순서로, 각 계층이 맡는 일과 함께 설명하세요. 계층에 들어가는 구체적인 도구는 소스가 예로 든 것만 쓰세요.
+      sources:
+      - stack
+      max_statements: 4
+  - id: support
+    title: 지원하는 하드웨어와 빌드 선택
+    question: libcamera가 전용 파이프라인 핸들러로 지원하는 하드웨어 플랫폼과 범용으로 지원하는 대상, 빌드 때 파이프라인 핸들러를 고르는 방법을 설명하세요. 특정 기기의 동작이나 성능을 보장하지 마세요.
+    covers:
+    - support
+    sources:
+    - id: platforms
+      file: Documentation/platform_support.rst
+      start: The library currently supports the following hardware platforms specifically
+      end: Virtual media controller driver for test use cases (vimc)
+    - id: pipelines
+      file: meson_options.txt
+      start: option('pipelines',
+      end: precedence.')
+    parts:
+    - id: dedicated
+      question: 전용 파이프라인 핸들러로 지원한다고 문서가 적은 하드웨어 플랫폼을 모두 나열하세요. 지원 기종이나 성능은 보장하지 마세요.
+      sources:
+      - platforms
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Mali-C55
+        - - IPU3
+          - ipu3
+        - - rkisp1
+        - - rpi/vc4
+        reject_patterns: []
+    - id: generic
+      question: 전용 핸들러 없이 범용으로 지원한다고 문서가 적은 대상을 모두 나열하세요.
+      sources:
+      - platforms
+      answer_contract:
+        basis: description
+        required_terms:
+        - - uvcvideo
+        - - simple
+        - - vimc
+        reject_patterns: []
+    - id: build
+      question: 빌드할 때 pipelines 옵션으로 파이프라인 핸들러를 고르는 방법과 auto·all의 의미를 설명하세요. 어떤 값이 어떤 기기에 맞는지는 추정하지 마세요.
+      sources:
+      - pipelines
+      answer_contract:
+        basis: description
+        required_terms:
+        - - pipelines
+        - - auto
+        - - all
+        reject_patterns: []
   - id: capabilities
     title: 제공 기능과 지원 범위
-    question: Camera가 하나의 이미지 소스에서 하나 이상의 스트림을 제공하는 기능을 설명하세요. 하드웨어 지원은 장치별 PipelineHandler 구현과 등록에 달려 있습니다. 지원 기종이나 성능 수치를
-      추정하지 마세요.
+    question: Camera가 하나의 이미지 소스에서 하나 이상의 스트림을 제공하는 기능을 설명하세요. 하드웨어 지원은 장치별 PipelineHandler 구현과 등록에 달려 있습니다. 지원 기종이나 성능 수치를 추정하지 마세요.
     covers:
     - capabilities
     sources:
@@ -108,9 +186,8 @@ sections:
         - - REGISTER_PIPELINE_HANDLER
         reject_patterns: []
   - id: benefits
-    title: 구현 근거로 보는 강점
-    question: PipelineHandler::queueRequest의 공통 구현과 계약이 제공하는 이점을 설명하세요. 준비 대기, 제출 순서, maxQueuedRequestsDevice_ 한도, 준비 실패·장치
-      제출 실패 시 취소와 정지 시 요청 추적을 다루세요. 장치 구현자의 completeRequest 통지 책임은 유지하며 처리 속도나 개발 기간 절감량을 추정하지 마세요.
+    title: 장치 구현자가 공통 계층에서 얻는 것
+    question: PipelineHandler::queueRequest의 공통 구현과 계약이 장치 구현자에게 해 주는 일을 설명하세요. 준비 대기, 제출 순서, maxQueuedRequestsDevice_ 한도, 준비 실패·장치 제출 실패 시 취소와 정지 시 요청 추적을 다루세요. 장치 구현자의 completeRequest 통지 책임은 유지하며 처리 속도나 개발 기간 절감량을 추정하지 마세요.
     covers:
     - benefits
     sources:
@@ -126,14 +203,9 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: Keeping track of queued requests ensures automatic completion of all requests
       end: signalled by the pipeline handler using the completeRequest() function.
-    - id: notification-contract
-      file: src/libcamera/pipeline_handler.cpp
-      start: Request completion shall be
-      end: signalled by the pipeline handler using the completeRequest() function.
     parts:
     - id: queue
-      question: 공통 PipelineHandler::queueRequest가 요청을 기다렸다가 전달하는 순서와 maxQueuedRequestsDevice_ 한도는 무엇입니까? 대기 큐 관리의 주체를 호출자로
-        바꾸지 말고 이 함수의 동작만 한 문단으로 설명하세요. 실패 처리는 다음 질문에서 다룹니다.
+      question: 공통 PipelineHandler::queueRequest가 요청을 기다렸다가 전달하는 순서와 maxQueuedRequestsDevice_ 한도는 무엇입니까? 대기 큐 관리의 주체를 호출자로 바꾸지 말고 이 함수의 동작만 한 문단으로 설명하세요. 실패 처리는 다음 질문에서 다룹니다.
       sources:
       - queue
       answer_contract:
@@ -157,26 +229,18 @@ sections:
         - - 실패
         - - 취소
         reject_patterns: []
-    - id: tracking
-      question: 공통 queueRequest의 요청 추적이 stop() 시 완료와 어떤 관계가 있는지만 한 문장으로 설명하세요. 추적을 호출자의 의무로 바꾸지 마세요.
+    - id: completion
+      question: 정지할 때 공통 queueRequest의 요청 추적이 대기 중인 요청의 완료를 어떻게 보장하는지, 그리고 파이프라인 핸들러가 completeRequest()로 완료를 통지해야 하는 의무를 한 문단으로 함께 설명하세요. 추적을 호출자의 의무로 바꾸지 말고, stop()의 호출 순서나 자동 완료 뒤 추가 통지는 추정하지 마세요.
       sources:
       - completion
       answer_contract:
-        basis: description
+        basis: contract
         required_terms:
         - - stop
+        - - completeRequest
         reject_patterns:
         - pattern: 호출자는.{0,40}추적
           message: 요청 추적은 공통 함수의 처리입니다. 호출자 의무로 바꾸지 마세요.
-    - id: notification
-      question: 이 Request completion 계약에서 완료 통지를 수행할 주체와 사용해야 하는 함수만 설명하세요.
-      sources:
-      - notification-contract
-      answer_contract:
-        basis: contract
-        required_terms:
-        - - completeRequest
-        reject_patterns:
         - pattern: 완료.{0,10}(후|뒤)
           message: 원문에 없는 자동 완료와 통지 사이의 순서를 추가하지 마세요.
   - id: queue-limit
@@ -208,12 +272,9 @@ sections:
       - queue
   reader_profile: vendor-overview
   routes:
-  - q: 연동 가이드에서 필요한 내용을 확인합니다.
-    to: vendor-integration.md
-  - q: 지원 범위와 검증에서 필요한 내용을 확인합니다.
-    to: vendor-assurance.md
-  - q: 장치별 파이프라인을 구현합니다.
-    to: pipeline-handler.md
+  - to: vendor-integration.md
+  - to: vendor-assurance.md
+  - to: pipeline-handler.md
   next:
     title: 연동 가이드
     link: vendor-integration.md
@@ -2788,6 +2849,176 @@ sections:
   show_evidence: true
   design_generation: llm
   semantic_review: true
+- id: team-overview
+  group: For Team
+  nav_section: 역할 이해
+  title: 이 프로젝트가 하는 일
+  output: team-overview.md
+  kind: prose
+  lead: 이 프로젝트가 무엇을 받아 무엇을 내놓는지, 어느 계층·팀과 맞닿아 있는지 짧게 확인하세요.
+  reader: 다른 팀에서 이 프로젝트와 협업하거나 결과를 가져다 쓰는 사람
+  design_generation: llm
+  design_prompt: focused
+  semantic_review: true
+  show_evidence: true
+  facts:
+    classes:
+    - libcamera::CameraManager
+    - libcamera::Camera
+    - libcamera::PipelineHandler
+    class_table: false
+  diagram:
+    enabled: false
+  watch:
+  - Documentation/introduction.rst
+  - Documentation/libcamera_architecture.rst
+  reader_profile: team
+  design_requirements:
+  - id: role
+    question: 이 프로젝트는 무엇을 하며 누구의 어떤 문제를 풉니까?
+    aspects:
+    - role
+  - id: inputs
+    question: 이 프로젝트는 무엇을 입력으로 받습니까?
+    aspects:
+    - inputs
+  - id: outputs
+    question: 이 프로젝트는 무엇을 결과로 내놓습니까?
+    aspects:
+    - outputs
+  - id: boundaries
+    question: 어느 계층·팀과 책임이 나뉩니까?
+    aspects:
+    - boundaries
+  design_topics:
+  - id: role
+    title: 하는 일
+    covers:
+    - role
+    question: 이 프로젝트가 무엇을 하는 소프트웨어이고 누구의 어떤 문제를 푸는지 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+    sources:
+    - id: what
+      file: Documentation/introduction.rst
+      start: libcamera is an open source complex camera support library
+      end: involved in capturing images from complex cameras on Linux systems.
+    - id: problem
+      file: Documentation/introduction.rst
+      start: The usage of these drivers to provide a functioning camera stack is a
+      end: necessitate bespoke handling.
+    - id: for
+      file: Documentation/introduction.rst
+      start: libcamera provides a complete camera stack for Linux-based systems to abstract
+      end: 'having to deal with this:'
+    - id: stack
+      file: Documentation/introduction.rst
+      start: 'The camera stack comprises four software layers. From bottom to top:'
+      end: the scope of the libcamera project.
+    parts:
+    - id: what
+      question: 이 프로젝트가 무엇을 하는 소프트웨어인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - what
+    - id: problem
+      question: 카메라를 쓰려는 쪽이 어떤 어려움을 겪는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - problem
+    - id: easier
+      question: 이 프로젝트를 쓰면 그 일이 어떻게 단순해지는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - for
+    - id: layers
+      question: 카메라를 쓰는 소프트웨어가 네 계층으로 나뉘는 모습을 아래에서 위 순서로 쉽게 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - stack
+      max_statements: 4
+  - id: inputs
+    title: 받는 것
+    covers:
+    - inputs
+    question: 이 프로젝트가 아래 계층에서 무엇을 받아 카메라를 제어하고 카메라를 어떻게 찾아 관리하는지 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+    sources:
+    - id: kernel
+      file: Documentation/introduction.rst
+      start: '* The kernel drivers control the camera hardware and expose a'
+      end: V4L2 Subdev API).
+    - id: manager
+      file: Documentation/libcamera_architecture.rst
+      start: The Camera Manager enumerates cameras and instantiates Pipeline Handlers to
+      end: application can take control of a camera device at once.
+    parts:
+    - id: below
+      question: 이 프로젝트가 아래 계층에서 무엇을 받아 카메라를 제어하는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - kernel
+    - id: discover
+      question: 카메라를 누가 찾고 한 번에 몇 곳이 제어권을 가질 수 있는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - manager
+  - id: outputs
+    title: 내놓는 것
+    covers:
+    - outputs
+    question: 위 계층의 애플리케이션과 다른 프레임워크가 이 프로젝트에서 무엇을 받아 쓰는지 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+    sources:
+    - id: framework
+      file: Documentation/introduction.rst
+      start: '* The libcamera framework is the core part of the stack.'
+      end: all together constitute the libcamera framework.
+    - id: camera
+      file: Documentation/libcamera_architecture.rst
+      start: The Camera class represents a single item of camera hardware that is capable
+      end: "object that all other API operations interact with from configuration to\n  capture."
+    - id: adaptation
+      file: Documentation/introduction.rst
+      start: '* The libcamera adaptation is an umbrella term designating the'
+      end: repository (for instance the gstreamer libcamera element).
+    parts:
+    - id: api
+      question: 애플리케이션이 이 프로젝트에서 받아 쓰는 것이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - framework
+      - camera
+    - id: adapters
+      question: 다른 프레임워크가 이 프로젝트에 연결되는 방법의 예를 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - adaptation
+  - id: boundaries
+    title: 다른 팀·계층과의 경계
+    covers:
+    - boundaries
+    question: 이 프로젝트의 범위 밖은 어디이고, 장치 제조사가 직접 기여하거나 따로 제공하는 부분은 무엇인지 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+    sources:
+    - id: apps
+      file: Documentation/introduction.rst
+      start: '* The applications and upper level frameworks are based on the'
+      end: the scope of the libcamera project.
+    - id: handler
+      file: Documentation/libcamera_architecture.rst
+      start: The Pipeline Handler manages the complex pipelines exposed by the kernel
+      end: managing the interactions with a camera device.
+    - id: ipa
+      file: Documentation/libcamera_architecture.rst
+      start: Together with the hardware image processing and hardware statistics
+      end: external IPA modules can be open-source or closed-source.
+    - id: licensing
+      file: Documentation/introduction.rst
+      start: Handlers are a part of the libcamera code base and need to be contributed
+      end: not include source code from the libcamera project.
+    parts:
+    - id: outside
+      question: 이 프로젝트의 범위 밖에 있는 것이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - apps
+    - id: vendors
+      question: 장치 제조사가 이 프로젝트에 직접 기여하거나 따로 제공하는 부분이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요.
+      sources:
+      - handler
+      - ipa
+      - licensing
+      max_statements: 3
+  next:
+    title: 시스템 개요
+    link: overview.md
 - id: overview
   group: For Developer
   title: 시스템 개요
@@ -3171,6 +3402,105 @@ sections:
   narration: facts
   design_generation: llm
   nav_section: 구조 이해
+- id: onboarding
+  group: For Developer
+  nav_section: 구조 이해
+  title: 실행해 보고 설계 이유 읽기
+  output: onboarding.md
+  kind: prose
+  lead: 먼저 cam 도구로 카메라를 확인한 뒤, 요청 접수와 완료가 나뉜 이유를 소스 주석에서 읽으세요.
+  reader: 이 코드를 처음 읽는 신입 개발자
+  design_generation: llm
+  design_prompt: focused
+  semantic_review: true
+  show_evidence: true
+  facts:
+    classes:
+    - libcamera::Camera
+    - libcamera::PipelineHandler
+    - libcamera::Request
+    class_table: false
+  diagram:
+    enabled: false
+  watch:
+  - README.rst
+  - src/libcamera/pipeline_handler.cpp
+  - src/libcamera/camera.cpp
+  design_requirements:
+  - id: try
+    question: 카메라를 직접 확인해 보려면 무엇을 실행합니까?
+  - id: why
+    question: 요청 접수와 완료 통지가 별도 단계인 이유 중 소스가 직접 밝힌 것은 무엇입니까?
+  design_topics:
+  - id: try
+    title: 직접 실행해 보기
+    covers:
+    - try
+    question: README가 소개하는 cam 도구로 카메라를 확인하는 방법을 설명하세요. 실행해 보지 않은 절차이므로 결과를 단정하지 마세요.
+    sources:
+    - id: cam
+      file: README.rst
+      start: The ``cam`` utility can be used for basic testing.
+      end: LIBCAMERA_LOG_LEVELS=*:DEBUG cam -l
+    parts:
+    - id: tool
+      question: cam 도구가 무엇을 위한 도구인지, 어떤 확인에 쓸 수 있다고 문서가 적었는지 한 문단으로 설명하세요.
+      sources:
+      - cam
+      answer_contract:
+        basis: description
+        required_terms:
+        - - cam
+        reject_patterns: []
+    - id: steps
+      question: 카메라 목록 확인, 프레임 캡처, 디버그 로그 켜기를 문서가 적은 명령 그대로 순서대로 한 문단으로 안내하세요. 출력 결과는 지어내지 마세요.
+      sources:
+      - cam
+      statement_kind: limitation
+  - id: why
+    title: 요청 접수와 완료를 나눈 이유
+    covers:
+    - why
+    question: queueRequest가 접수 시점에 무엇을 확인하고 완료는 어떻게 알리는지, 버퍼 완료와 요청 완료를 나눈 이유 중 소스 주석이 직접 밝힌 것을 설명하세요. 주석에 이유가 없는 부분은 이유를 추측하지 마세요.
+    sources:
+    - id: accept
+      file: src/libcamera/camera.cpp
+      start: This function queues a \a request to the camera for capture.
+      end: through the \ref requestCompleted signal.
+    - id: buffer
+      file: src/libcamera/pipeline_handler.cpp
+      start: This function shall be called by pipeline handlers to signal completion of
+      end: They shall complete requests explicitly with completeRequest().
+    - id: order
+      file: src/libcamera/pipeline_handler.cpp
+      start: The pipeline handler shall call this function to notify the \a camera that
+      end: without any ordering constraint.
+    parts:
+    - id: accept
+      question: queueRequest를 부르기 전에 요청에 무엇이 있어야 하고, 큐에 넣은 뒤 완료는 어떻게 알려 주는지 한 문단으로 설명하세요.
+      sources:
+      - accept
+    - id: buffer
+      question: 마지막 버퍼가 완료돼도 요청이 자동으로 완료되지 않는 이유로 소스가 밝힌 것과 그 대신 파이프라인 핸들러가 해야 할 일을 한 문단으로 설명하세요.
+      sources:
+      - buffer
+      answer_contract:
+        basis: description
+        required_terms:
+        - - completeRequest
+        reject_patterns: []
+    - id: order
+      question: 요청이 애플리케이션에 돌아가는 순서와, 파이프라인 핸들러가 completeRequest()를 부를 때의 순서 제약을 한 문단으로 설명하세요.
+      sources:
+      - order
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 순서
+        reject_patterns: []
+  next:
+    title: 카메라와 요청 모델
+    link: camera-model.md
 - id: camera-model
   group: For Developer
   nav_section: 구조 이해

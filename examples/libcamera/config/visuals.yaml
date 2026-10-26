@@ -1041,6 +1041,73 @@ sections:
         sha256: 4af35cfde252bae9391fc55c13025c02f8bd98084b9f53807de39707feb33377
         quote: "An application may start and stop a camera multiple times as long as it is\n * not released."
   vendor-overview:
+  - id: camera-stack
+    topic: value
+    kind: flow
+    title: 카메라 스택의 네 계층
+    question: 애플리케이션에서 카메라 하드웨어까지 어떤 계층을 지납니까? 지원 기종이나 성능을 보장하는 그림은 아닙니다.
+    nodes:
+    - id: apps
+      label: 애플리케이션·상위 프레임워크
+      label_en: Applications and upper-level frameworks
+      evidence:
+      - source: value/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: The applications and upper level frameworks are based on the
+    - id: adaptation
+      label: 어댑테이션 (V4L2 호환·GStreamer·Android HAL)
+      label_en: Adaptation (V4L2 compatibility, GStreamer, Android HAL)
+      evidence:
+      - source: value/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: The libcamera adaptation is an umbrella term designating the
+    - id: framework
+      label: libcamera 프레임워크
+      label_en: libcamera framework
+      evidence:
+      - source: value/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: The libcamera framework is the core part of the stack.
+    - id: kernel
+      label: 커널 드라이버 (V4L2 계열 API)
+      label_en: Kernel drivers (V4L2 family of APIs)
+      evidence:
+      - source: value/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: The kernel drivers control the camera hardware and expose a
+    edges:
+    - from: apps
+      to: framework
+      label: C++ API로 직접 사용
+      label_en: Use the C++ API directly
+      evidence:
+      - source: value/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: and exposes a native C++ API to upper layers
+    - from: apps
+      to: adaptation
+      label: 다른 프레임워크를 거쳐 사용
+      label_en: Use through another framework
+      evidence:
+      - source: value/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: components that interface to libcamera in other frameworks.
+    - from: adaptation
+      to: framework
+      label: libcamera에 연결
+      label_en: Connect to libcamera
+      evidence:
+      - source: value/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: components that interface to libcamera in other frameworks.
+    - from: framework
+      to: kernel
+      label: V4L2 계열 API로 제어
+      label_en: Control through the V4L2 family of APIs
+      evidence:
+      - source: value/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: low-level interface to userspace through the Linux kernel V4L2
   - id: hardware-boundary
     topic: capabilities
     kind: flow
@@ -1606,3 +1673,71 @@ sections:
       - source: parameters/parameters
         sha256: 5e4f1317cd9611173e6e5b1fa350ab26f28500656037c812909008604ebfb091
         quote: dewarpParams = dp;
+  team-overview:
+  - id: camera-stack
+    topic: role
+    kind: flow
+    title: 카메라 스택의 네 계층
+    question: 애플리케이션에서 카메라 하드웨어까지 어떤 계층을 지납니까? 지원 기종이나 성능을 보장하는 그림은 아닙니다.
+    nodes:
+    - id: apps
+      label: 애플리케이션·상위 프레임워크
+      label_en: Applications and upper-level frameworks
+      evidence:
+      - source: role/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: The applications and upper level frameworks are based on the
+    - id: adaptation
+      label: 어댑테이션 (V4L2 호환·GStreamer·Android HAL)
+      label_en: Adaptation (V4L2 compatibility, GStreamer, Android HAL)
+      evidence:
+      - source: role/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: The libcamera adaptation is an umbrella term designating the
+    - id: framework
+      label: libcamera 프레임워크
+      label_en: libcamera framework
+      evidence:
+      - source: role/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: The libcamera framework is the core part of the stack.
+    - id: kernel
+      label: 커널 드라이버 (V4L2 계열 API)
+      label_en: Kernel drivers (V4L2 family of APIs)
+      evidence:
+      - source: role/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: The kernel drivers control the camera hardware and expose a
+    edges:
+    - from: apps
+      to: framework
+      label: C++ API로 직접 사용
+      label_en: Use the C++ API directly
+      evidence:
+      - source: role/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: and exposes a native C++ API to upper layers
+    - from: apps
+      to: adaptation
+      label: 다른 프레임워크를 거쳐 사용
+      label_en: Use through another framework
+      evidence:
+      - source: role/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: components that interface to libcamera in other frameworks.
+    - from: adaptation
+      to: framework
+      label: libcamera에 연결
+      label_en: Connect to libcamera
+      evidence:
+      - source: role/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: components that interface to libcamera in other frameworks.
+    - from: framework
+      to: kernel
+      label: V4L2 계열 API로 제어
+      label_en: Control through the V4L2 family of APIs
+      evidence:
+      - source: role/stack
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+        quote: low-level interface to userspace through the Linux kernel V4L2

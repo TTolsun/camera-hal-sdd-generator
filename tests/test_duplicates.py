@@ -44,6 +44,11 @@ def _model(**sha):
     return SimpleNamespace(evidence={f"s/{key}": {"sha256": value} for key, value in sha.items()})
 
 
+def _ranged(**spans):
+    """key -> (sha, file, line, end_line)"""
+    return SimpleNamespace(evidence={f"s/{key}": dict(sha256=v[0], file=v[1], line=v[2], end_line=v[3]) for key, v in spans.items()})
+
+
 def _statement(text, ref):
     return {"text": text, "evidence": [ref]}
 
@@ -89,3 +94,17 @@ def test_사실_서술과_실행_확인_항목은_같은_코드를_말해도_중
     model = _model(**{"t/x": "h"})
     statements = {"t": [_statement(a, "x"), {**_statement(b, "x"), "kind": "limitation"}]}
     assert statement_findings(model, "s", statements) == []
+
+
+def test_해시가_달라도_같은_파일의_줄_범위가_겹치는_발췌는_같은_근거로_본다():
+    a, b = REPEATED[0]
+    answers = {"tracking": [_statement(a, "completion")], "notification": [_statement(b, "contract")]}
+    overlapping = _ranged(**{"tracking/completion": ("h1", "pipeline_handler.cpp", 458, 465),
+                             "notification/contract": ("h2", "pipeline_handler.cpp", 463, 465)})
+    assert len(statement_findings(overlapping, "s", answers)) == 1
+    apart = _ranged(**{"tracking/completion": ("h1", "pipeline_handler.cpp", 458, 465),
+                       "notification/contract": ("h2", "pipeline_handler.cpp", 600, 610)})
+    assert statement_findings(apart, "s", answers) == []
+    other_file = _ranged(**{"tracking/completion": ("h1", "pipeline_handler.cpp", 458, 465),
+                            "notification/contract": ("h2", "camera.cpp", 460, 465)})
+    assert statement_findings(other_file, "s", answers) == []

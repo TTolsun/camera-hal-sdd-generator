@@ -141,9 +141,19 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
         if not path.is_file():
             changed[sec["id"]] = ["원고가 아직 없음"]
             continue
-        recorded = str(split_frontmatter(path.read_text(encoding="utf-8"))[0].get("evidence_fingerprint", ""))
+        text = path.read_text(encoding="utf-8")
+        recorded = str(split_frontmatter(text)[0].get("evidence_fingerprint", ""))
         if recorded != fingerprint(model, sec):
             changed[sec["id"]] = ["설계 질문·근거 지정이 원고를 만든 입력과 다름" if recorded else "원고에 입력 지문이 없음"]
+            continue
+        if sec.get("design_generation") == "llm":
+            # 입력은 같아도 저장된 답변이 현재 검사(중복 문장, 문장 형태)나 표시 형식을 통과하지 못하면
+            # 같은 답변으로 다시 만들거나 해당 주제만 다시 쓰게 한다.
+            from . import generated_design
+            try:
+                generated_design.verify(model, sec, text)
+            except (ValueError, TypeError, KeyError) as exc:
+                changed[sec["id"]] = ["저장된 설계 답변이 현재 검사·표시 형식과 다름: " + str(exc)[:120]]
     return changed
 
 

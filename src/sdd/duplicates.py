@@ -46,6 +46,20 @@ def _clip(text: str, limit: int = 70) -> str:
     return text if len(text) <= limit else text[:limit - 1] + "…"
 
 
+def _shares_evidence(left: tuple, right: tuple) -> bool:
+    """같은 발췌이거나 같은 파일에서 줄 범위가 겹치는 발췌를 인용하는가.
+
+    같은 단락에서 시작·끝 구절만 달리 고른 두 근거는 해시가 다르지만 같은 문장을 뒷받침한다."""
+    for sha, file, start, end in left:
+        for other_sha, other_file, other_start, other_end in right:
+            if sha == other_sha:
+                return True
+            if (file and file == other_file and None not in (start, end, other_start, other_end)
+                    and start <= other_end and other_start <= end):
+                return True
+    return False
+
+
 def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
                        *, only_after: dict[str, int] | None = None) -> list[str]:
     """설계 답변 문장 사이의 중복. 앞 문장과 뜻이 겹치는 뒤 문장을 반려 사유로 돌려준다.
@@ -53,14 +67,15 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
     only_after 가 있으면 주제별로 그 개수 뒤에 온 문장만 뒤 문장으로 본다. 재요청 때 이미 통과한
     앞 문장끼리의 관계는 다시 지적하지 않고, 새로 추가한 문장만 검사하기 위해 쓴다.
     """
-    def evidence_ids(topic_id: str, statement: dict) -> frozenset[str]:
-        ids = set()
+    def evidence_ids(topic_id: str, statement: dict) -> tuple:
+        spans = []
         for ref in statement.get("evidence", []) or []:
             record = model.evidence.get(f"{section_id}/{topic_id}/{ref}", {})
-            ids.add(record.get("sha256") or f"{topic_id}/{ref}")
-        return frozenset(ids)
+            spans.append((record.get("sha256") or f"{topic_id}/{ref}", record.get("file"),
+                          record.get("line"), record.get("end_line")))
+        return tuple(spans)
 
-    seen: list[tuple[str, int, str, frozenset[str], str]] = []
+    seen: list[tuple[str, int, str, tuple, str]] = []
     findings: list[str] = []
     for topic_id, statements in answers.items():
         start = (only_after or {}).get(topic_id, 0)
@@ -73,7 +88,7 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
             if index >= start:
                 # 사실 서술과 실행 확인 항목은 같은 코드를 말해도 역할이 다르므로 서로 비교하지 않는다.
                 for other_topic, other_index, other_text, other_evidence, other_kind in seen:
-                    if kind == other_kind and evidence & other_evidence and similar(text, other_text):
+                    if kind == other_kind and _shares_evidence(evidence, other_evidence) and similar(text, other_text):
                         findings.append(
                             f"[의미 중복] {topic_id} {index + 1}번째 설명이 앞의 {other_topic} {other_index + 1}번째 "
                             f"설명과 같은 근거로 같은 내용을 되풀이합니다: \"{_clip(text)}\" ≈ \"{_clip(other_text)}\". "
