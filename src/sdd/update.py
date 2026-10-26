@@ -77,7 +77,7 @@ def _needs_review_pages(cfg: Config, ledger: dict[str, Any]) -> list[str]:
     승인 장부에 기록된(approved) 페이지는 사람이 needs-review 내용을 검토했다는 뜻이므로
     관문에서 제외한다. 본문이 바뀌면 승인이 stale 이 되어 다시 관문에 걸린다.
     """
-    from .export_html import _split
+    from .document_metadata import split_frontmatter
     pages = []
     for section in cfg.sections():
         if section.get("kind") == "manual":
@@ -87,7 +87,7 @@ def _needs_review_pages(cfg: Config, ledger: dict[str, Any]) -> list[str]:
         if not path.is_file():
             continue
         text = path.read_text(encoding="utf-8")
-        if (str(_split(text)[0].get("status", "")) == "needs-review"
+        if (str(split_frontmatter(text)[0].get("status", "")) == "needs-review"
                 and approvals_mod.page_status(ledger, rel, text) != "approved"):
             pages.append(rel)
     return sorted(set(pages))

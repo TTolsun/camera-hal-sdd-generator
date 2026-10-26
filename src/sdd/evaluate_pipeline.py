@@ -17,18 +17,23 @@ import yaml
 
 from .config import load, section_output
 from .document_health import enforce, page_path
+from .document_metadata import split_frontmatter as _split
 from .evidence import collect
 from .export_site import export_site
 from .facts.model import KnowledgeModel
 from .generate import Generator
-from .llm import Agent
+from .llm import Agent, LIVE_KINDS
 from .site_build import verify_site
 from .state_io import save as save_state
 
 
 def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None = None):
-    if cfg.agent.kind not in ('ollama', 'openai-compatible'):
-        raise ValueError('전체 생성 시험에는 실제 ollama 또는 openai-compatible 연결이 필요합니다.')
+    if cfg.agent.kind not in LIVE_KINDS:
+        raise ValueError('전체 생성 시험에는 실제 CLI 또는 명시적으로 허용한 모델 API 연결이 필요합니다.')
+    if cfg.agent.kind != 'cli' and not cfg.agent.allow_direct_api:
+        raise ValueError('직접 모델 API 시험에는 allow_direct_api: true를 명시해야 합니다.')
+    if cfg.agent.kind == 'cli' and previous is not None:
+        raise ValueError('CLI 전체 시험은 재개를 지원하지 않습니다. --continue-from 없이 새 시험을 실행하세요.')
     out = out.resolve()
     protected = [cfg.root, cfg.source_root, cfg.sdd_dir, cfg.facts_dir]
     if (out.exists() or any(p.resolve().is_relative_to(out) for p in protected)
@@ -68,6 +73,9 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
     (out / 'sdd.yaml').write_text(yaml.safe_dump(snapshot, allow_unicode=True), encoding='utf-8')
     report = {
         'schema': 1, 'source_commit': None, 'provider': cfg.agent.kind, 'model': cfg.agent.model,
+        'runner': cfg.agent.runner if cfg.agent.kind == 'cli' else None,
+        'model_selection': 'cli-default' if cfg.agent.kind == 'cli' and not cfg.agent.model else 'explicit',
+        'agent_label': cfg.agent.label,
         'sections_sha256': hashlib.sha256(cfg.sections_file.read_bytes()).hexdigest(),
         'engine_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                           for p in sorted(Path(__file__).parent.glob('*.py'))},
@@ -127,7 +135,6 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
         return report
     if previous:
         def resume():
-            from .export_html import _split
             old_bytes = (previous / 'evaluation.json').read_bytes()
             old = json.loads(old_bytes)
             expected = {s['id'] for s in trial.sections()}
@@ -201,7 +208,6 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
                    'manuscripts': [{'path': p.relative_to(out).as_posix(),
                                     'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths]}
             if row['llm_required']:
-                from .export_html import _split
                 meta, _ = _split(paths[0].read_text(encoding='utf-8'))
                 artifact = meta['generated_design']
                 row['generated_topics'] = artifact['generated_topics']
@@ -218,7 +224,9 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
     def provenance():
         from .provenance import verify_calls
         return verify_calls(model, trial.sdd_dir, trial.build_dir / 'prompts/calls',
-                            provider=trial.agent.kind, model_name=trial.agent.model, allow_reused=bool(previous))
+                            provider=trial.agent.kind, model_name=trial.agent.model,
+                            runner=trial.agent.runner if trial.agent.kind == 'cli' else None,
+                            allow_reused=bool(previous))
     if not stage('model-provenance', provenance):
         return report
     if not stage('audit-docs', lambda: enforce(trial, model)):
