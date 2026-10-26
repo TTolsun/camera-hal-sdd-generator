@@ -16,7 +16,7 @@ def wire(value, diagnosis=False):
     value=copy.deepcopy(value)
     for finding in value.get('findings', []):finding.pop('quote',None)
     if diagnosis:
-        value.pop('clarification',None);value.pop('expand',None)
+        value.pop('clarification',None);value.pop('expand',None);value.pop('subquestions',None)
     return value
 
 
@@ -238,3 +238,52 @@ def test_cut_boolean_expression_requires_smallest_authorized_complete_scope():
     gaps,required=policy.incomplete_expressions(pool)
     assert len(gaps)==1 and required==['s:scope0']
     assert policy.incomplete_expressions({'s:current':pool['s:scope0']})==([],[])
+
+
+def test_repeated_omission_splits_questions_but_preserves_parent_gate(project,tmp_path):
+    document=yaml.safe_load(project.sections_file.read_text(encoding='utf-8'))
+    part=document['sections'][0]['design_topics'][0]['parts'][0]
+    part['answer_contract']={'basis':'implementation','required_terms':[['cancelPending'],['releaseDevice']]}
+    project.sections_file.write_text(yaml.safe_dump(document,allow_unicode=True),encoding='utf-8')
+    def create(cfg,dump):
+        agent=factory()(cfg,dump);original=agent._post
+        def post(url,body):
+            system,user=[m['content'] for m in body['messages']]
+            if system in (policy.DIAGNOSIS_POLICY,policy.PLANNING_POLICY):
+                payload=json.loads(user)
+                if 'releaseDevice' not in payload['candidates']['s:current']['text']:
+                    return original(url,body)
+                if all(payload['required_terms_found']):
+                    result=verdict()
+                else:
+                    result=verdict('repair');result['checks']['coverage']='fail'
+                    result.update(clarification='두 호출을 모두 다루세요.', findings=[dict(category='coverage',
+                        candidate='s:current',issue='Missing releaseDevice')])
+                    if system==policy.PLANNING_POLICY:
+                        assert payload['split_required']
+                        result['subquestions']=['첫 취소 호출은 무엇입니까?', '그 뒤 해제 호출은 무엇입니까?']
+            else:
+                payload,_=json.JSONDecoder().raw_decode(user[user.index('{"reader":'):])
+                quote=next(p['quote_id'] for p in payload['sources']['s'] if 'quote_id' in p)
+                text=('`releaseDevice()`를 호출하여 장치를 해제합니다.' if '그 뒤 해제' in user
+                      else '`cancelPending()`을 호출하여 대기 요청을 취소합니다.')
+                result={'statements':[dict(text=text,quote_id=quote,covers=['stop'],kind='behavior')]}
+            return {'message':{'content':json.dumps(wire(result,system==policy.DIAGNOSIS_POLICY),ensure_ascii=False)},'done':True}
+        agent._post=post
+        return agent
+    result=run(project,['device'],tmp_path/'split',agent_factory=create)
+    assert result['stop_reason']=='model_review_complete',result
+    assert len(result['rounds'])==3
+    review=result['rounds'][-1]['reviews'][0]
+    assert len(review['assembly_origins'])==2
+    final=yaml.safe_load((tmp_path/'split/round-03/sections.yaml').read_text(encoding='utf-8'))
+    final_part=final['sections'][0]['design_topics'][0]['parts'][0]
+    assert final_part['answer_contract']==part['answer_contract']
+    from sdd.answer_contracts import validate
+    topic=final['sections'][0]['design_topics'][0]
+    statements=[dict(part_id='order',subpart_id=i,text=text,evidence=['s'],kind='behavior')
+                for i,text in enumerate(['cancelPending','releaseDevice'])]
+    validate(topic,statements)
+    for bad in (statements[:1], [statements[0],{**statements[1],'subpart_id':False}],
+                [statements[0],{**statements[1],'text':'release only'}]):
+        with pytest.raises(ValueError):validate(topic,bad)

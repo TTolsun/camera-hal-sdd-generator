@@ -82,7 +82,8 @@ def latest_response(trial, key):
     for path in folder.rglob('*.receipt.json'):
         receipt = json.loads(path.read_text(encoding='utf-8'))
         # Numeric suffix avoids prefix collisions between topic/part IDs.
-        if re.fullmatch(re.escape(prefix) + r'\d+(?:_revision)?', receipt['tag']):
+        tag_match = re.fullmatch(re.escape(prefix) + r'(?:sub(\d+)_)?\d+(?:_revision)?', receipt['tag'])
+        if tag_match:
             stem = str(path).removesuffix('.receipt.json')
             response = Path(stem + '.response.txt').read_text(encoding='utf-8')
             request = json.loads(Path(stem + '.request.json').read_text(encoding='utf-8'))
@@ -90,8 +91,23 @@ def latest_response(trial, key):
             if (receipt['response_sha256'] != digest(response)
                     or receipt['request_sha256'] != policy.digest(request)):
                 raise ValueError('Trial response or request hash mismatch')
-            found.append((receipt['completed_at'], receipt, response))
-    return max(found, key=lambda item: item[0])[1:] if found else None
+            found.append((receipt['completed_at'], receipt, response, tag_match[1]))
+    children = {item[3] for item in found if item[3] is not None}
+    if children:
+        chosen = [max((item for item in found if item[3] == child), key=lambda item:item[0])
+                  for child in sorted(children, key=int)]
+        statements = []
+        for _, _, raw, child in chosen:
+            data = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
+            for st in data['statements']:
+                statements.append({**st, 'subpart_id': int(child)})
+        raw = json.dumps({'statements': statements}, ensure_ascii=False)
+        from .repair_reader import digest
+        origins = [{'request_sha256':item[1]['request_sha256'], 'response_sha256':item[1]['response_sha256']}
+                   for item in chosen]
+        return dict(request_sha256=policy.digest(origins), response_sha256=digest(raw),
+                    assembly='subquestion-responses', origins=origins), raw
+    return max(found, key=lambda item: item[0])[1:3] if found else None
 
 
 def automatic_error(cfg, model, unit, raw):
@@ -116,12 +132,18 @@ def automatic_error(cfg, model, unit, raw):
         data = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
         if not isinstance(data, dict) or set(data) != {'statements'}:
             raise ValueError('Expected statements only')
+        sub_ids = [st.pop('subpart_id', None) for st in data['statements']]
         statements = resolve_passages(data['statements'], passages)
         if part:
-            if len(statements) > (1 if part.get('answer_contract') else 2):
+            if len(statements) > (len(part.get('subquestions', [])) or (1 if part.get('answer_contract') else 2)):
                 raise ValueError('Too many statements for the part')
-            for st in statements:
+            for st, sub_id in zip(statements, sub_ids):
                 st['part_id'] = part['id']
+                if sub_id is not None:
+                    st['subpart_id'] = sub_id
+            if part.get('subquestions'):
+                topic['parts'] = [part]
+                topic.pop('answer_contract', None)
         normalize_answer(model, statements, [*sources.values(), topic['question']])
         subset = {**section, 'design_topics': [topic], 'design_requirements': [
             r for r in section['design_requirements'] if r['id'] in topic['covers']]}
@@ -174,7 +196,7 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
     inputs = [cfg.sections_file, cfg.facts_path, *cfg.prompts_dir.glob('*.md'), *cfg.style_dir.glob('*.md')]
     inputs += [Path(__file__).with_name(name) for name in (
         'reader_loop.py', 'reader_loop_policy.py', 'repair_reader.py', 'evaluate_reader.py',
-        'generated_design.py', 'generated_visuals.py', 'evidence.py', 'answer_contracts.py')]
+        'generated_design.py', 'generated_visuals.py', 'evidence.py', 'answer_contracts.py', 'contract_schema.py')]
     def input_hashes():
         return {str(p.resolve()): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
     initial_hashes = input_hashes()
@@ -258,11 +280,15 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                 record = dict(target=key, response_sha256=receipt['response_sha256'],
                     request_sha256=receipt['request_sha256'], automatic_error=error,
                     review_key=review_key, reused_review=reused, diagnosis=proposal)
+                if receipt.get('assembly'):
+                    record['assembly_origins'] = receipt['origins']
                 entry['reviews'].append(record)
                 if proposal['verdict'] != 'acceptable' or gaps:
                     planning = {**payload, 'diagnosis': proposal,
                         'candidates': {k:{f:v for f,v in c.items() if f != 'selector'} for k,c in pool.items()},
                         'required_expansions': required_expansions,
+                        'can_split': part is not None,
+                        'split_required': bool(part and not part.get('subquestions') and error and not gaps and number > 1),
                         'output_schema': policy.schema(pool)}
                     plan_user = json.dumps(planning, ensure_ascii=False)
                     for attempt in range(cfg.max_retries + 1):
@@ -274,6 +300,8 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                                 raise ValueError('A plan cannot approve an answer before regeneration')
                             if proposal['verdict'] == 'repair' and not set(required_expansions) <= set(proposal['expand']):
                                 raise ValueError('Repair must select required_expansions: ' + repr(required_expansions))
+                            if proposal['verdict'] == 'repair' and planning['split_required'] and not proposal['subquestions']:
+                                raise ValueError('Repeated omissions require 2 to 4 atomic subquestions; the parent contract is unchanged')
                             break
                         except ValueError as exc:
                             if attempt == cfg.max_retries:
@@ -289,8 +317,10 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                     completed += not bool(error)
                     unresolved |= bool(error)
                     continue
-                signature = policy.digest(sorted((f['category'], pool[f['candidate']]['source'], f['quote'])
-                                                  for f in proposal['findings']))
+                signature = policy.digest(dict(
+                    findings=sorted((f['category'], pool[f['candidate']]['source'], f['quote'])
+                                    for f in proposal['findings']),
+                    split=bool(proposal.get('subquestions')) or bool(part and part.get('subquestions'))))
                 previous, count = failures.get(key, (None, 0))
                 failures[key] = (signature, count + 1 if signature == previous else 1)
                 if failures[key][1] >= limits.max_stalls:

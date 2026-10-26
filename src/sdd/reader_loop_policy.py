@@ -48,6 +48,11 @@ The diagnosis may contain false positives; check it against the actual answer an
 source instead of copying its allegations. Include EVERY required_expansions ID
 when returning repair. A current candidate cannot replace a required expansion.
 Return repair when the candidates resolve the issue, otherwise insufficient_evidence.'''
+PLANNING_POLICY += '''\nWhen split_required is true, supply 2 to 4 atomic Korean subquestions.
+Ask about one condition/responsibility per subquestion and cover the whole original
+question collectively. Do not return an answer as a subquestion. Existing sources
+and the full parent answer contract remain unchanged and are checked on assembly.
+Use an empty subquestions list when splitting is unnecessary or can_split is false.'''
 
 
 def digest(value):
@@ -118,9 +123,10 @@ def schema(pool, *, diagnosis=False):
             'category': {'type': 'string', 'enum': list(CHECKS)},
             'candidate': {'type': 'string', 'enum': list(pool)}, 'issue': string})},
         'clarification': {'type': 'string', 'maxLength': 1600},
+        'subquestions': {'type': 'array', 'maxItems': 4, 'items': {'type': 'string', 'maxLength': 800}},
         'expand': {'type': 'array', 'uniqueItems': True, 'items': {'type': 'string', 'enum': list(pool)}}})
     if diagnosis:
-        for field in ('clarification', 'expand'):
+        for field in ('clarification', 'expand', 'subquestions'):
             result['properties'].pop(field)
             result['required'].remove(field)
     return result
@@ -132,9 +138,10 @@ def decode(raw, pool, *, diagnosis=False):
     if diagnosis:
         if not isinstance(proposal, dict) or set(proposal) != {'verdict', 'checks', 'findings'}:
             raise ValueError('Diagnosis must contain only verdict, checks and findings')
-        proposal.update(clarification='', expand=[])
+        proposal.update(clarification='', expand=[], subquestions=[])
     if not isinstance(proposal, dict) or not isinstance(proposal.get('findings'), list):
         raise ValueError('Expected a proposal with findings')
+    proposal.setdefault('subquestions', [])
     for finding in proposal['findings']:
         if (not isinstance(finding, dict) or set(finding) != {'category', 'candidate', 'issue'}
                 or not isinstance(finding['candidate'], str) or finding['candidate'] not in pool):
@@ -159,7 +166,8 @@ def incomplete_expressions(pool):
 
 
 def validate(proposal, pool, *, diagnosis=False):
-    if not isinstance(proposal, dict) or set(proposal) != {'verdict', 'checks', 'findings', 'clarification', 'expand'}:
+    required = {'verdict', 'checks', 'findings', 'clarification', 'expand'}
+    if not isinstance(proposal, dict) or not required <= set(proposal) or set(proposal) - required - {'subquestions'}:
         raise ValueError('Invalid proposal fields')
     checks = proposal['checks']
     if (not isinstance(checks, dict) or set(checks) != set(CHECKS)
@@ -169,6 +177,11 @@ def validate(proposal, pool, *, diagnosis=False):
     if verdict not in ('acceptable', 'repair', 'insufficient_evidence'):
         raise ValueError('Unknown verdict')
     clarification, expansions, findings = (proposal[k] for k in ('clarification', 'expand', 'findings'))
+    subquestions = proposal.get('subquestions', [])
+    if (not isinstance(subquestions, list) or (subquestions and not 2 <= len(subquestions) <= 4)
+            or any(not isinstance(q, str) or not q.strip() or len(q) > 800 for q in subquestions)
+            or len(set(subquestions)) != len(subquestions)):
+        raise ValueError('Subquestions must be 2 to 4 unique bounded questions, or empty')
     if not isinstance(clarification, str) or len(clarification) > 1600:
         raise ValueError('Clarification must be bounded text')
     if (not isinstance(expansions, list) or any(not isinstance(x, str) or x not in pool for x in expansions)
@@ -185,19 +198,19 @@ def validate(proposal, pool, *, diagnosis=False):
                 or finding['quote'] not in pool[finding['candidate']]['text']
                 or not isinstance(finding['issue'], str) or not finding['issue'].strip()):
             raise ValueError('Every finding requires an exact source quote and an issue')
-    if verdict == 'acceptable' and (findings or expansions or clarification.strip() or 'fail' in checks.values()):
+    if verdict == 'acceptable' and (findings or expansions or subquestions or clarification.strip() or 'fail' in checks.values()):
         raise ValueError('Acceptable verdict cannot contain failures or changes')
     if verdict == 'acceptable' and any(checks[k] != 'pass' for k in ('subject', 'coverage')):
         raise ValueError('Acceptable answers require explicit subject and coverage checks')
     if verdict == 'repair' and (not findings or 'fail' not in checks.values()
-                                or (not diagnosis and not (clarification.strip() or expansions))):
+                                or (not diagnosis and not (clarification.strip() or expansions or subquestions))):
         raise ValueError('Repair needs a source-backed finding and a concrete edit')
     if any(checks[f['category']] != 'fail' for f in findings):
         raise ValueError('Findings must agree with failed check dimensions')
     if verdict == 'repair' and any(not f['candidate'].endswith(':current')
                                    and f['candidate'] not in expansions for f in findings):
         raise ValueError('A finding using wider evidence must also select that expansion')
-    if verdict == 'insufficient_evidence' and (clarification.strip() or expansions):
+    if verdict == 'insufficient_evidence' and (clarification.strip() or expansions or subquestions):
         raise ValueError('Insufficient evidence must stop, not invent an edit')
 
 
@@ -210,6 +223,10 @@ def apply(sections, key, proposal, pool):
     clarification = proposal['clarification'].strip()
     if clarification and clarification not in target['question']:
         target['question'] += '\n추가 대조 질문: ' + clarification
+    if proposal.get('subquestions'):
+        if part is None:
+            raise ValueError('Subquestion decomposition requires an existing part')
+        part['subquestions'] = list(proposal['subquestions'])
     for cid in proposal['expand']:
         candidate = pool[cid]
         source = next(s for s in topic['sources'] if s['id'] == candidate['source'])

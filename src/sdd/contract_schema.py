@@ -80,8 +80,14 @@ def generated_errors(section):
                     errors.append(f"{topic['id']}: parts sources는 현재 주제의 근거 id 목록이어야 합니다.")
                 else:
                     used.update(refs)
-                if set(part) - {'id', 'question', 'sources', 'answer_contract'}:
-                    errors.append(f"{topic['id']}: parts에는 id, question, sources, answer_contract만 허용합니다.")
+                subquestions = part.get('subquestions', [])
+                if (not isinstance(subquestions, list) or (subquestions and not 2 <= len(subquestions) <= 4)
+                        or any(not isinstance(q, str) or not q.strip() or len(q) > 800 for q in subquestions)
+                        or (isinstance(subquestions, list) and all(isinstance(q, str) for q in subquestions)
+                            and len(set(subquestions)) != len(subquestions))):
+                    errors.append(f"{topic['id']}: subquestions에는 중복 없는 짧은 질문 2~4개가 필요합니다.")
+                if set(part) - {'id', 'question', 'sources', 'answer_contract', 'subquestions'}:
+                    errors.append(f"{topic['id']}: 지원하지 않는 parts 필드입니다.")
             if used != source_ids:
                 errors.append(f"{topic['id']}: parts가 모든 소스 근거를 다뤄야 합니다.")
     if sorted(covered) != sorted(ids) or len(ids) != len(set(ids)):
