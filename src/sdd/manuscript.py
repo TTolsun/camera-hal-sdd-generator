@@ -68,9 +68,9 @@ def _question_leak(line: str) -> bool:
                 or any(_QUESTION_ENDING.search(s) for s in re.split(r"(?<=[.!])\s+", prose.strip())))
 
 
-# 한국어 문장에 한자·중국어·일본어 글자가 섞인 경우("우산術어", "闭上소")는 모델의 언어 혼입이다. 코드 표기 안은 원문이므로
+# 한국어 문장에 한자·중국어·일본어·키릴·아랍·태국 글자가 섞인 경우("우산術어", "闭上소")는 모델의 언어 혼입이다. 코드 표기 안은 원문이므로
 # 제외하고, 본문 문장에 남은 것만 반려한다. 한국어 설명에서 한자 병기가 필요하면 코드 표기나 인용으로 쓴다.
-_FOREIGN_SCRIPT = re.compile("[぀-ヿ㐀-䶿一-鿿]")
+_FOREIGN_SCRIPT = re.compile("[Ѐ-ӿ؀-ۿ฀-๿぀-ヿ㐀-䶿一-鿿]")
 
 
 def _foreign_script(line: str) -> bool:
