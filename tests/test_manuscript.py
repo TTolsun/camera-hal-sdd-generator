@@ -98,3 +98,26 @@ def test_표와_제목에는_코드_표기_규칙을_적용하지_않는다():
     names = {"IPAManager"}
     assert lint("| IPAManager | src/a.cpp:10 |", names) == []
     assert lint("## IPAManager", names) == []
+
+
+def test_A2_질문_문형이_답변에_섞이면_반려한다():
+    leaked = ("공통 queueRequest 의 요청 추적이 stop() 시 완료와 어떤 관계가 있는지는, "
+              "파이프라인 핸들러가 대기 중인 요청을 완료합니다 `src/p.cpp:10`.")
+    assert [f.rule for f in lint(leaked)] == ["질문 문형 누출"]
+    assert lint("대기 요청은 어디에서 기다립니까?")[0].rule == "질문 문형 누출"
+    assert lint("완료되었는지를, 호출자가 확인합니다.")[0].rule == "질문 문형 누출"
+
+
+def test_A2_평서문과_코드_표기_안의_물음표는_통과한다():
+    assert lint("호출자는 반환값이 0인지 확인해야 합니다.") == []
+    assert lint("`Adjusted ?` 표기는 원문 주석 그대로입니다.") == []
+    assert lint("요청이 제출되었는지는 `requestCompleted` 신호로 확인합니다.") == []
+
+
+def test_A1_같은_인용을_공유한_중복_문장은_린트에서_반려한다():
+    first = ("파이프라인 핸들러는 stop()으로 파이프라인이 중지될 때 대기 중인 모든 요청의 완료를 보장하기 위해 "
+             "completeRequest() 함수를 사용하여 완료 신호를 보내야 합니다. `src/p.cpp:10`")
+    second = ("stop() 시 대기 중인 모든 요청이 자동으로 완료되도록 보장하며, 이때 completeRequest() 함수를 사용하여 "
+              "요청 완료를 신호로 전달합니다. `src/p.cpp:10`")
+    assert [f.rule for f in lint(first + "\n\n" + second)] == ["의미 중복 문장"]
+    assert lint(first) == []

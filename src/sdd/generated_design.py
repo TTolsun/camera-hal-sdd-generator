@@ -11,6 +11,7 @@ import json
 import re
 
 from .evidence import fingerprint, topic_blocks, contract_text
+from . import duplicates
 from .llm import SCHEMA_KINDS
 from .manuscript import lint, describe
 from .semantic import review as semantic_review, only_uncertainty, known_names
@@ -191,6 +192,9 @@ def materialize(model, section, answers):
             record = model.evidence[key]
             source['sha256'] = record['sha256']
             pinned.evidence[key] = {**record, 'selector': copy.deepcopy(source)}
+    repeated = duplicates.statement_findings(model, section['id'], {t['id']: answers[t['id']] for t in section['design_topics']})
+    if repeated:
+        raise ValueError(' / '.join(repeated))
     return pinned, resolved
 
 
@@ -384,6 +388,8 @@ def generate(generator, section, previous=None):
                 if key.startswith(prefix) and record.get('status') == 'available'])
         return validate_answers(pinned, selected, retained)
     answers, origins = reusable(model, section, previous, inputs, validate_retained)
+    for tid in duplicates.repeated_topics(model, section, answers):
+        answers.pop(tid), origins.pop(tid, None)
     reused = list(answers)
     units = []
     for topic in section['design_topics']:
@@ -508,6 +514,12 @@ def generate(generator, section, previous=None):
                 raw = generator.agent.chat(system, revision, tag=f"{tag}_{attempt}_revision", **options)
             try:
                 candidate = {topic['id']: decode_unit(model, section, topic, raw, sources, passages)}
+                prior = {tid: list(statements) for tid, statements in answers.items()}
+                repeated = duplicates.statement_findings(
+                    model, section['id'], {**prior, topic['id']: prior.get(topic['id'], []) + candidate[topic['id']]},
+                    only_after={**{tid: len(v) for tid, v in prior.items()}, topic['id']: len(prior.get(topic['id'], []))})
+                if repeated:
+                    raise ValueError(' / '.join(repeated))
                 if grounding:
                     from .grounding import review as check_grounding
                     check_grounding(generator, topic, candidate[topic['id']], sources, f'{tag}_{attempt}',

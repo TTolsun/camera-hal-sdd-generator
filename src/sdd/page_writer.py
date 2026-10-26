@@ -7,11 +7,13 @@ from pathlib import Path
 from .budget import Block
 from .document_metadata import generation_info
 from .markdown_text import slugify
+from . import routes as route_rules
 from .validate import Verdict, extract_citations
 
 class PageWriter:
-    def __init__(self, cfg, model, page_titles):
+    def __init__(self, cfg, model, page_titles, page_leads=None):
         self.cfg, self.model, self.page_titles = cfg, model, page_titles
+        self.page_leads = page_leads or {}
         self.page_tpl = (cfg.templates_dir / "page.md").read_text(encoding="utf-8")
 
     def _render(self, title: str, lead: str, body: str, routes: list[tuple[str, str]] | None, evidence: str,
@@ -33,9 +35,10 @@ class PageWriter:
             fm += "\nfacts_omitted:\n" + "\n".join(f"  - {o}" for o in omitted)
         routes_md = ""
         if routes:
-            headings = {slugify(h): h for h in re.findall(r"^## (.+)$", body, re.M)}
+            headings = {slugify(h): h for h in re.findall(r"^#{2,6} (.+)$", body, re.M)}
             routes_md = "| 지금 확인할 내용 | 이동할 절 |\n|---|---|\n" + "\n".join(
-                f"| {q} | [{self._route_label(to, headings)}]({self._rel(to, page_path)}) |" for q, to in routes)
+                f"| {q or route_rules.derive_text(to, self.page_titles, self.page_leads)} | "
+                f"[{self._route_label(to, headings)}]({self._rel(to, page_path)}) |" for q, to in routes)
         return self.page_tpl.format(frontmatter=fm, title=title, lead=lead or "이 절의 표부터 확인하세요.",
                                     routes=routes_md, body=body.strip(), evidence=evidence,
                                     next_title=next_link[0], next_link=self._rel(next_link[1], page_path))
@@ -50,9 +53,12 @@ class PageWriter:
 
     def _route_label(self, to: str, headings: dict[str, str]) -> str:
         if to.startswith("#"):
-            return headings.get(to[1:], to[1:].replace("-", " "))
-        name = to.split("#", 1)[0]
-        return self.page_titles.get(name) or self.page_titles.get(Path(name).name) or Path(name).stem
+            if to[1:] not in headings:
+                # 조건부로만 생기는 절(예: 관련 자유 함수 표)을 가리킬 수 있으므로 생성은 계속하되 이유를 남긴다.
+                print(f"경고: 이동 안내 대상 '{to}'에 해당하는 제목이 이 페이지에 없습니다. 앵커 이름을 링크 글자로 씁니다.")
+                return to[1:].replace("-", " ")
+            return headings[to[1:]]
+        return route_rules.resolve_title(to, self.page_titles)
 
     def _evidence_lines(self, blocks: list[Block], tables: list[str], verdict: Verdict, omitted: list[str],
                         extra_files: set[str] | None = None) -> str:

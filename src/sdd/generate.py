@@ -32,7 +32,7 @@ from .markdown_text import slugify
 from .prompting import style_rules, compose_system_prompt
 from .validate import Verdict, extract_citations
 from .llm import AgentError
-from . import generated_design
+from . import generated_design, routes
 from .evidence import contract_text, fingerprint, requires_fingerprint, topic_blocks
 from .semantic import relation_facts, structural_text
 
@@ -58,7 +58,11 @@ class Generator:
         self.scenario_order = [sc["id"] for sc in cfg.scenarios()]
         self.scenario_cfg = {sc["id"]: sc for sc in cfg.scenarios()}
         self.narrator = Narrator(cfg, model, agent, self._record_review)
-        self.writer = PageWriter(cfg, model, self.page_titles)
+        page_leads = {sec.get("output", f"{sec['id']}.md"): sec["lead"] for sec in cfg.sections() if sec.get("lead")}
+        page_leads.update({f"{sid}.md": f"{sc.title} 흐름을 추적합니다." for sid, sc in model.scenarios.items()})
+        self.writer = PageWriter(cfg, model, self.page_titles, page_leads)
+        for warning in routes.warnings(cfg.sections(), self.page_titles):
+            print(f"경고: {warning}")
         self.facts = FactPresenter(model, cfg.package_depth)
 
 

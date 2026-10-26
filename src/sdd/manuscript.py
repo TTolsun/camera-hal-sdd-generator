@@ -16,6 +16,8 @@ import re
 from dataclasses import dataclass
 from typing import Callable, NamedTuple
 
+from . import duplicates
+
 _INLINE_CODE = re.compile(r"`[^`]*`")
 _FENCE = re.compile(r"^\s*```")
 _HEADING = re.compile(r"^\s*#{1,6}\s")
@@ -54,6 +56,18 @@ def _bad_ending(line: str) -> bool:
                for s in _sentences(line))
 
 
+# 설계 질문을 명사절로 받아 쉼표로 이은 문장("~ 어떤 관계가 있는지는, ~ 보장하며")과 질문 어미로 끝난 문장은
+# 답이 아니라 질문 문형이 본문에 새어 나온 것이다. 코드 표기 안의 물음표(`Adjusted ?`)는 보지 않는다.
+_QUESTION_CLAUSE = re.compile(r"(?:는지|인지|던지|은지|을지|할지|될지|일지)(?:는|도|를|가)?\s*,")
+_QUESTION_ENDING = re.compile(r"(?:습니까|입니까|나요|인가요|할까요|일까요)\s*[?]?\s*$")
+
+
+def _question_leak(line: str) -> bool:
+    prose = _EMPHASIS.sub("", _INLINE_CODE.sub(" ", line))
+    return bool(_QUESTION_CLAUSE.search(prose) or "?" in prose
+                or any(_QUESTION_ENDING.search(s) for s in re.split(r"(?<=[.!])\s+", prose.strip())))
+
+
 def _json_residue(line: str) -> bool:
     return bool(re.search(r'["”]\s*}+\s*$', line) or re.search(r"^\s*}+\s*$", line)
                 or "\\n" in _INLINE_CODE.sub(" ", line))
@@ -79,6 +93,9 @@ _RULES = [
     _Rule("굵은 글씨 제목",
           "**굵은 글씨** 한 줄을 제목처럼 쓰지 않습니다. 제목은 파이프라인이 붙이므로 문단만 씁니다.",
           re.compile(r"^\s*\*\*[^*\n]+\*\*\s*:?\s*$").match),
+    _Rule("질문 문형 누출",
+          "설계 질문의 문형(\"~ 있는지는,\", \"~입니까?\")이 답변에 섞였습니다. 질문을 되풀이하지 말고 근거가 말하는 사실만 평서문으로 씁니다.",
+          _question_leak, sentence=True),
     _Rule("종결어미",
           '모든 문장은 "~합니다", "~입니다" 로 끝냅니다. "~한다", "~이다", "~함", "~없음" 같은 형태로 끝내지 않습니다.',
           _bad_ending, sentence=True),
@@ -128,6 +145,8 @@ def lint(body: str, names: set[str] | None = None) -> list[Finding]:
                     "코드 표기 없는 클래스 이름",
                     "클래스 이름은 본문에서도 코드 표기로 감쌉니다: " + ", ".join(f"`{b}`" for b in dict.fromkeys(bare)),
                     i + 1, line.strip()))
+    for line_number, sentence, detail in duplicates.body_findings(body):
+        findings.append(Finding("의미 중복 문장", detail, line_number, sentence))
     if fenced:
         # 닫히지 않은 펜스는 이후 줄 전체를 검사 불능으로 만들므로 그 자체를 위반으로 잡는다.
         findings.append(Finding("닫히지 않은 코드 펜스",
