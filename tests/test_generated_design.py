@@ -1065,3 +1065,12 @@ def test_B5_statement_kind는_limitation만_허용하고_답변_계약과_함께
     with pytest.raises(ValueError, match='statement_kind'):
         Generator(tmp_cfg, model, agent).run()
 
+
+
+def test_B5_모든_parts가_limitation이면_모델을_부르기_전에_설정_오류로_막는다(tmp_cfg, generated):
+    section, model, save, agent = generated
+    section['design_topics'][0]['parts'] = [dict(id='x', question='실행 방법은 무엇입니까?', sources=['stop'], statement_kind='limitation')]
+    save()
+    with pytest.raises(ValueError, match='사실 답변이 없습니다'):
+        Generator(tmp_cfg, model, agent).run()
+    assert agent.calls == []
