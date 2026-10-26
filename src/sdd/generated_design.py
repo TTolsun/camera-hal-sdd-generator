@@ -307,10 +307,8 @@ def generate(generator, section, previous=None):
         'Keep an outcome and its necessary caller/implementer obligation together. '
         'A required call context does not prove thread safety or ordering. '
         'A reference measurement procedure is not a test result for this product. '
-        'Every sentence must be supported by its selected source passage. '
-        'Do not copy duties or example behavior from instructions into the answer. '
         'Preserve the scope of any/all/only together with may and negation. '
-        'Return only the requested JSON.'
+        'Use factual content only from the current source passages. Return only the requested JSON.'
     )
     if section.get('reader_profile') in ('vendor-overview', 'vendor', 'vendor-assurance'):
         system += (
