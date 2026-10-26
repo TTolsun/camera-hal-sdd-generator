@@ -115,7 +115,8 @@ def response_schema(topic, passages=None):
     # A checked part has exactly one required factual/contract answer. Offering
     # limitation here asks the model to choose an option the validator rejects,
     # especially for negative but fully sourced API obligations.
-    kinds = ['behavior'] if (topic.get('_max_statements') == 1 and topic.get('answer_contract')) or topic.get('answer_contract', {}).get('basis') == 'contract' else ['behavior', 'limitation']
+    # 실행 절차처럼 검증된 사실로 쓰면 안 되는 질문은 생성기가 종류를 고정한다. 모델이 고르지 않는다.
+    kinds = [topic['_statement_kind']] if topic.get('_statement_kind') else ['behavior'] if (topic.get('_max_statements') == 1 and topic.get('answer_contract')) or topic.get('answer_contract', {}).get('basis') == 'contract' else ['behavior', 'limitation']
     statement = {'type': 'object', 'additionalProperties': False,
                  'required': ['text', 'quote_id', 'evidence', 'covers', 'kind'], 'properties': {
                      # C++ expressions such as request->_d()->cancel() and
@@ -229,11 +230,11 @@ def normalize_answer(model, statements, sources):
             statement['text'] = ''.join(part if i % 2 else token.sub(mark, part) for i, part in enumerate(parts))
 
 
-def validate_answers(model, section, answers):
+def validate_answers(model, section, answers, allow_limited=False):
     from .design_contracts import enforce
     preflight(model, section)
     pinned, resolved = materialize(model, section, answers)
-    report = enforce(pinned, resolved)
+    report = enforce(pinned, resolved, allow_limited)
     for topic in resolved['design_topics']:
         text, _ = contract_text(pinned, section['id'], topic)
         blocks, _ = topic_blocks(pinned, section['id'], topic)
@@ -265,6 +266,9 @@ def decode_unit(model, section, topic, raw, sources, passages):
             and len(data['statements']) > topic['_max_statements']):
         raise ValueError(f"분할 질문은 {topic['_max_statements']}문단 이내로 답해야 합니다.")
     data['statements'] = resolve_passages(data['statements'], passages)
+    if topic.get('_statement_kind'):
+        for statement in data['statements']:
+            statement['kind'] = topic['_statement_kind']
     if '_part_id' in topic:
         for statement in data['statements']:
             statement['part_id'] = topic['_part_id']
@@ -291,7 +295,7 @@ def decode_unit(model, section, topic, raw, sources, passages):
     if errors:
         raise ValueError(' / '.join(errors))
     subset.pop('reader_profile', None)
-    validate_answers(model, subset, candidate)
+    validate_answers(model, subset, candidate, allow_limited=bool(topic.get('_statement_kind')))
     return candidate[topic['id']]
 
 
@@ -403,6 +407,8 @@ def generate(generator, section, previous=None):
                     '_max_statements': part.get('max_statements', 1 if part.get('answer_contract') else 2),
                     'sources': [next(s for s in topic['sources'] if s['id'] == ref) for ref in part['sources']]}
             unit.pop('answer_contract', None)
+            if 'statement_kind' in part:
+                unit['_statement_kind'] = part['statement_kind']
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']
             unit.pop('parts')

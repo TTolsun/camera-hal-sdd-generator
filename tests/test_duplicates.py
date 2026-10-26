@@ -82,3 +82,10 @@ def test_본문에서_같은_인용을_공유한_중복_문장을_행_번호와_
     assert "1행" in found[0][2]
     different_citation = f"{a} `src/p.cpp:10`\n\n{b} `src/q.cpp:99`"
     assert body_findings(different_citation) == []
+
+
+def test_사실_서술과_실행_확인_항목은_같은_코드를_말해도_중복으로_보지_않는다():
+    a, b = REPEATED[0]
+    model = _model(**{"t/x": "h"})
+    statements = {"t": [_statement(a, "x"), {**_statement(b, "x"), "kind": "limitation"}]}
+    assert statement_findings(model, "s", statements) == []

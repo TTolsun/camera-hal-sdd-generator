@@ -140,7 +140,7 @@ Ollama 연결에서는 JSON 구조와 제공된 질문·구절 id를 제한하�
 
 ## 독자 프로필
 
-`reader_profile: vendor-overview`, `reader_profile: vendor`, `reader_profile: vendor-assurance` 또는 `reader_profile: developer`를 `prose` 섹션에 지정하면 공통 필수 질문을 검사합니다. 생략하면 기존 설정 동작을 유지합니다.
+`reader_profile: vendor-overview`, `vendor`, `vendor-assurance`, `developer` 또는 `team`을 `prose` 섹션에 지정하면 공통 필수 질문을 검사합니다. 생략하면 기존 설정 동작을 유지합니다.
 
 | 프로필 | `design_requirements[].aspects`에 포함해야 하는 값 |
 |---|---|
@@ -148,6 +148,7 @@ Ollama 연결에서는 JSON 구조와 제공된 질문·구절 id를 제한하�
 | `vendor-assurance` | `constraints`, `verification` |
 | `vendor` (상세 구현 계약) | `inputs`, `ownership`, `completion`, `failure`, `verification` |
 | `developer` | `entry`, `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
+| `team` (다른 팀이 이 프로젝트가 하는 일을 이해하는 짧은 입구) | `role`, `inputs`, `outputs`, `boundaries` |
 | `architecture` (기존 설정 호환) | `responsibility`, `boundaries`, `lifecycle`, `concurrency`, `verification` |
 
 `vendor-overview`는 제품 개요, `vendor`는 연동 가이드, `vendor-assurance`는 지원 범위와 검증을 담당합니다. 한 페이지에 모든 질문을 넣지 않고 독자의 판단 단계별로 나눕니다. 기존 `vendor` 상세 계약도 유지합니다. 프로필을 바꾸면 질문·답변·근거를 검토하고 원고를 재생성하세요.
@@ -207,6 +208,12 @@ scenarios:
 서로 다른 근거 구절로 조건과 결과를 설명해야 할 때는 분할 질문에 `max_statements`를 지정할 수 있습니다. 범위는 1–8이며 기본값은 `answer_contract`가 있으면 1, 없으면 2입니다. 이 값은 목표 분량이 아니라 상한입니다. 늘려도 필수 용어, 근거 범위와 저장된 답변 검사는 유지됩니다.
 
 `design_generation: llm` 주제에 `parts`를 지정하면 절 제목은 유지하면서 작은 질문별로 모델을 호출합니다. 각 항목에는 고유한 `id`, `question`, 해당 주제 안의 소스 ID 목록인 `sources`를 넣습니다. 선택적으로 아래의 `answer_contract`를 지정합니다. 답변이나 해시를 미리 넣을 수 없습니다. 전체 parts가 주제의 모든 소스 ID를 포함해야 하며, 한 항목이라도 검사를 통과하지 못하면 원고를 교체하지 않습니다. 분할 질문에는 그 질문과 지정한 발췌만 전달하고, 상위 질문 전체를 다시 답하도록 요구하지 않습니다.
+
+## 설계 근거로 쓸 수 있는 파일과 실행 확인 질문
+
+`design_topics[].sources[]`는 코드 주석뿐 아니라 해당 커밋의 어떤 텍스트 파일도 `file`과 유일한 `start`·`end` 구절로 선택할 수 있습니다. 제품 목적과 계층 구조를 설명하는 소개 문서, 지원 플랫폼 목록, 실행 절차를 적은 README, 빌드 옵션 파일이 모두 같은 방식으로 인용되고 해시로 고정됩니다. 코드 주석에 없는 포지셔닝·지원 범위·실행 방법은 이런 파일이 저장소에 있을 때만 생성할 수 있습니다. 파일이 없으면 모델이 일반 지식으로 채우지 않고 생성이 실패하거나 해당 질문이 비어야 합니다. 사내 HAL에서도 README·설계 문서·빌드 설정을 이 방식으로 연결하세요.
+
+분할 질문에 `statement_kind: limitation`을 지정하면 그 답변을 모델이 아니라 생성기가 실행 확인 항목으로 고정합니다. 명령을 실행해 보는 절차처럼 검증된 사실로 쓰면 안 되는 내용에 사용하며, 페이지에는 `실행 확인 항목:` 표지가 붙습니다. `answer_contract`와 함께 쓸 수 없고, 같은 필수 질문에 사실 답변을 하는 다른 분할 질문이 있어야 합니다.
 
 한 항목이 여전히 복잡하면 `subquestions`에 중복 없는 세부 질문 2~4개를 지정할 수 있습니다. 각 질문은 800자 이내이며 같은 `sources`로 따로 작성합니다. 생성기는 `subpart_id`를 직접 부여하고 세부 질문마다 한 문단이 있는지 검사합니다. 원래 `question`과 `answer_contract`는 유지하며, 합친 답변에 원래 필수 용어·거부 패턴·근거 검사를 모두 적용합니다. [자동 보완 루프](../inhouse/reader-loop.md)도 이 설정을 제안할 수 있습니다.
 

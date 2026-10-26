@@ -31,7 +31,7 @@
 | 명령 | 하는 일 |
 |---|---|
 | `sdd compdb` | compile DB를 확보합니다. `--normalize --normalize-input <원본> --clang <clang> --out <파일>`로 다른 빌드 시스템의 DB를 정규화합니다. |
-| `sdd impact --base <ref> --base-facts <파일>` | 두 커밋의 영향 섹션과 범위 검토 항목을 계산합니다. `--fail-on-coverage-gap`이면 미결 항목이 있을 때 2로 끝납니다. |
+| `sdd impact --base <ref> --base-facts <파일>` | 두 커밋의 영향 섹션과 범위 검토 항목을 계산합니다. `--fail-on-coverage-gap`이면 미결 항목이 있을 때 2로 끝납니다. `--config-changes`를 더하면 소스 diff가 없어도 설계 질문·근거 지정이 원고를 만든 입력과 달라진 섹션(원고가 없는 새 섹션 포함)을 영향 섹션에 넣습니다. |
 | `sdd run --base <ref>` | extract → impact → generate를 한 번에 합니다. `update`와 달리 커밋을 하나씩 나누지 않습니다. |
 | `sdd audit-docs` | 문서 분량·증가·중복·Feature 범위를 검사합니다. 문제가 있으면 2. |
 | `sdd improve` | 새 커밋이 없을 때 기존 문서의 누락 한 항목을 점검·보완합니다. 보류되면 2. |

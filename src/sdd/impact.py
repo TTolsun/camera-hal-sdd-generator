@@ -122,6 +122,31 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
     return report
 
 
+def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
+    """소스 diff 없이 설계 질문·근거 지정·facts 선택이 바뀌어 다시 만들어야 하는 섹션과 이유.
+
+    원고는 생성할 때의 입력 지문(`evidence_fingerprint`)을 기록한다. 현재 설정과 facts로 계산한 지문이
+    다르면 그 원고는 지금의 질문·근거에 답하지 않으므로 영향 섹션이다. 표시용 설정(메뉴, 이동 안내,
+    다음 문서)은 지문에 들어가지 않아 재생성을 요구하지 않는다. 모델에 쓰는 evidence 는 먼저 수집해 두어야 한다."""
+    from .config import section_output
+    from .document_metadata import split_frontmatter
+    from .evidence import fingerprint, requires_fingerprint
+    changed: dict[str, list[str]] = {}
+    for sec in cfg.sections():
+        if sec.get("kind") == "manual" or not (sec.get("design_topics") or sec.get("reader_profile")):
+            continue
+        if not requires_fingerprint(sec):
+            continue
+        path = cfg.sdd_dir / section_output(sec)
+        if not path.is_file():
+            changed[sec["id"]] = ["원고가 아직 없음"]
+            continue
+        recorded = str(split_frontmatter(path.read_text(encoding="utf-8"))[0].get("evidence_fingerprint", ""))
+        if recorded != fingerprint(model, sec):
+            changed[sec["id"]] = ["설계 질문·근거 지정이 원고를 만든 입력과 다름" if recorded else "원고에 입력 지문이 없음"]
+    return changed
+
+
 def summary_facts(report: ImpactReport, model: KnowledgeModel) -> str:
     """change_impact 프롬프트에 넣을 사실 블록."""
     lines = [f"- 비교 범위: {report.base}..{report.head}", f"- 변경 파일 {len(report.changed_files)} 개:"]

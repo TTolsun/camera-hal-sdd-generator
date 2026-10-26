@@ -60,7 +60,7 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
             ids.add(record.get("sha256") or f"{topic_id}/{ref}")
         return frozenset(ids)
 
-    seen: list[tuple[str, int, str, frozenset[str]]] = []
+    seen: list[tuple[str, int, str, frozenset[str], str]] = []
     findings: list[str] = []
     for topic_id, statements in answers.items():
         start = (only_after or {}).get(topic_id, 0)
@@ -69,15 +69,17 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
             if not isinstance(text, str):
                 continue
             evidence = evidence_ids(topic_id, statement)
+            kind = statement.get("kind", "behavior")
             if index >= start:
-                for other_topic, other_index, other_text, other_evidence in seen:
-                    if evidence & other_evidence and similar(text, other_text):
+                # 사실 서술과 실행 확인 항목은 같은 코드를 말해도 역할이 다르므로 서로 비교하지 않는다.
+                for other_topic, other_index, other_text, other_evidence, other_kind in seen:
+                    if kind == other_kind and evidence & other_evidence and similar(text, other_text):
                         findings.append(
                             f"[의미 중복] {topic_id} {index + 1}번째 설명이 앞의 {other_topic} {other_index + 1}번째 "
                             f"설명과 같은 근거로 같은 내용을 되풀이합니다: \"{_clip(text)}\" ≈ \"{_clip(other_text)}\". "
                             "앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.")
                         break
-            seen.append((topic_id, index, text, evidence))
+            seen.append((topic_id, index, text, evidence, kind))
     return findings
 
 

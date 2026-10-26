@@ -124,7 +124,13 @@ def cmd_impact(args: argparse.Namespace) -> int:
     if base_model and base_model.meta.get("source_commit") != base:
         raise RuntimeError("--base-facts의 source_commit이 --base와 다릅니다.")
     files = changed_files(cfg.source_root, base, head)
+    if getattr(args, "config_changes", False) and any(s.get("design_topics") for s in cfg.sections()):
+        from .evidence import collect as collect_evidence
+        collect_evidence(cfg, model)
     report = impact_mod.compute(cfg, model, files, base, head, base_model)
+    if getattr(args, "config_changes", False):
+        for sid, reasons in impact_mod.config_changes(cfg, model).items():
+            report.sections.setdefault(sid, []).extend(reasons)
     out = cfg.build_dir / "impact.json"
     report.save(out)
     ledger = approvals_mod.load(cfg)
@@ -445,6 +451,8 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--base", required=True, help="비교 기준 commit/ref (예: HEAD~1, origin/main)")
     s.add_argument("--head", default="HEAD")
     s.add_argument("--base-facts", help="삭제·이름 변경 검토에 사용할 이전 커밋의 facts.json")
+    s.add_argument("--config-changes", action="store_true",
+                   help="소스 diff와 별개로, 설계 질문·근거 지정이 바뀌어 원고와 입력 지문이 다른 섹션도 영향 섹션에 넣는다")
     s.add_argument("--fail-on-coverage-gap", action="store_true", help="범위 검토 항목을 기록한 뒤 종료 코드 2로 중단")
     s.set_defaults(fn=cmd_impact)
 

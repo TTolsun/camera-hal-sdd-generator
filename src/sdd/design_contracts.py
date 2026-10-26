@@ -14,7 +14,7 @@ from .contract_schema import configuration_errors
 
 
 
-def audit(model: KnowledgeModel, section: dict) -> dict:
+def audit(model: KnowledgeModel, section: dict, allow_limited: bool = False) -> dict:
     errors = configuration_errors(section)
     if errors:
         return {"status": "incomplete", "requirements": [], "findings": errors, "human_review": "pending"}
@@ -66,7 +66,8 @@ def audit(model: KnowledgeModel, section: dict) -> dict:
         if not isinstance(req.get("question"), str) or not req['question'].strip():
             findings.append(f"{key}: 설계 질문이 비었습니다.")
         state = "documented" if answers[key] else "limited" if limits[key] else "missing"
-        if state != "documented":
+        # 질문 한 개를 따로 검사할 때만 실행 확인 항목(limitation)을 허용한다. 절 전체는 사실 답변이 있어야 한다.
+        if state != "documented" and not (allow_limited and state == "limited"):
             findings.append(f"{key}: 근거에 연결된 설계 답변이 없습니다 ({state}).")
         rows.append({"id": key, "question": req.get("question", ""), "status": state,
                      "topics": answers[key], "limitations": limits[key]})
@@ -75,8 +76,8 @@ def audit(model: KnowledgeModel, section: dict) -> dict:
             "scope": "Required answers and unchanged source bindings; not semantic or runtime approval."}
 
 
-def enforce(model: KnowledgeModel, section: dict) -> dict:
-    result = audit(model, section)
+def enforce(model: KnowledgeModel, section: dict, allow_limited: bool = False) -> dict:
+    result = audit(model, section, allow_limited)
     if result["findings"]:
         raise ValueError(f"{section['id']}: 설계 항목 검증 실패: " + " / ".join(result["findings"]))
     return result

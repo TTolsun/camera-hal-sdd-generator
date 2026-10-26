@@ -38,6 +38,13 @@ PROFILES['vendor-assurance'] = {
     'constraints': '지원 전제, 미지원 범위와 별도 검증할 제약은 무엇입니까?',
     'verification': '어떤 근거가 있고 무엇을 아직 검증하지 않았습니까?',
 }
+# 다른 팀이 이 프로젝트가 하는 일을 이해하기 위한 최소 질문. 전문 용어 없이 역할·입력·출력·경계를 먼저 답합니다.
+PROFILES['team'] = {
+    'role': '이 프로젝트는 무엇을 하며 누구의 어떤 문제를 풉니까?',
+    'inputs': '이 프로젝트는 무엇을 입력으로 받습니까?',
+    'outputs': '이 프로젝트는 무엇을 결과로 내놓습니까?',
+    'boundaries': '어느 계층·팀과 책임이 나뉩니까?',
+}
 
 
 def profile_errors(section):
