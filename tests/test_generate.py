@@ -1,7 +1,9 @@
 from pathlib import Path
 
 from sdd.budget import Block
-from sdd.generate import Generator, compose_system_prompt, slugify
+from sdd.generate import Generator
+from sdd.prompting import compose_system_prompt
+from sdd.markdown_text import slugify
 from sdd.impact import compute
 from sdd.llm import Agent
 
@@ -221,8 +223,8 @@ def test_manual_page_evidence_files_flagged(tmp_cfg, sample_model):
     assert all(Path(p).name != "constraints.md" for p in written)
 
 
-def _overview_generator(tmp_cfg, sample_model):
-    """개요 표 검사용 Generator. 익명 구조체와 표에서 뺀 패키지를 섞어 둔다."""
+def _overview_presenter(tmp_cfg, sample_model):
+    """개요 표 검사용 presenter. 익명 구조체와 표에서 뺀 패키지를 섞어 둔다."""
     from sdd.facts.model import ClassInfo, Location, PackageInfo, Relation
 
     m = sample_model
@@ -236,13 +238,13 @@ def _overview_generator(tmp_cfg, sample_model):
     m.relations.append(Relation(source="Generated", target="CameraDevice", type="association"))
     m.relations.append(Relation(source="PipeThread", target="CameraDevice", type="inheritance"))
     m.relations.append(Relation(source="FrameFactory", target="CameraDevice", type="association"))
-    tmp_cfg.agent.kind = "fake"
-    return Generator(tmp_cfg, m, _FakeAgent([_GOOD]))
+    from sdd.fact_presenter import FactPresenter
+    return FactPresenter(m, tmp_cfg.package_depth)
 
 
 def test_패키지_표는_익명_구조체_이름을_싣지_않는다(tmp_cfg, sample_model):
-    gen = _overview_generator(tmp_cfg, sample_model)
-    table = gen._package_table(["device", "pipeline"])
+    presenter = _overview_presenter(tmp_cfg, sample_model)
+    table = presenter.package_table(["device", "pipeline"])
     assert "unnamed struct" not in table and "/home/someone" not in table
     assert "`CameraDevice`" in table
     # 클래스 수는 익명 구조체를 포함한 실제 개수를 그대로 보여 준다.
@@ -250,8 +252,8 @@ def test_패키지_표는_익명_구조체_이름을_싣지_않는다(tmp_cfg, s
 
 
 def test_의존_표는_선택한_패키지만_방향마다_한_줄로_싣는다(tmp_cfg, sample_model):
-    gen = _overview_generator(tmp_cfg, sample_model)
-    deps = gen._package_deps_table(["device", "pipeline"])
+    presenter = _overview_presenter(tmp_cfg, sample_model)
+    deps = presenter.package_deps_table(["device", "pipeline"])
     assert "src/gen" not in deps                                  # 표에 없는 패키지는 의존에서도 뺀다
     assert deps.count("`pipeline` → `device`") == 1               # 상속과 참조를 한 줄로 합친다
     assert "| `pipeline` → `device` | 1 | 1 |" in deps

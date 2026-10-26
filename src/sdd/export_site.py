@@ -17,8 +17,8 @@ from . import glossary
 from .evidence_navigation import compact_evidence
 from .config import Config, section_output
 from .diagrams import section_diagram, diagram_block
-from .document_metadata import generation_info, reader_label
-from .export_html import _mermaid_fence, _nav_entries, _split, _title_of_text
+from .document_metadata import generation_info, reader_label, split_frontmatter
+from .export_html import _mermaid_fence, _nav_entries, _title_of_text
 from .facts.model import KnowledgeModel
 
 MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.esm.min.mjs"
@@ -230,21 +230,7 @@ def export_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = 
     return build_site(cfg, out or cfg.build_dir / "site", _render_site, mermaid_src)
 
 
-def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None) -> Path:
-    from .document_health import retired_paths
-    retired = retired_paths(cfg)
-    settings = cfg.raw.get("site", {}) or {}
-    title = str(settings.get("title", "Camera HAL SDD"))
-    source_url = str(settings.get("source_url", ""))
-    link_template = source_link_template(settings)
-    # Mermaid 우선순위: --mermaid > site.mermaid > site.mermaid_dir(사이트에 동봉) > 공개 CDN.
-    mermaid_dir = settings.get("mermaid_dir")
-    mermaid_src = mermaid_src or str(settings.get("mermaid") or "")
-    if not mermaid_src:
-        mermaid_src = f"assets/mermaid/{MERMAID_ENTRY}" if mermaid_dir else MERMAID
-    out = (out or cfg.build_dir / "site").resolve()
-    if out == cfg.sdd_dir.resolve() or out in cfg.sdd_dir.resolve().parents:
-        raise RuntimeError("Site output must be separate from the Markdown source directory")
+def _site_navigation(cfg, settings, retired):
     sections = {_path(section_output(s)): s for s in cfg.sections()}
     missing = [rel for rel, section in sections.items()
                if section.get("kind") != "manual" and not (cfg.sdd_dir / rel).is_file()]
@@ -273,6 +259,10 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     entries = _grouped(entries, [str(g) for g in (settings.get("nav_groups") or [])])
     entries = _sectioned(entries, sections)
     entries = _place_scenarios(entries, [sc["id"] for sc in cfg.scenarios()])
+    return sections, entries
+
+
+def _prepare_site_pages(cfg, settings, sections, entries):
     texts = {rel: (cfg.sdd_dir / rel).read_text(encoding="utf-8") for _, _, rel in entries}
     # 사람 승인 장부. 표시가 검사 결과를 바꾸지는 않지만, 승인·미승인 상태를 구분해 보여 준다.
     from . import approvals as approvals_mod
@@ -291,7 +281,7 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
             texts["index.md"] = "# 문서 안내\n\n코드에서 추출한 구조와 문장별 근거를 함께 확인하세요.\n"
         texts["index.md"] += "\n## 문서 목록\n\n| 문서 | 검사 결과 | 검토 상태 |\n|---|---|---|\n"
         for _, name, rel in entries:
-            check_name, result, _ = _check(_split(texts[rel])[0])
+            check_name, result, _ = _check(split_frontmatter(texts[rel])[0])
             label = _approval_label(approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))
             texts["index.md"] += f"| [{name}]({rel}) | {check_name} {result} | {label} |\n"
         entries.insert(0, ("시작하기", "문서 안내", "index.md"))
@@ -311,73 +301,92 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
                             and {**(cfg.raw.get("diagrams") or {}), **(s.get("diagram") or {})}.get("enabled", False)
                             for s in sections.values()):
         raise RuntimeError("facts.json is required to generate configured class diagrams")
+    return texts, approval_states, ledger, terms, model
+
+
+def _prepare_page_body(cfg, rel, texts, sections, terms, model):
+    diagram_source = None
+    meta, body = split_frontmatter(texts[rel])
+    if meta.get("generation_method") and meta.get("generation_method") != "manual":
+        if model is None or meta.get("source_commit") != model.meta.get("source_commit"):
+            raise RuntimeError(f"Facts and page source commits differ: {rel}")
+    if meta.get("scenario_fingerprint"):
+        from .scenario_document import build as scenario_document, fingerprint as scenario_fingerprint
+        sid = str(meta.get("scenario_id", ""))
+        settings = next((s for s in cfg.scenarios() if s["id"] == sid), {})
+        sc = model.scenarios.get(sid) if model else None
+        if sc is None or meta["scenario_fingerprint"] != scenario_fingerprint(sc, settings):
+            raise RuntimeError(f"Scenario evidence changed; regenerate page before publishing: {rel}")
+        sc_section = next((s for s in cfg.sections() if s["id"] == meta.get("section")), {})
+        policy = {**(cfg.raw.get("diagrams") or {}), **(sc_section.get("diagram") or {})}
+        scenario_document(sc, settings, int(policy.get("max_nodes", 16)))
+        sources = re.findall(r"```mermaid\n(.*?)\n```", body, re.S)
+        if len(sources) == 1:
+            diagram_source = sources[0]
+    page_title = _title_of_text(body)
+    body = re.sub(r"^\s*# .+\n", "", body, count=1)
+    section = sections.get(rel, {})
+    if section and section.get("kind") != "manual":
+        if section.get("design_requirements") or section.get("reader_profile"):
+            from .design_contracts import enforce
+            if model is None:
+                raise RuntimeError("facts.json is required to verify design requirements")
+            from . import generated_design
+            if generated_design.enabled(section):
+                generated_design.verify(model, section, texts[rel])
+            else:
+                enforce(model, section)
+        from .evidence import fingerprint, requires_fingerprint
+        if requires_fingerprint(section) or meta.get("evidence_fingerprint"):
+            if model is None or meta.get("evidence_fingerprint") != fingerprint(model, section):
+                raise RuntimeError(f"Design evidence changed; regenerate page before publishing: {rel}")
+    if section and section.get("kind", "prose") == "prose":
+        if model and meta.get("source_commit") != model.meta.get("source_commit"):
+            raise RuntimeError(f"Facts and page source commits differ: {rel}")
+        diagram = section_diagram(cfg, model, section) if model else ""
+        block = diagram_block(diagram)
+        if "<!-- sdd:class-diagram -->" in body:
+            # Keep the heading for existing route links, but never retain stale edges.
+            replacement = block.strip() or "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다."
+            body = re.sub(r"<!-- sdd:class-diagram -->.*?<!-- /sdd:class-diagram -->", lambda _: replacement, body, flags=re.S)
+            block = ""
+        if diagram:
+            diagram_source = diagram
+            before, marker, after = body.partition('??? note "근거와 검토 정보"')
+            # Move intact generated sections into reading order; preserve their wording.
+            parts = re.fullmatch(r"(.*?)^(## 관련 클래스\n.*?)(^## 구조 설명\n.*)", before, re.S | re.M)
+            if parts:
+                body = parts[1] + parts[3] + block + parts[2] + marker + after
+            else:
+                body = before + block + marker + after
+    if rel != glossary.PAGE and glossary.PAGE in texts:
+        body = glossary.insert(body, glossary.block(glossary.used_terms(terms, texts[rel]),
+                                                    posixpath.relpath(glossary.PAGE, posixpath.dirname(rel) or ".")))
+    from .visuals import place
+    from .generated_visuals import from_manuscript, render as render_visuals
+    artifact = from_manuscript(cfg, model, section, texts[rel]) if section else None
+    visuals = render_visuals(cfg, model, section, artifact) if section else []
+    body = place(body, visuals, section)
+    return page_title, meta, body, diagram_source, visuals
+
+
+def _heading_search(items, page_title, rel):
+    for item in items:
+        yield {"title": html.unescape(re.sub("<[^>]+>", "", item["name"])),
+               "page": page_title, "url": _html_path(rel) + "#" + quote(item["id"])}
+        yield from _heading_search(item.get("children", []), page_title, rel)
+
+
+def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_template):
     known = set(texts)
     rendered_pages = {}
     search = []
     diagram_sources = {}
     visual_sources = {}
     for group, name, rel in entries:
-        meta, body = _split(texts[rel])
-        if meta.get("generation_method") and meta.get("generation_method") != "manual":
-            if model is None or meta.get("source_commit") != model.meta.get("source_commit"):
-                raise RuntimeError(f"Facts and page source commits differ: {rel}")
-        if meta.get("scenario_fingerprint"):
-            from .scenario_document import build as scenario_document, fingerprint as scenario_fingerprint
-            sid = str(meta.get("scenario_id", ""))
-            settings = next((s for s in cfg.scenarios() if s["id"] == sid), {})
-            sc = model.scenarios.get(sid) if model else None
-            if sc is None or meta["scenario_fingerprint"] != scenario_fingerprint(sc, settings):
-                raise RuntimeError(f"Scenario evidence changed; regenerate page before publishing: {rel}")
-            sc_section = next((s for s in cfg.sections() if s["id"] == meta.get("section")), {})
-            policy = {**(cfg.raw.get("diagrams") or {}), **(sc_section.get("diagram") or {})}
-            scenario_document(sc, settings, int(policy.get("max_nodes", 16)))
-            sources = re.findall(r"```mermaid\n(.*?)\n```", body, re.S)
-            if len(sources) == 1:
-                diagram_sources[rel] = sources[0]
-        page_title = _title_of_text(body)
-        body = re.sub(r"^\s*# .+\n", "", body, count=1)
-        section = sections.get(rel, {})
-        if section and section.get("kind") != "manual":
-            if section.get("design_requirements") or section.get("reader_profile"):
-                from .design_contracts import enforce
-                if model is None:
-                    raise RuntimeError("facts.json is required to verify design requirements")
-                from . import generated_design
-                if generated_design.enabled(section):
-                    generated_design.verify(model, section, texts[rel])
-                else:
-                    enforce(model, section)
-            from .evidence import fingerprint, requires_fingerprint
-            if requires_fingerprint(section) or meta.get("evidence_fingerprint"):
-                if model is None or meta.get("evidence_fingerprint") != fingerprint(model, section):
-                    raise RuntimeError(f"Design evidence changed; regenerate page before publishing: {rel}")
-        if section and section.get("kind", "prose") == "prose":
-            if model and meta.get("source_commit") != model.meta.get("source_commit"):
-                raise RuntimeError(f"Facts and page source commits differ: {rel}")
-            diagram = section_diagram(cfg, model, section) if model else ""
-            block = diagram_block(diagram)
-            if "<!-- sdd:class-diagram -->" in body:
-                # Keep the heading for existing route links, but never retain stale edges.
-                replacement = block.strip() or "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다."
-                body = re.sub(r"<!-- sdd:class-diagram -->.*?<!-- /sdd:class-diagram -->", lambda _: replacement, body, flags=re.S)
-                block = ""
-            if diagram:
-                diagram_sources[rel] = diagram
-                before, marker, after = body.partition('??? note "근거와 검토 정보"')
-                # Move intact generated sections into reading order; preserve their wording.
-                parts = re.fullmatch(r"(.*?)^(## 관련 클래스\n.*?)(^## 구조 설명\n.*)", before, re.S | re.M)
-                if parts:
-                    body = parts[1] + parts[3] + block + parts[2] + marker + after
-                else:
-                    body = before + block + marker + after
-        if rel != glossary.PAGE and glossary.PAGE in texts:
-            body = glossary.insert(body, glossary.block(glossary.used_terms(terms, texts[rel]),
-                                                        posixpath.relpath(glossary.PAGE, posixpath.dirname(rel) or ".")))
-        from .visuals import place
-        from .generated_visuals import from_manuscript, render as render_visuals
-        artifact = from_manuscript(cfg, model, section, texts[rel]) if section else None
-        visuals = render_visuals(cfg, model, section, artifact) if section else []
-        body = place(body, visuals, section)
+        page_title, meta, body, diagram, visuals = _prepare_page_body(cfg, rel, texts, sections, terms, model)
+        if diagram is not None:
+            diagram_sources[rel] = diagram
         for visual, _, source in visuals:
             if source:
                 visual_sources[str(PurePosixPath(rel).with_suffix('')) + '.' + visual['id'] + '.mmd'] = source
@@ -386,13 +395,11 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         rendered_pages[rel] = (page_title, meta, content, toc)
         search.append({"title": page_title, "page": page_title, "url": _html_path(rel)})
 
-        def headings(items: list[dict]) -> None:
-            for item in items:
-                search.append({"title": html.unescape(re.sub("<[^>]+>", "", item["name"])),
-                               "page": page_title, "url": _html_path(rel) + "#" + quote(item["id"])})
-                headings(item.get("children", []))
+        search.extend(_heading_search(tokens, page_title, rel))
+    return rendered_pages, search, diagram_sources, visual_sources
 
-        headings(tokens)
+
+def _write_assets(cfg, out, mermaid_dir, visual_sources, terms):
     out.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ASSETS, out / "assets", dirs_exist_ok=True)
     for rel, source in visual_sources.items():
@@ -421,60 +428,75 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
                                "(`sdd fetch-mermaid` 로 준비하세요)")
         shutil.copytree(src_dir, out / "assets" / "mermaid", dirs_exist_ok=True)
     (out / ".nojekyll").write_text("", encoding="utf-8")
+    return asset_version, terms_version
+
+
+def _navigation_html(entries, sections, rel, current):
+    nav = []
+    last_group = None
+    last_section = None
+    branch_open = False
+    for nav_group, nav_title, nav_rel in entries:
+        nav_section = _nav_section(nav_rel, sections)
+        section_changed = (nav_group, nav_section) != last_section
+        child = _is_child(nav_rel)
+        if branch_open and (not child or section_changed):
+            nav.append("</details>")
+            branch_open = False
+        if section_changed and last_section and last_section[1]:
+            nav.append("</section>")
+        if nav_group != last_group:
+            if nav_group:
+                nav.append(f'<p class="nav-group">{html.escape(nav_group)}</p>')
+            last_group = nav_group
+        if section_changed:
+            if nav_section:
+                nav.append(f'<section class="nav-section" aria-label="{html.escape(nav_section, quote=True)}">'
+                           f'<h2>{html.escape(nav_section)}</h2>')
+            last_section = (nav_group, nav_section)
+        active = ' aria-current="page"' if nav_rel == rel else ""
+        link = (f'<a{" class=" + chr(34) + "nav-sub" + chr(34) if child else ""}'
+                f' href="{_href(_html_path(nav_rel), current)}"{active}>{html.escape(nav_title)}</a>')
+        if child and not branch_open:
+            # 하위 문서는 접었다 펼 수 있게 묶는다. 읽고 있는 가지만 펴 둔다.
+            count = sum(1 for _, _, r in entries if _branch_of(r) == _branch_of(nav_rel) and _is_child(r))
+            opened = " open" if _branch_of(rel) == _branch_of(nav_rel) else ""
+            nav.append(f'<details class="nav-branch"{opened}>'
+                       f'<summary>하위 문서 {count} 편</summary>')
+            branch_open = True
+        nav.append(link)
+    if branch_open:
+        nav.append("</details>")
+    if last_section and last_section[1]:
+        nav.append("</section>")
+    return nav
+
+
+def _pagination_html(entries, sections, index, rel, current):
+    previous_next = []
+    for offset, label in [(-1, "이전"), (1, "다음")]:
+        other = index + offset
+        fragment = ''
+        if offset == 1 and sections.get(rel, {}).get('next', {}).get('link'):
+            destination, _, requested_fragment = sections[rel]['next']['link'].partition('#')
+            selected = next((i for i, entry in enumerate(entries) if entry[2] == (destination or rel)), None)
+            if selected is not None:
+                other, fragment = selected, requested_fragment
+        if 0 <= other < len(entries):
+            _, dest_title, dest_rel = entries[other]
+            destination_href = _href(_html_path(dest_rel), current) + ('#' + quote(fragment) if fragment else '')
+            previous_next.append(f'<a class="{"previous" if offset < 0 else "next"}" href="{destination_href}"><small>{label}</small>{html.escape(dest_title)} {"←" if offset < 0 else "→"}</a>')
+    return previous_next
+
+
+def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, ledger, diagram_sources,
+                 mermaid_src, *, title, asset_version, terms_version):
     for index, (group, name, rel) in enumerate(entries):
         current = _html_path(rel)
         root = _href("index.html", current).removesuffix("index.html") or "./"
         page_title, meta, content, toc = rendered_pages[rel]
-        nav = []
-        last_group = None
-        last_section = None
-        branch_open = False
-        for nav_group, nav_title, nav_rel in entries:
-            nav_section = _nav_section(nav_rel, sections)
-            section_changed = (nav_group, nav_section) != last_section
-            child = _is_child(nav_rel)
-            if branch_open and (not child or section_changed):
-                nav.append("</details>")
-                branch_open = False
-            if section_changed and last_section and last_section[1]:
-                nav.append("</section>")
-            if nav_group != last_group:
-                if nav_group:
-                    nav.append(f'<p class="nav-group">{html.escape(nav_group)}</p>')
-                last_group = nav_group
-            if section_changed:
-                if nav_section:
-                    nav.append(f'<section class="nav-section" aria-label="{html.escape(nav_section, quote=True)}">'
-                               f'<h2>{html.escape(nav_section)}</h2>')
-                last_section = (nav_group, nav_section)
-            active = ' aria-current="page"' if nav_rel == rel else ""
-            link = (f'<a{" class=" + chr(34) + "nav-sub" + chr(34) if child else ""}'
-                    f' href="{_href(_html_path(nav_rel), current)}"{active}>{html.escape(nav_title)}</a>')
-            if child and not branch_open:
-                # 하위 문서는 접었다 펼 수 있게 묶는다. 읽고 있는 가지만 펴 둔다.
-                count = sum(1 for _, _, r in entries if _branch_of(r) == _branch_of(nav_rel) and _is_child(r))
-                opened = " open" if _branch_of(rel) == _branch_of(nav_rel) else ""
-                nav.append(f'<details class="nav-branch"{opened}>'
-                           f'<summary>하위 문서 {count} 편</summary>')
-                branch_open = True
-            nav.append(link)
-        if branch_open:
-            nav.append("</details>")
-        if last_section and last_section[1]:
-            nav.append("</section>")
-        previous_next = []
-        for offset, label in [(-1, "이전"), (1, "다음")]:
-            other = index + offset
-            fragment = ''
-            if offset == 1 and sections.get(rel, {}).get('next', {}).get('link'):
-                destination, _, requested_fragment = sections[rel]['next']['link'].partition('#')
-                selected = next((i for i, entry in enumerate(entries) if entry[2] == (destination or rel)), None)
-                if selected is not None:
-                    other, fragment = selected, requested_fragment
-            if 0 <= other < len(entries):
-                _, dest_title, dest_rel = entries[other]
-                destination_href = _href(_html_path(dest_rel), current) + ('#' + quote(fragment) if fragment else '')
-                previous_next.append(f'<a class="{"previous" if offset < 0 else "next"}" href="{destination_href}"><small>{label}</small>{html.escape(dest_title)} {"←" if offset < 0 else "→"}</a>')
+        nav = _navigation_html(entries, sections, rel, current)
+        previous_next = _pagination_html(entries, sections, index, rel, current)
         info = []
         method_label, method_scope = generation_info(str(meta.get("generation_method", "")))
         if meta:
@@ -523,12 +545,40 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
         target = out / current
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(doc, encoding="utf-8", newline="\n")
+
+
+def _write_search(out, rendered_pages, search, terms):
     if glossary.PAGE in rendered_pages:
         # 용어 이름으로도 찾게 하고, 본문 스크립트가 쓸 뜻 자료를 함께 둔다.
         search.extend(glossary.search_entries(terms, rendered_pages[glossary.PAGE][0]))
         (out / "assets" / "glossary.json").write_text(json.dumps(glossary.data(terms), ensure_ascii=False),
                                                       encoding="utf-8")
     (out / "assets" / "search.json").write_text(json.dumps(search, ensure_ascii=False), encoding="utf-8")
+
+
+def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None) -> Path:
+    from .document_health import retired_paths
+    retired = retired_paths(cfg)
+    settings = cfg.raw.get("site", {}) or {}
+    title = str(settings.get("title", "Camera HAL SDD"))
+    source_url = str(settings.get("source_url", ""))
+    link_template = source_link_template(settings)
+    # Mermaid 우선순위: --mermaid > site.mermaid > site.mermaid_dir(사이트에 동봉) > 공개 CDN.
+    mermaid_dir = settings.get("mermaid_dir")
+    mermaid_src = mermaid_src or str(settings.get("mermaid") or "")
+    if not mermaid_src:
+        mermaid_src = f"assets/mermaid/{MERMAID_ENTRY}" if mermaid_dir else MERMAID
+    out = (out or cfg.build_dir / "site").resolve()
+    if out == cfg.sdd_dir.resolve() or out in cfg.sdd_dir.resolve().parents:
+        raise RuntimeError("Site output must be separate from the Markdown source directory")
+    sections, entries = _site_navigation(cfg, settings, retired)
+    texts, approval_states, ledger, terms, model = _prepare_site_pages(cfg, settings, sections, entries)
+    rendered_pages, search, diagram_sources, visual_sources = _render_pages(
+        cfg, entries, sections, texts, terms, model, source_url, link_template)
+    asset_version, terms_version = _write_assets(cfg, out, mermaid_dir, visual_sources, terms)
+    _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, ledger, diagram_sources,
+                 mermaid_src, title=title, asset_version=asset_version, terms_version=terms_version)
+    _write_search(out, rendered_pages, search, terms)
     from .site_localization import localize_site
     localize_site(cfg, out)
     return out
