@@ -121,3 +121,16 @@ def test_explicit_answer_budget_keeps_coverage_and_saved_answer_limit():
     topic['parts'][0].pop('answer_contract')
     with pytest.raises(ValueError, match='id'):
         validate(topic, [{k:v for k,v in answer.items() if k != 'part_id'} for answer in answers])
+
+
+def test_reader_observed_state_and_void_owner_errors_are_rejected():
+    root = Path(__file__).resolve().parents[1]
+    sections = yaml.safe_load((root/'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
+    section = next(s for s in sections if s['id']=='request-lifecycle')
+    topic = next(t for t in section['design_topics'] if t['id']=='configuration-failure')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id']=='entry')
+    with pytest.raises(ValueError, match='상태 범위'):
+        check(rule, [statement('Camera::configure의 isAccessAllowed 반환을 관찰하면 CameraAcquired이고 CameraConfigured인지 확인합니다.')], 'entry')
+    topic = next(t for t in section['design_topics'] if t['id']=='journey')
+    with pytest.raises(ValueError, match='void'):
+        check(topic['answer_contract'], [statement('PipelineHandler::doQueueRequest() 함수는 성공 시 0을 반환합니다.')], 'journey')

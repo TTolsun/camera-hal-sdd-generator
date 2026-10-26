@@ -73,6 +73,30 @@ class Archive:
         class Reviewer:
             def __init__(self):
                 self.replayed_http_calls = 0
+                self.translation_replays = []
+            def translation_candidates(self, system):
+                rows = sorted((r for items in archive.exact.values() for r in items),
+                              key=lambda r: r['completed_at'])
+                for record in rows:
+                    if record['request']['system'] != system:
+                        continue
+                    try:
+                        request, _ = json.JSONDecoder().raw_decode(record['request']['user'])
+                        sources = request['texts']
+                        values = json.loads(record['raw'])['translations']
+                        fields = record['request']['response_schema']['properties']['translations']['properties']
+                        if (not isinstance(sources, dict) or not isinstance(values, dict)
+                                or sources.keys() != values.keys() or fields.keys() != sources.keys()
+                                or any(fields[k].get('type') != 'string' for k in sources)):
+                            continue
+                        yield record, sources, values
+                    except (ValueError, KeyError, TypeError, AttributeError):
+                        continue
+            def record_translation_reuse(self, record, sources):
+                self.replayed_http_calls += 1
+                self.translation_replays.append({key: record[key] for key in
+                    ('receipt', 'request_sha256', 'response_sha256')} |
+                    {'source_sha256': [hashlib.sha256(s.encode()).hexdigest() for s in sources]})
             def chat(self, system, user, **kwargs):
                 key = sha({'system': system, 'user': user, 'response_schema': kwargs.get('response_schema')})
                 rows = archive.exact.get(key, [])

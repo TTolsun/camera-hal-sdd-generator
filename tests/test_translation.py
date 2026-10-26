@@ -181,3 +181,44 @@ def test_reported_documentation_request_is_not_a_binding_api_obligation():
     _check_obligation(source, translated)
     with pytest.raises(ValueError, match='binding obligation'):
         _check_obligation(source + ' 호출자는 버퍼를 유지해야 합니다.', translated)
+
+
+def test_translation_http_replay_survives_batch_id_change_and_rechecks_source(tmp_cfg, monkeypatch):
+    from sdd.llm import Agent
+    from sdd.design_replay import Archive
+    tmp_cfg.agent.kind = 'ollama'
+    tmp_cfg.raw['site'] = {'translation_batch_size': 6}
+    calls = []
+    def respond(self, system, user, response_schema=None):
+        calls.append(user)
+        texts, _ = json.JSONDecoder().raw_decode(user)
+        return json.dumps({'translations': {k: '{{0}} process.' for k in texts['texts']}})
+    monkeypatch.setattr(Agent, '_ollama', respond)
+    dump = tmp_cfg.build_dir/'translation-prompts'
+    first = translate_missing(tmp_cfg, {'strings': {'{{0}} 처리': ''}}, Agent(tmp_cfg.agent, dump))
+    assert first['strings']['{{0}} 처리'] == '{{0}} process.'
+    replay = Archive(dump/'calls', tmp_cfg.agent).reviewer(Agent(tmp_cfg.agent, dump))
+    second = translate_missing(tmp_cfg, {'strings': {'기존': 'Existing.', '{{0}} 처리': ''}}, replay)
+    assert second['strings']['{{0}} 처리'] == '{{0}} process.'
+    assert len(calls) == 1 and replay.replayed_http_calls == 1
+    assert replay.translation_replays[0]['source_sha256']
+    translate_missing(tmp_cfg, {'strings': {'{{0}} 수정한 처리': ''}}, replay)
+    assert len(calls) == 2
+
+
+def test_batch_retries_only_failed_item_with_exact_missing_placeholder(tmp_cfg):
+    tmp_cfg.agent.kind = 'ollama'
+    tmp_cfg.raw['site'] = {'translation_batch_size': 6}
+    class Agent:
+        calls = 0
+        def chat(self, system, user, **kwargs):
+            self.calls += 1
+            texts, _ = json.JSONDecoder().raw_decode(user)
+            if self.calls == 1:
+                return json.dumps({'translations': {'0': 'First.', '1': '{{0}} gets a value.'}})
+            assert set(texts['texts']) == {'1'}
+            assert 'Translation ID 1' in user and '{{2}}' in user and 'Missing:' in user
+            return json.dumps({'translations': {'1': '{{0}} gets {{2}}.'}})
+    agent = Agent()
+    result = translate_missing(tmp_cfg, {'strings': {'첫 문장': '', '{{0}} 에 {{2}} 대입': ''}}, agent)
+    assert agent.calls == 2 and result['strings']['첫 문장'] == 'First.'

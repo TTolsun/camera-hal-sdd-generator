@@ -104,6 +104,32 @@ def _batched(cfg, catalog, agent, size):
               'Preserve grammatical subjects, conditional scope and may versus must. '
               'Return JSON with a translations object containing every input ID and English string only.')
     translated = dict(catalog['strings'])
+    def validate(source, text):
+        from collections import Counter
+        if not isinstance(text, str) or not text.strip() or KOREAN.search(text):
+            raise ValueError('Every translation must be nonempty English.')
+        expected = Counter(re.findall(r'\{\{\d+\}\}', source))
+        actual = Counter(re.findall(r'\{\{\d+\}\}', text))
+        if expected != actual:
+            raise ValueError(f'Preserve each placeholder in its own text. Missing: {list((expected-actual).elements())}; unexpected: {list((actual-expected).elements())}. Do not replace a placeholder with generic prose.')
+        _check_obligation(source, text)
+        return text.strip()
+    # A batch ID/order can change after a source-backed prose repair. Each
+    # translation is independent under the unchanged system instruction.
+    # Revalidate exact source strings from verified real HTTP records only.
+    if hasattr(agent, 'translation_candidates'):
+        for record, sources, values in agent.translation_candidates(system):
+            reused = []
+            for key, source in sources.items():
+                if source not in translated or translated[source]:
+                    continue
+                try:
+                    translated[source] = validate(source, values[key])
+                    reused.append(source)
+                except (ValueError, TypeError, KeyError):
+                    continue
+            if reused:
+                agent.record_translation_reuse(record, reused)
     missing = [(str(i), source) for i, (source, value) in enumerate(translated.items()) if not value]
     offset = 0
     while offset < len(missing):
@@ -115,35 +141,37 @@ def _batched(cfg, catalog, agent, size):
             if len(batch) == 1:
                 raise ValueError('Translation input exceeds the configured budget; text was not truncated.')
             batch.pop(next(reversed(batch)))
-        schema = {'type': 'object', 'required': ['translations'], 'additionalProperties': False,
-                  'properties': {'translations': {'type': 'object', 'required': list(batch),
-                     'additionalProperties': False, 'properties': {key: {'type': 'string'} for key in batch}}}}
+        pending, accepted = dict(batch), {}
+        feedback = ''
         for attempt in range(cfg.max_retries + 1):
+            user = json.dumps({'texts': pending}, ensure_ascii=False) + feedback
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Translation retry exceeds the configured budget; text was not truncated.')
+            schema = {'type': 'object', 'required': ['translations'], 'additionalProperties': False,
+                      'properties': {'translations': {'type': 'object', 'required': list(pending),
+                         'additionalProperties': False, 'properties': {key: {'type': 'string'} for key in pending}}}}
             options = {'response_schema': schema} if cfg.agent.kind in ('ollama', 'response-bundle') else {}
             raw = agent.chat(system, user, tag=f'translation_batch_{offset}_{attempt}', **options)
             try:
                 result = json.loads(raw)
                 values = result['translations']
-                if set(result) != {'translations'} or not isinstance(values, dict) or set(values) != set(batch):
+                if set(result) != {'translations'} or not isinstance(values, dict) or set(values) != set(pending):
                     raise ValueError('Return exactly the requested translation IDs.')
-                for key, source in batch.items():
-                    text = values[key]
-                    if not isinstance(text, str) or not text.strip() or KOREAN.search(text):
-                        raise ValueError('Every translation must be nonempty English.')
-                    if sorted(re.findall(r'\{\{\d+\}\}', text)) != sorted(re.findall(r'\{\{\d+\}\}', source)):
-                        raise ValueError('Preserve every original placeholder in its own text.')
+                errors = []
+                for key, source in list(pending.items()):
                     try:
-                        _check_obligation(source, text)
-                    except ValueError as exc:
-                        raise ValueError(f'Translation ID {key}: {exc}') from exc
-                translated.update({source: values[key].strip() for key, source in batch.items()})
+                        accepted[key] = validate(source, values[key])
+                        del pending[key]
+                    except (ValueError, TypeError, KeyError) as exc:
+                        errors.append(f'Translation ID {key}: {exc}')
+                if pending:
+                    raise ValueError(' / '.join(errors))
+                translated.update({source: accepted[key] for key, source in batch.items()})
                 print(f'Translation: {offset + len(batch)}/{len(missing)} strings', flush=True)
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last_error = str(exc)
-                user += '\nCorrect the previous output: ' + str(exc)
+                feedback = '\nCorrect the previous output: ' + last_error
         else:
             raise ValueError('Translation batch failed validation at offset ' + str(offset) + ': ' + last_error)
         offset += len(batch)

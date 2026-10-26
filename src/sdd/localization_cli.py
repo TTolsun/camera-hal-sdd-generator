@@ -62,7 +62,8 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
     return {'pages': len(pages), 'strings': len(units),
             'missing_translations': sum(not value for value in catalog['strings'].values()),
             'human_review': 'pending',
-            'replayed_http_calls': getattr(translation_agent, 'replayed_http_calls', 0)}
+            'replayed_http_calls': getattr(translation_agent, 'replayed_http_calls', 0),
+            'translation_replays': getattr(translation_agent, 'translation_replays', [])}
 
 
 def main() -> None:

@@ -3851,16 +3851,22 @@ sections:
     - configuration-failure
     parts:
     - id: entry
-      question: 첫 조사 지점의 파일과 Camera::configure에서 실제 호출한 isAccessAllowed의 반환값을 관찰하는 계획을 설명하세요. 성공이면 다음 검증 단계로 이동하고 상태 변경 함수를
-        재호출하지 마세요.
+      question: Camera::configure 내부에 표시된 isAccessAllowed 원래 호출의 반환값 ret를 관찰하고 실패 반환 분기를 기록하는 조사 계획을 설명하세요. 소스에 없는 선행 호출을
+        만들지 마세요.
       sources:
-      - configure-code
-      - configure
+      - configure-access
       answer_contract:
         basis: investigation
         required_terms:
         - - configure
         - - isAccessAllowed
+        - - 반환
+        - - 관찰
+          - 확인
+          - 기록
+        reject_patterns:
+        - pattern: CameraAcquired.{0,25}(?:이고|이면서|동시에).{0,25}CameraConfigured|CameraConfigured.{0,25}(?:이고|이면서|동시에).{0,25}CameraAcquired
+          message: 상태 범위의 두 경계를 동시에 만족하는 상태로 바꾸지 마세요.
     - id: access
       question: isAccessAllowed에서 disconnected_와 allowDisconnected 조건에 따라 -ENODEV가 나오는 분기만 관찰하는 조사 계획을 설명하세요.
       sources:
@@ -3995,6 +4001,15 @@ sections:
       start: Stream *stream = cfg.stream();
       end: return -EINVAL;
       scope: *id017
+    - id: configure-access
+      file: src/libcamera/camera.cpp
+      start: int ret = d->isAccessAllowed(Private::CameraAcquired,
+      end: return ret;
+      scope:
+        start: int Camera::configure(CameraConfiguration *config)
+        end: '
+
+          }'
   - id: journey
     title: 제출에서 완료까지
     question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임, 버퍼 완료와 요청
@@ -4020,8 +4035,118 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Complete a buffer for a request
       end: \brief Retrieve the absolute path to a platform configuration file
+    - id: dispatch
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequest(Request *request)
+      end: '
+
+        }'
+    - id: device-contract
+      file: src/libcamera/pipeline_handler.cpp
+      start: \fn PipelineHandler::queueRequestDevice()
+      end: '*/'
+    - id: buffer-notice
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
+    - id: request-notice
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Signal request completion
+      end: \brief Cancel request and signal its completion
     covers:
     - journey
+    parts:
+    - id: create
+      question: 요청 생성 API의 반환 객체와 생성 후 소유자를 설명하세요.
+      sources:
+      - create
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - createRequest
+        - - 요청
+    - id: buffer
+      question: 버퍼를 요청의 어느 스트림에 연결하는 API인지 설명하세요.
+      sources:
+      - buffer
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - addBuffer
+        - - 스트림
+    - id: submission
+      question: Camera::queueRequest의 성공 반환 의미와 이후 완료 신호를 구분하세요.
+      sources:
+      - queue
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - queueRequest
+        - - 완료
+    - id: waiting
+      question: 대기 큐와 준비 상태·장치 큐 한도가 요청 전달을 제한하는 경로를 설명하세요.
+      sources:
+      - device-queue
+      max_statements: 3
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - waitingRequests_
+        - - prepared_
+        - - maxQueuedRequestsDevice_
+    - id: dispatch
+      question: 이 void 함수의 취소 여부 분기와 각 호출을 설명하세요. 반환값을 지어내지 마세요.
+      sources:
+      - dispatch
+      max_statements: 3
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - doQueueRequest
+        - - cancelled_
+        - - completeRequest
+        - - queueRequestDevice
+    - id: device-result
+      question: 이 반환 계약이 속한 함수 이름과 성공·실패 반환값을 설명하세요.
+      sources:
+      - device-contract
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - queueRequestDevice
+        - - '0'
+        - - 음수
+    - id: buffer-complete
+      question: 버퍼 완료 통지 의무와 마지막 버퍼 이후 별도 요청 완료 의무를 설명하세요.
+      sources:
+      - buffer-notice
+      - completion
+      max_statements: 2
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - completeBuffer
+        - - completeRequest
+        - - 완료
+    - id: request-complete
+      question: 요청 완료 함수의 선두 Pending 검사와 애플리케이션 반환 순서를 설명하세요.
+      sources:
+      - request-notice
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - completeRequest
+        - - RequestPending
+    answer_contract:
+      basis: description
+      reject_patterns:
+      - pattern: doQueueRequest(?!Device).{0,35}(?:성공\s*시|성공하면).{0,15}0.{0,15}반환
+        message: doQueueRequest는 void입니다. queueRequestDevice의 반환 계약과 바꾸지 마세요.
   - id: resources
     title: 요청·버퍼·fence의 수명
     question: 요청과 버퍼의 소유권·유효 기간, reuse()가 초기화하는 상태·controls·metadata 및 ReuseBuffers 조건, fence 소유권과 재사용 주의, completeRequest()/cancelRequest()
@@ -4491,7 +4616,9 @@ sections:
       end: running state.
       scope:
         start: \brief Notify camera disconnection
-        end: int Camera::exportFrameBuffers(Stream *stream,
+        end: '
+
+          }'
     - id: pending-requeue
       file: src/libcamera/pipeline_handler.cpp
       start: doQueueRequest(request
@@ -4600,7 +4727,7 @@ sections:
         required_terms:
         - - disconnected
     - id: disconnect-todo
-      question: 이 TODO가 남겨 둔 요청 처리 대상과 발생 조건을 설명하세요. 이미 실행된 취소·완료 동작으로 쓰지 마세요.
+      question: 이 TODO 주석이 속한 함수 이름과 남겨 둔 요청 처리 대상·발생 조건을 설명하세요. 다음 함수의 소속으로 바꾸지 마세요.
       sources:
       - disconnect-todo
       answer_contract:
@@ -4608,6 +4735,10 @@ sections:
         required_terms:
         - - TODO
         - - 요청
+        - - disconnect
+        reject_patterns:
+        - pattern: exportFrameBuffers
+          message: 발췌 끝의 다음 함수를 TODO 소속으로 바꾸지 마세요.
   - id: review
     title: 변경 검토와 실행 확인
     question: 소스에서 확인할 제출·완료 차이, 명시적 요청 완료 책임, 선두 Pending과 반환 순서, 재사용 초기화, 정지 중 대기 요청 처리를 정리하세요. 정상 반복·fence 대기·장치 오류·미완료
@@ -4631,6 +4762,62 @@ sections:
       end: \brief Determine if the camera has any requests pending
     covers:
     - review
+    parts:
+    - id: submission-record
+      question: queueRequest 기존 호출의 반환값과 다음 완료 통지 여부를 어떤 항목으로 기록할지 소스 기반 조사 계획을 설명하세요. 실행한 결과를 만들지 마세요.
+      sources:
+      - queue
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - queueRequest
+        - - 반환
+        - - 기록
+    - id: reuse-state-record
+      question: reuse 호출 전후 status_ 값을 기록하는 소스 기반 조사 계획을 설명하세요.
+      sources:
+      - reuse
+      max_statements: 1
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - status_
+        - - 기록
+    - id: reuse-data-record
+      question: reuse 호출 전후 controls_와 metadata_ 초기화 여부를 기록하는 소스 기반 조사 계획을 설명하세요.
+      sources:
+      - reuse
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - controls_
+        - - metadata_
+        - - 기록
+    - id: completion-record
+      question: completeRequest 진입 시 대상 요청과 선두 요청 상태, RequestPending 분기의 검사 결과를 기록하는 소스 기반 조사 계획을 설명하세요.
+      sources:
+      - completion
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - completeRequest
+        - - RequestPending
+        - - 기록
+    - id: stop-record
+      question: stopDevice 진입·복귀 여부와 queuedRequests_·waitingRequests_ 검사 결과를 기록하는 소스 기반 조사 계획을 설명하세요. 실제 정지 성공을 주장하지 마세요.
+      sources:
+      - device-stop
+      max_statements: 3
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - stopDevice
+        - - queuedRequests_
+        - - waitingRequests_
+        - - 기록
   design_requirements:
   - id: journey
     question: 제출 성공 이후의 대기 조건과 완료 책임은 무엇입니까?
