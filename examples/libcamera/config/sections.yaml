@@ -1030,7 +1030,8 @@ sections:
         - - createIPA
         - - nullptr
     - id: signature
-      question: 프록시를 선택하는 if 조건식 전체와 참·거짓 분기의 반환식을 코드 그대로 적어 설명하세요. 조건식에 논리 연산자가 실제로 있는 경우에만 단락 평가를 설명하세요.
+      question: if 조건식 전체를 코드 그대로 적고, 참 분기의 Threaded 반환식과 거짓 분기의 Isolated 반환식을 각각 설명하세요. Threaded와 Isolated 두 식별자를 모두 포함하세요.
+        조건식에 논리 연산자가 실제로 있는 경우에만 단락 평가와 실행되는 분기를 설명하세요.
       sources:
       - proxy-kind
       answer_contract:
@@ -1603,7 +1604,8 @@ sections:
         - - nullptr
         reject_patterns: []
     - id: proxy-choice
-      question: 프록시를 선택하는 if 조건식 전체와 참·거짓 분기의 반환식을 코드 그대로 적어 설명하세요. 조건식에 논리 연산자가 실제로 있는 경우에만 단락 평가를 설명하세요.
+      question: if 조건식 전체를 코드 그대로 적고, 참 분기의 Threaded 반환식과 거짓 분기의 Isolated 반환식을 각각 설명하세요. Threaded와 Isolated 두 식별자를 모두 포함하세요.
+        조건식에 논리 연산자가 실제로 있는 경우에만 단락 평가와 실행되는 분기를 설명하세요.
       sources:
       - proxy-choice
       max_statements: 3
@@ -1707,13 +1709,8 @@ sections:
     - lifetime
   - id: errors
     title: 생성과 IPC 실패
-    question: createIPA의 nullptr 반환 조건, 모듈 로딩·심볼 검색 오류, Isolated 프록시 유효성 및 IPC sendSync의 타임아웃·오류 반환을 구분하세요. 서명 판정을 생성 실패로
-      바꾸지 마세요.
+    question: 모듈 로딩·심볼 검색 오류, Isolated 프록시 유효성 및 IPC sendSync의 타임아웃·오류 반환을 구분하세요. createIPA의 선택과 반환은 모듈 탐색 주제에서 다룹니다.
     sources:
-    - id: selection
-      file: include/libcamera/internal/ipa_manager.h
-      start: template<typename T>
-      end: '#if HAVE_IPA_PUBKEY'
     - id: load
       file: src/libcamera/ipa_module.cpp
       start: \brief Load the IPA implementation factory
@@ -1722,12 +1719,49 @@ sections:
       file: utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl
       start: '{{proxy_name}}Isolated::{{proxy_name}}Isolated('
       end: void {{proxy_name}}Isolated::recvMessage(
-    - id: ipc
+    - id: ipc-send
       file: src/libcamera/ipc_pipe_unixsocket.cpp
-      start: IPCPipeUnixSocket::IPCPipeUnixSocket(
+      start: int IPCPipeUnixSocket::sendSync(
+      end: int IPCPipeUnixSocket::sendAsync(
+    - id: ipc-call
+      file: src/libcamera/ipc_pipe_unixsocket.cpp
+      start: int IPCPipeUnixSocket::call(
       end: '} /* namespace libcamera */'
     covers:
     - errors
+    design_prompt: focused
+    parts:
+    - id: load-state
+      question: IPAModule::load에서 if (!valid_)와 if (loaded_) 각각의 반환값을 코드 그대로 읽어 설명하세요. 두 조건을 합치지 마세요.
+      sources:
+      - load
+      max_statements: 1
+    - id: load-failure
+      question: IPAModule::load에서 dlopen 실패와 dlsym 실패가 각각 실행하는 반환·핸들 정리 코드를 설명하세요. 두 분기의 차이를 유지하세요.
+      sources:
+      - load
+      max_statements: 1
+    - id: interface
+      question: IPAModule::createInterface의 if 조건식 전체와 그때 반환값, 조건이 거짓일 때 호출식을 설명하세요.
+      sources:
+      - load
+      max_statements: 1
+    - id: isolated
+      question: Isolated 생성자에서 워커 경로 확인·IPC 파이프 생성·연결 검사 실패 시 반환과 valid_ 설정을 설명하세요.
+      sources:
+      - isolated
+      max_statements: 1
+    - id: ipc-send
+      question: IPCPipeUnixSocket::sendSync가 호출하는 함수 이름, ret가 0이 아닐 때 반환값, 성공 시 out 처리와 반환값을 설명하세요.
+      sources:
+      - ipc-send
+      max_statements: 1
+    - id: ipc-call
+      question: IPCPipeUnixSocket::call에서 socket_->send가 실패하면 수행하는 정리와 반환을 설명하고, 타이머 만료 시 정리와 반환 오류 식별자를 설명하세요. 정상 완료 조건과
+        마지막 반환값도 구분하세요.
+      sources:
+      - ipc-call
+      max_statements: 1
   - id: tuning
     title: 보정 전 튜닝 파일
     question: RKISP1과 Mali-C55의 센서별 파일 이름과 fallback 요청, IPAProxy::configurationFile()의 대체 파일 검색, 두 uncalibrated.yaml의 알고리즘

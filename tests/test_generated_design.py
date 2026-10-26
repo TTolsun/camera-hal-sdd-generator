@@ -322,6 +322,33 @@ def test_legacy_reuse_requires_full_old_fingerprint_and_intact_body(tmp_cfg, gen
     assert not reusable(model, section, legacy, topic_inputs(model, section, 'policy'))[0]
 
 
+def test_structural_change_rebuilds_page_without_rewriting_unchanged_source_prose(tmp_cfg, generated):
+    from sdd.facts.model import ClassInfo
+    from sdd.impact import ImpactReport
+    section, model, save, agent = generated
+    section['facts'] = {'classes': ['Device'], 'class_table': False}
+    model.classes['Device'] = ClassInfo('Device', brief='Before structural extraction')
+    save()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    old_fingerprint = fingerprint(model, section)
+    model.classes['Device'].brief = 'After structural extraction'
+    record = model.evidence['device/stop/stop']
+    record.update(line=11, end_line=11)
+    save()
+    assert fingerprint(model, section) != old_fingerprint
+    agent.calls.clear()
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert not agent.calls
+    verify(model, section, path.read_text(encoding='utf-8'))
+    assert 'device.cpp:11' in path.read_text(encoding='utf-8')
+    record = model.evidence['device/stop/stop']
+    record['text'] += ' // Changed evidence still requires generation'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    save()
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport(base='a'*40, head='b'*40, sections=['device']))
+    assert len(agent.calls) == 1
+
+
 @pytest.mark.parametrize('extension', ['frag', 'vert', 'comp'])
 def test_generated_shader_explanation_is_cited_and_exported(tmp_cfg, generated, extension):
     from sdd.validate import check
