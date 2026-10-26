@@ -24,12 +24,11 @@ from .contract_render import coverage_table, SourceDetails
 from .scenario_document import build as scenario_document, hidden_message, fingerprint as scenario_fingerprint
 from .facts.model import ClassInfo, FunctionInfo, KnowledgeModel
 from .impact import ImpactReport
-from .matching import is_anonymous, matches_symbol, package_of, package_selected
+from .matching import matches_symbol, package_of, package_selected
 from .narration import Narrator, ChatPort
 from .page_writer import PageWriter
 from .fact_presenter import FactPresenter
 from .markdown_text import slugify
-from .prompting import style_rules, compose_system_prompt
 from .validate import Verdict, extract_citations
 from .llm import AgentError
 from . import generated_design, routes
@@ -90,7 +89,8 @@ class Generator:
                     section_diagram(self.cfg, self.model, sec)
                     previous_path = self.cfg.sdd_dir / section_output(sec)
                     previous = previous_path.read_text(encoding='utf-8') if impact and previous_path.exists() else None
-                    self.generated_designs[sec['id']] = generated_design.generate(self, sec, previous)
+                    self.generated_designs[sec['id']] = generated_design.generate(self.cfg, self.model, self.agent, sec, previous,
+                        replay_http=self.replay_http, all_design_units=self.all_design_units)
                     reports[sec['id']] = self.generated_designs[sec['id']][2]
                 except (ValueError, AgentError) as exc:
                     reports[sec['id']] = {'status': 'incomplete', 'requirements': [],
@@ -151,20 +151,20 @@ class Generator:
         blocks: list[Block] = []
 
         if facts.get("packages"):
-            t = self._package_table(facts["packages"])
+            t = self.facts.package_table(facts["packages"])
             tables.append("## 패키지별 역할\n\n" + t)
             blocks.append(Block("packages", "### 패키지별 역할\n" + t, 0))
-            deps = self._package_deps_table(facts["packages"])
+            deps = self.facts.package_deps_table(facts["packages"])
             if deps:
                 tables.append("## 패키지 사이의 의존\n\n" + deps)
                 blocks.append(Block("package-deps", "### 패키지 사이의 의존\n" + deps, 1))
         if facts.get("functions"):
-            t = self._entrypoint_table(facts["functions"])
+            t = self.facts.entrypoint_table(facts["functions"])
             if t:
                 tables.append("## 관련 자유 함수\n\n" + t)
                 blocks.append(Block("functions", "### 관련 자유 함수\n" + t, 2))
         if facts.get("classes"):
-            classes = [c for c in self._sorted_classes() if _match_class(c, sec)]
+            classes = [c for c in self.facts.sorted_classes() if _match_class(c, sec)]
             missing_classes = [name for name in facts["classes"] if not any(ch in name for ch in "*?[")
                                and not any(matches_symbol(c.name, [name]) for c in classes)]
             if missing_classes:
@@ -223,7 +223,7 @@ class Generator:
                 parts.append(sources.render())
             prose = "\n\n".join(parts)
         elif sec.get("narration") == "facts":
-            selected = {c.name for c in self._sorted_classes() if _match_class(c, sec)}
+            selected = {c.name for c in self.facts.sorted_classes() if _match_class(c, sec)}
             text = structural_text(self.model, selected)
             omitted = []
             verdict = Verdict(ok=bool(selected) and all(self.model.classes[n].loc for n in selected))
@@ -475,18 +475,6 @@ class Generator:
 
     # ---- 사실에서 만드는 표와 목록 -------------------------------------------------
 
-    def _sorted_classes(self, *args, **kwargs):
-        return self.facts._sorted_classes(*args, **kwargs)
-
-    def _package_table(self, *args, **kwargs):
-        return self.facts._package_table(*args, **kwargs)
-
-    def _package_deps_table(self, *args, **kwargs):
-        return self.facts._package_deps_table(*args, **kwargs)
-
-    def _entrypoint_table(self, *args, **kwargs):
-        return self.facts._entrypoint_table(*args, **kwargs)
-
     def _ordered_scenarios(self) -> list[tuple[str, Any]]:
         """scenarios.yaml 에 적은 순서대로 돌려준다.
 
@@ -516,9 +504,6 @@ class Generator:
                 "3. 예약된 호출과 완료 통지를 구분하고, 실행 스레드는 연결 코드와 대조합니다.")
 
 
-    def _entity_files(self, *args, **kwargs):
-        return self.facts._entity_files(*args, **kwargs)
-
     def _diagram_ref(self, name: str | None) -> str:
         if not name:
             return ""
@@ -543,7 +528,7 @@ class Generator:
         page = self._render(title=sec["title"], lead=sec.get("lead", ""), body=body,
                             routes=routes or _routes_from_config(sec) or
                                    _routes_from_headings(body),
-                            evidence=self._evidence_lines(blocks, tables, verdict, omitted, self._entity_files(sec)),
+                            evidence=self._evidence_lines(blocks, tables, verdict, omitted, self.facts.entity_files(sec)),
                             next_link=_next_of(sec), status=status, omitted=omitted, extra=extra, page_path=path)
         if generated_design.enabled(sec):
             from .document_metadata import split_frontmatter

@@ -23,7 +23,7 @@ from .evaluate_reader import evaluate
 from .repair_reader import repair
 from .evidence import collect
 from .facts.model import KnowledgeModel
-from .llm import Agent, AgentError
+from .llm import Agent, AgentError, LIVE_KINDS
 from . import reader_loop_policy as policy
 
 
@@ -53,21 +53,17 @@ class Budget:
         if self.clock() - self.started >= self.limits.max_seconds:
             raise BudgetExceeded('time_limit')
 
-    def wrap(self, agent):
+    def wrap(self, agent, settings):
         budget = self
         class BoundedAgent:
-            @property
-            def _counter(self):
-                return agent._counter
-
             def chat(self, system, user, **kwargs):
                 budget.check()
                 if budget.calls >= budget.limits.max_calls:
                     raise BudgetExceeded('call_limit')
-                if len(system) + len(user) > agent.cfg.max_input_chars:
+                if len(system) + len(user) > settings.max_input_chars:
                     raise BudgetExceeded('input_limit')
                 budget.calls += 1  # Failed HTTP attempts count too.
-                agent.cfg.timeout_sec = min(agent.cfg.timeout_sec, max(1,
+                settings.timeout_sec = min(settings.timeout_sec, max(1,
                     budget.limits.max_seconds - (budget.clock() - budget.started)))
                 return agent.chat(system, user, **kwargs)
         return BoundedAgent()
@@ -152,10 +148,76 @@ def automatic_error(cfg, model, unit, raw):
         return str(exc)
 
 
+def _diagnose(cfg, critic, key, payload, current_pool, reviews):
+    review_key = policy.digest({'policy': policy.DIAGNOSIS_POLICY,
+                                'schema': policy.schema(current_pool, diagnosis=True), 'payload': payload})
+    reused = review_key in reviews
+    diagnosis_attempts = 0
+    if reused:
+        proposal = reviews[review_key]
+    else:
+        # Compatible gateways may ignore response_schema; keep the
+        # same portable JSON contract in their textual request too.
+        user = json.dumps({**payload, 'output_schema': policy.schema(current_pool, diagnosis=True)}, ensure_ascii=False)
+        diagnosis_user = user
+        for diagnosis_attempt in range(cfg.max_retries + 1):
+            diagnosis_attempts += 1
+            raw_review = critic.chat(policy.DIAGNOSIS_POLICY, diagnosis_user,
+                tag=f"diagnose_{key.replace('/', '_')}_{diagnosis_attempt}",
+                response_schema=policy.schema(current_pool, diagnosis=True))
+            try:
+                proposal = policy.decode(raw_review, current_pool, diagnosis=True)
+                break
+            except ValueError as exc:
+                if diagnosis_attempt == cfg.max_retries:
+                    raise
+                diagnosis_user = user + '\nRejected diagnosis (not evidence):\n' + raw_review + '\nCorrection: ' + str(exc)
+        reviews[review_key] = proposal
+    return proposal, review_key, reused, diagnosis_attempts
+
+
+def _plan(cfg, critic, key, payload, proposal, pool, required_expansions, part, error, gaps, number):
+    planning = {**payload, 'diagnosis': proposal,
+        'candidates': {k:{f:v for f,v in c.items() if f != 'selector'} for k,c in pool.items()},
+        'required_expansions': required_expansions,
+        'can_split': part is not None,
+        'split_required': bool(part and not part.get('subquestions') and error and not gaps and number > 1),
+        'output_schema': policy.schema(pool)}
+    plan_user = json.dumps(planning, ensure_ascii=False)
+    for attempt in range(cfg.max_retries + 1):
+        raw_plan = critic.chat(policy.PLANNING_POLICY, plan_user,
+            tag=f"plan_{key.replace('/', '_')}_{attempt}", response_schema=policy.schema(pool))
+        try:
+            proposal = policy.decode(raw_plan, pool)
+            if proposal['verdict'] == 'acceptable':
+                raise ValueError('A plan cannot approve an answer before regeneration')
+            if proposal['verdict'] == 'repair' and not set(required_expansions) <= set(proposal['expand']):
+                raise ValueError('Repair must select required_expansions: ' + repr(required_expansions))
+            if proposal['verdict'] == 'repair' and planning['split_required'] and not proposal['subquestions']:
+                raise ValueError('Repeated omissions require 2 to 4 atomic subquestions; the parent contract is unchanged')
+            break
+        except ValueError as exc:
+            if attempt == cfg.max_retries:
+                raise
+            plan_user = json.dumps(planning, ensure_ascii=False) + '\nRejected proposal (not evidence):\n' + raw_plan + '\nCorrection: ' + str(exc)
+    return proposal, attempt + 1
+
+
+def _round_stop(completed, targets, entry, unresolved, fingerprint, seen):
+    if completed == len(targets) and entry['automatic_passed']:
+        return 'model_review_complete'
+    if unresolved:
+        return 'unresolved_automatic_failure'
+    if fingerprint in seen:
+        return ('unreached_targets' if any(r.get('status') == 'not_reached' for r in entry['reviews'])
+                else 'no_progress')
+    return None
+
+
 def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_factory=Agent):
     limits = limits or Limits()
     limits.validate()
-    if cfg.agent.kind not in ('cli', 'ollama', 'openai-compatible'):
+    if cfg.agent.kind not in LIVE_KINDS:
         raise ValueError('The loop requires an actual local or internal model connection')
     if cfg.agent.kind == 'cli' and seed is not None:
         raise ValueError('CLI 시험에는 HTTP --seed 재사용을 적용하지 않습니다. 새 CLI 시험을 실행하세요.')
@@ -205,7 +267,7 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
             raise BudgetExceeded('inputs_changed')
     out.mkdir(parents=True)
     budget = Budget(limits)
-    factory = lambda settings, dump: budget.wrap(agent_factory(settings, dump))
+    factory = lambda settings, dump: budget.wrap(agent_factory(settings, dump), settings)
     report = dict(schema=1, source_commit=commit, model=cfg.agent.model, provider=cfg.agent.kind,
         limits=vars(limits), original_sections_sha256=policy.digest(original), targets=targets,
         input_files_sha256=initial_hashes,
@@ -264,30 +326,8 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                     current_question=(part or topic)['question'], answer_contract=answer_contract,
                     answer=answer_text, required_terms_found=found_terms, automatic_error=error, evidence_gaps=gaps,
                     candidates={k: {f:v for f,v in c.items() if f != 'selector'} for k,c in current_pool.items()})
-                review_key = policy.digest({'policy': policy.DIAGNOSIS_POLICY,
-                                            'schema': policy.schema(current_pool, diagnosis=True), 'payload': payload})
-                reused = review_key in reviews
-                diagnosis_attempts = 0
-                if reused:
-                    proposal = reviews[review_key]
-                else:
-                    # Compatible gateways may ignore response_schema; keep the
-                    # same portable JSON contract in their textual request too.
-                    user = json.dumps({**payload, 'output_schema': policy.schema(current_pool, diagnosis=True)}, ensure_ascii=False)
-                    diagnosis_user = user
-                    for diagnosis_attempt in range(cfg.max_retries + 1):
-                        diagnosis_attempts += 1
-                        raw_review = critic.chat(policy.DIAGNOSIS_POLICY, diagnosis_user,
-                            tag=f"diagnose_{key.replace('/', '_')}_{diagnosis_attempt}",
-                            response_schema=policy.schema(current_pool, diagnosis=True))
-                        try:
-                            proposal = policy.decode(raw_review, current_pool, diagnosis=True)
-                            break
-                        except ValueError as exc:
-                            if diagnosis_attempt == cfg.max_retries:
-                                raise
-                            diagnosis_user = user + '\nRejected diagnosis (not evidence):\n' + raw_review + '\nCorrection: ' + str(exc)
-                    reviews[review_key] = proposal
+                proposal, review_key, reused, diagnosis_attempts = _diagnose(
+                    cfg, critic, key, payload, current_pool, reviews)
                 record = dict(target=key, response_sha256=receipt['response_sha256'],
                     request_sha256=receipt['request_sha256'], automatic_error=error,
                     review_key=review_key, reused_review=reused, diagnosis_attempts=diagnosis_attempts, diagnosis=proposal)
@@ -295,30 +335,8 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                     record['assembly_origins'] = receipt['origins']
                 entry['reviews'].append(record)
                 if proposal['verdict'] != 'acceptable' or gaps:
-                    planning = {**payload, 'diagnosis': proposal,
-                        'candidates': {k:{f:v for f,v in c.items() if f != 'selector'} for k,c in pool.items()},
-                        'required_expansions': required_expansions,
-                        'can_split': part is not None,
-                        'split_required': bool(part and not part.get('subquestions') and error and not gaps and number > 1),
-                        'output_schema': policy.schema(pool)}
-                    plan_user = json.dumps(planning, ensure_ascii=False)
-                    for attempt in range(cfg.max_retries + 1):
-                        raw_plan = critic.chat(policy.PLANNING_POLICY, plan_user,
-                            tag=f"plan_{key.replace('/', '_')}_{attempt}", response_schema=policy.schema(pool))
-                        try:
-                            proposal = policy.decode(raw_plan, pool)
-                            if proposal['verdict'] == 'acceptable':
-                                raise ValueError('A plan cannot approve an answer before regeneration')
-                            if proposal['verdict'] == 'repair' and not set(required_expansions) <= set(proposal['expand']):
-                                raise ValueError('Repair must select required_expansions: ' + repr(required_expansions))
-                            if proposal['verdict'] == 'repair' and planning['split_required'] and not proposal['subquestions']:
-                                raise ValueError('Repeated omissions require 2 to 4 atomic subquestions; the parent contract is unchanged')
-                            break
-                        except ValueError as exc:
-                            if attempt == cfg.max_retries:
-                                raise
-                            plan_user = json.dumps(planning, ensure_ascii=False) + '\nRejected proposal (not evidence):\n' + raw_plan + '\nCorrection: ' + str(exc)
-                    record['plan_attempts'] = attempt + 1
+                    proposal, record['plan_attempts'] = _plan(
+                        cfg, critic, key, payload, proposal, pool, required_expansions, part, error, gaps, number)
                 record['proposal'] = proposal
                 if proposal['verdict'] == 'insufficient_evidence':
                     report['stop_reason'] = 'insufficient_evidence'
@@ -341,17 +359,12 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
                 entry['edits'].append(key)
             if report['stop_reason']:
                 break
-            if completed == len(targets) and entry['automatic_passed']:
-                report['stop_reason'] = 'model_review_complete'
-                report['candidate_trial'] = str(trial.relative_to(out))
-                break
-            if unresolved:
-                report['stop_reason'] = 'unresolved_automatic_failure'
-                break
             fingerprint = policy.digest(draft_sections)
-            if fingerprint in seen:
-                report['stop_reason'] = ('unreached_targets' if any(
-                    r.get('status') == 'not_reached' for r in entry['reviews']) else 'no_progress')
+            stop = _round_stop(completed, targets, entry, unresolved, fingerprint, seen)
+            if stop:
+                report['stop_reason'] = stop
+                if stop == 'model_review_complete':
+                    report['candidate_trial'] = str(trial.relative_to(out))
                 break
             for section in draft_sections:
                 errors = configuration_errors(section)
