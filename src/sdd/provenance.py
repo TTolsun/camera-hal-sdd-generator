@@ -10,6 +10,15 @@ from .export_html import _split
 from .generated_design import normalize_answer, resolve_passages
 
 
+def same_answer(left, right):
+    # Generator versions can add code typography using newly available scope
+    # names. Only backticks may differ; every source word and other field stays
+    # exact. The manuscript validator still checks its code/HTML formatting.
+    def identity(answer):
+        return {**answer, 'text': answer['text'].replace('`', '')}
+    return identity(left) == identity(right)
+
+
 def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_name: str,
                  allow_reused: bool = False) -> dict:
     responses = []
@@ -84,13 +93,13 @@ def verify_calls(model, manuscripts: Path, calls: Path, *, provider: str, model_
                     possible = [item for tag, result in responses
                                 if re.fullmatch(re.escape(tag_prefix) + r'\d+(?:_revision)?', tag) for item in result]
                 original = {key: value for key, value in answer.items() if key not in ('part_id', 'subpart_id')}
-                if original not in possible:
+                if not any(same_answer(original, item) for item in possible):
                     raise ValueError(f'No matching HTTP model response for {sid}/{tid}')
                 statements += 1
     return {'documents': documents, 'topics': topics, 'statements': statements, 'visuals': visuals,
             'previous_http_answers_allowed': allow_reused,
             'verified_http_calls': len(list(calls.rglob('*.receipt.json'))),
-            'scope': 'Exact request/response hashes and model authorship; not semantic or human approval.'}
+            'scope': 'Exact request/response hashes and model authorship, allowing code backtick typography only; not semantic or human approval.'}
 
 
 def main():

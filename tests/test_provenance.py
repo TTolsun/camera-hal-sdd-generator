@@ -138,3 +138,15 @@ def test_subquestion_identity_must_match_real_http_tag(tmp_path):
     save()
     with pytest.raises(ValueError, match='No matching HTTP'):
         verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')
+
+
+def test_code_typography_preserves_authorship_but_words_cannot_change(tmp_path):
+    model, manuscripts, calls, artifact, save = setup(tmp_path)
+    answer = artifact['answers']['stop'][0]
+    answer['text'] = answer['text'].replace('stop()', '`stop()`')
+    save()
+    assert verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')['statements'] == 1
+    answer['text'] += ' 새로운 보장을 추가합니다.'
+    save()
+    with pytest.raises(ValueError, match='No matching HTTP'):
+        verify_calls(model, manuscripts, calls, provider='ollama', model_name='test')
