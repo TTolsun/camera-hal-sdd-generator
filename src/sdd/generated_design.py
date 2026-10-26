@@ -18,6 +18,21 @@ from .semantic import review as semantic_review, only_uncertainty, known_names
 from .validate import extract_citations, check
 
 
+# Only this exact SCHEMA_KINDS-only edit is HTTP-compatible with its predecessor:
+# frozen-source tests compare HTTP system/user/schema and validator outcomes.
+# CLI gains a schema and always keeps the new raw hash. Any later source change
+# misses this single pair, so it invalidates existing policy bindings normally.
+_HTTP_GROUNDING_SCHEMA_COMPATIBILITY = {
+    '4720babc38b81fdd79472e63a8d122e720efe40e3abf50247be45197a122b3ea':
+        'c54006f7c90cb2af955e1ede18b761c7feb22dffa3bc37a885c019508348eba0',
+}
+_HTTP_PROVIDERS = ('ollama', 'openai-compatible')
+
+
+def _http_grounding_policy(current):
+    return _HTTP_GROUNDING_SCHEMA_COMPATIBILITY.get(current, current)
+
+
 def enabled(section):
     return section.get('design_generation') == 'llm'
 
@@ -366,6 +381,8 @@ def _prepare_generation(cfg, model, section, previous):
     if grounding:
         from .grounding import policy_hash
         policy['grounding_policy'] = policy_hash()
+        if cfg.agent.kind in _HTTP_PROVIDERS:
+            policy['grounding_policy'] = _http_grounding_policy(policy['grounding_policy'])
     prompt_policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
     prompt_policy += execution_identity
     inputs = topic_inputs(model, section, prompt_policy + json.dumps(policy))
@@ -604,7 +621,18 @@ def verify(model, section, manuscript):
     artifact = meta.get('generated_design')
     if isinstance(artifact, dict) and artifact.get('grounding_review') == 'passed':
         from .grounding import policy_hash
-        if artifact.get('grounding_policy') != policy_hash():
+        current = policy_hash()
+        allowed = {current}
+        origins, answers = artifact.get('topic_agents'), artifact.get('answers')
+        # Never infer HTTP origin from a missing or mixed producer map. Every
+        # answer must have an explicit HTTP producer before accepting the alias.
+        if (isinstance(answers, dict) and answers and isinstance(origins, dict)
+                and set(origins) == set(answers)
+                and all(isinstance(value, str) and value.partition('/')[0] in _HTTP_PROVIDERS
+                        and value.partition('/')[2] for value in origins.values())):
+            allowed.add(_http_grounding_policy(current))
+        recorded_policy = artifact.get('grounding_policy')
+        if not isinstance(recorded_policy, str) or recorded_policy not in allowed:
             raise ValueError('근거 대조 정책이 바뀌었습니다. 실제 모델로 다시 검증·생성해야 합니다.')
     if not isinstance(artifact, dict) or artifact.get('schema') != 1:
         raise ValueError('LLM 설계 답변 기록이 없거나 형식이 잘못되었습니다.')

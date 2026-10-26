@@ -3,6 +3,8 @@ import json
 import hashlib
 from pathlib import Path
 
+from .llm import SCHEMA_KINDS
+
 
 def policy_hash():
     return hashlib.sha256(Path(__file__).read_text(encoding='utf-8').encode()).hexdigest()
@@ -58,7 +60,7 @@ def review(generator, topic, statements, sources, tag, *, source_files=None, sou
                     'properties': {'index': {'type': 'integer', 'enum': list(range(len(statements)))},
                                    'supported': {'type': 'boolean'},
                                    'reason': {'type': 'string', 'minLength': 1, 'maxLength': 400}}}}}}
-    options = {'response_schema': schema} if generator.cfg.agent.kind in ('ollama', 'response-bundle') else {}
+    options = {'response_schema': schema} if generator.cfg.agent.kind in SCHEMA_KINDS else {}
     raw = generator.agent.chat(system, user, tag=tag + '_grounding', **options)
     data = json.loads(raw)
     if not isinstance(data, dict):
