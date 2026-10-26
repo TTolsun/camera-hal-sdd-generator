@@ -74,7 +74,7 @@ def test_part_coverage_and_source_scope_are_revalidated():
     answers=[statement('호출자는 자원을 확보해야 합니다.',part_id='acquire'),
              dict(text='호출자는 자원을 반환해야 합니다.',kind='behavior',evidence=['other'],part_id='release')]
     validate(topic,answers)
-    with pytest.raises(ValueError, match='한두 문단'):
+    with pytest.raises(ValueError, match='답변 수'):
         validate(topic,answers[:1])
     wrong=copy.deepcopy(answers);wrong[1]['evidence']=['source']
     with pytest.raises(ValueError, match='다른 분할'):

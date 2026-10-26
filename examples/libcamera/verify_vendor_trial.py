@@ -66,6 +66,8 @@ def verify(root):
             for topic, answers in artifact['answers'].items():
                 for answer in answers:
                     tag = f"{result['section']}_{topic}_{answer['part_id']}_"
+                    if 'subpart_id' in answer:
+                        tag += f"sub{answer['subpart_id']}_"
                     matched = False
                     for receipt, request, response in calls:
                         if not receipt['tag'].startswith(tag):

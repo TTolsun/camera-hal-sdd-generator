@@ -287,3 +287,11 @@ def test_repeated_omission_splits_questions_but_preserves_parent_gate(project,tm
     for bad in (statements[:1], [statements[0],{**statements[1],'subpart_id':False}],
                 [statements[0],{**statements[1],'text':'release only'}]):
         with pytest.raises(ValueError):validate(topic,bad)
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('loop_proof',Path(__file__).parents[1]/'examples/libcamera/verify_reader_loop.py')
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    proof=module.verify(tmp_path/'split')
+    assert proof['diagnosed_targets']==1 and proof['manuscript']['answers']==2
+    path=next((tmp_path/'split/round-03/diagnosis-prompts/calls').rglob('*.response.txt'))
+    path.write_text('{}',encoding='utf-8')
+    with pytest.raises(AssertionError):module.verify(tmp_path/'split')
