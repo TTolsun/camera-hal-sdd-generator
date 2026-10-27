@@ -14,6 +14,7 @@ output:
 
 paths:
   sections_file: config/sections.yaml
+  consistency_file: config/contracts.yaml
   scenarios_file: config/scenarios.yaml
   prompts: prompts
   templates: ../../templates
