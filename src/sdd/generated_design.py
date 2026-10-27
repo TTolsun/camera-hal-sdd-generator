@@ -150,7 +150,7 @@ def response_schema(topic, passages=None):
             'properties': {'statements': {'type': 'array', 'maxItems': topic.get('_max_statements', 8), 'items': statement}}}
 
 
-def materialize(model, section, answers):
+def materialize(model, section, answers, enforce_repeats=True):
     """Adapt generated statements to the existing source-bound contract validator."""
     resolved = copy.deepcopy(section)
     resolved.pop('design_generation')
@@ -209,8 +209,9 @@ def materialize(model, section, answers):
             source['sha256'] = record['sha256']
             pinned.evidence[key] = {**record, 'selector': copy.deepcopy(source)}
     repeated = duplicates.statement_findings(model, section['id'], {t['id']: answers[t['id']] for t in section['design_topics']})
-    if repeated:
+    if repeated and enforce_repeats:
         raise ValueError(' / '.join(repeated))
+    pinned.repeated_findings = repeated
     return pinned, resolved
 
 
@@ -245,10 +246,10 @@ def normalize_answer(model, statements, sources):
             statement['text'] = ''.join(part if i % 2 else token.sub(mark, part) for i, part in enumerate(parts))
 
 
-def validate_answers(model, section, answers, allow_limited=False):
+def validate_answers(model, section, answers, allow_limited=False, enforce_repeats=True):
     from .design_contracts import enforce
     preflight(model, section)
-    pinned, resolved = materialize(model, section, answers)
+    pinned, resolved = materialize(model, section, answers, enforce_repeats)
     report = enforce(pinned, resolved, allow_limited)
     for topic in resolved['design_topics']:
         text, _ = contract_text(pinned, section['id'], topic)
@@ -681,7 +682,11 @@ def verify(model, section, manuscript):
         raise ValueError('LLM 설계 입력 근거·질문이 변경되어 재생성이 필요합니다.')
     if artifact.get('body_sha256') != digest(body.strip()):
         raise ValueError('LLM 설계 답변 기록과 원고 본문이 일치하지 않습니다.')
-    pinned, resolved, report = validate_answers(model, section, artifact.get('answers'))
+    # 게시 검증에서는 중복 문장 검사를 경고로만 둔다. 이미 만든 원고를 나중에 생긴 휴리스틱으로 막지 않고, 생성할 때와
+    # 영향 분석(sdd impact --config-changes)에서 다시 쓰도록 알린다.
+    pinned, resolved, report = validate_answers(model, section, artifact.get('answers'), enforce_repeats=False)
+    if getattr(pinned, 'repeated_findings', None):
+        report['repeated_sentences'] = list(pinned.repeated_findings)
     from .visuals import strip_blocks
     body = strip_blocks(body)
     for topic in resolved['design_topics']:

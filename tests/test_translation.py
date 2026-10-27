@@ -245,3 +245,21 @@ def test_translation_replay_does_not_adopt_invalid_batch_extra_fields(tmp_cfg, m
     replay = Archive(dump/'calls', tmp_cfg.agent).reviewer(Agent(tmp_cfg.agent, dump))
     assert translate_missing(tmp_cfg, {'strings': {'문장': ''}}, replay)['strings']['문장'] == 'English.'
     assert len(calls) == before + 1 and replay.replayed_http_calls == 0
+
+
+def test_파일_줄_발췌_라벨은_모델을_부르지_않고_결정적으로_번역한다(tmp_cfg):
+    from sdd.translation import fixed_translation, translate_missing
+    assert fixed_translation('Documentation/introduction.rst:10 발췌') == 'Documentation/introduction.rst:10 excerpt'
+    assert fixed_translation('src/libcamera/camera.cpp:752 발췌') == 'src/libcamera/camera.cpp:752 excerpt'
+    assert fixed_translation('이 발췌는 설명이 아닙니다.') is None
+
+    tmp_cfg.agent.kind = 'ollama'
+
+    class NoCalls:
+        def chat(self, *a, **k):
+            raise AssertionError('the model must not be called for a location label')
+
+    catalog = {'schema': 1, 'strings': {'README.rst:107 발췌': '', 'meson_options.txt:75 발췌': 'meson_options.txt:75 Excerpt'}}
+    result = translate_missing(tmp_cfg, catalog, agent=NoCalls())
+    assert result['strings'] == {'README.rst:107 발췌': 'README.rst:107 excerpt',
+                                 'meson_options.txt:75 발췌': 'meson_options.txt:75 Excerpt'}

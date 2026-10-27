@@ -24,7 +24,9 @@ For Developer는 신입·타팀 개발자를 위한 경로입니다. 클래스 �
 
 | 하려는 일 | 시작할 문서 |
 |---|---|
+| 이 프로젝트가 무엇을 받아 무엇을 내놓는지 이해합니다. | [이 프로젝트가 하는 일](team-overview.md) |
 | 하드웨어 지원의 구현 범위와 책임을 정합니다. | [libcamera 제품 개요](vendor-overview.md) |
+| 카메라를 직접 실행해 보고 설계 이유를 읽습니다. | [실행해 보고 설계 이유 읽기](onboarding.md) |
 | 요청을 연동하거나 완료 지연을 진단합니다. | [요청 처리와 문제 진단](request-lifecycle.md) |
 | 구성 실패의 원인을 좁힙니다. | [구성 실패를 좁히는 순서](request-lifecycle.md#구성-실패를-좁히는-순서) |
 | 파이프라인의 구성·완료·정지를 구현합니다. | [Pipeline Handler](pipeline-handler.md) |

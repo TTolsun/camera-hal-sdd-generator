@@ -1074,3 +1074,15 @@ def test_B5_모든_parts가_limitation이면_모델을_부르기_전에_설정_�
     with pytest.raises(ValueError, match='사실 답변이 없습니다'):
         Generator(tmp_cfg, model, agent).run()
     assert agent.calls == []
+
+
+def test_게시_검증은_중복_문장을_경고로만_보고하고_생성은_계속_거부한다(tmp_cfg, generated):
+    from sdd.generated_design import validate_answers
+    section, model, save, agent = generated
+    first = agent.statement
+    second = {**first, 'text': first['text'].replace('은 종료 시', '은 정지할 때')}
+    answers = {'stop': [first, second]}
+    with pytest.raises(ValueError, match='의미 중복'):
+        validate_answers(model, section, answers)
+    _, _, report = validate_answers(model, section, answers, enforce_repeats=False)
+    assert report['status'] == 'documented'

@@ -129,3 +129,8 @@ def test_한자_중국어_혼입은_본문에서_반려하고_코드_표기와_�
     assert [f.rule for f in lint("かな도 섞이면 안 됩니다.")] == ["외국 문자 혼입"]
     assert lint("원문 `闭上` 표기는 코드이므로 통과합니다.") == []
     assert lint("libcamera adaptation은 다른 프레임워크와 연결하는 구성요소입니다.") == []
+
+
+def test_키릴_글자가_한국어_문장에_섞이면_반려한다():
+    assert [f.rule for f in lint("카메라 매니저가 카메라를 찾ывает")] == ["외국 문자 혼입"]
+    assert [f.rule for f in lint("카메라를 찾ывает 기능을 제공합니다.")] == ["외국 문자 혼입"]
