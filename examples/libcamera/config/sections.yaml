@@ -2844,8 +2844,8 @@ sections:
   design_generation: llm
   semantic_review: true
 - id: team-overview
-  group: For Team
-  nav_section: 역할 이해
+  group: For Developer
+  nav_section: 구조 이해
   title: 이 프로젝트가 하는 일
   output: team-overview.md
   kind: prose
