@@ -15,6 +15,8 @@ from .design_response import (
 from .design_request import prepare_requests, _design_units
 from .design_execution import _request_unit, _UnitRejected
 from .design_types import DesignResult
+from .design_trials import open_archive
+from .design_compat import allowed_policies
 from .design_compat import (
     HTTP_PROVIDERS as _HTTP_PROVIDERS,
     HTTP_GROUNDING_SCHEMA_COMPATIBILITY as _HTTP_GROUNDING_SCHEMA_COMPATIBILITY,
@@ -45,16 +47,12 @@ def _assemble_generation(cfg, model, section, answers, inputs, reused, replayed,
     return DesignResult(pinned, resolved, report, artifact)
 
 
-
 def generate(cfg, model, agent, section, previous=None, *, replay_http=False, all_design_units=False):
     plan, answers, origins = _prepare_generation(cfg, model, section, previous)
     reused = list(answers)
     units = _design_units(section, answers)
     replayed, failures = [], []
-    archive = None
-    if replay_http:
-        from .design_replay import Archive
-        archive = Archive(cfg.build_dir / 'prompts/calls', cfg.agent)
+    archive = open_archive(cfg, replay_http)
     for topic in units:
         try:
             statements, record = _request_unit(cfg, model, agent, section, topic,
@@ -72,7 +70,6 @@ def generate(cfg, model, agent, section, previous=None, *, replay_http=False, al
     return _assemble_generation(cfg, model, section, answers, plan.inputs, reused, replayed, origins, plan.policy)
 
 
-
 def verify(model, section, manuscript):
     from .document_metadata import split_frontmatter
     meta, body = split_frontmatter(manuscript)
@@ -80,15 +77,7 @@ def verify(model, section, manuscript):
     if isinstance(artifact, dict) and artifact.get('grounding_review') == 'passed':
         from .grounding import policy_hash
         current = policy_hash()
-        allowed = {current}
-        origins, answers = artifact.get('topic_agents'), artifact.get('answers')
-        # Never infer HTTP origin from a missing or mixed producer map. Every
-        # answer must have an explicit HTTP producer before accepting the alias.
-        if (isinstance(answers, dict) and answers and isinstance(origins, dict)
-                and set(origins) == set(answers)
-                and all(isinstance(value, str) and value.partition('/')[0] in _HTTP_PROVIDERS
-                        and value.partition('/')[2] for value in origins.values())):
-            allowed.add(_http_grounding_policy(current))
+        allowed = allowed_policies(current, artifact)
         recorded_policy = artifact.get('grounding_policy')
         if not isinstance(recorded_policy, str) or recorded_policy not in allowed:
             raise ValueError('근거 대조 정책이 바뀌었습니다. 실제 모델로 다시 검증·생성해야 합니다.')

@@ -17,7 +17,6 @@ def enabled(section):
     return section.get('design_generation') == 'llm'
 
 
-
 def preflight(model, section):
     from .design_contracts import configuration_errors as validate_configuration
     errors = validate_configuration(section)
@@ -46,16 +45,13 @@ def preflight(model, section):
         raise ValueError(' / '.join(errors))
 
 
-
 def digest(text):
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
-
 
 
 def quote_text(text):
     """Ignore whitespace and Doxygen line decoration, retaining source words."""
     return ' '.join(re.sub(r'^\s*\*(?: |$)', '', text, flags=re.M).split())
-
 
 
 def source_passages(sources, *, whole_source=False, scopes=None):
@@ -75,7 +71,6 @@ def source_passages(sources, *, whole_source=False, scopes=None):
                 passages[key] = (source_id, chunk.strip())
             annotated[source_id].append(item)
     return annotated, passages
-
 
 
 def resolve_passages(statements, passages):
@@ -107,7 +102,6 @@ def resolve_passages(statements, passages):
     return result
 
 
-
 def response_schema(topic, passages=None):
     def ids(values):
         return {'type': 'array', 'minItems': 1, 'maxItems': len(values), 'uniqueItems': True,
@@ -133,7 +127,6 @@ def response_schema(topic, passages=None):
                      'kind': {'type': 'string', 'enum': kinds}}}
     return {'type': 'object', 'additionalProperties': False, 'required': ['statements'],
             'properties': {'statements': {'type': 'array', 'maxItems': topic.get('_max_statements', 8), 'items': statement}}}
-
 
 
 def materialize(model, section, answers, enforce_repeats=True):
@@ -201,7 +194,6 @@ def materialize(model, section, answers, enforce_repeats=True):
     return pinned, resolved
 
 
-
 def source_names(model, records):
     """Only mark identifiers that actually occur in this topic's input excerpts."""
     names = known_names(model)
@@ -209,7 +201,6 @@ def source_names(model, records):
     tokens = set(re.findall(r'[A-Za-z_][A-Za-z_0-9]*(?:::[A-Za-z_][A-Za-z_0-9]*)*', '\n'.join(records)))
     tokens |= {name.split('::', 1)[0] for name in tokens}
     return (names & tokens) | {name for name in tokens if '_' in name}
-
 
 
 def normalize_answer(model, statements, sources):
@@ -232,7 +223,6 @@ def normalize_answer(model, statements, sources):
                 for i, part in enumerate(parts))
             parts = re.split(r'(`[^`]*`)', marked)
             statement['text'] = ''.join(part if i % 2 else token.sub(mark, part) for i, part in enumerate(parts))
-
 
 
 def validate_answers(model, section, answers, allow_limited=False, enforce_repeats=True):
@@ -263,7 +253,6 @@ def validate_answers(model, section, answers, allow_limited=False, enforce_repea
             raise ValueError(' / '.join(findings))
     report['scope'] = 'LLM answer coverage, current source bindings and structural checks; not semantic or runtime approval.'
     return pinned, resolved, report
-
 
 
 def decode_unit(model, section, topic, raw, sources, passages):
@@ -327,7 +316,6 @@ def decode_unit(model, section, topic, raw, sources, passages):
                 ) from exc
         raise
     return candidate[topic['id']]
-
 
 
 def _validate_retained(pinned, selected, retained):

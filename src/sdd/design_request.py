@@ -6,7 +6,7 @@ import json
 
 from .design_response import source_passages
 from .design_types import RequestPlan, TopicPrompt, UnitRequest
-from .design_compat import HTTP_PROVIDERS, http_grounding_policy
+from .design_compat import generation_policy
 
 
 def prepare_requests(cfg, model, section, previous):
@@ -63,9 +63,7 @@ def prepare_requests(cfg, model, section, previous):
     policy = {'design_grounding': grounding}
     if grounding:
         from .grounding import policy_hash
-        policy['grounding_policy'] = policy_hash()
-        if cfg.agent.kind in HTTP_PROVIDERS:
-            policy['grounding_policy'] = http_grounding_policy(policy['grounding_policy'])
+        policy['grounding_policy'] = generation_policy(policy_hash(), cfg.agent.kind)
     prompt_policy = focused_prompt.reuse_policy(cfg, system) if focused_system is not None else system
     prompt_policy += execution_identity
     inputs = topic_inputs(model, section, prompt_policy + json.dumps(policy))
@@ -122,7 +120,6 @@ def _design_units(section, retained):
     return units
 
 
-
 def _unit_request(model, section, topic, focused_system):
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
     from . import focused_prompt
@@ -161,7 +158,6 @@ def _unit_request(model, section, topic, focused_system):
         base_user = focused_prompt.user_prompt(topic, annotated,
             request['requirements'] if '_part_id' not in topic else None)
     return UnitRequest(sources, source_files, context_records, scopes, passages, base_user)
-
 
 
 def _unit_tag(section, topic):

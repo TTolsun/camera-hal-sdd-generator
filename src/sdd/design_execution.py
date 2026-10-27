@@ -6,6 +6,7 @@ from .design_response import decode_unit, response_schema
 from .design_request import _unit_request, _unit_tag
 from .design_types import TopicPrompt, UnitResult
 from .llm import SCHEMA_KINDS
+from .design_trials import replay_unit, checkpoint
 
 
 def _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages, tag,
@@ -28,10 +29,8 @@ def _validate_unit_response(cfg, model, agent, section, topic, raw, sources, pas
     return statements
 
 
-
 class _UnitRejected(ValueError):
     """Exhausted response validation, eligible for all-design-units collection."""
-
 
 
 def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive, answers):
@@ -42,25 +41,17 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     passages, base_user = request.passages, request.user
     tag = _unit_tag(section, topic)
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
-    if archive:
-        for record in archive.candidates(system, base_user, schema, tag):
-            try:
-                statements = _validate_unit_response(cfg, model, agent,
-                    section, topic, record['raw'], sources, passages, tag + '_replay',
-                    grounding, source_files, scopes, context_records, reviewer=archive.reviewer, prior_answers=answers)
-                replayed = {key: record[key] for key in ('receipt', 'request_sha256', 'response_sha256')} | {
-                    'topic': topic['id'], 'part': topic.get('_part_id')}
-                return UnitResult(statements, replayed)
-            except (ValueError, TypeError, KeyError):
-                continue  # Rejected old output does not consume a fresh retry.
+    replayed = replay_unit(archive, system, base_user, schema, tag, topic,
+        lambda raw, reviewer: _validate_unit_response(cfg, model, agent,
+            section, topic, raw, sources, passages, tag + '_replay',
+            grounding, source_files, scopes, context_records, reviewer=reviewer, prior_answers=answers))
+    if replayed is not None:
+        return replayed
     user = base_user
     last = None
-    from . import answer_cache
     options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in SCHEMA_KINDS else {}
-    cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
-                                         {'request': options, **({'policy': unit_policy} if focused_system is not None else {}),
-                                          'revision': cfg.review.design_revision})
-    cached = answer_cache.read(cached_path)
+    saved = checkpoint(cfg, model, system, base_user, options, focused_system, unit_policy)
+    cached = saved.response
     from .grounding import GroundingFormatError
     pending_raw = None
     for attempt in range(cfg.max_retries + 1):
@@ -86,7 +77,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
         try:
             statements = _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages,
                                                  f'{tag}_{attempt}', grounding, source_files, scopes, context_records, prior_answers=answers)
-            answer_cache.save(cached_path, raw)
+            saved.save(raw)
             return UnitResult(statements, None)
         except (ValueError, TypeError, KeyError) as exc:
             last = str(exc)

@@ -15,3 +15,19 @@ def http_grounding_policy(current):
     return HTTP_GROUNDING_SCHEMA_COMPATIBILITY.get(current, current)
 
 
+def generation_policy(current, kind):
+    return http_grounding_policy(current) if kind in HTTP_PROVIDERS else current
+
+
+def allowed_policies(current, artifact):
+    allowed = {current}
+    origins, answers = artifact.get('topic_agents'), artifact.get('answers')
+    # Missing, partial and mixed producer maps never establish HTTP origin.
+    if (isinstance(answers, dict) and answers and isinstance(origins, dict)
+            and set(origins) == set(answers)
+            and all(isinstance(value, str) and value.partition('/')[0] in HTTP_PROVIDERS
+                    and value.partition('/')[2] for value in origins.values())):
+        allowed.add(http_grounding_policy(current))
+    return allowed
+
+
