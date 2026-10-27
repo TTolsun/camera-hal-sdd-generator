@@ -116,6 +116,10 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "contract_schema.py", code_root / "reader_profiles.py",
                                             code_root / "contract_render.py", code_root / "markdown_text.py",
                                             code_root / "generated_design.py", code_root / "generated_visuals.py",
+                                            code_root / "config.py", code_root / "design_types.py",
+                                            code_root / "design_request.py", code_root / "design_response.py",
+                                            code_root / "design_execution.py", code_root / "design_trials.py",
+                                            code_root / "design_compat.py",
                                             Path(__file__)]}
         from .diagrams import POLICY_VERSION
         data = {"schema": 1, "diagram_policy": POLICY_VERSION, "inputs": inputs, "engine": engine,

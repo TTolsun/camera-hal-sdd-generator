@@ -92,3 +92,20 @@ def test_frozen_generation_requests_results_and_origin(tmp_cfg, generated, kind,
     fixture = Path(__file__).parent / 'fixtures' / 'generation-141.json'
     expected = json.loads(fixture.read_text(encoding='utf-8'))
     assert actual == expected[f'{kind}/{mode}']
+
+
+def test_split_validator_remains_visible_in_build_provenance(tmp_cfg, sample_model, monkeypatch):
+    from sdd import site_build
+    from sdd.export_site import export_site
+    from test_export_site import prepare
+    prepare(tmp_cfg, sample_model)
+    out = export_site(tmp_cfg)
+    before = json.loads((out / site_build.MANIFEST).read_text(encoding='utf-8'))
+    digest = site_build.digest
+    monkeypatch.setattr(site_build, 'digest', lambda path:
+        'f' * 64 if path.name == 'design_response.py' else digest(path))
+    export_site(tmp_cfg)
+    after = json.loads((out / site_build.MANIFEST).read_text(encoding='utf-8'))
+    assert before['outputs'] == after['outputs']
+    assert before['engine']['design_response.py'] != after['engine']['design_response.py']
+    assert before['build_id'] != after['build_id']
