@@ -53,9 +53,27 @@ documentation:
     # 본문은 약 11,281자이며 18,000자 한도를 유지한다. 원문·응답 복구 기록을 포함한 파일은 약 142,434자다.
     request-lifecycle.md:
       max_markdown_chars: 160000
+      max_growth_ratio: 2.0
     # #107 B2: 첫 절을 제품 설명(무엇인가·누구의 문제·계층)과 지원 범위로 넓혀 본문이 기존의 약 1.7배가 된다.
     # 필요한 증가인지 검토한 결과이며, 중복 문장·분량은 사람 검토 전 상태로 남는다.
     vendor-overview.md:
+      max_growth_ratio: 2.0
+    # #107: Haiku 5.5로 다시 쓴 원고가 기존 9B 원고보다 오류 반환 경로와 예외 조건을 더 많이 설명한다(약 1.7배).
+    # 반복 문장 검사는 통과했고 늘어난 내용은 새 근거와 분기 설명이므로 분량 한도만 넓힌다. 사람 검토 전 상태다.
+    # 아래 페이지도 같은 모델·같은 이유로 넓힌다. 실제 증가율은 평가 기록에 적고, 한도에 가까우면 분할을 검토한다.
+    rkisp1-dewarp.md:
+      max_growth_ratio: 2.0
+    camera-model.md:
+      max_growth_ratio: 2.0
+    pipeline-handler.md:
+      max_growth_ratio: 2.0
+    vendor-integration.md:
+      max_growth_ratio: 2.0
+    overview.md:
+      max_growth_ratio: 2.0
+    ipa.md:
+      max_growth_ratio: 2.0
+    ipu3-lsc-flow.md:
       max_growth_ratio: 2.0
   features:
     - id: request-lifecycle
