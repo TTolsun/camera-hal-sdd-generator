@@ -297,6 +297,11 @@ def _prepare_site_pages(cfg, settings, sections, entries):
     glossary.enforce(cfg, terms, {rel: text for rel, text in texts.items()
                                   if sections.get(rel, {}).get("kind") != "per-package"})
     model = KnowledgeModel.load(cfg.facts_path) if cfg.facts_path.exists() else None
+    if cfg.paths.get('consistency_file'):
+        from .consistency import enforce as enforce_consistency
+        if model is None:
+            raise ValueError('facts.json is required for cross-document contract review')
+        enforce_consistency(cfg, model)
     if model is None and any(s.get("kind", "prose") == "prose" and s.get("facts", {}).get("classes")
                             and {**(cfg.raw.get("diagrams") or {}), **(s.get("diagram") or {})}.get("enabled", False)
                             for s in sections.values()):
@@ -333,7 +338,7 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
                 raise RuntimeError("facts.json is required to verify design requirements")
             from . import generated_design
             if generated_design.enabled(section):
-                generated_design.verify(model, section, texts[rel])
+                generated_design.verify(model, section, texts[rel], cfg=cfg)
             else:
                 enforce(model, section)
         from .evidence import fingerprint, requires_fingerprint

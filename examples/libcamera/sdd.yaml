@@ -42,6 +42,11 @@ review:
   max_retries: 1
   design_revision: false
   design_grounding: true
+  cli_checkpoint: true
+  max_calls: 1600
+  max_seconds: 14400
+  document_max_calls: 160
+  document_max_seconds: 7200
 
 documentation:
   enabled: true

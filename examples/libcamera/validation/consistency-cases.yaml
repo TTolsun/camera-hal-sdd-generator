@@ -1,0 +1,54 @@
+# Synthetic statements for evaluation only. These are never manuscript inputs.
+# Expected verdicts are removed before the selected CLI sees a case.
+cases:
+- id: buffer-is-request-completion
+  sources: [vendor-integration/request/buffer]
+  claims:
+    wrong: {text: 'When the last buffer completes during normal capture, the request always completes automatically.', expected: contradiction}
+- id: explicit-request-completion
+  sources: [vendor-integration/request/buffer]
+  claims:
+    normal: {text: 'Completing the last buffer during normal processing does not automatically complete the request; the pipeline handler must explicitly call completeRequest().', expected: compatible}
+- id: stop-versus-normal
+  sources: [vendor-overview/benefits/completion, vendor-integration/request/buffer]
+  claims:
+    stopped: {text: 'Tracking queued requests ensures their completion when the pipeline handler is stopped with stop(); the pipeline handler must signal completion with completeRequest().', expected: compatible}
+    normal: {text: 'The last buffer completing during normal processing does not itself complete the request.', expected: compatible}
+- id: application-owns-request
+  sources: [request-lifecycle/resources/create]
+  claims:
+    owner: {text: 'The caller owns the Request returned by Camera::createRequest() and is responsible for deleting it.', expected: compatible}
+- id: wrong-request-owner
+  sources: [request-lifecycle/resources/create]
+  claims:
+    owner: {text: 'Camera owns every Request returned by createRequest(); the application must never delete it.', expected: contradiction}
+- id: access-after-complete-request
+  sources: [request-lifecycle/resources/complete-access]
+  claims:
+    access: {text: 'After completeRequest() returns, the pipeline handler may continue accessing that request.', expected: contradiction}
+- id: completion-call-order-versus-return-order
+  sources: [request-lifecycle/journey/request-notice]
+  claims:
+    calls: {text: 'Pipeline handlers may call completeRequest() on completed requests without an ordering constraint.', expected: compatible}
+    returns: {text: 'Requests are returned to the application in their submission order.', expected: compatible}
+- id: wrong-return-order
+  sources: [request-lifecycle/journey/request-notice]
+  claims:
+    returns: {text: 'Requests are always returned to the application in the order their hardware processing finishes, regardless of submission order.', expected: contradiction}
+- id: unsupported-stop-deadline
+  sources: [vendor-integration/shutdown/stop, vendor-integration/shutdown/device]
+  claims:
+    deadline: {text: 'Every supported camera completes stopDevice() within 10 milliseconds.', expected: insufficient-evidence}
+- id: synchronization-responsibility
+  sources: [overview/boundary/synchronization]
+  claims:
+    synchronization: {text: 'Camera internally synchronizes all functions that change camera state, so the caller never needs to synchronize them.', expected: contradiction}
+- id: weakened-english-obligation
+  sources: [vendor-integration/request/buffer]
+  claims:
+    ko: {text: '파이프라인 핸들러는 요청을 완료하려면 completeRequest()를 명시적으로 호출해야 합니다.', expected: compatible}
+    en: {text: 'The pipeline handler may optionally call completeRequest() to complete a request; this call is not required.', translation_of: ko, expected: contradiction}
+- id: omitted-completion-condition
+  sources: [vendor-overview/benefits/completion, vendor-integration/request/buffer]
+  claims:
+    unclear: {text: 'Requests are completed automatically.', expected: ambiguous}

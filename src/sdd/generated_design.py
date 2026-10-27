@@ -140,7 +140,7 @@ def response_schema(topic, passages=None):
                     # Let the JSON grammar escape quotes/backslashes normally.
                     # A character-class pattern here can emit unescaped code
                     # string literals in constrained Ollama responses.
-                    'text': {'type': 'string'},
+                    'text': {'type': 'string', 'maxLength': 600},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
                      'evidence': ids(sorted({sid for sid, _ in passages.values()}) if passages
                                      else [source['id'] for source in topic.get('sources', [])]),
@@ -433,6 +433,19 @@ def _prepare_generation(cfg, model, section, previous):
         topic_prompts[topic['id']] = (focus, topic_system, topic_policy)
         if topic_policy != prompt_policy:
             inputs[topic['id']] = topic_inputs(model, section, topic_policy + json.dumps(policy))[topic['id']]
+    if cfg.agent.kind == 'cli':
+        # Bind standard prompts to their actual unit requests as focused prompts
+        # already bind their template. Changing drafting instructions/schema
+        # cannot silently reuse a completed topic under an old fingerprint.
+        from .cli_checkpoint import style_policy
+        for topic in section['design_topics']:
+            requests = []
+            for unit in _design_units({**section, 'design_topics': [topic]}, {}):
+                focus, selected_system, _ = topic_prompts[topic['id']]
+                *_, passages, user = _unit_request(model, section, unit, focus)
+                requests.append(dict(system=selected_system, user=user, schema=response_schema(unit, passages)))
+            inputs[topic['id']] = digest(inputs[topic['id']] + json.dumps(
+                dict(requests=requests, styles=style_policy(cfg), cli_protocol='native-schema-v1'), ensure_ascii=False, sort_keys=True))
     answers, origins = reusable(model, section, previous, inputs, _validate_retained)
     for tid in duplicates.repeated_topics(model, section, answers):
         answers.pop(tid), origins.pop(tid, None)
@@ -497,8 +510,11 @@ def _unit_request(model, section, topic, focused_system):
         'If answer_contract.basis is contract, state the implementer/caller obligation using 해야 합니다 or 해서는 안 됩니다; '
         'implementation describes code actually shown, description describes a documented capability, measurement describes only the supplied measurement evidence. '
         'Cover required_terms from the source, without inventing relations merely to include keywords. '
+        'For each required_terms group, include at least one listed surface form verbatim in the paragraph '
+        '(also inside backticks when it is an identifier); a synonym alone fails the lexical coverage check. '
         'Do not invent advice, rationale, guarantees or cleanup behavior. Preserve may/can versus must/shall and all negations. '
         'Each statement has text (one Korean paragraph without newlines), quote_id (the ID of the source passage directly supporting it), '
+        'Each text must stay within 600 characters and at most four sentences, retaining all requested conditions. '
         'evidence (all supporting source IDs, including the quote_id source), covers (answered requirement IDs), '
         'and kind (behavior or limitation). Required answers must have behavior, not just a limitation. '
         'Put code identifiers in backticks. Do not output citations, links, tables or headings. '
@@ -548,6 +564,55 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
         model, section, topic, focused_system)
     tag = _unit_tag(section, topic)
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
+    store = None
+    if cfg.agent.kind == 'cli' and cfg.agent.model and (cfg.raw.get('review') or {}).get('cli_checkpoint', False):
+        from .cli_checkpoint import Capture, UnitStore, validation_policy, style_policy
+        from .grounding import policy_hash
+        from .cli_agent import arguments
+        identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,
+                        request=dict(system=system, user=base_user, response_schema=schema),
+                        execution=dict(runner=cfg.agent.runner, model=cfg.agent.model,
+                                       command=cfg.agent.command, args=cfg.agent.args,
+                                       arguments=arguments(cfg.agent, schema)),
+                        prompt_policy=unit_policy, validation_policy=validation_policy(),
+                        style_policy=style_policy(cfg),
+                        grounding_policy=policy_hash() if grounding else None,
+                        revision=(cfg.raw.get('review') or {}).get('design_revision', False))
+        store = UnitStore(cfg, identity)
+        agent.unit(tag, 'running', input_sha256=store.path.stem,
+                   dependencies={key: value for key, value in identity.items() if key not in ('request', 'topic')})
+        cached_unit = store.read()
+        if cached_unit is not None:
+            saved, reviewer = cached_unit
+            grounding_changed = saved['identity'].get('grounding_policy') != identity['grounding_policy']
+            validation_changed = saved['identity'].get('validation_policy') != identity['validation_policy']
+            review_agent = Capture(agent) if grounding_changed else reviewer
+            try:
+                statements = _validate_unit_response(cfg, model, review_agent, section, topic,
+                    saved['raw'], sources, passages, tag, grounding, source_files, scopes,
+                    context_records, prior_answers=answers)
+            except (ValueError, TypeError, KeyError) as exc:
+                if not (grounding_changed or validation_changed):
+                    raise
+                # A changed policy never inherits an obsolete pass. Only this
+                # rejected unit is drafted again, within the same run budget.
+                statements = None
+                agent.unit(tag, 'revalidation-rejected', error=str(exc))
+            if statements is not None:
+                if statements != saved['statements']:
+                    raise ValueError('CLI checkpoint validated statements mismatch')
+                if grounding_changed or validation_changed:
+                    capture = Capture(agent)
+                    capture.receipts = [store.calls/name for name in saved['receipts']]
+                    if grounding_changed:
+                        capture.receipts += review_agent.receipts
+                    store.write(saved['raw'], statements, capture)
+                return statements, dict(checkpoint=store.path.name, topic=topic['id'],
+                                        part=topic.get('_part_id'), subpart=topic.get('_subpart_id'),
+                                        revalidated=grounding_changed or validation_changed,
+                                        new_grounding_review=grounding_changed,
+                                        receipts=saved['receipts'])
+        agent = Capture(agent)
     if archive:
         for record in archive.candidates(system, base_user, schema, tag):
             try:
@@ -593,6 +658,8 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             statements = _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages,
                                                  f'{tag}_{attempt}', grounding, source_files, scopes, context_records, prior_answers=answers)
             answer_cache.save(cached_path, raw)
+            if store is not None:
+                store.write(raw, statements, agent)
             return statements, None
         except (ValueError, TypeError, KeyError) as exc:
             last = str(exc)
@@ -628,39 +695,74 @@ def _assemble_generation(cfg, model, section, answers, inputs, reused, replayed,
                 'topic_agents': {tid: origins.get(tid, cfg.agent.label) for tid in answers},
                 'grounding_review': 'passed' if policy['design_grounding'] else 'not-run',
                 'grounding_policy': policy.get('grounding_policy')}
+    if cfg.agent.kind == 'cli':
+        from .cli_checkpoint import validation_policy, style_policy
+        artifact['validation_policy'] = validation_policy()
+        artifact['style_policy'] = style_policy(cfg)
     return pinned, resolved, report, artifact
 
 
 def generate(cfg, model, agent, section, previous=None, *, replay_http=False, all_design_units=False):
+    from .generation_run import Execution
+    execution = agent if isinstance(agent, Execution) else Execution(cfg, agent)
+    keys = [_unit_tag(section, unit) for unit in _design_units(section, {})]
+    with execution.document(section['id'], keys):
+        return _generate(cfg, model, execution, section, previous,
+                         replay_http=replay_http, all_design_units=all_design_units)
+
+
+def _generate(cfg, model, agent, section, previous=None, *, replay_http=False, all_design_units=False):
     topic_prompts, policy, inputs, answers, origins = _prepare_generation(cfg, model, section, previous)
     reused = list(answers)
+    for unit in _design_units(section, {}):
+        if unit['id'] in answers:
+            agent.unit(_unit_tag(section, unit), 'manuscript-reused')
     units = _design_units(section, answers)
-    replayed, failures = [], []
+    replayed, resumed, failures = [], [], []
     archive = None
     if replay_http:
         from .design_replay import Archive
         archive = Archive(cfg.build_dir / 'prompts/calls', cfg.agent)
     for topic in units:
+        key = _unit_tag(section, topic)
         try:
             statements, record = _request_unit(cfg, model, agent, section, topic,
                 topic_prompts[topic['id']], policy['design_grounding'], archive, answers)
         except _UnitRejected as exc:
+            agent.unit(key, 'failed', error=str(exc))
             if not all_design_units:
                 raise ValueError(str(exc)) from None
             failures.append(str(exc))
             continue
+        except BaseException as exc:
+            from .generation_run import failure_kind
+            agent.unit(key, 'failed', error=str(exc), failure_kind=failure_kind(exc))
+            raise
         answers.setdefault(topic['id'], []).extend(statements)
-        if record is not None:
+        if record is not None and 'checkpoint' in record:
+            resumed.append(record)
+            agent.unit(key, 'checkpoint-revalidated' if record.get('revalidated') else 'checkpoint-reused')
+        elif record is not None:
             replayed.append(record)
+            agent.unit(key, 'replayed')
+        else:
+            agent.unit(key, 'newly-generated')
     if failures:
         raise ValueError('\n'.join(failures))
-    return _assemble_generation(cfg, model, section, answers, inputs, reused, replayed, origins, policy)
+    result = _assemble_generation(cfg, model, section, answers, inputs, reused, replayed, origins, policy)
+    if resumed:
+        result[3]['checkpoint_units'] = resumed
+    return result
 
 
-def verify(model, section, manuscript):
+def verify(model, section, manuscript, *, cfg=None):
     from .document_metadata import split_frontmatter
     meta, body = split_frontmatter(manuscript)
     artifact = meta.get('generated_design')
+    if isinstance(artifact, dict) and cfg is not None and 'style_policy' in artifact:
+        from .cli_checkpoint import style_policy
+        if artifact['style_policy'] != style_policy(cfg):
+            raise ValueError('집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다.')
     if isinstance(artifact, dict) and artifact.get('grounding_review') == 'passed':
         from .grounding import policy_hash
         current = policy_hash()

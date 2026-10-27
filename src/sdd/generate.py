@@ -68,6 +68,18 @@ class Generator:
     # ---- 진입점 ------------------------------------------------------------
 
     def run(self, section_ids: list[str] | None = None, impact: ImpactReport | None = None) -> list[Path]:
+        from .generation_run import Execution
+        original = self.agent
+        self.agent = Execution(self.cfg, original)
+        self.narrator.agent = self.agent
+        try:
+            return self._run(section_ids, impact)
+        finally:
+            self.agent.persist()
+            self.agent = original
+            self.narrator.agent = original
+
+    def _run(self, section_ids, impact):
         written: list[Path] = []
         # Validate every selected contract before replacing any manuscript.
         selected = [s for s in self.cfg.sections()
@@ -537,7 +549,7 @@ class Generator:
             page = re.sub(r'^agent:.*$', 'agent: ' + ', '.join(agents), page, count=1, flags=re.M)
             artifact['body_sha256'] = generated_design.digest(split_frontmatter(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_design: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
-            generated_design.verify(self.model, sec, page)
+            generated_design.verify(self.model, sec, page, cfg=self.cfg)
         if sec['id'] in self.generated_visuals:
             from .document_metadata import split_frontmatter
             from .generated_visuals import from_manuscript

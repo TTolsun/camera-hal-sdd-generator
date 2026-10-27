@@ -66,9 +66,15 @@ def decode_response(runner, stdout):
         data = json.loads(stdout)
         if not isinstance(data, dict) or data.get('is_error') or data.get('subtype') != 'success':
             raise ValueError('Claude Code did not complete successfully')
-        if not isinstance(data.get('result'), str):
+        if 'structured_output' in data:
+            if not isinstance(data['structured_output'], dict):
+                raise ValueError('Claude Code structured output is not an object')
+            result = json.dumps(data['structured_output'], ensure_ascii=False)
+        else:
+            result = data.get('result')
+        if not isinstance(result, str):
             raise ValueError('Claude Code final result is not text')
-        return data['result'].strip(), {k: data[k] for k in ('model', 'session_id', 'usage', 'modelUsage') if k in data}
+        return result.strip(), {k: data[k] for k in ('model', 'session_id', 'usage', 'modelUsage') if k in data}
     parts, metadata, finished = [], {}, False
     for line in stdout.splitlines():
         event = json.loads(line)
@@ -101,6 +107,22 @@ def build_prompt(system, user, schema=None):
     return prompt
 
 
+def arguments(cfg, schema=None):
+    if cfg.runner == 'hermes':
+        argv = ['chat', '--ignore-rules', '--toolsets', 'todo', '--max-turns', '4',
+                '-Q', '--query-file', '-']
+    elif cfg.runner == 'claude':
+        argv = ['--print', '--output-format', 'json', '--tools', '',
+                '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--no-session-persistence']
+        if schema is not None:
+            argv += ['--json-schema', json.dumps(schema, ensure_ascii=False)]
+    else:
+        argv = ['run', '--format', 'json']
+    if cfg.model:
+        argv += ['--model', cfg.model]
+    return argv + cfg.args
+
+
 def chat(cfg, system, user, schema, dump_dir):
     argv = command(cfg)
     prompt = build_prompt(system, user, schema)
@@ -113,20 +135,11 @@ def chat(cfg, system, user, schema, dump_dir):
     with tempfile.TemporaryDirectory(prefix='call-', dir=parent) as temporary:
         work = Path(temporary)
         env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1', 'NO_COLOR': '1'}
-        if cfg.runner == 'hermes':
-            argv += ['chat', '--ignore-rules', '--toolsets', 'todo', '--max-turns', '4',
-                     '-Q', '--query-file', '-']
-        elif cfg.runner == 'claude':
-            argv += ['--print', '--output-format', 'json', '--tools', '',
-                     '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--no-session-persistence']
-        else:
-            argv += ['run', '--format', 'json']
+        argv += arguments(cfg, schema)
+        if cfg.runner == 'opencode':
             # CLI-native permissions: inference only, without nesting other agents.
             env['OPENCODE_CONFIG_CONTENT'] = json.dumps({'permission': {'*': 'deny'},
                                                         'instructions': [], 'share': 'disabled'})
-        if cfg.model:
-            argv += ['--model', cfg.model]
-        argv += cfg.args
         try:
             result = run(argv, cwd=work, prompt=prompt, timeout=cfg.timeout_sec, env=env)
         except RuntimeError as exc:
@@ -153,6 +166,7 @@ def chat(cfg, system, user, schema, dump_dir):
         if not response:
             raise RuntimeError(f'{cfg.runner} CLI 응답이 비었습니다.')
         metadata = {'runner': cfg.runner, 'executable': Path(argv[0]).name,
+                    'arguments': argv[1:],
                     'model_selection': 'explicit' if cfg.model else 'cli-default',
                     'exit_code': result.returncode,
                     'stdout_sha256': hashlib.sha256(result.stdout.encode()).hexdigest(),
