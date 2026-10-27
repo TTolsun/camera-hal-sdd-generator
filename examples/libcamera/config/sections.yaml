@@ -1379,7 +1379,7 @@ sections:
     title: IPU3 입력 크기 탐색의 경계
     covers:
     - input-search-boundary
-    question: IPU3에서 IF 크기를 탐색하는 두 반복문은 최소 폭·높이를 어떻게 계산하며, 높이를 자르는 연산과 unsigned 경계는 어떤 관계입니까? 소스에 있는 식과 조건을 구분하고 기기 동작이나 성능을 보장하지 마세요.
+    question: IPU3에서 입력 크기를 탐색하는 두 반복문은 최소 폭·높이를 어떻게 계산하며, 높이를 자르는 연산과 unsigned 경계는 어떤 관계입니까? 소스에 있는 식과 조건을 구분하고 기기 동작이나 성능을 보장하지 마세요.
     sources:
     - id: search
       file: src/libcamera/pipeline/ipu3/imgu.cpp
@@ -1399,9 +1399,15 @@ sections:
         - - minIfWidth
         - - minIfHeight
     - id: crop
-      question: calculateBDSHeight 호출과 높이 자르기의 관계를 소스가 밝힌 범위에서 설명하세요. 주석이나 식이 경계 오류를 설명하면 그 조건을 밝히고, 설명이 없으면 동작 보장을 추정하지 마세요.
+      question: calculateBDSHeight 호출과 높이 자르기의 관계를 소스가 밝힌 범위에서 설명하세요. 주석이나 식이 경계 오류를 설명하면 그 조건을 밝히고, 설명이 없으면 동작 보장을 추정하지 마세요. 계산식과 분기 설명의 대상은 선언된 변수·함수 이름으로 명시하고, 뜻을 설명하지 않은 새 약어는 도입하지 마세요.
       sources:
       - search
+      max_statements: 2
+      answer_contract:
+        basis: description
+        reject_patterns:
+        - pattern: (?<![A-Za-z0-9_])IF(?![A-Za-z0-9_])
+          message: 이 질문은 계산식과 분기를 묻습니다. 대상은 선언된 변수·함수 이름으로 명시하고 풀이 없는 IF 약어를 도입하지 마세요.
   design_requirements:
   - id: responsibility
     question: 핸들러는 어떤 객체와 장치를 만들고 관리합니까?
@@ -1416,7 +1422,7 @@ sections:
     aspects:
     - verification
   - id: input-search-boundary
-    question: IPU3에서 IF 크기를 탐색하는 두 반복문은 최소 폭·높이를 어떻게 계산하며, 높이를 자르는 연산과 unsigned 경계는 어떤 관계입니까? 소스에 있는 식과 조건을 구분하고 기기 동작이나 성능을 보장하지 마세요.
+    question: IPU3에서 입력 크기를 탐색하는 두 반복문은 최소 폭·높이를 어떻게 계산하며, 높이를 자르는 연산과 unsigned 경계는 어떤 관계입니까? 소스에 있는 식과 조건을 구분하고 기기 동작이나 성능을 보장하지 마세요.
   show_evidence: true
   reader_profile: vendor
   design_generation: llm
