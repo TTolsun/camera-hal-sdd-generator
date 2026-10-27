@@ -1,0 +1,470 @@
+{
+  "schema": 1,
+  "source_commit": "182307a772ebebf173ee84911906da707718485f",
+  "cases": [
+    {
+      "id": "buffer-is-request-completion",
+      "expected": {
+        "wrong": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "wrong",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "마지막 버퍼가 완료되는 시점. 주장은 '정상 캡처'로 한정하지만, 출처는 정상과 중지 상황을 구분하지 않고 자동 완료를 부정하므로 이 한정은 충돌을 해소하지 못한다.",
+          "actor": "파이프라인 핸들러(PipelineHandler)와 요청 완료를 명시적으로 호출하는 주체",
+          "timing": "마지막 버퍼가 completeBuffer로 완료 신고된 직후. 이 시점에 요청은 자동으로 완료되지 않는다.",
+          "scope": "PipelineHandler::completeBuffer API 계약. 요청 완료는 completeRequest 명시 호출로 이루어진다는 범위에 해당한다.",
+          "reason": "출처는 마지막 버퍼 완료만으로 요청이 자동 완료되지 않는다고 명시하고, 핸들러가 completeRequest로 요청을 명시 완료해야 한다고 규정한다. 주장은 'always'와 'automatically'로 전칭적 자동 완료를 단언하므로 같은 조건에서 명시적으로 양립하지 않는다. 출처에 정상 캡처와 중지 상황을 나누는 분기가 없으므로 '정상 캡처' 한정은 예외가 되지 않는다. 출처가 주장을 지지하지 않으므로 대상 주장은 부정된다.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "When the last buffer completes during normal capture, the request always completes automatically."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\001.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "explicit-request-completion",
+      "expected": {
+        "normal": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "normal",
+          "peers": [],
+          "status": "compatible",
+          "condition": "마지막 buffer가 완료된 경우입니다. 원문은 정상 처리와 중지 상황을 구분하지 않으며, 별도의 예외 조건을 명시하지 않습니다.",
+          "actor": "pipeline handler가 request 완료를 담당합니다. 원문은 handler가 completeRequest()를 명시적으로 호출해야 한다고 규정합니다.",
+          "timing": "마지막 buffer 완료 시점입니다. 그 시점에 request는 자동으로 완료되지 않으며, handler가 completeRequest()를 호출해야 request가 완료됩니다.",
+          "scope": "PipelineHandler::completeBuffer 문서가 정한 API 계약 범위입니다. 원문에는 정상 처리로 한정하는 문구가 없으므로 claim의 '정상 처리' 한정은 원문보다 좁지만 모순은 아닙니다. 장치 동작을 검증한 결과가 아닙니다.",
+          "reason": "원문은 마지막 buffer 완료 시 request가 자동으로 완료되지 않는다고 명시하고, handler가 completeRequest()로 명시적으로 완료해야 한다고 'shall'로 규정합니다. claim의 부정 조건, 주체, 의무 표현이 원문과 일치합니다. 원문에 없는 중지 상황 예외는 추론하지 않았습니다. 원문 근거와 조건이 충분하므로 compatible로 판정합니다.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "Completing the last buffer during normal processing does not automatically complete the request; the pipeline handler must explicitly call completeRequest()."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\002.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "stop-versus-normal",
+      "expected": {
+        "stopped": "compatible",
+        "normal": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "stopped",
+          "peers": [
+            "normal"
+          ],
+          "status": "compatible",
+          "condition": "pipeline handler가 stop()으로 중지되는 경우에 적용된다.",
+          "actor": "추적 중인 queued request의 자동 완료는 pipeline handler의 stop() 중지 경로에서 보장되며, pipeline handler는 completeRequest()로 완료를 신호해야 한다.",
+          "timing": "stop() 호출로 중지되는 시점에 적용된다.",
+          "scope": "stop() 중지 경로에서 추적 중인 queued request의 완료에 한정된다. 정상 처리 경로의 완료 규칙에 대해서는 판단하지 않는다.",
+          "reason": "completion 출처가 stop() 중지 시 queued request의 automatic completion을 명시하고, buffer 출처가 handler의 completeRequest() 명시 완료 의무를 명시한다. 주장은 두 내용을 충실히 요약하므로 호환된다. 출처가 밝힌 API 범위를 그대로 상속하며, 취소나 장치 상태에 대한 예외를 임의로 추가하지 않는다. 이는 장치 검증이 아닌 소스 계약에 대한 판정이다. normal 주장과는 조건(중지 대 정상 처리)이 달라 모순이 아니다.",
+          "sources": [
+            {
+              "source_id": "vendor-overview/benefits/completion",
+              "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+            },
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "Tracking queued requests ensures their completion when the pipeline handler is stopped with stop(); the pipeline handler must signal completion with completeRequest()."
+        },
+        {
+          "claim_id": "normal",
+          "peers": [
+            "stopped"
+          ],
+          "status": "compatible",
+          "condition": "정상 처리 중 마지막 buffer가 완료되는 경우에 적용된다.",
+          "actor": "buffer 완료는 pipeline handler가 completeBuffer()로 신호한다. request 완료는 handler가 completeRequest()로 명시적으로 수행해야 하며, 마지막 buffer 완료가 이를 대신하지 않는다.",
+          "timing": "정상 처리 중 마지막 buffer가 완료되는 시점에 적용된다.",
+          "scope": "정상 처리 경로에서 buffer 완료와 request 완료의 구분에 한정된다. 중지 경로에서의 완료 여부는 이 주장으로 판단하지 않는다. CameraManager thread 제약은 이 주장의 범위 밖이라 판정에 포함하지 않는다.",
+          "reason": "buffer 출처는 마지막 buffer 완료가 request를 자동 완료하지 않으며 handler가 completeRequest()로 명시 완료해야 한다고 밝힌다. 출처 문장 자체에는 정상 처리 조건이 없지만, 주장은 이 내용을 정상 처리 조건으로 한정하므로 출처와 충돌하지 않는다. completeBuffer의 True 반환도 모든 buffer 완료만 뜻하므로 request 완료를 의미하지 않는다. 출처에 없는 중지 조건의 추론이나 보편 양화는 하지 않는다. stopped 주장과는 조건이 달라 모순이 아니다.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "The last buffer completing during normal processing does not itself complete the request."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\003.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "application-owns-request",
+      "expected": {
+        "owner": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "owner",
+          "peers": [],
+          "status": "compatible",
+          "condition": "createRequest()가 유효한 Request 포인터를 반환한 경우에 적용된다. 오류로 nullptr이 반환되면 소유할 Request가 없으므로 이 claim의 대상이 아니다. 호출 전제인 Configured 또는 Running 상태는 같은 API 문서의 호출 범위로 상속된다.",
+          "actor": "createRequest()를 호출해 Request를 받은 애플리케이션 호출자가 소유자이며 삭제 책임을 진다.",
+          "timing": "함수가 Request를 반환하는 시점에 소유권과 삭제 책임이 호출자에게 넘어간다. 삭제는 completion handler 안에서 하거나 Request::reuse()로 상태를 초기화한 뒤 재사용하는 방식으로 호출자가 정하며, 소스는 이를 허용되는 선택지로 제시한다.",
+          "scope": "Request의 소유권과 삭제 책임에 한정된다. 스레드 안전성과 상태 조건은 호출 자체의 범위이며 이 claim의 판정 대상이 아니다. claim은 소스의 호출자 책임 진술을 충실히 요약하므로 소스의 API 범위를 그대로 상속한다.",
+          "reason": "claim이 소스의 소유권 이전과 호출자의 삭제 책임 진술을 충실히 요약한다. 주체, 조건, 시점이 소스와 충돌하지 않는다. claim은 삭제 시점을 지정하지 않으므로 소스의 허용 시점들과 충돌하지 않는다. 호출자 책임은 구현 보장이 아니므로 구현 보장으로 해석하지 않았다. 같은 주제의 peer claim이 없어 비교 대상도 없다.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/create",
+              "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+            }
+          ],
+          "claim_quote": "The caller owns the Request returned by Camera::createRequest() and is responsible for deleting it."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\004.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "wrong-request-owner",
+      "expected": {
+        "owner": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "owner",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "createRequest()가 반환한 Request 객체 전체에 적용된다. 출처의 소유권 문장은 조건 없이 반환된 request에 대해 말하며, 호출 가능 상태(Configured 또는 Running)는 호출 시점의 조건일 뿐 소유권 문장을 제한하지 않는다.",
+          "actor": "Camera와 애플리케이션(호출자). 출처는 소유권이 호출자에게 넘어가며 삭제 책임도 호출자에게 있다고 명시한다.",
+          "timing": "createRequest()가 request를 반환한 시점부터 해당 Request가 삭제되는 시점까지다. 출처는 completion handler에서 삭제하거나 Request::reuse()로 상태를 초기화한 뒤 재사용할 수 있다고 명시한다.",
+          "scope": "Camera::createRequest()가 반환한 Request 객체의 소유권과 삭제 책임이다. 재사용(Request::reuse())은 소유권과 삭제 책임에 대한 별도 조항이 없으므로 이 판정의 근거에서 제외한다.",
+          "reason": "출처는 반환된 request의 소유권이 호출자에게 넘어가며 호출자가 삭제할 책임이 있다고 명시한다. 대상 주장은 소유권이 Camera에 있고 애플리케이션이 절대 삭제하면 안 된다고 하므로, 소유자와 삭제 주체가 모두 출처와 정반대다. 출처가 명시적으로 뒷받침하는 쪽이 호출자 소유이므로 대상 주장이 틀렸다고 판정한다. 출처가 completion handler에서의 삭제를 허용하는데 주장은 이를 금지하므로 이 충돌은 해소되지 않는다.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/create",
+              "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+            }
+          ],
+          "claim_quote": "Camera owns every Request returned by createRequest(); the application must never delete it."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\005.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "access-after-complete-request",
+      "expected": {
+        "access": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "access",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "After completeRequest() returns. The source states no other precondition for this prohibition.",
+          "actor": "Pipeline handler, the caller of PipelineHandler::completeRequest().",
+          "timing": "After completeRequest() returns.",
+          "scope": "The pipeline handler's access to the completed request after the call. The source is an explicit API statement, so its scope is inherited. The source names no cancellation or device-state exception.",
+          "reason": "The source says the request is no longer managed by the pipeline handler and shall not be accessed once the function returns. The claim says the handler may continue accessing the request after return. Actor and timing match, but the modality is reversed: a permission contradicts an explicit prohibition. The target claim is the incorrect side.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/complete-access",
+              "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+            }
+          ],
+          "claim_quote": "After completeRequest() returns, the pipeline handler may continue accessing that request."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\006.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "completion-call-order-versus-return-order",
+      "expected": {
+        "calls": "compatible",
+        "returns": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "calls",
+          "peers": [
+            "returns"
+          ],
+          "status": "compatible",
+          "condition": "완료된 요청(any complete request)에 completeRequest()를 호출하는 경우이며, 출처는 이때 순서 제약이 없다고 명시한다.",
+          "actor": "파이프라인 핸들러(pipeline handler)",
+          "timing": "요청 완료를 알리기 위해 completeRequest()를 호출하는 시점이다.",
+          "scope": "completeRequest() 호출 순서에 대한 제약 여부만 다룬다. 애플리케이션에 반환되는 객체의 순서는 포함하지 않는다.",
+          "reason": "출처는 핸들러가 임의의 완료 요청에 대해 순서 제약 없이 completeRequest()를 호출할 수 있다고 명시하며, 주장은 이를 그대로 요약한다. 출처의 'shall call' 문장은 완료 통지 의무를 말할 뿐 호출 순서를 제한하지 않으므로 충돌하지 않는다. 반환 순서는 별개 사건이므로 returns 주장과도 충돌하지 않는다.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/journey/request-notice",
+              "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+            }
+          ],
+          "claim_quote": "Pipeline handlers may call completeRequest() on completed requests without an ordering constraint."
+        },
+        {
+          "claim_id": "returns",
+          "peers": [
+            "calls"
+          ],
+          "status": "compatible",
+          "condition": "completeRequest()가 요청을 완료 처리하고 완료된 요청을 애플리케이션에 반환하는 경우이며, 출처는 이때 제출 순서(submission order)로 반환된다고 보장한다.",
+          "actor": "completeRequest()를 통해 요청을 반환하는 흐름이다. 호출 순서를 정하는 파이프라인 핸들러의 의무가 아니라 함수가 제공하는 보장이다.",
+          "timing": "completeRequest() 실행 중 완료된 요청이 애플리케이션으로 반환되는 시점이며, 함수 호출 순서와는 별개 사건이다.",
+          "scope": "completeRequest()를 통해 반환되는 요청의 순서에 한정된다. 출처에 취소(cancellation)나 장치 상태에 대한 예외가 없으므로 이를 임의로 추가하지 않는다.",
+          "reason": "출처는 completeRequest()가 요청을 제출 순서대로 반환하도록 보장한다고 명시하고, 주장은 이를 충실히 요약한다. 따라서 해당 API 범위를 상속한다. 발췌된 반환 루프도 대기 중인 요청을 만나면 중단하여 앞선 요청부터 순서대로 반환하는 구조와 일치한다. 다만 큐가 제출 순서로 채워진다는 정의는 발췌에 없다. 출처가 보장을 명시하므로 compatible로 판정한다.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/journey/request-notice",
+              "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+            }
+          ],
+          "claim_quote": "Requests are returned to the application in their submission order."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\007.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "wrong-return-order",
+      "expected": {
+        "returns": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "returns",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "조건 없음. 대상 주장은 'always'와 'regardless of submission order'로 무조건 주장한다. 소스도 반환 순서를 submission order로 조건 없이 명시한다.",
+          "actor": "PipelineHandler::completeRequest 경로가 요청을 camera를 거쳐 application에 반환한다.",
+          "timing": "요청이 완료 처리되어 completeRequest가 호출되고 queuedRequests_ 앞에서부터 반환될 때다. 반환 순서는 hardware 처리 완료 순서가 아니라 제출 순서다.",
+          "scope": "PipelineHandler::completeRequest로 application에 반환되는 요청 전체다. 소스는 이 함수가 CameraManager thread에서 호출된다고 명시한다.",
+          "reason": "소스는 요청이 application에 submission order로 반환된다고 명시한다. 코드도 queuedRequests_ 앞 요청이 RequestPending 상태이면 반복을 멈추므로, 먼저 제출된 요청이 끝나기 전까지 나중 요청은 반환되지 않는다. 대상 주장은 hardware 완료 순서 기준 반환과 제출 순서 무관을 말하므로 소스와 명시적으로 충돌한다. 소스가 completeRequest 호출 순서에는 제약이 없다고 말하는 것은 함수 호출 순서에 관한 것이며, 대상 주장이 다루는 application 반환 순서와 별개의 사건이므로 이 충돌을 해소하지 않는다.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/journey/request-notice",
+              "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+            }
+          ],
+          "claim_quote": "Requests are always returned to the application in the order their hardware processing finishes, regardless of submission order."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\008.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "unsupported-stop-deadline",
+      "expected": {
+        "deadline": "insufficient-evidence"
+      },
+      "findings": [
+        {
+          "claim_id": "deadline",
+          "peers": [],
+          "status": "insufficient-evidence",
+          "condition": "claim에는 조건이 없다. 소스의 조건은 stopDevice()가 호출되어 스트림 캡처와 요청 처리를 중지하는 경우뿐이며, 10밀리초 상한이 적용되는 조건은 어느 소스에도 없다.",
+          "actor": "stopDevice()를 실행하는 pipeline handler와 그 대상 카메라",
+          "timing": "stopDevice() 완료까지 10밀리초 이내라는 정량 시간 상한. 소스는 중지가 즉시(immediately) 이루어진다고만 설명하고 시간 값은 제시하지 않는다.",
+          "scope": "claim의 'every supported camera' 전체 범위. 소스는 'the camera'를 대상으로 하며 'supported'의 범위를 정의하지 않는다.",
+          "reason": "소스의 'immediately'는 정성적 표현이며 10밀리초라는 정량 기한을 뜻하지 않는다. 따라서 소스가 claim을 뒷받침하지도, 모순되지도 않는다. 소스에 시간 상한이 없다는 사실로 기한 초과 불가라는 부정 보장을 추론하지 않으며, 지원 카메라 전체에 대한 보장도 확인되지 않는다. 검토 시 해당 카메라 구현의 측정값이나 시간 보장 근거가 필요하다.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/shutdown/device",
+              "source_quote": "\\fn PipelineHandler::stopDevice()\n * \\brief Stop capturing from all running streams\n * \\param[in] camera The camera to stop\n *\n * This function stops capturing and processing requests immediately. All\n * pending requests are cancelled and complete immediately in an error state.\n */"
+            },
+            {
+              "source_id": "vendor-integration/shutdown/stop",
+              "source_quote": "void PipelineHandler::stop(Camera *camera)\n{\n\t/*\n\t * Take all waiting requests so that they are not requeued in response\n\t * to completeRequest() being called inside stopDevice(). Cancel them\n\t * after the device to keep them in order.\n\t */\n\tCamera::Private *data = camera->_d();\n\tstd::queue<Request *> waitingRequests;\n\twaitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests complete. */\n\tstopDevice(camera);\n\n\t/* Cancel and signal as complete all waiting requests. */\n\twhile (!waitingRequests.empty()) {\n\t\tRequest *request = waitingRequests.front();\n\t\twaitingRequests.pop();\n\n\t\t/*\n\t\t * Cancel all requests by marking them as cancelled and calling\n\t\t * doQueueRequest() instead of cancelRequest(). This ensures\n\t\t * that the requests get a sequence number and are temporarily\n\t\t * added to queuedRequests_ so they can be properly completed in\n\t\t * completeRequest().\n\t\t */\n\t\trequest->_d()->cancel();\n\t\tdoQueueRequest(request);\n\t}\n\n\t/* Make sure no requests are pending. */\n\tASSERT(data->queuedRequests_.empty());\n\tASSERT(data->waitingRequests_.empty());\n\n\tdata->requestSequence_ = 0;\n}"
+            }
+          ],
+          "claim_quote": "Every supported camera completes stopDevice() within 10 milliseconds."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\009.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "synchronization-responsibility",
+      "expected": {
+        "synchronization": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "synchronization",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "Camera State 정의에 해당하는 상태 변경 함수 호출 시. 소스는 이 함수들이 Camera 클래스에 의해 일반적으로(generally) 서로 동기화되지 않으며, 필요한 경우 동기화 보장은 호출자 책임이라고 명시한다. 주장은 조건 없이 모든 상태 변경 함수가 내부 동기화된다고 말한다.",
+          "actor": "Camera 클래스(내부 동기화 주체 여부)와 호출자(필요 시 동기화 책임 주체). 소스는 책임을 호출자에게 두고, 주장은 Camera 클래스에 두고 있다.",
+          "timing": "상시 적용되는 API 구조 계약으로 소스에 특정 시점 조건은 없다. 동기화가 필요할 때 호출자가 수행한다는 조건부 표현이 있다.",
+          "scope": "overview/boundary/synchronization 섹션의 Camera State 관련 상태 변경 함수 전체. 주장의 'all' 범위가 소스의 범위와 같다.",
+          "reason": "소스는 Camera 클래스가 상태 변경 함수들을 서로 동기화하지 않는다고 명시하며, 동기화 책임을 호출자에게 둔다. 주장은 Camera가 모든 상태 변경 함수를 내부 동기화하므로 호출자가 동기화할 필요가 없다고 말하므로, 동기화 책임 주체와 필요성 판단이 정면으로 어긋난다. 소스의 'generally'는 예외 가능성을 남기지만, 주장의 'all'과 'never needs'를 지지하지 않는다. 소스에서 주장을 뒷받침하는 문장은 찾을 수 없으므로 compatible이나 ambiguous로 볼 근거가 없다.",
+          "sources": [
+            {
+              "source_id": "overview/boundary/synchronization",
+              "source_quote": "Functions that affect the camera state as defined below are generally not\n * synchronized with each other by the Camera class. The caller is responsible\n * for ensuring their synchronization if necessary.\n *\n * \\subsection Camera States"
+            }
+          ],
+          "claim_quote": "Camera internally synchronizes all functions that change camera state, so the caller never needs to synchronize them."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\010.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "weakened-english-obligation",
+      "expected": {
+        "ko": "compatible",
+        "en": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "ko",
+          "peers": [
+            "en"
+          ],
+          "status": "compatible",
+          "condition": "요청(request)을 완료하는 경우에 적용됩니다. 마지막 buffer가 완료되어도 요청은 자동으로 완료되지 않으므로, 완료에는 명시적 호출이 필요합니다.",
+          "actor": "파이프라인 핸들러(pipeline handler)",
+          "timing": "마지막 buffer가 완료된 뒤에도 핸들러가 completeRequest()를 명시적으로 호출해야 요청이 완료됩니다. 소스는 completeRequest() 호출의 구체적 시점을 명시하지 않습니다.",
+          "scope": "PipelineHandler의 일반적 요청 완료 의무입니다. 소스는 completeRequest()의 스레드나 정지(stopping) 중 동작을 다루지 않으므로, 이 finding은 그 범위를 주장하지 않습니다. buffer 완료와 request 완료는 별개 사건입니다.",
+          "reason": "소스는 핸들러가 요청을 명시적으로 완료해야 한다는 의무를 규정하며, 이 claim은 그 의무를 같은 modality로 충실히 요약합니다. 조건과 행위자가 소스와 맞고 부정 보장을 추론하지 않았습니다. 번역 en이 이 의무를 선택 사항으로 약화했으므로 문제는 en 쪽에 있습니다.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "파이프라인 핸들러는 요청을 완료하려면 completeRequest()를 명시적으로 호출해야 합니다."
+        },
+        {
+          "claim_id": "en",
+          "peers": [
+            "ko"
+          ],
+          "status": "contradiction",
+          "condition": "요청 완료 시 completeRequest() 호출 여부에 관한 주장입니다. en은 이 호출이 선택 사항이며 필수가 아니라고 주장합니다.",
+          "actor": "파이프라인 핸들러(pipeline handler)",
+          "timing": "요청을 완료하는 시점입니다. 소스는 마지막 buffer 완료만으로 요청이 자동 완료되지 않는다고 명시하므로, 명시적 호출이 요청 완료의 필요 조건입니다.",
+          "scope": "PipelineHandler의 요청 완료 의무 전반입니다. 소스가 규정한 범위와 같습니다.",
+          "reason": "소스는 핸들러가 completeRequest()로 요청을 명시적으로 완료해야 한다고 의무를 규정합니다. en은 'may optionally'와 'not required' 표현으로 이 의무를 권한과 면제로 바꿨으므로 modality와 부정이 소스와 정면으로 충돌합니다. 번역이 원문의 의무를 잃은 사례이며, 동일 조건의 peer인 ko와도 충돌합니다. 소스가 ko 쪽 의무를 지지하므로 잘못된 대상은 en입니다.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "The pipeline handler may optionally call completeRequest() to complete a request; this call is not required."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\011.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "omitted-completion-condition",
+      "expected": {
+        "unclear": "ambiguous"
+      },
+      "findings": [
+        {
+          "claim_id": "unclear",
+          "peers": [],
+          "status": "ambiguous",
+          "condition": "claim에 조건이 없다. 정상 처리 경로와 stop() 중지 경로에서 참인 내용이 다르므로 조건 미지정 상태로는 참 여부를 판정할 수 없다.",
+          "actor": "claim에는 행위 주체가 없다. 출처상 정상 처리에서는 pipeline handler가 completeRequest()로 request 완료를 명시적으로 신호해야 한다.",
+          "timing": "정상 처리에서는 마지막 buffer가 완료되어도 request가 자동 완료되지 않는다. stop() 중지 시에는 대기열에 있던 request가 자동 완료된다.",
+          "scope": "request 완료에 관한 주장이다. buffer 완료(completeBuffer)는 request 완료와 구분되므로, buffer 완료 근거로 request 완료를 대신 판정하지 않는다.",
+          "reason": "claim은 조건 없이 자동 완료를 단정한다. 출처 1은 stop() 중지 시 자동 완료를 말하고, 출처 2는 정상 처리에서 자동 완료를 부정하며 명시적 completeRequest() 호출을 요구한다. 두 조건에서 참 여부가 달라지지만 claim이 always, all, never 같은 전칭 표현을 쓰지 않고 충돌하는 조건도 명시하지 않으므로 contradiction이 아니라 ambiguous로 판정한다.",
+          "sources": [
+            {
+              "source_id": "vendor-overview/benefits/completion",
+              "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+            },
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "Requests are completed automatically."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\012.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "incorrect-original-correct-english",
+      "expected": {
+        "ko": "contradiction",
+        "en": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "ko",
+          "peers": [
+            "en"
+          ],
+          "status": "contradiction",
+          "condition": "정상 버퍼 처리에서 마지막 버퍼가 완료되는 경우다. 출처에는 이 조건을 벗어나는 예외가 없다.",
+          "actor": "원문은 행위자를 명시하지 않고 요청이 자동으로 완료된다고 쓴다. 출처는 파이프라인 핸들러가 completeRequest()로 명시적으로 완료해야 한다고 규정한다.",
+          "timing": "마지막 버퍼 완료 시점에 추가 호출 없이 요청이 완료된다는 뜻이다. 출처는 같은 시점에 요청이 자동으로 완료되지 않는다고 규정한다.",
+          "scope": "요청 완료 상태 전이 전반에 대한 주장이다. 출처의 규정이 같은 조건과 같은 주체에 대해 반대로 서술하므로 범위가 겹친다.",
+          "reason": "원문은 마지막 버퍼 완료만으로 요청이 자동 완료된다고 단정한다. 출처는 같은 조건에서 자동 완료되지 않으며 핸들러가 명시적으로 완료해야 한다고 명확히 규정한다. 두 진술은 조건과 시점이 같으므로 명시적 모순이다. 영문 번역은 출처와 일치하므로 틀린 쪽은 원문이다.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "정상 버퍼 처리에서 마지막 버퍼가 완료되면 추가 호출 없이 요청이 자동으로 완료됩니다."
+        },
+        {
+          "claim_id": "en",
+          "peers": [
+            "ko"
+          ],
+          "status": "compatible",
+          "condition": "정상 버퍼 처리에서 마지막 버퍼가 완료되는 경우다. 원문의 정상 처리 한정은 주제 맥락에서 확인되며, 출처 규정을 좁히지만 모순되지 않는다.",
+          "actor": "파이프라인 핸들러다. 명시적 완료 호출의 의무 주체이며, 출처도 같은 주체에게 같은 의무를 규정한다.",
+          "timing": "마지막 버퍼 완료 이후 요청 완료는 별도의 completeRequest() 호출 시점에 일어난다. 버퍼 완료 반환값은 버퍼 완료만 나타내므로 요청 완료와 구분된다.",
+          "scope": "요청 자동 완료의 부정과 핸들러의 명시적 호출 의무에 한정된다. 출처가 명시한 API 규정 범위를 그대로 따르며, 장치 검증이나 중지 중 예외를 추가하지 않는다.",
+          "reason": "출처는 마지막 버퍼 완료만으로 요청이 자동 완료되지 않으며 파이프라인 핸들러가 completeRequest()로 명시적으로 완료해야 한다고 규정한다. 번역은 부정, 의무, 행위자, 함수명을 출처와 일치시킨다. 출처가 충분히 뒷받침하므로 호환으로 판정한다. 이 판정은 문서화된 API 규정과의 일치만 뜻하며 실제 장치 동작을 검증하지 않는다.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "Normal completion of the last buffer does not automatically complete the request; the pipeline handler must explicitly call completeRequest()."
+        }
+      ],
+      "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v6\\build\\prompts\\calls\\5fca759f596a4aee93df191e8a1e78a7\\013.receipt.json",
+      "correct": true
+    }
+  ],
+  "human_review": "pending",
+  "scope": "Synthetic evaluation statements, not published manuscript content; actual selected CLI calls.",
+  "metrics": {
+    "cases": 13,
+    "claims": 17,
+    "correct": 17,
+    "contradictions": 7,
+    "detected": 7,
+    "missed": 0,
+    "false_positives": 0,
+    "compatible": 8,
+    "undetermined": 2
+  }
+}

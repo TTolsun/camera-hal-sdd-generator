@@ -1,0 +1,22 @@
+{
+  "core_fixed_cases": 12,
+  "core_claims": 15,
+  "core_correct": 15,
+  "core_contradictions": 6,
+  "core_detected": 6,
+  "core_false_positives": 0,
+  "extended": {
+    "cases": 13,
+    "claims": 17,
+    "correct": 17,
+    "contradictions": 7,
+    "detected": 7,
+    "missed": 0,
+    "false_positives": 0,
+    "compatible": 8,
+    "undetermined": 2
+  },
+  "policy_sha256": "7b39c25cb269c0c9be9f3af3e7a7a3f5b0023be9e892bf7f2dd6f4a936a3596d",
+  "fixture_sha256": "1ade199e55ba6177505e256c4e04f95029d08d2df5fc71a966ae6b964ae06e22",
+  "human_review": "pending"
+}

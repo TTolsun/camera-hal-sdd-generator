@@ -29,8 +29,13 @@ SYSTEM = (
     'A buffer completion is not necessarily request completion. Do not infer negative guarantees '
     'from silence or turn caller obligations into implementation guarantees. '
     'Inspect every supplied claim, including the primary document; the primary is not a truth oracle. '
+    'Assign the verdict to the target claim. If the sources identify which of two conflicting '
+    'claims is correct, flag the incorrect target; a source-supported target stays compatible '
+    'even when its peer or translation is wrong. Neither the original language nor the translation '
+    'is automatically correct. If sources cannot resolve an explicit same-condition mutual '
+    'inconsistency, report that conflict and explain the unresolved side. '
     'Return one finding per target claim ID in claims. peer_claims are comparison context only. '
-    'In claim_quote copy the complete target claim verbatim. '
+    'Select the exact claim_id; the generator attaches its complete original text. '
     'For each finding name all relevant peer claim IDs; compare both sides, not just keywords. '
     'For each source reference select its exact source_id. The validator attaches its complete '
     'original source text and location; do not copy or paraphrase source quotations. '
@@ -41,6 +46,11 @@ SYSTEM = (
     'whose truth differs between the supplied normal and stopping conditions is ambiguous, unless '
     'it explicitly says always/all/never or gives an incompatible condition. Read each claim within '
     'its supplied topic and peer context; a sentence need not repeat a scope already established there. '
+    'When a source explicitly states an API guarantee and the claim faithfully summarizes it, '
+    'inherit that API scope. Do not invent unrelated cancellation or device-state exceptions to '
+    'downgrade that supported summary. Distinguish ordering of function calls from ordering of '
+    'objects returned to an application; these are separate events. Still preserve every condition '
+    'that the source actually states, especially when normal and stopping behavior differ. '
     'Explain condition, actor, timing, scope and judgement in separate concise fields. '
     'For translations preserve obligation/prohibition, possibility, completion/cancellation and ownership. '
     'Never supply replacement prose or approve a document. Return JSON only.'
@@ -148,7 +158,7 @@ def schema(payload):
     string = dict(type='string', minLength=1)
     reference = dict(type='object', additionalProperties=False, required=['source_id'],
                      properties=dict(source_id=dict(type='string', enum=list(payload['sources']))))
-    fields = dict(claim_id=dict(type='string', enum=list(payload['claims'])), claim_quote=string,
+    fields = dict(claim_id=dict(type='string', enum=list(payload['claims'])),
                   peers=dict(type='array', uniqueItems=True, items=dict(type='string', enum=list(payload['claims']) + list(payload.get('peer_claims', {})))),
                   status=dict(type='string', enum=list(STATUSES)), condition=string, actor=string,
                   timing=string, scope=string, reason=string,
@@ -158,7 +168,7 @@ def schema(payload):
         findings=dict(type='array', minItems=len(payload['claims']), maxItems=len(payload['claims']), items=finding)))
 
 
-def validate(payload, raw):
+def validate(payload, raw, *, assembled=False):
     data = json.loads(raw)
     if not isinstance(data, dict) or set(data) != {'findings'} or not isinstance(data['findings'], list):
         raise ValueError('Consistency review requires findings')
@@ -167,13 +177,15 @@ def validate(payload, raw):
         raise ValueError('Consistency review must cover every claim exactly once')
     for row in findings:
         required = set(schema(payload)['properties']['findings']['items']['required'])
+        if assembled:
+            required.add('claim_quote')
         if set(row) != required or row['status'] not in STATUSES:
             raise ValueError('Invalid consistency finding shape/status')
         if any(not isinstance(row[k], str) or not row[k].strip() for k in
-               ('claim_quote', 'condition', 'actor', 'timing', 'scope', 'reason')):
+               ('condition', 'actor', 'timing', 'scope', 'reason')):
             raise ValueError('Missing contract dimensions')
         claim = payload['claims'][row['claim_id']]
-        if row['claim_quote'] != claim['text']:
+        if assembled and row['claim_quote'] != claim['text']:
             raise ValueError('Consistency claim quote changed')
         if (not isinstance(row['peers'], list) or len(row['peers']) != len(set(row['peers']))
                 or not set(row['peers']) <= (payload['claims'].keys() | payload.get('peer_claims', {}).keys())):
@@ -190,6 +202,7 @@ def validate(payload, raw):
                     raise ValueError('Invalid consistency source quote')
             else:
                 ref['source_quote'] = original
+        row['claim_quote'] = claim['text']
     return findings
 
 
@@ -288,7 +301,7 @@ def enforce(cfg, model):
         row = recorded[group['id']]
         if row.get('input_sha256') != identity(payload):
             raise ValueError(f"Stale cross-document contract review: {group['id']}; run audit-consistency")
-        validate(payload, json.dumps(dict(findings=row['findings']), ensure_ascii=False))
+        validate(payload, json.dumps(dict(findings=row['findings']), ensure_ascii=False), assembled=True)
         checked = []
         for batch in batches(payload):
             store, _ = review_store(cfg, batch)

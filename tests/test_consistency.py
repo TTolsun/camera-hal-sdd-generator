@@ -14,7 +14,7 @@ def contract_case():
         'vendor': dict(text='During stop, all tracked requests complete.'),
         'developer': dict(text='The last buffer does not automatically complete a request.')},
         sources={'source': dict(file='handler.cpp', line=1, text=source)})
-    findings = [dict(claim_id=key, claim_quote=value['text'], peers=[other for other in payload['claims'] if other != key],
+    findings = [dict(claim_id=key, peers=[other for other in payload['claims'] if other != key],
                      status='compatible', condition='stop' if key == 'vendor' else 'normal processing',
                      actor='pipeline handler', timing='during stop' if key == 'vendor' else 'last buffer completion',
                      scope='tracked requests' if key == 'vendor' else 'request', reason='Different conditions coexist.',
@@ -24,8 +24,18 @@ def contract_case():
 
 def test_consistency_preserves_condition_dimensions_and_every_claim(contract_case):
     payload, findings = contract_case
-    assert validate(payload, json.dumps(dict(findings=findings))) == findings
+    result = validate(payload, json.dumps(dict(findings=findings)))
+    assert result == [{**row, 'claim_quote': payload['claims'][row['claim_id']]['text']} for row in findings]
     assert findings[0]['condition'] != findings[1]['condition']
+
+
+def test_canonical_report_quote_cannot_be_rewritten(contract_case):
+    payload, findings = contract_case
+    assembled = validate(payload, json.dumps(dict(findings=findings)))
+    assert validate(payload, json.dumps(dict(findings=assembled)), assembled=True) == assembled
+    assembled[0]['claim_quote'] = 'changed original claim'
+    with pytest.raises(ValueError, match='claim quote changed'):
+        validate(payload, json.dumps(dict(findings=assembled)), assembled=True)
 
 
 @pytest.mark.parametrize('change', ['missing', 'duplicate', 'quote', 'source', 'peer', 'condition', 'unbacked'])
@@ -97,7 +107,7 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
     def run(argv, **kwargs):
         payload = json.loads(kwargs['prompt'].split('<user>\n',1)[1].split('\n</user>',1)[0])
         calls.append(payload)
-        findings = [dict(claim_id=key, claim_quote=value['text'], peers=[], status='compatible',
+        findings = [dict(claim_id=key, peers=[], status='compatible',
                          condition='explicit completion', actor='caller', timing='during completion',
                          scope='the request', reason='Fixture source matches.', sources=[dict(source_id='s/t/source')])
                     for key,value in payload['claims'].items()]
