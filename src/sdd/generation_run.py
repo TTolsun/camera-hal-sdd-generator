@@ -17,10 +17,10 @@ def failure_kind(exc):
     message = str(exc)
     if isinstance(exc, BudgetExceeded):
         return 'budget'
-    if isinstance(exc, AgentError):
-        return 'cli-timeout' if '초과' in message else 'cli-failure'
     if 'checkpoint' in message:
         return 'checkpoint-integrity'
+    if isinstance(exc, AgentError):
+        return 'cli-timeout' if '시간이 초과' in message else 'cli-failure'
     if '근거 대조 실패' in message:
         return 'grounding-rejected'
     return 'validation'
@@ -94,7 +94,7 @@ class Execution:
             if limit and used >= limit:
                 raise BudgetExceeded(f'{label} budget exhausted; previous output preserved')
             if limit and label.endswith('time'):
-                remaining.append(max(1, int(limit-used)))
+                remaining.append(limit-used)
         row = dict(tag=kwargs.get('tag'), started_seconds=now-self.started, status='running',
                    section=self.current['section'] if self.current else None)
         calls.append(row)  # Failed transport attempts count too.
@@ -104,9 +104,8 @@ class Execution:
             self.cfg.agent.timeout_sec = min(timeout, *remaining)
         try:
             raw = self.agent.chat(system, user, **kwargs)
+            self.check_time()
             row['status'] = 'completed'
-            if self.clock()-now >= self.cfg.agent.timeout_sec and remaining:
-                raise BudgetExceeded('time budget exhausted; completed response not accepted')
             return raw
         except BaseException as exc:
             row.update(status='failed', failure_kind=failure_kind(exc), error=str(exc))

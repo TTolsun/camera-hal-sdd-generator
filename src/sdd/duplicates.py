@@ -24,7 +24,7 @@ _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z0-9_]+)*(?:\(\))?")
 _NAME = r"[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*"
 _SUBJECT = re.compile(
     rf"(?<![A-Za-z0-9_:])({_NAME})(\([^()\n]*\))?\s*"
-    r"((?:의\s*)?(?:구현자|구현체)\s*(?:는|은|이|가)|(?:함수|메서드)\s*(?:는|은|이|가|에서|내부)|(?:는|은|이|가))(?=\s|$)")
+    r"((?:의\s*)?구현(?:자|체)?\s*(?:는|은|이|가)|(?:을|를)\s*호출하는\s*(?:쪽|호출자)\s*(?:는|은|이|가)|(?:함수|메서드)\s*(?:는|은|이|가|에서|내부)|(?:는|은|이|가))(?=\s|$)")
 _MEMBER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:(?:\([^()\n]*\))?(?:\.|->)[A-Za-z_][A-Za-z0-9_]*)+")
 _OWNED_FIELD = re.compile(rf"({_NAME})\s*(?:(?:구조체|클래스)\s*)?의\s*({_NAME})\s*(?:필드|멤버)")
 _VALUE = r"(?:true|false|nullptr|NULL|null|-E[A-Z0-9_]+|[+-]?\d+(?:\.\d+)?)"
@@ -86,7 +86,7 @@ def _same_function(left: str, right: str) -> bool:
 
 def _subject(text: str) -> str | None:
     for name, call, role in _SUBJECT.findall(text):
-        if call or '::' in name or role.startswith(('함수', '메서드')):
+        if call or '::' in name or role.startswith(('함수', '메서드')) or '호출하는' in role or '구현' in role:
             return name
     return None
 

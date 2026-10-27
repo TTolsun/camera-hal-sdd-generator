@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import stat
 from dataclasses import asdict
 from pathlib import Path
 from typing import Iterable
@@ -11,11 +12,22 @@ import yaml
 from .config import Config
 
 
+def is_link(path: Path) -> bool:
+    """Reject Windows reparse points too, including on Python 3.11."""
+    if path.is_symlink() or getattr(path, 'is_junction', lambda: False)():
+        return True
+    try:
+        attributes = getattr(path.lstat(), 'st_file_attributes', 0)
+    except FileNotFoundError:
+        return False
+    return bool(attributes & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400))
+
+
 def reject_symlinks(path: Path, *, recursive: bool = False) -> Path:
     """Check the original path before resolve can hide a linked component."""
     path = Path(path).absolute()
     def check(candidate):
-        if candidate.is_symlink() or getattr(candidate, 'is_junction', lambda: False)():
+        if is_link(candidate):
             raise ValueError(f'Trial inputs and outputs cannot use symbolic links: {candidate}')
     for candidate in [path, *path.parents]:
         check(candidate)

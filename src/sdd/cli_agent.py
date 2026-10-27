@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import time
 from contextlib import contextmanager
+from .trial_workspace import is_link
 
 
 RUNNERS = ('hermes', 'opencode', 'claude')
@@ -41,7 +42,10 @@ def run(argv, *, cwd, prompt, timeout, env=None):
                            capture_output=True, check=False)
         else:
             import signal
-            os.killpg(proc.pid, signal.SIGKILL)
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass  # The timed-out process can exit before group cleanup.
         proc.kill()
         try:
             proc.communicate(timeout=5)
@@ -137,13 +141,16 @@ def call_workspace(parent):
             if delay:
                 time.sleep(delay)
             # Validate the exact freshly created target before recursive cleanup.
-            if work.is_symlink() or work.resolve().parent != expected or not work.name.startswith('call-'):
+            if is_link(work) or work.resolve().parent != expected or not work.name.startswith('call-'):
                 raise RuntimeError('Unsafe CLI workspace cleanup target')
             try:
                 shutil.rmtree(work)
                 cleanup['status'] = 'removed'
                 break
-            except PermissionError as exc:
+            except FileNotFoundError:
+                cleanup['status'] = 'removed'
+                break
+            except OSError as exc:
                 # Some Windows CLI children briefly retain their working dir.
                 # Cleanup must not erase a completed, archived inference result.
                 cleanup.update(status='deferred', reason=str(exc))

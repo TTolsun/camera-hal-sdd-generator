@@ -189,6 +189,21 @@ def test_stdout_symlink_is_rejected_even_when_target_is_inside_archive(archive):
         verify_cli_receipt(**args)
 
 
+def test_stdout_reparse_directory_is_rejected_without_junction_api(archive, monkeypatch):
+    from pathlib import Path
+    from types import SimpleNamespace
+    args = archive()
+    target = args['calls'].parent/'cli'
+    original = Path.lstat
+    def reparse(path, *a, **kw):
+        record = original(path, *a, **kw)
+        return SimpleNamespace(st_mode=record.st_mode, st_file_attributes=0x400) if path == target else record
+    monkeypatch.setattr(Path, 'lstat', reparse)
+    monkeypatch.setattr(Path, 'is_junction', lambda self: False, raising=False)
+    with pytest.raises(ValueError, match='Linked CLI stdout'):
+        verify_cli_receipt(**args)
+
+
 def test_expected_transport_and_default_model_selection_are_checked(archive):
     args = archive(model='')
     args['receipt']['provider']['model_selection'] = 'explicit'

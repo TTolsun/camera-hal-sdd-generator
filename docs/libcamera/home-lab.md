@@ -176,7 +176,19 @@ Meson 설정만으로 멈추지 않고 빌드까지 수행하는 이유는 분�
      # model을 생략하면 Hermes 설정을 사용합니다.
    ```
 
-   설치된 모델 이름에 맞춰 값을 변경하고 `generate`를 섹션 제한 없이 실행합니다. Vendor·Developer 개요와 상세 설계 문서는 실제 LLM이 필수 질문에 답하므로 `dry-run`에서는 전체 생성이 실패합니다. 자동 검사 실패 시 기존 원고를 보존하며, 모델 출력의 의미는 별도 검토해야 합니다. 번역 카탈로그를 갱신한 뒤 `site.enabled: true`로 사이트 생성도 연결합니다. 모델은 **Hermes가 실행되는 환경에서 접속 가능**해야 합니다. [CLI 선택 안내](../inhouse/cli-agents.md)에 따라 OpenCode 또는 Claude Code로 바꿀 수 있습니다. 위 설정 파일은 Git에서 제외됩니다.
+   설치된 모델 이름에 맞춰 값을 변경하고 `generate`를 섹션 제한 없이 실행합니다. Vendor·Developer 개요와 상세 설계 문서는 실제 LLM이 필수 질문에 답하므로 `dry-run`에서는 전체 생성이 실패합니다. 자동 검사 실패 시 기존 원고를 보존하며, 모델 출력의 의미는 별도 검토해야 합니다. 공개 예제는 계약 대조 관문을 사용하므로, 최초 실행에서는 `site.enabled: false`로 원고를 준비하고 아래 순서로 번역·계약 대조·사이트 검증을 끝냅니다. 모델은 **Hermes가 실행되는 환경에서 접속 가능**해야 합니다. [CLI 선택 안내](../inhouse/cli-agents.md)에 따라 OpenCode 또는 Claude Code로 바꿀 수 있습니다. 위 설정 파일은 Git에서 제외됩니다.
+
+공개 예제의 `paths.consistency_file`은 완료·정지·소유권·콜백 계약을 관련 페이지와 영어판에서 함께 대조합니다. 필요한 페이지를 같은 소스 SHA로 생성한 뒤 다음을 실행합니다. 일부 페이지만 준비된 상태나 오래된 계약 보고서로는 사이트를 게시하지 않습니다.
+
+```bash
+"$SDD_PYTHON" -m sdd.site_localization --config "$SDD_CONFIG" \
+  --out "$SDD_ROOT/examples/libcamera/english.json" --translate
+"$SDD_PYTHON" -m sdd.cli --config "$SDD_CONFIG" audit-consistency
+"$SDD_PYTHON" -m sdd.cli --config "$SDD_CONFIG" export-site
+"$SDD_PYTHON" -m sdd.cli --config "$SDD_CONFIG" verify-site
+```
+
+새 번역과 계약 대조도 설정에서 선택한 CLI를 사용합니다. 실패하면 그 실행기의 원인을 해결한 뒤 같은 경로로 재개합니다. `build/consistency-review.json`의 확정 모순은 질문·근거·생성기를 고쳐 재생성하고, 미판정은 검토 목록으로 남깁니다. 자동 통과는 사람 승인이 아닙니다. 절차와 판정 범위는 [문서 간 계약 대조](../concepts/contract-consistency.md)를 따릅니다. 검증을 마친 뒤 같은 입력으로 `site.enabled: true`를 연결할 수 있으며, 원고나 카탈로그가 바뀌면 다시 대조합니다.
 
 ### 3-2. 생성 직후 확인할 항목
 

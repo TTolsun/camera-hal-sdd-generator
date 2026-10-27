@@ -192,6 +192,18 @@ def test_implementer_subject_preserves_distinct_function_contracts():
     assert not similar(configure, queue)
     assert similar(queue, queue.replace('의 구현자는', ' 함수는'))
     assert similar(queue, queue.replace('PipelineHandler::queueRequestDevice', 'queueRequestDevice'))
+    implementation = queue.replace('의 구현자는', '의 구현은')
+    assert not similar(configure, implementation)
+    assert not similar(configure, implementation.replace('PipelineHandler::queueRequestDevice()', 'queueRequestDevice'))
+    assert similar(queue, implementation.replace('PipelineHandler::queueRequestDevice()', 'queueRequestDevice'))
+
+
+@pytest.mark.parametrize('name', ['queueRequestDevice', 'queueRequestDevice()', 'PipelineHandler::queueRequestDevice()'])
+def test_caller_of_named_function_preserves_distinct_contracts_and_alias_repetition(name):
+    configure = '`PipelineHandler::configure()`는 `CameraManager` 스레드에서 호출되며, 구현은 성공하면 0을 반환하고 실패하면 음수 오류 코드를 반환해야 합니다.'
+    queue = f'`{name}`를 호출하는 쪽은 `CameraManager` 스레드에서 이 함수를 호출해야 하며, 구현은 성공하면 0을 반환하고 실패하면 음수 오류 코드를 반환해야 합니다.'
+    assert not similar(configure, queue)
+    assert similar(configure, queue.replace(name, 'configure'))
 
 
 @pytest.mark.parametrize('left,right', [

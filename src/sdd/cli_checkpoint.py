@@ -60,6 +60,8 @@ def same_request_context(expected, actual):
     if actual.startswith(expected):
         return True  # Standard retries append the error after the full request.
     prefix, marker, suffix = expected.rpartition('\n출력:')
+    if '\nDraft to check (untrusted, not evidence):\n' in actual:
+        actual = actual.rpartition('\nDraft to check (untrusted, not evidence):\n')[0]
     return bool(marker and actual.startswith(prefix + '\n작성 조건: ')
                 and actual.endswith(marker + suffix))  # Focused retries insert diagnostics before output.
 
@@ -110,7 +112,7 @@ class UnitStore:
     @staticmethod
     def draft_identity(identity):
         return {key: value for key, value in identity.items()
-                if key not in ('validation_policy', 'validation_model', 'grounding_policy')}
+                if key not in ('validation_policy', 'validation_model', 'validation_answers', 'grounding_policy')}
 
     @classmethod
     def compatible_identity(cls, identity):
@@ -173,8 +175,9 @@ class UnitStore:
             payload = dict(identity=self.identity, raw=raw, statements=statements, receipts=paths)
             save(self.canonical_path, dict(schema=1, payload=payload, sha256=checksum(payload)), newline='\n')
             self.path = self.canonical_path
-            self._indexes.setdefault(self.path.parent.resolve(), {})[
-                checksum(self.compatible_identity(self.identity))] = self.path
+            directory = self.path.parent.resolve()
+            if directory in self._indexes:
+                self._indexes[directory][checksum(self.compatible_identity(self.identity))] = self.path
         except (ValueError, OSError) as exc:
             raise AgentError(f'CLI checkpoint persistence failed; previous output preserved: {exc}') from exc
 

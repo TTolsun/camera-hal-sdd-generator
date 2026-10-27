@@ -147,9 +147,12 @@ def test_cli_unit_resume_preserves_validated_prefix_and_old_manuscript(cli_units
     assert any('checkpoint-reused' in d['units'].values() for r in reports for d in r['documents'])
 
 
-def test_cli_focused_retry_checkpoint_retains_exact_source_request(cli_units, tmp_cfg):
+@pytest.mark.parametrize('embedded_marker', [False, True])
+def test_cli_focused_retry_checkpoint_retains_exact_source_request(cli_units, tmp_cfg, embedded_marker):
     section, model, save, calls, state, agent = cli_units
     section['design_prompt'] = 'focused'
+    if embedded_marker:
+        section['design_topics'][0]['question'] += '\n출력: 문구는 질문 데이터입니다.'
     (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스로 답하세요.', encoding='utf-8')
     save()
     state['reject_first'] = True
@@ -159,6 +162,68 @@ def test_cli_focused_retry_checkpoint_retains_exact_source_request(cli_units, tm
     state['interrupt'] = False
     Generator(tmp_cfg, model, agent()).run()
     assert calls == ['stop', 'stop', 'prepare', 'prepare']
+
+
+def test_focused_revision_after_retry_retains_a_reusable_completed_receipt(cli_units, tmp_cfg, monkeypatch):
+    import subprocess
+    import sdd.cli_agent as transport
+    section, model, save, calls, state, agent = cli_units
+    section['design_prompt'] = 'focused'
+    tmp_cfg.raw['review']['design_revision'] = True
+    (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스로 답하세요.', encoding='utf-8')
+    save()
+    original = transport.run
+    def reject_first_draft_and_revision(argv, **kwargs):
+        result = original(argv, **kwargs)
+        if calls[-1] == 'stop' and calls.count('stop') <= 2:
+            return subprocess.CompletedProcess(argv, 0, json.dumps(dict(subtype='success', is_error=False, result='{}')), '')
+        return result
+    monkeypatch.setattr(transport, 'run', reject_first_draft_and_revision)
+    with pytest.raises(ValueError, match='interrupted'):
+        Generator(tmp_cfg, model, agent()).run()
+    assert calls.count('stop') == 4
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls.count('stop') == 4  # No new draft for the validated revised unit.
+
+
+def test_policy_update_does_not_hide_other_compatible_disk_checkpoints(cli_units, tmp_cfg, monkeypatch):
+    from sdd.cli_checkpoint import UnitStore
+    section, model, save, calls, state, agent = cli_units
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    before = list(calls)
+    UnitStore._indexes.clear()  # A new process starts with disk checkpoints only.
+    section['design_topics'][1]['title'] = '시작 준비의 새 제목'
+    save()
+    monkeypatch.setattr('sdd.cli_checkpoint.validation_policy', lambda: {'updated': 'validator'})
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == before
+
+
+def test_changed_prior_answer_revalidates_later_cached_units_without_redrafting(cli_units, tmp_cfg, monkeypatch):
+    import subprocess
+    import sdd.cli_agent as transport
+    section, model, save, calls, state, agent = cli_units
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    section['design_topics'][0]['question'] += ' 정지 진입점의 책임을 확인하세요.'
+    save()
+    original = transport.run
+    def updated_wording(argv, **kwargs):
+        result = original(argv, **kwargs)
+        if calls[-1] == 'stop':
+            native = json.loads(result.stdout)
+            data = json.loads(native['result'])
+            data['statements'][0]['text'] = data['statements'][0]['text'].replace('종료 시', '정지할 때')
+            native['result'] = json.dumps(data, ensure_ascii=False)
+            return subprocess.CompletedProcess(argv, 0, json.dumps(native), '')
+        return result
+    monkeypatch.setattr(transport, 'run', updated_wording)
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'stop']
+    reports = [json.loads(p.read_text(encoding='utf-8')) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
+    assert any(r['documents'][0]['units']['device_prepare'] == 'checkpoint-revalidated' for r in reports)
 
 
 @pytest.mark.parametrize('change', ['local-check', 'title'])
@@ -178,7 +243,7 @@ def test_focused_local_validation_or_heading_change_does_not_redraft_other_units
     assert calls==['stop','prepare','prepare']
 
 
-@pytest.mark.parametrize('change', ['checksum', 'receipt', 'stdout', 'missing-review'])
+@pytest.mark.parametrize('change', ['checksum', 'receipt', 'stdout', 'missing-review', 'statements'])
 def test_cli_checkpoint_damage_fails_and_preserves_old_output(cli_units, tmp_cfg, change):
     _, model, _, calls, state, agent = cli_units
     with pytest.raises(ValueError):
@@ -187,8 +252,11 @@ def test_cli_checkpoint_damage_fails_and_preserves_old_output(cli_units, tmp_cfg
     data = json.loads(cache.read_text(encoding='utf-8'))
     if change == 'checksum':
         data['sha256'] = 'bad'
-    elif change == 'missing-review':
-        data['payload']['receipts'] = []
+    elif change in ('missing-review', 'statements'):
+        if change == 'missing-review':
+            data['payload']['receipts'] = []
+        else:
+            data['payload']['statements'][0]['text'] = 'tampered validated statement'
         from sdd.cli_checkpoint import checksum
         data['sha256'] = checksum(data['payload'])
     elif change == 'receipt':
@@ -269,6 +337,29 @@ def test_same_source_changed_validator_facts_revalidate_without_redrafting(cli_u
     assert any(r['documents'][0]['units']['device_stop'] == 'checkpoint-revalidated' for r in reports)
 
 
+def test_changed_typography_policy_revalidates_and_updates_saved_statements(cli_units, tmp_cfg, monkeypatch):
+    import sdd.design_response as response
+    _, model, _, calls, state, agent = cli_units
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, agent()).run()
+    original = response.normalize_answer
+    def normalize(model, statements, sources):
+        original(model, statements, sources)
+        for statement in statements:
+            statement['text'] = statement['text'].replace('`stop()`', '`stop`')
+    monkeypatch.setattr(response, 'normalize_answer', normalize)
+    monkeypatch.setattr('sdd.cli_checkpoint.validation_policy', lambda: {'typography': 'updated'})
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'prepare']
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'prepare']
+    caches = [json.loads(p.read_text(encoding='utf-8'))['payload']
+              for p in (tmp_cfg.build_dir/'cli-checkpoints').glob('*.json')]
+    stop = next(p for p in caches if p['identity']['topic']['id'] == 'stop')
+    assert stop['statements'][0]['text'].startswith('`stop`')
+
+
 def test_cli_budget_exhaustion_preserves_prefix_and_reports_not_started(cli_units, tmp_cfg):
     _, model, _, calls, state, agent = cli_units
     tmp_cfg.raw['review']['max_calls'] = 1
@@ -305,6 +396,35 @@ def test_time_budget_includes_validation_and_cached_units(tmp_cfg):
             now[0]=2
     assert execution.report['calls']==[]
     assert execution.report['documents'][0]['failure_kind']=='budget'
+
+
+@pytest.mark.parametrize('scope', ['max_seconds', 'document_max_seconds'])
+@pytest.mark.parametrize('finished', [0.95, 1.05])
+def test_subsecond_remaining_time_never_accepts_a_response_after_deadline(tmp_cfg, scope, finished):
+    from sdd.generation_run import Execution, BudgetExceeded
+    now, timeouts = [0.0], []
+    tmp_cfg.raw.setdefault('review', {})[scope] = 1
+    timeout = tmp_cfg.agent.timeout_sec
+    class Agent:
+        def chat(self, *args, **kwargs):
+            timeouts.append(tmp_cfg.agent.timeout_sec)
+            now[0] = finished
+            return 'completed response'
+    execution = Execution(tmp_cfg, Agent(), clock=lambda: now[0])
+    def invoke():
+        with execution.document('device', ['stop']):
+            now[0] = 0.9
+            return execution.chat('system', 'user')
+    if finished > 1:
+        with pytest.raises(BudgetExceeded, match='time budget'):
+            invoke()
+        assert execution.report['calls'][0]['status'] == 'failed'
+        assert execution.report['calls'][0]['failure_kind'] == 'budget'
+    else:
+        assert invoke() == 'completed response'
+        assert execution.report['calls'][0]['status'] == 'completed'
+    assert timeouts == [pytest.approx(0.1)]
+    assert tmp_cfg.agent.timeout_sec == timeout
 
 
 def test_single_required_contract_cannot_decode_as_only_a_limitation():

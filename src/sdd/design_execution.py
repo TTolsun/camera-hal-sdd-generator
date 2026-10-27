@@ -43,7 +43,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
     store = None
     if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
-        from .cli_checkpoint import Capture, UnitStore, validation_policy, validation_model, style_policy
+        from .cli_checkpoint import Capture, UnitStore, validation_policy, validation_model, style_policy, checksum
         from .grounding import policy_hash
         from .cli_agent import arguments
         identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,
@@ -53,6 +53,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                                        arguments=arguments(cfg.agent, schema)),
                         prompt_policy=unit_policy, validation_policy=validation_policy(),
                         validation_model=validation_model(model),
+                        validation_answers=checksum(answers),
                         style_policy=style_policy(cfg),
                         grounding_policy=policy_hash() if grounding else None,
                         revision=cfg.review.design_revision)
@@ -65,6 +66,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             grounding_changed = saved['identity'].get('grounding_policy') != identity['grounding_policy']
             validation_changed = saved['identity'].get('validation_policy') != identity['validation_policy']
             validation_changed = validation_changed or saved['identity'].get('validation_model') != identity['validation_model']
+            validation_changed = validation_changed or saved['identity'].get('validation_answers') != identity['validation_answers']
             validation_changed = validation_changed or (
                 saved['identity'].get('topic', {}).get('answer_contract') != topic.get('answer_contract'))
             review_agent = Capture(agent) if grounding_changed else reviewer
@@ -80,7 +82,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 statements = None
                 agent.unit(tag, 'revalidation-rejected', error=str(exc))
             if statements is not None:
-                if statements != saved['statements']:
+                if statements != saved['statements'] and not (grounding_changed or validation_changed):
                     raise ValueError('CLI checkpoint validated statements mismatch')
                 receipt_names = saved['receipts']
                 if grounding_changed or validation_changed:
@@ -91,11 +93,11 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                     store.write(saved['raw'], statements, capture)
                     receipt_names = [path.resolve().relative_to(store.calls.resolve()).as_posix()
                                      for path in capture.receipts]
-                return statements, dict(checkpoint=store.path.name, topic=topic['id'],
+                return UnitResult(statements, dict(checkpoint=store.path.name, topic=topic['id'],
                                         part=topic.get('_part_id'), subpart=topic.get('_subpart_id'),
                                         revalidated=grounding_changed or validation_changed,
                                         new_grounding_review=grounding_changed,
-                                        receipts=receipt_names)
+                                        receipts=receipt_names))
         agent = Capture(agent)
     replayed = replay_unit(archive, system, base_user, schema, tag, topic,
         lambda raw, reviewer: _validate_unit_response(cfg, model, agent,
@@ -151,8 +153,9 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             if focused_system is not None:
                 # Repeating a rejected paragraph anchored small-model retries
                 # to that paragraph. Keep the evidence and actionable error.
-                user = base_user.replace('\n출력:', '\n작성 조건: ' + last
-                                         + '\n질문의 모든 조건을 근거에서 다시 확인하세요.\n출력:')
+                prefix, marker, suffix = base_user.rpartition('\n출력:')
+                user = (prefix + '\n작성 조건: ' + last
+                        + '\n질문의 모든 조건을 근거에서 다시 확인하세요.' + marker + suffix)
             else:
                 user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
                         + '\n수정할 오류: ' + last

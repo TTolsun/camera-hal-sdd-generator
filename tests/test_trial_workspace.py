@@ -10,6 +10,20 @@ from sdd.config import Config, load
 from sdd.trial_workspace import clone_config, contained_path, reject_symlinks, validate_output, write_snapshot
 
 
+def test_reparse_point_is_rejected_without_python312_junction_api(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    target = tmp_path/'reparse'
+    target.mkdir()
+    original = Path.lstat
+    def reparse(path, *a, **kw):
+        record = original(path, *a, **kw)
+        return SimpleNamespace(st_mode=record.st_mode, st_file_attributes=0x400) if path == target else record
+    monkeypatch.setattr(Path, 'lstat', reparse)
+    monkeypatch.setattr(Path, 'is_junction', lambda self: False, raising=False)
+    with pytest.raises(ValueError, match='symbolic links'):
+        reject_symlinks(target/'new-trial')
+
+
 def test_output_allows_new_build_trial_without_creating_it(tmp_cfg):
     out = tmp_cfg.build_dir / 'trials' / 'fresh'
     assert validate_output(tmp_cfg, out) == out.resolve()

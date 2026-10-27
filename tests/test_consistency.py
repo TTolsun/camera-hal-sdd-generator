@@ -56,6 +56,22 @@ def test_uncertain_assessment_is_exposed_without_claiming_source_support(contrac
     assert validate(payload, json.dumps(dict(findings=findings)))[0]['status'] == 'insufficient-evidence'
 
 
+def test_peer_claims_cannot_hide_missing_primary_contract(tmp_cfg):
+    from sdd.consistency import request
+    from sdd.facts.model import KnowledgeModel
+    revision = 'a'*40
+    model = KnowledgeModel(meta={'source_commit': revision})
+    tmp_cfg.sdd_dir.mkdir(parents=True, exist_ok=True)
+    for name, text in [('primary.md', 'Unrelated introduction.'), ('peer.md', 'The caller completes a request.')]:
+        (tmp_cfg.sdd_dir/name).write_text(f'---\nsource_commit: {revision}\n---\n\n{text}', encoding='utf-8')
+    group = dict(id='completion', primary='primary.md', documents=['primary.md', 'peer.md'], match='request')
+    with pytest.raises(ValueError, match='No primary document contract claims'):
+        request(tmp_cfg, model, group)
+    (tmp_cfg.sdd_dir/'primary.md').write_text(f'---\nsource_commit: {revision}\n---\n\nA request completes.', encoding='utf-8')
+    payload = request(tmp_cfg, model, group)
+    assert {claim['document'] for claim in payload['claims'].values()} == {'primary.md', 'peer.md'}
+
+
 def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_cfg, monkeypatch):
     import hashlib
     import subprocess

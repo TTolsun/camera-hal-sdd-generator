@@ -138,6 +138,9 @@ def request(cfg, model, group):
                                  text=translated, evidence=[], translation_of=key, origin_claims=matches)
     if not claims:
         raise ValueError(f"No contract claims found: {group['id']}")
+    if not any(claim['document'] == group['primary'] and claim['language'] == 'ko'
+               for claim in claims.values()):
+        raise ValueError(f"No primary document contract claims found: {group['id']}")
     return dict(contract=group, source_commit=model.meta.get('source_commit'), claims=claims, sources=sources)
 
 
