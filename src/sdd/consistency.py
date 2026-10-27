@@ -98,7 +98,7 @@ def request(cfg, model, group):
         if meta.get('source_commit') != model.meta.get('source_commit'):
             raise ValueError(f'Consistency source commit mismatch: {name}')
         if catalog:
-            from .export_site import _render
+            from .site_markdown import _render
             from .site_localization import display_pairs
             content, _, _ = _render(body, name, set(group['documents']), model, '', meta['source_commit'])
             display.extend(dict(document=name, **pair) for pair in display_pairs(content, catalog))
