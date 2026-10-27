@@ -52,6 +52,10 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
     from .contract_schema import configuration_errors
 
     sections = cfg.sections()
+    from .reader_profiles import family_errors
+    options = cfg.documentation.settings()
+    if errors := family_errors(sections, options.get('features', []), enabled=options.get('enabled', False)):
+        raise ValueError(' / '.join(errors))
     # Fail before Git reads or replacing evidence, including the CLI path that
     # collects excerpts before Generator.run validates required answers.
     for sec in sections:

@@ -23,6 +23,8 @@
       "first_attempt_successes": 0,
       "calls": 61,
       "seconds": 1391.6719999999914,
+      "provider_reported_turns_completed_receipts": 61,
+      "completed_receipts_with_unavailable_turns": 0,
       "trials": [
         {
           "phase": "claude-baseline-six",
@@ -130,6 +132,8 @@
       "first_attempt_successes": 0,
       "calls": 100,
       "seconds": 1447.2180000000517,
+      "provider_reported_turns_completed_receipts": 100,
+      "completed_receipts_with_unavailable_turns": 0,
       "trials": [
         {
           "phase": "claude-baseline-nine",
@@ -285,6 +289,8 @@
       "first_attempt_successes": 0,
       "calls": 74,
       "seconds": 1501.7039999999688,
+      "provider_reported_turns_completed_receipts": 73,
+      "completed_receipts_with_unavailable_turns": 0,
       "trials": [
         {
           "phase": "claude-improved-six",
@@ -392,6 +398,8 @@
       "first_attempt_successes": 0,
       "calls": 184,
       "seconds": 3820.594999999972,
+      "provider_reported_turns_completed_receipts": 408,
+      "completed_receipts_with_unavailable_turns": 0,
       "trials": [
         {
           "phase": "claude-native-nine",
@@ -547,6 +555,8 @@
       "first_attempt_successes": 0,
       "calls": 108,
       "seconds": 3397.8300000000163,
+      "provider_reported_turns_completed_receipts": 238,
+      "completed_receipts_with_unavailable_turns": 0,
       "trials": [
         {
           "phase": "claude-final-six",
@@ -636,6 +646,272 @@
           "error": "설계 항목 검증 실패:\nvendor-integration: vendor-integration/integration/application: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 원문은 확보·구성 후 준비, 시작 후 정지 전까지 요청 처리, 사용 완료 시 해제 필요를 말합니다. 그러나 정지가 해제보다 먼저 이루어진다는 순서는 원문에 없으므로 '정지된 뒤 해제'는 근거가 없는 주장입니다.",
           "seconds": 108.54700000002049,
           "calls": 4,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        }
+      ]
+    },
+    "claude-current-six": {
+      "expected": 6,
+      "completed": 6,
+      "status": "complete",
+      "successes": 2,
+      "first_attempt_successes": 0,
+      "calls": 168,
+      "seconds": 3495.70199999999,
+      "provider_reported_turns_completed_receipts": 377,
+      "completed_receipts_with_unavailable_turns": 0,
+      "trials": [
+        {
+          "phase": "claude-current-six",
+          "round": 1,
+          "section": "ipa",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nipa: ipa/selection: LLM 답변 검증 실패: [대화체·작업 보고] 1행 \"`IPAManager` 생성자는 설정 키 `ipa.module_paths`의 경로를 가장 먼저 검색합니다.…\": 독자에게 말을 걸거나 다음 단계·검토를 안내하거나 작업을 보고하는 문장은 원고가 아닙니다. 구조와 동작의 사실만 서술합니다.",
+          "seconds": 171.81200000000536,
+          "calls": 2,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-current-six",
+          "round": 1,
+          "section": "ipu3-lsc-flow",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/integration/active: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 선언은 `ipa::lsc::ActiveState lsc;`입니다. 문장은 타입을 `ActiveState`로만 적어 `ipa::` 한정자를 빠뜨렸고, 'lsc 한정 이름'이라는 표현도 전체 한정 이름 `ipa::lsc::ActiveState`를 드러내지 않습니다. 정의·실행 시점·동기화 부재 진술은 발췌문과 일치합니다.",
+          "seconds": 121.76600000000326,
+          "calls": 5,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-current-six",
+          "round": 1,
+          "section": "overview",
+          "status": "passed",
+          "error": null,
+          "seconds": 934.4839999999967,
+          "calls": 53,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-current-six",
+          "round": 1,
+          "section": "pipeline-handler",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\npipeline-handler: pipeline-handler/completion/lifetime: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 근거는 요청이 더 이상 관리되지 않고, 반환 뒤 접근되지 않아야 한다고 각각 명시합니다. '므로'로 잇는 인과 관계는 근거에 없으며, 이는 추가된 근거 없는 설명입니다.",
+          "seconds": 891.1559999999881,
+          "calls": 41,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-current-six",
+          "round": 1,
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "error": null,
+          "seconds": 634.7029999999795,
+          "calls": 28,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-current-six",
+          "round": 1,
+          "section": "vendor-integration",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nvendor-integration: vendor-integration/request/device-result: LLM 답변 검증 실패: [의미 중복] request 2번째 설명이 앞의 configuration 9번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`queueRequestDevice`를 호출하는 쪽은 `CameraManager` 스레드에서 이 함수를 호출해야 하며, 구현…\" ≈ \"`PipelineHandler::configure()`는 `CameraManager` 스레드에서 호출되며, 구현은 성공하면 …\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+          "seconds": 741.7810000000172,
+          "calls": 39,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        }
+      ]
+    },
+    "claude-merged-nine": {
+      "expected": 9,
+      "completed": 9,
+      "status": "complete",
+      "successes": 4,
+      "first_attempt_successes": 0,
+      "calls": 194,
+      "seconds": 3158.5800000000163,
+      "provider_reported_turns_completed_receipts": 436,
+      "completed_receipts_with_unavailable_turns": 0,
+      "trials": [
+        {
+          "phase": "claude-merged-nine",
+          "round": 1,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 114.71900000001187,
+          "calls": 6,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-merged-nine",
+          "round": 1,
+          "section": "overview",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\noverview: overview/completion/request: LLM 답변 검증 실패: [의미 중복] completion 2번째 설명이 앞의 completion 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"파이프라인 핸들러는 요청에 속한 모든 버퍼가 완료된 뒤에도 `completeRequest()`를 명시적으로 호출해야 합니다.\" ≈ \"`PipelineHandler::completeBuffer()`는 파이프라인 핸들러가 요청(`request`)에 속한 버퍼(…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+          "seconds": 666.9679999999935,
+          "calls": 40,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-merged-nine",
+          "round": 1,
+          "section": "vendor-integration",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nvendor-integration: vendor-integration/request/device-result: LLM 답변 검증 실패: request: 답변 계약 검사: 구현 의무는 해야 합니다/해서는 안 됩니다로 표현하세요. 관측된 구현이나 시험 보장으로 바꾸지 마세요.",
+          "seconds": 652.9220000000205,
+          "calls": 39,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-merged-nine",
+          "round": 2,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 110.21900000001187,
+          "calls": 6,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-merged-nine",
+          "round": 2,
+          "section": "overview",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\noverview: overview/discovery/entry: LLM 답변 검증 실패: discovery: 답변 계약 검사: 필수 용어 누락: PipelineHandler / 파이프라인 핸들러 / 파이프라인핸들러",
+          "seconds": 55.60999999998603,
+          "calls": 3,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-merged-nine",
+          "round": 2,
+          "section": "vendor-integration",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nvendor-integration: vendor-integration/integration/hardware: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 장치 확보, Camera 생성·내부 저장, 카메라 관리자 등록 주장은 원문 근거와 일치합니다. 그러나 '장치를 모두 찾지 못한 경우의 반환 계약은 다음 절에서 다룹니다'라는 문서 구조 주장은 제공된 근거 어디에도 없으므로 지원되지 않습니다.",
+          "seconds": 165.01600000000326,
+          "calls": 10,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-merged-nine",
+          "round": 3,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 107.625,
+          "calls": 6,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-merged-nine",
+          "round": 3,
+          "section": "overview",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\noverview: overview/discovery/singleton: LLM 답변 검증 실패: [의미 중복] discovery 2번째 설명이 앞의 discovery 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`CameraManager` 인스턴스는 동시에 하나만 존재할 수 있습니다. 애플리케이션은 두 번째 `CameraManager…\" ≈ \"`CameraManager`는 libcamera의 진입점입니다. 장치를 열거하고, 각 장치를 pipeline managers…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+          "seconds": 121.81299999999464,
+          "calls": 6,
+          "failed_calls": 0,
+          "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+          "max_retries": 1,
+          "max_calls": 160,
+          "max_seconds": 7200,
+          "facts_sha256": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+          "first_attempt_document_success": false
+        },
+        {
+          "phase": "claude-merged-nine",
+          "round": 3,
+          "section": "vendor-integration",
+          "status": "passed",
+          "error": null,
+          "seconds": 1163.6879999999946,
+          "calls": 78,
           "failed_calls": 0,
           "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
           "max_retries": 1,
@@ -1595,6 +1871,431 @@
       "undetermined": 2
     }
   },
+  "consistency-v4": {
+    "schema": 1,
+    "source_commit": "182307a772ebebf173ee84911906da707718485f",
+    "cases": [
+      {
+        "id": "buffer-is-request-completion",
+        "expected": {
+          "wrong": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "wrong",
+            "claim_quote": "When the last buffer completes during normal capture, the request always completes automatically.",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "소스는 마지막 버퍼가 완료되는 조건에서 요청이 자동으로 완료되지 않는다고 명시합니다. 소스 문구에는 정상 캡처를 예외로 두는 표현이 없으므로, 주장의 '정상 캡처 중' 조건은 판정을 바꾸지 않습니다.",
+            "actor": "파이프라인 핸들러가 주체입니다. 소스는 핸들러가 completeRequest()를 호출해 요청을 명시적으로 완료해야 한다고 규정합니다. 주장은 행위 주체를 밝히지 않고 요청이 자동으로 완료된다고 씁니다.",
+            "timing": "마지막 버퍼가 완료된 시점입니다. 소스는 이 시점에 요청이 자동으로 완료되지 않는다고 규정합니다.",
+            "scope": "요청의 완료 상태를 다룹니다. 버퍼 완료 알림과 요청 완료는 서로 다른 사건입니다. completeBuffer()의 반환값(모든 버퍼 완료 시 true)도 요청 완료를 뜻하지 않습니다.",
+            "reason": "주장은 'always'로 단정하며 마지막 버퍼 완료 시 요청이 자동 완료된다고 씁니다. 소스는 같은 사건에 대해 반대로 규정하므로 충돌입니다. 또한 주장은 버퍼 완료와 요청 완료를 혼동합니다. 이 판정은 소스 문구에 근거하며, 실제 장치 동작을 검증한 결과가 아닙니다.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\001.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "explicit-request-completion",
+        "expected": {
+          "normal": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "normal",
+            "claim_quote": "Completing the last buffer during normal processing does not automatically complete the request; the pipeline handler must explicitly call completeRequest().",
+            "peers": [],
+            "status": "compatible",
+            "condition": "소스는 조건을 한정하지 않은 일반 진술이다. 주장은 normal processing으로 조건을 좁히므로 소스 범위 안에 있다. stopping 조건에 대해서는 소스도 주장도 판단하지 않는다.",
+            "actor": "의무 주체는 pipeline handler다. 소스의 'They shall complete requests explicitly with completeRequest()'와 주장의 'the pipeline handler must explicitly call completeRequest()'가 같은 주체와 같은 의무를 가리킨다.",
+            "timing": "마지막 buffer가 완료된 시점에 request가 자동 완료되지 않는다. 이후 handler가 completeRequest()를 명시적으로 호출해야 한다. 호출 시점은 소스와 주장 모두 지정하지 않는다.",
+            "scope": "request 완료 상태에 대한 진술이다. 자동 완료 부정과 handler의 명시적 호출 의무만 다룬다. 소스의 CameraManager thread 제약은 completeBuffer에 대한 것이므로 이 주장의 범위 밖이다. 이 계약은 구현 동작을 검증한 결과가 아니다.",
+            "reason": "소스는 마지막 buffer 완료가 request를 자동 완료하지 않으며, handler가 completeRequest()로 명시적으로 완료해야 한다고 규정한다. 주장은 같은 내용을 같은 의무 방향으로 진술하므로 충돌하지 않는다. 주장의 normal processing 한정은 소스의 일반 진술보다 좁아 모순을 만들지 않는다. 소스에 stopping 조건의 다른 규정이 없으므로 그 조건을 추론하지 않는다.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\002.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "stop-versus-normal",
+        "expected": {
+          "stopped": "compatible",
+          "normal": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "stopped",
+            "claim_quote": "Tracking queued requests ensures their completion when the pipeline handler is stopped with stop(); the pipeline handler must signal completion with completeRequest().",
+            "peers": [
+              "normal"
+            ],
+            "status": "compatible",
+            "condition": "pipeline handler가 stop()으로 중지되는 상황입니다.",
+            "actor": "pipeline handler가 queued 요청을 추적하고, 완료 신호는 pipeline handler가 completeRequest()로 보냅니다.",
+            "timing": "stop() 호출로 중지될 때 queued 요청의 자동 완료가 일어납니다. completeRequest() 신호 의무는 완료 처리에 일반적으로 적용됩니다.",
+            "scope": "queued 요청 추적에 따른 자동 완료와 completeRequest() 신호 의무입니다. 정상 처리 중 buffer 완료가 request 완료를 만드는지는 이 주장의 범위가 아닙니다.",
+            "reason": "completion source 463행은 stop() 중지 시 모든 요청이 자동 완료된다고 명시하고, 완료 신호는 handler가 completeRequest()로 보내야 한다고 명시합니다. buffer source 547행도 handler가 completeRequest()로 명시 완료해야 한다고 적습니다. 두 조건 모두 주장과 같은 방향이므로 충돌하지 않습니다. 이는 설계 계약의 근거이며 실제 기기 동작 검증이 아닙니다.",
+            "sources": [
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              },
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ]
+          },
+          {
+            "claim_id": "normal",
+            "claim_quote": "The last buffer completing during normal processing does not itself complete the request.",
+            "peers": [
+              "stopped"
+            ],
+            "status": "compatible",
+            "condition": "정상 처리 중 request의 마지막 buffer가 완료된 상황입니다.",
+            "actor": "buffer 완료를 알리는 pipeline handler이며, request 완료는 handler가 completeRequest()로 명시해야 합니다.",
+            "timing": "마지막 buffer가 완료된 시점입니다. 이 시점에 request가 자동으로 완료되지 않습니다.",
+            "scope": "buffer 완료와 request 완료를 구분하는 범위입니다. stop() 중지 시 자동 완료 규칙과는 조건이 달라 이 주장의 범위에 들어가지 않습니다.",
+            "reason": "buffer source 547행은 마지막 buffer 완료 시 request가 자동 완료되지 않으며, handler가 completeRequest()로 명시 완료해야 한다고 적습니다. 주장과 같은 내용입니다. completeBuffer의 true 반환값은 request 내 모든 buffer 완료만 뜻하고 request 완료를 뜻하지 않습니다. completion source의 자동 완료는 stop() 조건에 한정되므로 이 주장과 충돌하지 않습니다.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              },
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\003.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "application-owns-request",
+        "expected": {
+          "owner": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "owner",
+            "claim_quote": "The caller owns the Request returned by Camera::createRequest() and is responsible for deleting it.",
+            "peers": [],
+            "status": "compatible",
+            "condition": "Camera::createRequest()가 Request 객체를 실제로 반환한 경우에 적용됩니다. 소스는 호출 가능 상태(Configured 또는 Running)를 명시하지만, 소유권 이전이 그 상태 조건에 따라 달라진다고 하지 않습니다. 오류 시에는 nullptr을 반환하므로 반환된 Request가 있을 때만 소유권이 발생합니다.",
+            "actor": "호출자(application)가 소유자이며 삭제 책임을 집니다. 소스의 'passed to the caller, which is responsible for deleting it'과 일치합니다.",
+            "timing": "createRequest()가 반환되는 시점에 소유권이 호출자에게 넘어갑니다. 삭제 시점은 completion handler 안이나 Request::reuse() 이후 재사용 등 호출자가 정하며, 소스는 특정 시점을 요구하지 않습니다.",
+            "scope": "반환된 Request 객체의 소유권과 삭제 책임에 한정됩니다. cookie 동작, 요청 완료 여부, 라이브러리의 자동 삭제 보장은 claim에서 주장하지 않으며 소스에도 없습니다.",
+            "reason": "소스는 반환된 request의 소유권이 호출자에게 넘어가고 호출자가 삭제 책임을 진다고 명시합니다. claim의 주체, 대상, 의무 방향이 소스와 같습니다. 소스 근거와 조건이 충분하므로 compatible로 판정합니다. 다만 이는 구현이 실제로 올바르게 삭제하는지에 대한 검증은 아닙니다.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/create",
+                "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\004.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "wrong-request-owner",
+        "expected": {
+          "owner": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "owner",
+            "claim_quote": "Camera owns every Request returned by createRequest(); the application must never delete it.",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "Applies to every Request returned by createRequest(). The source's ownership rule is unqualified by state. Its context line requires the Configured or Running state for the call, and the claim adds no state qualifier.",
+            "actor": "Claim assigns ownership to Camera and the prohibition on deletion to the application. Source assigns ownership to the caller (the application) and the responsibility for deleting the request to the caller.",
+            "timing": "Claim's prohibition has no time limit. Source allows deletion in the completion handler or after reuse with Request::reuse().",
+            "scope": "Ownership and deletion responsibility of the Request object returned by createRequest(). Source's cookie and context text do not change this scope.",
+            "reason": "Explicit incompatibility on ownership and actor. Source states ownership passes to the caller, which is responsible for deleting the request. Claim states Camera owns it and the application must never delete it. Source also permits deletion in the completion handler, which the claim forbids.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/create",
+                "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\005.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "access-after-complete-request",
+        "expected": {
+          "access": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "access",
+            "claim_quote": "After completeRequest() returns, the pipeline handler may continue accessing that request.",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "completeRequest() 반환 이후라는 같은 조건이다.",
+            "actor": "pipeline handler가 행위자다.",
+            "timing": "completeRequest() 호출이 반환된 직후 시점이다.",
+            "scope": "완료 처리된 request에 대한 접근 허용 여부다.",
+            "reason": "source에는 반환 이후 해당 request를 pipeline handler가 더 이상 관리하지 않으며 접근해서는 안 된다는 금지 규정이 있다. claim은 같은 조건, 같은 행위자, 같은 대상에 대해 접근을 계속할 수 있다고 허용한다. 허용과 금지가 직접 충돌하므로 contradiction으로 판정한다.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/complete-access",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\006.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "completion-call-order-versus-return-order",
+        "expected": {
+          "calls": "compatible",
+          "returns": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "calls",
+            "claim_quote": "Pipeline handlers may call completeRequest() on completed requests without an ordering constraint.",
+            "peers": [
+              "returns"
+            ],
+            "status": "compatible",
+            "condition": "요청이 이미 complete 상태일 때 completeRequest()를 호출하는 경우입니다.",
+            "actor": "pipeline handler",
+            "timing": "completeRequest() 호출 시점입니다. 이 호출 순서에는 제약이 없습니다.",
+            "scope": "호출 허용과 호출 순서만 다룹니다. 반환 순서 보장은 completeRequest() 내부의 queuedRequests_ 처리가 맡으며, 이 claim은 그 보장을 바꾸지 않습니다.",
+            "reason": "소스가 complete request에 대해 순서 제약 없이 호출할 수 있다고 명시하므로 주체, 조건, 순서 제약 없음이 모두 일치합니다. 소스의 'shall call'은 완료 통지 의무이고 claim은 호출 순서에 대한 허용이라 충돌하지 않습니다. 소스의 CameraManager thread 제약은 claim에 없어서 모순이 아닙니다.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ]
+          },
+          {
+            "claim_id": "returns",
+            "claim_quote": "Requests are returned to the application in their submission order.",
+            "peers": [
+              "calls"
+            ],
+            "status": "compatible",
+            "condition": "completeRequest()가 요청을 complete로 처리하고 큐 선두부터 반환하는 경로입니다.",
+            "actor": "PipelineHandler::completeRequest()와 Camera::Private의 queuedRequests_ 처리 루프입니다.",
+            "timing": "요청이 complete로 표시된 뒤, 큐 선두에서 RequestPending이 아닌 요청이 반환되는 시점입니다.",
+            "scope": "completeRequest() 경로에 한정됩니다. 소스 발췌에는 cancelRequest() 경로의 반환 순서가 없으므로 그 경로는 확인되지 않았습니다. 이 claim의 주제가 completeRequest() 순서이므로 이 범위 안에서 판정합니다.",
+            "reason": "소스가 제출 순서 반환을 보장한다고 명시하고, 코드도 큐 선두에서 pending이 아닌 요청만 pop하며 camera->requestComplete()를 호출하므로 이를 뒷받침합니다. calls의 순서 제약 없음은 호출 순서에 관한 주장이고 반환 순서는 큐 처리로 보장되므로 두 claim은 충돌하지 않습니다.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\007.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "wrong-return-order",
+        "expected": {
+          "returns": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "returns",
+            "claim_quote": "Requests are always returned to the application in the order their hardware processing finishes, regardless of submission order.",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "claim에는 한정 조건이 없고 'always'와 'regardless'로 보편 주장을 한다. source는 completeRequest 호출 경로의 반환 순서를 다루며 별도 예외 조건은 없다.",
+            "actor": "파이프라인 핸들러(completeRequest 호출 주체)와 Camera가 요청을 애플리케이션에 돌려주는 경로.",
+            "timing": "요청이 완료 신호를 받는 시점(completeRequest 호출 시)과 그 직후 큐를 비우며 반환하는 시점.",
+            "scope": "카메라 단위 요청 반환 순서. 반환 기준이 하드웨어 처리 완료 순서인지 제출 순서인지가 쟁점이다.",
+            "reason": "claim은 하드웨어 완료 순서 반환과 제출 순서 무관을 단정한다. source는 같은 반환 경로에 대해 제출 순서 반환을 보장한다고 명시한다. 구현도 큐 선두부터 완료된 요청만 꺼내 반환하므로 source와 일치하고 claim과는 상반된다. 같은 조건과 같은 범위에서 반환 기준 순서가 서로 달라 모순이다.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\008.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "unsupported-stop-deadline",
+        "expected": {
+          "deadline": "insufficient-evidence"
+        },
+        "findings": [
+          {
+            "claim_id": "deadline",
+            "claim_quote": "Every supported camera completes stopDevice() within 10 milliseconds.",
+            "peers": [],
+            "status": "insufficient-evidence",
+            "condition": "주장은 '지원되는 모든 카메라'에 대해 stopDevice() 완료 시간을 10밀리초 이내로 한정한다. 소스에는 10밀리초 한도나 지원 카메라 목록에 대한 언급이 없다.",
+            "actor": "stopDevice()는 파이프라인 핸들러가 구현하며, PipelineHandler::stop()이 camera 인자를 넘겨 이를 호출한다.",
+            "timing": "소스가 기술하는 시점 표현은 'immediately'(즉시)뿐이며 정량적 시간 한도가 없다. stop() 본문은 stopDevice() 반환 뒤에 대기 요청 취소 루프를 추가로 실행하므로, stopDevice() 완료 시간과 stop() 전체 완료 시간은 구별된다.",
+            "scope": "주장은 모든 지원 카메라의 stopDevice() 완료에 대한 보장이다. 소스는 개별 camera 인자에 대한 stop 흐름과 stopDevice()의 의미만 기술하며, 여러 카메라나 특정 하드웨어 전반에 대한 보장을 기술하지 않는다.",
+            "reason": "stopDevice() 설명은 호출 즉시 캡처와 요청 처리를 멈추고 대기 중인 요청을 오류 상태로 완료한다고만 말하며, 10밀리초라는 수치는 어느 소스에도 없다. 'immediately'를 정량 보장으로 승격할 수 없고, 소스가 시간 한도를 말하지 않는다는 사실로 반대 보장을 추론할 수도 없다. 소스 근거가 부족하므로 insufficient-evidence로 판정한다. 이 판정은 실제 장치의 10밀리초 준수 여부를 검증한 결과가 아니다.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/shutdown/stop",
+                "source_quote": "void PipelineHandler::stop(Camera *camera)\n{\n\t/*\n\t * Take all waiting requests so that they are not requeued in response\n\t * to completeRequest() being called inside stopDevice(). Cancel them\n\t * after the device to keep them in order.\n\t */\n\tCamera::Private *data = camera->_d();\n\tstd::queue<Request *> waitingRequests;\n\twaitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests complete. */\n\tstopDevice(camera);\n\n\t/* Cancel and signal as complete all waiting requests. */\n\twhile (!waitingRequests.empty()) {\n\t\tRequest *request = waitingRequests.front();\n\t\twaitingRequests.pop();\n\n\t\t/*\n\t\t * Cancel all requests by marking them as cancelled and calling\n\t\t * doQueueRequest() instead of cancelRequest(). This ensures\n\t\t * that the requests get a sequence number and are temporarily\n\t\t * added to queuedRequests_ so they can be properly completed in\n\t\t * completeRequest().\n\t\t */\n\t\trequest->_d()->cancel();\n\t\tdoQueueRequest(request);\n\t}\n\n\t/* Make sure no requests are pending. */\n\tASSERT(data->queuedRequests_.empty());\n\tASSERT(data->waitingRequests_.empty());\n\n\tdata->requestSequence_ = 0;\n}"
+              },
+              {
+                "source_id": "vendor-integration/shutdown/device",
+                "source_quote": "\\fn PipelineHandler::stopDevice()\n * \\brief Stop capturing from all running streams\n * \\param[in] camera The camera to stop\n *\n * This function stops capturing and processing requests immediately. All\n * pending requests are cancelled and complete immediately in an error state.\n */"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\009.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "synchronization-responsibility",
+        "expected": {
+          "synchronization": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "synchronization",
+            "claim_quote": "Camera internally synchronizes all functions that change camera state, so the caller never needs to synchronize them.",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "카메라 상태에 영향을 주는 함수들 간의 상호 동기화 상황이다. 소스에 별도의 예외 조건이나 다른 조건은 없다.",
+            "actor": "Camera 클래스와 호출자(caller)가 주체이다. 소스는 Camera 클래스가 이 함수들을 일반적으로 상호 동기화하지 않으며, 필요하면 동기화 책임은 호출자에게 있다고 명시한다.",
+            "timing": "소스에 특정 시점 조건은 없다. 일반적인 동기화 책임 분담을 서술하며, 주장의 시점 조건도 명시되어 있지 않다.",
+            "scope": "카메라 상태에 영향을 주는 함수 전체에 대한 일반 규칙이다. 소스에는 'generally'라는 한정어가 있으나, 주장의 'all'과 'never'를 허용하지 않는다.",
+            "reason": "주장은 Camera가 상태 변경 함수 전부를 내부적으로 동기화하므로 호출자가 동기화할 필요가 없다고 한다. 소스는 같은 함수들이 일반적으로 Camera 클래스에 의해 상호 동기화되지 않으며, 필요한 경우 호출자가 동기화를 책임진다고 한다. 두 내용은 같은 대상에 대해 Camera의 동기화 여부와 호출자 책임이 양립할 수 없다. 소스의 'generally'는 주장의 전칭 표현과 'never needs'를 뒷받침하지 못한다. 이 판정은 소스 문서 사이의 계약 충돌이며, 실제 구현이나 디바이스에서의 동작을 검증한 결과가 아니다.",
+            "sources": [
+              {
+                "source_id": "overview/boundary/synchronization",
+                "source_quote": "Functions that affect the camera state as defined below are generally not\n * synchronized with each other by the Camera class. The caller is responsible\n * for ensuring their synchronization if necessary.\n *\n * \\subsection Camera States"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\010.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "weakened-english-obligation",
+        "expected": {
+          "ko": "compatible",
+          "en": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "ko",
+            "claim_quote": "파이프라인 핸들러는 요청을 완료하려면 completeRequest()를 명시적으로 호출해야 합니다.",
+            "peers": [
+              "en"
+            ],
+            "status": "compatible",
+            "condition": "요청을 완료하는 경우에 적용됩니다. 원문에는 별도 예외 조건이 없습니다.",
+            "actor": "파이프라인 핸들러",
+            "timing": "요청 완료 시점에 completeRequest()를 명시적으로 호출해야 합니다.",
+            "scope": "핸들러의 호출 의무에 대한 주장입니다. 기기에서 요청이 실제로 완료되는지 검증하는 주장이 아닙니다.",
+            "reason": "소스는 핸들러가 completeRequest()로 요청을 명시적으로 완료해야 한다고 'shall'로 규정합니다. 마지막 버퍼가 완료되어도 요청은 자동으로 완료되지 않는다고 명시합니다. 주체, 행위, 의무 방향이 소스와 일치하므로 compatible입니다. 소스는 호출 의무만 규정하며, 호출하지 않았을 때의 결과에 대한 부정적 보장은 추론하지 않습니다.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ]
+          },
+          {
+            "claim_id": "en",
+            "claim_quote": "The pipeline handler may optionally call completeRequest() to complete a request; this call is not required.",
+            "peers": [
+              "ko"
+            ],
+            "status": "contradiction",
+            "condition": "요청을 완료하는 경우로 번역되었으며, 원문과 같은 조건입니다. 조건에 따른 예외는 명시되지 않습니다.",
+            "actor": "파이프라인 핸들러",
+            "timing": "요청을 완료하는 시점에 대한 구체적 시점은 명시되지 않습니다.",
+            "scope": "completeRequest() 호출이 선택 사항인지, 필수인지에 대한 의무 여부 범위입니다.",
+            "reason": "영문 번역은 호출을 'may optionally'와 'not required'로 표현해 허용 사항으로 바꿨습니다. 소스는 같은 주체가 completeRequest()로 요청을 명시적으로 완료해야 한다고 'shall'로 규정하므로 명시적으로 충돌합니다. 한국어 원문도 같은 주체와 행위에 대해 호출 의무를 주장하므로 same-condition peer 계약과도 충돌합니다. 번역 과정에서 의무가 선택으로 약화되었습니다.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\011.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "omitted-completion-condition",
+        "expected": {
+          "unclear": "ambiguous"
+        },
+        "findings": [
+          {
+            "claim_id": "unclear",
+            "claim_quote": "Requests are completed automatically.",
+            "peers": [],
+            "status": "ambiguous",
+            "condition": "The claim states no condition. Sources differ: automatic completion applies when the pipeline handler is stopped with stop(). Under normal processing, the last buffer completing does not complete the request, and completeRequest() must be called explicitly.",
+            "actor": "Not stated in the claim. Sources name the pipeline handler as the party that signals request completion via completeRequest(). Automatic completion is tied to stop().",
+            "timing": "Not stated in the claim. Automatic completion occurs at stop(). Under normal processing, the request is not completed automatically when its last buffer completes.",
+            "scope": "Unqualified. The claim does not say all requests or which pipeline handler. The stop-path source covers all queued requests when stop() is called.",
+            "reason": "The unqualified assertion holds under the stop() condition and is negated under normal processing by the buffer source. The claim has no always/all/never wording and no incompatible condition, so it is not a same-condition contradiction. A universal reading would infer a quantifier from the omitted precondition, which is not allowed. Source support does not verify device behavior.",
+            "sources": [
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              },
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ]
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-v4\\build\\prompts\\calls\\591536bb1a7c4d419d8f96926b1d46d9\\012.receipt.json",
+        "correct": true
+      }
+    ],
+    "human_review": "pending",
+    "scope": "Synthetic evaluation statements, not published manuscript content; actual selected CLI calls.",
+    "metrics": {
+      "cases": 12,
+      "claims": 15,
+      "correct": 15,
+      "contradictions": 6,
+      "detected": 6,
+      "missed": 0,
+      "false_positives": 0,
+      "compatible": 7,
+      "undetermined": 2
+    }
+  },
   "policy-matrix": {
     "schema": 1,
     "cases": [
@@ -1724,5 +2425,533 @@
       "seconds": 5.969000000011874,
       "source_commit": "182307a772ebebf173ee84911906da707718485f"
     }
-  ]
+  ],
+  "operational_candidate_attempts": [
+    {
+      "record": "camera-candidate/build/candidate-camera-model-20261028-003547.json",
+      "section": "camera-model",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\ncamera-model: camera-model/lifetime/ownership: LLM 답변 검증 실패: [의미 중복] lifetime 1번째 설명이 앞의 request 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"호출자는 `createRequest`가 반환한 요청을 삭제할 책임을 지며, 삭제 대신 재사용할 수도 있습니다. 재사용은 `R…\" ≈ \"`createRequest`는 빈 요청 객체를 `std::unique_ptr<Request>`로 반환하며, 반환된 객체의 소…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 1707.6399999999849,
+      "calls": 53,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\camera-candidate\\build\\run-inputs\\20261028-003547"
+    },
+    {
+      "record": "camera-candidate/build/candidate-camera-model-20261028-011107.json",
+      "section": "camera-model",
+      "status": "failed",
+      "error": "Visual evidence changed or quote is not unique: camera-model/lifetime/create",
+      "seconds": 2.9530000000086147,
+      "calls": 0,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\camera-candidate\\build\\run-inputs\\20261028-011107"
+    },
+    {
+      "record": "camera-candidate/build/candidate-camera-model-20261028-011421.json",
+      "section": "camera-model",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\ncamera-model: camera-model/lifetime/fence-reuse-caution: LLM 답변 검증 실패: [의미 중복] lifetime 13번째 설명이 앞의 lifetime 12번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Request::reuse()`의 동작을 제어하는 `Request::ReuseBuffers` 플래그는 `addBuffer(…\" ≈ \"`Request::reuse()`의 동작을 제어하는 플래그 중 `ReuseBuffers`는 이전에 `addBuffer()`로…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 639.984999999986,
+      "calls": 31,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\camera-candidate\\build\\run-inputs\\20261028-011421"
+    },
+    {
+      "record": "camera-candidate/build/candidate-camera-model-20261028-024916.json",
+      "section": "camera-model",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\ncamera-model: camera-model/lifetime/release-fence: LLM 답변 검증 실패: [의미 중복] lifetime 5번째 설명이 앞의 lifetime 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"펜스가 신호되지 않으면 요청은 타임아웃 뒤 실패합니다. 이때 버퍼에는 펜스가 그대로 남아 있으며, 애플리케이션은 다른 요청에…\" ≈ \"버퍼와 연결된 펜스가 신호되지 않으면 요청은 타임아웃 후 실패합니다. 이때 버퍼에는 펜스가 그대로 남아 있습니다. 애플리케이…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 437.3280000000086,
+      "calls": 27,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\camera-candidate\\build\\run-inputs\\20261028-024916"
+    },
+    {
+      "record": "camera-candidate/build/candidate-camera-model-20261028-025715.json",
+      "section": "camera-model",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\ncamera-model: camera-model/concurrency: LLM 답변 검증 실패: [의미 중복] concurrency 1번째 설명이 앞의 request 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Camera::createRequest()`는 문서에 `threadsafe`로 표시되어 있습니다. 문서상 이 함수는 카메라…\" ≈ \"`createRequest`는 빈 요청 객체를 `std::unique_ptr<Request>`로 반환하며, 반환된 객체의 소…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다. / [의미 중복] concurrency 5번째 설명이 앞의 shutdown 6번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Camera::stop()`은 문서상 어떤 카메라 상태에서든 호출할 수 있습니다. 카메라 상태에 영향을 주는 다른 함수와의…\" ≈ \"문서 주석에 따르면 `Camera::stop()`은 캡처와 요청 처리를 즉시 멈추고, 대기 중인 모든 요청을 취소해 오류 상…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 845.0780000000086,
+      "calls": 27,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\camera-candidate\\build\\run-inputs\\20261028-025715"
+    },
+    {
+      "record": "camera-candidate/build/candidate-camera-model-20261028-031627.json",
+      "section": "camera-model",
+      "status": "passed",
+      "error": null,
+      "seconds": 436.7809999999881,
+      "calls": 18,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\camera-candidate\\build\\run-inputs\\20261028-031627"
+    },
+    {
+      "record": "candidate/build/candidate-camera-model-20261028-002927.json",
+      "section": "camera-model",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\ncamera-model: camera-model/state/transition-configure: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: Diagram supports Acquired->Configured via configure(), Configured self-loop (configure, createRequest), start()->Running, release()->Available. But the source gives no success condition; '성공한 뒤' is an added condition not stated in the evidence.",
+      "seconds": 282.5940000000119,
+      "calls": 8,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261028-002927"
+    },
+    {
+      "record": "candidate/build/candidate-ipa-20261028-002927.json",
+      "section": "ipa",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nipa: ipa/execution/constructor-events: LLM 답변 검증 실패: [의미 중복] execution 1번째 설명의 3번째 문장이 같은 설명의 1번째 문장을 되풀이합니다: \"이 `connect` 호출의 수신 객체는 `ipa_->{{method.mojom_name}}`이며, 연결되는 메서드는 `{{…\" ≈ \"`{{proxy_name}}Threaded` 생성자 구간의 `ipa_->{{method.mojom_name}}.connect…\". 같은 설명 안에서 새 조건·호출·동작을 추가하지 않는 문장 반복을 줄입니다.",
+      "seconds": 790.0149999999849,
+      "calls": 26,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261028-002927"
+    },
+    {
+      "record": "candidate/build/candidate-ipu3-lsc-flow-20261028-002927.json",
+      "section": "ipu3-lsc-flow",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/integration/build: LLM 답변 검증 실패: [원고·근거 언급] 1행 \"`src/ipa/ipu3/algorithms/meson.build`의 `ipu3_ipa_algorithms…\": 독자는 요청문을 보지 못하므로 \"기존 원고에 따르면\", \"제공된 코드에서\" 같은 표현 없이 사실만 씁니다.",
+      "seconds": 90.25,
+      "calls": 3,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261028-002927"
+    },
+    {
+      "record": "candidate/build/candidate-onboarding-20261027-232027.json",
+      "section": "onboarding",
+      "status": "failed",
+      "error": "LLM 설계 입력 근거·질문이 변경되어 재생성이 필요합니다.",
+      "seconds": 393.9530000000086,
+      "calls": 14,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f"
+    },
+    {
+      "record": "candidate/build/candidate-onboarding-20261027-233316.json",
+      "section": "onboarding",
+      "status": "passed",
+      "error": null,
+      "seconds": 49.219000000011874,
+      "calls": 2,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261027-233316"
+    },
+    {
+      "record": "candidate/build/candidate-overview-20261027-230505.json",
+      "section": "overview",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\noverview: overview/completion/request: LLM 답변 검증 실패: [의미 중복] completion 3번째 설명이 앞의 completion 2번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"파이프라인 핸들러는 마지막 버퍼가 완료된 뒤에도 요청을 `completeRequest()`로 명시적으로 완료해야 합니다.\" ≈ \"마지막 버퍼가 완료되어도 요청은 자동으로 완료되지 않습니다. 이는 파이프라인 핸들러가 남은 작업을 수행할 수 있도록 하기 위…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 876.1719999999914,
+      "calls": 37,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f"
+    },
+    {
+      "record": "candidate/build/candidate-overview-20261027-233316.json",
+      "section": "overview",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\noverview: overview/queue-limit/waiting: LLM 답변 검증 실패: [의미 중복] queue-limit 3번째 설명이 앞의 queue-limit 2번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"애플리케이션이 `maxQueuedRequestsDevice_`보다 많은 요청을 제출하면, 하드웨어에 큐잉되지 않은 나머지 요…\" ≈ \"`maxQueuedRequestsDevice_`가 제한하는 요청 수는 파이프라인 핸들러가 기저 하드웨어(device)에 큐잉…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 477.98499999998603,
+      "calls": 20,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261027-233316"
+    },
+    {
+      "record": "candidate/build/candidate-overview-20261028-000620.json",
+      "section": "overview",
+      "status": "passed",
+      "error": null,
+      "seconds": 95.93799999999464,
+      "calls": 4,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261028-000620"
+    },
+    {
+      "record": "candidate/build/candidate-pipeline-handler-20261028-002927.json",
+      "section": "pipeline-handler",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\npipeline-handler: pipeline-handler/completion/cancel: LLM 답변 검증 실패: [의미 중복] completion 8번째 설명이 앞의 completion 3번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`cancelRequest`는 요청을 취소하고 완료 처리까지 수행하는 함수이며, 구현에서는 `request->_d()->ca…\" ≈ \"`PipelineHandler::completeRequest`를 호출하면 요청은 이 함수가 반환한 뒤 파이프라인 핸들러의 관…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 1713.9379999999946,
+      "calls": 51,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261028-002927"
+    },
+    {
+      "record": "candidate/build/candidate-rkisp1-dewarp-20261028-002927.json",
+      "section": "rkisp1-dewarp",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nrkisp1-dewarp: rkisp1-dewarp/parameters: LLM 답변 검증 실패: [의미 중복] parameters 4번째 설명이 앞의 parameters 3번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`cm` 검사를 통과한 뒤 `coefficients`가 없으면 `Dewarp parameters are missing 'co…\" ≈ \"`cm`이 없고 `coefficients` 또는 `cmNew` 중 하나라도 있으면, `LOG(Converter, Error)…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다. / [의미 중복] parameters 7번째 설명이 앞의 parameters 5번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`cmNew`도 `Matrix<double, 3, 3>` 형식으로 읽으며, 읽기 결과가 비어 있으면 `Failed to lo…\" ≈ \"`cm`은 `cm.get<Matrix<double, 3, 3>>()`로 3행 3열 `double` 행렬로 읽습니다. 결과 `…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 238.375,
+      "calls": 4,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261028-002927"
+    },
+    {
+      "record": "candidate/build/candidate-vendor-integration-20261027-232320.json",
+      "section": "vendor-integration",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nvendor-integration: [WinError 32] 다른 프로세스가 파일을 사용 중이기 때문에 프로세스가 액세스 할 수 없습니다: 'C:\\\\Users\\\\baboe\\\\.codex\\\\worktrees\\\\704a\\\\camera-hal-sdd-generator\\\\build\\\\goal\\\\candidate\\\\build\\\\prompts\\\\cli\\\\call-4plrpki8'",
+      "seconds": 173.56299999999464,
+      "calls": 6,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f"
+    },
+    {
+      "record": "candidate/build/candidate-vendor-integration-20261027-233316.json",
+      "section": "vendor-integration",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nvendor-integration: vendor-integration/request/device-result: LLM 답변 검증 실패: [의미 중복] request 2번째 설명이 앞의 configuration 9번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`PipelineHandler::queueRequestDevice()`의 구현자는 성공하면 `0`을, 그 밖의 경우에는 음수…\" ≈ \"`PipelineHandler::configure()`는 `CameraManager` 스레드에서 호출되는 함수입니다. 구현은…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 791.7039999999979,
+      "calls": 36,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261027-233316"
+    },
+    {
+      "record": "candidate/build/candidate-vendor-integration-20261028-000620.json",
+      "section": "vendor-integration",
+      "status": "passed",
+      "error": null,
+      "seconds": 850.5620000000054,
+      "calls": 42,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261028-000620"
+    },
+    {
+      "record": "candidate/build/candidate-vendor-overview-20261027-231353.json",
+      "section": "vendor-overview",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nvendor-overview: [WinError 32] 다른 프로세스가 파일을 사용 중이기 때문에 프로세스가 액세스 할 수 없습니다: 'C:\\\\Users\\\\baboe\\\\.codex\\\\worktrees\\\\704a\\\\camera-hal-sdd-generator\\\\build\\\\goal\\\\candidate\\\\build\\\\prompts\\\\cli\\\\call-5fq3z9_c'",
+      "seconds": 528.0310000000172,
+      "calls": 18,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f"
+    },
+    {
+      "record": "candidate/build/candidate-vendor-overview-20261027-233316.json",
+      "section": "vendor-overview",
+      "status": "passed",
+      "error": null,
+      "seconds": 342.5309999999881,
+      "calls": 16,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\candidate\\build\\run-inputs\\20261027-233316"
+    },
+    {
+      "record": "latest-candidate/build/candidate-framebuffer-allocator-20261028-004130.json",
+      "section": "framebuffer-allocator",
+      "status": "passed",
+      "error": null,
+      "seconds": 2.062000000005355,
+      "calls": 0,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-004130"
+    },
+    {
+      "record": "latest-candidate/build/candidate-ipa-20261028-025946.json",
+      "section": "ipa",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nipa: ipa/execution/isolated-store: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 핵심 사실(std::move 대입, isConnected 검사 통과 후 recv.connect 뒤에 실행, 직후 valid_ = true)은 근거와 일치합니다. 그러나 '실제 이동 동작은 ipc_의 타입이 정의한 대입 연산에 따른다'는 절은 근거에 없는 타입 의미 주장이며, 근거는 ipc_의 타입 정의를 포함하지 않아 확정 사실로 제시할 수 없습니다.",
+      "seconds": 780.4840000000258,
+      "calls": 29,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-ipa-20261028-035229.json",
+      "section": "ipa",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nipa: ipa/errors: LLM 답변 검증 실패: [의미 중복] errors 1번째 설명이 앞의 selection 5번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`createIPA`는 `module(name, minVersion, maxVersion)`이 `nullptr`을 반환하면 …\" ≈ \"`module(name, minVersion, maxVersion)`이 `nullptr`을 반환하면 `createIPA()`…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 592.5469999999914,
+      "calls": 16,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-035229"
+    },
+    {
+      "record": "latest-candidate/build/candidate-ipa-module-validation-20261028-004130.json",
+      "section": "ipa-module-validation",
+      "status": "passed",
+      "error": null,
+      "seconds": 185.68799999999464,
+      "calls": 5,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-004130"
+    },
+    {
+      "record": "latest-candidate/build/candidate-ipa-module-validation-20261028-025946.json",
+      "section": "ipa-module-validation",
+      "status": "passed",
+      "error": null,
+      "seconds": 79.09399999998277,
+      "calls": 4,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-ipu3-lsc-flow-20261028-025946.json",
+      "section": "ipu3-lsc-flow",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/integration/build: LLM 답변 검증 실패: [원고·근거 언급] 1행 \"`src/ipa/ipu3/algorithms/meson.build`의 `ipu3_ipa_algorithms…\": 독자는 요청문을 보지 못하므로 \"기존 원고에 따르면\", \"제공된 코드에서\" 같은 표현 없이 사실만 씁니다.",
+      "seconds": 65.57799999997951,
+      "calls": 3,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-ipu3-lsc-flow-20261028-035229.json",
+      "section": "ipu3-lsc-flow",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/integration/active: LLM 답변 검증 실패: 추출 사실에서 확인되지 않는 한정 이름: ipa::lsc::",
+      "seconds": 68.96799999999348,
+      "calls": 4,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-035229"
+    },
+    {
+      "record": "latest-candidate/build/candidate-onboarding-20261028-025946.json",
+      "section": "onboarding",
+      "status": "passed",
+      "error": null,
+      "seconds": 246.9220000000205,
+      "calls": 12,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-overview-20261028-025946.json",
+      "section": "overview",
+      "status": "passed",
+      "error": null,
+      "seconds": 220.79699999999139,
+      "calls": 12,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-rkisp1-dewarp-20261028-025946.json",
+      "section": "rkisp1-dewarp",
+      "status": "passed",
+      "error": null,
+      "seconds": 584.9379999999946,
+      "calls": 25,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-team-overview-20261028-004130.json",
+      "section": "team-overview",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nteam-overview: team-overview/role/problem: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 원문은 카메라 스택 제공 책임을 userspace에 두고, 응용 프로그램 개발자를 위한 공통 API가 없다고만 말합니다. '카메라를 쓰려는 쪽'이 그 책임을 진다는 주체 연결은 원문에 없습니다. 나머지 절(벤더별 구현, 파이프라인 차이로 인한 기기별 맞춤 처리, 마지막 범위 진술)은 원문과 일치합니다.",
+      "seconds": 277.125,
+      "calls": 6,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-004130"
+    },
+    {
+      "record": "latest-candidate/build/candidate-team-overview-20261028-025946.json",
+      "section": "team-overview",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nteam-overview: team-overview/role/what: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 핵심 주장(오픈 소스 카메라 지원 라이브러리, Linux·Android·ChromeOS 대상, 커널 드라이버 연동, 직관적 API, 복잡성 감소 목적)은 원문과 일치합니다. 그러나 '원문에 용어 정의가 없어 ... 풀이는 생략합니다'는 원문에 없는 작성 이유와 생략 결정을 담고 있어 근거가 없으므로 거부합니다.",
+      "seconds": 95.35899999999674,
+      "calls": 4,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-vendor-assurance-20261028-004130.json",
+      "section": "vendor-assurance",
+      "status": "passed",
+      "error": null,
+      "seconds": 703.3280000000086,
+      "calls": 21,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-004130"
+    },
+    {
+      "record": "latest-candidate/build/candidate-vendor-assurance-20261028-025946.json",
+      "section": "vendor-assurance",
+      "status": "passed",
+      "error": null,
+      "seconds": 275.7030000000086,
+      "calls": 16,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-vendor-integration-20261028-025946.json",
+      "section": "vendor-integration",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nvendor-integration: vendor-integration/request/device-result: LLM 답변 검증 실패: [의미 중복] request 2번째 설명이 앞의 configuration 9번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`PipelineHandler::queueRequestDevice()`의 구현은 성공하면 `0`을 반환해야 하고, 그 밖의 …\" ≈ \"`CameraManager` 스레드에서 `PipelineHandler::configure()`가 호출됩니다. 구현은 성공하면…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 714.3129999999946,
+      "calls": 39,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-candidate/build/candidate-vendor-integration-20261028-035229.json",
+      "section": "vendor-integration",
+      "status": "passed",
+      "error": null,
+      "seconds": 643.7820000000065,
+      "calls": 40,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-035229"
+    },
+    {
+      "record": "latest-candidate/build/candidate-vendor-overview-20261028-025946.json",
+      "section": "vendor-overview",
+      "status": "passed",
+      "error": null,
+      "seconds": 3.4059999999881256,
+      "calls": 0,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-candidate\\build\\run-inputs\\20261028-025946"
+    },
+    {
+      "record": "latest-core-final/build/candidate-camera-model-20261028-032608.json",
+      "section": "camera-model",
+      "status": "passed",
+      "error": null,
+      "seconds": 4.01600000000326,
+      "calls": 0,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-core-final\\build\\run-inputs\\20261028-032608"
+    },
+    {
+      "record": "latest-core-final/build/candidate-pipeline-handler-20261028-032608.json",
+      "section": "pipeline-handler",
+      "status": "passed",
+      "error": null,
+      "seconds": 197.89100000000326,
+      "calls": 6,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-core-final\\build\\run-inputs\\20261028-032608"
+    },
+    {
+      "record": "latest-lifecycle-final/build/candidate-request-lifecycle-20261028-034527.json",
+      "section": "request-lifecycle",
+      "status": "passed",
+      "error": null,
+      "seconds": 4.0,
+      "calls": 0,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-lifecycle-final\\build\\run-inputs\\20261028-034527"
+    },
+    {
+      "record": "latest-team-final/build/candidate-team-overview-20261028-033125.json",
+      "section": "team-overview",
+      "status": "passed",
+      "error": null,
+      "seconds": 650.9060000000172,
+      "calls": 26,
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\latest-team-final\\build\\run-inputs\\20261028-033125"
+    },
+    {
+      "record": "lifecycle-candidate/build/candidate-request-lifecycle-20261028-003045.json",
+      "section": "request-lifecycle",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nrequest-lifecycle: request-lifecycle/journey/request-complete: LLM 답변 검증 실패: [원고·근거 언급] 1행 \"completeRequest는 먼저 요청 객체의 complete()를 호출한 뒤, 카메라의 `queuedR…\": 독자는 요청문을 보지 못하므로 \"기존 원고에 따르면\", \"제공된 코드에서\" 같은 표현 없이 사실만 씁니다.",
+      "seconds": 989.7810000000172,
+      "calls": 33,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\lifecycle-candidate\\build\\run-inputs\\20261028-003045"
+    },
+    {
+      "record": "lifecycle-candidate/build/candidate-request-lifecycle-20261028-005044.json",
+      "section": "request-lifecycle",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nrequest-lifecycle: request-lifecycle/journey/request-head: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 조건 비교(`req->status() == Request::RequestPending`)와 `break` 실행은 인용과 일치합니다. 하지만 `break`를 감싸는 반복문이 없다는 주장은 틀렸습니다. 전체 원문 맥락에서 `break`는 `while (!data->queuedRequests_.empty())` 루프 안에 있으므로, 이 루프를 빠져나간다는 점이 확인됩니다.",
+      "seconds": 221.26499999998487,
+      "calls": 7,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\lifecycle-candidate\\build\\run-inputs\\20261028-005044"
+    },
+    {
+      "record": "lifecycle-candidate/build/candidate-request-lifecycle-20261028-010128.json",
+      "section": "request-lifecycle",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nrequest-lifecycle: request-lifecycle/journey/waiting-prepared: LLM 답변 검증 실패: [원고·근거 언급] 1행 \"선두 요청의 준비 여부는 `request->_d()->prepared_` 멤버로 확인합니다. `prepar…\": 독자는 요청문을 보지 못하므로 \"기존 원고에 따르면\", \"제공된 코드에서\" 같은 표현 없이 사실만 씁니다.",
+      "seconds": 69.34399999998277,
+      "calls": 2,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\lifecycle-candidate\\build\\run-inputs\\20261028-010128"
+    },
+    {
+      "record": "lifecycle-candidate/build/candidate-request-lifecycle-20261028-011720.json",
+      "section": "request-lifecycle",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nrequest-lifecycle: request-lifecycle/resources/request-owner: LLM 답변 검증 실패: [의미 중복] resources 1번째 설명이 앞의 journey 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`createRequest`가 오류로 `nullptr`을 반환하는 경우에는 호출자에게 소유권이 넘어가는 요청 객체가 없습니다.\" ≈ \"`Camera::createRequest`(`uint64_t` cookie)는 `std::unique_ptr<Request>…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 498.31200000000536,
+      "calls": 23,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\lifecycle-candidate\\build\\run-inputs\\20261028-011720"
+    },
+    {
+      "record": "lifecycle-candidate/build/candidate-request-lifecycle-20261028-025051.json",
+      "section": "request-lifecycle",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nrequest-lifecycle: request-lifecycle/configuration-failure/access-state: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 비교 분기, LOG 후 return -EACCES, 상태 값 관찰 계획은 소스와 일치합니다. 하지만 '한 번 읽은 값이므로' 이하의 근거와 상태 변경 함수 미호출 지시는 소스에 없는 임의의 근거입니다. false 분기에서 LOG 전에 실행되는 ASSERT도 생략되었습니다.",
+      "seconds": 114.26599999997416,
+      "calls": 5,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\lifecycle-candidate\\build\\run-inputs\\20261028-025051"
+    },
+    {
+      "record": "lifecycle-candidate/build/candidate-request-lifecycle-20261028-025402.json",
+      "section": "request-lifecycle",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nrequest-lifecycle: request-lifecycle/resources/release-fence: LLM 답변 검증 실패: [의미 중복] resources 6번째 설명이 앞의 resources 5번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"펜스가 신호되지 않으면 요청은 타임아웃 뒤 실패하며, 버퍼에는 펜스가 그대로 남습니다. 애플리케이션은 다른 요청에서 버퍼를 …\" ≈ \"`Request::addBuffer`에 넘긴 `buffer`의 펜스가 신호되지 않으면, 요청은 타임아웃 뒤에 실패합니다. 요…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 944.2190000000119,
+      "calls": 46,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\lifecycle-candidate\\build\\run-inputs\\20261028-025402"
+    },
+    {
+      "record": "lifecycle-candidate/build/candidate-request-lifecycle-20261028-031036.json",
+      "section": "request-lifecycle",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\nrequest-lifecycle: request-lifecycle/diagnosis/submission: LLM 답변 검증 실패: diagnosis: 설명 문단은 600자·4문장 이내로 나누세요. 조건과 예외는 유지하세요.",
+      "seconds": 546.1870000000054,
+      "calls": 28,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\lifecycle-candidate\\build\\run-inputs\\20261028-031036"
+    },
+    {
+      "record": "lifecycle-candidate/build/candidate-request-lifecycle-20261028-032220.json",
+      "section": "request-lifecycle",
+      "status": "passed",
+      "error": null,
+      "seconds": 1243.1719999999914,
+      "calls": 57,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\lifecycle-candidate\\build\\run-inputs\\20261028-032220"
+    },
+    {
+      "record": "pipeline-candidate/build/candidate-pipeline-handler-20261028-011122.json",
+      "section": "pipeline-handler",
+      "status": "failed",
+      "error": "설계 항목 검증 실패:\npipeline-handler: pipeline-handler/shutdown/device-call: LLM 답변 검증 실패: [의미 중복] shutdown 2번째 설명이 앞의 shutdown 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`PipelineHandler::stop()`은 `waitingRequests.swap(data->waitingRequest…\" ≈ \"`PipelineHandler::stop`은 `waitingRequests.swap(data->waitingRequests_…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+      "seconds": 338.2030000000086,
+      "calls": 12,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\pipeline-candidate\\build\\run-inputs\\20261028-011122"
+    },
+    {
+      "record": "pipeline-candidate/build/candidate-pipeline-handler-20261028-025412.json",
+      "section": "pipeline-handler",
+      "status": "passed",
+      "error": null,
+      "seconds": 569.125,
+      "calls": 27,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "input_snapshot": "$WORKSPACE\\build\\goal\\pipeline-candidate\\build\\run-inputs\\20261028-025412"
+    }
+  ],
+  "phase_versions": {
+    "claude-baseline-six": "45609e4",
+    "claude-baseline-nine": "45609e4",
+    "claude-improved-six": "Development snapshot before native schema; original requests and receipts are authoritative",
+    "claude-native-nine": "12f7c95",
+    "claude-final-six": "9b19aba development snapshot",
+    "claude-current-six": "b2271c9 frozen runtime; later review fixes are separate",
+    "claude-merged-nine": "a8972398ef29e8fd23fdc2b3464c552e07f81a20 frozen runtime"
+  },
+  "comparison_limits": "Each phase preserves its failed attempts and fixed kickoff input. Operational question refinements, current upstream, verified reuse, code review and transport probes are separate; this is not a pooled final-code success rate."
 }

@@ -16,7 +16,8 @@ class PageWriter:
         self.page_leads = page_leads or {}
         self.page_tpl = (cfg.templates_dir / "page.md").read_text(encoding="utf-8")
 
-    def _render(self, title: str, lead: str, body: str, routes: list[tuple[str, str]] | None, evidence: str,
+    def _render(self, title: str, lead: str, body: str,
+                routes: list[route_rules.NavigationRoute | tuple[str, str]] | None, evidence: str,
                 next_link: tuple[str, str], status: str, omitted: list[str], extra: dict[str, str],
                 page_path: Path) -> str:
         meta = {
@@ -36,9 +37,17 @@ class PageWriter:
         routes_md = ""
         if routes:
             headings = {slugify(h): h for h in re.findall(r"^#{2,6} (.+)$", body, re.M)}
-            routes_md = "| 지금 확인할 내용 | 이동할 절 |\n|---|---|\n" + "\n".join(
-                f"| {q or route_rules.derive_text(to, self.page_titles, self.page_leads)} | "
-                f"[{self._route_label(to, headings)}]({self._rel(to, page_path)}) |" for q, to in routes)
+            rows, anchors = [], set()
+            for value in routes:
+                route = value if isinstance(value, route_rules.NavigationRoute) else route_rules.NavigationRoute(*value)
+                if route.anchor is not None:
+                    if route.anchor in headings or route.anchor in anchors:
+                        raise ValueError('Duplicate or conflicting navigation anchor: ' + route.anchor)
+                    anchors.add(route.anchor)
+                anchor = f'<a id="{route.anchor}"></a>' if route.anchor else ''
+                rows.append(f"| {anchor}{route.question or route_rules.derive_text(route.target, self.page_titles, self.page_leads)} | "
+                            f"[{self._route_label(route.target, headings)}]({self._rel(route.target, page_path)}) |")
+            routes_md = "| 지금 확인할 내용 | 이동할 절 |\n|---|---|\n" + "\n".join(rows)
         return self.page_tpl.format(frontmatter=fm, title=title, lead=lead or "이 절의 표부터 확인하세요.",
                                     routes=routes_md, body=body.strip(), evidence=evidence,
                                     next_title=next_link[0], next_link=self._rel(next_link[1], page_path))

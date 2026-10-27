@@ -142,6 +142,7 @@ def automatic_error(cfg, model, unit, raw):
         subset = {**section, 'design_topics': [topic], 'design_requirements': [
             r for r in section['design_requirements'] if r['id'] in topic['covers']]}
         subset.pop('reader_profile', None)
+        subset.pop('reader_family', None)
         validate_answers(model, subset, {topic['id']: statements})
         return None
     except (ValueError, TypeError, KeyError) as exc:

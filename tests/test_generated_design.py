@@ -702,7 +702,7 @@ def test_impact_reuses_only_unchanged_topics_and_preserves_origin(tmp_cfg, gener
     assert len(agent.calls) == 3
 
 
-def test_legacy_reuse_requires_full_old_fingerprint_and_intact_body(tmp_cfg, generated):
+def test_legacy_reuse_cannot_invent_missing_prompt_and_model_identity(tmp_cfg, generated):
     from sdd.design_reuse import reusable, topic_inputs
     from sdd.export_html import _split
     section, model, save, agent = generated
@@ -714,10 +714,31 @@ def test_legacy_reuse_requires_full_old_fingerprint_and_intact_body(tmp_cfg, gen
     legacy = '---\n' + '\n'.join(f'{k}: {json.dumps(v, ensure_ascii=False) if k == "generated_design" else v}'
                                 for k, v in meta.items()) + '\n---\n' + body
     inputs = topic_inputs(model, section, 'policy')
-    assert reusable(model, section, legacy, inputs)[0]
+    assert not reusable(model, section, legacy, inputs)[0]
     assert not reusable(model, section, legacy + 'tampered', inputs)[0]
     section['design_topics'][0]['question'] += ' changed'
     assert not reusable(model, section, legacy, topic_inputs(model, section, 'policy'))[0]
+
+
+@pytest.mark.parametrize('quote', ['*\n' * 8, ' * \n' * 8])
+def test_comment_decoration_cannot_be_used_as_source_evidence(generated, quote):
+    from sdd.design_response import materialize
+    section, model, _, agent = generated
+    statement = {**agent.statement, 'quote': quote}
+    with pytest.raises(ValueError, match='원문 구절 quote'):
+        materialize(model, section, {'stop': [statement]})
+    statement['evidence'] = ['nonexistent']
+    with pytest.raises(ValueError, match='원문 구절 quote'):
+        materialize(model, section, {'stop': [statement]})
+
+
+def test_unpartitioned_response_obeys_its_declared_schema_limit(generated):
+    from sdd.design_response import decode_unit
+    section, model, _, agent = generated
+    topic = section['design_topics'][0]
+    raw = json.dumps({'statements': [agent.statement] * 9})
+    with pytest.raises(ValueError, match='8문단'):
+        decode_unit(model, section, topic, raw, {}, {})
 
 
 def test_structural_change_rebuilds_page_without_rewriting_unchanged_source_prose(tmp_cfg, generated):
@@ -1130,7 +1151,8 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     from sdd.contract_schema import configuration_errors
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
-    assert len(designs) == 14
+    assert len(designs) == 19
+    assert sum(len(section['design_topics']) for section in designs) == 69
     for section in designs:
         assert section['design_generation'] == 'llm'
         assert not configuration_errors(section)

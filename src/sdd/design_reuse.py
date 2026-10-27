@@ -23,6 +23,10 @@ def topic_inputs(model, section, policy):
     inputs = {}
     for topic in section['design_topics']:
         pinned, selected = subset(model, section, [topic['id']])
+        # Family membership is checked across the complete current guide before
+        # generation/publication. It changes validation scope, not this topic's
+        # drafting input; the assembled page fingerprint still binds it.
+        selected.pop('reader_family', None)
         # Drafting receives the selected excerpts, not the page's class tables
         # or call graph. Structural changes must rebuild those tables without
         # unnecessarily replacing source-identical prose. The assembled page
@@ -47,22 +51,18 @@ def reusable(model, section, previous, inputs, validate=None):
     answers = artifact.get('answers')
     if not isinstance(answers, dict):
         return {}, {}
-    # Legacy pages have one page fingerprint. Reuse is possible only if the
-    # entire old topic set still matches, including every question and source.
+    # A legacy page fingerprint does not bind prompts/model/policy. Without
+    # topic input identities we cannot prove compatibility with this run.
     old_inputs = artifact.get('topic_inputs')
     if not isinstance(old_inputs, dict):
-        pinned, selected = subset(model, section, answers)
-        if set(answers) != {t['id'] for t in selected['design_topics']}:
-            return {}, {}
-        if fingerprint(pinned, selected) != artifact.get('input_fingerprint'):
-            return {}, {}
-        old_inputs = {tid: inputs[tid] for tid in answers}
+        return {}, {}
     retained, origins = {}, {}
     for tid, current in inputs.items():
         if old_inputs.get(tid) != current or tid not in answers:
             continue
         pinned, selected = subset(model, section, [tid])
         selected.pop('reader_profile', None)
+        selected.pop('reader_family', None)
         selected_answers = copy.deepcopy(answers[tid])
         try:
             if validate:

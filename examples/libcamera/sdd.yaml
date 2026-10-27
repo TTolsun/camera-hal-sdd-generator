@@ -82,20 +82,43 @@ documentation:
     ipu3-lsc-flow.md:
       max_growth_ratio: 2.0
   features:
-    - id: request-lifecycle
-      primary: request-lifecycle.md
-      sections: [camera-model, pipeline-handler]
-      scenarios: [queue_request, complete_request, camera_stop]
-      symbols: [libcamera::Camera, libcamera::Request, libcamera::PipelineHandler]
-    - id: ipu3-lsc
-      primary: ipu3-lsc-flow.md
-      sections: [ipu3-lsc]
-      symbols: [libcamera::ipa::ipu3::algorithms::Lsc]
-    - id: rkisp1-dewarp
-      primary: rkisp1-dewarp.md
-      sections: [pipeline-handler]
-      symbols: [libcamera::RkISP1CameraData, libcamera::ConverterDW100Module, libcamera::Dw100VertexMap]
+  - id: request-lifecycle
+    primary: request-lifecycle.md
+    sections:
+    - camera-model
+    - camera-requests
+    - pipeline-handler
+    - pipeline-requests
+    - request-diagnosis
+    scenarios: [queue_request, complete_request, camera_stop]
+    symbols: [libcamera::Camera, libcamera::Request, libcamera::PipelineHandler]
+  - id: ipu3-lsc
+    primary: ipu3-lsc-flow.md
+    sections: [ipu3-lsc]
+    symbols: [libcamera::ipa::ipu3::algorithms::Lsc]
+  - id: rkisp1-dewarp
+    primary: rkisp1-dewarp.md
+    sections: [pipeline-handler]
+    symbols: [libcamera::RkISP1CameraData, libcamera::ConverterDW100Module, libcamera::Dw100VertexMap]
+  - id: pipeline-reader
+    primary: pipeline-handler.md
+    sections:
+    - pipeline-requests
+    reader_profile: vendor
+  - id: request-reader
+    primary: request-lifecycle.md
+    sections:
+    - request-diagnosis
+    reader_profile: vendor
 
+  - id: ipa-algorithms
+    primary: ipa.md
+    sections:
+    - ipa-algorithms
+  - id: ipu3-lsc-prepare
+    primary: ipu3-lsc-flow.md
+    sections:
+    - ipu3-lsc-prepare
 site:
   enabled: true
   title: libcamera 설계 문서

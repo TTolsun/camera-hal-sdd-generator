@@ -60,13 +60,60 @@ def profile_errors(section):
         if not isinstance(aspects, list) or any(not isinstance(a, str) or a not in PROFILES[profile] for a in aspects):
             return [f'{profile}: aspects에는 프로필의 확인 항목을 지정해야 합니다.']
         found.update(aspects)
-    errors = [f'{profile}/{key}: 필수 독자 질문이 없습니다. {question}'
-              for key, question in PROFILES[profile].items() if key not in found]
+    errors = [] if section.get('reader_family') else [
+        f'{profile}/{key}: 필수 독자 질문이 없습니다. {question}'
+        for key, question in PROFILES[profile].items() if key not in found]
     for topic in section.get('design_topics', []):
         for statement in topic.get('statements', []):
             text = statement.get('text', '')
             if isinstance(text, str) and _dense_paragraph(text):
                 errors.append(f"{topic['id']}: 설명 문단은 600자·4문장 이내로 나누세요. 조건과 예외는 유지하세요.")
+    return errors
+
+
+def family_errors(sections, features, *, enabled=True):
+    """A split guide must retain the full profile across its declared pages."""
+    from .config import section_output
+    declared = [s for s in sections if s.get('reader_family')]
+    profiled = [f for f in features if isinstance(f, dict) and 'reader_profile' in f] if isinstance(features, list) else []
+    if not declared and not profiled:
+        return []
+    if not enabled:
+        return ['Reader families require documentation.enabled and its publication checks.']
+    by_id = {s['id']: s for s in sections}
+    groups, errors = {}, []
+    for feature in profiled:
+        name, profile = feature.get('id'), feature.get('reader_profile')
+        related = feature.get('sections', [])
+        if (not isinstance(name, str) or not name or name in groups
+                or not isinstance(profile, str) or profile not in PROFILES
+                or not isinstance(related, list) or any(not isinstance(s, str) for s in related)):
+            errors.append('Reader family needs a unique feature id, known reader_profile and section ids.')
+            continue
+        primary = [s['id'] for s in sections if section_output(s) == feature.get('primary')]
+        if len(primary) != 1:
+            errors.append(f'Reader family {name}: primary must be one configured page.')
+            continue
+        members = set(primary + related)
+        groups[name] = (profile, members)
+        requirements = []
+        for sid in sorted(members):
+            section = by_id.get(sid)
+            if section is None:
+                errors.append(f'Reader family {name}: missing section {sid}.')
+                continue
+            if section.get('reader_family') != name or section.get('reader_profile') != profile:
+                errors.append(f'Reader family {name}: {sid} must declare the same family and profile.')
+            requirements.extend(section.get('design_requirements', []))
+        errors.extend(f'Reader family {name}: {error}' for error in profile_errors(
+            dict(reader_profile=profile, design_requirements=requirements)))
+    for section in declared:
+        if not isinstance(section['reader_family'], str):
+            errors.append(f"{section['id']}: reader_family must be a feature id.")
+            continue
+        group = groups.get(section['reader_family'])
+        if group is None or section['id'] not in group[1]:
+            errors.append(f"{section['id']}: reader_family must include this page in a profiled feature.")
     return errors
 
 

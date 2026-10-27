@@ -57,7 +57,7 @@ def test_recorded_local_qwen_equality_error_is_still_rejected():
     call = evidence['calls']['pipeline-handler_queue_queue-limit_2']
     assert call['receipt']['transport'] == 'ollama'
     sections = yaml.safe_load((root/'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
-    page = next(s for s in sections if s['id'] == 'pipeline-handler')
+    page = next(s for s in sections if s['id'] == 'pipeline-requests')
     topic = next(t for t in page['design_topics'] if t['id'] == 'queue')
     rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'capacity')
     with pytest.raises(ValueError, match='비교 연산자'):

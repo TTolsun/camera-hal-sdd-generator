@@ -159,7 +159,7 @@ def materialize(model, section, answers, enforce_repeats=True):
                 raise ValueError('LLM 설명 문단이 중복됐습니다. 각 문단은 서로 다른 내용을 설명해야 합니다.')
             seen.add(normalized)
             quote = st.get('quote')
-            if not isinstance(quote, str) or len(quote.strip()) < 12:
+            if not isinstance(quote, str) or len(quote_text(quote)) < 12:
                 raise ValueError('각 설명에는 직접 근거로 삼은 원문 구절 quote가 필요합니다.')
             original = [quote_text(model.evidence.get(f"{section['id']}/{topic['id']}/{ref}", {}).get('text', ''))
                         for ref in st['evidence']]
@@ -260,9 +260,9 @@ def decode_unit(model, section, topic, raw, sources, passages):
     data = json.loads(cleaned)
     if not isinstance(data, dict) or set(data) != {'statements'}:
         raise ValueError('statements만 가진 JSON 객체가 필요합니다.')
-    if ('_part_id' in topic and isinstance(data['statements'], list)
-            and len(data['statements']) > topic['_max_statements']):
-        raise ValueError(f"분할 질문은 {topic['_max_statements']}문단 이내로 답해야 합니다.")
+    maximum = topic.get('_max_statements', 8)
+    if isinstance(data['statements'], list) and len(data['statements']) > maximum:
+        raise ValueError(f"질문은 {maximum}문단 이내로 답해야 합니다.")
     data['statements'] = resolve_passages(data['statements'], passages)
     original_texts = [statement.get('text') for statement in data['statements']]
     if topic.get('_statement_kind'):
@@ -294,6 +294,7 @@ def decode_unit(model, section, topic, raw, sources, passages):
     if errors:
         raise ValueError(' / '.join(errors))
     subset.pop('reader_profile', None)
+    subset.pop('reader_family', None)
     try:
         validate_answers(model, subset, candidate, allow_limited=bool(topic.get('_statement_kind')))
     except ValueError as exc:

@@ -5,6 +5,31 @@ import pytest
 from sdd.translation import translate_missing
 
 
+@pytest.mark.parametrize('batch_size', [1, 3])
+def test_reused_translation_must_pass_current_obligation_policy(tmp_cfg, batch_size):
+    tmp_cfg.agent.kind = 'cli'
+    tmp_cfg.raw['site'] = {'translation_batch_size': batch_size}
+    source = '호출자는 {{0}} 버퍼를 유지해야 합니다.'
+    previous = {'strings': {'기존 문장': 'Existing text.', source: 'The caller should retain {{0}} buffer.'}}
+    class Agent:
+        calls = 0
+        def chat(self, system, user, **kw):
+            self.calls += 1
+            request = json.loads(user)
+            corrected = 'The caller must retain {{0}} buffer.'
+            if batch_size == 1:
+                assert request['source'] == source
+                return json.dumps({'text': corrected})
+            assert list(request['texts'].values()) == [source]
+            return json.dumps({'translations': {key: corrected for key in request['texts']}})
+    agent = Agent()
+    result = translate_missing(tmp_cfg, previous, agent)
+    assert agent.calls == 1
+    assert result['strings'][source] == 'The caller must retain {{0}} buffer.'
+    assert result['strings']['기존 문장'] == 'Existing text.'
+    assert previous['strings'][source] == 'The caller should retain {{0}} buffer.'
+
+
 def test_translation_keeps_existing_text_and_retries_placeholders(tmp_cfg):
     tmp_cfg.agent.kind = 'ollama'
     catalog = {'strings': {'기존 문장': 'Existing text.', '{{0}} 함수는 실패하면 반환합니다.': ''}}

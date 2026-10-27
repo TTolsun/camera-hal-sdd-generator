@@ -113,8 +113,7 @@ def prepare(cfg):
         page_path(cfg, rel)
     if baseline(cfg) is None:
         pages = inventory(cfg)
-        if pages:
-            _save(cfg.build_dir / "document-baseline.json", {"schema": 1, "pages": pages})
+        _save(cfg.build_dir / "document-baseline.json", {"schema": 1, "pages": pages})
 
 
 def retired_paths(cfg):
@@ -208,7 +207,7 @@ def audit(cfg, model=None):
     by_id = {s["id"]: s for s in sections}
     features = []
     for feature in options.get("features", []):
-        if (not isinstance(feature, dict) or set(feature) - {"id", "primary", "sections", "scenarios", "symbols"}
+        if (not isinstance(feature, dict) or set(feature) - {"id", "primary", "sections", "scenarios", "symbols", "reader_profile"}
                 or not isinstance(feature.get("id"), str) or not feature["id"].strip()
                 or feature["id"] in ids):
             raise ValueError("Feature must have a unique id and supported contract fields")
@@ -232,7 +231,13 @@ def audit(cfg, model=None):
                 if not present:
                     finding("feature-contract", [primary], "refresh-or-retire",
                             f"Feature {feature['id']} is missing {field}: {value}")
-        features.append({"id": feature["id"], "primary": primary})
+        features.append({"id": feature["id"], "primary": primary,
+                         **({'reader_profile': feature['reader_profile']} if 'reader_profile' in feature else {})})
+
+    from .reader_profiles import family_errors
+    for error in family_errors(sections, options.get('features', []), enabled=options.get('enabled', False)):
+        finding('reader-family', [section_output(s) for s in sections if s.get('reader_family')],
+                'restore-required-contracts', error)
 
     report = {"schema": 1, "source_commit": model.meta.get("source_commit"),
               "status": "needs-review" if findings else "ok", "human_review": "not-performed",

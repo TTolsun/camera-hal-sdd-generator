@@ -1,0 +1,582 @@
+{
+  "schema": 1,
+  "source_commit": "182307a772ebebf173ee84911906da707718485f",
+  "translation_units": 300,
+  "clang_parse_errors": 0,
+  "pipelines": [
+    "imx8-isi",
+    "ipu3",
+    "mali-c55",
+    "rkisp1",
+    "rpi/pisp",
+    "rpi/vc4",
+    "simple",
+    "uvcvideo",
+    "vimc",
+    "virtual"
+  ],
+  "ipas": [
+    "ipu3",
+    "mali-c55",
+    "rkisp1",
+    "rpi/pisp",
+    "rpi/vc4",
+    "softisp",
+    "vimc"
+  ],
+  "cam": true,
+  "qcam": false,
+  "lc_compliance": true,
+  "gstreamer": true,
+  "verification": {
+    "ok": true,
+    "source_commit": "182307a772ebebf173ee84911906da707718485f",
+    "classes": 1412,
+    "missing_required_classes": [],
+    "selected_classes": {
+      "vendor-overview": 5,
+      "vendor-assurance": 5,
+      "vendor-integration": 5,
+      "pipeline-handler": 16,
+      "pipeline-requests": 16,
+      "ipa": 5,
+      "ipu3-lsc-flow": 7,
+      "rkisp1-dewarp": 5,
+      "team-overview": 3,
+      "overview": 5,
+      "onboarding": 3,
+      "camera-model": 3,
+      "camera-requests": 3,
+      "request-lifecycle": 3,
+      "request-diagnosis": 3,
+      "ipu3-lsc": 8
+    },
+    "citations": 8026,
+    "files": 538,
+    "invalid_locations": [],
+    "tracked_tree_files": 1517,
+    "tracked_source_changes": [],
+    "source_evidence_errors": {},
+    "source_only_sections": [
+      "ipa-module-validation",
+      "framebuffer-allocator-boundary"
+    ],
+    "note": "Checks presence and locations; does not prove semantic completeness or prose accuracy."
+  },
+  "scope_comparison": {
+    "old_classes": 1513,
+    "current_classes": 1412,
+    "removed": 101,
+    "added": 0,
+    "removed_still_tracked": 0,
+    "removed_classes": [
+      {
+        "name": "IPAProxyIPU3Worker",
+        "file": "build-full/src/libcamera/proxy/worker/ipu3_ipa_proxy_worker.cpp",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "IPAProxyMaliC55Worker",
+        "file": "build-full/src/libcamera/proxy/worker/mali-c55_ipa_proxy_worker.cpp",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "IPAProxyRPiWorker",
+        "file": "build-full/src/libcamera/proxy/worker/raspberrypi_ipa_proxy_worker.cpp",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "IPAProxyRkISP1Worker",
+        "file": "build-full/src/libcamera/proxy/worker/rkisp1_ipa_proxy_worker.cpp",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "IPAProxySoftIspWorker",
+        "file": "build-full/src/libcamera/proxy/worker/softisp_ipa_proxy_worker.cpp",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "IPAProxyVimcWorker",
+        "file": "build-full/src/libcamera/proxy/worker/vimc_ipa_proxy_worker.cpp",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::IPABuffer",
+        "file": "build-full/include/libcamera/ipa/core_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::IPACameraSensorInfo",
+        "file": "build-full/include/libcamera/ipa/core_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::IPASettings",
+        "file": "build-full/include/libcamera/ipa/core_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::IPAStream",
+        "file": "build-full/include/libcamera/ipa/core_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::(unnamed enum at build-full/include/libcamera/control_ids.h:27:1)",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AeConstraintModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AeExposureModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AeFlickerModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AeMeteringModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AeStateEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AfMeteringEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AfModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AfPauseEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AfPauseStateEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AfRangeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AfSpeedEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AfStateEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AfTriggerEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AnalogueGainModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::AwbModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::ExposureTimeModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::HdrChannelEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::HdrModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::WdrModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::draft::(unnamed enum at build-full/include/libcamera/control_ids.h:338:1)",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::draft::AePrecaptureTriggerEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::draft::AwbStateEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::draft::ColorCorrectionAberrationModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::draft::FaceDetectModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::draft::LensShadingMapModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::draft::NoiseReductionModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::draft::TestPatternModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::rpi::(unnamed enum at build-full/include/libcamera/control_ids.h:446:1)",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::controls::rpi::SyncModeEnum",
+        "file": "build-full/include/libcamera/control_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::BufferIds",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::ConfigParams",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::ConfigResult",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::IPAProxyRPi",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::IPAProxyRPiIsolated",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::IPAProxyRPiThreaded",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::IPAProxyRPiThreaded::ThreadProxy",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::IPARPiInterface",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::InitParams",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::InitResult",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::PrepareParams",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::ProcessParams",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::SensorConfig",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::StartResult",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::_RPiCmd",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::RPi::_RPiEventCmd",
+        "file": "build-full/include/libcamera/ipa/raspberrypi_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::ipu3::IPAConfigInfo",
+        "file": "build-full/include/libcamera/ipa/ipu3_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::ipu3::IPAIPU3Interface",
+        "file": "build-full/include/libcamera/ipa/ipu3_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::ipu3::IPAProxyIPU3",
+        "file": "build-full/include/libcamera/ipa/ipu3_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::ipu3::IPAProxyIPU3Isolated",
+        "file": "build-full/include/libcamera/ipa/ipu3_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::ipu3::IPAProxyIPU3Threaded",
+        "file": "build-full/include/libcamera/ipa/ipu3_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::ipu3::IPAProxyIPU3Threaded::ThreadProxy",
+        "file": "build-full/include/libcamera/ipa/ipu3_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::ipu3::_IPU3Cmd",
+        "file": "build-full/include/libcamera/ipa/ipu3_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::ipu3::_IPU3EventCmd",
+        "file": "build-full/include/libcamera/ipa/ipu3_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::mali_c55::IPAConfigInfo",
+        "file": "build-full/include/libcamera/ipa/mali-c55_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::mali_c55::IPAMaliC55Interface",
+        "file": "build-full/include/libcamera/ipa/mali-c55_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::mali_c55::IPAProxyMaliC55",
+        "file": "build-full/include/libcamera/ipa/mali-c55_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::mali_c55::IPAProxyMaliC55Isolated",
+        "file": "build-full/include/libcamera/ipa/mali-c55_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::mali_c55::IPAProxyMaliC55Threaded",
+        "file": "build-full/include/libcamera/ipa/mali-c55_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::mali_c55::IPAProxyMaliC55Threaded::ThreadProxy",
+        "file": "build-full/include/libcamera/ipa/mali-c55_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::mali_c55::_MaliC55Cmd",
+        "file": "build-full/include/libcamera/ipa/mali-c55_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::mali_c55::_MaliC55EventCmd",
+        "file": "build-full/include/libcamera/ipa/mali-c55_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::rkisp1::IPAConfigInfo",
+        "file": "build-full/include/libcamera/ipa/rkisp1_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::rkisp1::IPAProxyRkISP1",
+        "file": "build-full/include/libcamera/ipa/rkisp1_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::rkisp1::IPAProxyRkISP1Isolated",
+        "file": "build-full/include/libcamera/ipa/rkisp1_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::rkisp1::IPAProxyRkISP1Threaded",
+        "file": "build-full/include/libcamera/ipa/rkisp1_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::rkisp1::IPAProxyRkISP1Threaded::ThreadProxy",
+        "file": "build-full/include/libcamera/ipa/rkisp1_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::rkisp1::IPARkISP1Interface",
+        "file": "build-full/include/libcamera/ipa/rkisp1_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::rkisp1::_RkISP1Cmd",
+        "file": "build-full/include/libcamera/ipa/rkisp1_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::rkisp1::_RkISP1EventCmd",
+        "file": "build-full/include/libcamera/ipa/rkisp1_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::softisp::IPAConfigInfo",
+        "file": "build-full/include/libcamera/ipa/softisp_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::softisp::IPAProxySoftIsp",
+        "file": "build-full/include/libcamera/ipa/softisp_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::softisp::IPAProxySoftIspIsolated",
+        "file": "build-full/include/libcamera/ipa/softisp_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::softisp::IPAProxySoftIspThreaded",
+        "file": "build-full/include/libcamera/ipa/softisp_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::softisp::IPAProxySoftIspThreaded::ThreadProxy",
+        "file": "build-full/include/libcamera/ipa/softisp_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::softisp::IPASoftIspInterface",
+        "file": "build-full/include/libcamera/ipa/softisp_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::softisp::_SoftIspCmd",
+        "file": "build-full/include/libcamera/ipa/softisp_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::softisp::_SoftIspEventCmd",
+        "file": "build-full/include/libcamera/ipa/softisp_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::IPAOperationCode",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::IPAProxyVimc",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::IPAProxyVimcIsolated",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::IPAProxyVimcThreaded",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::IPAProxyVimcThreaded::ThreadProxy",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_proxy.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::IPAVimcInterface",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::TestFlag",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::_VimcCmd",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::ipa::vimc::_VimcEventCmd",
+        "file": "build-full/include/libcamera/ipa/vimc_ipa_interface.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::properties::(unnamed enum at build-full/include/libcamera/property_ids.h:27:1)",
+        "file": "build-full/include/libcamera/property_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::properties::LocationEnum",
+        "file": "build-full/include/libcamera/property_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::properties::draft::(unnamed enum at build-full/include/libcamera/property_ids.h:77:1)",
+        "file": "build-full/include/libcamera/property_ids.h",
+        "present_in_upstream_tree": false
+      },
+      {
+        "name": "libcamera::properties::draft::ColorFilterArrangementEnum",
+        "file": "build-full/include/libcamera/property_ids.h",
+        "present_in_upstream_tree": false
+      }
+    ],
+    "added_classes": []
+  },
+  "limits": "Static selected Clang build only; qcam, Android HAL, hardware execution and inhouse Camera HAL remain unverified. All previous tracked class names retained; the 101 removed names originate in untracked build-full generated files. Earlier 186TU/982-class extraction is a separate partial-scope trial."
+}

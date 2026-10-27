@@ -7,7 +7,25 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from pathlib import Path
+from .markdown_text import slugify
+
+
+@dataclass(frozen=True)
+class NavigationRoute:
+    question: str | None
+    target: str
+    anchor: str | None = None
+
+    def __post_init__(self):
+        if self.anchor is not None and (not isinstance(self.anchor, str)
+                                       or not self.anchor or slugify(self.anchor) != self.anchor):
+            raise ValueError('routes[].anchor must be a nonempty normalized heading id')
+
+
+def from_config(row):
+    return NavigationRoute(str(row.get('q') or ''), str(row.get('to') or '#'), row.get('anchor'))
 
 _BOILERPLATE = re.compile(r"(?:에서|에|을|를|의|으로|로)?(?:필요한|해당)?(?:내용|문서|절|페이지)?(?:을|를)?"
                           r"(?:확인|이동|참고|참조|열람)(?:합니다|하세요|하십시오)?")
@@ -45,7 +63,13 @@ def repeats_title(q: str, title: str) -> bool:
 def warnings(sections: list[dict], page_titles: dict[str, str]) -> list[str]:
     result = []
     for sec in sections:
+        anchors = set()
         for route in sec.get("routes") or []:
+            parsed = from_config(route)
+            if parsed.anchor is not None:
+                if parsed.anchor in anchors:
+                    raise ValueError('Duplicate routes[].anchor: ' + parsed.anchor)
+                anchors.add(parsed.anchor)
             q, to = str(route.get("q") or ""), str(route.get("to", ""))
             title = page_titles.get(page_name(to)) or page_titles.get(Path(page_name(to)).name)
             if q and title and repeats_title(q, title):
