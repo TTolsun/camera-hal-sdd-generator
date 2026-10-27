@@ -22,14 +22,10 @@ class StaleVisualEvidence(ValueError):
 
 
 def definitions(cfg, section):
-    settings = cfg.raw.get('visuals', {})
-    if not isinstance(settings, dict) or set(settings) - {'file', 'max_nodes', 'on_stale'}:
-        raise ValueError('visuals accepts file, max_nodes and on_stale')
-    if settings.get('on_stale', 'error') not in {'error', 'omit'}:
-        raise ValueError('visuals.on_stale must be error or omit')
-    if not settings.get('file'):
+    settings = cfg.visuals
+    if not settings.file:
         return []
-    path = cfg.root / settings['file']
+    path = cfg.root / settings.file
     data = yaml.safe_load(path.read_text(encoding='utf-8'))
     if not isinstance(data, dict) or data.get('schema') != 1 or not isinstance(data.get('sections'), dict):
         raise ValueError('Invalid visuals schema')
@@ -114,7 +110,7 @@ def render_values(cfg, model, section, values):
         raise ValueError('facts.json is required for question visuals')
     if section.get('kind', 'prose') != 'prose' or not section.get('show_evidence'):
         raise ValueError('Question visuals require prose and show_evidence')
-    limit = cfg.raw.get('visuals', {}).get('max_nodes', 12)
+    limit = cfg.visuals.max_nodes
     if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
         raise ValueError('Invalid visuals.max_nodes')
     topics = {t['id']: t for t in section.get('design_topics', [])}
@@ -152,7 +148,7 @@ def render_values(cfg, model, section, values):
             try:
                 records = _records(model, section, item)
             except StaleVisualEvidence as exc:
-                if cfg.raw.get('visuals', {}).get('on_stale', 'error') != 'omit':
+                if cfg.visuals.on_stale != 'omit':
                     raise
                 stale.append(str(exc))
                 return

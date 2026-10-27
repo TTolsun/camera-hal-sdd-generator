@@ -10,6 +10,180 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+import math
+
+
+@dataclass(frozen=True)
+class ReviewConfig:
+    design_prompt: str = 'standard'
+    design_grounding: bool = False
+    design_revision: bool = False
+    answer_cache: bool = False
+    reader_loop: dict[str, Any] = field(default_factory=dict)
+    coverage_triage: dict[str, Any] = field(default_factory=dict)
+
+    def prompt_mode(self, override=None):
+        mode = self.design_prompt if override is None else override
+        if mode not in ('standard', 'focused'):
+            raise ValueError('review.design_prompt는 standard 또는 focused여야 합니다.')
+        return mode
+
+    def grounding(self, section):
+        value = section.get('design_grounding', self.design_grounding)
+        if type(value) is not bool:
+            raise ValueError('review.design_grounding은 boolean이어야 합니다.')
+        return value
+
+
+    def triage_options(self):
+        opts = self.coverage_triage or {}
+        if not isinstance(opts, dict) or set(opts) - {'enabled', 'pass_gate', 'agent', 'max_diff_chars'}:
+            raise ValueError(f"review.coverage_triage 는 {sorted({'enabled', 'pass_gate', 'agent', 'max_diff_chars'})} 만 지원합니다.")
+        # "false" 같은 문자열은 파이썬에서 참이 되므로, 관문을 여는 값은 진짜 불리언만 받는다.
+        for key in ("enabled", "pass_gate"):
+            if key in opts and not isinstance(opts[key], bool):
+                raise ValueError(f"review.coverage_triage.{key} 는 true 또는 false 여야 합니다: {opts[key]!r}")
+        limit = opts.get("max_diff_chars", 6000)
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+            raise ValueError(f"review.coverage_triage.max_diff_chars 는 양의 정수여야 합니다: {limit!r}")
+        return opts
+
+
+@dataclass(frozen=True)
+class SiteConfig:
+    enabled: bool = False
+    title: str = 'Camera HAL SDD'
+    source_url: str = ''
+    source_link_template: str = ''
+    source_link: str = 'github'
+    nav_group: str = ''
+    nav_groups: list[str] = field(default_factory=list)
+    require_approval: bool = False
+    intro: str | None = None
+    english_catalog: str | None = None
+    mermaid_dir: str | None = None
+    mermaid: str = ''
+    undefined_terms: str | None = None
+    translation_batch_size: int = 1
+
+    @classmethod
+    def from_mapping(cls, values):
+        return _settings(cls, values)
+
+    def batch_size(self):
+        value = self.translation_batch_size
+        if type(value) is not int or not 1 <= value <= 16:
+            raise ValueError('site.translation_batch_size must be an integer from 1 to 16.')
+        return value
+
+
+@dataclass(frozen=True)
+class UpdateConfig:
+    extract_cmd: list[str] | None = None
+    compdb_cmd: list[str] | None = None
+
+    def extraction_command(self):
+        command = self.extract_cmd
+        if command is not None and (not isinstance(command, list) or not command
+                or any(not isinstance(v, str) or not v for v in command)):
+            raise ValueError('update.extract_cmd는 비어 있지 않은 문자열 인자 목록이어야 합니다.')
+        return command
+
+
+@dataclass(frozen=True)
+class VisualsConfig:
+    file: str | None = None
+    max_nodes: int = 12
+    on_stale: str = 'error'
+
+
+@dataclass(frozen=True)
+class AutomationConfig:
+    # Publication hooks, idle review rules and schedule are separate consumers.
+    # Keep the exact supplied mapping for the existing resume identity.
+    options: dict[str, Any]
+    schedule: dict[str, Any]
+    publish: dict[str, Any]
+    hermes: dict[str, Any]
+    idle_review: dict[str, Any]
+
+
+    def publication_options(self):
+        opts = self.options
+        if not isinstance(opts, dict):
+            raise ValueError("automation 설정은 객체여야 합니다.")
+        pub = opts.get("publish", {})
+        if not isinstance(pub, dict) or not isinstance(opts.get("hermes", {}), dict):
+            raise ValueError("publish와 hermes 설정은 객체여야 합니다.")
+        if not isinstance(opts.get("idle_review", {}), dict):
+            raise ValueError("idle_review 설정은 객체여야 합니다.")
+        if opts.get("idle_review", {}).get("enabled") and not opts.get("hermes", {}).get("enabled"):
+            raise ValueError("누락 점검에는 automation.hermes.enabled가 필요합니다.")
+        if int(pub.get("timeout_sec", 900)) <= 0:
+            raise ValueError("publish.timeout_sec은 양수여야 합니다.")
+        for key in ("repo", "directory", "remote", "branch"):
+            if not isinstance(pub.get(key), str) or not pub[key].strip():
+                raise ValueError(f"automation.publish.{key}가 필요합니다.")
+        if pub["remote"].startswith("-") or pub["branch"].startswith("-"):
+            raise ValueError("Git remote/branch는 옵션으로 시작할 수 없습니다.")
+        command_arguments(pub.get("verify_command"), "publish.verify_command")
+        if pub.get("deploy_command") is not None:
+            command_arguments(pub["deploy_command"], "publish.deploy_command")
+        return opts, pub
+
+
+DOCUMENTATION_DEFAULTS = {"max_chars": 18000, "max_markdown_chars": 120000, "max_growth_ratio": 1.5,
+            "min_growth_chars": 1000, "duplicate_min_chars": 180}
+
+
+
+def documentation_limits(values):
+    if set(values) - set(DOCUMENTATION_DEFAULTS):
+        raise ValueError("Unknown documentation limit")
+    for name, value in values.items():
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or value <= 0):
+            raise ValueError(f"documentation limit must be positive: {name}")
+        if name != "max_growth_ratio" and not isinstance(value, int):
+            raise ValueError(f"documentation limit must be an integer: {name}")
+    if values["max_growth_ratio"] <= 1:
+        raise ValueError("max_growth_ratio must exceed 1")
+
+
+
+@dataclass(frozen=True)
+class DocumentationConfig:
+    options: dict[str, Any]
+
+    def settings(self):
+        options = self.options
+        if not isinstance(options, dict) or not isinstance(options.get("enabled", False), bool):
+            raise ValueError("documentation.enabled must be a boolean")
+        if set(options) - {"enabled", "limits", "pages", "features", "retired_pages"}:
+            raise ValueError("Unknown documentation setting")
+        if not isinstance(options.get("limits", {}), dict) or not isinstance(options.get("pages", {}), dict):
+            raise ValueError("documentation limits/pages must be objects")
+        limits = {**DOCUMENTATION_DEFAULTS, **options.get("limits", {})}
+        documentation_limits(limits)
+        for key in ("features", "retired_pages"):
+            if not isinstance(options.get(key, []), list):
+                raise ValueError(f"documentation.{key} must be a list")
+        for rel, overrides in options.get("pages", {}).items():
+            if not isinstance(overrides, dict):
+                raise ValueError("Page limits must be an object")
+            documentation_limits({**limits, **overrides})
+        return {**options, "limits": limits}
+
+
+def command_arguments(value, label):
+    if not isinstance(value, list) or not value or any(not isinstance(a, str) or not a for a in value):
+        raise ValueError(f"{label}은 비어 있지 않은 명령 인자 목록이어야 합니다.")
+
+
+def _settings(cls, values):
+    # Keep unknown project keys in raw for lossless snapshots. Only the fields
+    # consumed by this responsibility cross its typed boundary.
+    return cls(**{name: values[name] for name in cls.__dataclass_fields__ if name in values})
 
 
 @dataclass
@@ -65,6 +239,46 @@ class Config:
     # 자산 위치. 기본은 root 아래 config/, prompts/, templates/, style/. sdd.yaml 의 paths: 로 바꿀 수 있다
     # (examples/ 처럼 저장소의 자산을 다른 위치에서 재사용할 때).
     paths: dict[str, Path] = field(default_factory=dict)
+
+    # Resolve on access: existing integrations edit raw when cloning a trial or
+    # disabling localization. A cached second copy would silently become stale.
+    @property
+    def review(self) -> ReviewConfig:
+        return _settings(ReviewConfig, self.raw.get('review') or {})
+
+    @property
+    def site(self) -> SiteConfig:
+        return _settings(SiteConfig, self.raw.get('site') or {})
+
+    @property
+    def update(self) -> UpdateConfig:
+        return _settings(UpdateConfig, self.raw.get('update') or {})
+
+    @property
+    def visuals(self) -> VisualsConfig:
+        settings = self.raw.get('visuals', {})
+        if not isinstance(settings, dict) or set(settings) - {'file', 'max_nodes', 'on_stale'}:
+            raise ValueError('visuals accepts file, max_nodes and on_stale')
+        if settings.get('on_stale', 'error') not in {'error', 'omit'}:
+            raise ValueError('visuals.on_stale must be error or omit')
+        return _settings(VisualsConfig, settings)
+
+    @property
+    def automation(self) -> AutomationConfig:
+        opts = self.raw.get('automation', {})
+        if not isinstance(opts, dict):
+            raise ValueError('automation 설정은 객체여야 합니다.')
+        return AutomationConfig(opts, *(opts.get(k, {}) for k in
+                                       ('schedule', 'publish', 'hermes', 'idle_review')))
+
+    @property
+    def documentation(self) -> DocumentationConfig:
+        return DocumentationConfig(self.raw.get('documentation', {}))
+
+    def diagram_policy(self, section):
+        # Section overrides and false/0 are retained verbatim. Graph validity
+        # (including the node limit) remains the diagram consumer's contract.
+        return {**(self.raw.get('diagrams') or {}), **(section.get('diagram') or {})}
 
     @property
     def build_dir(self) -> Path:

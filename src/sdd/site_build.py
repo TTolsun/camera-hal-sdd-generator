@@ -91,15 +91,15 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
         inputs["configuration"] = hashlib.sha256(json.dumps(cfg.raw, sort_keys=True, default=str).encode()).hexdigest()
-        intro = (cfg.raw.get("site") or {}).get("intro")
+        intro = cfg.site.intro
         if intro:
             inputs["intro"] = digest(cfg.root / intro)
-        catalog = (cfg.raw.get("site") or {}).get("english_catalog")
+        catalog = cfg.site.english_catalog
         if catalog:
             inputs["english_catalog"] = digest(cfg.root / catalog)
         if cfg.facts_path.exists():
             inputs["facts"] = digest(cfg.facts_path)
-        visuals_file = (cfg.raw.get('visuals') or {}).get('file')
+        visuals_file = cfg.visuals.file
         if visuals_file:
             inputs['visuals'] = digest(cfg.root / visuals_file)
         from .approvals import ledger_path
@@ -116,6 +116,10 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "contract_schema.py", code_root / "reader_profiles.py",
                                             code_root / "contract_render.py", code_root / "markdown_text.py",
                                             code_root / "generated_design.py", code_root / "generated_visuals.py",
+                                            code_root / "config.py", code_root / "design_types.py",
+                                            code_root / "design_request.py", code_root / "design_response.py",
+                                            code_root / "design_execution.py", code_root / "design_trials.py",
+                                            code_root / "design_compat.py",
                                             Path(__file__)]}
         from .diagrams import POLICY_VERSION
         data = {"schema": 1, "diagram_policy": POLICY_VERSION, "inputs": inputs, "engine": engine,

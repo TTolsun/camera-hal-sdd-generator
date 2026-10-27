@@ -43,7 +43,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
     sections_snapshot = out / 'sections.yaml'
     sections_snapshot.write_bytes(cfg.sections_file.read_bytes())
     trial = clone_config(cfg, out, sections_file=sections_snapshot)
-    previous_catalog = cfg.raw.get('site', {}).get('english_catalog')
+    previous_catalog = cfg.site.english_catalog
     if previous_catalog:
         trial.raw['site']['english_catalog'] = str(out / 'english.json')
     write_snapshot(trial, out / 'sdd.yaml')

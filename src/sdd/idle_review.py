@@ -274,7 +274,7 @@ def _promote(path, state):
 def run(cfg, target, job_id):
     from .document_health import prepare
     prepare(cfg)
-    options = cfg.raw.get("automation", {}).get("idle_review", {})
+    options = cfg.automation.idle_review
     revision = options.get("revision", 1)
     identity = hashlib.sha256(json.dumps({"target": target, "raw": cfg.raw,
         "paths": [str(p.resolve()) for p in (cfg.source_root, cfg.sections_file, cfg.scenarios_file,
@@ -305,7 +305,7 @@ def run(cfg, target, job_id):
     before = _snapshot(cfg)
     proposal = None
     try:
-        hermes = cfg.raw.get("automation", {}).get("hermes", {})
+        hermes = cfg.automation.hermes
         data = _ask(cfg, _prompt(cfg, section, excerpt), hermes, work)
         kind, ident = _proposal(data, section, excerpt, cfg)
         if kind in {"no_gap", "needs_review"}:
