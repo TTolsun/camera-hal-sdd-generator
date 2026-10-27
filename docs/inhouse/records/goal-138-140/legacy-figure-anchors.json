@@ -1,0 +1,38 @@
+[
+  {
+    "previous": "camera-model.html#요청과-버퍼를-유지할-기간",
+    "target": "camera-requests.html#요청과-버퍼를-유지할-기간",
+    "previous_published_id_verified": true,
+    "target_generated_heading_verified": true
+  },
+  {
+    "previous": "request-lifecycle.html#요청이-대기하거나-장치로-가는-조건",
+    "target": "request-diagnosis.html#요청이-대기하거나-장치로-가는-조건",
+    "previous_published_id_verified": true,
+    "target_generated_heading_verified": true
+  },
+  {
+    "previous": "request-lifecycle.html#구성-실패를-좁히는-분기",
+    "target": "request-diagnosis.html#구성-실패를-좁히는-분기",
+    "previous_published_id_verified": true,
+    "target_generated_heading_verified": true
+  },
+  {
+    "previous": "pipeline-handler.html#요청이-대기하거나-장치로-가는-조건",
+    "target": "pipeline-requests.html#요청이-대기하거나-장치로-가는-조건",
+    "previous_published_id_verified": true,
+    "target_generated_heading_verified": true
+  },
+  {
+    "previous": "pipeline-handler.html#버퍼-완료에서-요청-반환까지",
+    "target": "pipeline-requests.html#버퍼-완료에서-요청-반환까지",
+    "previous_published_id_verified": true,
+    "target_generated_heading_verified": true
+  },
+  {
+    "previous": "ipu3-lsc-flow.html#lsc-파라미터를-갱신하는-분기",
+    "target": "ipu3-lsc-prepare.html#lsc-파라미터를-갱신하는-분기",
+    "previous_published_id_verified": true,
+    "target_generated_heading_verified": true
+  }
+]

@@ -52,3 +52,15 @@ cases:
   sources: [vendor-overview/benefits/completion, vendor-integration/request/buffer]
   claims:
     unclear: {text: 'Requests are completed automatically.', expected: ambiguous}
+- id: incorrect-original-correct-english
+  sources:
+  - vendor-integration/request/buffer
+  claims:
+    ko:
+      text: 정상 버퍼 처리에서 마지막 버퍼가 완료되면 추가 호출 없이 요청이 자동으로 완료됩니다.
+      expected: contradiction
+    en:
+      text: Normal completion of the last buffer does not automatically complete the request; the pipeline handler must explicitly call
+        completeRequest().
+      translation_of: ko
+      expected: compatible

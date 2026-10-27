@@ -13,6 +13,28 @@ from sdd.export_html import _split
 from test_design_contracts import contract
 
 
+@pytest.mark.parametrize('previous,anchor,target', [
+    ('camera-model', '요청과-버퍼를-유지할-기간', 'camera-requests'),
+    ('request-lifecycle', '요청이-대기하거나-장치로-가는-조건', 'request-diagnosis'),
+    ('request-lifecycle', '구성-실패를-좁히는-분기', 'request-diagnosis'),
+    ('pipeline-handler', '요청이-대기하거나-장치로-가는-조건', 'pipeline-requests'),
+    ('pipeline-handler', '버퍼-완료에서-요청-반환까지', 'pipeline-requests'),
+    ('ipu3-lsc-flow', 'lsc-파라미터를-갱신하는-분기', 'ipu3-lsc-prepare'),
+])
+def test_published_figure_deep_links_follow_the_moved_evidence(previous, anchor, target):
+    from pathlib import Path
+    from sdd.markdown_text import slugify
+    root = Path(__file__).resolve().parents[1]/'examples/libcamera/config'
+    sections = {s['id']: s for s in yaml.safe_load((root/'sections.yaml').read_text(encoding='utf-8'))['sections']}
+    figures = yaml.safe_load((root/'visuals.yaml').read_text(encoding='utf-8'))['sections']
+    links = [r for r in sections[previous]['routes'] if r.get('anchor') == anchor]
+    assert len(links) == 1
+    assert links[0]['to'] == sections[target]['output']+'#'+anchor
+    moved = [v for v in figures[target] if slugify(v['title']) == anchor]
+    assert len(moved) == 1
+    assert moved[0]['topic'] in {t['id'] for t in sections[target]['design_topics']}
+
+
 @pytest.fixture
 def automatic(tmp_cfg, contract):
     section, model, save = contract

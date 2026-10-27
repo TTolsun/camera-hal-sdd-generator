@@ -36,9 +36,10 @@ def english_diagram(source: str) -> str:
 
 
 class DisplayText(HTMLParser):
-    def __init__(self, translate):
+    def __init__(self, translate, observe=None):
         super().__init__(convert_charrefs=True)
         self.translate = translate
+        self.observe = observe
         self.tree = {'raw': '', 'end': '', 'children': [], 'protected': False, 'attrs': []}
         self.stack = [self.tree]
 
@@ -69,6 +70,13 @@ class DisplayText(HTMLParser):
                 translated = self.translate(text)
                 if sorted(re.findall(r'\{\{\d+\}\}', translated)) != sorted(tokens):
                     raise RuntimeError('English translation changed inline placeholders')
+                if self.observe:
+                    def original(child):
+                        return child if isinstance(child, str) else ''.join(original(c) for c in child['children'])
+                    original_tokens = {f'{{{{{i}}}}}': original(c) for i, c in enumerate(children) if not isinstance(c, str)}
+                    visible_tokens = {key: html.unescape(re.sub(r'<[^>]*>', '', value)) for key, value in tokens.items()}
+                    resolve = lambda value, values: re.sub(r'\{\{\d+\}\}', lambda m: values[m[0]], value).strip()
+                    self.observe(text.strip(), resolve(text, original_tokens), resolve(translated, visible_tokens))
                 body = html.escape(translated, quote=False)
                 body = re.sub(r'\{\{\d+\}\}', lambda m: tokens[m[0]], body)
             else:
@@ -116,6 +124,20 @@ def display_strings(document: str) -> list[str]:
     parser.feed(document)
     parser.output
     return sorted(found)
+
+
+def display_pairs(document: str, catalog: dict[str, str]) -> list[dict[str, str]]:
+    """Resolve current display units with the same inline tokens as English output.
+
+    Entries not rendered in this document are never treated as its translations.
+    Code identifiers and translated link labels remain visible to contract review.
+    """
+    found = []
+    parser = DisplayText(lambda value: catalog.get(value.strip(), value),
+                         lambda key, source, translated: found.append(dict(key=key, source=source, translated=translated)))
+    parser.feed(document)
+    parser.output
+    return found
 
 
 def source_hash(document: str) -> str:
