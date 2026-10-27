@@ -29,8 +29,7 @@ def failure_kind(exc):
 class Execution:
     def __init__(self, cfg, agent, *, clock=time.monotonic):
         self.cfg, self.agent, self.clock = cfg, agent, clock
-        review = cfg.raw.get('review') or {}
-        self.limits = {key: review.get(key, 0) for key in
+        self.limits = {key: getattr(cfg.review, key) for key in
                        ('max_calls', 'max_seconds', 'document_max_calls', 'document_max_seconds')}
         for name, value in self.limits.items():
             if type(value) is not int or value < 0:

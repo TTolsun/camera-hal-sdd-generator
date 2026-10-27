@@ -104,7 +104,7 @@ def plans(cfg, section):
 
 
 def node_limit(cfg, plan):
-    ceiling = cfg.raw['visuals'].get('max_nodes', 12)
+    ceiling = cfg.visuals.max_nodes
     limit = plan.get('max_nodes', ceiling)
     if any(isinstance(v, bool) or not isinstance(v, int) or v < 2 for v in (limit, ceiling)) or limit > ceiling:
         raise ValueError('LLM visual max_nodes must be at least two and within visuals.max_nodes')

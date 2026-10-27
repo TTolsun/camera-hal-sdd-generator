@@ -74,9 +74,9 @@ def groups(cfg):
 def request(cfg, model, group):
     claims, sources = {}, {}
     catalog = {}
-    site = cfg.raw.get('site') or {}
-    if site.get('english_catalog'):
-        catalog = json.loads((cfg.root/site['english_catalog']).read_text(encoding='utf-8'))
+    site = cfg.site
+    if site.english_catalog:
+        catalog = json.loads((cfg.root/site.english_catalog).read_text(encoding='utf-8'))
         catalog = catalog.get('strings', {})
     for name in group['documents']:
         text = contained_path(cfg.sdd_dir, name).read_text(encoding='utf-8')

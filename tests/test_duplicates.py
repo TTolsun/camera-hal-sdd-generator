@@ -177,6 +177,15 @@ def test_function_alias_keeps_repetition_but_explicit_owners_are_distinct():
     assert not similar(text, text.replace('Engine::configure()', 'Device::configure()'))
 
 
+def test_prose_field_owners_distinguish_real_public_frame_context_claims():
+    left = '`IPAFrameContext` 구조체의 `lsc` 필드는 `ipa::lsc::FrameContext` 타입으로 선언되어 있으며 프레임별 알고리즘 처리 상태를 보관합니다.'
+    right = '`IPAContext` 구조체의 `frameContexts` 필드는 `FCQueue<IPAFrameContext>` 타입으로 선언되어 있으며 프레임별 알고리즘 처리 상태를 보관합니다.'
+    assert not similar(left, right)
+    text = '`Owner` 구조체의 `field` 필드는 정수 값을 유지하고 요청 처리 중 콜백에서 갱신됩니다.'
+    assert similar(text, text.replace('`Owner` 구조체의 `field` 필드는', '`Owner.field`는'))
+    assert similar(text, text.replace('`Owner` 구조체의 `field` 필드는', '`ns::Owner.field`는'))
+
+
 def test_implementer_subject_preserves_distinct_function_contracts():
     configure = '`PipelineHandler::configure()`는 `CameraManager` 스레드에서 호출되며 성공하면 0을, 실패하면 음수 오류를 반환해야 합니다.'
     queue = '`PipelineHandler::queueRequestDevice()`의 구현자는 성공하면 0을, 실패하면 음수 오류를 반환해야 합니다.'

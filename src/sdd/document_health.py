@@ -12,47 +12,20 @@ import re
 from collections import defaultdict
 from pathlib import PurePosixPath
 
-from .config import section_output
+from .config import section_output, DOCUMENTATION_DEFAULTS as DEFAULTS
 from .document_metadata import split_frontmatter as _split
 from .facts.model import KnowledgeModel
 
 
-DEFAULTS = {"max_chars": 18000, "max_markdown_chars": 120000, "max_growth_ratio": 1.5,
-            "min_growth_chars": 1000, "duplicate_min_chars": 180}
 
 
 def settings(cfg):
-    options = cfg.raw.get("documentation", {})
-    if not isinstance(options, dict) or not isinstance(options.get("enabled", False), bool):
-        raise ValueError("documentation.enabled must be a boolean")
-    if set(options) - {"enabled", "limits", "pages", "features", "retired_pages"}:
-        raise ValueError("Unknown documentation setting")
-    if not isinstance(options.get("limits", {}), dict) or not isinstance(options.get("pages", {}), dict):
-        raise ValueError("documentation limits/pages must be objects")
-    limits = {**DEFAULTS, **options.get("limits", {})}
-    _limits(limits)
-    for key in ("features", "retired_pages"):
-        if not isinstance(options.get(key, []), list):
-            raise ValueError(f"documentation.{key} must be a list")
-    for rel, overrides in options.get("pages", {}).items():
+    options = cfg.documentation.settings()
+    for rel in options.get('pages', {}):
         page_path(cfg, rel)
-        if not isinstance(overrides, dict):
-            raise ValueError("Page limits must be an object")
-        _limits({**limits, **overrides})
-    return {**options, "limits": limits}
+    return options
 
 
-def _limits(values):
-    if set(values) - set(DEFAULTS):
-        raise ValueError("Unknown documentation limit")
-    for name, value in values.items():
-        if (isinstance(value, bool) or not isinstance(value, (int, float))
-                or not math.isfinite(value) or value <= 0):
-            raise ValueError(f"documentation limit must be positive: {name}")
-        if name != "max_growth_ratio" and not isinstance(value, int):
-            raise ValueError(f"documentation limit must be an integer: {name}")
-    if values["max_growth_ratio"] <= 1:
-        raise ValueError("max_growth_ratio must exceed 1")
 
 
 def page_path(cfg, rel):

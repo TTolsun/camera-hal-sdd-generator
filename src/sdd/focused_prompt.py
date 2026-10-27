@@ -9,9 +9,8 @@ OUTPUT = ('질문의 모든 조건에 답하는 한 문단. 여러 문장을 써
 
 def system_prompt(cfg, mode=None):
     if mode is None:
-        mode = (cfg.raw.get('review') or {}).get('design_prompt', 'standard')
-    if mode not in ('standard', 'focused'):
-        raise ValueError('review.design_prompt는 standard 또는 focused여야 합니다.')
+        mode = cfg.review.design_prompt
+    mode = cfg.review.prompt_mode(mode)
     if mode == 'standard':
         return None
     path = cfg.prompts_dir / 'focused-design-system.md'

@@ -10,6 +10,23 @@ from sdd.generate import Generator
 from sdd.semantic import review
 
 
+def test_inheritance_object_is_not_mistaken_for_the_derived_subject():
+    model = KnowledgeModel(classes={'ns::Base': ClassInfo('ns::Base'),
+                                    'ns::Driver': ClassInfo('ns::Driver')})
+    for phrase in ('`Base`를 상속한 파생 클래스', '`Base`를 상속하는 클래스', '`Base`를 직접 상속받은 클래스'):
+        text = '`Driver::configure`의 구현자는 ' + phrase + '에 저장된 커스텀 필드에 의존할 수 있습니다. `x.h:1`'
+        assert review(text, model, {'x.h:1'}) == []
+
+
+def test_inverse_inheritance_word_order_still_checks_the_named_child():
+    model = KnowledgeModel(classes={'ns::Base': ClassInfo('ns::Base'),
+                                    'ns::Child': ClassInfo('ns::Child')})
+    text = '`Base`를 상속한 `Child` 클래스가 필드를 보관합니다. `x.h:1`'
+    assert any('상속' in finding for finding in review(text, model, {'x.h:1'}))
+    model.classes['ns::Child'].bases = ['ns::Base']
+    assert review(text, model, {'x.h:1'}) == []
+
+
 def test_revision_pinned_excerpts_and_fail_closed_anchors(tmp_cfg):
     root = tmp_cfg.source_root
     def git(*args):
