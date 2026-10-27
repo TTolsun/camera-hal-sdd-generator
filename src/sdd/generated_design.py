@@ -586,6 +586,8 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             saved, reviewer = cached_unit
             grounding_changed = saved['identity'].get('grounding_policy') != identity['grounding_policy']
             validation_changed = saved['identity'].get('validation_policy') != identity['validation_policy']
+            validation_changed = validation_changed or (
+                saved['identity'].get('topic', {}).get('answer_contract') != topic.get('answer_contract'))
             review_agent = Capture(agent) if grounding_changed else reviewer
             try:
                 statements = _validate_unit_response(cfg, model, review_agent, section, topic,
@@ -726,6 +728,7 @@ def _generate(cfg, model, agent, section, previous=None, *, replay_http=False, a
     for topic in units:
         key = _unit_tag(section, topic)
         try:
+            agent.check_time()
             statements, record = _request_unit(cfg, model, agent, section, topic,
                 topic_prompts[topic['id']], policy['design_grounding'], archive, answers)
         except _UnitRejected as exc:
@@ -750,6 +753,12 @@ def _generate(cfg, model, agent, section, previous=None, *, replay_http=False, a
     if failures:
         raise ValueError('\n'.join(failures))
     result = _assemble_generation(cfg, model, section, answers, inputs, reused, replayed, origins, policy)
+    if reused and previous:
+        from .document_metadata import split_frontmatter
+        old_meta, _ = split_frontmatter(previous)
+        result[3]['reuse_lineage'] = dict(source_commit=old_meta.get('source_commit'),
+            body_sha256=old_meta.get('generated_design', {}).get('body_sha256'),
+            topics=list(reused), validation='current source, contract and editorial checks; human review pending')
     if resumed:
         result[3]['checkpoint_units'] = resumed
     return result

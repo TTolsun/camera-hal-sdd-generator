@@ -7,6 +7,7 @@ It never turns an imported response into a new call or a human approval.
 from __future__ import annotations
 
 import hashlib
+import ast
 import json
 from pathlib import Path
 
@@ -25,13 +26,29 @@ def validation_policy():
     # Lexical/source/contract checks are distinct from model entailment policy.
     # Content hashes change with code; no compatibility aliases are added here.
     root = Path(__file__).parent
-    return {name: hashlib.sha256((root / (name + '.py')).read_bytes()).hexdigest()
-            for name in ('manuscript', 'semantic', 'duplicates', 'design_contracts', 'validate')}
+    policy = {name: hashlib.sha256((root / (name + '.py')).read_bytes()).hexdigest()
+              for name in ('manuscript', 'semantic', 'duplicates', 'design_contracts', 'validate')}
+    selected = {'materialize', 'validate_answers', 'decode_unit', 'normalize_answer', '_validate_unit_response'}
+    tree = ast.parse((root/'generated_design.py').read_text(encoding='utf-8'))
+    nodes = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in selected]
+    if {node.name for node in nodes} != selected:
+        raise ValueError('Design validation policy functions are missing')
+    policy['design_validation'] = hashlib.sha256(ast.dump(ast.Module(body=nodes, type_ignores=[]),
+                                                         include_attributes=False).encode()).hexdigest()
+    return policy
 
 
 def style_policy(cfg):
     return {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
             for path in sorted(cfg.style_dir.glob('*.md'))}
+
+
+def same_request_context(expected, actual):
+    if actual.startswith(expected):
+        return True  # Standard retries append the error after the full request.
+    prefix, marker, suffix = expected.rpartition('\n출력:')
+    return bool(marker and actual.startswith(prefix + '\n작성 조건: ')
+                and actual.endswith(marker + suffix))  # Focused retries insert diagnostics before output.
 
 
 class Capture:
@@ -50,15 +67,50 @@ class Capture:
 
 
 class UnitStore:
+    _indexes = {}
+
     def __init__(self, cfg, identity):
         self.cfg, self.identity = cfg, identity
         self.path = cfg.build_dir / 'cli-checkpoints' / (checksum(self.draft_identity(identity)) + '.json')
+        self.canonical_path = self.path
         self.calls = cfg.build_dir / 'prompts' / 'calls'
+        if not self.path.exists() and self.path.parent.exists():
+            directory = reject_symlinks(self.path.parent).resolve()
+            if directory not in self._indexes:
+                index = {}
+                for candidate in directory.glob('*.json'):
+                    reject_symlinks(candidate)
+                    try:
+                        data = json.loads(candidate.read_text(encoding='utf-8'))
+                        payload = data['payload']
+                        if data['sha256'] != checksum(payload):
+                            raise ValueError('checkpoint checksum mismatch')
+                        key = checksum(self.compatible_identity(payload['identity']))
+                        index.setdefault(key, candidate)
+                    except (ValueError, KeyError, TypeError, OSError) as exc:
+                        raise ValueError(f'CLI checkpoint is damaged: {candidate}: {exc}') from exc
+                self._indexes[directory] = index
+            compatible = self._indexes[directory].get(checksum(self.compatible_identity(identity)))
+            if compatible is not None:
+                self.path = compatible
 
     @staticmethod
     def draft_identity(identity):
         return {key: value for key, value in identity.items()
                 if key not in ('validation_policy', 'grounding_policy')}
+
+    @classmethod
+    def compatible_identity(cls, identity):
+        result = cls.draft_identity(identity)
+        if isinstance(result.get('topic'), dict):
+            result['topic'] = {key: value for key, value in result['topic'].items() if key != 'title'}
+            if isinstance(result['topic'].get('answer_contract'), dict):
+                result['topic']['answer_contract'] = {key: value for key, value in result['topic']['answer_contract'].items()
+                                                       if key != 'reject_patterns'}
+        # Actual system/user/schema, source revision and execution identity must
+        # STILL match. Only a layout title and checks absent from the model's
+        # input can use this path, always under current deterministic validation.
+        return result
 
     def _records(self, paths):
         rows = []
@@ -84,13 +136,13 @@ class UnitStore:
             data = json.loads(self.path.read_text(encoding='utf-8'))
             payload = data['payload']
             if (data['sha256'] != checksum(payload)
-                    or self.draft_identity(payload['identity']) != self.draft_identity(self.identity)
+                    or self.compatible_identity(payload['identity']) != self.compatible_identity(self.identity)
                     or not isinstance(payload['receipts'], list) or not payload['receipts']):
                 raise ValueError('checkpoint identity or checksum mismatch')
             records = self._records(payload['receipts'])
             request = self.identity['request']
             if not any(row.raw == payload['raw'] and row.request['system'] == request['system']
-                       and row.request['user'].startswith(request['user'])
+                       and same_request_context(request['user'], row.request['user'])
                        and row.request.get('response_schema') == request['response_schema'] for row in records):
                 raise ValueError('validated response has no completed CLI receipt')
             return payload, Reviewer(records)
@@ -106,7 +158,10 @@ class UnitStore:
             paths = [path.resolve().relative_to(self.calls.resolve()).as_posix() for path in capture.receipts]
             self._records(paths)
             payload = dict(identity=self.identity, raw=raw, statements=statements, receipts=paths)
-            save(self.path, dict(schema=1, payload=payload, sha256=checksum(payload)), newline='\n')
+            save(self.canonical_path, dict(schema=1, payload=payload, sha256=checksum(payload)), newline='\n')
+            self.path = self.canonical_path
+            self._indexes.setdefault(self.path.parent.resolve(), {})[
+                checksum(self.compatible_identity(self.identity))] = self.path
         except (ValueError, OSError) as exc:
             raise AgentError(f'CLI checkpoint persistence failed; previous output preserved: {exc}') from exc
 

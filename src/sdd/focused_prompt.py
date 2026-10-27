@@ -26,8 +26,17 @@ def user_prompt(topic, sources, requirements=None):
     question = topic['question']
     if requirements:
         question += '\n함께 답할 항목:\n' + json.dumps(requirements, ensure_ascii=False)
+    constraints = {key: topic[key] for key in ('_statement_kind', '_max_statements') if key in topic}
+    if 'answer_contract' in topic:
+        constraints['answer_contract'] = {key: value for key, value in topic['answer_contract'].items()
+                                          if key in ('basis', 'required_terms')}
     return ('근거:\n' + json.dumps(sources, ensure_ascii=False)
-            + '\n질문: ' + question + '\n출력: '
+            + '\n질문: ' + question
+            + '\n작성 조건: ' + json.dumps(constraints, ensure_ascii=False)
+            + '\n문장은 합니다·입니다 형태로 끝내세요. 한 문단은 600자·4문장 이내로 쓰고, '
+              '필수 용어의 각 묶음에서 하나 이상을 원래 표기대로 포함하세요. '
+              '근거가 부족한 부분은 질문 문형을 되풀이하지 말고 확인되지 않은 대상을 명시하세요.'
+            + '\n출력: '
             + json.dumps(example, ensure_ascii=False)
             + ' 형식의 JSON만 반환하세요.')
 

@@ -8,6 +8,8 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import time
+from contextlib import contextmanager
 
 
 RUNNERS = ('hermes', 'opencode', 'claude')
@@ -123,6 +125,31 @@ def arguments(cfg, schema=None):
     return argv + cfg.args
 
 
+@contextmanager
+def call_workspace(parent):
+    expected = Path(parent or tempfile.gettempdir()).resolve()
+    work = Path(tempfile.mkdtemp(prefix='call-', dir=parent))
+    cleanup = {}
+    try:
+        yield work, cleanup
+    finally:
+        for delay in (0, .025, .1, .25, .5):
+            if delay:
+                time.sleep(delay)
+            # Validate the exact freshly created target before recursive cleanup.
+            if work.is_symlink() or work.resolve().parent != expected or not work.name.startswith('call-'):
+                raise RuntimeError('Unsafe CLI workspace cleanup target')
+            try:
+                shutil.rmtree(work)
+                cleanup['status'] = 'removed'
+                break
+            except PermissionError as exc:
+                # Some Windows CLI children briefly retain their working dir.
+                # Cleanup must not erase a completed, archived inference result.
+                cleanup.update(status='deferred', reason=str(exc))
+                continue
+
+
 def chat(cfg, system, user, schema, dump_dir):
     argv = command(cfg)
     prompt = build_prompt(system, user, schema)
@@ -132,8 +159,7 @@ def chat(cfg, system, user, schema, dump_dir):
     parent = Path(dump_dir) / 'cli' if dump_dir else None
     if parent:
         parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='call-', dir=parent) as temporary:
-        work = Path(temporary)
+    with call_workspace(parent) as (work, cleanup):
         env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1', 'NO_COLOR': '1'}
         argv += arguments(cfg, schema)
         if cfg.runner == 'opencode':
@@ -166,6 +192,7 @@ def chat(cfg, system, user, schema, dump_dir):
         if not response:
             raise RuntimeError(f'{cfg.runner} CLI 응답이 비었습니다.')
         metadata = {'runner': cfg.runner, 'executable': Path(argv[0]).name,
+                    'workspace_cleanup': cleanup,
                     'arguments': argv[1:],
                     'model_selection': 'explicit' if cfg.model else 'cli-default',
                     'exit_code': result.returncode,

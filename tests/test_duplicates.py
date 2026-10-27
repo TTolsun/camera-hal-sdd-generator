@@ -177,6 +177,14 @@ def test_function_alias_keeps_repetition_but_explicit_owners_are_distinct():
     assert not similar(text, text.replace('Engine::configure()', 'Device::configure()'))
 
 
+def test_implementer_subject_preserves_distinct_function_contracts():
+    configure = '`PipelineHandler::configure()`는 `CameraManager` 스레드에서 호출되며 성공하면 0을, 실패하면 음수 오류를 반환해야 합니다.'
+    queue = '`PipelineHandler::queueRequestDevice()`의 구현자는 성공하면 0을, 실패하면 음수 오류를 반환해야 합니다.'
+    assert not similar(configure, queue)
+    assert similar(queue, queue.replace('의 구현자는', ' 함수는'))
+    assert similar(queue, queue.replace('PipelineHandler::queueRequestDevice', 'queueRequestDevice'))
+
+
 @pytest.mark.parametrize('left,right', [
     ('Worker::run() 함수는 state.ready 가 false 이면 대기 중인 요청을 즉시 반환합니다.',
      'Worker::run() 함수는 state.ready 가 true 이면 대기 중인 요청을 즉시 반환합니다.'),

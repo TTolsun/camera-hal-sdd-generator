@@ -16,6 +16,8 @@ from .call_records import canonical_request_hash
 from .document_metadata import split_frontmatter
 from .state_io import save
 from .trial_workspace import contained_path
+from .cli_checkpoint import Capture, UnitStore
+from .cli_agent import arguments
 
 STATUSES = ('compatible', 'contradiction', 'ambiguous', 'insufficient-evidence')
 SYSTEM = (
@@ -30,10 +32,15 @@ SYSTEM = (
     'Return one finding per target claim ID in claims. peer_claims are comparison context only. '
     'In claim_quote copy the complete target claim verbatim. '
     'For each finding name all relevant peer claim IDs; compare both sides, not just keywords. '
-    'For each source reference provide a verbatim source_quote and source_id. '
+    'For each source reference select its exact source_id. The validator attaches its complete '
+    'original source text and location; do not copy or paraphrase source quotations. '
     'Use compatible only when source support and conditions are sufficient. Use contradiction '
     'for an explicit incompatible source/document or same-condition peer contract. Use ambiguous '
     'for missing conditions/actor/timing and insufficient-evidence when sources cannot establish it. '
+    'Do not infer a universal quantifier from an omitted precondition. An unqualified assertion '
+    'whose truth differs between the supplied normal and stopping conditions is ambiguous, unless '
+    'it explicitly says always/all/never or gives an incompatible condition. Read each claim within '
+    'its supplied topic and peer context; a sentence need not repeat a scope already established there. '
     'Explain condition, actor, timing, scope and judgement in separate concise fields. '
     'For translations preserve obligation/prohibition, possibility, completion/cancellation and ownership. '
     'Never supply replacement prose or approve a document. Return JSON only.'
@@ -112,15 +119,23 @@ def request(cfg, model, group):
             sources[sid] = dict(file=record['file'], line=excerpt['line'],
                                text=excerpt['text'], sha256=excerpt['sha256'])
     for source, translated in catalog.items():
-        if not isinstance(source, str) or not isinstance(translated, str) or not re.search(group['match'], source, re.I):
+        if not isinstance(source, str) or not isinstance(translated, str):
             continue
         # Catalog entries are exact displayed paragraph units, with inline code
         # and links protected by numbered placeholders. Preserve those units;
         # never guess a translated sentence by searching English keywords.
+        korean = ''.join(re.findall('[가-힣]+', source))
+        matches = [key for key, claim in claims.items() if claim['language']=='ko'
+                   and not key.startswith('catalog/')
+                   and len(''.join(re.findall('[가-힣]+', claim['text']))) >= 12
+                   and ''.join(re.findall('[가-힣]+', claim['text'])) in korean]
+        if not matches:
+            continue
         key = 'catalog/' + hashlib.sha256(source.encode()).hexdigest()[:16]
-        claims[key] = dict(document='english-catalog', topic=None, language='ko', text=source, evidence=[])
+        claims[key] = dict(document='english-catalog', topic=None, language='ko', text=source,
+                           evidence=[], origin_claims=matches)
         claims[key+'/en'] = dict(document='english-catalog', topic=None, language='en',
-                                 text=translated, evidence=[], translation_of=key)
+                                 text=translated, evidence=[], translation_of=key, origin_claims=matches)
     if not claims:
         raise ValueError(f"No contract claims found: {group['id']}")
     return dict(contract=group, source_commit=model.meta.get('source_commit'), claims=claims, sources=sources)
@@ -128,8 +143,8 @@ def request(cfg, model, group):
 
 def schema(payload):
     string = dict(type='string', minLength=1)
-    reference = dict(type='object', additionalProperties=False, required=['source_id', 'source_quote'],
-                     properties=dict(source_id=dict(type='string', enum=list(payload['sources'])), source_quote=string))
+    reference = dict(type='object', additionalProperties=False, required=['source_id'],
+                     properties=dict(source_id=dict(type='string', enum=list(payload['sources']))))
     fields = dict(claim_id=dict(type='string', enum=list(payload['claims'])), claim_quote=string,
                   peers=dict(type='array', uniqueItems=True, items=dict(type='string', enum=list(payload['claims']) + list(payload.get('peer_claims', {})))),
                   status=dict(type='string', enum=list(STATUSES)), condition=string, actor=string,
@@ -163,11 +178,15 @@ def validate(payload, raw):
         if not isinstance(row['sources'], list) or (row['status'] in ('compatible', 'contradiction') and not row['sources']):
             raise ValueError('Definite consistency verdict requires source evidence')
         for ref in row['sources']:
-            if (not isinstance(ref, dict) or set(ref) != {'source_id', 'source_quote'}
-                    or ref['source_id'] not in payload['sources'] or not isinstance(ref['source_quote'], str)
-                    or len(ref['source_quote'].strip()) < 12
-                    or ref['source_quote'] not in payload['sources'][ref['source_id']]['text']):
+            if (not isinstance(ref, dict) or set(ref) not in ({'source_id'}, {'source_id', 'source_quote'})
+                    or ref['source_id'] not in payload['sources']):
                 raise ValueError('Invalid consistency source quote')
+            original = payload['sources'][ref['source_id']]['text']
+            if 'source_quote' in ref:
+                if not isinstance(ref['source_quote'], str) or len(ref['source_quote'].strip()) < 12 or ref['source_quote'] not in original:
+                    raise ValueError('Invalid consistency source quote')
+            else:
+                ref['source_quote'] = original
     return findings
 
 
@@ -188,20 +207,54 @@ def batches(payload, size=6):
         yield {**payload, 'claims': selected, 'peer_claims': peers}
 
 
+def review_store(cfg, payload):
+    if cfg.agent.kind != 'cli' or not cfg.agent.model:
+        raise ValueError('Contract audit requires the selected CLI and an explicit model')
+    response_schema = schema(payload)
+    request_data = dict(system=SYSTEM, user=json.dumps(payload, ensure_ascii=False), response_schema=response_schema)
+    identity_data = dict(purpose='cross-document-consistency', policy=policy_hash(),
+                         source_commit=payload['source_commit'], request=request_data,
+                         execution=dict(runner=cfg.agent.runner, model=cfg.agent.model,
+                                        command=cfg.agent.command, arguments=arguments(cfg.agent, response_schema)))
+    return UnitStore(cfg, identity_data), request_data
+
+
 def audit(cfg, model, agent):
+    from .generation_run import Execution
+    configured = groups(cfg)
+    if not configured:
+        raise ValueError('No consistency contracts configured')
+    agent = agent if isinstance(agent, Execution) else Execution(cfg, agent)
     report = dict(schema=1, source_commit=model.meta.get('source_commit'), contracts=[],
-                  human_review='pending', assessment='automatic model review; not human approval')
+                  fresh_batches=0, reused_batches=0, human_review='pending',
+                  assessment='automatic model review; not human approval')
     path = cfg.build_dir/'consistency-review.json'
     try:
-        for group in groups(cfg):
+        for group in configured:
             payload = request(cfg, model, group)
             findings = []
             for index, batch in enumerate(batches(payload)):
-                user = json.dumps(batch, ensure_ascii=False)
+                agent.check_time()
+                store, request_data = review_store(cfg, batch)
+                user = request_data['user']
                 if len(SYSTEM)+len(user) > cfg.agent.max_input_chars:
                     raise ValueError(f"Consistency input exceeds budget: {group['id']}; split contract groups")
-                raw = agent.chat(SYSTEM, user, tag=f"consistency_{group['id']}_{index}", response_schema=schema(batch))
-                findings += validate(batch, raw)
+                cached = store.read()
+                if cached is not None:
+                    report['reused_batches'] += 1
+                    saved, _ = cached
+                    checked = validate(batch, saved['raw'])
+                    if checked != saved['statements']:
+                        raise ValueError('Consistency checkpoint verdict mismatch')
+                else:
+                    report['fresh_batches'] += 1
+                    capture = Capture(agent)
+                    raw = capture.chat(SYSTEM, user, tag=f"consistency_{group['id']}_{index}", response_schema=schema(batch))
+                    checked = validate(batch, raw)
+                    store.write(raw, checked, capture)
+                    if not capture.receipts:
+                        raise ValueError('Consistency review lacks completed CLI receipts')
+                findings += checked
             report['contracts'].append(dict(id=group['id'], input_sha256=identity(payload),
                 findings=findings, claims=payload['claims'], sources=payload['sources']))
             save(path, report, newline='\n')
@@ -233,3 +286,13 @@ def enforce(cfg, model):
         if row.get('input_sha256') != identity(payload):
             raise ValueError(f"Stale cross-document contract review: {group['id']}; run audit-consistency")
         validate(payload, json.dumps(dict(findings=row['findings']), ensure_ascii=False))
+        checked = []
+        for batch in batches(payload):
+            store, _ = review_store(cfg, batch)
+            cached = store.read()
+            if cached is None:
+                raise ValueError('Consistency review lacks current source-bound CLI receipts')
+            saved, _ = cached
+            checked += validate(batch, saved['raw'])
+        if checked != row['findings']:
+            raise ValueError('Consistency report differs from its completed CLI assessment')

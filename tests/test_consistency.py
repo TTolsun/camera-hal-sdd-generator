@@ -54,3 +54,52 @@ def test_uncertain_assessment_is_exposed_without_claiming_source_support(contrac
     payload, findings = contract_case
     findings[0].update(status='insufficient-evidence', sources=[], condition='not established')
     assert validate(payload, json.dumps(dict(findings=findings)))[0]['status'] == 'insufficient-evidence'
+
+
+def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_cfg, monkeypatch):
+    import hashlib
+    import subprocess
+    import yaml
+    from sdd.config import AgentConfig
+    from sdd.consistency import audit, enforce
+    from sdd.facts.model import KnowledgeModel
+    from sdd.llm import Agent
+    tmp_cfg.agent = AgentConfig(kind='cli', runner='claude', model='fixture-model', max_input_chars=40000)
+    tmp_cfg.sdd_dir.mkdir(parents=True, exist_ok=True)
+    revision = 'a'*40
+    path = tmp_cfg.sdd_dir/'primary.md'
+    path.write_text(f'---\nsource_commit: {revision}\n---\n\nThe caller completes a request.', encoding='utf-8')
+    config = tmp_cfg.root/'contracts.yaml'
+    config.write_text(yaml.safe_dump(dict(contracts=[dict(id='completion', question='Who completes it?',
+        primary='primary.md', documents=['primary.md'], match='request', evidence=['s/t/source'])])), encoding='utf-8')
+    tmp_cfg.paths['consistency_file'] = config
+    source = 'The caller shall explicitly complete a request.'
+    model = KnowledgeModel(meta=dict(source_commit=revision), evidence={'s/t/source': dict(
+        text=source, sha256=hashlib.sha256(source.encode()).hexdigest(), commit=revision, file='device.cpp', line=5)})
+    monkeypatch.setattr('sdd.cli_agent.command', lambda cfg: ['fixture-cli'])
+    calls = []
+    def run(argv, **kwargs):
+        payload = json.loads(kwargs['prompt'].split('<user>\n',1)[1].split('\n</user>',1)[0])
+        calls.append(payload)
+        findings = [dict(claim_id=key, claim_quote=value['text'], peers=[], status='compatible',
+                         condition='explicit completion', actor='caller', timing='during completion',
+                         scope='the request', reason='Fixture source matches.', sources=[dict(source_id='s/t/source')])
+                    for key,value in payload['claims'].items()]
+        return subprocess.CompletedProcess(argv,0,json.dumps(dict(subtype='success', is_error=False,
+            structured_output=dict(findings=findings))), '')
+    monkeypatch.setattr('sdd.cli_agent.run', run)
+    def agent():return Agent(tmp_cfg.agent, tmp_cfg.build_dir/'prompts')
+    report = audit(tmp_cfg, model, agent())
+    assert report['status']=='passed' and report['human_review']=='pending'
+    enforce(tmp_cfg, model)
+    audit(tmp_cfg, model, agent())
+    assert len(calls)==1  # Repeat build/review reuses verified exact receipts.
+    report['contracts'][0]['findings'][0]['reason']='manually changed verdict'
+    report_path=tmp_cfg.build_dir/'consistency-review.json'
+    report_path.write_text(json.dumps(report),encoding='utf-8')
+    with pytest.raises(ValueError, match='differs'):
+        enforce(tmp_cfg, model)
+    audit(tmp_cfg, model, agent())
+    path.write_text(path.read_text(encoding='utf-8')+' Changed request contract.',encoding='utf-8')
+    with pytest.raises(ValueError, match='Stale'):
+        enforce(tmp_cfg, model)

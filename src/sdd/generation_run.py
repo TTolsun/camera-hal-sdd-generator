@@ -55,6 +55,7 @@ class Execution:
         self.report['documents'].append(row)
         try:
             yield
+            self.check_time()
             row['status'] = 'passed'
         except BaseException as exc:
             row.update(status='failed', failure_kind=failure_kind(exc), error=str(exc))
@@ -70,6 +71,14 @@ class Execution:
             if details:
                 self.current.setdefault('details', {})[key] = details
             self.persist()
+
+    def check_time(self):
+        elapsed = self.clock()-self.started
+        if self.limits['max_seconds'] and elapsed >= self.limits['max_seconds']:
+            raise BudgetExceeded('run time budget exhausted; previous output preserved')
+        if (self.current is not None and self.limits['document_max_seconds']
+                and elapsed-self.current['started_seconds'] >= self.limits['document_max_seconds']):
+            raise BudgetExceeded('document time budget exhausted; previous output preserved')
 
     def chat(self, system, user, **kwargs):
         now = self.clock()

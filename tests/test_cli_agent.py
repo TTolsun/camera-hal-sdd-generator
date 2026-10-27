@@ -101,6 +101,27 @@ def test_claude_native_schema_output_and_receipt_bind_actual_arguments(tmp_path)
     assert verify_cli_receipt(record.request, record.raw, record.receipt, dump/'calls', cfg)['runner'] == 'claude'
 
 
+@pytest.mark.parametrize('permanent', [False, True])
+def test_cli_cleanup_lock_preserves_completed_response_and_records_deferral(tmp_path, monkeypatch, permanent):
+    import shutil
+    original = shutil.rmtree
+    attempts = []
+    def locked(path, *args, **kwargs):
+        attempts.append(path)
+        if permanent or len(attempts)==1:
+            raise PermissionError('fixture retained working directory')
+        return original(path, *args, **kwargs)
+    monkeypatch.setattr('sdd.cli_agent.shutil.rmtree', locked)
+    cfg = AgentConfig(command=fake_cli(tmp_path, 'completed answer'))
+    dump = tmp_path/'prompts'
+    agent = Agent(cfg, dump)
+    assert agent.chat('system','user')=='completed answer'
+    receipt=json.loads(agent.last_receipt.read_text(encoding='utf-8'))
+    assert receipt['provider']['workspace_cleanup']['status']==('deferred' if permanent else 'removed')
+    assert len(list((dump/'calls').rglob('*.receipt.json')))==1
+    assert len(attempts)==(5 if permanent else 2)
+
+
 def test_missing_cli_does_not_fallback(tmp_path, monkeypatch):
     monkeypatch.setattr(Agent, '_post', lambda *a: pytest.fail('No API fallback'))
     with pytest.raises(AgentError, match='찾지 못했습니다'):

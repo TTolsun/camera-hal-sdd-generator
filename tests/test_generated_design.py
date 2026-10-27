@@ -88,6 +88,8 @@ def cli_units(generated, tmp_cfg, monkeypatch):
             return subprocess.CompletedProcess(argv, 0, json.dumps(dict(subtype='success', is_error=False, result=raw)), '')
         second_unit = '시작 전에 무엇을 준비합니까?' in prompt
         calls.append('prepare' if second_unit else 'stop')
+        if not second_unit and state.pop('reject_first', False):
+            return subprocess.CompletedProcess(argv, 0, json.dumps(dict(subtype='success', is_error=False, result='{}')), '')
         if second_unit and state['interrupt']:
             raise RuntimeError('fixture CLI interrupted')
         statement = (dict(text='`prepare()`은 시작 전에 준비 함수를 호출합니다. 이 진입점의 호출을 처리하려면 구현자는 준비 함수와 연결된 동작을 함께 확인해야 합니다.',
@@ -118,6 +120,37 @@ def test_cli_unit_resume_preserves_validated_prefix_and_old_manuscript(cli_units
     assert verify(model, section, target.read_text(encoding='utf-8'))['human_review'] == 'pending'
     reports = [json.loads(p.read_text(encoding='utf-8')) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
     assert any('checkpoint-reused' in d['units'].values() for r in reports for d in r['documents'])
+
+
+def test_cli_focused_retry_checkpoint_retains_exact_source_request(cli_units, tmp_cfg):
+    section, model, save, calls, state, agent = cli_units
+    section['design_prompt'] = 'focused'
+    (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스로 답하세요.', encoding='utf-8')
+    save()
+    state['reject_first'] = True
+    with pytest.raises(ValueError, match='interrupted'):
+        Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'stop', 'prepare']
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'stop', 'prepare', 'prepare']
+
+
+@pytest.mark.parametrize('change', ['local-check', 'title'])
+def test_focused_local_validation_or_heading_change_does_not_redraft_other_units(cli_units, tmp_cfg, change):
+    section,model,save,calls,state,agent=cli_units
+    section['design_prompt']='focused'
+    topic=section['design_topics'][0]
+    topic['answer_contract']=dict(basis='description',reject_patterns=[])
+    (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스로 답하세요.',encoding='utf-8')
+    save()
+    with pytest.raises(ValueError):Generator(tmp_cfg,model,agent()).run()
+    if change=='local-check':
+        topic['answer_contract']['reject_patterns'].append(dict(pattern='unsupported-guarantee',message='Unsupported guarantee.'))
+    else:topic['title']='같은 종료 책임의 새 제목'
+    save();state['interrupt']=False
+    Generator(tmp_cfg,model,agent()).run()
+    assert calls==['stop','prepare','prepare']
 
 
 @pytest.mark.parametrize('change', ['checksum', 'receipt', 'stdout', 'missing-review'])
@@ -201,6 +234,32 @@ def test_cli_budget_exhaustion_preserves_prefix_and_reports_not_started(cli_unit
     state['interrupt'] = False
     Generator(tmp_cfg, model, agent()).run()
     assert calls == ['stop', 'prepare']
+
+
+def test_cli_checkpoint_persistence_failure_stops_before_replacing_output(cli_units, tmp_cfg, monkeypatch):
+    _, model, _, calls, _, agent = cli_units
+    path=tmp_cfg.sdd_dir/'device.md'
+    path.parent.mkdir(parents=True,exist_ok=True)
+    path.write_text('old output',encoding='utf-8')
+    def fail(*args,**kwargs):raise PermissionError('fixture persistence failure')
+    monkeypatch.setattr('sdd.cli_checkpoint.save',fail)
+    with pytest.raises(ValueError,match='persistence failed'):
+        Generator(tmp_cfg,model,agent()).run()
+    assert calls==['stop']
+    assert path.read_text(encoding='utf-8')=='old output'
+
+
+def test_time_budget_includes_validation_and_cached_units(tmp_cfg):
+    from sdd.generation_run import Execution, BudgetExceeded
+    now=[0]
+    tmp_cfg.raw.setdefault('review',{})['max_seconds']=1
+    execution=Execution(tmp_cfg,object(),clock=lambda:now[0])
+    with pytest.raises(BudgetExceeded,match='time budget'):
+        with execution.document('device',['stop']):
+            execution.unit('stop','checkpoint-reused')
+            now[0]=2
+    assert execution.report['calls']==[]
+    assert execution.report['documents'][0]['failure_kind']=='budget'
 
 
 def test_single_required_contract_cannot_decode_as_only_a_limitation():
