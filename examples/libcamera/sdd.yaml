@@ -111,6 +111,10 @@ documentation:
     - request-diagnosis
     reader_profile: vendor
 
+  - id: ipa-algorithms
+    primary: ipa.md
+    sections:
+    - ipa-algorithms
 site:
   enabled: true
   title: libcamera 설계 문서

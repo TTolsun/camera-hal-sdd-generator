@@ -1827,8 +1827,8 @@ sections:
   - src/libcamera/ipc_pipe*
   - src/libcamera/shaders/**
   next:
-    title: IPU3 LSC와 상태 연결
-    link: ipu3-lsc.md
+    title: IPA 튜닝과 소프트웨어 ISP
+    link: ipa-algorithms.md
   semantic_review: true
   design_topics:
   - id: selection
@@ -2234,6 +2234,76 @@ sections:
         - - 2000ms
         - - ETIMEDOUT
         - - erase
+  design_requirements:
+  - id: selection
+    question: 어떤 IPA 모듈과 실행 방식이 선택됩니까?
+  - id: execution
+    question: 동기 호출과 비동기 호출은 어디에서 실행됩니까?
+  - id: interface
+    question: 파이프라인과 알고리즘은 어떤 입력과 결과를 주고받습니까?
+  - id: lifetime
+    question: 인터페이스를 만들고 비동기 처리를 끝내는 계약은 무엇입니까?
+  - id: errors
+    question: 모듈 생성과 IPC 오류는 어떻게 관찰됩니까?
+  show_evidence: true
+  design_generation: llm
+  design_grounding: true
+  routes:
+  - q: 모듈 탐색과 격리 조건의 조건과 근거를 대조하세요.
+    to: '#모듈-탐색과-격리-조건'
+  - q: 스레드와 프로세스 경계의 조건과 근거를 대조하세요.
+    to: '#스레드와-프로세스-경계'
+  - q: 프레임 입력과 결과 인터페이스의 조건과 근거를 대조하세요.
+    to: '#프레임-입력과-결과-인터페이스'
+  - q: IPA 객체와 종료 순서의 조건과 근거를 대조하세요.
+    to: '#ipa-객체와-종료-순서'
+  - q: 생성과 IPC 실패의 조건과 근거를 대조하세요.
+    to: '#생성과-ipc-실패'
+  - q: 보정 전 튜닝 파일의 조건과 근거를 대조하세요.
+    to: ipa-algorithms.md#보정-전-튜닝-파일
+    anchor: 보정-전-튜닝-파일
+  - q: 소프트웨어 ISP 입력 버퍼의 텍스처 형식의 조건과 근거를 대조하세요.
+    to: ipa-algorithms.md#소프트웨어-isp-입력-버퍼의-텍스처-형식
+    anchor: 소프트웨어-isp-입력-버퍼의-텍스처-형식
+  - q: 소프트웨어 ISP 셰이더의 렌즈 음영 보정의 조건과 근거를 대조하세요.
+    to: ipa-algorithms.md#소프트웨어-isp-셰이더의-렌즈-음영-보정
+    anchor: 소프트웨어-isp-셰이더의-렌즈-음영-보정
+- id: ipa-algorithms
+  group: For Vendor
+  nav_section: 연동 구현
+  title: IPA 튜닝과 소프트웨어 ISP
+  output: ipa-algorithms.md
+  kind: prose
+  lead: 튜닝 파일 경로와 소프트웨어 ISP의 렌즈 보정·입력 버퍼 연결을 코드와 대조하세요.
+  reader: 영상 처리 알고리즘과 프로세스 경계를 분석하는 개발자
+  answers:
+  - 사실에 포함된 IPA 관련 클래스는 무엇인가?
+  - 프록시와 알고리즘 사이에서 추가 확인이 필요한 경계는 무엇인가?
+  facts:
+    classes:
+    - libcamera::IPAManager
+    - libcamera::IPAModule
+    - libcamera::IPAProxy
+    - libcamera::ipa::ipu3::IPAIPU3
+    - libcamera::ipa::rkisp1::IPARkISP1
+  watch:
+  - src/ipa/**
+  - src/libcamera/ipa*
+  - src/libcamera/proxy/**
+  - include/libcamera/ipa/**
+  - include/libcamera/internal/ipa*
+  - src/ipa/**/meson.build
+  - src/libcamera/proxy/**/meson.build
+  - meson.options
+  - meson_options.txt
+  - utils/codegen/ipc/**
+  - src/libcamera/ipc_pipe*
+  - src/libcamera/shaders/**
+  next:
+    title: IPU3 LSC와 상태 연결
+    link: ipu3-lsc.md
+  semantic_review: true
+  design_topics:
   - id: tuning
     title: 보정 전 튜닝 파일
     question: RKISP1과 Mali-C55의 센서별 파일 이름과 fallback 요청, IPAProxy::configurationFile()의 대체 파일 검색, 두 uncalibrated.yaml의 알고리즘 목록을 설명하세요. 목록에 없는 보정 알고리즘이 활성화된다고 추정하지 마세요.
@@ -2334,16 +2404,6 @@ sections:
     covers:
     - softisp-lsc
   design_requirements:
-  - id: selection
-    question: 어떤 IPA 모듈과 실행 방식이 선택됩니까?
-  - id: execution
-    question: 동기 호출과 비동기 호출은 어디에서 실행됩니까?
-  - id: interface
-    question: 파이프라인과 알고리즘은 어떤 입력과 결과를 주고받습니까?
-  - id: lifetime
-    question: 인터페이스를 만들고 비동기 처리를 끝내는 계약은 무엇입니까?
-  - id: errors
-    question: 모듈 생성과 IPC 오류는 어떻게 관찰됩니까?
   - id: tuning
     question: 센서별 튜닝 파일이 없으면 어떤 파일과 알고리즘이 쓰입니까?
   - id: softisp-lsc
@@ -2353,6 +2413,8 @@ sections:
   show_evidence: true
   design_generation: llm
   design_grounding: true
+  routes:
+  - to: ipa.md
 - id: ipu3-lsc-flow
   group: For Vendor
   nav_section: 장치별 기능 구현
