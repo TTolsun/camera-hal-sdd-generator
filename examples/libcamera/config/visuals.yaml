@@ -963,138 +963,6 @@ sections:
       - source: request/request
         sha256: 550c83f35d2a4d5218ac10731fe8650d8446e262841f2dd80a54e9238c7da287
         quote: lscAlgo_.queueRequest(context.activeState.lsc, frameContext.lsc, controls);
-  - id: lsc-update-gates
-    topic: prepare
-    kind: decision
-    title: LSC 파라미터를 갱신하는 분기
-    question: 명시적 update가 있으면 색온도 생략 검사를 건너뜁니다. 갱신을 통지한 뒤 비활성 상태이면 LUT 계산은 수행하지 않습니다.
-    nodes:
-    - id: update
-      label: lsc.update인가?
-      label_en: lsc.update?
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: if (!frameContext.lsc.update)
-      shape: decision
-    - id: enabled
-      label: lsc.enabled인가?
-      label_en: lsc.enabled?
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: "if (!frameContext.lsc.enabled)\n\t\t\treturn;"
-      shape: decision
-    - id: threshold
-      label: 색온도 차이가 임계값 이상인가?
-      label_en: Colour-temperature difference reaches threshold?
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: if (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)
-      shape: decision
-    - id: quantized
-      label: 양자화된 색온도가 달라졌는가?
-      label_en: Quantized temperature changed?
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: if (quantizedCt == lastAppliedQuantizedCt_)
-      shape: decision
-    - id: skip
-      label: 파라미터 갱신 없이 반환
-      label_en: Return without updating parameters
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: "if (quantizedCt == lastAppliedQuantizedCt_)\n\t\t\treturn;"
-    - id: notify
-      label: use.acc_shd와 활성화 값 기록
-      label_en: Write use.acc_shd and enable flag
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: params->use.acc_shd = 1;
-    - id: lut
-      label: 활성 상태면 LUT 계산·기록
-      label_en: Compute and write LUT when enabled
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: lscAlgo_.interpolateComponents(quantizedCt);
-    edges:
-    - from: update
-      to: notify
-      label: 예
-      label_en: 'Yes'
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: if (!frameContext.lsc.update) {
-    - from: update
-      to: enabled
-      label: 아니오
-      label_en: 'No'
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: if (!frameContext.lsc.update) {
-    - from: enabled
-      to: skip
-      label: 아니오
-      label_en: 'No'
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: "if (!frameContext.lsc.enabled)\n\t\t\treturn;"
-    - from: enabled
-      to: threshold
-      label: 예
-      label_en: 'Yes'
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: if (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)
-    - from: threshold
-      to: skip
-      label: 아니오
-      label_en: 'No'
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: "if (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)\n\t\t\treturn;"
-    - from: threshold
-      to: quantized
-      label: 예
-      label_en: 'Yes'
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: if (quantizedCt == lastAppliedQuantizedCt_)
-    - from: quantized
-      to: skip
-      label: 아니오
-      label_en: 'No'
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: "if (quantizedCt == lastAppliedQuantizedCt_)\n\t\t\treturn;"
-    - from: quantized
-      to: notify
-      label: 예
-      label_en: 'Yes'
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: params->use.acc_shd = 1;
-    - from: notify
-      to: lut
-      label: 활성 상태일 때만
-      label_en: Only when enabled
-      evidence:
-      - source: prepare/prepare
-        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
-        quote: "if (!frameContext.lsc.enabled)\n\t\treturn;"
   rkisp1-dewarp:
   - id: per-camera-parameters
     topic: ownership
@@ -1740,3 +1608,136 @@ sections:
       - source: configuration-failure/configure
         sha256: 5892a108abafcaf7266fb5798b70facc498e62efce52f04e773156c01471b509
         quote: "ConnectionTypeBlocking, this, config);\n\tif (ret)\n\t\treturn ret;"
+  ipu3-lsc-prepare:
+  - id: lsc-update-gates
+    topic: prepare
+    kind: decision
+    title: LSC 파라미터를 갱신하는 분기
+    question: 명시적 update가 있으면 색온도 생략 검사를 건너뜁니다. 갱신을 통지한 뒤 비활성 상태이면 LUT 계산은 수행하지 않습니다.
+    nodes:
+    - id: update
+      label: lsc.update인가?
+      label_en: lsc.update?
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: if (!frameContext.lsc.update)
+      shape: decision
+    - id: enabled
+      label: lsc.enabled인가?
+      label_en: lsc.enabled?
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: "if (!frameContext.lsc.enabled)\n\t\t\treturn;"
+      shape: decision
+    - id: threshold
+      label: 색온도 차이가 임계값 이상인가?
+      label_en: Colour-temperature difference reaches threshold?
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: if (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)
+      shape: decision
+    - id: quantized
+      label: 양자화된 색온도가 달라졌는가?
+      label_en: Quantized temperature changed?
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: if (quantizedCt == lastAppliedQuantizedCt_)
+      shape: decision
+    - id: skip
+      label: 파라미터 갱신 없이 반환
+      label_en: Return without updating parameters
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: "if (quantizedCt == lastAppliedQuantizedCt_)\n\t\t\treturn;"
+    - id: notify
+      label: use.acc_shd와 활성화 값 기록
+      label_en: Write use.acc_shd and enable flag
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: params->use.acc_shd = 1;
+    - id: lut
+      label: 활성 상태면 LUT 계산·기록
+      label_en: Compute and write LUT when enabled
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: lscAlgo_.interpolateComponents(quantizedCt);
+    edges:
+    - from: update
+      to: notify
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: if (!frameContext.lsc.update) {
+    - from: update
+      to: enabled
+      label: 아니오
+      label_en: 'No'
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: if (!frameContext.lsc.update) {
+    - from: enabled
+      to: skip
+      label: 아니오
+      label_en: 'No'
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: "if (!frameContext.lsc.enabled)\n\t\t\treturn;"
+    - from: enabled
+      to: threshold
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: if (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)
+    - from: threshold
+      to: skip
+      label: 아니오
+      label_en: 'No'
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: "if (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)\n\t\t\treturn;"
+    - from: threshold
+      to: quantized
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: if (quantizedCt == lastAppliedQuantizedCt_)
+    - from: quantized
+      to: skip
+      label: 아니오
+      label_en: 'No'
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: "if (quantizedCt == lastAppliedQuantizedCt_)\n\t\t\treturn;"
+    - from: quantized
+      to: notify
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: params->use.acc_shd = 1;
+    - from: notify
+      to: lut
+      label: 활성 상태일 때만
+      label_en: Only when enabled
+      evidence:
+      - source: prepare/prepare
+        sha256: 1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268
+        quote: "if (!frameContext.lsc.enabled)\n\t\treturn;"

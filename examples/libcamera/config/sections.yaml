@@ -2439,8 +2439,8 @@ sections:
   - src/ipa/ipu3/ipa_context.*
   - src/ipa/libipa/lsc*
   next:
-    title: 시스템 개요
-    link: overview.md
+    title: IPU3 렌즈 보정 테이블 준비
+    link: ipu3-lsc-prepare.md
   design_topics:
   - id: integration
     title: 빌드와 상태 연결
@@ -2506,8 +2506,7 @@ sections:
         - - IPAFrameContext
   - id: setup
     title: 초기화와 크롭 설정
-    question: init()의 센서 activeArea, 그리드 최대 셀 수, 셀 크기 반올림과 공통 알고리즘 전달값을 설명하세요. configure()의 analogCrop과 정규화 샘플 위치를 설명하고 샘플
-      수 경계는 검증 결과로 단정하지 마세요.
+    question: init()의 센서 activeArea, 그리드 최대 셀 수, 셀 크기 반올림과 공통 알고리즘 전달값을 설명하세요. configure()의 analogCrop과 정규화 샘플 위치를 설명하고 샘플 수 경계는 검증 결과로 단정하지 마세요.
     sources:
     - id: setup
       file: src/ipa/ipu3/algorithms/lsc.cpp
@@ -2517,8 +2516,7 @@ sections:
     - setup
   - id: request
     title: 첫 프레임과 요청별 제어
-    question: frame 번호와 LensShadingCorrectionEnable 포함 여부에 따른 첫 프레임 enabled/update 설정을 설명하세요. 공통 queueRequest()로 전달하는 공유 상태·프레임
-      상태·controls도 구분하세요.
+    question: frame 번호와 LensShadingCorrectionEnable 포함 여부에 따른 첫 프레임 enabled/update 설정을 설명하세요. 공통 queueRequest()로 전달하는 공유 상태·프레임 상태·controls도 구분하세요.
     sources:
     - id: request
       file: src/ipa/ipu3/algorithms/lsc.cpp
@@ -2586,6 +2584,66 @@ sections:
         basis: implementation
         required_terms:
         - - controls
+  - id: metadata
+    title: 메타데이터와 확인 범위
+    question: process() 래퍼가 공통 알고리즘에 전달하는 프레임 상태와 metadata, 직접 사용하는 통계가 있는지, 파일 끝의 알고리즘 등록을 설명하세요. 장치 실행 결과는 추정하지 마세요.
+    sources:
+    - id: process
+      file: src/ipa/ipu3/algorithms/lsc.cpp
+      start: void Lsc::process(
+      end: REGISTER_IPA_ALGORITHM(Lsc, "Lsc")
+    covers:
+    - metadata
+  design_requirements:
+  - id: integration
+    question: LSC 구현 파일과 공유 상태 및 프레임별 상태는 어떻게 연결됩니까?
+  - id: setup
+    question: 입력 크기에 따라 그리드와 크기 제한을 어떻게 결정합니까?
+  - id: request
+    question: 첫 프레임의 기본 활성화와 요청 제어는 어떤 데이터를 전달합니까?
+  - id: metadata
+    question: 프레임 처리 결과를 어떻게 통지합니까?
+  show_evidence: true
+  design_generation: llm
+  routes:
+  - q: 빌드와 상태 연결의 조건과 근거를 대조하세요.
+    to: '#빌드와-상태-연결'
+  - q: 초기화와 크롭 설정의 조건과 근거를 대조하세요.
+    to: '#초기화와-크롭-설정'
+  - q: 첫 프레임과 요청별 제어의 조건과 근거를 대조하세요.
+    to: '#첫-프레임과-요청별-제어'
+  - q: 파라미터 갱신 조건의 조건과 근거를 대조하세요.
+    to: ipu3-lsc-prepare.md#파라미터-갱신-조건
+    anchor: 파라미터-갱신-조건
+  - q: 메타데이터와 확인 범위의 조건과 근거를 대조하세요.
+    to: '#메타데이터와-확인-범위'
+- id: ipu3-lsc-prepare
+  group: For Vendor
+  nav_section: 장치별 기능 구현
+  title: IPU3 렌즈 보정 테이블 준비
+  output: ipu3-lsc-prepare.md
+  kind: prose
+  lead: 보정 테이블 갱신 조건과 보간·양자화·하드웨어 배열 배치를 코드와 대조하세요.
+  reader: IPU3 렌즈 음영 보정의 동작을 확인하는 개발자
+  semantic_review: true
+  facts:
+    classes:
+    - libcamera::ipa::ipu3::algorithms::Lsc
+    - libcamera::ipa::LscAlgorithm
+    - libcamera::ipa::ipu3::IPAContext
+    - libcamera::ipa::ipu3::IPAActiveState
+    - libcamera::ipa::ipu3::IPAFrameContext
+    - libcamera::ipa::lsc::ActiveState
+    - libcamera::ipa::lsc::FrameContext
+  watch:
+  - src/ipa/ipu3/algorithms/lsc.*
+  - src/ipa/ipu3/algorithms/meson.build
+  - src/ipa/ipu3/ipa_context.*
+  - src/ipa/libipa/lsc*
+  next:
+    title: 시스템 개요
+    link: overview.md
+  design_topics:
   - id: prepare
     title: 파라미터 갱신 조건
     question: prepare의 조기 반환 조건과 그 뒤 공통으로 기록하는 커널 플래그, 활성 경로의 그리드·크롭·보간 LUT·저장 색온도를 소스의 실제 조건에 맞게 설명하세요.
@@ -2771,29 +2829,13 @@ sections:
         reject_patterns:
         - pattern: (?:ct|quantizedCt).{0,10}인자|마지막\s*줄
           message: ct와 quantizedCt는 이 대입문의 변수이며 제공된 근거는 함수 인자 또는 함수 마지막 줄이라는 주장을 뒷받침하지 않습니다.
-  - id: metadata
-    title: 메타데이터와 확인 범위
-    question: process() 래퍼가 공통 알고리즘에 전달하는 프레임 상태와 metadata, 직접 사용하는 통계가 있는지, 파일 끝의 알고리즘 등록을 설명하세요. 장치 실행 결과는 추정하지 마세요.
-    sources:
-    - id: process
-      file: src/ipa/ipu3/algorithms/lsc.cpp
-      start: void Lsc::process(
-      end: REGISTER_IPA_ALGORITHM(Lsc, "Lsc")
-    covers:
-    - metadata
   design_requirements:
-  - id: integration
-    question: LSC 구현 파일과 공유 상태 및 프레임별 상태는 어떻게 연결됩니까?
-  - id: setup
-    question: 입력 크기에 따라 그리드와 크기 제한을 어떻게 결정합니까?
-  - id: request
-    question: 첫 프레임의 기본 활성화와 요청 제어는 어떤 데이터를 전달합니까?
   - id: prepare
     question: 갱신은 어떤 조건에서 수행하며 커널에 어떤 파라미터를 전달합니까?
-  - id: metadata
-    question: 프레임 처리 결과를 어떻게 통지합니까?
   show_evidence: true
   design_generation: llm
+  routes:
+  - to: ipu3-lsc-flow.md
 - id: rkisp1-dewarp
   group: For Vendor
   nav_section: 장치별 기능 구현

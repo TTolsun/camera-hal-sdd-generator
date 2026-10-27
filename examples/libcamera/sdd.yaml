@@ -115,6 +115,10 @@ documentation:
     primary: ipa.md
     sections:
     - ipa-algorithms
+  - id: ipu3-lsc-prepare
+    primary: ipu3-lsc-flow.md
+    sections:
+    - ipu3-lsc-prepare
 site:
   enabled: true
   title: libcamera 설계 문서
