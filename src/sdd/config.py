@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+import math
 
 
 @dataclass(frozen=True)
@@ -107,6 +108,49 @@ class AutomationConfig:
     idle_review: dict[str, Any]
 
 
+DOCUMENTATION_DEFAULTS = {"max_chars": 18000, "max_markdown_chars": 120000, "max_growth_ratio": 1.5,
+            "min_growth_chars": 1000, "duplicate_min_chars": 180}
+
+
+
+def documentation_limits(values):
+    if set(values) - set(DOCUMENTATION_DEFAULTS):
+        raise ValueError("Unknown documentation limit")
+    for name, value in values.items():
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or value <= 0):
+            raise ValueError(f"documentation limit must be positive: {name}")
+        if name != "max_growth_ratio" and not isinstance(value, int):
+            raise ValueError(f"documentation limit must be an integer: {name}")
+    if values["max_growth_ratio"] <= 1:
+        raise ValueError("max_growth_ratio must exceed 1")
+
+
+
+@dataclass(frozen=True)
+class DocumentationConfig:
+    options: dict[str, Any]
+
+    def settings(self):
+        options = self.options
+        if not isinstance(options, dict) or not isinstance(options.get("enabled", False), bool):
+            raise ValueError("documentation.enabled must be a boolean")
+        if set(options) - {"enabled", "limits", "pages", "features", "retired_pages"}:
+            raise ValueError("Unknown documentation setting")
+        if not isinstance(options.get("limits", {}), dict) or not isinstance(options.get("pages", {}), dict):
+            raise ValueError("documentation limits/pages must be objects")
+        limits = {**DOCUMENTATION_DEFAULTS, **options.get("limits", {})}
+        documentation_limits(limits)
+        for key in ("features", "retired_pages"):
+            if not isinstance(options.get(key, []), list):
+                raise ValueError(f"documentation.{key} must be a list")
+        for rel, overrides in options.get("pages", {}).items():
+            if not isinstance(overrides, dict):
+                raise ValueError("Page limits must be an object")
+            documentation_limits({**limits, **overrides})
+        return {**options, "limits": limits}
+
+
 def _settings(cls, values):
     # Keep unknown project keys in raw for lossless snapshots. Only the fields
     # consumed by this responsibility cross its typed boundary.
@@ -197,6 +241,10 @@ class Config:
             raise ValueError('automation 설정은 객체여야 합니다.')
         return AutomationConfig(opts, *(opts.get(k, {}) for k in
                                        ('schedule', 'publish', 'hermes', 'idle_review')))
+
+    @property
+    def documentation(self) -> DocumentationConfig:
+        return DocumentationConfig(self.raw.get('documentation', {}))
 
     def diagram_policy(self, section):
         # Section overrides and false/0 are retained verbatim. Graph validity
