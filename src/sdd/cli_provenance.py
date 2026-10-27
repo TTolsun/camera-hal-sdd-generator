@@ -8,6 +8,7 @@ from typing import Any, Callable
 
 from .config import AgentConfig
 from .cli_agent import RUNNERS, build_prompt as assemble_prompt, decode_response
+from .trial_workspace import is_link
 
 PromptBuilder = Callable[[str, str, dict | None], str]
 StdoutDecoder = Callable[[str, str], tuple[str, dict]]
@@ -27,7 +28,7 @@ def _stdout_file(calls: Path, name: Any) -> Path:
         raise ValueError('Unsafe CLI stdout path')
     if PurePosixPath(name).is_absolute():
         raise ValueError('Unsafe CLI stdout path')
-    if calls.is_symlink() or getattr(calls, 'is_junction', lambda: False)():
+    if is_link(calls):
         raise ValueError('Linked CLI calls directory is not allowed')
     try:
         if not calls.is_dir():
@@ -36,7 +37,7 @@ def _stdout_file(calls: Path, name: Any) -> Path:
         path = base.joinpath(*parts)
         current = path
         while current != base:
-            if current.is_symlink() or getattr(current, 'is_junction', lambda: False)():
+            if is_link(current):
                 raise ValueError('Linked CLI stdout path is not allowed')
             current = current.parent
         resolved = path.resolve(strict=True)

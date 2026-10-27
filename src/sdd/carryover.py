@@ -78,7 +78,7 @@ def carry_forward(cfg: Config, model: KnowledgeModel,
             from . import generated_design
             if generated_design.enabled(sec):
                 try:
-                    generated_design.verify(model, sec, text)
+                    generated_design.verify(model, sec, text, cfg=cfg)
                 except ValueError as exc:
                     invalid.append(str(exc))
             else:

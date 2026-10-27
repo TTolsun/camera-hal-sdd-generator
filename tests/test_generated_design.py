@@ -14,6 +14,31 @@ from sdd.facts.model import KnowledgeModel
 from sdd.impact import compute
 
 
+@pytest.mark.parametrize('focused', [False, True])
+@pytest.mark.parametrize('excerpt', ['if (pending())\n    break;', 'data->queuedRequests_.push_back(request);'])
+def test_scoped_draft_receives_verified_enclosing_context(generated, focused, excerpt):
+    from sdd.generated_design import _unit_request
+    section, model, _, _ = generated
+    topic = section['design_topics'][0]
+    source = topic['sources'][0]
+    source.update(start=excerpt, end='\n', scope={'start': 'void stop()', 'end': '\n}'})
+    context = 'void stop() {\n  auto *data = camera->_d();\n  while (active()) {\n    ' + excerpt + '\n  }\n}'
+    record = model.evidence['device/stop/stop']
+    record.update(text=excerpt, sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+                  context={'text': context, 'sha256': hashlib.sha256(context.encode()).hexdigest()})
+    request = _unit_request(model, section, topic, 'focused' if focused else None)
+    payload = (json.loads(request.user.split('근거:\n', 1)[1].split('\n질문:', 1)[0]) if focused else
+               json.loads(request.user.split('\n', 1)[1])['sources'])
+    item = payload['stop'][0]
+    assert item['enclosing_context']['before'] + item['text'] + item['enclosing_context']['after'] == context
+    assert json.dumps(context, ensure_ascii=False) not in request.user
+    assert request.sources == {'stop': excerpt}
+    assert request.passages == {'stop:0': ('stop', excerpt)}
+    record['context']['sha256'] = '0'*64
+    with pytest.raises(ValueError, match='전체 원문·해시'):
+        _unit_request(model, section, topic, 'focused' if focused else None)
+
+
 def test_opt_in_answer_checkpoint_is_bound_to_revision_and_question(generated, tmp_cfg, monkeypatch):
     monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'original-weights')
     section, model, save, agent = generated
@@ -55,6 +80,351 @@ def test_answer_checkpoint_is_disabled_by_default(generated, tmp_cfg):
     Generator(tmp_cfg, model, agent).run()
     assert len(agent.calls) == 2
     assert not (tmp_cfg.build_dir/'validated-answers').exists()
+
+
+@pytest.fixture
+def cli_units(generated, tmp_cfg, monkeypatch):
+    """Synthetic completed CLI archives, never a real inference claim."""
+    import subprocess
+    from sdd.llm import Agent
+    section, model, save, base = generated
+    second = copy.deepcopy(section['design_topics'][0])
+    second.update(id='prepare', title='시작 준비', question='시작 전에 무엇을 준비합니까?', covers=['startup'])
+    source = dict(id='prepare', file='device.cpp', start='void prepare()', end='}')
+    second['sources'] = [source]
+    section['design_topics'].append(second)
+    section['design_requirements'].append(dict(id='startup', question='시작 전 준비는 무엇입니까?'))
+    text = 'void prepare() { enable(); }'
+    model.evidence['device/prepare/prepare'] = dict(selector=source, commit='a'*40, file='device.cpp',
+        line=20, end_line=20, text=text, sha256=hashlib.sha256(text.encode()).hexdigest(), status='available')
+    save()
+    tmp_cfg.agent.kind = 'cli'
+    tmp_cfg.agent.runner = 'claude'
+    tmp_cfg.agent.model = 'fixture-model'
+    tmp_cfg.agent.args = ['--effort', 'high']
+    tmp_cfg.raw.setdefault('review', {})['cli_checkpoint'] = True
+    calls, state = [], {'interrupt': True}
+    monkeypatch.setattr('sdd.cli_agent.command', lambda cfg: ['fixture-cli'])
+    def run(argv, **kwargs):
+        prompt = kwargs['prompt']
+        if 'Audit factual entailment' in prompt:
+            calls.append('grounding')
+            raw = json.dumps({'reviews': [dict(index=0, supported=True, reason='Fixture source matches.')]})
+            return subprocess.CompletedProcess(argv, 0, json.dumps(dict(subtype='success', is_error=False, result=raw)), '')
+        second_unit = '시작 전에 무엇을 준비합니까?' in prompt
+        calls.append('prepare' if second_unit else 'stop')
+        if not second_unit and state.pop('reject_first', False):
+            return subprocess.CompletedProcess(argv, 0, json.dumps(dict(subtype='success', is_error=False, result='{}')), '')
+        if second_unit and state['interrupt']:
+            raise RuntimeError('fixture CLI interrupted')
+        statement = (dict(text='`prepare()`은 시작 전에 준비 함수를 호출합니다. 이 진입점의 호출을 처리하려면 구현자는 준비 함수와 연결된 동작을 함께 확인해야 합니다.',
+                          quote=text, evidence=['prepare'], covers=['startup'], kind='behavior')
+                     if second_unit else base.statement)
+        raw = json.dumps({'statements': [statement]}, ensure_ascii=False)
+        stdout = json.dumps(dict(subtype='success', is_error=False, result=raw))
+        return subprocess.CompletedProcess(argv, 0, stdout, '')
+    monkeypatch.setattr('sdd.cli_agent.run', run)
+    return section, model, save, calls, state, lambda: Agent(tmp_cfg.agent, tmp_cfg.build_dir/'prompts')
+
+
+def test_cli_unit_resume_preserves_validated_prefix_and_old_manuscript(cli_units, tmp_cfg):
+    section, model, save, calls, state, agent = cli_units
+    target = tmp_cfg.sdd_dir/'device.md'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text('previous published manuscript', encoding='utf-8')
+    with pytest.raises(ValueError, match='interrupted'):
+        Generator(tmp_cfg, model, agent()).run()
+    assert target.read_text(encoding='utf-8') == 'previous published manuscript'
+    assert calls == ['stop', 'prepare']
+    assert len(list((tmp_cfg.build_dir/'cli-checkpoints').glob('*.json'))) == 1
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'prepare']  # zero prefix generation calls
+    artifact = yaml.safe_load(target.read_text(encoding='utf-8').split('---')[1])['generated_design']
+    assert len(artifact['checkpoint_units']) == 1
+    assert verify(model, section, target.read_text(encoding='utf-8'))['human_review'] == 'pending'
+    reports = [json.loads(p.read_text(encoding='utf-8')) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
+    assert any('checkpoint-reused' in d['units'].values() for r in reports for d in r['documents'])
+
+
+@pytest.mark.parametrize('embedded_marker', [False, True])
+def test_cli_focused_retry_checkpoint_retains_exact_source_request(cli_units, tmp_cfg, embedded_marker):
+    section, model, save, calls, state, agent = cli_units
+    section['design_prompt'] = 'focused'
+    if embedded_marker:
+        section['design_topics'][0]['question'] += '\n출력: 문구는 질문 데이터입니다.'
+    (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스로 답하세요.', encoding='utf-8')
+    save()
+    state['reject_first'] = True
+    with pytest.raises(ValueError, match='interrupted'):
+        Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'stop', 'prepare']
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'stop', 'prepare', 'prepare']
+
+
+def test_focused_revision_after_retry_retains_a_reusable_completed_receipt(cli_units, tmp_cfg, monkeypatch):
+    import subprocess
+    import sdd.cli_agent as transport
+    section, model, save, calls, state, agent = cli_units
+    section['design_prompt'] = 'focused'
+    tmp_cfg.raw['review']['design_revision'] = True
+    (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스로 답하세요.', encoding='utf-8')
+    save()
+    original = transport.run
+    def reject_first_draft_and_revision(argv, **kwargs):
+        result = original(argv, **kwargs)
+        if calls[-1] == 'stop' and calls.count('stop') <= 2:
+            return subprocess.CompletedProcess(argv, 0, json.dumps(dict(subtype='success', is_error=False, result='{}')), '')
+        return result
+    monkeypatch.setattr(transport, 'run', reject_first_draft_and_revision)
+    with pytest.raises(ValueError, match='interrupted'):
+        Generator(tmp_cfg, model, agent()).run()
+    assert calls.count('stop') == 4
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls.count('stop') == 4  # No new draft for the validated revised unit.
+
+
+def test_policy_update_does_not_hide_other_compatible_disk_checkpoints(cli_units, tmp_cfg, monkeypatch):
+    from sdd.cli_checkpoint import UnitStore
+    section, model, save, calls, state, agent = cli_units
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    before = list(calls)
+    UnitStore._indexes.clear()  # A new process starts with disk checkpoints only.
+    section['design_topics'][1]['title'] = '시작 준비의 새 제목'
+    save()
+    monkeypatch.setattr('sdd.cli_checkpoint.validation_policy', lambda: {'updated': 'validator'})
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == before
+
+
+def test_changed_prior_answer_revalidates_later_cached_units_without_redrafting(cli_units, tmp_cfg, monkeypatch):
+    import subprocess
+    import sdd.cli_agent as transport
+    section, model, save, calls, state, agent = cli_units
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    section['design_topics'][0]['question'] += ' 정지 진입점의 책임을 확인하세요.'
+    save()
+    original = transport.run
+    def updated_wording(argv, **kwargs):
+        result = original(argv, **kwargs)
+        if calls[-1] == 'stop':
+            native = json.loads(result.stdout)
+            data = json.loads(native['result'])
+            data['statements'][0]['text'] = data['statements'][0]['text'].replace('종료 시', '정지할 때')
+            native['result'] = json.dumps(data, ensure_ascii=False)
+            return subprocess.CompletedProcess(argv, 0, json.dumps(native), '')
+        return result
+    monkeypatch.setattr(transport, 'run', updated_wording)
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'stop']
+    reports = [json.loads(p.read_text(encoding='utf-8')) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
+    assert any(r['documents'][0]['units']['device_prepare'] == 'checkpoint-revalidated' for r in reports)
+
+
+@pytest.mark.parametrize('change', ['local-check', 'title'])
+def test_focused_local_validation_or_heading_change_does_not_redraft_other_units(cli_units, tmp_cfg, change):
+    section,model,save,calls,state,agent=cli_units
+    section['design_prompt']='focused'
+    topic=section['design_topics'][0]
+    topic['answer_contract']=dict(basis='description',reject_patterns=[])
+    (tmp_cfg.prompts_dir/'focused-design-system.md').write_text('제공된 소스로 답하세요.',encoding='utf-8')
+    save()
+    with pytest.raises(ValueError):Generator(tmp_cfg,model,agent()).run()
+    if change=='local-check':
+        topic['answer_contract']['reject_patterns'].append(dict(pattern='unsupported-guarantee',message='Unsupported guarantee.'))
+    else:topic['title']='같은 종료 책임의 새 제목'
+    save();state['interrupt']=False
+    Generator(tmp_cfg,model,agent()).run()
+    assert calls==['stop','prepare','prepare']
+
+
+@pytest.mark.parametrize('change', ['checksum', 'receipt', 'stdout', 'missing-review', 'statements'])
+def test_cli_checkpoint_damage_fails_and_preserves_old_output(cli_units, tmp_cfg, change):
+    _, model, _, calls, state, agent = cli_units
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, agent()).run()
+    cache = next((tmp_cfg.build_dir/'cli-checkpoints').glob('*.json'))
+    data = json.loads(cache.read_text(encoding='utf-8'))
+    if change == 'checksum':
+        data['sha256'] = 'bad'
+    elif change in ('missing-review', 'statements'):
+        if change == 'missing-review':
+            data['payload']['receipts'] = []
+        else:
+            data['payload']['statements'][0]['text'] = 'tampered validated statement'
+        from sdd.cli_checkpoint import checksum
+        data['sha256'] = checksum(data['payload'])
+    elif change == 'receipt':
+        receipt = tmp_cfg.build_dir/'prompts/calls'/data['payload']['receipts'][0]
+        receipt.write_text('{}', encoding='utf-8')
+    else:
+        receipt = tmp_cfg.build_dir/'prompts/calls'/data['payload']['receipts'][0]
+        saved_receipt = json.loads(receipt.read_text(encoding='utf-8'))
+        stdout = tmp_cfg.build_dir/'prompts'/saved_receipt['provider']['stdout_path']
+        stdout.write_text('tampered', encoding='utf-8')
+    cache.write_text(json.dumps(data), encoding='utf-8')
+    state['interrupt'] = False
+    before = len(calls)
+    with pytest.raises(ValueError, match='checkpoint'):
+        Generator(tmp_cfg, model, agent()).run()
+    assert len(calls) == before
+
+
+@pytest.mark.parametrize('change', ['commit', 'question', 'evidence', 'model', 'args', 'policy', 'rendering', 'style'])
+def test_cli_checkpoint_input_changes_require_fresh_calls(cli_units, tmp_cfg, monkeypatch, change):
+    section, model, save, calls, state, agent = cli_units
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, agent()).run()
+    if change == 'commit':
+        model.meta['source_commit'] = 'b'*40
+        for row in model.evidence.values():
+            row['commit'] = 'b'*40
+    elif change == 'question':
+        section['design_topics'][0]['question'] += ' 조건을 설명하세요.'
+    elif change == 'evidence':
+        row = model.evidence['device/stop/stop']
+        row['text'] += ' // changed source'
+        row['sha256'] = hashlib.sha256(row['text'].encode()).hexdigest()
+    elif change == 'policy':
+        monkeypatch.setattr('sdd.cli_checkpoint.validation_policy', lambda: {'changed': 'policy'})
+    elif change == 'rendering':
+        tmp_cfg.raw['site'] = {'title': 'A different presentation title'}
+    elif change == 'style':
+        path = tmp_cfg.style_dir/'README.md'
+        path.write_text(path.read_text(encoding='utf-8')+'\n전역 집필 규칙 변경입니다.\n', encoding='utf-8')
+    else:
+        setattr(tmp_cfg.agent, change, 'other-model' if change == 'model' else ['--effort', 'medium'])
+    save()
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls.count('stop') == (1 if change in ('policy', 'rendering') else 2)
+
+
+def test_cli_changed_grounding_policy_reviews_saved_draft_without_regenerating(cli_units, tmp_cfg, monkeypatch):
+    _, model, _, calls, state, agent = cli_units
+    tmp_cfg.raw['review']['design_grounding'] = True
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'grounding', 'prepare']
+    monkeypatch.setattr('sdd.grounding.policy_hash', lambda: 'new-grounding-policy')
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'grounding', 'prepare', 'grounding', 'prepare', 'grounding']
+    from sdd.document_metadata import split_frontmatter
+    metadata, _ = split_frontmatter((tmp_cfg.sdd_dir/'device.md').read_text(encoding='utf-8'))
+    resumed = metadata['generated_design']['checkpoint_units'][0]
+    assert resumed['new_grounding_review'] and len(resumed['receipts']) == 3
+    current = json.loads((tmp_cfg.build_dir/'cli-checkpoints'/resumed['checkpoint']).read_text(encoding='utf-8'))
+    assert resumed['receipts'] == current['payload']['receipts']
+
+
+def test_same_source_changed_validator_facts_revalidate_without_redrafting(cli_units, tmp_cfg):
+    from sdd.facts.model import ClassInfo
+    _, model, save, calls, state, agent = cli_units
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, agent()).run()
+    model.classes['NewClass'] = ClassInfo('NewClass', bases=['Base'])
+    save()
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'prepare']
+    reports = [json.loads(p.read_text(encoding='utf-8')) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
+    assert any(r['documents'][0]['units']['device_stop'] == 'checkpoint-revalidated' for r in reports)
+
+
+def test_changed_typography_policy_revalidates_and_updates_saved_statements(cli_units, tmp_cfg, monkeypatch):
+    import sdd.design_response as response
+    _, model, _, calls, state, agent = cli_units
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, agent()).run()
+    original = response.normalize_answer
+    def normalize(model, statements, sources):
+        original(model, statements, sources)
+        for statement in statements:
+            statement['text'] = statement['text'].replace('`stop()`', '`stop`')
+    monkeypatch.setattr(response, 'normalize_answer', normalize)
+    monkeypatch.setattr('sdd.cli_checkpoint.validation_policy', lambda: {'typography': 'updated'})
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'prepare']
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'prepare']
+    caches = [json.loads(p.read_text(encoding='utf-8'))['payload']
+              for p in (tmp_cfg.build_dir/'cli-checkpoints').glob('*.json')]
+    stop = next(p for p in caches if p['identity']['topic']['id'] == 'stop')
+    assert stop['statements'][0]['text'].startswith('`stop`')
+
+
+def test_cli_budget_exhaustion_preserves_prefix_and_reports_not_started(cli_units, tmp_cfg):
+    _, model, _, calls, state, agent = cli_units
+    tmp_cfg.raw['review']['max_calls'] = 1
+    with pytest.raises(ValueError, match='budget exhausted'):
+        Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop']
+    tmp_cfg.raw['review']['max_calls'] = 2
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare']
+
+
+def test_cli_checkpoint_persistence_failure_stops_before_replacing_output(cli_units, tmp_cfg, monkeypatch):
+    _, model, _, calls, _, agent = cli_units
+    path=tmp_cfg.sdd_dir/'device.md'
+    path.parent.mkdir(parents=True,exist_ok=True)
+    path.write_text('old output',encoding='utf-8')
+    def fail(*args,**kwargs):raise PermissionError('fixture persistence failure')
+    monkeypatch.setattr('sdd.cli_checkpoint.save',fail)
+    with pytest.raises(ValueError,match='persistence failed'):
+        Generator(tmp_cfg,model,agent()).run()
+    assert calls==['stop']
+    assert path.read_text(encoding='utf-8')=='old output'
+
+
+def test_time_budget_includes_validation_and_cached_units(tmp_cfg):
+    from sdd.generation_run import Execution, BudgetExceeded
+    now=[0]
+    tmp_cfg.raw.setdefault('review',{})['max_seconds']=1
+    execution=Execution(tmp_cfg,object(),clock=lambda:now[0])
+    with pytest.raises(BudgetExceeded,match='time budget'):
+        with execution.document('device',['stop']):
+            execution.unit('stop','checkpoint-reused')
+            now[0]=2
+    assert execution.report['calls']==[]
+    assert execution.report['documents'][0]['failure_kind']=='budget'
+
+
+@pytest.mark.parametrize('scope', ['max_seconds', 'document_max_seconds'])
+@pytest.mark.parametrize('finished', [0.95, 1.05])
+def test_subsecond_remaining_time_never_accepts_a_response_after_deadline(tmp_cfg, scope, finished):
+    from sdd.generation_run import Execution, BudgetExceeded
+    now, timeouts = [0.0], []
+    tmp_cfg.raw.setdefault('review', {})[scope] = 1
+    timeout = tmp_cfg.agent.timeout_sec
+    class Agent:
+        def chat(self, *args, **kwargs):
+            timeouts.append(tmp_cfg.agent.timeout_sec)
+            now[0] = finished
+            return 'completed response'
+    execution = Execution(tmp_cfg, Agent(), clock=lambda: now[0])
+    def invoke():
+        with execution.document('device', ['stop']):
+            now[0] = 0.9
+            return execution.chat('system', 'user')
+    if finished > 1:
+        with pytest.raises(BudgetExceeded, match='time budget'):
+            invoke()
+        assert execution.report['calls'][0]['status'] == 'failed'
+        assert execution.report['calls'][0]['failure_kind'] == 'budget'
+    else:
+        assert invoke() == 'completed response'
+        assert execution.report['calls'][0]['status'] == 'completed'
+    assert timeouts == [pytest.approx(0.1)]
+    assert tmp_cfg.agent.timeout_sec == timeout
 
 
 def test_single_required_contract_cannot_decode_as_only_a_limitation():
@@ -678,7 +1048,8 @@ def test_grounding_requires_bounded_verdict_reasons(tmp_cfg, reason):
 def test_json_code_string_literals_survive_without_schema_character_class(tmp_cfg, generated):
     from sdd.generated_design import response_schema
     section, model, save, agent = generated
-    assert response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text'] == {'type': 'string'}
+    field = response_schema(section['design_topics'][0])['properties']['statements']['items']['properties']['text']
+    assert field == {'type': 'string', 'maxLength': 600}
     agent.statement['text'] += ' 코드 문자열의 표기는 `"diagnostic"`입니다.'
     path = Generator(tmp_cfg, model, agent).run()[0]
     assert '`"diagnostic"`' in path.read_text(encoding='utf-8')

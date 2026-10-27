@@ -4,7 +4,7 @@ from __future__ import annotations
 import copy
 import json
 
-from .design_response import source_passages
+from .design_response import source_passages, response_schema, digest
 from .design_types import RequestPlan, TopicPrompt, UnitRequest
 from .design_compat import generation_policy
 
@@ -85,6 +85,20 @@ def prepare_requests(cfg, model, section, previous):
         topic_prompts[topic['id']] = TopicPrompt(focus, topic_system, topic_policy)
         if topic_policy != prompt_policy:
             inputs[topic['id']] = topic_inputs(model, section, topic_policy + json.dumps(policy))[topic['id']]
+    if cfg.agent.kind == 'cli':
+        # Bind standard prompts to their actual unit requests as focused prompts
+        # already bind their template. Changing drafting instructions/schema
+        # cannot silently reuse a completed topic under an old fingerprint.
+        from .cli_checkpoint import style_policy
+        for topic in section['design_topics']:
+            requests = []
+            for unit in _design_units({**section, 'design_topics': [topic]}, {}):
+                focus, selected_system, _ = topic_prompts[topic['id']]
+                request = _unit_request(model, section, unit, focus)
+                passages, user = request.passages, request.user
+                requests.append(dict(system=selected_system, user=user, schema=response_schema(unit, passages)))
+            inputs[topic['id']] = digest(inputs[topic['id']] + json.dumps(
+                dict(requests=requests, styles=style_policy(cfg), cli_protocol='native-schema-v1'), ensure_ascii=False, sort_keys=True))
     return RequestPlan(topic_prompts, policy, inputs, previous)
 
 
@@ -130,6 +144,17 @@ def _unit_request(model, section, topic, focused_system):
     # those on blank lines makes one quote_id insufficient for that claim.
     scopes = {s['id']: s['scope'] for s in topic['sources'] if 'scope' in s}
     annotated, passages = source_passages(sources, whole_source=focused_system is not None, scopes=scopes)
+    # A narrow excerpt may omit a loop, declaration, guard or qualifying
+    # contract. Drafting must see the same immutable context as grounding.
+    for sid in scopes:
+        context = context_records[sid].get('context')
+        if (not isinstance(context, dict) or not isinstance(context.get('text'), str)
+                or digest(context['text']) != context.get('sha256') or context['text'].count(sources[sid]) != 1):
+            raise ValueError('범위의 전체 원문·해시가 없습니다. 현재 소스에서 발췌를 다시 수집하세요.')
+        if context['text'] != sources[sid]:
+            # Keep every byte, while avoiding a second copy of a long excerpt.
+            before, _, after = context['text'].partition(sources[sid])
+            annotated[sid][0]['enclosing_context'] = dict(before=before, after=after)
     if not passages:
         raise ValueError(f"{section['id']}/{topic['id']}: 인용 가능한 소스 구절이 없습니다.")
     request = {'reader': section.get('reader', ''), 'sources': annotated, 'source_files': source_files,
@@ -146,8 +171,11 @@ def _unit_request(model, section, topic, focused_system):
         'If answer_contract.basis is contract, state the implementer/caller obligation using 해야 합니다 or 해서는 안 됩니다; '
         'implementation describes code actually shown, description describes a documented capability, measurement describes only the supplied measurement evidence. '
         'Cover required_terms from the source, without inventing relations merely to include keywords. '
+        'For each required_terms group, include at least one listed surface form verbatim in the paragraph '
+        '(also inside backticks when it is an identifier); a synonym alone fails the lexical coverage check. '
         'Do not invent advice, rationale, guarantees or cleanup behavior. Preserve may/can versus must/shall and all negations. '
         'Each statement has text (one Korean paragraph without newlines), quote_id (the ID of the source passage directly supporting it), '
+        'Each text must stay within 600 characters and at most four sentences, retaining all requested conditions. '
         'evidence (all supporting source IDs, including the quote_id source), covers (answered requirement IDs), '
         'and kind (behavior or limitation). Required answers must have behavior, not just a limitation. '
         'Put code identifiers in backticks. Do not output citations, links, tables or headings. '

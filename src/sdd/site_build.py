@@ -91,6 +91,9 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
         inputs["configuration"] = hashlib.sha256(json.dumps(cfg.raw, sort_keys=True, default=str).encode()).hexdigest()
+        if cfg.paths.get('consistency_file'):
+            inputs['consistency_configuration'] = digest(cfg.paths['consistency_file'])
+            inputs['consistency_review'] = digest(cfg.build_dir/'consistency-review.json')
         intro = cfg.site.intro
         if intro:
             inputs["intro"] = digest(cfg.root / intro)

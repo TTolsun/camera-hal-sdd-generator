@@ -86,13 +86,14 @@ def test_raw_configuration_access_stays_at_documented_boundaries():
     limits = {'config': 7, 'trial_workspace': 6, 'localization_cli': 1,
               'automation': 2, 'idle_review': 1, 'site_build': 1,
               'evaluate_pipeline': 2, 'evaluate_reader': 2, 'compdb': 2}
-    receipt_text = {'design_replay': 'loaded', 'provenance': 'record',
-                    'reader_loop': 'record', 'repair_reader': 'record'}
+    receipt_text = {'design_replay': {'loaded'}, 'provenance': {'record'},
+                    'reader_loop': {'record'}, 'repair_reader': {'record'},
+                    'cli_checkpoint': {'row', 'record'}}
     for path in root.glob('*.py'):
         accesses = [n for n in ast.walk(ast.parse(path.read_text(encoding='utf-8')))
                     if isinstance(n, ast.Attribute) and n.attr == 'raw'
                     and not (isinstance(n.value, ast.Name)
-                             and n.value.id == receipt_text.get(path.stem))]
+                             and n.value.id in receipt_text.get(path.stem, set()))]
         assert len(accesses) <= limits.get(path.stem, 0), (path.name, [n.lineno for n in accesses])
 
 

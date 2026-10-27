@@ -41,6 +41,64 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     passages, base_user = request.passages, request.user
     tag = _unit_tag(section, topic)
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
+    store = None
+    if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
+        from .cli_checkpoint import Capture, UnitStore, validation_policy, validation_model, style_policy, checksum
+        from .grounding import policy_hash
+        from .cli_agent import arguments
+        identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,
+                        request=dict(system=system, user=base_user, response_schema=schema),
+                        execution=dict(runner=cfg.agent.runner, model=cfg.agent.model,
+                                       command=cfg.agent.command, args=cfg.agent.args,
+                                       arguments=arguments(cfg.agent, schema)),
+                        prompt_policy=unit_policy, validation_policy=validation_policy(),
+                        validation_model=validation_model(model),
+                        validation_answers=checksum(answers),
+                        style_policy=style_policy(cfg),
+                        grounding_policy=policy_hash() if grounding else None,
+                        revision=cfg.review.design_revision)
+        store = UnitStore(cfg, identity)
+        agent.unit(tag, 'running', input_sha256=store.path.stem,
+                   dependencies={key: value for key, value in identity.items() if key not in ('request', 'topic')})
+        cached_unit = store.read()
+        if cached_unit is not None:
+            saved, reviewer = cached_unit
+            grounding_changed = saved['identity'].get('grounding_policy') != identity['grounding_policy']
+            validation_changed = saved['identity'].get('validation_policy') != identity['validation_policy']
+            validation_changed = validation_changed or saved['identity'].get('validation_model') != identity['validation_model']
+            validation_changed = validation_changed or saved['identity'].get('validation_answers') != identity['validation_answers']
+            validation_changed = validation_changed or (
+                saved['identity'].get('topic', {}).get('answer_contract') != topic.get('answer_contract'))
+            review_agent = Capture(agent) if grounding_changed else reviewer
+            try:
+                statements = _validate_unit_response(cfg, model, review_agent, section, topic,
+                    saved['raw'], sources, passages, tag, grounding, source_files, scopes,
+                    context_records, prior_answers=answers)
+            except (ValueError, TypeError, KeyError) as exc:
+                if not (grounding_changed or validation_changed):
+                    raise
+                # A changed policy never inherits an obsolete pass. Only this
+                # rejected unit is drafted again, within the same run budget.
+                statements = None
+                agent.unit(tag, 'revalidation-rejected', error=str(exc))
+            if statements is not None:
+                if statements != saved['statements'] and not (grounding_changed or validation_changed):
+                    raise ValueError('CLI checkpoint validated statements mismatch')
+                receipt_names = saved['receipts']
+                if grounding_changed or validation_changed:
+                    capture = Capture(agent)
+                    capture.receipts = [store.calls/name for name in saved['receipts']]
+                    if grounding_changed:
+                        capture.receipts += review_agent.receipts
+                    store.write(saved['raw'], statements, capture)
+                    receipt_names = [path.resolve().relative_to(store.calls.resolve()).as_posix()
+                                     for path in capture.receipts]
+                return UnitResult(statements, dict(checkpoint=store.path.name, topic=topic['id'],
+                                        part=topic.get('_part_id'), subpart=topic.get('_subpart_id'),
+                                        revalidated=grounding_changed or validation_changed,
+                                        new_grounding_review=grounding_changed,
+                                        receipts=receipt_names))
+        agent = Capture(agent)
     replayed = replay_unit(archive, system, base_user, schema, tag, topic,
         lambda raw, reviewer: _validate_unit_response(cfg, model, agent,
             section, topic, raw, sources, passages, tag + '_replay',
@@ -78,6 +136,8 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             statements = _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages,
                                                  f'{tag}_{attempt}', grounding, source_files, scopes, context_records, prior_answers=answers)
             saved.save(raw)
+            if store is not None:
+                store.write(raw, statements, agent)
             return UnitResult(statements, None)
         except (ValueError, TypeError, KeyError) as exc:
             last = str(exc)
@@ -93,8 +153,9 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             if focused_system is not None:
                 # Repeating a rejected paragraph anchored small-model retries
                 # to that paragraph. Keep the evidence and actionable error.
-                user = base_user.replace('\n출력:', '\n작성 조건: ' + last
-                                         + '\n질문의 모든 조건을 근거에서 다시 확인하세요.\n출력:')
+                prefix, marker, suffix = base_user.rpartition('\n출력:')
+                user = (prefix + '\n작성 조건: ' + last
+                        + '\n질문의 모든 조건을 근거에서 다시 확인하세요.' + marker + suffix)
             else:
                 user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
                         + '\n수정할 오류: ' + last

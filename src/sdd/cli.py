@@ -380,6 +380,17 @@ def cmd_verify_site(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_audit_consistency(args: argparse.Namespace) -> int:
+    from .consistency import audit
+    from .generation_run import Execution
+    cfg = _cfg(args)
+    agent = Execution(cfg, Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts'))
+    report = audit(cfg, _load_model(cfg), agent)
+    print(f"{report['status']}: {cfg.build_dir/'consistency-review.json'}")
+    print(f"Automatic unresolved findings: {len(report['unresolved'])}; human review remains pending")
+    return 1 if report['status'] != 'passed' else 0
+
+
 def cmd_automate(args: argparse.Namespace) -> int:
     from . import automation
     cfg = _cfg(args)
@@ -432,6 +443,7 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
     sub.add_parser("audit-docs", help="문서 분량·증가·중복·Feature 범위·폐기 계획을 검사한다 (기준선 변경 없음)").set_defaults(fn=cmd_audit_docs)
+    sub.add_parser('audit-consistency', help='선택한 CLI로 문서·언어 사이의 계약과 소스를 대조한다 (사람 승인 아님)').set_defaults(fn=cmd_audit_consistency)
 
     s = sub.add_parser("compdb", help="compile DB 확보와 정규화")
     s.add_argument("--regenerate", action="store_true")

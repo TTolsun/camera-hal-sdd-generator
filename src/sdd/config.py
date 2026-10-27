@@ -19,6 +19,11 @@ class ReviewConfig:
     design_grounding: bool = False
     design_revision: bool = False
     answer_cache: bool = False
+    cli_checkpoint: bool = False
+    max_calls: int = 0
+    max_seconds: int = 0
+    document_max_calls: int = 0
+    document_max_seconds: int = 0
     reader_loop: dict[str, Any] = field(default_factory=dict)
     coverage_triage: dict[str, Any] = field(default_factory=dict)
 

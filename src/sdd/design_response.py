@@ -119,7 +119,7 @@ def response_schema(topic, passages=None):
                     # Let the JSON grammar escape quotes/backslashes normally.
                     # A character-class pattern here can emit unescaped code
                     # string literals in constrained Ollama responses.
-                    'text': {'type': 'string'},
+                    'text': {'type': 'string', 'maxLength': 600},
                      'quote_id': {'type': 'string', **({'enum': list(passages)} if passages else {})},
                      'evidence': ids(sorted({sid for sid, _ in passages.values()}) if passages
                                      else [source['id'] for source in topic.get('sources', [])]),

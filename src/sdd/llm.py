@@ -35,10 +35,12 @@ class Agent:
         self._counter = 0
         self._run_id = uuid.uuid4().hex
         self._transport_metadata = {}
+        self.last_receipt = None
 
     def chat(self, system: str, user: str, tag: str = "prompt", response_schema: dict | None = None) -> str:
         self._counter += 1
         self._transport_metadata = {}
+        self.last_receipt = None
         request = {'system': system, 'user': user, 'response_schema': response_schema}
         request_hash = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if self.dump_dir:
@@ -92,6 +94,7 @@ class Agent:
             }
             prefix.with_suffix('.receipt.json').write_text(
                 json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+            self.last_receipt = prefix.with_suffix('.receipt.json')
         if (self._transport_metadata.get('done_reason') == 'length'
                 or self._transport_metadata.get('finish_reason') == 'length'):
             raise AgentError('모델이 출력 토큰 한도에 도달했습니다. 부분 답변을 사용하지 않습니다. '
