@@ -1638,8 +1638,7 @@ sections:
       max_statements: 1
   - id: shutdown
     title: 정지와 미완료 요청
-    question: PipelineHandler::stop()과 stopDevice()를 함수 이름으로 구분하세요. stop()의 대기 목록 분리, stopDevice() 호출, 대기 요청 취소와 doQueueRequest()
-      처리 순서를 설명하세요. doQueueRequest()를 하드웨어에 다시 제출한다고 설명하지 마세요. stopDevice() 구현의 완료 의무와 최종 대기 요청 검사를 구분하세요.
+    question: PipelineHandler::stop()과 stopDevice()를 함수 이름으로 구분하세요. stop()의 대기 목록 분리, stopDevice() 호출, 대기 요청 취소와 doQueueRequest() 처리 순서를 설명하세요. doQueueRequest()를 하드웨어에 다시 제출한다고 설명하지 마세요. stopDevice() 구현의 완료 의무와 최종 대기 요청 검사를 구분하세요.
     sources:
     - id: stop
       file: src/libcamera/pipeline_handler.cpp
@@ -1653,21 +1652,15 @@ sections:
     - shutdown
     parts:
     - id: detach
-      question: PipelineHandler::stop에서 waitingRequests_를 별도 목록으로 분리하는 동작과 주석에 적힌 분리 이유만 설명하세요.
+      question: PipelineHandler::stop의 waitingRequests_ 분리 동작과 주석의 분리 이유, 그 직후 호출하는 장치 정지 함수의 이름을 한 문단으로 설명하세요. 이후 대기 요청 처리와 구현자의 완료 의무는 다음 질문에서 다룹니다.
       sources:
       - stop
       answer_contract:
         basis: implementation
         required_terms:
         - - waitingRequests_
-    - id: device-call
-      question: waitingRequests_를 분리한 다음 호출하는 장치 정지 함수의 이름만 설명하세요.
-      sources:
-      - stop
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - stopDevice
+      max_statements: 1
     - id: pending
       question: stopDevice가 반환한 뒤 분리해 둔 대기 요청 각각을 취소하고 doQueueRequest로 처리하는 순서만 설명하세요. 하드웨어에 재제출한다고 쓰지 마세요.
       sources:
@@ -4085,7 +4078,7 @@ sections:
         required_terms:
         - - metadata_
     - id: reuse-fences
-      question: ReuseBuffers 플래그의 기존 버퍼 재사용 의미만 설명하세요. 펜스 권고는 다음 질문에서 다룹니다.
+      question: ReuseBuffers 플래그가 기존 버퍼와 연결된 펜스에 미치는 효과를 함께 한 문단으로 설명하세요. 사용 권고는 별도 질문에서 다룹니다.
       sources:
       - reuse-flags
       answer_contract:
@@ -4093,17 +4086,11 @@ sections:
         required_terms:
         - - ReuseBuffers
         - - 버퍼
-    - id: fence-reuse-caution
-      question: 이 플래그로 버퍼를 재사용할 때 연결된 펜스도 재사용되는지에 관한 원문 설명만 옮기세요.
-      sources:
-      - reuse-flags
-      answer_contract:
-        basis: description
-        required_terms:
         - - 펜스
           - fence
           - Fence
-        - - 재사용
+        - - 유지
+      max_statements: 1
     - id: reuse-advice
       question: 이 should not 문장의 사용 권고만 원문의 강도로 설명하세요. 강한 금지 의무로 바꾸지 마세요.
       sources:
@@ -4469,7 +4456,7 @@ sections:
     - journey
     parts:
     - id: create
-      question: 요청 생성 API의 반환 객체와 생성 후 소유자를 설명하세요.
+      question: createRequest의 반환 타입과 반환되는 객체의 종류만 소개하세요. 소유권과 소멸 책임은 자원 수명 절에서 설명하므로 여기서는 반복하지 마세요.
       sources:
       - create
       max_statements: 1
@@ -4477,7 +4464,8 @@ sections:
         basis: description
         required_terms:
         - - createRequest
-        - - 요청
+        - - unique_ptr
+        - - Request
     - id: buffer
       question: 버퍼를 요청의 어느 스트림에 연결하는 API인지 설명하세요.
       sources:
@@ -4594,8 +4582,7 @@ sections:
     design_prompt: focused
   - id: resources
     title: 요청·버퍼·fence의 수명
-    question: 요청과 버퍼의 소유권·유효 기간, reuse()가 초기화하는 상태·controls·metadata 및 ReuseBuffers 조건, fence 소유권과 재사용 주의, completeRequest()/cancelRequest()
-      반환 후 핸들러의 접근 규칙을 설명하세요.
+    question: 요청과 버퍼의 소유권·유효 기간, reuse()가 초기화하는 상태·controls·metadata 및 ReuseBuffers 조건, fence 소유권과 재사용 주의, completeRequest()/cancelRequest() 반환 후 핸들러의 접근 규칙을 설명하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -4807,7 +4794,7 @@ sections:
         required_terms:
         - - metadata_
     - id: reuse-fences
-      question: ReuseBuffers 플래그의 기존 버퍼 재사용 의미만 설명하세요. 펜스 권고는 다음 질문에서 다룹니다.
+      question: ReuseBuffers 플래그가 기존 버퍼와 연결된 펜스에 미치는 효과를 함께 한 문단으로 설명하세요. 사용 권고는 별도 질문에서 다룹니다.
       sources:
       - reuse-flags
       answer_contract:
@@ -4815,17 +4802,11 @@ sections:
         required_terms:
         - - ReuseBuffers
         - - 버퍼
-    - id: fence-reuse-caution
-      question: 이 플래그로 버퍼를 재사용할 때 연결된 펜스도 재사용되는지에 관한 원문 설명만 옮기세요.
-      sources:
-      - reuse-flags
-      answer_contract:
-        basis: description
-        required_terms:
         - - 펜스
           - fence
           - Fence
-        - - 재사용
+        - - 유지
+      max_statements: 1
     - id: reuse-advice
       question: 이 should not 문장의 사용 권고만 원문의 강도로 설명하세요. 강한 금지 의무로 바꾸지 마세요.
       sources:
