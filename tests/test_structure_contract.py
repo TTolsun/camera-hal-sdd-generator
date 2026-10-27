@@ -1,0 +1,63 @@
+"""External contracts captured before #141; no live model calls."""
+import copy
+import hashlib
+import json
+from pathlib import Path
+
+import pytest
+import yaml
+
+from sdd.config import load
+from sdd.generated_design import generate
+from sdd.trial_workspace import clone_config, write_snapshot
+from test_generated_design import generated
+
+
+@pytest.mark.parametrize('example', ['libcamera', 'mini-hal', 'inhouse-template'])
+def test_example_effective_config_round_trip(example, tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    cfg = load(root / 'examples' / example / 'sdd.yaml')
+    out = tmp_path / 'trial'
+    out.mkdir()
+    trial = clone_config(cfg, out)
+    restored = load(write_snapshot(trial, out / 'sdd.yaml'))
+    for name in ('agent', 'source_root', 'compile_commands', 'paths', 'facts_dir',
+                 'sdd_dir', 'diagrams_dir', 'require_citations', 'max_retries', 'package_depth'):
+        assert getattr(restored, name) == getattr(trial, name)
+
+
+def test_named_local_merge_preserves_false_zero_null_and_relative_paths(tmp_path):
+    main = tmp_path / 'sdd.claude.yaml'
+    main.write_text(yaml.safe_dump({'source': {'root': 'code'},
+        'agent': {'kind': 'cli', 'runner': 'hermes', 'max_output_tokens': 1500},
+        'review': {'max_retries': 2, 'require_citations': True}, 'site': {'enabled': True}}))
+    main.with_name('sdd.claude.local.yaml').write_text(yaml.safe_dump({
+        'agent': {'runner': 'claude', 'model': 'claude-haiku-5-5', 'args': ['--effort', 'high'],
+                  'max_output_tokens': 0, 'think': False},
+        'review': {'max_retries': 0, 'require_citations': False}, 'site': None}))
+    cfg = load(main)
+    assert cfg.source_root == (tmp_path / 'code').resolve()
+    assert cfg.agent.runner == 'claude' and cfg.agent.args == ['--effort', 'high']
+    assert cfg.agent.model == 'claude-haiku-5-5' and cfg.agent.max_output_tokens == 0
+    assert cfg.max_retries == 0 and cfg.require_citations is False
+    assert cfg.raw['site'] is None
+
+
+@pytest.mark.parametrize('kind', ['cli', 'ollama', 'openai-compatible', 'response-bundle'])
+@pytest.mark.parametrize('mode', ['standard', 'focused'])
+def test_frozen_generation_requests_results_and_origin(tmp_cfg, generated, kind, mode):
+    section, model, _, draft = generated
+    tmp_cfg.agent.kind = kind
+    tmp_cfg.agent.model = 'test-model'
+    tmp_cfg.raw['review'] = {'design_prompt': mode}
+    calls = []
+    class Recorded:
+        def chat(self, system, user, **options):
+            calls.append(dict(system=system, user=user, options=options))
+            return json.dumps({'statements': [draft.statement]}, ensure_ascii=False)
+    _, resolved, report, artifact = generate(tmp_cfg, model, Recorded(), copy.deepcopy(section))
+    stable = {'calls': calls, 'resolved': resolved, 'report': report, 'artifact': artifact}
+    actual = hashlib.sha256(json.dumps(stable, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+    fixture = Path(__file__).parent / 'fixtures' / 'generation-141.json'
+    expected = json.loads(fixture.read_text(encoding='utf-8'))
+    assert actual == expected[f'{kind}/{mode}']
