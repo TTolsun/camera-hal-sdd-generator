@@ -24,6 +24,12 @@ def main() -> int:
     head = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=cfg.source_root, text=True
     ).strip()
+    prefix = subprocess.check_output(['git', 'rev-parse', '--show-prefix'], cwd=cfg.source_root, text=True).strip()
+    tree = subprocess.check_output(['git', 'ls-tree', '-r', '--full-tree', '--name-only', head],
+                                   cwd=cfg.source_root, text=True).splitlines()
+    tracked = {name[len(prefix):] for name in tree if name.startswith(prefix)}
+    dirty = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'],
+                                    cwd=cfg.source_root, text=True).splitlines()
     selected = {
         sec["id"]: sum(any(fnmatch.fnmatch(name, pattern)
                             or fnmatch.fnmatch(name.rsplit("::", 1)[-1], pattern)
@@ -46,15 +52,16 @@ def main() -> int:
         if file not in lengths:
             path = cfg.source_root / file
             lengths[file] = len(path.read_text(encoding="utf-8", errors="replace").splitlines()) if path.is_file() else 0
-        if not 1 <= int(line) <= lengths[file]:
+        if file not in tracked or not 1 <= int(line) <= lengths[file]:
             invalid.append(citation)
-    ok = (not missing and bool(selected) and all(selected.values())
+    ok = (not missing and not dirty and bool(selected) and all(selected.values())
           and bool(lengths) and not invalid and not evidence_errors and model.meta.get("source_commit") == head)
     report = {
         "ok": ok, "source_commit": head, "classes": len(model.classes),
         "missing_required_classes": missing, "selected_classes": selected,
         "citations": len(model.citations()), "files": len(lengths),
         "invalid_locations": invalid,
+        "tracked_tree_files": len(tracked), "tracked_source_changes": dirty,
         "source_evidence_errors": evidence_errors,
         "source_only_sections": [sec['id'] for sec in cfg.sections() if enabled(sec) and not sec.get('facts', {}).get('classes')],
         "note": "Checks presence and locations; does not prove semantic completeness or prose accuracy.",

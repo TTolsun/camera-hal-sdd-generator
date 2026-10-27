@@ -497,10 +497,11 @@ def _unit_request(model, section, topic, focused_system):
     for sid in scopes:
         context = context_records[sid].get('context')
         if (not isinstance(context, dict) or not isinstance(context.get('text'), str)
-                or digest(context['text']) != context.get('sha256') or sources[sid] not in context['text']):
+                or digest(context['text']) != context.get('sha256') or context['text'].count(sources[sid]) != 1):
             raise ValueError('범위의 전체 원문·해시가 없습니다. 현재 소스에서 발췌를 다시 수집하세요.')
         if context['text'] != sources[sid]:
-            annotated[sid][0]['enclosing_context'] = context['text']
+            before, _, after = context['text'].partition(sources[sid])
+            annotated[sid][0]['enclosing_context'] = dict(before=before, after=after)
     if not passages:
         raise ValueError(f"{section['id']}/{topic['id']}: 인용 가능한 소스 구절이 없습니다.")
     request = {'reader': section.get('reader', ''), 'sources': annotated, 'source_files': source_files,
