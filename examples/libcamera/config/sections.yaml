@@ -1526,8 +1526,7 @@ sections:
         - - 버퍼
   - id: completion
     title: 버퍼 완료와 요청 반환
-    question: completeBuffer()의 알림·추적과 명시적인 completeRequest()를 구분하세요. completeRequest()가 장치 큐 앞의 Pending 상태를 만나면 반복을 어떻게 처리하는지,
-      애플리케이션 반환 순서와 핸들러 완료 호출 순서, 대기 요청 전달 재개, 호출 스레드와 반환 후 접근 규칙을 설명하세요.
+    question: completeBuffer()의 알림·추적과 명시적인 completeRequest()를 구분하세요. completeRequest()가 장치 큐 앞의 Pending 상태를 만나면 반복을 어떻게 처리하는지, 애플리케이션 반환 순서와 핸들러 완료 호출 순서, 대기 요청 전달 재개, 호출 스레드와 반환 후 접근 규칙을 설명하세요.
     sources:
     - id: completion
       file: src/libcamera/pipeline_handler.cpp
@@ -1628,15 +1627,15 @@ sections:
         - - completeRequest
         - - CameraManager
     - id: cancel
-      question: cancelRequest의 취소·완료 처리와 completeRequest에 대한 계약 참조를 설명하세요. 두 함수를 같은 것으로 바꾸지 마세요.
+      question: cancelRequest 구현이 직접 수행하는 호출과 호출 순서만 설명하세요. completeRequest의 접근 금지·반환 순서·스레드 계약은 이 절의 다른 답변에서 설명하므로 다시 나열하지 마세요.
       sources:
       - cancel-contract
-      - request-contract
       answer_contract:
-        basis: description
+        basis: implementation
         required_terms:
         - - cancelRequest
         - - completeRequest
+      max_statements: 1
   - id: shutdown
     title: 정지와 미완료 요청
     question: PipelineHandler::stop()과 stopDevice()를 함수 이름으로 구분하세요. stop()의 대기 목록 분리, stopDevice() 호출, 대기 요청 취소와 doQueueRequest()
@@ -2915,7 +2914,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: problem
-      question: 카메라를 쓰려는 쪽이 어떤 어려움을 겪는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
+      question: 문서가 명시한 userspace의 카메라 스택 제공 책임, 벤더별 구현과 공통 API의 관계, 기기별 맞춤 처리가 필요한 조건을 설명하세요. 응용 프로그램 개발자와 사용자 공간 구현의 주체를 구분하고, 카메라를 쓰려는 모든 쪽에 같은 구현 책임이 있다고 추정하지 마세요.
       sources:
       - problem
       answer_contract:
@@ -3923,13 +3922,8 @@ sections:
         - - 완료
   - id: lifetime
     title: 소유권과 재사용
-    question: 요청 소유권, addBuffer()의 버퍼 참조 유효 기간, reuse()의 상태·controls·metadata 초기화와 ReuseBuffers 조건을 설명하세요. fence는 성공 시 어느
-      객체로 이전되고 타임아웃 뒤 releaseFence()가 필요한지, ReuseBuffers와 fence의 주의를 빠뜨리지 마세요.
+    question: 요청 소유권, addBuffer()의 버퍼 참조 유효 기간, reuse()의 상태·controls·metadata 초기화와 ReuseBuffers 조건을 설명하세요. fence는 성공 시 어느 객체로 이전되고 타임아웃 뒤 releaseFence()가 필요한지, ReuseBuffers와 fence의 주의를 빠뜨리지 마세요.
     sources:
-    - id: create
-      file: src/libcamera/camera.cpp
-      start: \brief Create a request object for the camera
-      end: std::unique_ptr<Request> Camera::createRequest(uint64_t cookie)
     - id: reuse
       file: src/libcamera/request.cpp
       start: \brief Reset the request for reuse
@@ -3991,15 +3985,6 @@ sections:
     covers:
     - lifetime
     parts:
-    - id: ownership
-      question: createRequest가 반환한 요청을 누가 삭제하거나 재사용할 책임이 있는지 설명하세요.
-      sources:
-      - create
-      answer_contract:
-        basis: description
-        required_terms:
-        - - createRequest
-        - - 호출자
     - id: buffer-validity
       question: addBuffer가 저장하는 버퍼 참조와 완료 콜백까지 호출자가 지켜야 하는 유효 기간만 설명하세요.
       sources:
@@ -4415,8 +4400,7 @@ sections:
           }'
   - id: journey
     title: 제출에서 완료까지
-    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임, 버퍼 완료와 요청
-      완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션 콜백 스레드의 확인 범위를 구분하세요.
+    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임, 버퍼 완료와 요청 완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션 콜백 스레드의 확인 범위를 구분하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -4525,7 +4509,7 @@ sections:
         - - waitingRequests_
         - - maxQueuedRequestsDevice_
     - id: waiting-prepared
-      question: 이 코드에서 선두 요청이 준비되었는지 확인하는 멤버 이름을 설명하세요.
+      question: 선두 요청의 준비 여부를 읽는 멤버 이름과 그 값이 이 분기에 사용되는 방식만 설명하세요. 다른 메서드 정의의 누락, 원문 범위의 평가나 추가 확인 과제는 이 질문의 범위가 아닙니다.
       sources:
       - waiting-prepared
       max_statements: 1
@@ -4585,10 +4569,10 @@ sections:
         required_terms:
         - - completeRequest
     - id: request-complete
-      question: 요청 완료 함수가 애플리케이션에 요청을 반환하는 순서를 설명하세요.
+      question: completeRequest에서 queuedRequests_의 확인 순서, RequestPending 조건이 반복에 미치는 영향, 요청을 애플리케이션으로 넘기는 시점을 한 문단으로 설명하세요. complete()·requestComplete()·doQueueRequests()의 내부 구현이나 별도 확인 과제는 이 질문의 범위가 아닙니다.
       sources:
       - request-notice
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: implementation
         required_terms:

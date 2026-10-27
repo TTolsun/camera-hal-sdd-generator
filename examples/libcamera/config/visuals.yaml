@@ -133,7 +133,7 @@ sections:
       label: 호출자가 Request를 소유
       label_en: Caller owns Request
       evidence:
-      - source: lifetime/create
+      - source: request/create
         sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
         quote: The ownership of the returned request is passed to the caller
     - id: buffer
@@ -154,7 +154,7 @@ sections:
       label: 요청 삭제
       label_en: Delete request
       evidence:
-      - source: lifetime/create
+      - source: request/create
         sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
         quote: "The request may be deleted in the completion\n * handler"
     - id: reuse
@@ -186,7 +186,7 @@ sections:
       label: 완료 핸들러에서 삭제 가능
       label_en: May delete in completion handler
       evidence:
-      - source: lifetime/create
+      - source: request/create
         sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
         quote: "The request may be deleted in the completion\n * handler"
     - from: callback
