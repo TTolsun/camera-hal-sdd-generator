@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**[전체 문서 자동화 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-26-qwen-full) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[2026-10-27 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-27) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -12,22 +12,24 @@
 | 결과를 인수인계합니다. | [완료 기록](#완료-기록) |
 | 새 버전의 반입 파일을 만듭니다. | [패키지 재생성](#패키지-재생성) |
 
+[이번 릴리스 노트](release-2026-10-27.md)에서 병합 기능, Claude Code의 미완료 작업, 사내 적용 조건과 업그레이드 절차를 확인하세요. 진행 중인 변경은 반입본의 완료 기능으로 표시하지 않습니다.
+
 ## 반입 확인과 설치
 
 이 버전은 [LLM 그림 자동화](../concepts/site.md#사내-llm으로-초안-자동-생성하기)를 포함합니다. `src/sdd/generated_visuals.py`, `examples/inhouse-template/config/visuals.yaml`, `tools/evaluate_visuals.py`가 manifest에 포함돼야 합니다. 반입본에서 실제 승인 모델로 재시험하기 전에는 사내 모델 검증 완료로 기록하지 않습니다.
 
-전체 문서 자동화를 시험할 때는 [사내 LLM 생성 시험](contract-authoring.md#사내-llm-생성-시험)을 사용합니다. `src/sdd/evaluate_pipeline.py`, `src/sdd/provenance.py`, `src/sdd/design_replay.py`도 반입본에 포함됩니다. 운영 원고와 분리된 새 폴더에서 모든 섹션·실제 HTTP 작성 기록·문서 검사·번역·사이트·반복 빌드를 확인합니다. 실패 후에는 원고를 손으로 고치지 않고 설정과 생성기를 개선한 뒤 `--continue-from`으로 현재 기준을 다시 적용합니다. 이 시험은 구조 재추출·사내 HAL 실행·사람 승인을 대신하지 않습니다.
+전체 문서 자동화를 시험할 때는 [사내 LLM 생성 시험](contract-authoring.md#사내-llm-생성-시험)을 사용합니다. `src/sdd/evaluate_pipeline.py`, `src/sdd/provenance.py`, `src/sdd/design_replay.py`도 반입본에 포함됩니다. 운영 원고와 분리된 새 폴더에서 모든 섹션·실제 CLI 작성 기록·문서 검사·번역·사이트·반복 빌드를 확인합니다. 실패 후에는 원고를 손으로 고치지 않고 설정과 생성기를 개선한 뒤 `--continue-from`으로 현재 기준을 다시 적용합니다. 이 시험은 구조 재추출·사내 HAL 실행·사람 승인을 대신하지 않습니다.
 
 ### GitHub에서 받기
 
-`inhouse-2026-10-26-qwen-full` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+`inhouse-2026-10-27` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
 
 | 파일 | 용도 |
 |---|---|
-| [camera-hal-sdd-inhouse-qwen-full.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-26-qwen-full/camera-hal-sdd-inhouse-qwen-full.zip) | 생성기·가이드·스킬·설정 템플릿 |
-| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-26-qwen-full/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
-| [camera-hal-sdd-inhouse-qwen-full.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-26-qwen-full/camera-hal-sdd-inhouse-qwen-full.zip.sha256) | 반입 ZIP의 SHA-256 |
-| [qwen-full-report.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-26-qwen-full/qwen-full-report.json) | 공개 libcamera 입력과 Local Qwen으로 수행한 전체 문서·사이트 시험 기록 |
+| [camera-hal-sdd-inhouse-2026-10-27.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27/camera-hal-sdd-inhouse-2026-10-27.zip) | 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [camera-hal-sdd-inhouse-2026-10-27.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27/camera-hal-sdd-inhouse-2026-10-27.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
 
 프롬프트 파일은 이 검증 버전과 함께 보관하는 사본입니다. 이후 버전의 절차는 해당 버전의 이 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
 
@@ -57,7 +59,7 @@ workspace/
 |---|---|
 | 생성기 소스, 가이드, 스킬, 설정 템플릿, 공개 예제·테스트, 집필 규칙과 라이선스 | 사내 HAL 소스·제품 compile DB·생성 헤더·컴파일러·Git |
 | 고정 커밋, 파일별 해시, `uv.lock`에서 만든 `requirements-inhouse.txt` | 대상 OS·CPU·Python에 맞는 Python 실행 환경과 wheel |
-| 모델 없이 시작하는 템플릿, 로컬 Mermaid를 쓰는 설정 | 승인된 Mermaid 배포본 또는 사내 자산 서버 |
+| 기본 Hermes CLI를 쓰는 템플릿, 로컬 Mermaid를 쓰는 설정 | 승인된 Mermaid 배포본 또는 사내 자산 서버 |
 | 로컬 초안·품질·복구 절차 | 사람 검토자, 사내 게시·모델 접근 권한 |
 
 이 ZIP만으로 폐쇄망 의존성 설치까지 완료되지는 않습니다. `.venv`나 다른 OS의 libclang 바이너리를 복사하지 않습니다. **대상과 같은 OS·CPU·Python 환경**의 승인된 준비 장비에서 다음 명령으로 wheel을 모으고, 별도 해시 목록과 조직의 라이선스 검토 자료를 함께 반입합니다. 지원 wheel이 없으면 대상 환경을 확인하고 준비를 중단합니다.

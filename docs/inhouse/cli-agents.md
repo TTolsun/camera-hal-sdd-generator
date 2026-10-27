@@ -23,11 +23,27 @@ agent:
 agent:
   kind: cli
   runner: hermes
-  model: qwen3.5:9b
-  args: [--provider, custom, --reasoning, none]
+  model: qwen3.5:9b-ctx64k
+  args: [--provider, custom, --reasoning, high]
 ```
 
 OpenCode에서는 `runner: opencode`와 해당 CLI의 `provider/model` ID를, Claude Code에서는 `runner: claude`와 해당 CLI가 지원하는 모델 ID를 사용합니다. 모델 제공자와 지원 모델은 CLI별로 다르므로 모든 CLI가 모든 모델을 지원한다고 가정하지 않습니다. 위 Qwen 설정은 공개 시험 예제이며 사내 기본 모델을 지정하지 않습니다.
+
+`qwen3.5:9b-ctx64k`는 공개 시험 환경에 준비한 모델 프리셋 이름입니다. 해당 환경에서는 같은 9B 가중치에 `num_ctx=65536`을 설정했습니다. 다른 환경에서는 준비한 모델 ID와 컨텍스트 설정을 사용하세요. 생성기의 `agent.num_ctx`는 Hermes에 전달되지 않으며, `--reasoning high`는 컨텍스트 크기와 별도로 지정하는 추론 강도입니다.
+
+공개 libcamera의 기본 프로필은 [예제 설정](../../examples/libcamera/sdd.yaml)에 저장합니다. 같은 환경에서 새 Qwen 시험을 실행할 때는 이 모델과 `high`를 사용합니다. 기존 HTTP·CLI 시험 기록의 모델이나 추론 설정은 바꾸지 않습니다.
+
+사내에서는 자체 `sdd.yaml`을 사용하거나 `sdd.local.yaml`로 모델·제공자·추론 강도를 교체할 수 있습니다. 예를 들어 다음 값은 공개 예제의 `model`과 `args`를 대체합니다. `args`는 목록 전체가 교체되므로 사용할 실행기의 인자를 모두 적으세요.
+
+```yaml
+agent:
+  kind: cli
+  runner: hermes
+  model: approved-internal-model
+  args: [--provider, approved-provider, --reasoning, high]
+```
+
+OpenCode나 Claude Code로 바꿀 때도 해당 CLI의 모델 ID와 인자를 함께 지정합니다. 추가 인자가 없으면 `args: []`로 Hermes 전용 인자를 지웁니다. 공통 생성기에는 공개 Qwen 모델을 하드코딩하지 않습니다.
 
 CLI 실행 파일이나 사내 실행 래퍼를 지정해야 한다면 `command: ["/approved/path/hermes"]`처럼 실행 접두사를 인자 목록으로 적습니다. 생성기가 각 CLI의 비대화형 옵션을 이어 붙입니다. 셸 명령 문자열을 넣지 않으며 인증 토큰은 `args`나 `command`에 넣지 않습니다. 각 CLI에서 승인된 인증 수단으로 관리합니다.
 
@@ -41,6 +57,8 @@ CLI 실행 파일이나 사내 실행 래퍼를 지정해야 한다면 `command:
 | 실패 | 실행 파일 누락·시간 초과·종료 코드 오류·빈 응답·JSON 완료 상태 오류는 실패합니다. CLI가 생성한 내용에도 기존 문서·근거·노드 한도 검사를 적용합니다. |
 | 증거 | `build/prompts/calls/`의 요청·응답·receipt와 `build/prompts/cli/`의 CLI 출력을 보관합니다. receipt의 `transport: cli`, `cli_call: true`, `http_call: false`는 생성기가 CLI를 실행했다는 뜻입니다. CLI 내부의 HTTP 호출 수는 뜻하지 않습니다. 모델 생략 시에는 `model_selection: cli-default`로 기록합니다. |
 
+설계 답변의 본문·근거 구조 검사는 통과했지만 출처 대조 응답의 JSON 형식만 잘못된 경우에는, 같은 실행의 후보를 메모리에 유지하고 기존 재시도 한도 안에서 CLI로 대조만 다시 요청합니다. 근거가 부족하다는 판정은 기존처럼 답변을 다시 생성합니다. 이전 실행의 저장 응답을 실패한 CLI 대신 사용하는 동작은 아닙니다.
+
 `automation.hermes`라는 기존 설정 키는 호환성을 위해 유지합니다. `agent.kind: cli`이면 설명 재검토와 누락 보완도 선택한 `agent.runner`를 사용합니다. 예전에 지정한 `automation.hermes.command`는 CLI 모드에서 거절합니다. 해당 값을 제거하고 실행 경로를 `agent.command`로 통일합니다.
 
 직접 API 비교 시험은 별도 설정에 `kind: ollama` 또는 `openai-compatible`과 `allow_direct_api: true`를 모두 명시해야 합니다. CLI 실패의 대체 경로로 사용하지 않습니다. `dry-run`과 `response-bundle`은 모델을 자동 호출하지 않으므로 CLI 재현 성공으로 보고하지 않습니다. 기존 HTTP 응답을 가져오는 `repair_reader --seed`는 CLI 원응답 재사용을 지원하지 않습니다.
@@ -50,7 +68,7 @@ CLI 실행 파일이나 사내 실행 래퍼를 지정해야 한다면 `command:
 저장소 또는 반입본에서 새 출력 경로로 실행합니다. Qwen 공개 시험에만 필요한 옵션을 명시하며, CLI의 기본 모델로 시험하려면 모델·추가 인자를 생략합니다.
 
 ```bash
-python tools/evaluate_visuals.py --out build/hermes-replay --runner hermes --model qwen3.5:9b --cli-arg=--provider --cli-arg=custom --cli-arg=--reasoning --cli-arg=none --with-prose
+python tools/evaluate_visuals.py --out build/hermes-replay --runner hermes --model qwen3.5:9b-ctx64k --cli-arg=--provider --cli-arg=custom --cli-arg=--reasoning --cli-arg=high --with-prose
 ```
 
 공개 mini HAL의 두 Git 커밋에서 문서 답변과 그림을 생성하고, 조건 변경 후 재생성·이전 사이트 보존·원응답 해시를 검사합니다. 실제 CLI 호출 결과와 테스트 대역의 자동 검사를 구분합니다. 이 시험은 사내 HAL·실기기·사람 승인 검증이 아닙니다.

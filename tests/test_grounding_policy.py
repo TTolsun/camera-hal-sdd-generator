@@ -90,7 +90,7 @@ def review(generator, topic, statements, sources, tag, *, source_files=None, sou
 '''
 
 PREVIOUS_SHA = 'c54006f7c90cb2af955e1ede18b761c7feb22dffa3bc37a885c019508348eba0'
-CLI_SCHEMA_SHA = '4720babc38b81fdd79472e63a8d122e720efe40e3abf50247be45197a122b3ea'
+CLI_SCHEMA_SHA = '3c9673abb403dee9aa554ee5b3c549ebfe95bb18ec0e9cd7bf6e495e060439c2'
 
 
 def _previous_review():
@@ -131,29 +131,34 @@ _PASS = {'reviews': [{'index': 0, 'supported': True, 'reason': '직접 근거가
 
 @pytest.mark.parametrize('kind', ['ollama', 'openai-compatible'])
 @pytest.mark.parametrize('basis,scoped', [('contract', False), ('investigation', False), ('contract', True)])
-@pytest.mark.parametrize('response', [
-    _PASS,
-    {'reviews': [{'index': 1, 'supported': True, 'reason': 'Supported.'},
-                 {'index': 0, 'supported': True, 'reason': 'Supported.'}]},
-    {'reviews': [{'index': 0, 'supported': False, 'reason': 'Unsupported.'},
-                 {'index': 1, 'supported': True, 'reason': 'Supported.'}]},
-    {'reviews': []},
-    {'verdicts': _PASS['reviews']},
-    {'reviews': _PASS['reviews'], 'extra': True},
-    {'reviews': [{'index': 0, 'supported': True, 'reason': ''}, _PASS['reviews'][1]]},
-    {'reviews': [{'index': 0, 'supported': True, 'reason': 'x' * 401}, _PASS['reviews'][1]]},
-    {'reviews': [{'index': True, 'supported': True, 'reason': 'Supported.'}, _PASS['reviews'][1]]},
-    {'reviews': [{'index': 0, 'supported': 1, 'reason': 'Supported.'}, _PASS['reviews'][1]]},
-    {'reviews': [_PASS['reviews'][0], _PASS['reviews'][0]]},
-    {'reviews': [_PASS['reviews'][0]]},
-    [],
-    None,
+@pytest.mark.parametrize('response,format_error', [
+    (_PASS, False),
+    ({'reviews': [{'index': 1, 'supported': True, 'reason': 'Supported.'},
+                  {'index': 0, 'supported': True, 'reason': 'Supported.'}]}, False),
+    ({'reviews': [{'index': 0, 'supported': False, 'reason': 'Unsupported.'},
+                  {'index': 1, 'supported': True, 'reason': 'Supported.'}]}, False),
+    ({'reviews': []}, True),
+    ({'verdicts': _PASS['reviews']}, True),
+    ({'reviews': _PASS['reviews'], 'extra': True}, True),
+    ({'reviews': [{'index': 0, 'supported': True, 'reason': ''}, _PASS['reviews'][1]]}, True),
+    ({'reviews': [{'index': 0, 'supported': True, 'reason': 'x' * 401}, _PASS['reviews'][1]]}, True),
+    ({'reviews': [{'index': True, 'supported': True, 'reason': 'Supported.'}, _PASS['reviews'][1]]}, True),
+    ({'reviews': [{'index': 0, 'supported': 1, 'reason': 'Supported.'}, _PASS['reviews'][1]]}, True),
+    ({'reviews': [_PASS['reviews'][0], _PASS['reviews'][0]]}, True),
+    ({'reviews': [_PASS['reviews'][0]]}, True),
+    ([], True),
+    (None, True),
 ])
-def test_http_requests_schema_and_validation_match_frozen_policy(kind, basis, scoped, response):
+def test_http_requests_schema_and_validation_match_frozen_policy(kind, basis, scoped, response, format_error):
     raw = json.dumps(response, ensure_ascii=False)
     previous = _review_result(_previous_review(), kind, raw, basis=basis, scoped=scoped)
     current = _review_result(grounding.review, kind, raw, basis=basis, scoped=scoped)
-    assert current == previous
+    assert current[0] == previous[0] and current[2] == previous[2]
+    if format_error:
+        assert issubclass(grounding.GroundingFormatError, ValueError)
+        assert current[1] == 'GroundingFormatError' and previous[1] == 'ValueError'
+    else:
+        assert current[1:] == previous[1:]
     assert len(current[0]) == 1
     assert ('response_schema' in current[0][0][2]) is (kind == 'ollama')
 

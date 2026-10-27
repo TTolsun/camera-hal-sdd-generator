@@ -759,7 +759,7 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     from sdd.contract_schema import configuration_errors
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
-    assert len(designs) == 13
+    assert len(designs) == 14
     for section in designs:
         assert section['design_generation'] == 'llm'
         assert not configuration_errors(section)

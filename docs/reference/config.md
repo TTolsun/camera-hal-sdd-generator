@@ -66,15 +66,17 @@
 | `allow_direct_api` | `false` | 별도 비교 시험에서만 직접 API 호출을 명시적으로 허용합니다. CLI 실패 시 자동으로 켜지지 않습니다. |
 | `base_url` | `http://localhost:11434` | 엔드포인트. 인증 토큰은 환경 변수 `SDD_AGENT_API_KEY`로만 전달합니다. |
 | `max_input_chars` | `18000` | 입력 상한. 넘으면 우선순위 낮은 사실부터 빼고 그 목록을 원고에 남깁니다. |
-| `temperature` | `0.1` | 샘플링 온도. |
+| `temperature` | `0.1` | 직접 API 호출의 샘플링 온도. CLI에는 전달하지 않습니다. |
 | `timeout_sec` | `300` | 호출당 제한 시간. |
-| `num_ctx` | `0` | Ollama 컨텍스트 창. 0이면 지정하지 않습니다. |
-| `think` | `false` | Ollama thinking 모델의 사고 생성. 켜면 호출당 수 분이 더 걸립니다. |
-| `max_output_tokens` | `1500` | 출력 상한. 소형 모델의 반복 폭주를 막습니다. |
+| `num_ctx` | `0` | 직접 Ollama API 호출의 컨텍스트 창. 0이면 지정하지 않습니다. CLI에서는 모델 제공 서버나 모델 프리셋에 설정합니다. |
+| `think` | `false` | 직접 Ollama API 호출의 사고 생성 설정입니다. CLI의 reasoning effort를 바꾸지 않습니다. |
+| `max_output_tokens` | `1500` | 직접 API 호출의 출력 상한. CLI의 출력 상한은 선택한 CLI에서 설정합니다. |
 | `full_style_guides` | `false` | 집필 규칙 전문을 프롬프트에 넣습니다(약 13k자). 소형 모델에서는 끕니다. |
 | `response_dir` | 없음 | `response-bundle`의 요청·응답 디렉터리. 설정 파일 기준 상대 경로 또는 절대 경로입니다. |
 
 설정만으로 데이터 반출을 막지는 못합니다. 실제 연결 대상은 운영 환경에서 관리합니다.
+
+Hermes의 추론 강도는 `agent.args: [--reasoning, high]`처럼 실행별로 지정할 수 있습니다. `num_ctx`나 `think` 값을 바꿔도 이 인자를 대신하지 않습니다. CLI별 설정은 [CLI 선택 안내](../inhouse/cli-agents.md)를 따릅니다.
 
 `build/prompts/calls/<실행 id>/`에는 호출별 요청·응답·receipt를 보존합니다. 재시도가 같은 출력 디렉터리를 사용해도 기존 호출 기록을 덮어쓰지 않습니다. receipt의 `transport`, `http_call`, 요청·응답 해시, 모델 설정과 공급자가 반환한 토큰 수로 HTTP 호출과 파일 가져오기를 구분합니다. 인증 헤더와 모델의 내부 추론 본문은 receipt에 넣지 않습니다. HTTP 호출 성공이나 해시 일치는 설명의 의미 정확성을 보증하지 않습니다.
 
