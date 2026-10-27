@@ -27,11 +27,11 @@ def test_core_metadata_consumers_do_not_import_html_renderers(module):
         if isinstance(node, ast.ImportFrom):
             target = (importlib.util.resolve_name('.' * node.level + (node.module or ''), 'sdd')
                       if node.level else node.module or '')
-            assert target not in {'sdd.export_html', 'sdd.export_site'}, (module, node.lineno, target)
+            assert target not in {'sdd.export_html', 'sdd.export_site', 'sdd.site_markdown'}, (module, node.lineno, target)
             if target == 'sdd':
-                assert not {'export_html', 'export_site'} & {alias.name for alias in node.names}
+                assert not {'export_html', 'export_site', 'site_markdown'} & {alias.name for alias in node.names}
         elif isinstance(node, ast.Import):
-            assert not {'sdd.export_html', 'sdd.export_site'} & {alias.name for alias in node.names}
+            assert not {'sdd.export_html', 'sdd.export_site', 'sdd.site_markdown'} & {alias.name for alias in node.names}
 
 
 def test_runtime_modules_have_no_import_cycle():
@@ -67,7 +67,7 @@ def test_design_decisions_do_not_access_external_services_or_outputs(module):
     root = Path(__file__).resolve().parents[1] / 'src' / 'sdd'
     tree = ast.parse((root / (module + '.py')).read_text(encoding='utf-8'))
     forbidden = {'subprocess', 'pathlib', 'urllib', 'http', 'socket', 'os',
-                 'llm', 'cli_agent', 'source_git', 'config', 'export_site', 'export_html',
+                 'llm', 'cli_agent', 'source_git', 'config', 'export_site', 'export_html', 'site_markdown',
                  'design_execution', 'design_request', 'design_trials', 'answer_cache', 'design_replay'}
     for node in ast.walk(tree):
         assert not forbidden.intersection(imported_names(node)), (module, getattr(node, 'lineno', 0))
