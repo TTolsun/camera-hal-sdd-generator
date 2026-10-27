@@ -26,6 +26,7 @@ _SUBJECT = re.compile(
     rf"(?<![A-Za-z0-9_:])({_NAME})(\([^()\n]*\))?\s*"
     r"((?:의\s*)?(?:구현자|구현체)\s*(?:는|은|이|가)|(?:함수|메서드)\s*(?:는|은|이|가|에서|내부)|(?:는|은|이|가))(?=\s|$)")
 _MEMBER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:(?:\([^()\n]*\))?(?:\.|->)[A-Za-z_][A-Za-z0-9_]*)+")
+_OWNED_FIELD = re.compile(rf"({_NAME})\s*(?:(?:구조체|클래스)\s*)?의\s*({_NAME})\s*(?:필드|멤버)")
 _VALUE = r"(?:true|false|nullptr|NULL|null|-E[A-Z0-9_]+|[+-]?\d+(?:\.\d+)?)"
 _BOUND_VALUE = re.compile(
     rf"^\s*(?:의\s*)?(?:값|필드)?\s*(?:에는|은|는|이|가|을|를|에|도)?\s*"
@@ -97,7 +98,18 @@ def _members(text: str) -> dict[str, tuple[str, str] | None]:
         value = _BOUND_VALUE.match(text[match.end():])
         operator = '!=' if value and value[1] in ('!=', 'is not') else '=='
         members[name] = (operator, _value(value[2])) if value else None
+    for match in _OWNED_FIELD.finditer(text):
+        name = match[1] + '.' + match[2]
+        value = _BOUND_VALUE.match(text[match.end():])
+        operator = '!=' if value and value[1] in ('!=', 'is not') else '=='
+        members.setdefault(name, (operator, _value(value[2])) if value else None)
     return members
+
+
+def _same_member(left: str, right: str) -> bool:
+    a, _, field_a = left.rpartition('.')
+    b, _, field_b = right.rpartition('.')
+    return field_a == field_b and _same_function(a, b)
 
 
 def _value(value: str) -> str:
@@ -121,10 +133,11 @@ def _different_claims(left: str, right: str) -> bool:
     if a and b and not _same_function(a, b):
         return True
     am, bm = _members(left), _members(right)
-    if am and bm and not am.keys() & bm.keys():
+    shared_members = [(a, b) for a in am for b in bm if _same_member(a, b)]
+    if am and bm and not shared_members:
         return True
-    for name in am.keys() & bm.keys():
-        if am[name] and bm[name] and am[name] != bm[name]:
+    for a, b in shared_members:
+        if am[a] and bm[b] and am[a] != bm[b]:
             return True
     av, bv = (set(_VARIABLE_LABEL.findall(text)) for text in (left, right))
     if av and bv and not av & bv:

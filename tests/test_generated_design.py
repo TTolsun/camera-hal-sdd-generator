@@ -14,6 +14,31 @@ from sdd.facts.model import KnowledgeModel
 from sdd.impact import compute
 
 
+@pytest.mark.parametrize('focused', [False, True])
+@pytest.mark.parametrize('excerpt', ['if (pending())\n    break;', 'data->queuedRequests_.push_back(request);'])
+def test_scoped_draft_receives_verified_enclosing_context(generated, focused, excerpt):
+    from sdd.generated_design import _unit_request
+    section, model, _, _ = generated
+    topic = section['design_topics'][0]
+    source = topic['sources'][0]
+    source.update(start=excerpt, end='\n', scope={'start': 'void stop()', 'end': '\n}'})
+    context = 'void stop() {\n  auto *data = camera->_d();\n  while (active()) {\n    ' + excerpt + '\n  }\n}'
+    record = model.evidence['device/stop/stop']
+    record.update(text=excerpt, sha256=hashlib.sha256(excerpt.encode()).hexdigest(),
+                  context={'text': context, 'sha256': hashlib.sha256(context.encode()).hexdigest()})
+    request = _unit_request(model, section, topic, 'focused' if focused else None)
+    payload = (json.loads(request.user.split('근거:\n', 1)[1].split('\n질문:', 1)[0]) if focused else
+               json.loads(request.user.split('\n', 1)[1])['sources'])
+    item = payload['stop'][0]
+    assert item['enclosing_context']['before'] + item['text'] + item['enclosing_context']['after'] == context
+    assert json.dumps(context, ensure_ascii=False) not in request.user
+    assert request.sources == {'stop': excerpt}
+    assert request.passages == {'stop:0': ('stop', excerpt)}
+    record['context']['sha256'] = '0'*64
+    with pytest.raises(ValueError, match='전체 원문·해시'):
+        _unit_request(model, section, topic, 'focused' if focused else None)
+
+
 def test_opt_in_answer_checkpoint_is_bound_to_revision_and_question(generated, tmp_cfg, monkeypatch):
     monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'original-weights')
     section, model, save, agent = generated
@@ -222,6 +247,12 @@ def test_cli_changed_grounding_policy_reviews_saved_draft_without_regenerating(c
     state['interrupt'] = False
     Generator(tmp_cfg, model, agent()).run()
     assert calls == ['stop', 'grounding', 'prepare', 'grounding', 'prepare', 'grounding']
+    from sdd.document_metadata import split_frontmatter
+    metadata, _ = split_frontmatter((tmp_cfg.sdd_dir/'device.md').read_text(encoding='utf-8'))
+    resumed = metadata['generated_design']['checkpoint_units'][0]
+    assert resumed['new_grounding_review'] and len(resumed['receipts']) == 3
+    current = json.loads((tmp_cfg.build_dir/'cli-checkpoints'/resumed['checkpoint']).read_text(encoding='utf-8'))
+    assert resumed['receipts'] == current['payload']['receipts']
 
 
 def test_cli_budget_exhaustion_preserves_prefix_and_reports_not_started(cli_units, tmp_cfg):

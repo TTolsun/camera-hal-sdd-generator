@@ -144,6 +144,17 @@ def _unit_request(model, section, topic, focused_system):
     # those on blank lines makes one quote_id insufficient for that claim.
     scopes = {s['id']: s['scope'] for s in topic['sources'] if 'scope' in s}
     annotated, passages = source_passages(sources, whole_source=focused_system is not None, scopes=scopes)
+    # A narrow excerpt may omit a loop, declaration, guard or qualifying
+    # contract. Drafting must see the same immutable context as grounding.
+    for sid in scopes:
+        context = context_records[sid].get('context')
+        if (not isinstance(context, dict) or not isinstance(context.get('text'), str)
+                or digest(context['text']) != context.get('sha256') or context['text'].count(sources[sid]) != 1):
+            raise ValueError('범위의 전체 원문·해시가 없습니다. 현재 소스에서 발췌를 다시 수집하세요.')
+        if context['text'] != sources[sid]:
+            # Keep every byte, while avoiding a second copy of a long excerpt.
+            before, _, after = context['text'].partition(sources[sid])
+            annotated[sid][0]['enclosing_context'] = dict(before=before, after=after)
     if not passages:
         raise ValueError(f"{section['id']}/{topic['id']}: 인용 가능한 소스 구절이 없습니다.")
     request = {'reader': section.get('reader', ''), 'sources': annotated, 'source_files': source_files,

@@ -80,17 +80,20 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             if statements is not None:
                 if statements != saved['statements']:
                     raise ValueError('CLI checkpoint validated statements mismatch')
+                receipt_names = saved['receipts']
                 if grounding_changed or validation_changed:
                     capture = Capture(agent)
                     capture.receipts = [store.calls/name for name in saved['receipts']]
                     if grounding_changed:
                         capture.receipts += review_agent.receipts
                     store.write(saved['raw'], statements, capture)
+                    receipt_names = [path.resolve().relative_to(store.calls.resolve()).as_posix()
+                                     for path in capture.receipts]
                 return statements, dict(checkpoint=store.path.name, topic=topic['id'],
                                         part=topic.get('_part_id'), subpart=topic.get('_subpart_id'),
                                         revalidated=grounding_changed or validation_changed,
                                         new_grounding_review=grounding_changed,
-                                        receipts=saved['receipts'])
+                                        receipts=receipt_names)
         agent = Capture(agent)
     replayed = replay_unit(archive, system, base_user, schema, tag, topic,
         lambda raw, reviewer: _validate_unit_response(cfg, model, agent,

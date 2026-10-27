@@ -115,12 +115,21 @@ def review(text: str, model: KnowledgeModel, supplied: set[str], *, source_ident
             # several independent relationships; its first name is not necessarily
             # the subject of the inheritance clause.
             pair = re.search(r'`([\w:]+)`\s*(?:은|는|이|가)\s*`([\w:]+)`\s*(?:을|를)\s*(?:직접\s*)?상속', sentence)
+            inverse = re.search(r'`([\w:]+)`\s*(?:을|를)\s*(?:직접\s*)?상속(?:한|하는)\s*'
+                                r'(?:파생\s*클래스(?:인)?\s*)?`([\w:]+)`', sentence)
+            base_objects = {resolve(name) for name in re.findall(
+                r'`([\w:]+)`\s*(?:을|를)\s*(?:직접\s*)?상속', sentence)}
             subjects = resolved if len(resolved) == 1 or re.search(r'모두|이들도|둘 다', sentence) else []
-            if pair:
-                source, target = resolve(pair[1]), resolve(pair[2])
+            if pair or inverse:
+                source, target = ((resolve(pair[1]), resolve(pair[2])) if pair else
+                                  (resolve(inverse[2]), resolve(inverse[1])))
                 subjects = [source] if source else []
                 if source in model.classes and target and target not in model.classes[source].bases:
                     findings.append(f"추출되지 않은 직접 상속: {source} → {target}")
+            else:
+                # In "a derived class inheriting Base", Base is the object of
+                # inheritance; its own empty bases do not contradict the text.
+                subjects = [name for name in subjects if name not in base_objects]
             for name in subjects:
                 if name in model.classes and not model.classes[name].bases:
                     findings.append(f"추출된 기반 클래스가 없는 {name}에 상속을 주장했습니다.")
