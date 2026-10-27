@@ -3,7 +3,8 @@
 source:
   root: ../../../libcamera
   compile_commands: ../../../libcamera/build/compile_commands.json
-  exclude: ["subprojects/**", "test/**"]
+  # Meson-generated headers are absent from the official Git commit used by source links.
+  exclude: ["subprojects/**", "test/**", "build/**"]
   ndk_build:
     enabled: false
 
