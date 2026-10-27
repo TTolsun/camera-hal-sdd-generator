@@ -28,6 +28,9 @@ def validation_policy():
     root = Path(__file__).parent
     policy = {name: hashlib.sha256((root / (name + '.py')).read_bytes()).hexdigest()
               for name in ('manuscript', 'semantic', 'duplicates', 'design_contracts', 'validate')}
+    # All pure response helpers participate, including quote resolution and
+    # normalization called transitively by the selected validation functions.
+    policy['design_response'] = hashlib.sha256((root/'design_response.py').read_bytes()).hexdigest()
     selected = {'materialize', 'validate_answers', 'decode_unit', 'normalize_answer', '_validate_unit_response'}
     nodes = []
     for module in ('design_response', 'design_execution'):
@@ -38,6 +41,14 @@ def validation_policy():
     policy['design_validation'] = hashlib.sha256(ast.dump(ast.Module(body=nodes, type_ignores=[]),
                                                          include_attributes=False).encode()).hexdigest()
     return policy
+
+
+def validation_model(model):
+    """Bind validator inputs without redrafting source-identical answers."""
+    return checksum(dict(classes={name: item.bases for name, item in model.classes.items()},
+                         functions=sorted(model.functions),
+                         relations=sorted((r.source, r.target, r.type) for r in model.relations),
+                         citations=sorted(model.citations())))
 
 
 def style_policy(cfg):
@@ -99,7 +110,7 @@ class UnitStore:
     @staticmethod
     def draft_identity(identity):
         return {key: value for key, value in identity.items()
-                if key not in ('validation_policy', 'grounding_policy')}
+                if key not in ('validation_policy', 'validation_model', 'grounding_policy')}
 
     @classmethod
     def compatible_identity(cls, identity):

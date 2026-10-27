@@ -45,8 +45,9 @@ def _assemble_generation(cfg, model, section, answers, inputs, reused, replayed,
                 'grounding_review': 'passed' if policy['design_grounding'] else 'not-run',
                 'grounding_policy': policy.get('grounding_policy')}
     if cfg.agent.kind == 'cli':
-        from .cli_checkpoint import validation_policy, style_policy
+        from .cli_checkpoint import validation_policy, validation_model, style_policy
         artifact['validation_policy'] = validation_policy()
+        artifact['validation_model'] = validation_model(model)
         artifact['style_policy'] = style_policy(cfg)
     return DesignResult(pinned, resolved, report, artifact)
 

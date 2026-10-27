@@ -255,6 +255,20 @@ def test_cli_changed_grounding_policy_reviews_saved_draft_without_regenerating(c
     assert resumed['receipts'] == current['payload']['receipts']
 
 
+def test_same_source_changed_validator_facts_revalidate_without_redrafting(cli_units, tmp_cfg):
+    from sdd.facts.model import ClassInfo
+    _, model, save, calls, state, agent = cli_units
+    with pytest.raises(ValueError):
+        Generator(tmp_cfg, model, agent()).run()
+    model.classes['NewClass'] = ClassInfo('NewClass', bases=['Base'])
+    save()
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, agent()).run()
+    assert calls == ['stop', 'prepare', 'prepare']
+    reports = [json.loads(p.read_text(encoding='utf-8')) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
+    assert any(r['documents'][0]['units']['device_stop'] == 'checkpoint-revalidated' for r in reports)
+
+
 def test_cli_budget_exhaustion_preserves_prefix_and_reports_not_started(cli_units, tmp_cfg):
     _, model, _, calls, state, agent = cli_units
     tmp_cfg.raw['review']['max_calls'] = 1

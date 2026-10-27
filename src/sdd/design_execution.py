@@ -43,7 +43,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
     store = None
     if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
-        from .cli_checkpoint import Capture, UnitStore, validation_policy, style_policy
+        from .cli_checkpoint import Capture, UnitStore, validation_policy, validation_model, style_policy
         from .grounding import policy_hash
         from .cli_agent import arguments
         identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,
@@ -52,6 +52,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                                        command=cfg.agent.command, args=cfg.agent.args,
                                        arguments=arguments(cfg.agent, schema)),
                         prompt_policy=unit_policy, validation_policy=validation_policy(),
+                        validation_model=validation_model(model),
                         style_policy=style_policy(cfg),
                         grounding_policy=policy_hash() if grounding else None,
                         revision=cfg.review.design_revision)
@@ -63,6 +64,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             saved, reviewer = cached_unit
             grounding_changed = saved['identity'].get('grounding_policy') != identity['grounding_policy']
             validation_changed = saved['identity'].get('validation_policy') != identity['validation_policy']
+            validation_changed = validation_changed or saved['identity'].get('validation_model') != identity['validation_model']
             validation_changed = validation_changed or (
                 saved['identity'].get('topic', {}).get('answer_contract') != topic.get('answer_contract'))
             review_agent = Capture(agent) if grounding_changed else reviewer
