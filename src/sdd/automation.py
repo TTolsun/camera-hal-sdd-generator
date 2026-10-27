@@ -17,6 +17,7 @@ from .facts.model import KnowledgeModel
 from .locking import locked
 from .state_io import save
 from .site_build import MANIFEST, verify_site
+from .config import command_arguments as _command
 
 
 
@@ -42,36 +43,12 @@ def cron(cfg, config_path):
     return f"CRON_TZ={zone}\n{minute} {hour} * * * {quoted}\n"
 
 
-def _command(value, label):
-    if not isinstance(value, list) or not value or any(not isinstance(a, str) or not a for a in value):
-        raise ValueError(f"{label}은 비어 있지 않은 명령 인자 목록이어야 합니다.")
-
-
 def git(repo, *args):
     return subprocess.check_output(["git", *args], cwd=repo, encoding="utf-8").strip()
 
 
 def _settings(cfg):
-    opts = cfg.automation.options
-    if not isinstance(opts, dict):
-        raise ValueError("automation 설정은 객체여야 합니다.")
-    pub = opts.get("publish", {})
-    if not isinstance(pub, dict) or not isinstance(opts.get("hermes", {}), dict):
-        raise ValueError("publish와 hermes 설정은 객체여야 합니다.")
-    if not isinstance(opts.get("idle_review", {}), dict):
-        raise ValueError("idle_review 설정은 객체여야 합니다.")
-    if opts.get("idle_review", {}).get("enabled") and not opts.get("hermes", {}).get("enabled"):
-        raise ValueError("누락 점검에는 automation.hermes.enabled가 필요합니다.")
-    if int(pub.get("timeout_sec", 900)) <= 0:
-        raise ValueError("publish.timeout_sec은 양수여야 합니다.")
-    for key in ("repo", "directory", "remote", "branch"):
-        if not isinstance(pub.get(key), str) or not pub[key].strip():
-            raise ValueError(f"automation.publish.{key}가 필요합니다.")
-    if pub["remote"].startswith("-") or pub["branch"].startswith("-"):
-        raise ValueError("Git remote/branch는 옵션으로 시작할 수 없습니다.")
-    _command(pub.get("verify_command"), "publish.verify_command")
-    if pub.get("deploy_command") is not None:
-        _command(pub["deploy_command"], "publish.deploy_command")
+    opts, pub = cfg.automation.publication_options()
     repo = (cfg.root / pub["repo"]).resolve()
     out = (repo / pub["directory"]).resolve()
     source = cfg.source_root.resolve()

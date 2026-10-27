@@ -108,6 +108,30 @@ class AutomationConfig:
     idle_review: dict[str, Any]
 
 
+    def publication_options(self):
+        opts = self.options
+        if not isinstance(opts, dict):
+            raise ValueError("automation 설정은 객체여야 합니다.")
+        pub = opts.get("publish", {})
+        if not isinstance(pub, dict) or not isinstance(opts.get("hermes", {}), dict):
+            raise ValueError("publish와 hermes 설정은 객체여야 합니다.")
+        if not isinstance(opts.get("idle_review", {}), dict):
+            raise ValueError("idle_review 설정은 객체여야 합니다.")
+        if opts.get("idle_review", {}).get("enabled") and not opts.get("hermes", {}).get("enabled"):
+            raise ValueError("누락 점검에는 automation.hermes.enabled가 필요합니다.")
+        if int(pub.get("timeout_sec", 900)) <= 0:
+            raise ValueError("publish.timeout_sec은 양수여야 합니다.")
+        for key in ("repo", "directory", "remote", "branch"):
+            if not isinstance(pub.get(key), str) or not pub[key].strip():
+                raise ValueError(f"automation.publish.{key}가 필요합니다.")
+        if pub["remote"].startswith("-") or pub["branch"].startswith("-"):
+            raise ValueError("Git remote/branch는 옵션으로 시작할 수 없습니다.")
+        command_arguments(pub.get("verify_command"), "publish.verify_command")
+        if pub.get("deploy_command") is not None:
+            command_arguments(pub["deploy_command"], "publish.deploy_command")
+        return opts, pub
+
+
 DOCUMENTATION_DEFAULTS = {"max_chars": 18000, "max_markdown_chars": 120000, "max_growth_ratio": 1.5,
             "min_growth_chars": 1000, "duplicate_min_chars": 180}
 
@@ -149,6 +173,11 @@ class DocumentationConfig:
                 raise ValueError("Page limits must be an object")
             documentation_limits({**limits, **overrides})
         return {**options, "limits": limits}
+
+
+def command_arguments(value, label):
+    if not isinstance(value, list) or not value or any(not isinstance(a, str) or not a for a in value):
+        raise ValueError(f"{label}은 비어 있지 않은 명령 인자 목록이어야 합니다.")
 
 
 def _settings(cls, values):

@@ -56,6 +56,24 @@ def test_configuration_views_follow_trial_mutations_and_preserve_unknown_keys(tm
     assert tmp_cfg.review.grounding({'design_grounding': False}) is False
 
 
+@pytest.mark.parametrize('values', [{}, {'design_revision': False, 'answer_cache': False},
+                                   {'design_revision': 0, 'answer_cache': 0},
+                                   {'design_revision': 'false', 'answer_cache': 'false'}])
+def test_legacy_review_gate_values_are_not_coerced(tmp_cfg, values):
+    tmp_cfg.raw['review'] = values
+    assert tmp_cfg.review.design_revision == values.get('design_revision', False)
+    assert tmp_cfg.review.answer_cache == values.get('answer_cache', False)
+
+
+@pytest.mark.parametrize('group', ['automation', 'visuals', 'documentation'])
+def test_explicit_null_optional_objects_keep_existing_rejection(tmp_cfg, group):
+    tmp_cfg.raw[group] = None
+    with pytest.raises(ValueError):
+        view = getattr(tmp_cfg, group)
+        if group == 'documentation':
+            view.settings()
+
+
 @pytest.mark.parametrize('kind', ['cli', 'ollama', 'openai-compatible', 'response-bundle'])
 @pytest.mark.parametrize('mode', ['standard', 'focused'])
 def test_frozen_generation_requests_results_and_origin(tmp_cfg, generated, kind, mode):

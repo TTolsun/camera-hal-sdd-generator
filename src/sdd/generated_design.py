@@ -12,8 +12,8 @@ from .design_response import (
     response_schema, materialize, source_names, normalize_answer, validate_answers,
     decode_unit, _validate_retained,
 )
-from .design_request import prepare_requests, _design_units
-from .design_execution import _request_unit, _UnitRejected
+from .design_request import prepare_requests, _design_units, _unit_request, _unit_tag
+from .design_execution import _request_unit, _UnitRejected, _validate_unit_response
 from .design_types import DesignResult
 from .design_trials import open_archive
 from .design_compat import allowed_policies
