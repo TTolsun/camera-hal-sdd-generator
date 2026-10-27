@@ -47,8 +47,15 @@ def translate_missing(cfg, catalog, agent=None):
         raise ValueError('Translation requires an actual LLM response.')
     size = cfg.site.batch_size()
     agent = agent or Agent(cfg.agent, cfg.build_dir / 'translation-prompts')
-    catalog = {**catalog, 'strings': {source: value or fixed_translation(source) or value
-                                      for source, value in catalog['strings'].items()}}
+    validated = {}
+    for source, value in catalog['strings'].items():
+        if value:
+            try:
+                value = _validate_text(source, value)
+            except (ValueError, TypeError):
+                value = ''  # Re-translate a legacy value under the current rules.
+        validated[source] = value or fixed_translation(source) or value
+    catalog = {**catalog, 'strings': validated}
     if size > 1:
         return _batched(cfg, catalog, agent, size)
     system = ('Translate Korean technical documentation into clear English. '
