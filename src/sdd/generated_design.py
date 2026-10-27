@@ -111,6 +111,11 @@ def _generate(cfg, model, agent, section, previous=None, *, replay_http=False, a
 
 
 def verify(model, section, manuscript, *, cfg=None):
+    if cfg is not None:
+        from .reader_profiles import family_errors
+        options = cfg.documentation.settings()
+        if errors := family_errors(cfg.sections(), options.get('features', []), enabled=options.get('enabled', False)):
+            raise ValueError('\n'.join(errors))
     from .document_metadata import split_frontmatter
     meta, body = split_frontmatter(manuscript)
     artifact = meta.get('generated_design')

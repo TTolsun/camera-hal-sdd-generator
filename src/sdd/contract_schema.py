@@ -4,6 +4,10 @@ from .answer_contracts import configuration_errors as answer_contract_errors
 
 def configuration_errors(section: dict) -> list[str]:
     errors = []
+    if 'reader_family' in section and (not isinstance(section['reader_family'], str)
+                                       or not section['reader_family'].strip()
+                                       or not section.get('reader_profile')):
+        errors.append('reader_family에는 명시적인 reader_profile과 비어 있지 않은 문서 묶음 id가 필요합니다.')
     if 'design_grounding' in section and type(section['design_grounding']) is not bool:
         errors.append('design_grounding은 boolean이어야 합니다.')
     for field in ('design_requirements', 'design_topics'):

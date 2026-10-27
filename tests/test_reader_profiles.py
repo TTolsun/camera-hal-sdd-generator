@@ -12,6 +12,102 @@ from sdd.facts.model import KnowledgeModel
 from sdd.generate import Generator
 from sdd.reader_profiles import PROFILES
 
+
+def split_family():
+    sections = [dict(id='entry', output='entry.md', reader_profile='vendor', reader_family='guide',
+                     design_requirements=[dict(id=k, aspects=[k]) for k in ['inputs', 'ownership']]),
+                dict(id='detail', output='detail.md', reader_profile='vendor', reader_family='guide',
+                     design_requirements=[dict(id=k, aspects=[k]) for k in ['completion', 'failure', 'verification']])]
+    features = [dict(id='guide', primary='entry.md', sections=['detail'], reader_profile='vendor')]
+    return sections, features
+
+
+def test_split_reader_family_keeps_every_original_required_aspect_and_dense_guard():
+    from sdd.reader_profiles import family_errors, profile_errors
+    sections, features = split_family()
+    assert family_errors(sections, features) == []
+    assert all(configuration_errors(s) == [] for s in sections)
+    sections[0]['design_topics'] = [dict(id='long', statements=[dict(text='문장입니다. ' * 8)])]
+    assert any('4문장' in error for error in profile_errors(sections[0]))
+
+
+def test_family_membership_revalidates_the_guide_without_replacing_identical_drafts():
+    from sdd.design_reuse import topic_inputs
+    from sdd.evidence import fingerprint
+    section = dict(id='guide', reader_profile='vendor', design_topics=[dict(id='one', covers=['one'])],
+                   design_requirements=[dict(id='one', aspects=['inputs'])])
+    model = KnowledgeModel()
+    before = topic_inputs(model, section, 'actual drafting policy')
+    whole_before = fingerprint(model, section)
+    section['reader_family'] = 'split-guide'
+    assert topic_inputs(model, section, 'actual drafting policy') == before
+    assert fingerprint(model, section) != whole_before
+    assert topic_inputs(model, section, 'changed actual drafting policy') != before
+
+
+@pytest.mark.parametrize('change', ['aspect', 'member', 'declaration', 'profile', 'orphan', 'disabled'])
+def test_split_reader_family_cannot_skip_coverage_or_its_publication_gate(change):
+    from sdd.reader_profiles import family_errors
+    sections, features = split_family()
+    if change == 'aspect': sections[1]['design_requirements'].pop()
+    elif change == 'member': features[0]['sections'] = ['missing']
+    elif change == 'declaration': sections[1].pop('reader_family')
+    elif change == 'profile': sections[1]['reader_profile'] = 'developer'
+    elif change == 'orphan': sections[1]['reader_family'] = 'missing'
+    assert family_errors(sections, features, enabled=change != 'disabled')
+
+
+def test_invalid_reader_family_fails_before_git_calls_and_preserves_old_outputs(tmp_cfg, monkeypatch):
+    sections, features = split_family()
+    sections[1]['design_requirements'].pop()
+    tmp_cfg.sections_file.write_text(yaml.safe_dump(dict(sections=sections)), encoding='utf-8')
+    tmp_cfg.raw['documentation'] = dict(enabled=True, features=features)
+    model = KnowledgeModel(evidence={'old': {'text': 'preserved'}})
+    target = tmp_cfg.sdd_dir/'entry.md'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text('previous manuscript', encoding='utf-8')
+    monkeypatch.setattr('sdd.source_git.file_at', lambda *a, **kw: pytest.fail('No Git reads for invalid family'))
+    with pytest.raises(ValueError, match='verification'):
+        collect(tmp_cfg, model)
+    with pytest.raises(ValueError, match='verification'):
+        Generator(tmp_cfg, model, object())
+    assert model.evidence == {'old': {'text': 'preserved'}}
+    assert target.read_text(encoding='utf-8') == 'previous manuscript'
+
+
+def test_portable_split_family_builds_and_missing_detail_blocks_existing_site(tmp_cfg):
+    tmp_cfg.source_root = ROOT/'examples/mini-hal'
+    config = yaml.safe_load((tmp_cfg.source_root/'config/reader-sections.yaml').read_text(encoding='utf-8'))
+    original = next(s for s in config['sections'] if s.get('reader_profile') == 'vendor')
+    detail = copy.deepcopy(original)
+    detail.update(id='vendor-detail', output='vendor-detail.md', title='상세 계약')
+    moved = {t['id'] for t in original['design_topics'][len(original['design_topics'])//2:]}
+    for section, keep in [(original, False), (detail, True)]:
+        section['reader_family'] = 'portable-guide'
+        section['design_topics'] = [t for t in section['design_topics'] if (t['id'] in moved) == keep]
+        covers = {r for t in section['design_topics'] for r in t.get('covers', [])}
+        covers.update(r for t in section['design_topics'] for st in t.get('statements', []) for r in st.get('covers', []))
+        section['design_requirements'] = [r for r in section['design_requirements'] if r['id'] in covers]
+        section['routes'] = []
+    config['sections'].append(detail)
+    tmp_cfg.raw['documentation'] = dict(enabled=True, features=[dict(id='portable-guide',
+        primary=original['output'], sections=['vendor-detail'], reader_profile='vendor')])
+    tmp_cfg.sections_file.write_text(yaml.safe_dump(config, allow_unicode=True), encoding='utf-8')
+    tmp_cfg.scenarios_file.write_text('scenarios: []\n', encoding='utf-8')
+    commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    model = KnowledgeModel(meta={'source_commit': commit})
+    collect(tmp_cfg, model)
+    model.save(tmp_cfg.facts_path)
+    class NoModel:
+        def chat(self, *a, **kw): pytest.fail('Source-bound mini HAL fixture needs no model')
+    Generator(tmp_cfg, model, NoModel()).run()
+    site = export_site(tmp_cfg)
+    manifest = (site/'site-manifest.json').read_bytes()
+    (tmp_cfg.sdd_dir/'vendor-detail.md').unlink()
+    with pytest.raises(RuntimeError, match='lifecycle'):
+        export_site(tmp_cfg)
+    assert (site/'site-manifest.json').read_bytes() == manifest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 

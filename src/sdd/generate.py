@@ -40,6 +40,10 @@ _FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
 
 class Generator:
     def __init__(self, cfg: Config, model: KnowledgeModel, agent: ChatPort, *, replay_http=False, all_design_units=False):
+        from .reader_profiles import family_errors
+        options = cfg.documentation.settings()
+        if errors := family_errors(cfg.sections(), options.get('features', []), enabled=options.get('enabled', False)):
+            raise ValueError('\n'.join(errors))
         self.cfg = cfg
         self.model = model
         self.agent = agent
@@ -613,11 +617,11 @@ def _next_of(sec: dict[str, Any]) -> tuple[str, str]:
     return (str(nxt.get("title", "시스템 개요")), str(nxt.get("link", "overview.md")))
 
 
-def _routes_from_config(sec: dict[str, Any]) -> list[tuple[str, str]] | None:
-    routes = sec.get("routes")
-    if not routes:
+def _routes_from_config(sec: dict[str, Any]) -> list[routes.NavigationRoute] | None:
+    configured = sec.get("routes")
+    if not configured:
         return None
-    return [(str(r.get("q", "")), str(r.get("to", "#"))) for r in routes]
+    return [routes.from_config(row) for row in configured]
 
 
 def _routes_from_headings(body: str) -> list[tuple[str, str]] | None:

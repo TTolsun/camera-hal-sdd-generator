@@ -87,7 +87,7 @@ def test_part_coverage_and_source_scope_are_revalidated():
 def test_actual_qwen_postincrement_error_is_rejected_by_project_contract():
     root = Path(__file__).resolve().parents[1]
     data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
-    topic = next(t for s in data['sections'] if s['id'] == 'pipeline-handler'
+    topic = next(t for s in data['sections'] if s['id'] == 'pipeline-requests'
                  for t in s['design_topics'] if t['id'] == 'queue')
     rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'sequence')
     bad = 'requestSequence_ 값을 증가시키고 그 증가된 값을 sequence_에 저장합니다.'
@@ -101,7 +101,7 @@ def test_actual_qwen_postincrement_error_is_rejected_by_project_contract():
 def test_reuse_fence_recommendation_is_not_strengthened_to_must_not():
     root = Path(__file__).resolve().parents[1]
     data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
-    topic = next(t for s in data['sections'] if s['id'] == 'camera-model'
+    topic = next(t for s in data['sections'] if s['id'] == 'camera-requests'
                  for t in s['design_topics'] if t['id'] == 'lifetime')
     rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'reuse-advice')
     assert rule['basis'] == 'description'
@@ -127,7 +127,8 @@ def test_reader_observed_state_and_void_owner_errors_are_rejected():
     root = Path(__file__).resolve().parents[1]
     sections = yaml.safe_load((root/'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     section = next(s for s in sections if s['id']=='request-lifecycle')
-    topic = next(t for t in section['design_topics'] if t['id']=='configuration-failure')
+    detail = next(s for s in sections if s['id']=='request-diagnosis')
+    topic = next(t for t in detail['design_topics'] if t['id']=='configuration-failure')
     rule = next(p['answer_contract'] for p in topic['parts'] if p['id']=='entry')
     with pytest.raises(ValueError, match='상태 범위'):
         check(rule, [statement('Camera::configure의 isAccessAllowed 반환을 관찰하면 CameraAcquired이고 CameraConfigured인지 확인합니다.')], 'entry')

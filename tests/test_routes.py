@@ -56,3 +56,30 @@ def test_A3_독자가_얻을_내용을_적은_q와_q_생략은_경고하지_않�
     sections = [{"id": "a", "routes": [{"q": "연동 순서와 구현 책임을 확인합니다.", "to": "vendor-integration.md"},
                                        {"to": "vendor-overview.md"}]}]
     assert routes.warnings(sections, TITLES) == []
+
+
+def test_moved_topic_keeps_its_old_anchor_with_a_static_link_to_the_new_page(tmp_cfg):
+    page = render(tmp_cfg, [routes.NavigationRoute('', 'vendor-integration.md#완료', '옛-완료')])
+    assert '<a id="옛-완료"></a>' in page
+    assert '[연동 가이드](vendor-integration.md#완료)' in page
+
+
+@pytest.mark.parametrize('anchor', ['', 'two words', '" onclick="bad', '../outside'])
+def test_invalid_migration_anchor_fails_before_output(tmp_cfg, anchor):
+    with pytest.raises(ValueError, match='anchor'):
+        routes.from_config(dict(to='vendor-integration.md', anchor=anchor))
+
+
+def test_navigation_anchor_cannot_shadow_a_heading_or_another_anchor(tmp_cfg):
+    row = routes.NavigationRoute('', 'vendor-integration.md', '본문')
+    with pytest.raises(ValueError, match='conflicting'):
+        render(tmp_cfg, [row])
+    sections = [{'id': 'a', 'routes': [dict(to='vendor-integration.md', anchor='old')]*2}]
+    with pytest.raises(ValueError, match='Duplicate'):
+        routes.warnings(sections, TITLES)
+def test_null_question_uses_the_destination_lead():
+    from sdd.routes import from_config
+    route = from_config({'q': None, 'to': 'detail.md'})
+    assert route.question == ''
+    assert route.target == 'detail.md'
+    assert from_config({'to': None}).target == '#'

@@ -51,6 +51,31 @@ documentation:
 3. 전체 `generate`로 원고를 다시 만듭니다. 근거 지문·커밋·문서 수명주기·사이트 링크 검사가 변경된 구조를 확인합니다. 번역판이 있으면 번역 카탈로그도 다시 검토합니다.
 4. 원고 검토와 게시 절차를 수행합니다. 자동 검사 통과를 사람 승인으로 기록하지 않습니다.
 
+독자 프로필의 질문을 여러 페이지로 나눌 때는 각 섹션에 같은 `reader_profile`과
+`reader_family`를 선언하고, `documentation.features`의 같은 `id`에 프로필과 구성원을 기록합니다.
+`primary`는 진입 페이지의 출력 경로이며 `sections`는 함께 읽을 상세 섹션 ID입니다.
+
+```yaml
+documentation:
+  enabled: true
+  features:
+    - id: request-guide
+      reader_profile: vendor
+      primary: request.md
+      sections: [request-errors]
+```
+
+이 예에서 `request`와 `request-errors` 섹션은 모두 `reader_family: request-guide`와
+`reader_profile: vendor`를 가집니다. 모든 구성원의 필수 질문을 합쳐 원래 프로필 전체를
+검사합니다. 개별 페이지의 문단 길이·근거·답변 검사는 그대로 적용합니다. 선언에서 빠진
+페이지, 다른 프로필, 누락된 질문이나 실제 원고가 없는 구성원은 생성·게시를 막습니다.
+이 계약에는 `documentation.enabled: true`가 필요합니다.
+
+옮긴 절의 기존 주소는 `routes`의 `anchor`에 원래 제목 ID를 지정해 보존할 수 있습니다.
+이 앵커는 이동 안내 표에서 새 페이지로 연결되며 JavaScript 없이도 동작합니다.
+기존 제목이나 다른 이동 안내와 같은 ID를 쓰면 생성에 실패합니다. 번역·검색·내부 링크도
+새 문서 구성을 대상으로 다시 검증합니다.
+
 설정을 지웠다는 이유만으로 기존 원고를 조용히 버리지 않습니다. 통합하거나 폐기한 페이지는 다음처럼 선언합니다. `sha256`은 `audit-docs` 보고서의 해당 페이지 값을 사용합니다. UTF-8로 읽어 줄바꿈을 정규화한 원고 전체의 해시입니다.
 
 ```yaml

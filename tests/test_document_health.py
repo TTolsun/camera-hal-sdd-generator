@@ -45,6 +45,21 @@ def test_failed_retries_cannot_ratchet_growth_baseline(tmp_cfg, sample_model):
     assert health.baseline(tmp_cfg) != original
 
 
+def test_first_failed_generation_keeps_its_empty_starting_baseline(tmp_cfg, sample_model):
+    setup(tmp_cfg, sample_model, ('overview', 'detail'))
+    health.prepare(tmp_cfg)
+    initial = health.baseline(tmp_cfg)
+    assert initial['pages'] == {}
+    page(tmp_cfg, body='A partial first-generation output.')
+    health.prepare(tmp_cfg)
+    assert health.baseline(tmp_cfg) == initial
+    assert 'missing-page' in rules(health.audit(tmp_cfg))
+    page(tmp_cfg, 'detail.md', body='A different completed explanation.')
+    report = health.enforce(tmp_cfg)
+    health.checkpoint(tmp_cfg, report)
+    assert set(health.baseline(tmp_cfg)['pages']) == {'overview.md', 'detail.md'}
+
+
 def test_new_feature_adds_page_without_commit_count_penalty(tmp_cfg, sample_model):
     setup(tmp_cfg, sample_model)
     page(tmp_cfg)
