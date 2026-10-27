@@ -24,6 +24,10 @@ SOLID 원칙 중 단일 책임과 의존 방향을 우선 적용합니다. 실�
 | `design_execution.py` | 한 단위의 호출·입력 예산·기존 제한 재시도와 grounding 호출을 관리합니다. |
 | `design_types.py` | `RequestPlan`, `TopicPrompt`, `UnitRequest`, `UnitResult`, `DesignResult`로 경계 값을 명명합니다. 저장하는 schema 1은 바꾸지 않습니다. |
 | `design_trials.py`, `design_compat.py` | 명시적 HTTP 비교 체크포인트·기록 재생을 연결하고, 과거 HTTP 정책 해시의 정확한 허용 쌍을 판정합니다. CLI 실패의 대체 실행기로 사용하지 않습니다. |
+| `cli_checkpoint.py` | 운영 CLI에서 검증된 단위를 보존하고 원래 호출·입력·정책을 대조합니다. 저장·재검증을 새 호출이나 사람 승인으로 표시하지 않습니다. |
+| `generation_run.py` | 실행·문서별 호출·시간 한도와 실제 단위 상태를 기록합니다. 답변의 의미 판정과 원고 조립을 맡지 않습니다. |
+| `cli_provenance.py` | CLI stdout·호출 메타데이터와 요청·응답을 대조합니다. 실행기를 호출하거나 원고를 고치지 않습니다. |
+| `consistency.py` | 프로젝트 계약 설정·문서·소스 근거와 선택한 CLI의 문서 간 대조를 연결합니다. 자동 판정과 사람 승인을 구분하며 게시할 인용을 원문과 대조합니다. |
 | `response_bundle.py`, `agent_errors.py` | 요청 지문에 연결된 파일 교환과 공통 전송 오류를 담당합니다. 파일 교환을 실제 호출로 표시하지 않습니다. |
 | `matching.py` | 파일 접근 없이 경로 glob과 C++ 심볼 선택 규칙을 제공합니다. |
 | `impact.py` | 설정과 근거를 모아 재생성 대상을 계산하고 보고서를 구성합니다. |
@@ -56,6 +60,8 @@ SOLID 원칙 중 단일 책임과 의존 방향을 우선 적용합니다. 실�
 
 `Config.review`, `site`, `update`, `visuals`, `automation`, `documentation`은 책임별 설정 객체를 반환합니다. YAML 키·기본값·명시적 false/0과 로컬 덮어쓰기는 유지합니다. 사용하지 않는 선택 기능의 잘못된 옵션 때문에 다른 명령까지 새로 거부하지 않도록, 기존 기능에서 옵션을 소비하던 시점에 설정 객체의 검증을 호출합니다. 객체는 접근 시 현재 설정에서 만들므로 시험 복사본의 변경 뒤에 오래된 값이 남지 않습니다. `raw`에는 알 수 없는 프로젝트 키도 보존하여 snapshot 왕복을 유지합니다.
 
+후속 PR #143에서 추가한 CLI 체크포인트와 실행 한도도 `ReviewConfig` 필드로 전달합니다. 실행 사용량·종료 판정·기록 저장은 `generation_run`, 원본 CLI 기록의 적합성은 `cli_checkpoint`와 `cli_provenance`의 경계에 있습니다. 이 운영 재개 경계는 비교·수리 시험의 `design_trials`와 구분합니다. 실제 계약과 검증 정책은 [CLI 재개 안내](reuse-boundaries.md#cli-중간-실패에서-재개하기)와 [문서 간 계약 대조](contract-consistency.md)를 따릅니다.
+
 | 기존 raw 소비 영역 | 키와 기본값 | 현재 경계 |
 | --- | --- | --- |
 | 생성·검토·재사용 | `design_prompt: standard`, `design_grounding: false`, `design_revision: false`, `answer_cache: false`, `reader_loop: {}`, `coverage_triage: {}` | `ReviewConfig`가 해석합니다. 섹션의 grounding·prompt 재정의가 우선합니다. |
@@ -73,4 +79,4 @@ SOLID 원칙 중 단일 책임과 의존 방향을 우선 적용합니다. 실�
 
 사이트 manifest의 `engine`에는 분리된 생성·판정·설정 파일도 기록합니다. 같은 코드를 다른 파일로 옮겼다고 실행 코드 추적이 사라지지 않도록 합니다. 코드 이동으로 build_id는 달라질 수 있지만 원고의 입력 정책 지문이나 승인 상태를 바꾸지 않습니다. 출력 바이트가 같은 경우와 실행 코드 기록만 달라진 경우를 검증 기록에서 구분합니다.
 
-고정 응답 회귀는 네 전송 방식과 두 프롬프트 모드의 요청·검증 결과·artifact·출처를 변경 전 SHA의 값과 대조합니다. 시각·실행 ID·파일 기록을 포함하지 않는 메모리 경계이므로 제외할 비결정적 필드는 없습니다. 실제 CLI 실행의 문장에는 바이트 동일성을 요구하지 않습니다. 자세한 검증 기록은 [#141 작업 기록](../inhouse/records/structure-141.md)에 남깁니다.
+고정 응답 회귀는 네 전송 방식과 두 프롬프트 모드의 요청·검증 결과·artifact·출처를 대조합니다. #141의 변경 전 캡처는 `generation-141.json`에 보존하며, 병합 `350a9d3`까지의 동작 보존 근거입니다. 후속 #138~#140의 의도된 스키마·문맥·정책 변경은 별도 `generation-138.json` 기준과 해당 이슈의 회귀로 검사합니다. 이를 #141의 무동작 변경이나 새 CLI 생성 성공으로 해석하지 않습니다. 시각·실행 ID·파일 기록을 포함하지 않는 메모리 경계이며 실제 CLI 문장의 바이트 동일성을 요구하지 않습니다. 자세한 검증 기록은 [#141 작업 기록](../inhouse/records/structure-141.md)에 남깁니다.
