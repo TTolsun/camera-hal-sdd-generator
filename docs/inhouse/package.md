@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**[2026-10-27 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-27) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[2026-10-27 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-10-27-r2) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -12,7 +12,7 @@
 | 결과를 인수인계합니다. | [완료 기록](#완료-기록) |
 | 새 버전의 반입 파일을 만듭니다. | [패키지 재생성](#패키지-재생성) |
 
-[이번 릴리스 노트](release-2026-10-27.md)에서 병합 기능, Claude Code의 미완료 작업, 사내 적용 조건과 업그레이드 절차를 확인하세요. 진행 중인 변경은 반입본의 완료 기능으로 표시하지 않습니다.
+[이번 릴리스 노트](release-2026-10-27.md)에서 병합 기능, 공개 평가의 결과와 한계, 사내 적용 조건과 업그레이드 절차를 확인하세요. 공개 예제의 부분 재생성과 실제 사내 HAL 검증을 구분합니다.
 
 ## 반입 확인과 설치
 
@@ -22,14 +22,14 @@
 
 ### GitHub에서 받기
 
-`inhouse-2026-10-27` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+`inhouse-2026-10-27-r2` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
 
 | 파일 | 용도 |
 |---|---|
-| [camera-hal-sdd-inhouse-2026-10-27.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27/camera-hal-sdd-inhouse-2026-10-27.zip) | 생성기·가이드·스킬·설정 템플릿 |
-| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
-| [camera-hal-sdd-inhouse-2026-10-27.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27/camera-hal-sdd-inhouse-2026-10-27.zip.sha256) | 반입 ZIP의 SHA-256 |
-| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
+| [camera-hal-sdd-inhouse-2026-10-27-r2.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27-r2/camera-hal-sdd-inhouse-2026-10-27-r2.zip) | 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27-r2/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [camera-hal-sdd-inhouse-2026-10-27-r2.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27-r2/camera-hal-sdd-inhouse-2026-10-27-r2.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-10-27-r2/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
 
 프롬프트 파일은 이 검증 버전과 함께 보관하는 사본입니다. 이후 버전의 절차는 해당 버전의 이 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
 
@@ -121,6 +121,9 @@ config/visuals.yaml에는 generation: llm 질문을 실제 근거와 연결해�
 생성 원고와 HTML은 직접 고치지 말고 설정 또는 생성기에서 수정해줘.
 소스에서 확인한 동작, 에이전트의 검토, 실기기 시험, 사람 승인을 구분해줘.
 사람 승인이나 실행 결과를 만들어 내지 마. 승인 전 검증 가능한 일은 끝내줘.
+기존 원고의 반복 문장 경고는 합격으로 간주하지 말고 impact --config-changes로 재생성 범위를 확인해줘.
+공개 예제의 부분 재생성·response-bundle 기록은 사내 CLI 재현 성공 증거로 사용하지 마.
+문서 사이의 완료·취소·소유권 설명과 실제 소스를 대조하고 남은 의미 오류를 기록해줘.
 소스·설정·facts·원고·프롬프트·로그는 사내에만 보관해줘.
 공개 libcamera 배포 지시는 사내 입력에 적용하지 마.
 
