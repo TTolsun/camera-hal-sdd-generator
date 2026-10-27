@@ -17,7 +17,14 @@ SOLID 원칙 중 단일 책임과 의존 방향을 우선 적용합니다. 실�
 | `contract_render.py` | 질문별 검증표와 페이지마다 중복을 제거한 원문 보기를 만듭니다. |
 | `state_io.py` | 자동 실행과 유휴 검토가 공유하는 상태를 원자적으로 저장합니다. |
 | `localization_cli.py` | 번역 카탈로그 갱신 명령에서 사이트 렌더링과 번역 모듈을 연결합니다. |
-| `generated_design.py` | 필수 질문별 LLM 답변을 생성·검사하고 원고에 보존된 답변과 현재 근거·본문의 일치를 재검증합니다. 사람 승인을 만들지 않습니다. |
+| `config.py` | YAML 병합·경로 해석과 책임별 설정 객체를 제공합니다. 옵션 검증은 기존 소비 시점에 수행하며, 새 필수 키를 추가하지 않습니다. |
+| `generated_design.py` | 생성 순서·검증된 원고 재사용·최종 artifact 조립과 게시 재검증을 연결합니다. 기존 함수 import와 네 항목 반환 계약을 유지합니다. |
+| `design_request.py` | 요청·분할 단위·프롬프트·입력 지문을 준비합니다. 모델을 호출하거나 답변을 수용하지 않습니다. |
+| `design_response.py` | 응답 JSON·구절·문장·필수 질문을 판정하고 검증할 문서 모델을 구성합니다. 파일·Git·CLI·렌더러에 접근하지 않습니다. |
+| `design_execution.py` | 한 단위의 호출·입력 예산·기존 제한 재시도와 grounding 호출을 관리합니다. |
+| `design_types.py` | `RequestPlan`, `TopicPrompt`, `UnitRequest`, `UnitResult`, `DesignResult`로 경계 값을 명명합니다. 저장하는 schema 1은 바꾸지 않습니다. |
+| `design_trials.py`, `design_compat.py` | 명시적 HTTP 비교 체크포인트·기록 재생을 연결하고, 과거 HTTP 정책 해시의 정확한 허용 쌍을 판정합니다. CLI 실패의 대체 실행기로 사용하지 않습니다. |
+| `response_bundle.py`, `agent_errors.py` | 요청 지문에 연결된 파일 교환과 공통 전송 오류를 담당합니다. 파일 교환을 실제 호출로 표시하지 않습니다. |
 | `matching.py` | 파일 접근 없이 경로 glob과 C++ 심볼 선택 규칙을 제공합니다. |
 | `impact.py` | 설정과 근거를 모아 재생성 대상을 계산하고 보고서를 구성합니다. |
 | `coverage.py` | 주입받은 facts·섹션·근거 목록에서 문서 범위 누락을 판단합니다. Config·Git·파일에 접근하지 않습니다. |
@@ -44,3 +51,26 @@ SOLID 원칙 중 단일 책임과 의존 방향을 우선 적용합니다. 실�
 설정 검사 → 근거 수집 → 계약 판정 → 문서 조립 → 사이트 출력의 책임을 분리했습니다. `design_contracts`는 생성기나 렌더러를 import하지 않습니다. `automation`과 `idle_review`는 서로 상태 저장을 빌리지 않고 `state_io`를 사용합니다. `site_localization` 라이브러리는 사이트 출력을 import하지 않으며 명령 진입점이 둘을 연결합니다.
 
 `tests/test_dependencies.py`는 함수 안의 import도 포함해 라이브러리 전체의 순환 의존을 검사합니다. `__main__` 실행 진입점은 라이브러리 import에서 실행되지 않으므로 제외합니다. Liskov 치환을 주장하기 위한 상속 계층을 새로 만들지 않고 실제 교체 지점인 모델 호출만 작은 프로토콜로 정의했습니다.
+
+## 설정 접근 경계
+
+`Config.review`, `site`, `update`, `visuals`, `automation`, `documentation`은 책임별 설정 객체를 반환합니다. YAML 키·기본값·명시적 false/0과 로컬 덮어쓰기는 유지합니다. 사용하지 않는 선택 기능의 잘못된 옵션 때문에 다른 명령까지 새로 거부하지 않도록, 기존 기능에서 옵션을 소비하던 시점에 설정 객체의 검증을 호출합니다. 객체는 접근 시 현재 설정에서 만들므로 시험 복사본의 변경 뒤에 오래된 값이 남지 않습니다. `raw`에는 알 수 없는 프로젝트 키도 보존하여 snapshot 왕복을 유지합니다.
+
+| 기존 raw 소비 영역 | 키와 기본값 | 현재 경계 |
+| --- | --- | --- |
+| 생성·검토·재사용 | `design_prompt: standard`, `design_grounding: false`, `design_revision: false`, `answer_cache: false`, `reader_loop: {}`, `coverage_triage: {}` | `ReviewConfig`가 해석합니다. 섹션의 grounding·prompt 재정의가 우선합니다. |
+| 사이트·번역·CLI | `enabled: false`, `title: Camera HAL SDD`, `source_url: ''`, `source_link: github`, `source_link_template: ''`, `nav_group: ''`, `nav_groups: []`, `require_approval: false`, `intro/english_catalog/mermaid_dir: null`, `mermaid: ''`, `undefined_terms: null`, `translation_batch_size: 1` | `SiteConfig`가 해석합니다. 자산 경로는 계속 설정 루트 기준이며 기존 CLI Mermaid 우선순위를 유지합니다. |
+| 증분 갱신 | `extract_cmd/compdb_cmd: null` | `UpdateConfig`가 명령을 제공합니다. 기존 추출 명령 검증과 compdb의 truthy 판정을 유지합니다. |
+| 질문별 그림 | `file: null`, `max_nodes: 12`, `on_stale: error` | `VisualsConfig`가 설정 키를 검사합니다. 근거·계획별 노드 한도 판정은 그림 소비자가 담당합니다. |
+| 구조 그림 | `enabled: false`, `max_nodes: 16`, `direction: LR`, `strip_namespace: ''` | `Config.diagram_policy`가 섹션 재정의를 병합합니다. 그래프 유효성은 기존 그림 검사에 남습니다. |
+| 자동화·문서 수명주기 | 기존 schedule/publish/hermes/idle_review 및 documentation limits/pages/features/retired_pages | 설정 객체는 옵션을 전달하며 문서 한도 검증을 모읍니다. Git 대상·출력 격리·실제 문서 계약은 해당 업무 모듈이 검사합니다. |
+
+남은 raw 접근은 원형을 보존해야 하는 경계입니다. `site_build`, `idle_review`, `automation`은 기존 지문과 재개 식별자를 계산합니다. `trial_workspace`, `evaluate_pipeline`, `evaluate_reader`, `localization_cli`는 독립 시험의 설정을 복사·수정·저장합니다. `compdb`는 선택적인 simple compile DB의 빌드별 설정을 해석합니다. `config` 이외의 허용 모듈과 최대 접근 수는 의존성 테스트에 고정합니다. 호출 기록의 응답 원문을 뜻하는 `raw`는 Config 설정과 구분합니다.
+
+## 변경의 영향 범위
+
+검토 옵션을 추가할 때는 `config.ReviewConfig`와 해당 소비자만 수정합니다. 응답 검증 규칙을 교체할 때는 `design_response`와 판정 모듈·회귀를 수정하며 요청·재시도·파일 교환 코드는 바꾸지 않습니다. 재사용 적합성 검사는 `design_reuse`에서 변경하며, 실제 교체 지점인 검증 함수만 주입받습니다. 과거 HTTP 별칭은 `design_compat`에 한정되어 있습니다. 이번 책임 이동은 기존 grounding 정책 파일·정책 해시·캐시 키의 의미를 바꾸지 않습니다.
+
+사이트 manifest의 `engine`에는 분리된 생성·판정·설정 파일도 기록합니다. 같은 코드를 다른 파일로 옮겼다고 실행 코드 추적이 사라지지 않도록 합니다. 코드 이동으로 build_id는 달라질 수 있지만 원고의 입력 정책 지문이나 승인 상태를 바꾸지 않습니다. 출력 바이트가 같은 경우와 실행 코드 기록만 달라진 경우를 검증 기록에서 구분합니다.
+
+고정 응답 회귀는 네 전송 방식과 두 프롬프트 모드의 요청·검증 결과·artifact·출처를 변경 전 SHA의 값과 대조합니다. 시각·실행 ID·파일 기록을 포함하지 않는 메모리 경계이므로 제외할 비결정적 필드는 없습니다. 실제 CLI 실행의 문장에는 바이트 동일성을 요구하지 않습니다. 자세한 검증 기록은 [#141 작업 기록](../inhouse/records/structure-141.md)에 남깁니다.

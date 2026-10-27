@@ -15,7 +15,7 @@ import markdown
 
 from . import glossary
 from .evidence_navigation import compact_evidence
-from .config import Config, section_output
+from .config import Config, SiteConfig, section_output
 from .diagrams import section_diagram, diagram_block
 from .document_metadata import generation_info, reader_label, split_frontmatter
 from .export_html import _mermaid_fence, _nav_entries, _title_of_text
@@ -32,16 +32,18 @@ SOURCE_LINK_TEMPLATES = {
 }
 
 
-def source_link_template(settings: dict) -> str:
+def source_link_template(settings: SiteConfig | dict) -> str:
     """site 설정에서 인용 링크 템플릿을 정한다.
 
     `site.source_link_template` 이 있으면 그대로 쓰고, 없으면 `site.source_link` 가 가리키는
     호스트 형식(github 기본, gitiles)을 쓴다. 자리표시자가 어긋난 템플릿은 게시 시점에 조용히
     깨진 링크를 만들므로 여기서 즉시 실패시킨다.
     """
-    template = str(settings.get("source_link_template") or "")
+    if isinstance(settings, dict):
+        settings = SiteConfig.from_mapping(settings)
+    template = str(settings.source_link_template or "")
     if not template:
-        host = str(settings.get("source_link", "github"))
+        host = str(settings.source_link)
         template = SOURCE_LINK_TEMPLATES.get(host, "")
         if not template:
             raise RuntimeError(f"site.source_link 값을 모릅니다: {host} "
@@ -237,7 +239,7 @@ def _site_navigation(cfg, settings, retired):
     if missing:
         raise RuntimeError("Configured pages are missing; run generate first: " + ", ".join(missing))
     # 그룹은 sections.yaml 의 group 이 정한다. 없으면 한 그룹으로 묶는다.
-    default_group = str(settings.get("nav_group") or "설계 문서")
+    default_group = str(settings.nav_group or "설계 문서")
     scenario_group = next((str(s.get("group") or default_group) for s in sections.values()
                            if s.get("kind") == "per-scenario"), default_group)
     entries = [(str(s.get("group") or default_group), s.get("title", rel), rel) for rel, s in sections.items()
@@ -256,7 +258,7 @@ def _site_navigation(cfg, settings, retired):
             entries.append((group or inherited, name, rel))
     if not entries:
         raise RuntimeError("No generated Markdown pages found")
-    entries = _grouped(entries, [str(g) for g in (settings.get("nav_groups") or [])])
+    entries = _grouped(entries, [str(g) for g in (settings.nav_groups or [])])
     entries = _sectioned(entries, sections)
     entries = _place_scenarios(entries, [sc["id"] for sc in cfg.scenarios()])
     return sections, entries
@@ -268,13 +270,13 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
     from . import approvals as approvals_mod
     ledger = approvals_mod.load(cfg)
     approval_states = {rel: approvals_mod.page_status(ledger, rel, texts[rel]) for rel in texts}
-    if settings.get("require_approval", False):
+    if settings.require_approval:
         blocked = sorted(rel for rel, state in approval_states.items() if state != "approved")
         if blocked:
             raise RuntimeError("site.require_approval: 사람 검토 승인이 없는 문서가 있어 게시를 중단합니다: "
                                + ", ".join(blocked) + " (`sdd accept <문서>` 로 승인 기록)")
     if "index.md" not in texts:
-        intro = settings.get("intro")
+        intro = settings.intro
         if intro:
             texts["index.md"] = (cfg.root / str(intro)).read_text(encoding="utf-8")
         else:
@@ -303,7 +305,7 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
             raise ValueError('facts.json is required for cross-document contract review')
         enforce_consistency(cfg, model)
     if model is None and any(s.get("kind", "prose") == "prose" and s.get("facts", {}).get("classes")
-                            and {**(cfg.raw.get("diagrams") or {}), **(s.get("diagram") or {})}.get("enabled", False)
+                            and cfg.diagram_policy(s).get("enabled", False)
                             for s in sections.values()):
         raise RuntimeError("facts.json is required to generate configured class diagrams")
     return texts, approval_states, ledger, terms, model
@@ -323,7 +325,7 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
         if sc is None or meta["scenario_fingerprint"] != scenario_fingerprint(sc, settings):
             raise RuntimeError(f"Scenario evidence changed; regenerate page before publishing: {rel}")
         sc_section = next((s for s in cfg.sections() if s["id"] == meta.get("section")), {})
-        policy = {**(cfg.raw.get("diagrams") or {}), **(sc_section.get("diagram") or {})}
+        policy = cfg.diagram_policy(sc_section)
         scenario_document(sc, settings, int(policy.get("max_nodes", 16)))
         sources = re.findall(r"```mermaid\n(.*?)\n```", body, re.S)
         if len(sources) == 1:
@@ -567,13 +569,13 @@ def _write_search(out, rendered_pages, search, terms):
 def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None, *, check_consistency=True) -> Path:
     from .document_health import retired_paths
     retired = retired_paths(cfg)
-    settings = cfg.raw.get("site", {}) or {}
-    title = str(settings.get("title", "Camera HAL SDD"))
-    source_url = str(settings.get("source_url", ""))
+    settings = cfg.site
+    title = str(settings.title)
+    source_url = str(settings.source_url)
     link_template = source_link_template(settings)
     # Mermaid 우선순위: --mermaid > site.mermaid > site.mermaid_dir(사이트에 동봉) > 공개 CDN.
-    mermaid_dir = settings.get("mermaid_dir")
-    mermaid_src = mermaid_src or str(settings.get("mermaid") or "")
+    mermaid_dir = settings.mermaid_dir
+    mermaid_src = mermaid_src or str(settings.mermaid or "")
     if not mermaid_src:
         mermaid_src = f"assets/mermaid/{MERMAID_ENTRY}" if mermaid_dir else MERMAID
     out = (out or cfg.build_dir / "site").resolve()

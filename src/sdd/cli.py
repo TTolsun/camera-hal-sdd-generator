@@ -271,7 +271,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
         (cfg.build_dir / "change_impact.md").write_text(summary + "\n", encoding="utf-8")
         print("-> build/change_impact.md (리뷰어용 변경 요약)")
     health = document_health.enforce(cfg, model)
-    if (cfg.raw.get("site") or {}).get("enabled", False):
+    if cfg.site.enabled:
         from .export_site import export_site
         print(f"-> {export_site(cfg)}")
     document_health.checkpoint(cfg, health)
@@ -339,12 +339,12 @@ def cmd_export_html(args: argparse.Namespace) -> int:
     from .export_html import export
 
     cfg = _cfg(args)
-    site = cfg.raw.get("site") or {}
-    mermaid = args.mermaid or str(site.get("mermaid") or "") or None
-    if not mermaid and site.get("mermaid_dir"):
+    site = cfg.site
+    mermaid = args.mermaid or str(site.mermaid or "") or None
+    if not mermaid and site.mermaid_dir:
         # 사이트와 같은 오프라인 구성을 따른다. fetch-mermaid 가 준비한 로컬 사본을 가리키면
         # CDN 없이도 단일 HTML 의 그림이 렌더링된다 (HTML 을 이 경로에서 읽을 수 있는 환경 기준).
-        mermaid = (cfg.root / str(site["mermaid_dir"]) / "mermaid.esm.min.mjs").as_posix()
+        mermaid = (cfg.root / str(site.mermaid_dir) / "mermaid.esm.min.mjs").as_posix()
     out = export(cfg, out=Path(args.out).resolve() if args.out else None,
                  mkdocs_yml=Path(args.mkdocs).resolve() if args.mkdocs else None,
                  **({"mermaid_src": mermaid} if mermaid else {}), site_name=args.title,

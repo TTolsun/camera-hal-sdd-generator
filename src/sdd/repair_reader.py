@@ -130,7 +130,7 @@ def repair(cfg, seed, section_ids, out, *, agent_factory=Agent):
         imported_requests=imported, reused_responses=agent.reused, new_http_attempts=agent.new_attempts,
         new_http_calls=len(list((out / 'new-prompts/calls').rglob('*.receipt.json'))),
         settings={**{k: getattr(cfg.agent, k) for k in ('temperature', 'think', 'num_ctx', 'max_output_tokens')},
-                  'max_retries': cfg.max_retries, 'design_prompt': cfg.raw.get('review', {}).get('design_prompt', 'standard')},
+                  'max_retries': cfg.max_retries, 'design_prompt': cfg.review.design_prompt},
         sections_sha256=hashlib.sha256(snapshot.read_bytes()).hexdigest(),
         generator_files_sha256={n: hashlib.sha256(Path(__file__).with_name(n).read_bytes()).hexdigest()
             for n in ('repair_reader.py', 'generated_design.py', 'evidence.py', 'focused_prompt.py', 'prompting.py',

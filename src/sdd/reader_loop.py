@@ -120,7 +120,7 @@ def automatic_error(cfg, model, unit, raw):
             topic['answer_contract'] = part['answer_contract']
     sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
     _, passages = source_passages(sources,
-        whole_source=cfg.raw.get('review', {}).get('design_prompt') == 'focused',
+        whole_source=cfg.review.design_prompt == 'focused',
         scopes={s['id']: s['scope'] for s in topic['sources'] if 'scope' in s})
     try:
         data = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
@@ -230,7 +230,7 @@ def run(cfg, section_ids, out, *, seed=None, targets=None, limits=None, agent_fa
     targets = list(all_units) if targets is None else targets
     if not targets or len(set(targets)) != len(targets) or any(k not in all_units for k in targets):
         raise ValueError('Targets must name unique configured section/topic[/part] units')
-    scopes = cfg.raw.get('review', {}).get('reader_loop', {}).get('evidence_scopes', {})
+    scopes = cfg.review.reader_loop.get('evidence_scopes', {})
     if not isinstance(scopes, dict):
         raise ValueError('reader_loop.evidence_scopes must be a mapping')
     known_sources = {f"{s['id']}/{t['id']}/{r['id']}" for s in original

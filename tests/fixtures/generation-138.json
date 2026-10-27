@@ -1,0 +1,10 @@
+{
+  "cli/standard": "55de9858aa494b0c153d3a2c0f88fe35ae5a2c102907667d238d8575fd61f655",
+  "cli/focused": "5881266c73d7fe841322e859f1f1a5c9b058c28dfd3096318d3857bc73c464b1",
+  "ollama/standard": "8f726e805f7787f01ae751f1806029f92c4f927b55073c0aacfa54aa09955df4",
+  "ollama/focused": "37d47e61e8ef09bbfa4cdb1b4b9c886f25fedca447c18f8cdcbcd1bd675da2bd",
+  "openai-compatible/standard": "da1170d82254c3678fad6644e3253a39d9d83d6f58feea1e5a854031e9fadaab",
+  "openai-compatible/focused": "fdc6edd3570cc0b9878b774291312660200c44a315f094a97ff033d3ee5f712c",
+  "response-bundle/standard": "e6b6bfd2315a1041db96965fc400adb1e23e9defd236ef37a8a8e073ea92c3bc",
+  "response-bundle/focused": "470b6cc1426c1a7b91ac25e5b9848b3eb49a3807a0b10d0373ca52a0d4c0580d"
+}

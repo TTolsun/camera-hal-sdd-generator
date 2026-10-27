@@ -41,17 +41,7 @@ SYSTEM = (
 
 
 def settings(cfg: Config) -> dict[str, Any]:
-    opts = (cfg.raw.get("review", {}) or {}).get("coverage_triage", {}) or {}
-    if not isinstance(opts, dict) or set(opts) - _KEYS:
-        raise ValueError(f"review.coverage_triage 는 {sorted(_KEYS)} 만 지원합니다.")
-    # "false" 같은 문자열은 파이썬에서 참이 되므로, 관문을 여는 값은 진짜 불리언만 받는다.
-    for key in ("enabled", "pass_gate"):
-        if key in opts and not isinstance(opts[key], bool):
-            raise ValueError(f"review.coverage_triage.{key} 는 true 또는 false 여야 합니다: {opts[key]!r}")
-    limit = opts.get("max_diff_chars", 6000)
-    if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
-        raise ValueError(f"review.coverage_triage.max_diff_chars 는 양의 정수여야 합니다: {limit!r}")
-    return opts
+    return cfg.review.triage_options()
 
 
 def agent_config(cfg: Config, opts: dict[str, Any]) -> AgentConfig:

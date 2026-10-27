@@ -226,7 +226,7 @@ def data(glossary: Glossary) -> list[dict]:
 
 def enforce(cfg: Config, glossary: Glossary, pages: dict[str, str]) -> None:
     """뜻이 없는 약어를 알린다. 용어집 파일이 있으면 기본으로 게시를 중단한다."""
-    policy = (cfg.raw.get("site") or {}).get("undefined_terms")
+    policy = cfg.site.undefined_terms
     if policy is None:
         policy = "fail" if glossary.configured else "warn"
     # YAML 은 따옴표 없는 off 를 false 로 읽는다. 끄려던 설정이 기본값(fail)으로 바뀌지 않게 한다.

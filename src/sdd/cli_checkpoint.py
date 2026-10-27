@@ -29,8 +29,10 @@ def validation_policy():
     policy = {name: hashlib.sha256((root / (name + '.py')).read_bytes()).hexdigest()
               for name in ('manuscript', 'semantic', 'duplicates', 'design_contracts', 'validate')}
     selected = {'materialize', 'validate_answers', 'decode_unit', 'normalize_answer', '_validate_unit_response'}
-    tree = ast.parse((root/'generated_design.py').read_text(encoding='utf-8'))
-    nodes = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in selected]
+    nodes = []
+    for module in ('design_response', 'design_execution'):
+        tree = ast.parse((root/(module+'.py')).read_text(encoding='utf-8'))
+        nodes.extend(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in selected)
     if {node.name for node in nodes} != selected:
         raise ValueError('Design validation policy functions are missing')
     policy['design_validation'] = hashlib.sha256(ast.dump(ast.Module(body=nodes, type_ignores=[]),
