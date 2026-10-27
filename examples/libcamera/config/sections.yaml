@@ -2898,12 +2898,13 @@ sections:
       end: the scope of the libcamera project.
     parts:
     - id: what
-      question: 이 프로젝트가 무엇을 하는 소프트웨어인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
+      question: 공식 소개가 명시한 제품의 종류·대상 운영체제·줄이려는 복잡성을 쉬운 문장 두세 개로 설명하세요. 제품 이름 libcamera와 코드 식별자는 원문 표기를 유지하세요.
       sources:
       - what
       answer_contract:
         basis: description
-        required_terms: []
+        required_terms:
+        - - libcamera
         reject_patterns: []
       max_statements: 1
     - id: problem
@@ -2916,7 +2917,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: easier
-      question: 이 프로젝트를 쓰면 그 일이 어떻게 단순해지는지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
+      question: 이 프로젝트를 쓰면 그 일이 어떻게 단순해지는지 한 문단으로 설명하세요. 공식 문서의 작업과 연결 관계를 중심으로 쉬운 문장을 쓰세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - for
       answer_contract:
@@ -2925,7 +2926,7 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: layers
-      question: 카메라를 쓰는 소프트웨어가 네 계층으로 나뉘는 모습을 아래에서 위 순서로 쉽게 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
+      question: 카메라를 쓰는 소프트웨어가 네 계층으로 나뉘는 모습을 아래에서 위 순서로 쉽게 설명하세요. 공식 문서의 작업과 연결 관계를 중심으로 쉬운 문장을 쓰세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
       sources:
       - stack
       max_statements: 1
