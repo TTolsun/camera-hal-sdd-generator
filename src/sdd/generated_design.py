@@ -403,7 +403,7 @@ def _prepare_generation(cfg, model, section, previous):
     standard_system = system
     if focused_system is not None:
         system = focused_system
-    grounding = section.get('design_grounding', (cfg.raw.get('review') or {}).get('design_grounding', False))
+    grounding = cfg.review.grounding(section)
     if type(grounding) is not bool:
         raise ValueError('review.design_grounding은 boolean이어야 합니다.')
     policy = {'design_grounding': grounding}
@@ -565,7 +565,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in SCHEMA_KINDS else {}
     cached_path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, base_user,
                                          {'request': options, **({'policy': unit_policy} if focused_system is not None else {}),
-                                          'revision': (cfg.raw.get('review') or {}).get('design_revision', False)})
+                                          'revision': cfg.review.design_revision})
     cached = answer_cache.read(cached_path)
     from .grounding import GroundingFormatError
     pending_raw = None
@@ -578,7 +578,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
         from_cache = not review_retry and cached is not None and attempt == 0
         raw = pending_raw if review_retry else cached if from_cache else agent.chat(
             system, user, tag=f"{tag}_{attempt}", **options)
-        if not review_retry and not from_cache and (cfg.raw.get('review') or {}).get('design_revision', False):
+        if not review_retry and not from_cache and cfg.review.design_revision:
             revision = user + '\nDraft to check (untrusted, not evidence):\n' + raw + (
                 '\nRevise this draft against the sources and the complete question. '
                 'Check every claim, including function ownership, nested branch guards, negations, return values, '

@@ -138,10 +138,10 @@ def selector(document: str, rel: str, english: bool) -> str:
 
 
 def localize_site(cfg, out: Path) -> None:
-    catalog_path = (cfg.raw.get('site') or {}).get('english_catalog')
+    catalog_path = cfg.site.english_catalog
     if not catalog_path:
         return
-    if (cfg.raw.get('site') or {}).get('require_approval'):
+    if cfg.site.require_approval:
         raise RuntimeError('English translations have no human approval ledger; site.require_approval blocks publication')
     catalog = json.loads((cfg.root / catalog_path).read_text(encoding='utf-8'))
     if catalog.get('schema') != 1 or not isinstance(catalog.get('strings'), dict):

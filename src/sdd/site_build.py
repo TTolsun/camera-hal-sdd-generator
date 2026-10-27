@@ -91,15 +91,15 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
         inputs["configuration"] = hashlib.sha256(json.dumps(cfg.raw, sort_keys=True, default=str).encode()).hexdigest()
-        intro = (cfg.raw.get("site") or {}).get("intro")
+        intro = cfg.site.intro
         if intro:
             inputs["intro"] = digest(cfg.root / intro)
-        catalog = (cfg.raw.get("site") or {}).get("english_catalog")
+        catalog = cfg.site.english_catalog
         if catalog:
             inputs["english_catalog"] = digest(cfg.root / catalog)
         if cfg.facts_path.exists():
             inputs["facts"] = digest(cfg.facts_path)
-        visuals_file = (cfg.raw.get('visuals') or {}).get('file')
+        visuals_file = cfg.visuals.file
         if visuals_file:
             inputs['visuals'] = digest(cfg.root / visuals_file)
         from .approvals import ledger_path

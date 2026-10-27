@@ -43,6 +43,19 @@ def test_named_local_merge_preserves_false_zero_null_and_relative_paths(tmp_path
     assert cfg.raw['site'] is None
 
 
+def test_configuration_views_follow_trial_mutations_and_preserve_unknown_keys(tmp_cfg):
+    tmp_cfg.raw['site'] = {'translation_batch_size': 0, 'future_key': 'retained'}
+    with pytest.raises(ValueError, match='translation_batch_size'):
+        tmp_cfg.site.batch_size()
+    tmp_cfg.raw['site']['translation_batch_size'] = 3
+    assert tmp_cfg.site.batch_size() == 3
+    assert tmp_cfg.raw['site']['future_key'] == 'retained'
+    tmp_cfg.raw['review']['design_grounding'] = 'false'
+    with pytest.raises(ValueError, match='boolean'):
+        tmp_cfg.review.grounding({})
+    assert tmp_cfg.review.grounding({'design_grounding': False}) is False
+
+
 @pytest.mark.parametrize('kind', ['cli', 'ollama', 'openai-compatible', 'response-bundle'])
 @pytest.mark.parametrize('mode', ['standard', 'focused'])
 def test_frozen_generation_requests_results_and_origin(tmp_cfg, generated, kind, mode):

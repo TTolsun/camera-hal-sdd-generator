@@ -45,9 +45,7 @@ def fixed_translation(source):
 def translate_missing(cfg, catalog, agent=None):
     if cfg.agent.kind == 'dry-run':
         raise ValueError('Translation requires an actual LLM response.')
-    size = cfg.raw.get('site', {}).get('translation_batch_size', 1)
-    if type(size) is not int or not 1 <= size <= 16:
-        raise ValueError('site.translation_batch_size must be an integer from 1 to 16.')
+    size = cfg.site.batch_size()
     agent = agent or Agent(cfg.agent, cfg.build_dir / 'translation-prompts')
     catalog = {**catalog, 'strings': {source: value or fixed_translation(source) or value
                                       for source, value in catalog['strings'].items()}}

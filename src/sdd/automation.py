@@ -22,7 +22,7 @@ from .site_build import MANIFEST, verify_site
 
 def cron(cfg, config_path):
     """Render a user crontab entry for CRON_TZ-capable cron (e.g. Cronie)."""
-    schedule = cfg.raw.get("automation", {}).get("schedule", {})
+    schedule = cfg.automation.schedule
     at, zone = str(schedule.get("time", "")), str(schedule.get("timezone", ""))
     if not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", at):
         raise ValueError("automation.schedule.time에 HH:MM을 지정하세요.")
@@ -52,7 +52,7 @@ def git(repo, *args):
 
 
 def _settings(cfg):
-    opts = cfg.raw.get("automation", {})
+    opts = cfg.automation.options
     if not isinstance(opts, dict):
         raise ValueError("automation 설정은 객체여야 합니다.")
     pub = opts.get("publish", {})

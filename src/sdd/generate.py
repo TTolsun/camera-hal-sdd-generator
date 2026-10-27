@@ -335,7 +335,7 @@ class Generator:
                 "|---|---|---|---|---|---|"]
         routes: list[tuple[str, str]] = []
         shown_by_id: dict[str, tuple[list[Any], int]] = {}
-        policy = {**(self.cfg.raw.get("diagrams") or {}), **(sec.get("diagram") or {})}
+        policy = self.cfg.diagram_policy(sec)
         documents = {sid: scenario_document(sc, self.scenario_cfg.get(sid, {}), int(policy.get("max_nodes", 16)))
                      for sid, sc in ordered if not impact or sid in impact.scenarios}
         for sid, sc in ordered:

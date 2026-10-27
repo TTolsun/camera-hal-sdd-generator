@@ -125,11 +125,9 @@ class Steps:
 
 def _extract(cfg: Config) -> KnowledgeModel:
     """Allow extraction in the actual build environment, with staged validation."""
-    command = (cfg.raw.get('update') or {}).get('extract_cmd')
+    command = cfg.update.extraction_command()
     if command is None:
         return extract.run(cfg)
-    if not isinstance(command, list) or not command or any(not isinstance(v, str) or not v for v in command):
-        raise ValueError('update.extract_cmd는 비어 있지 않은 문자열 인자 목록이어야 합니다.')
     commit = source_git.resolve_commit(cfg.source_root, 'HEAD')
     cfg.build_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='extract-', dir=cfg.build_dir) as temporary:
@@ -155,7 +153,7 @@ def _run_compdb_cmd(cfg: Config) -> None:
     import subprocess
 
     from . import compdb
-    cmd = (cfg.raw.get("update", {}) or {}).get("compdb_cmd")
+    cmd = cfg.update.compdb_cmd
     if cmd:
         subprocess.run([str(c) for c in cmd], cwd=cfg.source_root, check=True)
         if cfg.ndk_build.get("enabled"):
