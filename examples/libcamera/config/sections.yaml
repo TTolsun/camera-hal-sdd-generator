@@ -3633,8 +3633,7 @@ sections:
     - responsibility
   - id: state
     title: 상태와 허용 호출
-    question: Available·Acquired·Configured·Running·Stopping 상태와 acquire/configure/start/stop/release 허용 전이를 설명하세요. createRequest와
-      queueRequest의 허용 상태 및 호출자의 상태 변경 동기화 책임을 구분하세요.
+    question: Available·Acquired·Configured·Running·Stopping 상태와 acquire/configure/start/stop/release 허용 전이를 설명하세요. createRequest와 queueRequest의 허용 상태 및 호출자의 상태 변경 동기화 책임을 구분하세요.
     sources:
     - id: states
       file: src/libcamera/camera.cpp
@@ -3646,18 +3645,23 @@ sections:
       end: int Camera::start(const ControlList *controls)
     - id: create-state
       file: src/libcamera/camera.cpp
-      start: "\\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running\
-        \ state as defined in \\ref camera_operation."
+      start: "\\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation."
       end: std::unique_ptr<Request> Camera::createRequest(uint64_t cookie)
     - id: queue-state
       file: src/libcamera/camera.cpp
-      start: "\\context This function is \\threadsafe. It may only be called when the camera\n * is in the Running state as\
-        \ defined in \\ref camera_operation."
+      start: "\\context This function is \\threadsafe. It may only be called when the camera\n * is in the Running state as defined in \\ref camera_operation."
       end: int Camera::queueRequest(Request *request)
     - id: synchronization
       file: src/libcamera/camera.cpp
       start: Functions that affect the camera state as defined below are generally not
       end: for ensuring their synchronization if necessary.
+    - id: configure-state-result
+      file: src/libcamera/camera.cpp
+      start: d->setState(Private::CameraConfigured);
+      end: return 0;
+      scope:
+        start: int Camera::configure(CameraConfiguration *config)
+        end: "\n}\n"
     covers:
     - state
     parts:
@@ -3670,9 +3674,10 @@ sections:
         required_terms:
         - - Acquired
     - id: transition-configure
-      question: configure가 성공한 뒤의 상태는 무엇입니까?
+      question: configure가 성공한 뒤의 상태는 무엇입니까? 상태도만으로 성공 조건을 추정하지 말고 configure 구현의 상태 설정과 반환값도 함께 대조하세요.
       sources:
       - states
+      - configure-state-result
       answer_contract:
         basis: description
         required_terms:
@@ -4253,16 +4258,12 @@ sections:
   design_topics:
   - id: configuration-failure
     title: 구성 실패를 좁히는 순서
-    question: 구성 실패를 처음 조사하는 개발자가 src/libcamera/camera.cpp의 Camera::configure에서 상태 검사, validate 결과, 실제 PipelineHandler::configure
-      반환, stream 연결 결과 순서로 원인을 좁히도록 설명하세요. 각 단계에서 읽을 값과 다음 분기, -ENODEV/-EACCES/-EINVAL의 다른 원인을 구분하세요. validate를 디버거에서 재호출하지
-      말고 원래 호출의 결과를 관찰하세요. validate 후보 목록을 모두 실행하지 말고 실제 config 동적 타입과 pipe_의 구체 구현을 호출 스택에서 확인하도록 안내하세요. 이는 소스 기반 조사 계획이며
-      실기기 검증 명령이나 복구 보장이 아닙니다.
+    question: 구성 실패를 처음 조사하는 개발자가 src/libcamera/camera.cpp의 Camera::configure에서 상태 검사, validate 결과, 실제 PipelineHandler::configure 반환, stream 연결 결과 순서로 원인을 좁히도록 설명하세요. 각 단계에서 읽을 값과 다음 분기, -ENODEV/-EACCES/-EINVAL의 다른 원인을 구분하세요. validate를 디버거에서 재호출하지 말고 원래 호출의 결과를 관찰하세요. validate 후보 목록을 모두 실행하지 말고 실제 config 동적 타입과 pipe_의 구체 구현을 호출 스택에서 확인하도록 안내하세요. 이는 소스 기반 조사 계획이며 실기기 검증 명령이나 복구 보장이 아닙니다.
     covers:
     - configuration-failure
     parts:
     - id: entry
-      question: Camera::configure 내부에 표시된 isAccessAllowed 원래 호출의 반환값 ret를 관찰하고 실패 반환 분기를 기록하는 조사 계획을 설명하세요. 소스에 없는 선행 호출을
-        만들지 마세요.
+      question: Camera::configure 내부에 표시된 isAccessAllowed 원래 호출의 반환값 ret를 관찰하고 실패 반환 분기를 기록하는 조사 계획을 설명하세요. 소스에 없는 선행 호출을 만들지 마세요.
       sources:
       - configure-access
       answer_contract:
@@ -4287,8 +4288,7 @@ sections:
         - - disconnected_
         - - -ENODEV
     - id: access-state
-      question: isAccessAllowed의 상태 범위 비교에서 currentState, low, high 값을 관찰하고 비교식의 참·거짓을 기록하는 조사 계획만 설명하세요. 상태 enum 값이며 배열 인덱스를
-        추정하지 마세요.
+      question: isAccessAllowed의 상태 범위 비교에서 currentState, low, high 값을 관찰하고 비교식의 참·거짓을 기록하는 조사 계획만 설명하세요. 상태 enum 값이며 배열 인덱스를 추정하지 마세요.
       sources:
       - state-range
       answer_contract:
@@ -4322,7 +4322,7 @@ sections:
         - - 호출자
         - - 확인
     - id: validation-result
-      question: 이 validate 호출의 비교 대상 상태 이름을 관찰하는 조사 지점만 설명하세요.
+      question: 이 validate 호출의 결과를 Valid와 비교하는 조건과, Valid가 아닐 때 반환하는 오류 코드를 함께 기록하는 조사 항목을 한 문단으로 제안하세요. 같은 분기를 결과 확인과 오류 확인으로 되풀이하지 마세요.
       sources:
       - validation-check
       answer_contract:
@@ -4330,14 +4330,8 @@ sections:
         required_terms:
         - - validate
         - - Valid
-    - id: validation-error
-      question: 위 비교 조건이 참이면 return 뒤에 나오는 오류 코드를 관찰하는 지점만 설명하세요.
-      sources:
-      - validation-check
-      answer_contract:
-        basis: investigation
-        required_terms:
         - - -EINVAL
+      max_statements: 1
     - id: device-configure
       question: 상태·검증을 통과했으면 실제 pipe_의 configure 호출 반환값과 호출 스택의 구체 구현을 관찰해 실패 위치를 좁히는 계획을 설명하세요. 구체 클래스 이름은 추정하지 마세요.
       sources:
@@ -4394,8 +4388,7 @@ sections:
       start: The caller shall check the
       end: configuration carefully.
       scope:
-        start: "\\retval CameraConfiguration::Adjusted The configuration has been adjusted\n * and is now valid. Parameters\
-          \ may have changed for any stream, and stream"
+        start: "\\retval CameraConfiguration::Adjusted The configuration has been adjusted\n * and is now valid. Parameters may have changed for any stream, and stream"
         end: configuration carefully.
     - id: validation-check
       file: src/libcamera/camera.cpp
