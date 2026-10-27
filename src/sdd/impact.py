@@ -149,7 +149,7 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
             # 같은 답변으로 다시 만들거나 해당 주제만 다시 쓰게 한다.
             from . import generated_design
             try:
-                repeated = generated_design.verify(model, sec, text).get("repeated_sentences")
+                repeated = generated_design.verify(model, sec, text, cfg=cfg).get("repeated_sentences")
                 if repeated:
                     changed[sec["id"]] = ["같은 근거로 같은 내용을 되풀이한 문장이 있음: " + repeated[0][:100]]
             except (ValueError, TypeError, KeyError) as exc:

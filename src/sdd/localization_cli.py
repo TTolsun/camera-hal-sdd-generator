@@ -33,7 +33,10 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
     previous = json.loads(destination.read_text(encoding='utf-8')) if destination.exists() else {}
     cfg.build_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.translation-', dir=cfg.build_dir) as temporary:
-        out = _render_site(cfg, Path(temporary))
+        # Private Korean rendering discovers strings for the not-yet-created
+        # translation. It is never synchronized to a publication directory.
+        # The public export path always checks the completed bilingual review.
+        out = _render_site(cfg, Path(temporary), check_consistency=False)
         declared_labels = diagram_translations(out)
         pages, units = {}, set()
         for path in sorted(out.rglob('*.html')):

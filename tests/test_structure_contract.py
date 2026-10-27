@@ -87,9 +87,15 @@ def test_frozen_generation_requests_results_and_origin(tmp_cfg, generated, kind,
             calls.append(dict(system=system, user=user, options=options))
             return json.dumps({'statements': [draft.statement]}, ensure_ascii=False)
     _, resolved, report, artifact = generate(tmp_cfg, model, Recorded(), copy.deepcopy(section))
+    if kind == 'cli':
+        from sdd.cli_checkpoint import validation_policy, style_policy
+        assert artifact.pop('validation_policy') == validation_policy()
+        assert artifact.pop('style_policy') == style_policy(tmp_cfg)
     stable = {'calls': calls, 'resolved': resolved, 'report': report, 'artifact': artifact}
     actual = hashlib.sha256(json.dumps(stable, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
-    fixture = Path(__file__).parent / 'fixtures' / 'generation-141.json'
+    # #138 intentionally changes native schemas, lexical coverage instructions
+    # and focused obligations. Keep the old #141 capture as historical evidence.
+    fixture = Path(__file__).parent / 'fixtures' / 'generation-138.json'
     expected = json.loads(fixture.read_text(encoding='utf-8'))
     assert actual == expected[f'{kind}/{mode}']
 

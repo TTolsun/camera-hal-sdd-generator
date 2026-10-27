@@ -83,6 +83,71 @@ def test_cli_default_model_is_not_overridden(tmp_path):
     assert '--model' not in captured['argv']
 
 
+def test_claude_native_schema_output_and_receipt_bind_actual_arguments(tmp_path):
+    from sdd.call_records import load_record
+    from sdd.cli_provenance import verify_cli_receipt
+    output = dict(type='result', subtype='success', is_error=False, result='', structured_output={'status': 'ok'})
+    cfg = AgentConfig(runner='claude', model='fixture-model', args=['--effort', 'high'],
+                      command=fake_cli(tmp_path, json.dumps(output)))
+    schema = dict(type='object', required=['status'], properties=dict(status=dict(type='string')))
+    dump = tmp_path/'prompts'
+    agent = Agent(cfg, dump)
+    assert json.loads(agent.chat('system', 'user', response_schema=schema)) == {'status': 'ok'}
+    captured = json.loads((tmp_path/'input.json').read_text(encoding='utf-8'))
+    index = captured['argv'].index('--json-schema')
+    assert json.loads(captured['argv'][index+1]) == schema
+    assert captured['argv'][-2:] == ['--effort', 'high']
+    record = load_record(agent.last_receipt, root=dump/'calls')
+    assert verify_cli_receipt(record.request, record.raw, record.receipt, dump/'calls', cfg)['runner'] == 'claude'
+
+
+@pytest.mark.parametrize('permanent', [False, True])
+@pytest.mark.parametrize('cleanup_error', [PermissionError('fixture retained working directory'), OSError(39, 'directory not empty')])
+def test_cli_cleanup_lock_preserves_completed_response_and_records_deferral(tmp_path, monkeypatch, permanent, cleanup_error):
+    import shutil
+    original = shutil.rmtree
+    attempts = []
+    def locked(path, *args, **kwargs):
+        attempts.append(path)
+        if permanent or len(attempts)==1:
+            raise cleanup_error
+        return original(path, *args, **kwargs)
+    monkeypatch.setattr('sdd.cli_agent.shutil.rmtree', locked)
+    cfg = AgentConfig(command=fake_cli(tmp_path, 'completed answer'))
+    dump = tmp_path/'prompts'
+    agent = Agent(cfg, dump)
+    assert agent.chat('system','user')=='completed answer'
+    receipt=json.loads(agent.last_receipt.read_text(encoding='utf-8'))
+    assert receipt['provider']['workspace_cleanup']['status']==('deferred' if permanent else 'removed')
+    assert len(list((dump/'calls').rglob('*.receipt.json')))==1
+    assert len(attempts)==(5 if permanent else 2)
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='POSIX process-group race')
+def test_timeout_group_exit_race_keeps_timeout_failure_and_partial_output(monkeypatch):
+    from sdd.cli_agent import run
+    class Process:
+        pid = 42
+        attempts = 0
+        killed = False
+        def communicate(self, *args, **kwargs):
+            self.attempts += 1
+            if self.attempts == 1:
+                raise subprocess.TimeoutExpired('fixture', 0.1, output=b'partial', stderr=b'diagnostic')
+            return '', ''
+        def kill(self):
+            self.killed = True
+    process = Process()
+    monkeypatch.setattr('sdd.cli_agent.subprocess.Popen', lambda *a, **kw: process)
+    def already_exited(*args):
+        raise ProcessLookupError('process group exited')
+    monkeypatch.setattr('sdd.cli_agent.os.killpg', already_exited)
+    with pytest.raises(RuntimeError, match='초과') as error:
+        run(['fixture'], cwd=None, prompt='request', timeout=0.1)
+    assert error.value.stdout == b'partial' and error.value.stderr == b'diagnostic'
+    assert process.killed and process.attempts == 2
+
+
 def test_missing_cli_does_not_fallback(tmp_path, monkeypatch):
     monkeypatch.setattr(Agent, '_post', lambda *a: pytest.fail('No API fallback'))
     with pytest.raises(AgentError, match='찾지 못했습니다'):

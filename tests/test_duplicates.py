@@ -177,6 +177,35 @@ def test_function_alias_keeps_repetition_but_explicit_owners_are_distinct():
     assert not similar(text, text.replace('Engine::configure()', 'Device::configure()'))
 
 
+def test_prose_field_owners_distinguish_real_public_frame_context_claims():
+    left = '`IPAFrameContext` 구조체의 `lsc` 필드는 `ipa::lsc::FrameContext` 타입으로 선언되어 있으며 프레임별 알고리즘 처리 상태를 보관합니다.'
+    right = '`IPAContext` 구조체의 `frameContexts` 필드는 `FCQueue<IPAFrameContext>` 타입으로 선언되어 있으며 프레임별 알고리즘 처리 상태를 보관합니다.'
+    assert not similar(left, right)
+    text = '`Owner` 구조체의 `field` 필드는 정수 값을 유지하고 요청 처리 중 콜백에서 갱신됩니다.'
+    assert similar(text, text.replace('`Owner` 구조체의 `field` 필드는', '`Owner.field`는'))
+    assert similar(text, text.replace('`Owner` 구조체의 `field` 필드는', '`ns::Owner.field`는'))
+
+
+def test_implementer_subject_preserves_distinct_function_contracts():
+    configure = '`PipelineHandler::configure()`는 `CameraManager` 스레드에서 호출되며 성공하면 0을, 실패하면 음수 오류를 반환해야 합니다.'
+    queue = '`PipelineHandler::queueRequestDevice()`의 구현자는 성공하면 0을, 실패하면 음수 오류를 반환해야 합니다.'
+    assert not similar(configure, queue)
+    assert similar(queue, queue.replace('의 구현자는', ' 함수는'))
+    assert similar(queue, queue.replace('PipelineHandler::queueRequestDevice', 'queueRequestDevice'))
+    implementation = queue.replace('의 구현자는', '의 구현은')
+    assert not similar(configure, implementation)
+    assert not similar(configure, implementation.replace('PipelineHandler::queueRequestDevice()', 'queueRequestDevice'))
+    assert similar(queue, implementation.replace('PipelineHandler::queueRequestDevice()', 'queueRequestDevice'))
+
+
+@pytest.mark.parametrize('name', ['queueRequestDevice', 'queueRequestDevice()', 'PipelineHandler::queueRequestDevice()'])
+def test_caller_of_named_function_preserves_distinct_contracts_and_alias_repetition(name):
+    configure = '`PipelineHandler::configure()`는 `CameraManager` 스레드에서 호출되며, 구현은 성공하면 0을 반환하고 실패하면 음수 오류 코드를 반환해야 합니다.'
+    queue = f'`{name}`를 호출하는 쪽은 `CameraManager` 스레드에서 이 함수를 호출해야 하며, 구현은 성공하면 0을 반환하고 실패하면 음수 오류 코드를 반환해야 합니다.'
+    assert not similar(configure, queue)
+    assert similar(configure, queue.replace(name, 'configure'))
+
+
 @pytest.mark.parametrize('left,right', [
     ('Worker::run() 함수는 state.ready 가 false 이면 대기 중인 요청을 즉시 반환합니다.',
      'Worker::run() 함수는 state.ready 가 true 이면 대기 중인 요청을 즉시 반환합니다.'),

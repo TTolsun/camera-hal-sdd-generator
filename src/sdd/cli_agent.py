@@ -8,6 +8,9 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import time
+from contextlib import contextmanager
+from .trial_workspace import is_link
 
 
 RUNNERS = ('hermes', 'opencode', 'claude')
@@ -39,7 +42,10 @@ def run(argv, *, cwd, prompt, timeout, env=None):
                            capture_output=True, check=False)
         else:
             import signal
-            os.killpg(proc.pid, signal.SIGKILL)
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass  # The timed-out process can exit before group cleanup.
         proc.kill()
         try:
             proc.communicate(timeout=5)
@@ -66,9 +72,15 @@ def decode_response(runner, stdout):
         data = json.loads(stdout)
         if not isinstance(data, dict) or data.get('is_error') or data.get('subtype') != 'success':
             raise ValueError('Claude Code did not complete successfully')
-        if not isinstance(data.get('result'), str):
+        if 'structured_output' in data:
+            if not isinstance(data['structured_output'], dict):
+                raise ValueError('Claude Code structured output is not an object')
+            result = json.dumps(data['structured_output'], ensure_ascii=False)
+        else:
+            result = data.get('result')
+        if not isinstance(result, str):
             raise ValueError('Claude Code final result is not text')
-        return data['result'].strip(), {k: data[k] for k in ('model', 'session_id', 'usage', 'modelUsage') if k in data}
+        return result.strip(), {k: data[k] for k in ('model', 'session_id', 'usage', 'modelUsage') if k in data}
     parts, metadata, finished = [], {}, False
     for line in stdout.splitlines():
         event = json.loads(line)
@@ -101,6 +113,50 @@ def build_prompt(system, user, schema=None):
     return prompt
 
 
+def arguments(cfg, schema=None):
+    if cfg.runner == 'hermes':
+        argv = ['chat', '--ignore-rules', '--toolsets', 'todo', '--max-turns', '4',
+                '-Q', '--query-file', '-']
+    elif cfg.runner == 'claude':
+        argv = ['--print', '--output-format', 'json', '--tools', '',
+                '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--no-session-persistence']
+        if schema is not None:
+            argv += ['--json-schema', json.dumps(schema, ensure_ascii=False)]
+    else:
+        argv = ['run', '--format', 'json']
+    if cfg.model:
+        argv += ['--model', cfg.model]
+    return argv + cfg.args
+
+
+@contextmanager
+def call_workspace(parent):
+    expected = Path(parent or tempfile.gettempdir()).resolve()
+    work = Path(tempfile.mkdtemp(prefix='call-', dir=parent))
+    cleanup = {}
+    try:
+        yield work, cleanup
+    finally:
+        for delay in (0, .025, .1, .25, .5):
+            if delay:
+                time.sleep(delay)
+            # Validate the exact freshly created target before recursive cleanup.
+            if is_link(work) or work.resolve().parent != expected or not work.name.startswith('call-'):
+                raise RuntimeError('Unsafe CLI workspace cleanup target')
+            try:
+                shutil.rmtree(work)
+                cleanup['status'] = 'removed'
+                break
+            except FileNotFoundError:
+                cleanup['status'] = 'removed'
+                break
+            except OSError as exc:
+                # Some Windows CLI children briefly retain their working dir.
+                # Cleanup must not erase a completed, archived inference result.
+                cleanup.update(status='deferred', reason=str(exc))
+                continue
+
+
 def chat(cfg, system, user, schema, dump_dir):
     argv = command(cfg)
     prompt = build_prompt(system, user, schema)
@@ -110,23 +166,13 @@ def chat(cfg, system, user, schema, dump_dir):
     parent = Path(dump_dir) / 'cli' if dump_dir else None
     if parent:
         parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='call-', dir=parent) as temporary:
-        work = Path(temporary)
+    with call_workspace(parent) as (work, cleanup):
         env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1', 'NO_COLOR': '1'}
-        if cfg.runner == 'hermes':
-            argv += ['chat', '--ignore-rules', '--toolsets', 'todo', '--max-turns', '4',
-                     '-Q', '--query-file', '-']
-        elif cfg.runner == 'claude':
-            argv += ['--print', '--output-format', 'json', '--tools', '',
-                     '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--no-session-persistence']
-        else:
-            argv += ['run', '--format', 'json']
+        argv += arguments(cfg, schema)
+        if cfg.runner == 'opencode':
             # CLI-native permissions: inference only, without nesting other agents.
             env['OPENCODE_CONFIG_CONTENT'] = json.dumps({'permission': {'*': 'deny'},
                                                         'instructions': [], 'share': 'disabled'})
-        if cfg.model:
-            argv += ['--model', cfg.model]
-        argv += cfg.args
         try:
             result = run(argv, cwd=work, prompt=prompt, timeout=cfg.timeout_sec, env=env)
         except RuntimeError as exc:
@@ -153,6 +199,8 @@ def chat(cfg, system, user, schema, dump_dir):
         if not response:
             raise RuntimeError(f'{cfg.runner} CLI 응답이 비었습니다.')
         metadata = {'runner': cfg.runner, 'executable': Path(argv[0]).name,
+                    'workspace_cleanup': cleanup,
+                    'arguments': argv[1:],
                     'model_selection': 'explicit' if cfg.model else 'cli-default',
                     'exit_code': result.returncode,
                     'stdout_sha256': hashlib.sha256(result.stdout.encode()).hexdigest(),

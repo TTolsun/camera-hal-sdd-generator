@@ -264,7 +264,7 @@ def _site_navigation(cfg, settings, retired):
     return sections, entries
 
 
-def _prepare_site_pages(cfg, settings, sections, entries):
+def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=True):
     texts = {rel: (cfg.sdd_dir / rel).read_text(encoding="utf-8") for _, _, rel in entries}
     # 사람 승인 장부. 표시가 검사 결과를 바꾸지는 않지만, 승인·미승인 상태를 구분해 보여 준다.
     from . import approvals as approvals_mod
@@ -299,6 +299,11 @@ def _prepare_site_pages(cfg, settings, sections, entries):
     glossary.enforce(cfg, terms, {rel: text for rel, text in texts.items()
                                   if sections.get(rel, {}).get("kind") != "per-package"})
     model = KnowledgeModel.load(cfg.facts_path) if cfg.facts_path.exists() else None
+    if cfg.paths.get('consistency_file') and check_consistency:
+        from .consistency import enforce as enforce_consistency
+        if model is None:
+            raise ValueError('facts.json is required for cross-document contract review')
+        enforce_consistency(cfg, model)
     if model is None and any(s.get("kind", "prose") == "prose" and s.get("facts", {}).get("classes")
                             and cfg.diagram_policy(s).get("enabled", False)
                             for s in sections.values()):
@@ -335,7 +340,7 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
                 raise RuntimeError("facts.json is required to verify design requirements")
             from . import generated_design
             if generated_design.enabled(section):
-                generated_design.verify(model, section, texts[rel])
+                generated_design.verify(model, section, texts[rel], cfg=cfg)
             else:
                 enforce(model, section)
         from .evidence import fingerprint, requires_fingerprint
@@ -511,6 +516,9 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
             if meta.get(key):
                 info.append(f'<dt>{label}</dt><dd><code>{html.escape(str(meta[key]))}</code></dd>')
         downloads = ""
+        if cfg.paths.get('consistency_file'):
+            info.append('<dt>문서 간 계약</dt><dd><a href="' + _href('contract-consistency.json', current)
+                        + '">자동 대조 보고서</a> · 사람 검토 전</dd>')
         if rel in sections or (cfg.sdd_dir / rel).is_file():
             (out / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(cfg.sdd_dir / rel, out / rel)
@@ -558,7 +566,7 @@ def _write_search(out, rendered_pages, search, terms):
     (out / "assets" / "search.json").write_text(json.dumps(search, ensure_ascii=False), encoding="utf-8")
 
 
-def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None) -> Path:
+def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None, *, check_consistency=True) -> Path:
     from .document_health import retired_paths
     retired = retired_paths(cfg)
     settings = cfg.site
@@ -574,13 +582,16 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     if out == cfg.sdd_dir.resolve() or out in cfg.sdd_dir.resolve().parents:
         raise RuntimeError("Site output must be separate from the Markdown source directory")
     sections, entries = _site_navigation(cfg, settings, retired)
-    texts, approval_states, ledger, terms, model = _prepare_site_pages(cfg, settings, sections, entries)
+    texts, approval_states, ledger, terms, model = _prepare_site_pages(cfg, settings, sections, entries,
+                                                                   check_consistency=check_consistency)
     rendered_pages, search, diagram_sources, visual_sources = _render_pages(
         cfg, entries, sections, texts, terms, model, source_url, link_template)
     asset_version, terms_version = _write_assets(cfg, out, mermaid_dir, visual_sources, terms)
     _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, ledger, diagram_sources,
                  mermaid_src, title=title, asset_version=asset_version, terms_version=terms_version)
     _write_search(out, rendered_pages, search, terms)
+    if cfg.paths.get('consistency_file') and check_consistency:
+        shutil.copyfile(cfg.build_dir/'consistency-review.json', out/'contract-consistency.json')
     from .site_localization import localize_site
     localize_site(cfg, out)
     return out

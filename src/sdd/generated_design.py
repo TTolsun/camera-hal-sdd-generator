@@ -44,36 +44,80 @@ def _assemble_generation(cfg, model, section, answers, inputs, reused, replayed,
                 'topic_agents': {tid: origins.get(tid, cfg.agent.label) for tid in answers},
                 'grounding_review': 'passed' if policy['design_grounding'] else 'not-run',
                 'grounding_policy': policy.get('grounding_policy')}
+    if cfg.agent.kind == 'cli':
+        from .cli_checkpoint import validation_policy, validation_model, style_policy
+        artifact['validation_policy'] = validation_policy()
+        artifact['validation_model'] = validation_model(model)
+        artifact['style_policy'] = style_policy(cfg)
     return DesignResult(pinned, resolved, report, artifact)
 
 
 def generate(cfg, model, agent, section, previous=None, *, replay_http=False, all_design_units=False):
+    from .generation_run import Execution
+    execution = agent if isinstance(agent, Execution) else Execution(cfg, agent)
+    keys = [_unit_tag(section, unit) for unit in _design_units(section, {})]
+    with execution.document(section['id'], keys):
+        return _generate(cfg, model, execution, section, previous,
+                         replay_http=replay_http, all_design_units=all_design_units)
+
+
+def _generate(cfg, model, agent, section, previous=None, *, replay_http=False, all_design_units=False):
     plan, answers, origins = _prepare_generation(cfg, model, section, previous)
+    topic_prompts, policy, inputs = plan.prompts, plan.policy, plan.inputs
     reused = list(answers)
+    for unit in _design_units(section, {}):
+        if unit['id'] in answers:
+            agent.unit(_unit_tag(section, unit), 'manuscript-reused')
     units = _design_units(section, answers)
-    replayed, failures = [], []
+    replayed, resumed, failures = [], [], []
     archive = open_archive(cfg, replay_http)
     for topic in units:
+        key = _unit_tag(section, topic)
         try:
+            agent.check_time()
             statements, record = _request_unit(cfg, model, agent, section, topic,
-                plan.prompts[topic['id']], plan.policy['design_grounding'], archive, answers)
+                topic_prompts[topic['id']], policy['design_grounding'], archive, answers)
         except _UnitRejected as exc:
+            agent.unit(key, 'failed', error=str(exc))
             if not all_design_units:
                 raise ValueError(str(exc)) from None
             failures.append(str(exc))
             continue
+        except BaseException as exc:
+            from .generation_run import failure_kind
+            agent.unit(key, 'failed', error=str(exc), failure_kind=failure_kind(exc))
+            raise
         answers.setdefault(topic['id'], []).extend(statements)
-        if record is not None:
+        if record is not None and 'checkpoint' in record:
+            resumed.append(record)
+            agent.unit(key, 'checkpoint-revalidated' if record.get('revalidated') else 'checkpoint-reused')
+        elif record is not None:
             replayed.append(record)
+            agent.unit(key, 'replayed')
+        else:
+            agent.unit(key, 'newly-generated')
     if failures:
         raise ValueError('\n'.join(failures))
-    return _assemble_generation(cfg, model, section, answers, plan.inputs, reused, replayed, origins, plan.policy)
+    result = _assemble_generation(cfg, model, section, answers, inputs, reused, replayed, origins, policy)
+    if reused and previous:
+        from .document_metadata import split_frontmatter
+        old_meta, _ = split_frontmatter(previous)
+        result[3]['reuse_lineage'] = dict(source_commit=old_meta.get('source_commit'),
+            body_sha256=old_meta.get('generated_design', {}).get('body_sha256'),
+            topics=list(reused), validation='current source, contract and editorial checks; human review pending')
+    if resumed:
+        result[3]['checkpoint_units'] = resumed
+    return result
 
 
-def verify(model, section, manuscript):
+def verify(model, section, manuscript, *, cfg=None):
     from .document_metadata import split_frontmatter
     meta, body = split_frontmatter(manuscript)
     artifact = meta.get('generated_design')
+    if isinstance(artifact, dict) and cfg is not None and 'style_policy' in artifact:
+        from .cli_checkpoint import style_policy
+        if artifact['style_policy'] != style_policy(cfg):
+            raise ValueError('집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다.')
     if isinstance(artifact, dict) and artifact.get('grounding_review') == 'passed':
         from .grounding import policy_hash
         current = policy_hash()
