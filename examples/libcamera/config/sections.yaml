@@ -1434,6 +1434,12 @@ sections:
   - q: 버퍼 완료와 요청 반환의 조건과 근거를 대조하세요.
     to: pipeline-requests.md#버퍼-완료와-요청-반환
     anchor: 버퍼-완료와-요청-반환
+  - q: “요청이 대기하거나 장치로 가는 조건” 그림을 확인하세요.
+    to: pipeline-requests.md#요청이-대기하거나-장치로-가는-조건
+    anchor: 요청이-대기하거나-장치로-가는-조건
+  - q: “버퍼 완료에서 요청 반환까지” 그림을 확인하세요.
+    to: pipeline-requests.md#버퍼-완료에서-요청-반환까지
+    anchor: 버퍼-완료에서-요청-반환까지
   reader_family: pipeline-reader
 - id: pipeline-requests
   group: For Vendor
@@ -2623,6 +2629,9 @@ sections:
     anchor: 파라미터-갱신-조건
   - q: 메타데이터와 확인 범위의 조건과 근거를 대조하세요.
     to: '#메타데이터와-확인-범위'
+  - q: “LSC 파라미터를 갱신하는 분기” 그림을 확인하세요.
+    to: ipu3-lsc-prepare.md#lsc-파라미터를-갱신하는-분기
+    anchor: lsc-파라미터를-갱신하는-분기
 - id: ipu3-lsc-prepare
   group: For Vendor
   nav_section: 장치별 기능 구현
@@ -4109,6 +4118,9 @@ sections:
   - q: 소유권과 재사용의 조건과 근거를 대조하세요.
     to: camera-requests.md#소유권과-재사용
     anchor: 소유권과-재사용
+  - q: “요청과 버퍼를 유지할 기간” 그림을 확인하세요.
+    to: camera-requests.md#요청과-버퍼를-유지할-기간
+    anchor: 요청과-버퍼를-유지할-기간
 - id: camera-requests
   group: For Developer
   nav_section: 구조 이해
@@ -4540,6 +4552,12 @@ sections:
     anchor: 실패-위치별-확인-순서
   - q: 정지와 연결 해제의 차이를 확인합니다.
     to: '#정지와-연결-해제를-구분하기'
+  - q: “요청이 대기하거나 장치로 가는 조건” 그림을 확인하세요.
+    to: request-diagnosis.md#요청이-대기하거나-장치로-가는-조건
+    anchor: 요청이-대기하거나-장치로-가는-조건
+  - q: “구성 실패를 좁히는 분기” 그림을 확인하세요.
+    to: request-diagnosis.md#구성-실패를-좁히는-분기
+    anchor: 구성-실패를-좁히는-분기
   facts:
     classes:
     - libcamera::Camera

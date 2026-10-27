@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "experiment": "Actual Windows process-tree interruption during selected native Claude CLI; not a between-call injected exception",
+  "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+  "runner": "claude",
+  "model": "claude-haiku-5-5",
+  "args": [
+    "--effort",
+    "high"
+  ],
+  "old_manuscript_sha256": "e9a15520bfbbf5bbc989a7029fba209309ec9c391c28027669de9edad3659104",
+  "human_review": "pending",
+  "runs": [
+    {
+      "step": "actual-process-interruption",
+      "seconds": 76.125,
+      "worker_pid": 55436,
+      "native_pids": [
+        58628
+      ],
+      "completed_cli_receipts": 4,
+      "inflight_native_processes": 1,
+      "validated_prefix_units": 2,
+      "old_output_preserved": true
+    },
+    {
+      "step": "resume",
+      "status": "passed",
+      "error": null,
+      "calls": 8,
+      "seconds": 168.78099999998813,
+      "new_receipt_tags": [
+        "onboarding_why_accept_0",
+        "onboarding_why_accept_0_grounding",
+        "onboarding_why_accept_1",
+        "onboarding_why_accept_1_grounding",
+        "onboarding_why_buffer_0",
+        "onboarding_why_buffer_0_grounding",
+        "onboarding_why_order_0",
+        "onboarding_why_order_0_grounding"
+      ],
+      "body_sha256": "6a6a891e8c1169759a230e53d52996726ba73d697d93fb55c22609f7561f51cf",
+      "validated_prefix_unnecessary_generation_calls": 0
+    },
+    {
+      "step": "repeat",
+      "status": "passed",
+      "error": null,
+      "calls": 0,
+      "seconds": 0.32800000000861473,
+      "new_receipt_tags": [],
+      "body_sha256": "6a6a891e8c1169759a230e53d52996726ba73d697d93fb55c22609f7561f51cf",
+      "validated_prefix_unnecessary_generation_calls": 0
+    }
+  ],
+  "validated_prefix_receipt_tags": [
+    "onboarding_try_steps_0",
+    "onboarding_try_steps_0_grounding",
+    "onboarding_try_tool_0",
+    "onboarding_try_tool_0_grounding"
+  ]
+}
