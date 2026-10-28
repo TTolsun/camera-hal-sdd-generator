@@ -97,6 +97,26 @@ def test_real_agent_archives_from_fake_subprocess_are_verified(archive, runner, 
     assert 'human_approval' not in report
 
 
+@pytest.mark.parametrize('change', ['effort', 'prefix', 'recorded-model'])
+def test_configured_cli_arguments_cannot_be_changed_or_relabelled(archive, change):
+    args = archive('codex')
+    if change == 'effort':
+        args['expected'].args = ['-c', 'model_reasoning_effort="high"']
+    elif change == 'prefix':
+        args['expected'].command.append('different-wrapper-argument')
+    else:
+        recorded = args['receipt']['provider']['arguments']
+        recorded[recorded.index('--model')+1] = 'another-model'
+    with pytest.raises(ValueError, match='arguments differ'):
+        verify_cli_receipt(**args)
+
+
+def test_model_only_archive_audit_does_not_claim_argument_profile_verification(archive):
+    args = archive('codex')
+    args['expected'].command = []
+    assert verify_cli_receipt(**args)['arguments_verified'] is False
+
+
 @pytest.mark.parametrize('field,value', [
     ('schema', True), ('transport', 'response-bundle'), ('cli_call', False), ('http_call', True),
     ('model', 'different/model'), ('request_sha256', 'changed'), ('response_sha256', 'changed'),
