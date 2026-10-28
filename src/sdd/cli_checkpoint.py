@@ -22,6 +22,14 @@ def checksum(value):
     return canonical_request_hash(value)
 
 
+def execution_identity(agent_config, schema):
+    """Keep invocation details at the receipt/checkpoint boundary, byte-exact."""
+    from .cli_agent import arguments
+    return dict(runner=agent_config.runner, model=agent_config.model,
+                command=agent_config.command, args=agent_config.args,
+                arguments=arguments(agent_config, schema))
+
+
 def validation_policy():
     # Lexical/source/contract checks are distinct from model entailment policy.
     # Content hashes change with code; no compatibility aliases are added here.

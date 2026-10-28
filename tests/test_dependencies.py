@@ -27,11 +27,11 @@ def test_core_metadata_consumers_do_not_import_html_renderers(module):
         if isinstance(node, ast.ImportFrom):
             target = (importlib.util.resolve_name('.' * node.level + (node.module or ''), 'sdd')
                       if node.level else node.module or '')
-            assert target not in {'sdd.export_html', 'sdd.export_site'}, (module, node.lineno, target)
+            assert target not in {'sdd.export_html', 'sdd.export_site', 'sdd.site_markdown'}, (module, node.lineno, target)
             if target == 'sdd':
-                assert not {'export_html', 'export_site'} & {alias.name for alias in node.names}
+                assert not {'export_html', 'export_site', 'site_markdown'} & {alias.name for alias in node.names}
         elif isinstance(node, ast.Import):
-            assert not {'sdd.export_html', 'sdd.export_site'} & {alias.name for alias in node.names}
+            assert not {'sdd.export_html', 'sdd.export_site', 'sdd.site_markdown'} & {alias.name for alias in node.names}
 
 
 def test_runtime_modules_have_no_import_cycle():
@@ -67,7 +67,7 @@ def test_design_decisions_do_not_access_external_services_or_outputs(module):
     root = Path(__file__).resolve().parents[1] / 'src' / 'sdd'
     tree = ast.parse((root / (module + '.py')).read_text(encoding='utf-8'))
     forbidden = {'subprocess', 'pathlib', 'urllib', 'http', 'socket', 'os',
-                 'llm', 'cli_agent', 'source_git', 'config', 'export_site', 'export_html',
+                 'llm', 'cli_agent', 'cli_schema', 'source_git', 'config', 'export_site', 'export_html', 'site_markdown',
                  'design_execution', 'design_request', 'design_trials', 'answer_cache', 'design_replay'}
     for node in ast.walk(tree):
         assert not forbidden.intersection(imported_names(node)), (module, getattr(node, 'lineno', 0))
@@ -97,13 +97,13 @@ def test_raw_configuration_access_stays_at_documented_boundaries():
         assert len(accesses) <= limits.get(path.stem, 0), (path.name, [n.lineno for n in accesses])
 
 
-def test_generation_core_does_not_interpret_comparison_or_replay_storage():
+def test_generation_core_does_not_interpret_transport_protocol_or_trial_storage():
     root = Path(__file__).resolve().parents[1] / 'src' / 'sdd'
     for module in ('generated_design', 'design_execution', 'design_request', 'design_response'):
         tree = ast.parse((root / (module + '.py')).read_text(encoding='utf-8'))
         for node in ast.walk(tree):
             assert not imported_names(node).intersection({
-                'answer_cache', 'design_replay', 'call_records', 'response_bundle'})
+                'cli_agent', 'cli_schema', 'answer_cache', 'design_replay', 'call_records', 'response_bundle'})
 
 
 @pytest.mark.parametrize('source', ['from . import llm', 'from .llm import Agent',
