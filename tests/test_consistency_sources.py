@@ -15,6 +15,36 @@ def record(text, *, file='device.cpp', line=1):
                 text=text, sha256=hashlib.sha256(text.encode()).hexdigest())
 
 
+def test_recovered_topic_mapping_order_preserves_exact_audit_requests(tmp_cfg):
+    """A partial resume can append one answer topic after its unchanged peers."""
+    from sdd.call_records import canonical_request_hash
+    topics = {name: [dict(text=f'요청 완료 계약 {name} {i}를 보존합니다.', evidence=['proof'])
+                     for i in range(4)] for name in ('alpha', 'zeta')}
+    model = KnowledgeModel(meta={'source_commit': 'a'*40}, evidence={
+        f'doc/{name}/proof': record(f'void {name}() {{ complete(); }}', file=name+'.cpp')
+        for name in topics})
+    tmp_cfg.sdd_dir.mkdir(parents=True)
+    path = tmp_cfg.sdd_dir/'primary.md'
+    body = '\n\n'.join(a['text'] for answers in topics.values() for a in answers)
+    group = dict(id='completion', question='Who completes?', primary='primary.md', documents=['primary.md'], match='요청')
+
+    def requests(order):
+        artifact = dict(answers={name: topics[name] for name in order})
+        path.write_text('---\nsource_commit: '+'a'*40+'\nsection: doc\ngenerated_design: '
+                        +json.dumps(artifact, ensure_ascii=False)+'\n---\n\n'+body, encoding='utf-8')
+        payload = request(tmp_cfg, model, group)
+        return [dict(system=SYSTEM, user=json.dumps(wire_payload(batch), ensure_ascii=False, separators=(',', ':')),
+                     response_schema=schema(batch)) for batch in batches(payload)]
+
+    before = requests(['zeta', 'alpha'])
+    after = requests(['alpha', 'zeta'])
+    assert len(before) > 1  # Includes primary peers and schema enums across batches.
+    assert before == after
+    assert [canonical_request_hash(r) for r in before] == [canonical_request_hash(r) for r in after]
+    topics['alpha'][0]['text'] += ' 호출 주체가 달라집니다.'
+    assert requests(['alpha', 'zeta']) != after
+
+
 @pytest.mark.parametrize('same', [False, True])
 def test_selected_group_sources_supplement_direct_claim_and_displayed_translation_proof(tmp_cfg, same):
     from sdd.site_markdown import _render

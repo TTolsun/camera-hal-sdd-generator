@@ -127,7 +127,10 @@ def request(cfg, model, group):
             display.extend(dict(document=name, **pair) for pair in display_pairs(content, catalog))
         artifact = meta.get('generated_design') or {}
         if artifact.get('answers'):
-            for tid, statements in artifact['answers'].items():
+            # Partial recovery can append a repaired topic after unchanged
+            # topics. Mapping order is not contract content, but otherwise it
+            # changes batches, literal CLI prompts and schema peer enums.
+            for tid, statements in sorted(artifact['answers'].items()):
                 for index, statement in enumerate(statements):
                     key = f'{name}/{tid}/{index}'
                     refs = [f"{meta['section']}/{tid}/{sid}" for sid in statement['evidence']]

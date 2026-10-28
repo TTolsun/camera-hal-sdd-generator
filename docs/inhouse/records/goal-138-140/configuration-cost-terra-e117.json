@@ -1,0 +1,208 @@
+{
+  "schema": 1,
+  "scope": "Public libcamera configuration; line counts are not authoring time measurements.",
+  "section_lines": 6090,
+  "visual_lines": 1743,
+  "sections": 22,
+  "design_sections": 19,
+  "topics": 69,
+  "parts": 300,
+  "unpartitioned_topics": 13,
+  "design_units": 313,
+  "source_selectors": 290,
+  "source_files": [
+    "Documentation/introduction.rst",
+    "Documentation/libcamera_architecture.rst",
+    "Documentation/platform_support.rst",
+    "Documentation/software-isp-benchmarking.rst",
+    "README.rst",
+    "include/libcamera/internal/ipa_manager.h",
+    "include/libcamera/internal/pipeline_handler.h",
+    "include/libcamera/ipa/ipu3.mojom",
+    "include/libcamera/ipa/rkisp1.mojom",
+    "include/libcamera/ipa/softisp.mojom",
+    "meson_options.txt",
+    "src/ipa/ipu3/algorithms/lsc.cpp",
+    "src/ipa/ipu3/algorithms/meson.build",
+    "src/ipa/ipu3/ipa_context.h",
+    "src/ipa/mali-c55/data/uncalibrated.yaml",
+    "src/ipa/rkisp1/data/uncalibrated.yaml",
+    "src/libcamera/camera.cpp",
+    "src/libcamera/camera_manager.cpp",
+    "src/libcamera/converter/converter_dw100.cpp",
+    "src/libcamera/egl.cpp",
+    "src/libcamera/framebuffer_allocator.cpp",
+    "src/libcamera/ipa_manager.cpp",
+    "src/libcamera/ipa_module.cpp",
+    "src/libcamera/ipa_proxy.cpp",
+    "src/libcamera/ipc_pipe_unixsocket.cpp",
+    "src/libcamera/pipeline/ipu3/imgu.cpp",
+    "src/libcamera/pipeline/mali-c55/mali-c55.cpp",
+    "src/libcamera/pipeline/rkisp1/rkisp1.cpp",
+    "src/libcamera/pipeline_handler.cpp",
+    "src/libcamera/request.cpp",
+    "src/libcamera/shaders/bayer_1x_packed.frag",
+    "src/libcamera/shaders/bayer_unpacked.frag",
+    "utils/codegen/ipc/generators/libcamera_templates/module_ipa_proxy.cpp.tmpl",
+    "utils/codegen/ipc/generators/libcamera_templates/proxy_functions.tmpl"
+  ],
+  "review_time": {
+    "measured": false,
+    "assumption": "Planning only: 1–2 minutes per unique evidence excerpt plus 10–20 minutes per document. Cross-document and device review may take longer.",
+    "documents": [
+      {
+        "document": "camera-model.md",
+        "unique_evidence": 19,
+        "planning_minutes": [
+          29,
+          58
+        ]
+      },
+      {
+        "document": "camera-requests.md",
+        "unique_evidence": 18,
+        "planning_minutes": [
+          28,
+          56
+        ]
+      },
+      {
+        "document": "framebuffer-allocator.md",
+        "unique_evidence": 5,
+        "planning_minutes": [
+          15,
+          30
+        ]
+      },
+      {
+        "document": "ipa-algorithms.md",
+        "unique_evidence": 9,
+        "planning_minutes": [
+          19,
+          38
+        ]
+      },
+      {
+        "document": "ipa-module-validation.md",
+        "unique_evidence": 2,
+        "planning_minutes": [
+          12,
+          24
+        ]
+      },
+      {
+        "document": "ipa.md",
+        "unique_evidence": 27,
+        "planning_minutes": [
+          37,
+          74
+        ]
+      },
+      {
+        "document": "ipu3-lsc-flow.md",
+        "unique_evidence": 7,
+        "planning_minutes": [
+          17,
+          34
+        ]
+      },
+      {
+        "document": "ipu3-lsc-prepare.md",
+        "unique_evidence": 7,
+        "planning_minutes": [
+          17,
+          34
+        ]
+      },
+      {
+        "document": "onboarding.md",
+        "unique_evidence": 4,
+        "planning_minutes": [
+          14,
+          28
+        ]
+      },
+      {
+        "document": "overview.md",
+        "unique_evidence": 19,
+        "planning_minutes": [
+          29,
+          58
+        ]
+      },
+      {
+        "document": "pipeline-handler.md",
+        "unique_evidence": 6,
+        "planning_minutes": [
+          16,
+          32
+        ]
+      },
+      {
+        "document": "pipeline-requests.md",
+        "unique_evidence": 16,
+        "planning_minutes": [
+          26,
+          52
+        ]
+      },
+      {
+        "document": "request-diagnosis.md",
+        "unique_evidence": 15,
+        "planning_minutes": [
+          25,
+          50
+        ]
+      },
+      {
+        "document": "request-lifecycle.md",
+        "unique_evidence": 43,
+        "planning_minutes": [
+          53,
+          106
+        ]
+      },
+      {
+        "document": "rkisp1-dewarp.md",
+        "unique_evidence": 13,
+        "planning_minutes": [
+          23,
+          46
+        ]
+      },
+      {
+        "document": "team-overview.md",
+        "unique_evidence": 13,
+        "planning_minutes": [
+          23,
+          46
+        ]
+      },
+      {
+        "document": "vendor-assurance.md",
+        "unique_evidence": 9,
+        "planning_minutes": [
+          19,
+          38
+        ]
+      },
+      {
+        "document": "vendor-integration.md",
+        "unique_evidence": 33,
+        "planning_minutes": [
+          43,
+          86
+        ]
+      },
+      {
+        "document": "vendor-overview.md",
+        "unique_evidence": 14,
+        "planning_minutes": [
+          24,
+          48
+        ]
+      }
+    ]
+  },
+  "human_review": "pending"
+}
