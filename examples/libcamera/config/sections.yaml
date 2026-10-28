@@ -5672,7 +5672,7 @@ sections:
         - - completeBuffer
         - - completeRequest
     - id: pending-head
-      question: completeRequest의 선두 RequestPending 여부와 break를 관찰하는 계획을 설명하세요. Pending을 만나면 완료·제거한다고 쓰지 말고 소스의 다음 분기를 구분하세요.
+      question: completeRequest의 선두 RequestPending 여부와 break, Pending이 아닌 경로의 ASSERT가 검사하는 정확한 부정 조건과 다음 제거·통지 분기를 관찰하는 계획을 설명하세요. ASSERT 식을 코드 그대로 포함하고, 단언을 미래 실행의 보장으로 바꾸지 마세요.
       sources:
       - completion
       answer_contract:
@@ -5682,6 +5682,8 @@ sections:
           - Pending
         - - break
           - 중단
+        - - ASSERT
+        - - '!req->hasPendingBuffers()'
   design_requirements:
   - id: diagnosis
     question: 제출 실패와 제출 후 완료 지연을 어떻게 구분합니까?

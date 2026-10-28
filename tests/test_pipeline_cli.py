@@ -14,6 +14,27 @@ from sdd.provenance import verify_calls
 from test_evaluate_pipeline import configure
 
 
+def test_cached_cli_generate_from_impact_has_no_outside_budget_summary_call(cli_trial, tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from sdd import cli
+    from sdd.facts.model import KnowledgeModel
+    from sdd.impact import ImpactReport
+    from sdd.trial_workspace import clone_config
+    cfg = cli_trial('codex', model='fixture-model')
+    out = tmp_path/'cached-cli-command'
+    evaluate(cfg, out)
+    selected = clone_config(cfg, out)
+    selected.raw.setdefault('site', {})['enabled'] = False
+    model = KnowledgeModel.load(selected.facts_path)
+    sha = model.meta['source_commit']
+    ImpactReport(sha, sha, sections={'entry': ['Verified current inputs']}).save(selected.build_dir/'impact.json')
+    monkeypatch.setattr(cli, '_cfg', lambda args: selected)
+    monkeypatch.setattr(Agent, 'chat', lambda *a, **kw: pytest.fail('Cached CLI resume must not make a summary/model call'))
+    assert cli.cmd_generate(SimpleNamespace(sections=None, from_impact=True)) == 0
+    summary = (selected.build_dir/'change_impact.md').read_text(encoding='utf-8')
+    assert f'{sha}..{sha}' in summary and 'entry' in summary
+
+
 def test_cli_model_and_arguments_enter_config_impact_without_render_only_redrafting(cli_trial, tmp_path, monkeypatch):
     from sdd.facts.model import KnowledgeModel
     from sdd.impact import config_changes

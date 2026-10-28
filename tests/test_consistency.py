@@ -168,7 +168,7 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
     tmp_cfg.paths['consistency_file'] = config
     source = 'The caller shall explicitly complete a request.'
     model = KnowledgeModel(meta=dict(source_commit=revision), evidence={'s/t/source': dict(
-        text=source, sha256=hashlib.sha256(source.encode()).hexdigest(), commit=revision, file='device.cpp', line=5)})
+        status='available', text=source, sha256=hashlib.sha256(source.encode()).hexdigest(), commit=revision, file='device.cpp', line=5)})
     monkeypatch.setattr('sdd.cli_agent.command', lambda cfg: ['fixture-cli'])
     calls = []
     verdict = {'value': 'compatible'}

@@ -18,6 +18,7 @@ from .state_io import save
 from .trial_workspace import contained_path
 from .cli_checkpoint import Capture, UnitStore
 from .cli_agent import arguments
+from .consistency_sources import source as evidence_source, citation_refs, canonicalize
 
 STATUSES = ('compatible', 'contradiction', 'ambiguous', 'insufficient-evidence')
 ASSESSMENT = 'automatic model review; not human approval'
@@ -67,7 +68,10 @@ SYSTEM = (
 
 
 def policy_hash():
-    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    root = Path(__file__).parent
+    parts = {name: hashlib.sha256((root/name).read_bytes()).hexdigest()
+             for name in ('consistency.py', 'consistency_sources.py')}
+    return canonical_request_hash(parts)
 
 
 def groups(cfg):
@@ -91,7 +95,7 @@ def groups(cfg):
 
 
 def request(cfg, model, group):
-    claims, sources = {}, {}
+    claims, sources, all_statements = {}, {}, {}
     display = []
     catalog = {}
     site = cfg.site
@@ -112,37 +116,27 @@ def request(cfg, model, group):
         if artifact.get('answers'):
             for tid, statements in artifact['answers'].items():
                 for index, statement in enumerate(statements):
-                    if not re.search(group['match'], statement['text'], re.I):
-                        continue
                     key = f'{name}/{tid}/{index}'
                     refs = [f"{meta['section']}/{tid}/{sid}" for sid in statement['evidence']]
-                    claims[key] = dict(document=name, topic=tid, language='ko', text=statement['text'], evidence=refs)
+                    all_statements[key] = dict(document=name, topic=tid, language='ko', text=statement['text'], evidence=refs)
+                    if not re.search(group['match'], statement['text'], re.I):
+                        continue
+                    claims[key] = dict(all_statements[key])
                     for sid in refs:
-                        record = model.evidence.get(sid, {})
-                        excerpt = record.get('context', record)
-                        if (record.get('commit') != model.meta.get('source_commit')
-                                or not isinstance(excerpt.get('text'), str)
-                                or hashlib.sha256(excerpt['text'].encode()).hexdigest() != excerpt.get('sha256')):
-                            raise ValueError(f'Invalid consistency source: {sid}')
-                        sources[sid] = dict(file=record['file'], line=excerpt['line'],
-                                           text=excerpt['text'], sha256=excerpt['sha256'])
+                        sources[sid] = evidence_source(model, sid)
         else:
             # Scenarios have no design-answer artifact; preserve selected whole
             # paragraphs and their existing source citations for the reviewer.
             for index, paragraph in enumerate(body.split('\n\n')):
                 if re.search(group['match'], paragraph, re.I) and not paragraph.startswith(('#', '<', '```', '|')):
+                    refs = citation_refs(model, paragraph)
                     claims[f'{name}/paragraph/{index}'] = dict(document=name, topic=None, language='ko',
-                                                               text=paragraph, evidence=[])
+                                                               text=paragraph, evidence=refs)
+                    for sid in refs:
+                        sources[sid] = evidence_source(model, sid)
     if group.get('evidence'):
-        sources = {}
         for sid in group['evidence']:
-            record = model.evidence.get(sid, {})
-            excerpt = record.get('context', record)
-            if (record.get('commit') != model.meta.get('source_commit') or not isinstance(excerpt.get('text'), str)
-                    or hashlib.sha256(excerpt['text'].encode()).hexdigest() != excerpt.get('sha256')):
-                raise ValueError(f'Invalid selected consistency evidence: {sid}')
-            sources[sid] = dict(file=record['file'], line=excerpt['line'],
-                               text=excerpt['text'], sha256=excerpt['sha256'])
+            sources[sid] = evidence_source(model, sid)
     for pair in display:
         source, translated = pair['source'], pair['translated']
         # Catalog entries are exact displayed paragraph units, with inline code
@@ -160,16 +154,27 @@ def request(cfg, model, group):
         if not isinstance(value, str) or not value.strip() or re.search('[가-힣]', value):
             raise ValueError(f"Missing displayed contract translation: {pair['document']}")
         key = 'catalog/' + hashlib.sha256((pair['document']+'\n'+source).encode()).hexdigest()[:16]
+        # A displayed paragraph may join several statements. Preserve every
+        # matching statement's direct proof, including other clauses in it.
+        refs = list(dict.fromkeys(sid for claim in all_statements.values()
+            if claim['document'] == pair['document']
+            and len(''.join(re.findall('[가-힣]+', claim['text']))) >= 12
+            and ''.join(re.findall('[가-힣]+', claim['text'])) in korean
+            for sid in claim['evidence']))
+        for sid in refs:
+            sources[sid] = evidence_source(model, sid)
         claims[key] = dict(document=pair['document'], topic=None, language='ko', text=source,
-                           evidence=[], origin_claims=matches)
+                           evidence=refs, origin_claims=matches)
         claims[key+'/en'] = dict(document=pair['document'], topic=None, language='en',
-                                 text=translated, evidence=[], translation_of=key, origin_claims=matches)
+                                 text=translated, evidence=refs, translation_of=key, origin_claims=matches)
     if not claims:
         raise ValueError(f"No contract claims found: {group['id']}")
     if not any(claim['document'] == group['primary'] and claim['language'] == 'ko'
                for claim in claims.values()):
         raise ValueError(f"No primary document contract claims found: {group['id']}")
-    return dict(contract=group, source_commit=model.meta.get('source_commit'), claims=claims, sources=sources)
+    sources, shared, aliases = canonicalize(claims, sources, group.get('evidence', []))
+    return dict(contract=group, source_commit=model.meta.get('source_commit'), claims=claims,
+                sources=sources, shared_sources=shared, source_aliases=aliases)
 
 
 def schema(payload):
@@ -229,23 +234,64 @@ def identity(payload):
     return canonical_request_hash(dict(payload=payload, policy=policy_hash()))
 
 
-def batches(payload, size=6):
+def wire_payload(payload):
+    # Selection configuration and locally checked digests are provenance, not
+    # claims. Keep them in the bound report; send every complete source text,
+    # location, claim, direct-reference relation and primary peer to the model.
+    result = {key: value for key, value in payload.items()
+              if key not in ('source_aliases', 'shared_sources')}
+    result['contract'] = {key: value for key, value in payload['contract'].items()
+                          if key in ('id', 'question', 'primary')}
+    result['sources'] = {sid: {key: value for key, value in row.items() if key != 'sha256'}
+                         for sid, row in payload['sources'].items()}
+    return result
+
+
+def batches(payload, size=6, *, max_input_chars=None):
+    if type(size) is not int or size < 1:
+        raise ValueError('Consistency batch size must be positive')
+    if max_input_chars is not None and (type(max_input_chars) is not int or max_input_chars < 1):
+        raise ValueError('Consistency input limit must be positive')
     ids = list(payload['claims'])
     primary = payload['contract']['primary']
     anchors = {key: claim for key, claim in payload['claims'].items() if claim['document']==primary}
-    for start in range(0, len(ids), size):
-        selected = {key: payload['claims'][key] for key in ids[start:start+size]}
+
+    def split(keys):
+        selected = {key: payload['claims'][key] for key in keys}
         peers = {key: value for key, value in anchors.items() if key not in selected}
-        # Preserve all primary context. Oversized groups fail the input budget
-        # before a call instead of silently dropping comparison claims.
-        yield {**payload, 'claims': selected, 'peer_claims': peers}
+        needed = set(payload.get('shared_sources', payload['sources']))
+        needed.update(sid for claim in [*selected.values(), *peers.values()]
+                      for sid in claim.get('evidence', []))
+        if needed - payload['sources'].keys():
+            raise ValueError('Consistency claim references missing direct evidence')
+        # The full report retains source aliases. The model sees canonical IDs,
+        # complete excerpts for every target/primary, and configured shared proof.
+        batch = {key: value for key, value in payload.items() if key != 'source_aliases'}
+        batch.update(claims=selected, peer_claims=peers,
+                     sources={sid: value for sid, value in payload['sources'].items() if sid in needed})
+        if max_input_chars is not None:
+            from .cli_agent import build_prompt
+            prompt = build_prompt(SYSTEM, json.dumps(wire_payload(batch), ensure_ascii=False,
+                                                    separators=(',', ':')), schema(batch))
+            if len(prompt) > max_input_chars:
+                if len(keys) == 1:
+                    raise ValueError('Consistency input exceeds budget with full target, primary context and sources')
+                middle = len(keys) // 2
+                yield from split(keys[:middle])
+                yield from split(keys[middle:])
+                return
+        yield batch
+
+    for start in range(0, len(ids), size):
+        yield from split(ids[start:start+size])
 
 
 def review_store(cfg, payload):
     if cfg.agent.kind != 'cli' or not cfg.agent.model:
         raise ValueError('Contract audit requires the selected CLI and an explicit model')
     response_schema = schema(payload)
-    request_data = dict(system=SYSTEM, user=json.dumps(payload, ensure_ascii=False), response_schema=response_schema)
+    request_data = dict(system=SYSTEM, user=json.dumps(wire_payload(payload), ensure_ascii=False,
+                        separators=(',', ':')), response_schema=response_schema)
     identity_data = dict(purpose='cross-document-consistency', policy=policy_hash(),
                          source_commit=payload['source_commit'], request=request_data,
                          execution=dict(runner=cfg.agent.runner, model=cfg.agent.model,
@@ -267,7 +313,7 @@ def audit(cfg, model, agent):
         for group in configured:
             payload = request(cfg, model, group)
             findings = []
-            for index, batch in enumerate(batches(payload)):
+            for index, batch in enumerate(batches(payload, max_input_chars=cfg.agent.max_input_chars)):
                 agent.check_time()
                 store, request_data = review_store(cfg, batch)
                 user = request_data['user']
@@ -290,7 +336,8 @@ def audit(cfg, model, agent):
                         raise ValueError('Consistency review lacks completed CLI receipts')
                 findings += checked
             report['contracts'].append(dict(id=group['id'], input_sha256=identity(payload),
-                findings=findings, claims=payload['claims'], sources=payload['sources']))
+                findings=findings, claims=payload['claims'], sources=payload['sources'],
+                source_aliases=payload['source_aliases']))
             save(path, report, newline='\n')
     except BaseException as exc:
         report.update(status='incomplete', error=str(exc))
@@ -323,9 +370,11 @@ def enforce(cfg, model):
         row = recorded[group['id']]
         if row.get('input_sha256') != identity(payload):
             raise ValueError(f"Stale cross-document contract review: {group['id']}; run audit-consistency")
+        if any(row.get(key) != payload[key] for key in ('claims', 'sources', 'source_aliases')):
+            raise ValueError('Consistency report source/claim metadata changed; run audit-consistency')
         validate(payload, json.dumps(dict(findings=row['findings']), ensure_ascii=False), assembled=True)
         checked = []
-        for batch in batches(payload):
+        for batch in batches(payload, max_input_chars=cfg.agent.max_input_chars):
             store, _ = review_store(cfg, batch)
             cached = store.read()
             if cached is None:
