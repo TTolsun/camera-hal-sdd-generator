@@ -21,6 +21,12 @@ contracts:
 - id: callbacks-synchronization
   question: 함수 호출 스레드와 콜백의 실행 스레드, 상태 변경 동기화의 책임, 통지와 반환 순서의 보장 범위를 구분하고 한영 의무·금지 표현을 대조하세요.
   primary: request-lifecycle.md
+  documents: [vendor-integration.md, overview.md, camera-model.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md]
+  match: '스레드|동기화|thread|콜백|requestCompleted|제출 순서'
+  evidence: [overview/boundary/synchronization, overview/boundary/completion, vendor-integration/request/completion-context, request-lifecycle/journey/request-notice, camera-model/concurrency/create, camera-model/concurrency/queue, camera-model/concurrency/start, camera-model/concurrency/stop, camera-model/concurrency/callback-signal]
+- id: scenario-analysis
+  question: 정적 호출 목록·예약 표기·가상 후보가 뜻하는 분석 범위를 실제 제품의 콜백 스레드·실행 보장과 구분하고 한영 설명을 대조하세요.
+  primary: scenarios/queue_request.md
   documents: [vendor-integration.md, overview.md, camera-model.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md, scenarios/queue_request.md]
   match: '스레드|동기화|thread|콜백|requestCompleted|제출 순서'
   evidence: [overview/boundary/synchronization, overview/boundary/completion, vendor-integration/request/completion-context, request-lifecycle/journey/request-notice, camera-model/concurrency/create, camera-model/concurrency/queue, camera-model/concurrency/start, camera-model/concurrency/stop, camera-model/concurrency/callback-signal]

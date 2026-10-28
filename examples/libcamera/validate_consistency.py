@@ -1,13 +1,13 @@
 """Evaluate synthetic public-source contract cases through the selected CLI."""
 from pathlib import Path
 import argparse
-import hashlib
 import json
 
 import yaml
 
 from sdd.config import load
 from sdd.consistency import SYSTEM, schema, validate
+from sdd.consistency_sources import source as evidence_source
 from sdd.facts.model import KnowledgeModel
 from sdd.generation_run import Execution
 from sdd.llm import Agent
@@ -29,11 +29,7 @@ def main():
     for case in cases:
         sources = {}
         for sid in case['sources']:
-            record = model.evidence[sid]
-            excerpt = record.get('context', record)
-            assert record['commit'] == model.meta['source_commit']
-            assert hashlib.sha256(excerpt['text'].encode()).hexdigest() == excerpt['sha256']
-            sources[sid] = dict(file=record['file'], line=excerpt['line'], text=excerpt['text'])
+            sources[sid] = evidence_source(model, sid)
         expected = {key: row['expected'] for key, row in case['claims'].items()}
         claims = {key: {k: v for k, v in row.items() if k!='expected'} for key, row in case['claims'].items()}
         payload = dict(contract=dict(id=case['id'], primary='fixture', question='Compare the complete contract with its conditions and source.'),

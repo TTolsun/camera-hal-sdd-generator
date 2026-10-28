@@ -1,6 +1,14 @@
 # Synthetic statements for evaluation only. These are never manuscript inputs.
 # Expected verdicts are removed before the selected CLI sees a case.
 cases:
+- id: extracted-analysis-scope
+  sources: ['@analysis/scenario/queue_request']
+  claims:
+    scope: {text: 'The extracted call list does not establish runtime branch counts or callback execution threads; a deferred target records a passed method reference rather than a guarantee of asynchronous execution.', expected: compatible}
+- id: analysis-is-not-runtime-evidence
+  sources: ['@analysis/scenario/queue_request']
+  claims:
+    unsupported: {text: 'Every callback always runs asynchronously on a single CameraManager thread in every device execution.', expected: insufficient-evidence}
 - id: abbreviated-private-member-receiver
   sources: [request-lifecycle/resources/reuse]
   claims:

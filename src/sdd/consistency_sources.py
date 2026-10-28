@@ -1,4 +1,4 @@
-"""Source preservation for contract claims; no CLI, renderer or source-file IO."""
+"""Source preservation; no CLI or project source-file IO."""
 from __future__ import annotations
 
 import hashlib
@@ -7,6 +7,9 @@ from .validate import extract_citations
 
 
 def source(model, sid):
+    if sid.startswith('@analysis/scenario/') and sid not in model.evidence:
+        from .consistency_analysis import evidence
+        return evidence(model, sid)
     record = model.evidence.get(sid, {})
     excerpt = record.get('context', record)
     if (record.get('commit') != model.meta.get('source_commit')
