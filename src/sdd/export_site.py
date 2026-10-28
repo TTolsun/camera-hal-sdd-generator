@@ -294,6 +294,32 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
     artifact = from_manuscript(cfg, model, section, texts[rel]) if section else None
     visuals = render_visuals(cfg, model, section, artifact) if section else []
     body = place(body, visuals, section)
+    if rel == 'index.md' and cfg.site.overview_visual is not None:
+        selection = cfg.site.overview_visual
+        if (not isinstance(selection, dict) or set(selection) != {'section', 'visual'}
+                or any(not isinstance(value, str) or not value for value in selection.values())):
+            raise ValueError('site.overview_visual needs section and visual IDs')
+        targets = [(path, value) for path, value in sections.items()
+                   if value.get('id') == selection['section'] and path != 'index.md']
+        if len(targets) != 1:
+            raise ValueError('Overview visual source section is missing or ambiguous')
+        target, original = targets[0]
+        _, _, _, _, available = _prepare_page_body(cfg, target, texts, sections, terms, model)
+        selected = [value for value in available if value[0]['id'] == selection['visual']]
+        if len(selected) != 1 or not selected[0][2]:
+            raise ValueError('Overview visual is missing or its source evidence changed')
+        from .visuals import render_values
+        # Revalidate the original definition and source pins for its new output
+        # path; do not copy HTML, prose, stale diagrams or a model's answer.
+        if any(value[0]['id'] == selection['visual'] for value in visuals):
+            raise ValueError('Overview visual ID conflicts with an existing index visual')
+        reused = render_values(cfg, model, {**original, 'output': 'index.md'}, [selected[0][0]])
+        visuals += reused
+        block = reused[0][1].replace('\n### ', '\n## ', 1)
+        block = re.sub(r'\]\(#(source-[0-9a-f]{16})\)',
+                       lambda match: '](' + target + '#' + match[1] + ')', block)
+        first, separator, rest = body.lstrip('\n').partition('\n\n')
+        body = first + '\n\n' + block + (separator + rest if separator else '')
     return page_title, meta, body, diagram_source, visuals
 
 

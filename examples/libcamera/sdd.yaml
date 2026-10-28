@@ -120,6 +120,7 @@ documentation:
     sections:
     - ipu3-lsc-prepare
 site:
+  overview_visual: {section: vendor-overview, visual: camera-stack}
   enabled: true
   title: libcamera 설계 문서
   intro: site-intro.md
