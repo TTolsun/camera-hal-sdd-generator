@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "translation_units": 300,
+  "clang_parse_errors": 0,
+  "verification": {
+    "ok": true,
+    "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+    "classes": 1412,
+    "missing_required_classes": [],
+    "selected_classes": {
+      "vendor-overview": 5,
+      "vendor-assurance": 5,
+      "vendor-integration": 5,
+      "pipeline-handler": 16,
+      "pipeline-requests": 16,
+      "ipa": 5,
+      "ipa-algorithms": 5,
+      "ipu3-lsc-flow": 7,
+      "ipu3-lsc-prepare": 7,
+      "rkisp1-dewarp": 5,
+      "team-overview": 3,
+      "overview": 5,
+      "onboarding": 3,
+      "camera-model": 3,
+      "camera-requests": 3,
+      "request-lifecycle": 3,
+      "request-diagnosis": 3,
+      "ipu3-lsc": 8
+    },
+    "citations": 8028,
+    "files": 538,
+    "invalid_locations": [],
+    "tracked_tree_files": 1517,
+    "tracked_source_changes": [],
+    "source_evidence_errors": {},
+    "source_only_sections": [
+      "ipa-module-validation",
+      "framebuffer-allocator-boundary"
+    ],
+    "note": "Checks presence and locations; does not prove semantic completeness or prose accuracy."
+  },
+  "prior_partial_and_full_runs": "Preserved separately in upstream-scope.json and original archives; do not pool counts.",
+  "human_review": "pending",
+  "scope": "Public libcamera only; not private HAL verification"
+}

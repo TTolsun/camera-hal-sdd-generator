@@ -133,6 +133,22 @@ def test_uncertain_assessment_is_exposed_without_claiming_source_support(contrac
     assert validate(payload, json.dumps(dict(findings=findings)))[0]['status'] == 'insufficient-evidence'
 
 
+@pytest.mark.parametrize('status', ['compatible', 'contradiction'])
+def test_analysis_only_proof_cannot_certify_project_runtime_contracts(contract_case, status):
+    payload, findings = contract_case
+    payload['sources']['source']['kind'] = 'analysis-definition'
+    for row in findings:
+        row['status'] = status
+    with pytest.raises(ValueError, match='cannot support a definite project-runtime'):
+        validate(payload, json.dumps(dict(findings=findings)))
+    for claim in payload['claims'].values():
+        claim['evidence_domain'] = 'analysis-representation'
+    assert validate(payload, json.dumps(dict(findings=findings)))
+    del payload['sources']['source']['kind']
+    with pytest.raises(ValueError, match='requires its analysis definition'):
+        validate(payload, json.dumps(dict(findings=findings)))
+
+
 def test_peer_claims_cannot_hide_missing_primary_contract(tmp_cfg):
     from sdd.consistency import request
     from sdd.facts.model import KnowledgeModel
@@ -168,7 +184,7 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
     tmp_cfg.paths['consistency_file'] = config
     source = 'The caller shall explicitly complete a request.'
     model = KnowledgeModel(meta=dict(source_commit=revision), evidence={'s/t/source': dict(
-        text=source, sha256=hashlib.sha256(source.encode()).hexdigest(), commit=revision, file='device.cpp', line=5)})
+        status='available', text=source, sha256=hashlib.sha256(source.encode()).hexdigest(), commit=revision, file='device.cpp', line=5)})
     monkeypatch.setattr('sdd.cli_agent.command', lambda cfg: ['fixture-cli'])
     calls = []
     verdict = {'value': 'compatible'}
@@ -186,6 +202,12 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
     report = audit(tmp_cfg, model, agent())
     assert report['status']=='passed' and report['human_review']=='pending'
     enforce(tmp_cfg, model)
+    for field in ('claims', 'sources', 'source_aliases'):
+        altered = copy.deepcopy(report)
+        altered['contracts'][0][field] = {}
+        (tmp_cfg.build_dir/'consistency-review.json').write_text(json.dumps(altered), encoding='utf-8')
+        with pytest.raises(ValueError, match='metadata changed'):
+            enforce(tmp_cfg, model)
     audit(tmp_cfg, model, agent())
     assert len(calls)==1  # Repeat build/review reuses verified exact receipts.
     report['contracts'][0]['findings'][0]['reason']='manually changed verdict'

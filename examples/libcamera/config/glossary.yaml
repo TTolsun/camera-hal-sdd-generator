@@ -193,6 +193,9 @@ terms:
 - term: EBUSY
   definition: 이미 버퍼가 할당된 스트림에 대해 FrameBufferAllocator::allocate()를 다시 호출하면 -EBUSY를 반환합니다.
   aliases: []
+- term: RAW
+  definition: RAW는 픽셀의 색상 인코딩 분류이며, 센서의 원시 프레임을 캡처하기 위한 별도의 스트림 역할인 StreamRole::Raw와 구분됩니다.
+  aliases: []
 common:
 - API
 - CPU

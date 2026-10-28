@@ -3,7 +3,7 @@
   "human_review": "pending",
   "source": "Public libcamera only; no inhouse HAL validation",
   "fixed_source": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
-  "latest_source": "182307a772ebebf173ee84911906da707718485f",
+  "latest_source": "e117198c015057761bb0bbaa85f963c41ce412d7",
   "selected_cli": {
     "kind": "cli",
     "runner": "claude",
@@ -922,6 +922,2864 @@
         }
       ]
     }
+  },
+  "selected_cli_scope": "Historical fixed-input comparison phases only. Latest selected operational CLI is recorded separately; original model identities are unchanged.",
+  "historical_latest_source": "182307a772ebebf173ee84911906da707718485f",
+  "current_operational_profile": {
+    "kind": "cli",
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+    "source_scope": "All300TU/0parse errors/1412classes/6scenarios/8028citations; public libcamera only",
+    "comparison_scope": "New Terra run and verified recovery; separate from fixed-input historical Claude trials"
+  },
+  "current_operational_generation_runs": [
+    {
+      "record": "publication-e117/build/generation-runs/0ef411bdd8e04f819f7591e4ada0bc70.json",
+      "calls": 2,
+      "seconds": 49.688,
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-model",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "error": null
+        }
+      ],
+      "unit_status_counts": {
+        "checkpoint-reused": 13,
+        "manuscript-reused": 299,
+        "newly-generated": 1
+      }
+    },
+    {
+      "record": "publication-e117/build/generation-runs/12a1ef4b99d747ca8361385178bf6aaf.json",
+      "calls": 2,
+      "seconds": 23.906,
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-model",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "failed",
+          "error": "request-lifecycle/resources/cancel-access: LLM 답변 검증 실패: [의미 중복] resources 15번째 설명이 앞의 resources 14번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`cancelRequest`는 요청을 취소하고 완료하며, `completeRequest`와 같은 규칙이 적용됩니다. 따라서 …\" ≈ \"`completeRequest`가 반환한 뒤에는 파이프라인 핸들러가 해당 요청을 더 이상 관리하지 않으며, 요청에 접근해서는…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "error": null
+        }
+      ],
+      "unit_status_counts": {
+        "manuscript-reused": 299,
+        "failed": 1,
+        "checkpoint-revalidated": 14
+      }
+    },
+    {
+      "record": "publication-e117/build/generation-runs/3027968cd91f4eeb8388defcf2d689df.json",
+      "calls": 626,
+      "seconds": 2946.5,
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "failed",
+          "error": "vendor-assurance/measurement/procedure: LLM 답변 검증 실패: [의미 중복] measurement 2번째 설명이 앞의 measurement 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"항상 실행되는 `DebayerCpu` 내장 벤치마크는 `Software ISP`를 사용하는 파이프라인에서 `cam` 또는 `…\" ≈ \"`DebayerCpu`의 내장 벤치마크는 통계 수집과 디베이어 처리에 걸린 시간만 측정하며, 프레임 캡처와 출력에 걸린 시간…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa",
+          "status": "failed",
+          "error": "ipa/errors/sync-timeout: LLM 답변 검증 실패: 모델 근거 대조 실패 (승인 아님): paragraph 1: 소켓 송신은 `socket_->send(message)`로 수행하며 반환된 반복자를 사용하지 않습니다. 반복자는 완료 상태 확인과 항목 삭제에 사용됩니다."
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "failed",
+          "error": "ipu3-lsc-flow/request/frame-argument: LLM 답변 검증 실패: [의미 중복] request 5번째 설명이 앞의 request 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 두 번째 인자로 `frameContext.…\" ≈ \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 첫 번째 인자로 `context.activ…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "failed",
+          "error": "ipu3-lsc-prepare/prepare/ct-threshold: LLM 답변 검증 실패: [의미 중복] prepare 2번째 설명이 앞의 prepare 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `frameContext.lsc.update`가 false이고 `frameContext.lsc.…\" ≈ \"`Lsc::prepare`는 `frameContext.lsc.update`가 거짓이고 `frameContext.lsc.ena…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-model",
+          "status": "failed",
+          "error": "camera-model/concurrency/state-synchronization: LLM 답변 검증 실패: [의미 중복] concurrency 3번째 설명이 앞의 shutdown 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"호출자는 `Camera::start`와 `Camera::stop`을 모두 카메라 상태에 영향을 주는 다른 함수들과 동기화해야…\" ≈ \"`Camera::stop()`의 API 문서는 캡처와 요청 처리를 즉시 중지하며, 대기 중인 모든 요청을 취소하고 오류 상태…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+        },
+        {
+          "section": "camera-requests",
+          "status": "failed",
+          "error": "LLM 설명 문단이 중복됐습니다. 각 문단은 서로 다른 내용을 설명해야 합니다."
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "error": null
+        }
+      ],
+      "unit_status_counts": {
+        "failed": 5,
+        "not-started": 17,
+        "newly-generated": 296
+      }
+    },
+    {
+      "record": "publication-e117/build/generation-runs/49e1042114004c76a9606fa382f5ed57.json",
+      "calls": 1,
+      "seconds": 0.015,
+      "documents": [],
+      "unit_status_counts": {}
+    },
+    {
+      "record": "publication-e117/build/generation-runs/7ddfd6995a3a4cf78906d7d6c661e9ad.json",
+      "calls": 4,
+      "seconds": 34.75,
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "failed",
+          "error": "codex CLI가 실패했습니다 (exit 1). 로컬 실행 기록을 확인하세요. 다른 실행기로 대체하지 않습니다."
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "failed",
+          "error": "codex CLI가 실패했습니다 (exit 1). 로컬 실행 기록을 확인하세요. 다른 실행기로 대체하지 않습니다."
+        },
+        {
+          "section": "vendor-integration",
+          "status": "failed",
+          "error": "codex CLI가 실패했습니다 (exit 1). 로컬 실행 기록을 확인하세요. 다른 실행기로 대체하지 않습니다."
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "running",
+          "error": null
+        }
+      ],
+      "unit_status_counts": {
+        "not-started": 67,
+        "running": 1,
+        "failed": 3
+      }
+    },
+    {
+      "record": "publication-e117/build/generation-runs/c7281629bbe44269b3bbb80273a5183d.json",
+      "calls": 2,
+      "seconds": 45.484,
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-model",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "error": null
+        }
+      ],
+      "unit_status_counts": {
+        "checkpoint-reused": 7,
+        "manuscript-reused": 306,
+        "newly-generated": 1
+      }
+    },
+    {
+      "record": "publication-e117/build/generation-runs/d2876f2037234b96b1c9420a7a70b4d3.json",
+      "calls": 38,
+      "seconds": 265.578,
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "failed",
+          "error": "ipu3-lsc-prepare/prepare/quantized-same: LLM 답변 검증 실패: [의미 중복] prepare 3번째 설명이 앞의 prepare 2번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `frameContext.lsc.update`가 false이고 `frameContext.lsc.…\" ≈ \"`Lsc::prepare`는 `frameContext.lsc.update`가 false이고 `frameContext.lsc.…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-model",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "error": null
+        }
+      ],
+      "unit_status_counts": {
+        "failed": 1,
+        "not-started": 11,
+        "checkpoint-revalidated": 286,
+        "newly-generated": 17
+      }
+    },
+    {
+      "record": "publication-e117/build/generation-runs/d9d0f98c5bcc4cbebd64c302ce717b67.json",
+      "calls": 27,
+      "seconds": 228.375,
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-model",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "camera-requests",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "error": null
+        }
+      ],
+      "unit_status_counts": {
+        "checkpoint-revalidated": 302,
+        "newly-generated": 12
+      }
+    },
+    {
+      "record": "publication-e117/build/generation-runs/ec00e88ce020446cb666c0950b827184.json",
+      "calls": 0,
+      "seconds": 0.375,
+      "documents": [],
+      "unit_status_counts": {}
+    }
+  ],
+  "terra_contract_cases": {
+    "schema": 1,
+    "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+    "cases": [
+      {
+        "id": "buffer-is-request-completion",
+        "expected": {
+          "wrong": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "wrong",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "The last buffer completes during normal capture.",
+            "actor": "The pipeline handler completes the request explicitly.",
+            "timing": "After buffer completion, when the pipeline handler is ready to complete the request.",
+            "scope": "The completeBuffer contract for a request and its buffers.",
+            "reason": "The source expressly states that completion of the last buffer does not automatically complete the request; the pipeline handler must call completeRequest().",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "When the last buffer completes during normal capture, the request always completes automatically."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\001.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "explicit-request-completion",
+        "expected": {
+          "normal": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "normal",
+            "peers": [],
+            "status": "compatible",
+            "condition": "The last buffer completes during normal processing.",
+            "actor": "The pipeline handler completes the request explicitly.",
+            "timing": "After buffer completion, request completion requires an explicit call.",
+            "scope": "The completeBuffer() and completeRequest() API contract.",
+            "reason": "The source supports the distinction between completing the last buffer and completing the request, and requires the explicit call.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "Completing the last buffer during normal processing does not automatically complete the request; the pipeline handler must explicitly call completeRequest()."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\002.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "stop-versus-normal",
+        "expected": {
+          "stopped": "compatible",
+          "normal": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "stopped",
+            "peers": [
+              "normal"
+            ],
+            "status": "compatible",
+            "condition": "Queued requests when the pipeline handler is stopped.",
+            "actor": "The pipeline handler signals request completion.",
+            "timing": "On stopping with stop().",
+            "scope": "Automatic completion of queued requests and the obligation to signal completion with completeRequest().",
+            "reason": "The source supports both parts of the claim. The normal-processing peer concerns completion of the last buffer, a separate event under a different condition.",
+            "sources": [
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              },
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "Tracking queued requests ensures their completion when the pipeline handler is stopped with stop(); the pipeline handler must signal completion with completeRequest()."
+          },
+          {
+            "claim_id": "normal",
+            "peers": [
+              "stopped"
+            ],
+            "status": "compatible",
+            "condition": "Normal processing when the last buffer completes.",
+            "actor": "The pipeline handler completes requests explicitly.",
+            "timing": "At completion of the last buffer.",
+            "scope": "Request completion following buffer completion.",
+            "reason": "The source states that completing the last buffer does not automatically complete the request. The peer addresses queued requests when stopping, so the claims are compatible.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              },
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              }
+            ],
+            "claim_quote": "The last buffer completing during normal processing does not itself complete the request."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\003.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "application-owns-request",
+        "expected": {
+          "owner": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "owner",
+            "peers": [],
+            "status": "compatible",
+            "condition": "The camera must be in the Configured or Running state; the function may return nullptr on error.",
+            "actor": "The caller owns the returned request and is responsible for deleting it.",
+            "timing": "Ownership passes to the caller when the request is returned; deletion may occur in the completion handler.",
+            "scope": "Requests created by Camera::createRequest().",
+            "reason": "The source explicitly supports the stated ownership and deletion responsibility.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/create",
+                "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+              }
+            ],
+            "claim_quote": "The caller owns the Request returned by Camera::createRequest() and is responsible for deleting it."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\004.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "wrong-request-owner",
+        "expected": {
+          "owner": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "owner",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "A request is successfully returned by createRequest() when the camera is configured or running.",
+            "actor": "The caller owns the request and is responsible for deleting it.",
+            "timing": "Ownership passes to the caller on return; deletion may occur in the completion handler.",
+            "scope": "Requests returned by Camera::createRequest().",
+            "reason": "The claim assigns ownership to the camera and prohibits application deletion, directly contradicting the source's caller ownership and deletion responsibility.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/create",
+                "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+              }
+            ],
+            "claim_quote": "Camera owns every Request returned by createRequest(); the application must never delete it."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\005.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "access-after-complete-request",
+        "expected": {
+          "access": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "access",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "The request has been passed to completeRequest().",
+            "actor": "The pipeline handler.",
+            "timing": "After completeRequest() returns.",
+            "scope": "Access to the completed request.",
+            "reason": "The source prohibits the pipeline handler from accessing the request after the function returns, while the claim permits continued access.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/complete-access",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ],
+            "claim_quote": "After completeRequest() returns, the pipeline handler may continue accessing that request."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\006.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "completion-call-order-versus-return-order",
+        "expected": {
+          "calls": "compatible",
+          "returns": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "calls",
+            "peers": [
+              "returns"
+            ],
+            "status": "compatible",
+            "condition": "The request has completed.",
+            "actor": "The pipeline handler calls completeRequest() on the CameraManager thread.",
+            "timing": "The call signals request completion.",
+            "scope": "Ordering of calls to completeRequest().",
+            "reason": "The source permits calls on completed requests without an ordering constraint. The peer concerns the separate order in which requests reach the application.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ],
+            "claim_quote": "Pipeline handlers may call completeRequest() on completed requests without an ordering constraint."
+          },
+          {
+            "claim_id": "returns",
+            "peers": [
+              "calls"
+            ],
+            "status": "compatible",
+            "condition": "Requests are completed through completeRequest().",
+            "actor": "The completion function returns requests to the application.",
+            "timing": "Requests are returned in submission order as completion permits.",
+            "scope": "The API guarantee for returning requests to the application.",
+            "reason": "The source expressly guarantees submission-order returns while allowing the calls described by the peer to occur in any order.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ],
+            "claim_quote": "Requests are returned to the application in their submission order."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\007.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "wrong-return-order",
+        "expected": {
+          "returns": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "returns",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "Completed requests are notified through completeRequest.",
+            "actor": "The pipeline handler calls completeRequest; the camera returns requests to the application.",
+            "timing": "Calls may occur without an ordering constraint, but application returns follow submission order.",
+            "scope": "The completeRequest API's request return guarantee.",
+            "reason": "The claim requires hardware completion order regardless of submission order, which conflicts with the source's submission-order guarantee when those orders differ.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ],
+            "claim_quote": "Requests are always returned to the application in the order their hardware processing finishes, regardless of submission order."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\008.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "unsupported-stop-deadline",
+        "expected": {
+          "deadline": "insufficient-evidence"
+        },
+        "findings": [
+          {
+            "claim_id": "deadline",
+            "peers": [],
+            "status": "insufficient-evidence",
+            "condition": "When stopping a camera.",
+            "actor": "The pipeline handler invokes stopDevice() for the camera.",
+            "timing": "The source describes immediate stopping and request completion but gives no measured deadline for the function to return.",
+            "scope": "The claim covers every supported camera and completion of stopDevice().",
+            "reason": "The supplied contract does not establish a 10-millisecond return-time guarantee or verify it across supported cameras.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/shutdown/stop",
+                "source_quote": "void PipelineHandler::stop(Camera *camera)\n{\n\t/*\n\t * Take all waiting requests so that they are not requeued in response\n\t * to completeRequest() being called inside stopDevice(). Cancel them\n\t * after the device to keep them in order.\n\t */\n\tCamera::Private *data = camera->_d();\n\tstd::queue<Request *> waitingRequests;\n\twaitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests complete. */\n\tstopDevice(camera);\n\n\t/* Cancel and signal as complete all waiting requests. */\n\twhile (!waitingRequests.empty()) {\n\t\tRequest *request = waitingRequests.front();\n\t\twaitingRequests.pop();\n\n\t\t/*\n\t\t * Cancel all requests by marking them as cancelled and calling\n\t\t * doQueueRequest() instead of cancelRequest(). This ensures\n\t\t * that the requests get a sequence number and are temporarily\n\t\t * added to queuedRequests_ so they can be properly completed in\n\t\t * completeRequest().\n\t\t */\n\t\trequest->_d()->cancel();\n\t\tdoQueueRequest(request);\n\t}\n\n\t/* Make sure no requests are pending. */\n\tASSERT(data->queuedRequests_.empty());\n\tASSERT(data->waitingRequests_.empty());\n\n\tdata->requestSequence_ = 0;\n}"
+              },
+              {
+                "source_id": "vendor-integration/shutdown/device",
+                "source_quote": "\\fn PipelineHandler::stopDevice()\n * \\brief Stop capturing from all running streams\n * \\param[in] camera The camera to stop\n *\n * This function stops capturing and processing requests immediately. All\n * pending requests are cancelled and complete immediately in an error state.\n */"
+              }
+            ],
+            "claim_quote": "Every supported camera completes stopDevice() within 10 milliseconds."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\009.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "synchronization-responsibility",
+        "expected": {
+          "synchronization": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "synchronization",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "Synchronization is the caller's responsibility if necessary.",
+            "actor": "The caller, rather than the Camera class, is responsible for necessary synchronization.",
+            "timing": "When functions affecting camera state require synchronization with each other.",
+            "scope": "Functions affecting camera state as defined in the source.",
+            "reason": "The claim asserts universal internal synchronization and removes the caller's responsibility; the source states that these functions are generally not synchronized by the Camera class and assigns responsibility to the caller when necessary.",
+            "sources": [
+              {
+                "source_id": "overview/boundary/synchronization",
+                "source_quote": "Functions that affect the camera state as defined below are generally not\n * synchronized with each other by the Camera class. The caller is responsible\n * for ensuring their synchronization if necessary.\n *\n * \\subsection Camera States"
+              }
+            ],
+            "claim_quote": "Camera internally synchronizes all functions that change camera state, so the caller never needs to synchronize them."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\010.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "weakened-english-obligation",
+        "expected": {
+          "ko": "compatible",
+          "en": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "ko",
+            "peers": [
+              "en"
+            ],
+            "status": "compatible",
+            "condition": "When completing a request.",
+            "actor": "Pipeline handler.",
+            "timing": "After buffer completion; the last buffer does not automatically complete the request.",
+            "scope": "Explicit request completion in the pipeline handler API.",
+            "reason": "The source requires explicit request completion. The English peer incorrectly makes the call optional.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "파이프라인 핸들러는 요청을 완료하려면 completeRequest()를 명시적으로 호출해야 합니다."
+          },
+          {
+            "claim_id": "en",
+            "peers": [
+              "ko"
+            ],
+            "status": "contradiction",
+            "condition": "When completing a request.",
+            "actor": "Pipeline handler.",
+            "timing": "After buffer completion; the last buffer does not automatically complete the request.",
+            "scope": "Explicit request completion in the pipeline handler API.",
+            "reason": "The source requires the call, while this claim says it is optional and unnecessary. The Korean peer preserves the obligation.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "The pipeline handler may optionally call completeRequest() to complete a request; this call is not required."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\011.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "omitted-completion-condition",
+        "expected": {
+          "unclear": "ambiguous"
+        },
+        "findings": [
+          {
+            "claim_id": "unclear",
+            "peers": [],
+            "status": "ambiguous",
+            "condition": "The claim omits whether the pipeline handler is stopping or the last buffer has completed.",
+            "actor": "The pipeline handler signals request completion using completeRequest().",
+            "timing": "Automatic completion is stated for stopping; completion of the last buffer does not automatically complete the request.",
+            "scope": "Request completion, distinct from buffer completion.",
+            "reason": "The unqualified claim can describe stopping behavior, but it does not preserve the condition and differs from the stated behavior when the last buffer completes.",
+            "sources": [
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              },
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "Requests are completed automatically."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\012.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "incorrect-original-correct-english",
+        "expected": {
+          "ko": "contradiction",
+          "en": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "ko",
+            "peers": [
+              "en"
+            ],
+            "status": "contradiction",
+            "condition": "Normal processing when the last buffer completes.",
+            "actor": "Pipeline handler.",
+            "timing": "After completion of the last buffer.",
+            "scope": "Request completion through the completeBuffer API.",
+            "reason": "The claim says the request completes automatically without another call; the source and English claim require explicit completion via completeRequest().",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "정상 버퍼 처리에서 마지막 버퍼가 완료되면 추가 호출 없이 요청이 자동으로 완료됩니다."
+          },
+          {
+            "claim_id": "en",
+            "peers": [
+              "ko"
+            ],
+            "status": "compatible",
+            "condition": "Normal processing when the last buffer completes.",
+            "actor": "Pipeline handler.",
+            "timing": "After completion of the last buffer.",
+            "scope": "Request completion through the completeBuffer API.",
+            "reason": "The source supports the stated absence of automatic request completion and the obligation to call completeRequest(); the Korean claim conflicts with that contract.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "Normal completion of the last buffer does not automatically complete the request; the pipeline handler must explicitly call completeRequest()."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v2\\build\\prompts\\calls\\19473716eac14a0c88b10add18d0accf\\013.receipt.json",
+        "correct": true
+      }
+    ],
+    "human_review": "pending",
+    "scope": "Synthetic evaluation statements, not published manuscript content; actual selected CLI calls.",
+    "metrics": {
+      "cases": 13,
+      "claims": 17,
+      "correct": 17,
+      "contradictions": 7,
+      "detected": 7,
+      "missed": 0,
+      "false_positives": 0,
+      "compatible": 8,
+      "undetermined": 2
+    }
+  },
+  "current_terra_contract_cases": {
+    "schema": 1,
+    "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+    "cases": [
+      {
+        "id": "extracted-analysis-scope",
+        "expected": {
+          "scope": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "scope",
+            "peers": [],
+            "status": "compatible",
+            "condition": "The claim concerns the extracted call list and deferred targets in the supplied analysis representation.",
+            "actor": "The extractor records passed method or function references; queue or signal implementations determine execution details.",
+            "timing": "The representation does not establish callback execution timing or thread, or guarantee asynchronous execution.",
+            "scope": "Static analysis representation only; it does not establish runtime branch counts or product behavior.",
+            "reason": "The definitions describe a call map without branch ancestry and record deferred references without tracing their execution order or thread. This supports the stated limits.",
+            "sources": [
+              {
+                "source_id": "@analysis/scenario/queue_request",
+                "source_quote": "{\"generator_definitions\": [{\"file\": \"src/sdd/facts/model.py\", \"line\": 73, \"name\": \"Message\", \"sha256\": \"4e0b4766c0d7eab15773e8a9349e6cd49ebd08cc52dfe7b2fba49616d03c1648\", \"text\": \"@dataclass\\nclass Message:\\n    src: str                       # participant display name\\n    dst: str\\n    name: str                      # 호출된 함수 이름\\n    loc: Location | None = None    # 호출 지점\\n    note: str = \\\"\\\"                 # 예: \\\"virtual 후보\\\" (정적으로 확정되지 않은 호출)\"}, {\"file\": \"src/sdd/facts/model.py\", \"line\": 82, \"name\": \"Scenario\", \"sha256\": \"b1f6188925808def6094453b5159214d8be4a2e398d299600b8d190e8236a6e3\", \"text\": \"@dataclass\\nclass Scenario:\\n    id: str\\n    title: str\\n    entry: str                     # from 함수 시그니처\\n    participants: list[str] = field(default_factory=list)\\n    messages: list[Message] = field(default_factory=list)\\n    mermaid: str = \\\"\\\"              # clang-uml 이 만든 Mermaid 본문\\n    unresolved: int = 0            # 정적으로 끊긴 호출 수 (virtual / function pointer)\\n    # 인자로 넘어간 메서드 수. 대상은 알지만 실행 시점과 스레드는 큐·신호 구현이 정한다.\\n    deferred: int = 0\"}, {\"file\": \"src/sdd/facts/callgraph.py\", \"line\": 148, \"name\": \"_deferred_targets\", \"sha256\": \"0b7c4a80ddd83f08782249229a78f9a878bb234dad15ca69fa24966428904a56\", \"text\": \"def _deferred_targets(node: cindex.Cursor, scope: SourceScope, callee_usr: str) -> list[cindex.Cursor]:\\n    \\\"\\\"\\\"호출 인자로 넘어간 메서드·함수 선언을 모은다.\\n\\n    `invokeMethod(&PipelineHandler::queueRequest, ...)` 나 `connect(&Class::slot)` 처럼 메서드를\\n    값으로 넘기면, 그 메서드는 이 호출 자리에서 실행되지 않는다. 실행 시점과 스레드는 큐나 신호\\n    구현이 정하므로 정적 추적으로는 순서를 알 수 없다. 대상 이름은 알 수 있으므로 경계로 기록한다.\\n    중첩된 호출 표현식은 바깥 순회가 따로 보기 때문에 여기서는 들어가지 않는다.\\n    \\\"\\\"\\\"\\n    found: list[cindex.Cursor] = []\\n    seen: set[str] = set()\\n\\n    def walk(n: cindex.Cursor) -> None:\\n        for child in n.get_children():\\n            if child.kind == cindex.CursorKind.CALL_EXPR:\\n                continue\\n            if child.kind == cindex.CursorKind.DECL_REF_EXPR:\\n                target = child.referenced\\n                if (target is not None and target.kind in (METHOD_KINDS | FUNCTION_KINDS)\\n                        and scope.contains(target)):\\n                    usr = target.get_usr()\\n                    if usr and usr != callee_usr and usr not in seen:\\n                        seen.add(usr)\\n                        found.append(target)\\n            walk(child)\\n\\n    walk(node)\\n    return found\"}, {\"file\": \"src/sdd/facts/callgraph.py\", \"line\": 292, \"name\": \"trace\", \"sha256\": \"8769562486ac0baeb37bf1c6d844cc8d2fd1d5c4eefb3e424e21f9e5c68a0ec8\", \"text\": \"def trace(g: Graph, entry: FuncDef, depth: int) -> tuple[list[Message], int, int]:\\n    messages: list[Message] = []\\n    unresolved = 0\\n    deferred = 0\\n\\n    def visit(fd: FuncDef, level: int, path: set[str]) -> None:\\n        nonlocal unresolved, deferred\\n        if level >= depth or len(messages) >= _MAX_MESSAGES:\\n            return\\n        for call in fd.calls:\\n            if call.kind == \\\"deferred\\\":\\n                # 대상은 알지만 이 자리에서 실행되지 않는다. 따라 들어가면 없는 순서를 만들게 된다.\\n                deferred += 1\\n                target = g.defs.get(call.callee_usr)\\n                messages.append(Message(src=fd.owner, dst=(target.owner if target else call.callee_owner),\\n                                        name=call.callee_name, loc=call.loc,\\n                                        note=\\\"예약된 호출, 실행 순서는 정적으로 확인 불가\\\"))\\n                continue\\n            if call.kind in (\\\"pointer\\\", \\\"callable\\\", \\\"unresolved\\\"):\\n                unresolved += 1\\n                label = {\\\"pointer\\\": \\\"함수 포인터, 정적 추적 불가\\\", \\\"callable\\\": \\\"콜백 객체, 정적 추적 불가\\\",\\n                         \\\"unresolved\\\": \\\"정적 추적 불가\\\"}[call.kind]\\n                messages.append(Message(src=fd.owner, dst=call.callee_owner, name=call.callee_name,\\n                                        loc=call.loc, note=label))\\n                continue\\n            targets = [call.callee_usr]\\n            note = \\\"\\\"\\n            if call.kind == \\\"virtual\\\":\\n                over = g.overrides.get(call.callee_usr, [])\\n                # 기반 구현이 있으면(순수 가상이 아니면) 그것도 후보다.\\n                base_def = g.defs.get(call.callee_usr)\\n                targets = ([call.callee_usr] if base_def else []) + over\\n                if len(targets) > 1:\\n                    note = \\\"virtual 후보\\\"\\n                elif targets:\\n                    note = \\\"virtual, 현재 구현 하나\\\"   # 지금은 하나지만 동적 디스패치라는 사실은 남긴다.\\n                else:\\n                    unresolved += 1\\n                    messages.append(Message(src=fd.owner, dst=call.callee_owner, name=call.callee_name,\\n                                            loc=call.loc, note=\\\"virtual, override 없음\\\"))\\n                    continue\\n            for t_usr in targets:\\n                t = g.defs.get(t_usr)\\n                owner = t.owner if t else call.callee_owner\\n                messages.append(Message(src=fd.owner, dst=owner, name=call.callee_name, loc=call.loc, note=note))\\n                if t and t_usr not in path:\\n                    visit(t, level + 1, path | {t_usr})\\n\\n    visit(entry, 0, {entry.usr})\\n    return messages, unresolved, deferred\"}, {\"file\": \"src/sdd/scenario_document.py\", \"line\": 62, \"name\": \"build\", \"sha256\": \"23bf4f1fe1e5c07cf6ab5972431d49b5b0fb800d8197d655d580c851bb886f96\", \"text\": \"    \\\"\\\"\\\"Focus rules select evidence, not prose assertions or execution stages.\\n\\n    Legacy flat facts do not carry branch ancestry. Draw a call *map*, not a\\n    sequence across candidates. The full extracted trace stays in this page.\\n    \\\"\\\"\\\"\"}], \"kind\": \"analysis-definition\", \"project_source_commit\": \"e117198c015057761bb0bbaa85f963c41ce412d7\", \"scenario\": {\"annotated_messages\": [{\"dst\": \"PipelineHandler\", \"loc\": {\"file\": \"src/libcamera/camera.cpp\", \"line\": 1376}, \"name\": \"queueRequest\", \"note\": \"예약된 호출, 실행 순서는 정적으로 확인 불가\", \"src\": \"Camera\"}], \"deferred\": 1, \"entry\": \"Camera::queueRequest(Request *)\", \"id\": \"queue_request\", \"messages_total\": 80, \"unresolved\": 0}, \"scope\": \"Analysis representation only; not product runtime, hardware or callback-thread evidence.\"}"
+              }
+            ],
+            "claim_quote": "The extracted call list does not establish runtime branch counts or callback execution threads; a deferred target records a passed method reference rather than a guarantee of asynchronous execution."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\001.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "analysis-is-not-runtime-evidence",
+        "expected": {
+          "unsupported": "insufficient-evidence"
+        },
+        "findings": [
+          {
+            "claim_id": "unsupported",
+            "peers": [],
+            "status": "insufficient-evidence",
+            "condition": "Every device execution and every callback.",
+            "actor": "The claim specifies a single CameraManager thread.",
+            "timing": "The claim requires asynchronous execution in all cases.",
+            "scope": "The supplied source describes an analysis representation, not product runtime or callback-thread behavior.",
+            "reason": "The analysis definition does not establish callback execution, timing, or thread ownership, so it cannot substantiate the universal runtime guarantee.",
+            "sources": [
+              {
+                "source_id": "@analysis/scenario/queue_request",
+                "source_quote": "{\"generator_definitions\": [{\"file\": \"src/sdd/facts/model.py\", \"line\": 73, \"name\": \"Message\", \"sha256\": \"4e0b4766c0d7eab15773e8a9349e6cd49ebd08cc52dfe7b2fba49616d03c1648\", \"text\": \"@dataclass\\nclass Message:\\n    src: str                       # participant display name\\n    dst: str\\n    name: str                      # 호출된 함수 이름\\n    loc: Location | None = None    # 호출 지점\\n    note: str = \\\"\\\"                 # 예: \\\"virtual 후보\\\" (정적으로 확정되지 않은 호출)\"}, {\"file\": \"src/sdd/facts/model.py\", \"line\": 82, \"name\": \"Scenario\", \"sha256\": \"b1f6188925808def6094453b5159214d8be4a2e398d299600b8d190e8236a6e3\", \"text\": \"@dataclass\\nclass Scenario:\\n    id: str\\n    title: str\\n    entry: str                     # from 함수 시그니처\\n    participants: list[str] = field(default_factory=list)\\n    messages: list[Message] = field(default_factory=list)\\n    mermaid: str = \\\"\\\"              # clang-uml 이 만든 Mermaid 본문\\n    unresolved: int = 0            # 정적으로 끊긴 호출 수 (virtual / function pointer)\\n    # 인자로 넘어간 메서드 수. 대상은 알지만 실행 시점과 스레드는 큐·신호 구현이 정한다.\\n    deferred: int = 0\"}, {\"file\": \"src/sdd/facts/callgraph.py\", \"line\": 148, \"name\": \"_deferred_targets\", \"sha256\": \"0b7c4a80ddd83f08782249229a78f9a878bb234dad15ca69fa24966428904a56\", \"text\": \"def _deferred_targets(node: cindex.Cursor, scope: SourceScope, callee_usr: str) -> list[cindex.Cursor]:\\n    \\\"\\\"\\\"호출 인자로 넘어간 메서드·함수 선언을 모은다.\\n\\n    `invokeMethod(&PipelineHandler::queueRequest, ...)` 나 `connect(&Class::slot)` 처럼 메서드를\\n    값으로 넘기면, 그 메서드는 이 호출 자리에서 실행되지 않는다. 실행 시점과 스레드는 큐나 신호\\n    구현이 정하므로 정적 추적으로는 순서를 알 수 없다. 대상 이름은 알 수 있으므로 경계로 기록한다.\\n    중첩된 호출 표현식은 바깥 순회가 따로 보기 때문에 여기서는 들어가지 않는다.\\n    \\\"\\\"\\\"\\n    found: list[cindex.Cursor] = []\\n    seen: set[str] = set()\\n\\n    def walk(n: cindex.Cursor) -> None:\\n        for child in n.get_children():\\n            if child.kind == cindex.CursorKind.CALL_EXPR:\\n                continue\\n            if child.kind == cindex.CursorKind.DECL_REF_EXPR:\\n                target = child.referenced\\n                if (target is not None and target.kind in (METHOD_KINDS | FUNCTION_KINDS)\\n                        and scope.contains(target)):\\n                    usr = target.get_usr()\\n                    if usr and usr != callee_usr and usr not in seen:\\n                        seen.add(usr)\\n                        found.append(target)\\n            walk(child)\\n\\n    walk(node)\\n    return found\"}, {\"file\": \"src/sdd/facts/callgraph.py\", \"line\": 292, \"name\": \"trace\", \"sha256\": \"8769562486ac0baeb37bf1c6d844cc8d2fd1d5c4eefb3e424e21f9e5c68a0ec8\", \"text\": \"def trace(g: Graph, entry: FuncDef, depth: int) -> tuple[list[Message], int, int]:\\n    messages: list[Message] = []\\n    unresolved = 0\\n    deferred = 0\\n\\n    def visit(fd: FuncDef, level: int, path: set[str]) -> None:\\n        nonlocal unresolved, deferred\\n        if level >= depth or len(messages) >= _MAX_MESSAGES:\\n            return\\n        for call in fd.calls:\\n            if call.kind == \\\"deferred\\\":\\n                # 대상은 알지만 이 자리에서 실행되지 않는다. 따라 들어가면 없는 순서를 만들게 된다.\\n                deferred += 1\\n                target = g.defs.get(call.callee_usr)\\n                messages.append(Message(src=fd.owner, dst=(target.owner if target else call.callee_owner),\\n                                        name=call.callee_name, loc=call.loc,\\n                                        note=\\\"예약된 호출, 실행 순서는 정적으로 확인 불가\\\"))\\n                continue\\n            if call.kind in (\\\"pointer\\\", \\\"callable\\\", \\\"unresolved\\\"):\\n                unresolved += 1\\n                label = {\\\"pointer\\\": \\\"함수 포인터, 정적 추적 불가\\\", \\\"callable\\\": \\\"콜백 객체, 정적 추적 불가\\\",\\n                         \\\"unresolved\\\": \\\"정적 추적 불가\\\"}[call.kind]\\n                messages.append(Message(src=fd.owner, dst=call.callee_owner, name=call.callee_name,\\n                                        loc=call.loc, note=label))\\n                continue\\n            targets = [call.callee_usr]\\n            note = \\\"\\\"\\n            if call.kind == \\\"virtual\\\":\\n                over = g.overrides.get(call.callee_usr, [])\\n                # 기반 구현이 있으면(순수 가상이 아니면) 그것도 후보다.\\n                base_def = g.defs.get(call.callee_usr)\\n                targets = ([call.callee_usr] if base_def else []) + over\\n                if len(targets) > 1:\\n                    note = \\\"virtual 후보\\\"\\n                elif targets:\\n                    note = \\\"virtual, 현재 구현 하나\\\"   # 지금은 하나지만 동적 디스패치라는 사실은 남긴다.\\n                else:\\n                    unresolved += 1\\n                    messages.append(Message(src=fd.owner, dst=call.callee_owner, name=call.callee_name,\\n                                            loc=call.loc, note=\\\"virtual, override 없음\\\"))\\n                    continue\\n            for t_usr in targets:\\n                t = g.defs.get(t_usr)\\n                owner = t.owner if t else call.callee_owner\\n                messages.append(Message(src=fd.owner, dst=owner, name=call.callee_name, loc=call.loc, note=note))\\n                if t and t_usr not in path:\\n                    visit(t, level + 1, path | {t_usr})\\n\\n    visit(entry, 0, {entry.usr})\\n    return messages, unresolved, deferred\"}, {\"file\": \"src/sdd/scenario_document.py\", \"line\": 62, \"name\": \"build\", \"sha256\": \"23bf4f1fe1e5c07cf6ab5972431d49b5b0fb800d8197d655d580c851bb886f96\", \"text\": \"    \\\"\\\"\\\"Focus rules select evidence, not prose assertions or execution stages.\\n\\n    Legacy flat facts do not carry branch ancestry. Draw a call *map*, not a\\n    sequence across candidates. The full extracted trace stays in this page.\\n    \\\"\\\"\\\"\"}], \"kind\": \"analysis-definition\", \"project_source_commit\": \"e117198c015057761bb0bbaa85f963c41ce412d7\", \"scenario\": {\"annotated_messages\": [{\"dst\": \"PipelineHandler\", \"loc\": {\"file\": \"src/libcamera/camera.cpp\", \"line\": 1376}, \"name\": \"queueRequest\", \"note\": \"예약된 호출, 실행 순서는 정적으로 확인 불가\", \"src\": \"Camera\"}], \"deferred\": 1, \"entry\": \"Camera::queueRequest(Request *)\", \"id\": \"queue_request\", \"messages_total\": 80, \"unresolved\": 0}, \"scope\": \"Analysis representation only; not product runtime, hardware or callback-thread evidence.\"}"
+              }
+            ],
+            "claim_quote": "Every callback always runs asynchronously on a single CameraManager thread in every device execution."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\002.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "abbreviated-private-member-receiver",
+        "expected": {
+          "qualified": "compatible",
+          "abbreviated": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "qualified",
+            "peers": [
+              "abbreviated"
+            ],
+            "status": "compatible",
+            "condition": "During reuse, regardless of the ReuseBuffers flag.",
+            "actor": "Request::reuse() operates on the request's private metadata member.",
+            "timing": "After resetting the request and clearing its controls.",
+            "scope": "Metadata clearing within Request::reuse().",
+            "reason": "The source supports the qualified call. The peer abbreviates the same member call without asserting a different receiver or object.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/reuse",
+                "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+              }
+            ],
+            "claim_quote": "Request::reuse() clears the metadata by calling _d()->metadata_.clear()."
+          },
+          {
+            "claim_id": "abbreviated",
+            "peers": [
+              "qualified"
+            ],
+            "status": "compatible",
+            "condition": "During reuse, regardless of the ReuseBuffers flag.",
+            "actor": "Request::reuse() operates on the request's private metadata member.",
+            "timing": "After resetting the request and clearing its controls.",
+            "scope": "Metadata clearing within Request::reuse().",
+            "reason": "The named function and source identify the same metadata member and clearing action; omitting the private accessor does not assert a different receiver or object.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/reuse",
+                "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+              }
+            ],
+            "claim_quote": "Request::reuse() calls metadata_.clear() to clear its metadata."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\003.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "different-member-is-not-a-receiver-abbreviation",
+        "expected": {
+          "wrong": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "wrong",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "When Request::reuse() is called, regardless of the buffer reuse flag.",
+            "actor": "Request::reuse().",
+            "timing": "During request reset, before subsequent requeueing.",
+            "scope": "Clearing request controls and metadata.",
+            "reason": "The source clears controls and metadata with separate calls on different members. The controls call does not perform the stated metadata clearing.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/reuse",
+                "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+              }
+            ],
+            "claim_quote": "Request::reuse() clears its metadata by calling controls_.clear(); this controls call performs the metadata clearing."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\004.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "buffer-is-request-completion",
+        "expected": {
+          "wrong": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "wrong",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "The last buffer completes during normal capture.",
+            "actor": "Pipeline handlers must explicitly complete the request.",
+            "timing": "After the last buffer completes, the request does not complete automatically.",
+            "scope": "The completeBuffer API contract for buffer and request completion.",
+            "reason": "The claim asserts automatic request completion, while the source expressly requires an explicit completeRequest() call.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "When the last buffer completes during normal capture, the request always completes automatically."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\005.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "explicit-request-completion",
+        "expected": {
+          "normal": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "normal",
+            "peers": [],
+            "status": "compatible",
+            "condition": "The last buffer completes during normal processing.",
+            "actor": "The pipeline handler.",
+            "timing": "After the last buffer completes, request completion requires an explicit call.",
+            "scope": "The completeBuffer and completeRequest API contract; no device behavior is established.",
+            "reason": "The source states that completing the last buffer does not automatically complete the request and requires pipeline handlers to complete requests explicitly.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "Completing the last buffer during normal processing does not automatically complete the request; the pipeline handler must explicitly call completeRequest()."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\006.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "stop-versus-normal",
+        "expected": {
+          "stopped": "compatible",
+          "normal": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "stopped",
+            "peers": [
+              "normal"
+            ],
+            "status": "compatible",
+            "condition": "Queued requests when the pipeline handler is stopped with stop().",
+            "actor": "The pipeline handler signals request completion using completeRequest().",
+            "timing": "When the pipeline handler stops.",
+            "scope": "Request completion for queued requests.",
+            "reason": "The source supports both automatic completion on stopping and the pipeline handler's obligation to signal completion. The normal-processing peer addresses a different event and condition.",
+            "sources": [
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              },
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "Tracking queued requests ensures their completion when the pipeline handler is stopped with stop(); the pipeline handler must signal completion with completeRequest()."
+          },
+          {
+            "claim_id": "normal",
+            "peers": [
+              "stopped"
+            ],
+            "status": "compatible",
+            "condition": "The last buffer completes during normal processing.",
+            "actor": "The pipeline handler completes the request explicitly with completeRequest().",
+            "timing": "After the last buffer completes; buffer completion itself does not automatically complete the request.",
+            "scope": "The relationship between buffer completion and request completion.",
+            "reason": "The source explicitly distinguishes completion of the last buffer from completion of its request. The stopping peer describes a separate condition.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              },
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              }
+            ],
+            "claim_quote": "The last buffer completing during normal processing does not itself complete the request."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\007.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "application-owns-request",
+        "expected": {
+          "owner": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "owner",
+            "peers": [],
+            "status": "compatible",
+            "condition": "A request is returned successfully; the function may be called in the Configured or Running state.",
+            "actor": "The caller owns the request and is responsible for deleting it.",
+            "timing": "Ownership passes when the request is returned; deletion may occur in the completion handler.",
+            "scope": "The request returned by Camera::createRequest().",
+            "reason": "The source explicitly assigns ownership and deletion responsibility to the caller.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/create",
+                "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+              }
+            ],
+            "claim_quote": "The caller owns the Request returned by Camera::createRequest() and is responsible for deleting it."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\008.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "wrong-request-owner",
+        "expected": {
+          "owner": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "owner",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "A request is successfully returned by createRequest(), called while the camera is Configured or Running.",
+            "actor": "The caller owns the returned request and is responsible for deleting it.",
+            "timing": "Ownership passes to the caller on return; deletion may occur in the completion handler.",
+            "scope": "Requests returned by Camera::createRequest().",
+            "reason": "The claim assigns ownership to the camera and prohibits application deletion, contrary to the source's caller ownership and deletion responsibility.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/create",
+                "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+              }
+            ],
+            "claim_quote": "Camera owns every Request returned by createRequest(); the application must never delete it."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\009.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "access-after-complete-request",
+        "expected": {
+          "access": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "access",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "The pipeline handler has called completeRequest() for the completed request.",
+            "actor": "Pipeline handler.",
+            "timing": "After completeRequest() returns.",
+            "scope": "Access to the request passed to completeRequest().",
+            "reason": "The source prohibits access after the function returns, while the claim permits continued access.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/complete-access",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ],
+            "claim_quote": "After completeRequest() returns, the pipeline handler may continue accessing that request."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\010.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "completion-call-order-versus-return-order",
+        "expected": {
+          "calls": "compatible",
+          "returns": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "calls",
+            "peers": [
+              "returns"
+            ],
+            "status": "compatible",
+            "condition": "The request is complete.",
+            "actor": "The pipeline handler calls completeRequest() on the CameraManager thread.",
+            "timing": "Calls may occur in any order once requests are complete.",
+            "scope": "Ordering of calls to completeRequest().",
+            "reason": "The source permits calls without an ordering constraint while separately guaranteeing submission-order returns to the application.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ],
+            "claim_quote": "Pipeline handlers may call completeRequest() on completed requests without an ordering constraint."
+          },
+          {
+            "claim_id": "returns",
+            "peers": [
+              "calls"
+            ],
+            "status": "compatible",
+            "condition": "Requests are returned through the completeRequest() API.",
+            "actor": "The completion API returns requests to the application.",
+            "timing": "Requests are returned in submission order.",
+            "scope": "The API guarantee for request returns to the application.",
+            "reason": "The source explicitly guarantees submission-order returns, independently of the order in which the pipeline handler calls completeRequest().",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ],
+            "claim_quote": "Requests are returned to the application in their submission order."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\011.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "wrong-return-order",
+        "expected": {
+          "returns": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "returns",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "Completed requests may be reported to the function without an ordering constraint.",
+            "actor": "The pipeline handler signals completion; the camera returns requests to the application.",
+            "timing": "The function may be called on complete requests in any order, but requests are returned in submission order.",
+            "scope": "Request completion and return to the application.",
+            "reason": "The claim says return order always follows hardware processing completion regardless of submission order, while the source guarantees submission order.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/journey/request-notice",
+                "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+              }
+            ],
+            "claim_quote": "Requests are always returned to the application in the order their hardware processing finishes, regardless of submission order."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\012.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "unsupported-stop-deadline",
+        "expected": {
+          "deadline": "insufficient-evidence"
+        },
+        "findings": [
+          {
+            "claim_id": "deadline",
+            "peers": [],
+            "status": "insufficient-evidence",
+            "condition": "Stopping a supported camera.",
+            "actor": "The pipeline handler invokes stopDevice() for the camera.",
+            "timing": "The source describes immediate stopping and request completion but specifies no 10-millisecond bound for the function to return.",
+            "scope": "The claim covers every supported camera and the duration of stopDevice().",
+            "reason": "The source contract does not establish a numerical execution deadline or device performance across all supported cameras.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/shutdown/stop",
+                "source_quote": "void PipelineHandler::stop(Camera *camera)\n{\n\t/*\n\t * Take all waiting requests so that they are not requeued in response\n\t * to completeRequest() being called inside stopDevice(). Cancel them\n\t * after the device to keep them in order.\n\t */\n\tCamera::Private *data = camera->_d();\n\tstd::queue<Request *> waitingRequests;\n\twaitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests complete. */\n\tstopDevice(camera);\n\n\t/* Cancel and signal as complete all waiting requests. */\n\twhile (!waitingRequests.empty()) {\n\t\tRequest *request = waitingRequests.front();\n\t\twaitingRequests.pop();\n\n\t\t/*\n\t\t * Cancel all requests by marking them as cancelled and calling\n\t\t * doQueueRequest() instead of cancelRequest(). This ensures\n\t\t * that the requests get a sequence number and are temporarily\n\t\t * added to queuedRequests_ so they can be properly completed in\n\t\t * completeRequest().\n\t\t */\n\t\trequest->_d()->cancel();\n\t\tdoQueueRequest(request);\n\t}\n\n\t/* Make sure no requests are pending. */\n\tASSERT(data->queuedRequests_.empty());\n\tASSERT(data->waitingRequests_.empty());\n\n\tdata->requestSequence_ = 0;\n}"
+              },
+              {
+                "source_id": "vendor-integration/shutdown/device",
+                "source_quote": "\\fn PipelineHandler::stopDevice()\n * \\brief Stop capturing from all running streams\n * \\param[in] camera The camera to stop\n *\n * This function stops capturing and processing requests immediately. All\n * pending requests are cancelled and complete immediately in an error state.\n */"
+              }
+            ],
+            "claim_quote": "Every supported camera completes stopDevice() within 10 milliseconds."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\013.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "synchronization-responsibility",
+        "expected": {
+          "synchronization": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "synchronization",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "When synchronization is necessary.",
+            "actor": "The caller is responsible for synchronization; the Camera class generally does not provide it between these functions.",
+            "timing": "When functions affecting camera state require synchronization with each other.",
+            "scope": "Functions affecting the camera state as defined by the source contract.",
+            "reason": "The claim asserts universal internal synchronization and denies caller responsibility, contrary to the source.",
+            "sources": [
+              {
+                "source_id": "overview/boundary/synchronization",
+                "source_quote": "Functions that affect the camera state as defined below are generally not\n * synchronized with each other by the Camera class. The caller is responsible\n * for ensuring their synchronization if necessary.\n *\n * \\subsection Camera States"
+              }
+            ],
+            "claim_quote": "Camera internally synchronizes all functions that change camera state, so the caller never needs to synchronize them."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\014.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "weakened-english-obligation",
+        "expected": {
+          "ko": "compatible",
+          "en": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "ko",
+            "peers": [
+              "en"
+            ],
+            "status": "compatible",
+            "condition": "When a pipeline handler completes a request.",
+            "actor": "Pipeline handler.",
+            "timing": "Explicit request completion, including after the last buffer completes.",
+            "scope": "Project-source request completion contract.",
+            "reason": "The source requires explicit request completion with completeRequest(); the English peer incorrectly makes that call optional.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "파이프라인 핸들러는 요청을 완료하려면 completeRequest()를 명시적으로 호출해야 합니다."
+          },
+          {
+            "claim_id": "en",
+            "peers": [
+              "ko"
+            ],
+            "status": "contradiction",
+            "condition": "When a pipeline handler completes a request.",
+            "actor": "Pipeline handler.",
+            "timing": "Explicit request completion, including after the last buffer completes.",
+            "scope": "Project-source request completion contract.",
+            "reason": "The source requires completeRequest() explicitly, whereas this claim says the call is optional and not required. The Korean peer preserves the obligation.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "The pipeline handler may optionally call completeRequest() to complete a request; this call is not required."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\015.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "omitted-completion-condition",
+        "expected": {
+          "unclear": "ambiguous"
+        },
+        "findings": [
+          {
+            "claim_id": "unclear",
+            "peers": [],
+            "status": "ambiguous",
+            "condition": "The claim omits whether the pipeline is stopping or a buffer has completed during normal processing.",
+            "actor": "The pipeline handler signals request completion.",
+            "timing": "Automatic completion is described when the pipeline handler stops; completion of the last buffer does not automatically complete the request.",
+            "scope": "Request completion, distinct from buffer completion.",
+            "reason": "The unqualified claim can describe stopping behavior, but it does not preserve the condition that distinguishes it from explicit request completion after buffer processing.",
+            "sources": [
+              {
+                "source_id": "vendor-overview/benefits/completion",
+                "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+              },
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "Requests are completed automatically."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\016.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "incorrect-original-correct-english",
+        "expected": {
+          "ko": "contradiction",
+          "en": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "ko",
+            "peers": [
+              "en"
+            ],
+            "status": "contradiction",
+            "condition": "Normal buffer processing when the last buffer completes.",
+            "actor": "The pipeline handler must explicitly complete the request.",
+            "timing": "After the last buffer completes.",
+            "scope": "Request completion following buffer completion.",
+            "reason": "The claim asserts automatic request completion without another call, contrary to the source and the English claim.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "정상 버퍼 처리에서 마지막 버퍼가 완료되면 추가 호출 없이 요청이 자동으로 완료됩니다."
+          },
+          {
+            "claim_id": "en",
+            "peers": [
+              "ko"
+            ],
+            "status": "compatible",
+            "condition": "Normal buffer processing when the last buffer completes.",
+            "actor": "The pipeline handler.",
+            "timing": "After the last buffer completes.",
+            "scope": "Request completion following buffer completion.",
+            "reason": "The source supports both the lack of automatic request completion and the obligation to call completeRequest() explicitly. The Korean claim conflicts with this contract.",
+            "sources": [
+              {
+                "source_id": "vendor-integration/request/buffer",
+                "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+              }
+            ],
+            "claim_quote": "Normal completion of the last buffer does not automatically complete the request; the pipeline handler must explicitly call completeRequest()."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\017.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "actual-bilingual-private-member-abbreviation",
+        "expected": {
+          "ko": "compatible",
+          "en": "compatible"
+        },
+        "findings": [
+          {
+            "claim_id": "ko",
+            "peers": [
+              "en"
+            ],
+            "status": "compatible",
+            "condition": "Request::ReuseBuffers is set for buffer reuse.",
+            "actor": "Request::reuse clears the request's controls and metadata; the application selects the reuse flag.",
+            "timing": "During request reuse, before requeueing.",
+            "scope": "Request reset, previously added buffers, and associated fences.",
+            "reason": "Both language claims agree with the source. The shortened metadata member call identifies the same clear action and object despite omitting the private accessor.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/reuse",
+                "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+              },
+              {
+                "source_id": "request-lifecycle/resources/reuse-flags",
+                "source_quote": "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+              }
+            ],
+            "claim_quote": "Request::reuse는 controls_.clear()를 호출해 controls_를 비웁니다. Request::reuse는 metadata_.clear()를 호출해 metadata_를 비웁니다. Request::ReuseBuffers 플래그는 addBuffer()로 이전에 추가한 버퍼를 재사용하도록 유지합니다. 버퍼에 연결된 펜스는 재사용하지 않습니다."
+          },
+          {
+            "claim_id": "en",
+            "peers": [
+              "ko"
+            ],
+            "status": "compatible",
+            "condition": "Request::ReuseBuffers is set for buffer reuse.",
+            "actor": "Request::reuse clears the request's controls and metadata; the application selects the reuse flag.",
+            "timing": "During request reuse, before requeueing.",
+            "scope": "Request reset, previously added buffers, and associated fences.",
+            "reason": "Both language claims agree with the source. The shortened metadata member call identifies the same clear action and object despite omitting the private accessor.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/reuse",
+                "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+              },
+              {
+                "source_id": "request-lifecycle/resources/reuse-flags",
+                "source_quote": "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+              }
+            ],
+            "claim_quote": "Request::reuse calls controls_.clear() to clear controls_. Request::reuse calls metadata_.clear() to clear metadata_. The Request::ReuseBuffers flag keeps buffers previously added with addBuffer() available for reuse. Fences attached to the buffers are not reused."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\018.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "explicit-other-request-receiver",
+        "expected": {
+          "wrong": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "wrong",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "On invocation of Request::reuse(), regardless of the ReuseBuffers flag.",
+            "actor": "The invoked Request object.",
+            "timing": "During reuse(), before the call returns.",
+            "scope": "The request's own metadata.",
+            "reason": "The source clears metadata through the invoked object's private accessor; the claim explicitly identifies a different Request object.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/reuse",
+                "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+              }
+            ],
+            "claim_quote": "Request::reuse() clears the metadata_ of another Request object instead of the metadata belonging to the Request on which reuse() was invoked."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\019.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "different-member-action",
+        "expected": {
+          "wrong": "contradiction"
+        },
+        "findings": [
+          {
+            "claim_id": "wrong",
+            "peers": [],
+            "status": "contradiction",
+            "condition": "Request reuse, regardless of the ReuseBuffers flag.",
+            "actor": "Request::reuse()",
+            "timing": "During the reuse call.",
+            "scope": "Action on the request's metadata collection.",
+            "reason": "The source calls clear() on the metadata collection; the claim explicitly says it calls reset() instead.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/reuse",
+                "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+              }
+            ],
+            "claim_quote": "Request::reuse() calls metadata_.reset() instead of metadata_.clear() to reset the metadata collection."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\020.receipt.json",
+        "correct": true
+      },
+      {
+        "id": "unestablished-abbreviated-receiver",
+        "expected": {
+          "unknown": "insufficient-evidence"
+        },
+        "findings": [
+          {
+            "claim_id": "unknown",
+            "peers": [],
+            "status": "insufficient-evidence",
+            "condition": "The claim concerns an undocumented external helper with no established connection to Request.",
+            "actor": "The claimed helper is not identified in the source.",
+            "timing": "The helper's invocation timing is not established.",
+            "scope": "An independent collection attributed to the helper.",
+            "reason": "The source establishes a metadata clear within Request::reuse, but does not establish whether the claimed external helper or its collection exists.",
+            "sources": [
+              {
+                "source_id": "request-lifecycle/resources/reuse",
+                "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+              }
+            ],
+            "claim_quote": "An undocumented external helper calls metadata_.clear() on its own collection, whose receiver and connection to Request are not established."
+          }
+        ],
+        "receipt": "$WORKSPACE\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\021.receipt.json",
+        "correct": true
+      }
+    ],
+    "human_review": "pending",
+    "scope": "Synthetic evaluation statements, not published manuscript content; actual selected CLI calls.",
+    "metrics": {
+      "cases": 21,
+      "claims": 27,
+      "correct": 27,
+      "contradictions": 10,
+      "detected": 10,
+      "missed": 0,
+      "false_positives": 0,
+      "compatible": 13,
+      "undetermined": 4
+    }
+  },
+  "actual_terra_whole_audits": {
+    "parallel-contract-audit-terra-e117": {
+      "policy_sha256": "772c75115bbeca87540d8226315f9e5b130f702882cf9b973584a22751b11a3e",
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "scope": "Four independent contract groups, same source/manuscripts/current translations/system/native CLI/arguments/40k budget. Completed prefix reused only after exact receipt-bound identity checks. No manual findings. Canonical all-group CLI review follows by verified reuse.",
+      "workers": [
+        {
+          "id": "request-completion",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 16,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117\\request-completion\\build\\consistency-review.json"
+        },
+        {
+          "id": "stopping-cancellation",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 11,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117\\stopping-cancellation\\build\\consistency-review.json"
+        },
+        {
+          "id": "ownership-reuse",
+          "exit_code": 1,
+          "status": "failed",
+          "fresh_batches": 11,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117\\ownership-reuse\\build\\consistency-review.json"
+        },
+        {
+          "id": "callbacks-synchronization",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 15,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117\\callbacks-synchronization\\build\\consistency-review.json"
+        }
+      ],
+      "seconds": 269.39100000000326
+    },
+    "parallel-contract-audit-terra-e117-v3": {
+      "policy_sha256": "0203f413b5296e528ef70e4356517fe54deeabb95797f7820721add862fab33d",
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "scope": "Four independent contract groups, same source/manuscripts/current translations/system/native CLI/arguments/40k budget. Completed prefix reused only after exact receipt-bound identity checks. No manual findings. Canonical all-group CLI review follows by verified reuse.",
+      "workers": [
+        {
+          "id": "request-completion",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 16,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-v3\\request-completion\\build\\consistency-review.json"
+        },
+        {
+          "id": "stopping-cancellation",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 11,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-v3\\stopping-cancellation\\build\\consistency-review.json"
+        },
+        {
+          "id": "ownership-reuse",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 11,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-v3\\ownership-reuse\\build\\consistency-review.json"
+        },
+        {
+          "id": "callbacks-synchronization",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 15,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-v3\\callbacks-synchronization\\build\\consistency-review.json"
+        }
+      ],
+      "seconds": 255.31300000002375
+    },
+    "parallel-contract-audit-terra-e117-evidence": {
+      "policy_sha256": "0203f413b5296e528ef70e4356517fe54deeabb95797f7820721add862fab33d",
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "scope": "Four independent contract groups, same source/manuscripts/current translations/system/native CLI/arguments/40k budget. Completed prefix reused only after exact receipt-bound identity checks. No manual findings. Canonical all-group CLI review follows by verified reuse.",
+      "workers": [
+        {
+          "id": "request-completion",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 16,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-evidence\\request-completion\\build\\consistency-review.json"
+        },
+        {
+          "id": "stopping-cancellation",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 11,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-evidence\\stopping-cancellation\\build\\consistency-review.json"
+        },
+        {
+          "id": "ownership-reuse",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 11,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-evidence\\ownership-reuse\\build\\consistency-review.json"
+        },
+        {
+          "id": "callbacks-synchronization",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 0,
+          "reused_batches": 15,
+          "report": "parallel-contract-audit-terra-e117-evidence\\callbacks-synchronization\\build\\consistency-review.json"
+        }
+      ],
+      "seconds": 259.10999999998603
+    },
+    "parallel-contract-audit-terra-e117-direct-v7": {
+      "policy_sha256": "89c9b2af7aff91f4b6e06ba1bd149eb7f38dbf271e95fb71420b8120036fc684",
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "scope": "Configured independent contract groups, same source/manuscripts/current translations/system/native CLI/arguments/40k budget. Completed prefix reused only after exact receipt-bound identity checks. No manual findings. Canonical all-group CLI review follows by verified reuse.",
+      "workers": [
+        {
+          "id": "request-completion",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 18,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v7\\request-completion\\build\\consistency-review.json"
+        },
+        {
+          "id": "stopping-cancellation",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 17,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v7\\stopping-cancellation\\build\\consistency-review.json"
+        },
+        {
+          "id": "ownership-reuse",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 11,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v7\\ownership-reuse\\build\\consistency-review.json"
+        },
+        {
+          "id": "callbacks-synchronization",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 25,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v7\\callbacks-synchronization\\build\\consistency-review.json"
+        },
+        {
+          "id": "scenario-analysis",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 15,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v7\\scenario-analysis\\build\\consistency-review.json"
+        }
+      ],
+      "seconds": 272.10899999999674
+    },
+    "parallel-contract-audit-terra-e117-direct-v9": {
+      "policy_sha256": "89c9b2af7aff91f4b6e06ba1bd149eb7f38dbf271e95fb71420b8120036fc684",
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "scope": "Configured independent contract groups, same source/manuscripts/current translations/system/native CLI/arguments/40k budget. Completed prefix reused only after exact receipt-bound identity checks. No manual findings. Canonical all-group CLI review follows by verified reuse.",
+      "workers": [
+        {
+          "id": "request-completion",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 19,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v9\\request-completion\\build\\consistency-review.json"
+        },
+        {
+          "id": "stopping-cancellation",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 17,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v9\\stopping-cancellation\\build\\consistency-review.json"
+        },
+        {
+          "id": "ownership-reuse",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 11,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v9\\ownership-reuse\\build\\consistency-review.json"
+        },
+        {
+          "id": "callbacks-synchronization",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 25,
+          "reused_batches": 0,
+          "report": "parallel-contract-audit-terra-e117-direct-v9\\callbacks-synchronization\\build\\consistency-review.json"
+        },
+        {
+          "id": "scenario-analysis",
+          "exit_code": 0,
+          "status": "passed",
+          "fresh_batches": 2,
+          "reused_batches": 13,
+          "report": "parallel-contract-audit-terra-e117-direct-v9\\scenario-analysis\\build\\consistency-review.json"
+        }
+      ],
+      "seconds": 266.98399999999674
+    }
+  },
+  "canonical_contract_report": {
+    "schema": 1,
+    "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+    "fresh_batches": 0,
+    "reused_batches": 87,
+    "human_review": "pending",
+    "assessment": "automatic model review; not human approval",
+    "comparison_scope": "Every target is compared with supplied sources and all primary claims. Secondary pairs are compared when in the same batch; this is not an exhaustive all-pairs proof.",
+    "status": "passed",
+    "unresolved": [
+      {
+        "contract": "request-completion",
+        "claim_id": "scenarios/queue_request.md/paragraph/28",
+        "peers": [
+          "request-lifecycle.md/journey/2",
+          "request-lifecycle.md/journey/5",
+          "request-lifecycle.md/journey/10"
+        ],
+        "status": "insufficient-evidence",
+        "condition": "The excerpt provides a next-step link without a scenario-specific transition condition.",
+        "actor": "The link names PipelineHandler::completeRequest.",
+        "timing": "The link presents request completion notification as a next documentation step.",
+        "scope": "Navigation and the linked page's contents are not established by the supplied source excerpts.",
+        "reason": "The sources establish the named function's completion role, but do not establish the link destination or the scenario's next-step ordering.",
+        "sources": [
+          {
+            "source_id": "request-lifecycle/journey/request-notice",
+            "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+          },
+          {
+            "source_id": "request-lifecycle/journey/dispatch",
+            "source_quote": "void PipelineHandler::doQueueRequest(Request *request)\n{\n\tLIBCAMERA_TRACEPOINT(request_device_queue, request);\n\n\tCamera *camera = request->_d()->camera();\n\tCamera::Private *data = camera->_d();\n\tdata->queuedRequests_.push_back(request);\n\n\trequest->_d()->sequence_ = data->requestSequence_++;\n\n\tif (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera, request);\n\tif (ret)\n\t\tcancelRequest(request);\n}"
+          }
+        ],
+        "claim_quote": "다음 단계: [요청 완료 통지 (PipelineHandler::completeRequest)](complete_request.md)\n"
+      }
+    ]
+  },
+  "terra_same_input_controlled_trials": {
+    "terra-controlled-before-v2": [
+      {
+        "round": 1,
+        "section": "ipu3-lsc-flow",
+        "status": "failed",
+        "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/request/frame-argument: LLM 답변 검증 실패: [의미 중복] request 5번째 설명이 앞의 request 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::queueRequest`는 공통 `lscAlgo_.queueRequest` 호출의 두 번째 인자로 `frameCo…\" ≈ \"`Lsc::queueRequest`는 공통 `lscAlgo_.queueRequest` 호출의 첫 번째 인자로 `context…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+        "seconds": 95.875,
+        "calls": 20,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-flow_integration_build": "newly-generated",
+          "ipu3-lsc-flow_integration_active": "newly-generated",
+          "ipu3-lsc-flow_integration_frame": "newly-generated",
+          "ipu3-lsc-flow_integration_queue": "newly-generated",
+          "ipu3-lsc-flow_setup": "newly-generated",
+          "ipu3-lsc-flow_request_default": "newly-generated",
+          "ipu3-lsc-flow_request_default-update": "newly-generated",
+          "ipu3-lsc-flow_request_delegate": "newly-generated",
+          "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+          "ipu3-lsc-flow_request_frame-argument": "failed",
+          "ipu3-lsc-flow_request_controls-argument": "not-started",
+          "ipu3-lsc-flow_metadata": "not-started"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+          "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+          "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+          "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 1,
+        "section": "ipu3-lsc-prepare",
+        "status": "failed",
+        "error": "설계 항목 검증 실패:\nipu3-lsc-prepare: ipu3-lsc-prepare/prepare/disabled-exit: LLM 답변 검증 실패: [의미 중복] prepare 5번째 설명이 앞의 prepare 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `config->general.shd_enable`에 `frameContext.lsc.enabl…\" ≈ \"`Lsc::prepare`는 `config->general.shd_enable`에 `frameContext.lsc.enabl…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+        "seconds": 54.875,
+        "calls": 10,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+          "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+          "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+          "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+          "ipu3-lsc-prepare_prepare_disabled-exit": "failed",
+          "ipu3-lsc-prepare_prepare_grid": "not-started",
+          "ipu3-lsc-prepare_prepare_crop": "not-started",
+          "ipu3-lsc-prepare_prepare_gain": "not-started",
+          "ipu3-lsc-prepare_prepare_black-level": "not-started",
+          "ipu3-lsc-prepare_prepare_lut": "not-started",
+          "ipu3-lsc-prepare_prepare_lut-channels": "not-started",
+          "ipu3-lsc-prepare_prepare_remember": "not-started",
+          "ipu3-lsc-prepare_prepare_remember-quantized": "not-started"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 2,
+        "section": "ipu3-lsc-flow",
+        "status": "failed",
+        "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/request/controls-argument: LLM 답변 검증 실패: [의미 중복] request 6번째 설명이 앞의 request 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"공통 `lscAlgo_.queueRequest` 호출의 세 번째 인자는 `controls`입니다.\" ≈ \"`Lsc::queueRequest`는 공통 `lscAlgo_.queueRequest` 호출의 첫 번째 인자로 `context…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+        "seconds": 127.93699999997625,
+        "calls": 23,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-flow_integration_build": "newly-generated",
+          "ipu3-lsc-flow_integration_active": "newly-generated",
+          "ipu3-lsc-flow_integration_frame": "newly-generated",
+          "ipu3-lsc-flow_integration_queue": "newly-generated",
+          "ipu3-lsc-flow_setup": "newly-generated",
+          "ipu3-lsc-flow_request_default": "newly-generated",
+          "ipu3-lsc-flow_request_default-update": "newly-generated",
+          "ipu3-lsc-flow_request_delegate": "newly-generated",
+          "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+          "ipu3-lsc-flow_request_frame-argument": "newly-generated",
+          "ipu3-lsc-flow_request_controls-argument": "failed",
+          "ipu3-lsc-flow_metadata": "not-started"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+          "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+          "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+          "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 2,
+        "section": "ipu3-lsc-prepare",
+        "status": "passed",
+        "error": null,
+        "seconds": 171.625,
+        "calls": 29,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+          "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+          "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+          "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+          "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+          "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+          "ipu3-lsc-prepare_prepare_crop": "newly-generated",
+          "ipu3-lsc-prepare_prepare_gain": "newly-generated",
+          "ipu3-lsc-prepare_prepare_black-level": "newly-generated",
+          "ipu3-lsc-prepare_prepare_lut": "newly-generated",
+          "ipu3-lsc-prepare_prepare_lut-channels": "newly-generated",
+          "ipu3-lsc-prepare_prepare_remember": "newly-generated",
+          "ipu3-lsc-prepare_prepare_remember-quantized": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 3,
+        "section": "ipu3-lsc-flow",
+        "status": "failed",
+        "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/request/frame-argument: LLM 답변 검증 실패: [의미 중복] request 5번째 설명이 앞의 request 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 두 번째 인자로 `frameContext.…\" ≈ \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 첫 번째 인자로 `context.activ…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+        "seconds": 111.54599999997299,
+        "calls": 20,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-flow_integration_build": "newly-generated",
+          "ipu3-lsc-flow_integration_active": "newly-generated",
+          "ipu3-lsc-flow_integration_frame": "newly-generated",
+          "ipu3-lsc-flow_integration_queue": "newly-generated",
+          "ipu3-lsc-flow_setup": "newly-generated",
+          "ipu3-lsc-flow_request_default": "newly-generated",
+          "ipu3-lsc-flow_request_default-update": "newly-generated",
+          "ipu3-lsc-flow_request_delegate": "newly-generated",
+          "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+          "ipu3-lsc-flow_request_frame-argument": "failed",
+          "ipu3-lsc-flow_request_controls-argument": "not-started",
+          "ipu3-lsc-flow_metadata": "not-started"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+          "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+          "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+          "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 3,
+        "section": "ipu3-lsc-prepare",
+        "status": "passed",
+        "error": null,
+        "seconds": 182.34399999998277,
+        "calls": 29,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+          "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+          "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+          "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+          "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+          "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+          "ipu3-lsc-prepare_prepare_crop": "newly-generated",
+          "ipu3-lsc-prepare_prepare_gain": "newly-generated",
+          "ipu3-lsc-prepare_prepare_black-level": "newly-generated",
+          "ipu3-lsc-prepare_prepare_lut": "newly-generated",
+          "ipu3-lsc-prepare_prepare_lut-channels": "newly-generated",
+          "ipu3-lsc-prepare_prepare_remember": "newly-generated",
+          "ipu3-lsc-prepare_prepare_remember-quantized": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      }
+    ],
+    "terra-controlled-after": [
+      {
+        "round": 1,
+        "section": "ipu3-lsc-flow",
+        "status": "passed",
+        "error": null,
+        "seconds": 133.10899999999674,
+        "calls": 26,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-flow_integration_build": "newly-generated",
+          "ipu3-lsc-flow_integration_active": "newly-generated",
+          "ipu3-lsc-flow_integration_frame": "newly-generated",
+          "ipu3-lsc-flow_integration_queue": "newly-generated",
+          "ipu3-lsc-flow_setup": "newly-generated",
+          "ipu3-lsc-flow_request_default": "newly-generated",
+          "ipu3-lsc-flow_request_default-update": "newly-generated",
+          "ipu3-lsc-flow_request_delegate": "newly-generated",
+          "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+          "ipu3-lsc-flow_request_frame-argument": "newly-generated",
+          "ipu3-lsc-flow_request_controls-argument": "newly-generated",
+          "ipu3-lsc-flow_metadata": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+          "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+          "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+          "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 1,
+        "section": "ipu3-lsc-prepare",
+        "status": "passed",
+        "error": null,
+        "seconds": 151.11000000004424,
+        "calls": 27,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+          "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+          "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+          "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+          "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+          "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+          "ipu3-lsc-prepare_prepare_crop": "newly-generated",
+          "ipu3-lsc-prepare_prepare_gain": "newly-generated",
+          "ipu3-lsc-prepare_prepare_black-level": "newly-generated",
+          "ipu3-lsc-prepare_prepare_lut": "newly-generated",
+          "ipu3-lsc-prepare_prepare_lut-channels": "newly-generated",
+          "ipu3-lsc-prepare_prepare_remember": "newly-generated",
+          "ipu3-lsc-prepare_prepare_remember-quantized": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 2,
+        "section": "ipu3-lsc-flow",
+        "status": "passed",
+        "error": null,
+        "seconds": 149.65600000001723,
+        "calls": 25,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-flow_integration_build": "newly-generated",
+          "ipu3-lsc-flow_integration_active": "newly-generated",
+          "ipu3-lsc-flow_integration_frame": "newly-generated",
+          "ipu3-lsc-flow_integration_queue": "newly-generated",
+          "ipu3-lsc-flow_setup": "newly-generated",
+          "ipu3-lsc-flow_request_default": "newly-generated",
+          "ipu3-lsc-flow_request_default-update": "newly-generated",
+          "ipu3-lsc-flow_request_delegate": "newly-generated",
+          "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+          "ipu3-lsc-flow_request_frame-argument": "newly-generated",
+          "ipu3-lsc-flow_request_controls-argument": "newly-generated",
+          "ipu3-lsc-flow_metadata": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+          "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+          "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+          "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 2,
+        "section": "ipu3-lsc-prepare",
+        "status": "failed",
+        "error": "설계 항목 검증 실패:\nipu3-lsc-prepare: ipu3-lsc-prepare/prepare/crop: LLM 답변 검증 실패: [의미 중복] prepare 7번째 설명이 앞의 prepare 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `frameContext.lsc.update`가 거짓일 때 LSC가 비활성화되어 있거나, 현재 …\" ≈ \"`Lsc::prepare`는 `frameContext.lsc.update`가 거짓이고 `frameContext.lsc.ena…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+        "seconds": 100.35999999998603,
+        "calls": 16,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+          "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+          "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+          "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+          "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+          "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+          "ipu3-lsc-prepare_prepare_crop": "failed",
+          "ipu3-lsc-prepare_prepare_gain": "not-started",
+          "ipu3-lsc-prepare_prepare_black-level": "not-started",
+          "ipu3-lsc-prepare_prepare_lut": "not-started",
+          "ipu3-lsc-prepare_prepare_lut-channels": "not-started",
+          "ipu3-lsc-prepare_prepare_remember": "not-started",
+          "ipu3-lsc-prepare_prepare_remember-quantized": "not-started"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 3,
+        "section": "ipu3-lsc-flow",
+        "status": "passed",
+        "error": null,
+        "seconds": 168.64000000001397,
+        "calls": 25,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-flow_integration_build": "newly-generated",
+          "ipu3-lsc-flow_integration_active": "newly-generated",
+          "ipu3-lsc-flow_integration_frame": "newly-generated",
+          "ipu3-lsc-flow_integration_queue": "newly-generated",
+          "ipu3-lsc-flow_setup": "newly-generated",
+          "ipu3-lsc-flow_request_default": "newly-generated",
+          "ipu3-lsc-flow_request_default-update": "newly-generated",
+          "ipu3-lsc-flow_request_delegate": "newly-generated",
+          "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+          "ipu3-lsc-flow_request_frame-argument": "newly-generated",
+          "ipu3-lsc-flow_request_controls-argument": "newly-generated",
+          "ipu3-lsc-flow_metadata": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+          "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+          "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+          "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 3,
+        "section": "ipu3-lsc-prepare",
+        "status": "passed",
+        "error": null,
+        "seconds": 171.54699999996228,
+        "calls": 31,
+        "reused_units": 0,
+        "units": {
+          "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+          "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+          "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+          "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+          "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+          "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+          "ipu3-lsc-prepare_prepare_crop": "newly-generated",
+          "ipu3-lsc-prepare_prepare_gain": "newly-generated",
+          "ipu3-lsc-prepare_prepare_black-level": "newly-generated",
+          "ipu3-lsc-prepare_prepare_lut": "newly-generated",
+          "ipu3-lsc-prepare_prepare_lut-channels": "newly-generated",
+          "ipu3-lsc-prepare_prepare_remember": "newly-generated",
+          "ipu3-lsc-prepare_prepare_remember-quantized": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      }
+    ],
+    "terra-controlled-short-before": [
+      {
+        "round": 1,
+        "section": "ipa-module-validation",
+        "status": "passed",
+        "error": null,
+        "seconds": 29.280999999959022,
+        "calls": 4,
+        "reused_units": 0,
+        "units": {
+          "ipa-module-validation_metadata_checks": "newly-generated",
+          "ipa-module-validation_signature_file-result": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+          "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 2,
+        "section": "ipa-module-validation",
+        "status": "passed",
+        "error": null,
+        "seconds": 34.45400000002701,
+        "calls": 4,
+        "reused_units": 0,
+        "units": {
+          "ipa-module-validation_metadata_checks": "newly-generated",
+          "ipa-module-validation_signature_file-result": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+          "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 3,
+        "section": "ipa-module-validation",
+        "status": "passed",
+        "error": null,
+        "seconds": 36.07900000002701,
+        "calls": 4,
+        "reused_units": 0,
+        "units": {
+          "ipa-module-validation_metadata_checks": "newly-generated",
+          "ipa-module-validation_signature_file-result": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+        "topic_inputs": {
+          "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+          "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      }
+    ],
+    "terra-controlled-short-after": [
+      {
+        "round": 1,
+        "section": "ipa-module-validation",
+        "status": "passed",
+        "error": null,
+        "seconds": 35.92200000002049,
+        "calls": 4,
+        "reused_units": 0,
+        "units": {
+          "ipa-module-validation_metadata_checks": "newly-generated",
+          "ipa-module-validation_signature_file-result": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+          "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 2,
+        "section": "ipa-module-validation",
+        "status": "passed",
+        "error": null,
+        "seconds": 33.125,
+        "calls": 4,
+        "reused_units": 0,
+        "units": {
+          "ipa-module-validation_metadata_checks": "newly-generated",
+          "ipa-module-validation_signature_file-result": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+          "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      },
+      {
+        "round": 3,
+        "section": "ipa-module-validation",
+        "status": "passed",
+        "error": null,
+        "seconds": 30.25,
+        "calls": 4,
+        "reused_units": 0,
+        "units": {
+          "ipa-module-validation_metadata_checks": "newly-generated",
+          "ipa-module-validation_signature_file-result": "newly-generated"
+        },
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+        "topic_inputs": {
+          "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+          "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+        },
+        "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "limits": {
+          "max_calls": 1600,
+          "max_seconds": 14400,
+          "document_max_calls": 160,
+          "document_max_seconds": 7200,
+          "max_input_chars": 40000,
+          "timeout_sec": 600,
+          "max_retries": 1
+        }
+      }
+    ]
   },
   "recovery-v2": {
     "schema": 1,
@@ -3351,13 +6209,13 @@
     ]
   },
   "configuration-cost-current": {
-    "section_lines": 6120,
+    "section_lines": 6121,
     "visual_lines": 1743,
     "sections": 22,
     "design_sections": 19,
     "topics": 69,
     "parts": 305,
-    "source_selectors": 289,
+    "source_selectors": 290,
     "source_files": [
       "Documentation/introduction.rst",
       "Documentation/libcamera_architecture.rst",
