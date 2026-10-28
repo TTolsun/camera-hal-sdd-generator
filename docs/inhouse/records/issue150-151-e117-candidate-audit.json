@@ -1502,5 +1502,282 @@
     "changed_files": 414,
     "docs_changed": 0,
     "scope": "publication/issue141"
+  },
+  "resumed_verification": {
+    "checked_at_utc": "2026-10-28T20:48:22.996372+00:00",
+    "semantic_chain": {
+      "checked_at_utc": "2026-10-28T20:37:39.231421+00:00",
+      "scope": "provisional saved semantic report; unmerged policy inspected as data; no publication approval",
+      "generator_workspace": "7109651c7c783bc5ed70760990201ec29e99a15e",
+      "merged_policy_sha256": "70ec8d6511a49594d246f7168b5ed08292bc877ee40c83cfc17a4533ff250fa9",
+      "recorded_owner_policy_sha256": "0203f413b5296e528ef70e4356517fe54deeabb95797f7820721add862fab33d",
+      "policy_is_merged": false,
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "snapshot_hashes": {
+        "sdd.codex.local.yaml": "fbfc2521efbd72f14a6915e2ac66052c983e92869bab80d61d33ef4b2871b42e",
+        "sections.yaml": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+        "facts/facts.json": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "english.json": "341e642a85e106cbfd49e060e9fb8a976e1c6480ec18b5ca09f939cf24d0fbbe",
+        "build/consistency-review.json": "20138dc3c37721047cd2d721566fda81b2f7c0eb7082f27350c33b66fcc29785",
+        "manuscripts/camera-model.md": "d83c18e0b68957cc3b6801b24d25ced09d9d28983f8542c1ae748d6e3b309fb0",
+        "manuscripts/camera-requests.md": "8d8ec160937e76f2e7ac28da02c597c5d930d43a42c70ab9dd2ab45767c5471f",
+        "manuscripts/component-index.md": "8d379a25823d3b93bcf06741c87764129af6a0e29116215bd96ced7f76cafddc",
+        "manuscripts/framebuffer-allocator.md": "99bdf8adbcf0d196c5f3c7aec3d2022595773ddf5dca1a8ec379e6eff78fc728",
+        "manuscripts/ipa-algorithms.md": "a38ab0a370ca37b90ea4bec963933a8a9ee9646090a3eb7c634d33547038e751",
+        "manuscripts/ipa-module-validation.md": "51c4c06c09489b4fefc1f765953e4a34281424ddf2e9bb77fc87357b982b2435",
+        "manuscripts/ipa.md": "c883cfea730029d6f6353deb9c515f00afa40e8197384c9286ebdd25cea79a65",
+        "manuscripts/ipu3-lsc-flow.md": "8ee59ed7d8b65262681fc0ab7f02e0faa8934d350a8d4ff4228eb8807f597f48",
+        "manuscripts/ipu3-lsc-prepare.md": "39886c1fcebb52f57697a706177486558c1a5f96cc2b53f4858a6c667aeb068c",
+        "manuscripts/ipu3-lsc.md": "bc4878b0d8f7ce324ad64433430d5308745f47a6850a427df6136cfd7f50ff43",
+        "manuscripts/onboarding.md": "f87f6848927ca4cba930280d4deac51c5032718e3f3059c00887e0e937919cb2",
+        "manuscripts/overview.md": "c2e8a0bf3319c8435bc66e6f1fe5a438aeeadbfc840cd3c22c12d239d557ac2b",
+        "manuscripts/pipeline-handler.md": "c55b2127e103669ace75438384cb6c637e92e1d8527fe5caf1057cadc29b91ce",
+        "manuscripts/pipeline-requests.md": "f0d958526087155a375e94128f738e501289bf563ba37a7a9c2f8826966e08ff",
+        "manuscripts/request-diagnosis.md": "0386b97f25a74bff42e098f73f238bd095ecec68161b832aac715f3062f085ef",
+        "manuscripts/request-lifecycle.md": "b33d18c5894236e4d89a64c64eeaddbeb3fe636d77e33c0338d3af2d23020bd8",
+        "manuscripts/rkisp1-dewarp.md": "258e9de19c3c3c7789db140277ae577deef203924748291bf660bba879a6b2f1",
+        "manuscripts/scenarios/camera_start.md": "59344a00ed97b12bdff29eaf9f99b0d6eb225d3366d4b946158ef3bc0211a2f6",
+        "manuscripts/scenarios/camera_stop.md": "360dc634bfe92719eae79fe8e5fe703fc2931d14d1d4b3abc87f901d07a7df75",
+        "manuscripts/scenarios/complete_request.md": "5fdb6e76516c89dc8a4530ee5eba8afe3af0ca79e47d7c231651631501103a1d",
+        "manuscripts/scenarios/configure.md": "5812ca12c95acc0f3460caeac847c3e8f7b676aba7b8eebbd90b2dc593134d38",
+        "manuscripts/scenarios/index.md": "1d9449e107abb33d2bcdd9f7b299340ea2f695c65d5e5a031a3dcb6330453796",
+        "manuscripts/scenarios/manager_start.md": "84ff9463e9fc93d7c8a6d5fce7db286704a462f3bd9313edad55fe4f72ec5749",
+        "manuscripts/scenarios/queue_request.md": "c08d5f3611c570f1e7d5aa663da029480dcfd0604e913d5c1709d495b706ba32",
+        "manuscripts/team-overview.md": "e0d740f15ffcca161c46d7c6f7b755e69b8cab3af99f545a976588e7ebc1995b",
+        "manuscripts/vendor-assurance.md": "1a4f43619f5423decffdc90f87c8deba9dede9d3f85df5c629051059c2b8a9ea",
+        "manuscripts/vendor-integration.md": "30d90bc628f73cb6912c37258fb3a42c251e9491f0941b6f8449cfd280a07816",
+        "manuscripts/vendor-overview.md": "981a5a12197284da7d79e9aaf14265e06bd618f6c618a0460d6a2ca2024ac4de",
+        "contracts.yaml": "617da9845cf0142bdd66f8b13fced06569fd91e64b766caee92457a6f23b283f",
+        "owner-policy.py": "0203f413b5296e528ef70e4356517fe54deeabb95797f7820721add862fab33d"
+      },
+      "contracts": [
+        {
+          "id": "request-completion",
+          "claims": 92,
+          "claims_equal_current_snapshot": true,
+          "sources_equal_current_snapshot": true,
+          "input_matches_owner_policy": true,
+          "input_matches_merged_policy": false,
+          "language_counts": {
+            "ko": 66,
+            "en": 26
+          },
+          "findings_match_completed_cli": true,
+          "statuses": {
+            "compatible": 80,
+            "insufficient-evidence": 10,
+            "ambiguous": 2
+          }
+        },
+        {
+          "id": "stopping-cancellation",
+          "claims": 61,
+          "claims_equal_current_snapshot": true,
+          "sources_equal_current_snapshot": true,
+          "input_matches_owner_policy": true,
+          "input_matches_merged_policy": false,
+          "language_counts": {
+            "ko": 43,
+            "en": 18
+          },
+          "findings_match_completed_cli": true,
+          "statuses": {
+            "insufficient-evidence": 22,
+            "compatible": 39
+          }
+        },
+        {
+          "id": "ownership-reuse",
+          "claims": 63,
+          "claims_equal_current_snapshot": true,
+          "sources_equal_current_snapshot": true,
+          "input_matches_owner_policy": true,
+          "input_matches_merged_policy": false,
+          "language_counts": {
+            "ko": 47,
+            "en": 16
+          },
+          "findings_match_completed_cli": true,
+          "statuses": {
+            "compatible": 48,
+            "insufficient-evidence": 15
+          }
+        },
+        {
+          "id": "callbacks-synchronization",
+          "claims": 87,
+          "claims_equal_current_snapshot": true,
+          "sources_equal_current_snapshot": true,
+          "input_matches_owner_policy": true,
+          "input_matches_merged_policy": false,
+          "language_counts": {
+            "ko": 60,
+            "en": 27
+          },
+          "findings_match_completed_cli": true,
+          "statuses": {
+            "compatible": 46,
+            "insufficient-evidence": 41
+          }
+        }
+      ],
+      "errors": [],
+      "new_llm_calls": 0,
+      "status_counts": {
+        "compatible": 213,
+        "insufficient-evidence": 88,
+        "ambiguous": 2
+      },
+      "unresolved_matches_report": true,
+      "recorded_summary": {
+        "status": "passed",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "human_review": "pending",
+        "assessment": "automatic model review; not human approval",
+        "comparison_scope": "Every target is compared with supplied sources and all primary claims. Secondary pairs are compared when in the same batch; this is not an exhaustive all-pairs proof.",
+        "fresh_batches": 0,
+        "reused_batches": 53
+      },
+      "scope_metadata_valid": true,
+      "owner_input_changes": [],
+      "policy_gate": "not current merged policy; do not publish based on this reconstruction",
+      "batches_verified": 53,
+      "receipts_verified": 53,
+      "raw_verification_sha256": "580d428231b651e405ba47734fdf0e967c50328549d20800aaf3a14323433f4a",
+      "raw_local_path": "C:/Users/baboe/.codex/worktrees/baab/camera-hal-sdd-generator/build/issue150-audit/semantic-chain-20261028-203738/verification.json",
+      "receipt_profiles": [
+        [
+          "codex",
+          "gpt-6.1-terra"
+        ]
+      ],
+      "ambiguous": [
+        {
+          "contract": "request-completion",
+          "claim_id": "catalog/8ad751febcf66211",
+          "claim_quote": "조사 계획으로 completeRequest()에서 queuedRequests_가 비어 있는지와 선두 요청의 status()가 Request::RequestPending인지 관찰합니다. 선두 요청이 RequestPending이면 break로 반복문을 빠져나가고, 이후 doQueueRequests(camera)를 호출합니다. 선두 요청이 RequestPending이 아니면 코드가 hasPendingBuffers()에 대한 ASSERT를 거친 뒤 선두 요청을 제거하고 camera->requestComplete(req)를 호출하는 분기를 관찰합니다.",
+          "reason": "The branch and call ordering agree with the source and peers, but saying that an ASSERT is performed on hasPendingBuffers() does not establish whether the asserted condition is positive or negated. The source and journey peers specify the negated condition. The English translation has the same ambiguity."
+        },
+        {
+          "contract": "request-completion",
+          "claim_id": "catalog/8ad751febcf66211/en",
+          "claim_quote": "As part of the investigation plan, observe whether queuedRequests_ is empty and whether the status() of the first request is Request::RequestPending in completeRequest(). If the first request is RequestPending, the loop is exited with break, and doQueueRequests(camera) is then called. If the first request is not RequestPending, observe the branch where the code performs ASSERT on hasPendingBuffers(), removes the first request, and calls camera->requestComplete(req).",
+          "reason": "The branch and call ordering agree with the source and peers, but saying that an ASSERT is performed on hasPendingBuffers() does not establish whether the asserted condition is positive or negated. The source and journey peers specify the negated condition. The Korean claim has the same ambiguity."
+        }
+      ]
+    },
+    "merged_gate": {
+      "gate": "rejected",
+      "reason": "Stale cross-document contract review: request-completion; run audit-consistency",
+      "checked_at_utc": "2026-10-28T20:39:37.707062+00:00",
+      "new_llm_calls": 0,
+      "manuscript_or_owner_writes": 0,
+      "scope": "Current merged consistency.enforce on fixed copied inputs; no policy override"
+    },
+    "python312_policy_reproduction": {
+      "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+      "candidate_code": {
+        "files": {
+          "design_response": "ce93f02b72371ed40f1b1124e78cef512baea31aa2df988db0c689f8169f783c",
+          "design_execution": "cb75d16662117bdc8a94d26e62ca9ae092b632fe23fcf6576848ba50b15e20d7"
+        },
+        "ast_sha256": "608d2eed51e4ad5d5693fbc9b7d669ae1ba8e503f6736b62ea1ca068ce706556",
+        "dump_chars": 42082
+      },
+      "merged_code": {
+        "files": {
+          "design_response": "ce93f02b72371ed40f1b1124e78cef512baea31aa2df988db0c689f8169f783c",
+          "design_execution": "cb75d16662117bdc8a94d26e62ca9ae092b632fe23fcf6576848ba50b15e20d7"
+        },
+        "ast_sha256": "608d2eed51e4ad5d5693fbc9b7d669ae1ba8e503f6736b62ea1ca068ce706556",
+        "dump_chars": 42082
+      }
+    },
+    "python314_policy_reproduction": {
+      "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
+      "candidate_code": {
+        "files": {
+          "design_response": "ce93f02b72371ed40f1b1124e78cef512baea31aa2df988db0c689f8169f783c",
+          "design_execution": "cb75d16662117bdc8a94d26e62ca9ae092b632fe23fcf6576848ba50b15e20d7"
+        },
+        "ast_sha256": "b244980c9bf902081ee90e6365a0afa5de5b1a964b1d1a333b0ab59c06302e3d",
+        "dump_chars": 38945
+      },
+      "merged_code": {
+        "files": {
+          "design_response": "ce93f02b72371ed40f1b1124e78cef512baea31aa2df988db0c689f8169f783c",
+          "design_execution": "cb75d16662117bdc8a94d26e62ca9ae092b632fe23fcf6576848ba50b15e20d7"
+        },
+        "ast_sha256": "b244980c9bf902081ee90e6365a0afa5de5b1a964b1d1a333b0ab59c06302e3d",
+        "dump_chars": 38945
+      }
+    },
+    "pr154_code_metadata": {
+      "head": "e5481880cf7b74e17ef62362c339aeb2b0bb00ce",
+      "files": [
+        {
+          "path": "src/sdd/consistency.py",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "70bc0752af2c23ee7d7d545b3e5c9b89e0d5f5ed",
+          "size": 20760,
+          "url": "https://api.github.com/repos/TTolsun/camera-hal-sdd-generator/git/blobs/70bc0752af2c23ee7d7d545b3e5c9b89e0d5f5ed"
+        },
+        {
+          "path": "src/sdd/design_execution.py",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8d7d0d3c37ebdce22c1210a297d2594732b3cc56",
+          "size": 10712,
+          "url": "https://api.github.com/repos/TTolsun/camera-hal-sdd-generator/git/blobs/8d7d0d3c37ebdce22c1210a297d2594732b3cc56"
+        },
+        {
+          "path": "src/sdd/design_response.py",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "87f7b4f9897d7bce3af45c7e17c59ae53024a062",
+          "size": 19226,
+          "url": "https://api.github.com/repos/TTolsun/camera-hal-sdd-generator/git/blobs/87f7b4f9897d7bce3af45c7e17c59ae53024a062"
+        },
+        {
+          "path": "src/sdd/duplicates.py",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "71014b64dd7a78b24dc88337b28c9e7edf14d586",
+          "size": 26029,
+          "url": "https://api.github.com/repos/TTolsun/camera-hal-sdd-generator/git/blobs/71014b64dd7a78b24dc88337b28c9e7edf14d586"
+        }
+      ]
+    },
+    "line_endings": {
+      "owner_raw_bytes": 21102,
+      "crlf_count": 342,
+      "lf_git_blob": "70bc0752af2c23ee7d7d545b3e5c9b89e0d5f5ed",
+      "matches_pr154_blob_after_lf_normalization": true
+    },
+    "public_live_check": {
+      "checked_at_utc": "2026-10-28T20:39:43.064200+00:00",
+      "build_id": "815398b2088e5031e6ef0e19fc5b8e7612f7c0ce7ee3c32a2f0051f2b94bb8ce",
+      "manifest_sha256": "128acaf07935bf811b476ccaaaf8a0973c9145810c7e3735172274a1e6cd66a3",
+      "matches_prior_verified_public_manifest": true,
+      "html_pages": 50,
+      "http_status": {
+        "pipeline-requests.html": 404,
+        "camera-requests.html": 404,
+        "request-diagnosis.html": 404,
+        "ipa-algorithms.html": 404,
+        "ipu3-lsc-prepare.html": 404,
+        "en/pipeline-requests.html": 404,
+        "en/camera-requests.html": 404,
+        "en/request-diagnosis.html": 404,
+        "en/ipa-algorithms.html": 404,
+        "en/ipu3-lsc-prepare.html": 404
+      }
+    },
+    "official_upstream": "e117198c015057761bb0bbaa85f963c41ce412d7",
+    "public_upstream_mirror": "e117198c015057761bb0bbaa85f963c41ce412d7",
+    "no_policy_or_manuscript_edits": true,
+    "all90_classified_and_resolved": false,
+    "site_candidate_manifest_available": false
   }
 }
