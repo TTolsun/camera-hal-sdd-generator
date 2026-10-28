@@ -1777,7 +1777,17 @@
     "official_upstream": "e117198c015057761bb0bbaa85f963c41ce412d7",
     "public_upstream_mirror": "e117198c015057761bb0bbaa85f963c41ce412d7",
     "no_policy_or_manuscript_edits": true,
-    "all90_classified_and_resolved": false,
-    "site_candidate_manifest_available": false
+    "site_candidate_manifest_available": false,
+    "all90_classification_and_disposition_available": false,
+    "unresolved_gate_contract": {
+      "ambiguous_and_insufficient_alone_block_publication": false,
+      "blocks": [
+        "confirmed contradiction",
+        "stale input/policy",
+        "receipt/verdict/unresolved-list mismatch"
+      ],
+      "observed_gate_rejection_cause": "policy identity mismatch",
+      "additional_user_requested_work": "classify all90,repair manuscript/source-input defects where possible and document remaining limitations;do not relabel everything compatible"
+    }
   }
 }
