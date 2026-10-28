@@ -1,0 +1,2438 @@
+{
+  "schema": 1,
+  "checked_at_utc": "2026-10-28T22:39:44.521340+00:00",
+  "scope": "Independent audit of recorded completed report and saved bilingual site; post-merge re-audit and final public publication remain pending",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "verification_generator_commit": "ee776c82cfb336b6b4cb2cc36fcd34ea81d7528f",
+  "human_review": "pending",
+  "new_llm_calls_by_this_audit": 0,
+  "owners": {
+    "generation_translation_policy_publication": "이슈 #138–140 해결 및 배포",
+    "structure": "완료 #141 구조 개선",
+    "independent_audit": "this session"
+  },
+  "ledger": {
+    "original_report_sha256": "20138dc3c37721047cd2d721566fda81b2f7c0eb7082f27350c33b66fcc29785",
+    "recorded_final_report_sha256": "53282e8bc2430f873a0faf34e0055c570f31e0a5c9052977e6c2489dcbb558a4",
+    "cases": 90,
+    "coverage_exact": true,
+    "duplicates": 0,
+    "final_compatible": 90,
+    "initial_triage": {
+      "direct-source-supply-gap": 73,
+      "actual-omitted-negated-assertion": 2,
+      "needs-source-and-scope-review": 15
+    },
+    "lineage": [
+      {
+        "before": [
+          "request-completion",
+          "vendor-integration.md/shutdown/1"
+        ],
+        "after": [
+          "request-completion",
+          "vendor-integration.md/shutdown/1"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "request-completion",
+          "vendor-integration.md/shutdown/3"
+        ],
+        "after": [
+          "request-completion",
+          "vendor-integration.md/shutdown/3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/56825299302f5e08"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/56825299302f5e08"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/56825299302f5e08/en"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/56825299302f5e08/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/93005475282cdf14"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/93005475282cdf14"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/93005475282cdf14/en"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/93005475282cdf14/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/c2d18b3ad493b9ef"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/c2d18b3ad493b9ef"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/c2d18b3ad493b9ef/en"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/c2d18b3ad493b9ef/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/29d47fd21db8a04b"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/aad3f2612a067c5e"
+        ],
+        "mapping": "preserved-origin",
+        "text_changed": true
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/29d47fd21db8a04b/en"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/aad3f2612a067c5e/en"
+        ],
+        "mapping": "preserved-origin",
+        "text_changed": true
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/8ad751febcf66211"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/8e791ffd2f607a75"
+        ],
+        "mapping": "preserved-origin",
+        "text_changed": true
+      },
+      {
+        "before": [
+          "request-completion",
+          "catalog/8ad751febcf66211/en"
+        ],
+        "after": [
+          "request-completion",
+          "catalog/8e791ffd2f607a75/en"
+        ],
+        "mapping": "preserved-origin",
+        "text_changed": true
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "vendor-overview.md/benefits/1"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "vendor-overview.md/benefits/1"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "request-lifecycle.md/journey/5"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "request-lifecycle.md/journey/5"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "pipeline-requests.md/queue/4"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "pipeline-requests.md/queue/4"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "pipeline-requests.md/queue/12"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "pipeline-requests.md/queue/12"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "request-diagnosis.md/diagnosis/4"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "request-diagnosis.md/diagnosis/4"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "request-diagnosis.md/diagnosis/5"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "request-diagnosis.md/diagnosis/5"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/79bf08c6b8b324f6"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/79bf08c6b8b324f6"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/79bf08c6b8b324f6/en"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/79bf08c6b8b324f6/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/b1a46db4caf41e3b"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/b1a46db4caf41e3b"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/b1a46db4caf41e3b/en"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/b1a46db4caf41e3b/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/29d47fd21db8a04b"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/aad3f2612a067c5e"
+        ],
+        "mapping": "explicit cancel-access to handler-access question merge; union of direct sources preserved",
+        "text_changed": true
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/29d47fd21db8a04b/en"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/aad3f2612a067c5e/en"
+        ],
+        "mapping": "explicit cancel-access to handler-access question merge; union of direct sources preserved",
+        "text_changed": true
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/63bfd3d7dddc817e"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/63bfd3d7dddc817e"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/63bfd3d7dddc817e/en"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/63bfd3d7dddc817e/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/3c5c7b8f129f89f7"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/3c5c7b8f129f89f7"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/3c5c7b8f129f89f7/en"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/3c5c7b8f129f89f7/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/0891afab591aa2fe"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/0891afab591aa2fe"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/0891afab591aa2fe/en"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/0891afab591aa2fe/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/4f2a9e51d3ebc363"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/4f2a9e51d3ebc363"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/4f2a9e51d3ebc363/en"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/4f2a9e51d3ebc363/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/91c34eadba119c39"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/91c34eadba119c39"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "stopping-cancellation",
+          "catalog/91c34eadba119c39/en"
+        ],
+        "after": [
+          "stopping-cancellation",
+          "catalog/91c34eadba119c39/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "overview.md/responsibility/0"
+        ],
+        "after": [
+          "ownership-reuse",
+          "overview.md/responsibility/0"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "camera-model.md/responsibility/0"
+        ],
+        "after": [
+          "ownership-reuse",
+          "camera-model.md/responsibility/0"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "request-diagnosis.md/configuration-failure/3"
+        ],
+        "after": [
+          "ownership-reuse",
+          "request-diagnosis.md/configuration-failure/3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/d08e3844e8529e97"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/d08e3844e8529e97"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/d08e3844e8529e97/en"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/d08e3844e8529e97/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/319943f1d013fbb6"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/319943f1d013fbb6"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/319943f1d013fbb6/en"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/319943f1d013fbb6/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/a5207894b4fbc7e6"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/a5207894b4fbc7e6"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/a5207894b4fbc7e6/en"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/a5207894b4fbc7e6/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/29d47fd21db8a04b"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/aad3f2612a067c5e"
+        ],
+        "mapping": "preserved-origin",
+        "text_changed": true
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/29d47fd21db8a04b/en"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/aad3f2612a067c5e/en"
+        ],
+        "mapping": "preserved-origin",
+        "text_changed": true
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/bdf53eda0bf7ae4c"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/bdf53eda0bf7ae4c"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/bdf53eda0bf7ae4c/en"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/bdf53eda0bf7ae4c/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/81d77d8815ff8950"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/81d77d8815ff8950"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "ownership-reuse",
+          "catalog/81d77d8815ff8950/en"
+        ],
+        "after": [
+          "ownership-reuse",
+          "catalog/81d77d8815ff8950/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/boundary/2"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "vendor-integration.md/boundary/2"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/boundary/2"
+        ],
+        "after": [
+          "scenario-analysis",
+          "vendor-integration.md/boundary/2"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/configuration/3"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "vendor-integration.md/configuration/3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/configuration/3"
+        ],
+        "after": [
+          "scenario-analysis",
+          "vendor-integration.md/configuration/3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/configuration/8"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "vendor-integration.md/configuration/8"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/configuration/8"
+        ],
+        "after": [
+          "scenario-analysis",
+          "vendor-integration.md/configuration/8"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/request/2"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "vendor-integration.md/request/2"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/request/2"
+        ],
+        "after": [
+          "scenario-analysis",
+          "vendor-integration.md/request/2"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/algorithm/3"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "vendor-integration.md/algorithm/3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "vendor-integration.md/algorithm/3"
+        ],
+        "after": [
+          "scenario-analysis",
+          "vendor-integration.md/algorithm/3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "camera-model.md/concurrency/3"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "camera-model.md/concurrency/3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "camera-model.md/concurrency/3"
+        ],
+        "after": [
+          "scenario-analysis",
+          "camera-model.md/concurrency/3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "request-lifecycle.md/resources/1"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "request-lifecycle.md/resources/1"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "request-lifecycle.md/resources/1"
+        ],
+        "after": [
+          "scenario-analysis",
+          "request-lifecycle.md/resources/1"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "camera-requests.md/request/2"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "camera-requests.md/request/2"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "camera-requests.md/request/2"
+        ],
+        "after": [
+          "scenario-analysis",
+          "camera-requests.md/request/2"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "camera-requests.md/lifetime/0"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "camera-requests.md/lifetime/0"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "camera-requests.md/lifetime/0"
+        ],
+        "after": [
+          "scenario-analysis",
+          "camera-requests.md/lifetime/0"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "pipeline-requests.md/queue/1"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "pipeline-requests.md/queue/1"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "pipeline-requests.md/queue/1"
+        ],
+        "after": [
+          "scenario-analysis",
+          "pipeline-requests.md/queue/1"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "scenarios/queue_request.md/paragraph/14"
+        ],
+        "after": [
+          "scenario-analysis",
+          "scenarios/queue_request.md/paragraph/14"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3224a8227a269130"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/3224a8227a269130"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3224a8227a269130"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/3224a8227a269130"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3224a8227a269130/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/3224a8227a269130/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3224a8227a269130/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/3224a8227a269130/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/7a75740664d08f7d"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/7a75740664d08f7d"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/7a75740664d08f7d"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/7a75740664d08f7d"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/7a75740664d08f7d/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/7a75740664d08f7d/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/7a75740664d08f7d/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/7a75740664d08f7d/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/e2896d9b796995ac"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/e2896d9b796995ac"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/e2896d9b796995ac"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/e2896d9b796995ac"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/e2896d9b796995ac/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/e2896d9b796995ac/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/e2896d9b796995ac/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/e2896d9b796995ac/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/463b51721e3a9400"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/463b51721e3a9400"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/463b51721e3a9400"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/463b51721e3a9400"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/463b51721e3a9400/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/463b51721e3a9400/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/463b51721e3a9400/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/463b51721e3a9400/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/1904fe425d4c9ab3"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/1904fe425d4c9ab3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/1904fe425d4c9ab3"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/1904fe425d4c9ab3"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/1904fe425d4c9ab3/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/1904fe425d4c9ab3/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/1904fe425d4c9ab3/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/1904fe425d4c9ab3/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3ada1076f0d94452"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/3ada1076f0d94452"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3ada1076f0d94452"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/3ada1076f0d94452"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3ada1076f0d94452/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/3ada1076f0d94452/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3ada1076f0d94452/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/3ada1076f0d94452/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/5fbfdd4a0d724d00"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/5fbfdd4a0d724d00"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/5fbfdd4a0d724d00"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/5fbfdd4a0d724d00"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/5fbfdd4a0d724d00/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/5fbfdd4a0d724d00/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/5fbfdd4a0d724d00/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/5fbfdd4a0d724d00/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/2fc3456c63f26639"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/2fc3456c63f26639"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/2fc3456c63f26639"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/2fc3456c63f26639"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/2fc3456c63f26639/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/2fc3456c63f26639/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/2fc3456c63f26639/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/2fc3456c63f26639/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/05acb1c6533f9b85"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/05acb1c6533f9b85"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/05acb1c6533f9b85"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/05acb1c6533f9b85"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/05acb1c6533f9b85/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/05acb1c6533f9b85/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/05acb1c6533f9b85/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/05acb1c6533f9b85/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/17213e255910fe0b"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/17213e255910fe0b"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/17213e255910fe0b"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/17213e255910fe0b"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/17213e255910fe0b/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/17213e255910fe0b/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/17213e255910fe0b/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/17213e255910fe0b/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/9e35b9d0edb41f98"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/9e35b9d0edb41f98"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/9e35b9d0edb41f98"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/9e35b9d0edb41f98"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/9e35b9d0edb41f98/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/9e35b9d0edb41f98/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/9e35b9d0edb41f98/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/9e35b9d0edb41f98/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/0f4906a6590fd2db"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/0f4906a6590fd2db"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/0f4906a6590fd2db"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/0f4906a6590fd2db"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/0f4906a6590fd2db/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/0f4906a6590fd2db/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/0f4906a6590fd2db/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/0f4906a6590fd2db/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/11bfecb773e66367"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/11bfecb773e66367"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/11bfecb773e66367"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/11bfecb773e66367"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/11bfecb773e66367/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/11bfecb773e66367/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/11bfecb773e66367/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/11bfecb773e66367/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3fc78c4767c9bb29"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/3fc78c4767c9bb29"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3fc78c4767c9bb29"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/3fc78c4767c9bb29"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3fc78c4767c9bb29/en"
+        ],
+        "after": [
+          "callbacks-synchronization",
+          "catalog/3fc78c4767c9bb29/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/3fc78c4767c9bb29/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/3fc78c4767c9bb29/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/2eace40003f58d25"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/2eace40003f58d25"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      },
+      {
+        "before": [
+          "callbacks-synchronization",
+          "catalog/2eace40003f58d25/en"
+        ],
+        "after": [
+          "scenario-analysis",
+          "catalog/2eace40003f58d25/en"
+        ],
+        "mapping": "same-id",
+        "text_changed": false
+      }
+    ],
+    "human_review": "pending",
+    "owner_manuscript_changes": []
+  },
+  "question_lineage": {
+    "before_commit": "1c45fba8bfcdc7b7c5106643accee65c8ac0e557",
+    "after_commit": "ee776c82cfb336b6b4cb2cc36fcd34ea81d7528f",
+    "old_questions": {
+      "handler-access": {
+        "id": "handler-access",
+        "question": "completeRequest가 반환한 뒤 파이프라인 핸들러의 요청 접근 금지 계약만 설명하세요.",
+        "sources": [
+          "complete-access",
+          "completion"
+        ],
+        "answer_contract": {
+          "basis": "contract",
+          "required_terms": [
+            [
+              "completeRequest"
+            ],
+            [
+              "접근"
+            ]
+          ]
+        }
+      },
+      "cancel-access": {
+        "id": "cancel-access",
+        "question": "cancelRequest 반환 후 요청 접근의 금지 의무를 두 근거로 설명하세요. completeRequest 규칙을 이어받는다고만 쓰지 말고 접근 의무를 명시하세요.",
+        "sources": [
+          "cancel-rules",
+          "complete-access"
+        ],
+        "answer_contract": {
+          "basis": "contract",
+          "required_terms": [
+            [
+              "cancelRequest"
+            ],
+            [
+              "접근"
+            ]
+          ]
+        }
+      }
+    },
+    "new_question": {
+      "id": "handler-access",
+      "question": "completeRequest와 cancelRequest의 반환 후 요청 접근 의무를 두 함수의 근거로 함께 비교하세요. 취소 함수의 처리와 같은 규칙이 적용되는 주체·시점을 구분하고, 다른 호출자나 애플리케이션까지 의무를 확대하지 마세요. 같은 접근 의무를 두 문장으로 반복하지 마세요.",
+      "sources": [
+        "complete-access",
+        "completion",
+        "cancel-rules"
+      ],
+      "answer_contract": {
+        "basis": "contract",
+        "required_terms": [
+          [
+            "completeRequest"
+          ],
+          [
+            "cancelRequest"
+          ],
+          [
+            "접근"
+          ],
+          [
+            "파이프라인 핸들러"
+          ]
+        ]
+      }
+    },
+    "evidence_union_preserved": true,
+    "actor_required": true
+  },
+  "access_bilingual_pair": {
+    "key": "펜스를 사용하는 경우 {{1}} 플래그를 사용하지 않도록 권고합니다. {{3}}는 요청을 취소한 뒤 {{5}}를 호출해 완료하며, {{7}}와 같은 규칙이 적용됩니다. 파이프라인 핸들러는 두 함수 중 호출한 함수가 반환된 후 해당 요청에 접근해서는 안 됩니다. 반환 후 요청은 더 이상 파이프라인 핸들러가 관리하지 않습니다.",
+    "source": "펜스를 사용하는 경우 Request::ReuseBuffers 플래그를 사용하지 않도록 권고합니다. cancelRequest는 요청을 취소한 뒤 completeRequest를 호출해 완료하며, completeRequest와 같은 규칙이 적용됩니다. 파이프라인 핸들러는 두 함수 중 호출한 함수가 반환된 후 해당 요청에 접근해서는 안 됩니다. 반환 후 요청은 더 이상 파이프라인 핸들러가 관리하지 않습니다.",
+    "translated": "When using fences, it is recommended not to use the Request::ReuseBuffers flag. cancelRequest completes the request by calling completeRequest after canceling it, and the same rules as for completeRequest apply. The pipeline handler must not access the request after the function it called, either of the two, returns. After it returns, the request is no longer managed by the pipeline handler."
+  },
+  "native_cli": {
+    "regeneration_grounding_receipts": {
+      "ce629cef38a7491eb99f4c5b5662e00b/001.receipt.json": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "8f4ed2d5b3c58032f603c89f3f9e68fce650df22a22cb35a45fec7e9afc91b08",
+        "arguments_verified": true,
+        "completed_at": "2026-10-28T21:14:25.460434+00:00",
+        "tag": "request-diagnosis_diagnosis_pending-head_0"
+      },
+      "ce629cef38a7491eb99f4c5b5662e00b/002.receipt.json": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "27fad5c6bf67a0bdc19ae3c3f8d62c92fef83b1f5bffafee8728bdee30193828",
+        "arguments_verified": true,
+        "completed_at": "2026-10-28T21:14:29.089265+00:00",
+        "tag": "request-diagnosis_diagnosis_pending-head_0_grounding"
+      },
+      "4b900c1dec794f8f943bb90243a549b0/001.receipt.json": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "b24b78b8e073bdc040736fab7800a4a93b3a6ae74e403410f61542111c9615fd",
+        "arguments_verified": true,
+        "completed_at": "2026-10-28T22:06:58.515416+00:00",
+        "tag": "request-lifecycle_resources_handler-access_0"
+      },
+      "4b900c1dec794f8f943bb90243a549b0/002.receipt.json": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "ec4b232343b6d5cef6ed6d78873882c495e77d4d80591dc6ae340d4687ecd79f",
+        "arguments_verified": true,
+        "completed_at": "2026-10-28T22:07:02.619083+00:00",
+        "tag": "request-lifecycle_resources_handler-access_0_grounding"
+      }
+    },
+    "access_translation_receipts": [
+      {
+        "receipt": "842e7e0894764d5393bdca6307cc59c9/001.receipt.json",
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "42150ee3f4932db6facb8529e7d7540e7b1478553223b5c10f527bdd9f5a1238",
+        "arguments_verified": true
+      }
+    ],
+    "assert_translation": "Previously independently bound to current catalog and immutable assertion; stdout sha132d27a7f5e96fbc952f3b2fc05c25054f4cb9455db6194d13fa20b179b221f5",
+    "model": "gpt-6.1-terra",
+    "runner": "codex",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "fixed_cases": {
+    "record": "docs/inhouse/records/goal-138-140/terra-contract-cases-v7.json",
+    "sha256": "85c6f2841f5eecd6fe2f196fa4653d2c83d8632813a1bc2b899c157c9faca132",
+    "completed_native_receipts_verified": 21,
+    "actual_raw_expected_verdicts_equal": true,
+    "metrics": {
+      "cases": 21,
+      "claims": 27,
+      "correct": 27,
+      "contradictions": 10,
+      "detected": 10,
+      "missed": 0,
+      "false_positives": 0,
+      "compatible": 13,
+      "undetermined": 4
+    }
+  },
+  "merged_regression": {
+    "command": "python -m pytest tests/test_consistency.py tests/test_consistency_sources.py tests/test_consistency_analysis.py tests/test_pipeline_cli.py -q",
+    "passed": 51,
+    "seconds": 73.66,
+    "python": "3.12.10"
+  },
+  "merged_ci": {
+    "head": "79a37561eb22946dd55374249b66105a437d0baa",
+    "merge": "ee776c82cfb336b6b4cb2cc36fcd34ea81d7528f",
+    "pr_run": 40778552548,
+    "push_run": 40778545952,
+    "successful_matrix_jobs": 8,
+    "sourcery": "skipped, not human approval"
+  },
+  "runtime": {
+    "verified_python_modules": 96,
+    "normalization": "Each actual runtime module equals merged Git blob after CRLF to LF normalization; original runtime bytes preserved; policy code unmodified",
+    "audit_LF_policy": "da05cc10cc3e9ecb2e35d4284a8684183f43426aa9fbb11cd28bba222decb1b8",
+    "candidate_runtime_policy": "89c9b2af7aff91f4b6e06ba1bd149eb7f38dbf271e95fb71420b8120036fc684",
+    "modules": {
+      "src/sdd/consistency.py": {
+        "git_sha256": "2d04e3d2cb6b28595b27ff3c1bafd28a8bb6bf7e6db566c060b2c05445d5a706",
+        "runtime_sha256": "04e2bb622c5dd24422af95fe9a52357daae706c2dd7be5e976789f0a8c3bd74a",
+        "crlf_pairs": 423,
+        "bytes": 26304
+      },
+      "src/sdd/consistency_analysis.py": {
+        "git_sha256": "de9b433cc9eb22380c106da466d67840e401e1b7dc270c8f3df177d7a5904979",
+        "runtime_sha256": "de9b433cc9eb22380c106da466d67840e401e1b7dc270c8f3df177d7a5904979",
+        "crlf_pairs": 0,
+        "bytes": 3539
+      },
+      "src/sdd/consistency_sources.py": {
+        "git_sha256": "ffb5e124997ee82fae74f972ebb1b2d787a92dea6b1a286d9565d38b64557d35",
+        "runtime_sha256": "ffb5e124997ee82fae74f972ebb1b2d787a92dea6b1a286d9565d38b64557d35",
+        "crlf_pairs": 0,
+        "bytes": 3214
+      }
+    }
+  },
+  "old_callback_claim_ids_preserved": 87,
+  "site": {
+    "checked_at_utc": "2026-10-28T22:34:20.366942+00:00",
+    "scope": "Saved candidate site, not deployed final result",
+    "manifest_build_id": "dae849dc87fe8589e86979470364cea06eb9b8d61d10e5e72bc446de2959088d",
+    "manifest_sha256": "8eaa2a13cb3a9b7c3cf625bb732cc7462fe1a447c90662fe3648e0b297b0e140",
+    "output_count": 252,
+    "site_checks": {
+      "html_pages": 60,
+      "broken_links": 0,
+      "manifest_verified": true
+    },
+    "pages": {
+      "expected": 30,
+      "ko": 30,
+      "en": 30,
+      "missing": [],
+      "extra": []
+    },
+    "manifest_inputs": {
+      "configuration": "68c588b93aa2f250d7aa3838511d877e10a56d30b94429e23a567fb06a2da677",
+      "consistency_configuration": "7afe9322dd937cd279298778f7fc441bb21a5289888b4d3c7f247c3b0d5a7027",
+      "consistency_review": "53282e8bc2430f873a0faf34e0055c570f31e0a5c9052977e6c2489dcbb558a4",
+      "english_catalog": "f7f30e80f707b19df35499deadb28ea722c3854d520a7e916c262aac73c44b91",
+      "facts": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+      "intro": "5256b0091b77a55f2aaa3aa524919cee10096ae040fb472f3dff4e7fa3a2a478",
+      "markdown/camera-model.md": "989bc982c29d5f954351175dd047503acdc3e4f8f436483c68faaacb0039c193",
+      "markdown/camera-requests.md": "851ddef5d4edd20e376d6032d434160b18e70cbc3feb0760e4876efb07e22303",
+      "markdown/component-index.md": "dfce9f9759111ace21d69854aa863db3db4102d4e420f3ab76c996a700cea296",
+      "markdown/framebuffer-allocator.md": "3d5029b441064c6887a48ae8358e832d2174a67ce4988946be4aaedcc23fd252",
+      "markdown/ipa-algorithms.md": "e202735de552ff4a4b62d41f887dd387e6725a8302ab29534961134bfec091c8",
+      "markdown/ipa-module-validation.md": "cf8d4dac5f36396053eba3baa747cf98cf1fc81b0f9c94b13f19eab318700c0c",
+      "markdown/ipa.md": "c60cb5dfe4915093941ac67356ba565d16b6f1bb617cb1da4b74512bc7222bf3",
+      "markdown/ipu3-lsc-flow.md": "57b56715e49810b76241ddfe9ed1e0938c8091467faa0affc1ea71e28b47bc7f",
+      "markdown/ipu3-lsc-prepare.md": "df7de2be710300635c3c9a8268870b2adc98a92be964e0168f6e7a0fc4f14824",
+      "markdown/ipu3-lsc.md": "bc4878b0d8f7ce324ad64433430d5308745f47a6850a427df6136cfd7f50ff43",
+      "markdown/onboarding.md": "7d108603625a94ab54996cc9aa5fc97a26267557869129c35b599976dbc27e01",
+      "markdown/overview.md": "68edaff49437d98e2287d3d36ae45d457d236785d3acc64a23753d015dcf8e6b",
+      "markdown/pipeline-handler.md": "b5f28b41c9f6f206710dab6a34acc21f03e178d47608a555ec2d7cdec67837e0",
+      "markdown/pipeline-requests.md": "2c10d98d4cb5e46b907a65005b0a77f8ea406533fa3c85b388f9c838c0d98819",
+      "markdown/request-diagnosis.md": "548554f30ee8c6402572b1446925d4cfe1f1317da3d9e20a721b40897908d9c3",
+      "markdown/request-lifecycle.md": "4c9ad90724c032685d542a1a13365d0925af86d25137f38267f3dce4a3b0bb01",
+      "markdown/rkisp1-dewarp.md": "60890cf64721eeb06008afa596790cf65e61e8ba368c35ca84b870a17bf7fd01",
+      "markdown/scenarios/camera_start.md": "59344a00ed97b12bdff29eaf9f99b0d6eb225d3366d4b946158ef3bc0211a2f6",
+      "markdown/scenarios/camera_stop.md": "360dc634bfe92719eae79fe8e5fe703fc2931d14d1d4b3abc87f901d07a7df75",
+      "markdown/scenarios/complete_request.md": "5fdb6e76516c89dc8a4530ee5eba8afe3af0ca79e47d7c231651631501103a1d",
+      "markdown/scenarios/configure.md": "5812ca12c95acc0f3460caeac847c3e8f7b676aba7b8eebbd90b2dc593134d38",
+      "markdown/scenarios/index.md": "a9c476a021146077a5cd7ab40889c8482f39c0dd69266901990f711b8040e875",
+      "markdown/scenarios/manager_start.md": "84ff9463e9fc93d7c8a6d5fce7db286704a462f3bd9313edad55fe4f72ec5749",
+      "markdown/scenarios/queue_request.md": "c08d5f3611c570f1e7d5aa663da029480dcfd0604e913d5c1709d495b706ba32",
+      "markdown/team-overview.md": "7862a9a99aa66441df8678a11aca4b1c9058eeba57c33f9cabb42931b4fff1e3",
+      "markdown/vendor-assurance.md": "1d2022443d964da87685bfb98106ed855f3a888e67fee690dc0671c1e5c7aa1c",
+      "markdown/vendor-integration.md": "721f776f759eb8bf43d3f5e9357688c3cf52bbf9084a0d31e4183dac040d51c6",
+      "markdown/vendor-overview.md": "ae597e6addc0f9efb1e5a82fdcf458df727d188593c43348d3cd3ce65bc0dc43",
+      "sections": "2cddad2fac3fd70f9ad7f0195cd8ddc94780de4f6606fc21433314b7653b78b1",
+      "visuals": "de7a4ad2a71a5c3287b78bd15533f925e895aca77f1fced920a0405bdceff57c"
+    },
+    "catalog": {
+      "sha256": "127539ed9930d257138c546c9a6a83c82f6f43418ee3470212d6b712082069f7",
+      "matches_manifest": false,
+      "strings": 1733,
+      "pages": 30,
+      "formal_errors": [],
+      "source_page_hash_mismatches": [
+        "camera-model.html",
+        "camera-requests.html",
+        "component-index.html",
+        "framebuffer-allocator.html",
+        "ipa-algorithms.html",
+        "ipa-module-validation.html",
+        "ipa.html",
+        "ipu3-lsc-flow.html",
+        "ipu3-lsc-prepare.html",
+        "onboarding.html",
+        "overview.html",
+        "pipeline-handler.html",
+        "pipeline-requests.html",
+        "request-diagnosis.html",
+        "request-lifecycle.html",
+        "rkisp1-dewarp.html",
+        "scenarios/index.html",
+        "team-overview.html",
+        "vendor-assurance.html",
+        "vendor-integration.html",
+        "vendor-overview.html"
+      ],
+      "display_errors": [],
+      "unprotected_korean_pages": []
+    },
+    "routes": [
+      {
+        "page": "pipeline-handler.html",
+        "anchor": "요청-준비와-장치-큐",
+        "destination": "pipeline-requests.html#요청-준비와-장치-큐"
+      },
+      {
+        "page": "en/pipeline-handler.html",
+        "anchor": "요청-준비와-장치-큐",
+        "destination": "en/pipeline-requests.html#요청-준비와-장치-큐"
+      },
+      {
+        "page": "pipeline-handler.html",
+        "anchor": "버퍼-완료와-요청-반환",
+        "destination": "pipeline-requests.html#버퍼-완료와-요청-반환"
+      },
+      {
+        "page": "en/pipeline-handler.html",
+        "anchor": "버퍼-완료와-요청-반환",
+        "destination": "en/pipeline-requests.html#버퍼-완료와-요청-반환"
+      },
+      {
+        "page": "pipeline-handler.html",
+        "anchor": "요청이-대기하거나-장치로-가는-조건",
+        "destination": "pipeline-requests.html#요청이-대기하거나-장치로-가는-조건"
+      },
+      {
+        "page": "en/pipeline-handler.html",
+        "anchor": "요청이-대기하거나-장치로-가는-조건",
+        "destination": "en/pipeline-requests.html#요청이-대기하거나-장치로-가는-조건"
+      },
+      {
+        "page": "pipeline-handler.html",
+        "anchor": "버퍼-완료에서-요청-반환까지",
+        "destination": "pipeline-requests.html#버퍼-완료에서-요청-반환까지"
+      },
+      {
+        "page": "en/pipeline-handler.html",
+        "anchor": "버퍼-완료에서-요청-반환까지",
+        "destination": "en/pipeline-requests.html#버퍼-완료에서-요청-반환까지"
+      },
+      {
+        "page": "ipa.html",
+        "anchor": "보정-전-튜닝-파일",
+        "destination": "ipa-algorithms.html#보정-전-튜닝-파일"
+      },
+      {
+        "page": "en/ipa.html",
+        "anchor": "보정-전-튜닝-파일",
+        "destination": "en/ipa-algorithms.html#보정-전-튜닝-파일"
+      },
+      {
+        "page": "ipa.html",
+        "anchor": "소프트웨어-isp-입력-버퍼의-텍스처-형식",
+        "destination": "ipa-algorithms.html#소프트웨어-isp-입력-버퍼의-텍스처-형식"
+      },
+      {
+        "page": "en/ipa.html",
+        "anchor": "소프트웨어-isp-입력-버퍼의-텍스처-형식",
+        "destination": "en/ipa-algorithms.html#소프트웨어-isp-입력-버퍼의-텍스처-형식"
+      },
+      {
+        "page": "ipa.html",
+        "anchor": "소프트웨어-isp-셰이더의-렌즈-음영-보정",
+        "destination": "ipa-algorithms.html#소프트웨어-isp-셰이더의-렌즈-음영-보정"
+      },
+      {
+        "page": "en/ipa.html",
+        "anchor": "소프트웨어-isp-셰이더의-렌즈-음영-보정",
+        "destination": "en/ipa-algorithms.html#소프트웨어-isp-셰이더의-렌즈-음영-보정"
+      },
+      {
+        "page": "ipu3-lsc-flow.html",
+        "anchor": "파라미터-갱신-조건",
+        "destination": "ipu3-lsc-prepare.html#파라미터-갱신-조건"
+      },
+      {
+        "page": "en/ipu3-lsc-flow.html",
+        "anchor": "파라미터-갱신-조건",
+        "destination": "en/ipu3-lsc-prepare.html#파라미터-갱신-조건"
+      },
+      {
+        "page": "ipu3-lsc-flow.html",
+        "anchor": "lsc-파라미터를-갱신하는-분기",
+        "destination": "ipu3-lsc-prepare.html#lsc-파라미터를-갱신하는-분기"
+      },
+      {
+        "page": "en/ipu3-lsc-flow.html",
+        "anchor": "lsc-파라미터를-갱신하는-분기",
+        "destination": "en/ipu3-lsc-prepare.html#lsc-파라미터를-갱신하는-분기"
+      },
+      {
+        "page": "camera-model.html",
+        "anchor": "요청-생성과-완료",
+        "destination": "camera-requests.html#요청-생성과-완료"
+      },
+      {
+        "page": "en/camera-model.html",
+        "anchor": "요청-생성과-완료",
+        "destination": "en/camera-requests.html#요청-생성과-완료"
+      },
+      {
+        "page": "camera-model.html",
+        "anchor": "소유권과-재사용",
+        "destination": "camera-requests.html#소유권과-재사용"
+      },
+      {
+        "page": "en/camera-model.html",
+        "anchor": "소유권과-재사용",
+        "destination": "en/camera-requests.html#소유권과-재사용"
+      },
+      {
+        "page": "camera-model.html",
+        "anchor": "요청과-버퍼를-유지할-기간",
+        "destination": "camera-requests.html#요청과-버퍼를-유지할-기간"
+      },
+      {
+        "page": "en/camera-model.html",
+        "anchor": "요청과-버퍼를-유지할-기간",
+        "destination": "en/camera-requests.html#요청과-버퍼를-유지할-기간"
+      },
+      {
+        "page": "request-lifecycle.html",
+        "anchor": "구성-실패를-좁히는-순서",
+        "destination": "request-diagnosis.html#구성-실패를-좁히는-순서"
+      },
+      {
+        "page": "en/request-lifecycle.html",
+        "anchor": "구성-실패를-좁히는-순서",
+        "destination": "en/request-diagnosis.html#구성-실패를-좁히는-순서"
+      },
+      {
+        "page": "request-lifecycle.html",
+        "anchor": "실패-위치별-확인-순서",
+        "destination": "request-diagnosis.html#실패-위치별-확인-순서"
+      },
+      {
+        "page": "en/request-lifecycle.html",
+        "anchor": "실패-위치별-확인-순서",
+        "destination": "en/request-diagnosis.html#실패-위치별-확인-순서"
+      },
+      {
+        "page": "request-lifecycle.html",
+        "anchor": "요청이-대기하거나-장치로-가는-조건",
+        "destination": "request-diagnosis.html#요청이-대기하거나-장치로-가는-조건"
+      },
+      {
+        "page": "en/request-lifecycle.html",
+        "anchor": "요청이-대기하거나-장치로-가는-조건",
+        "destination": "en/request-diagnosis.html#요청이-대기하거나-장치로-가는-조건"
+      },
+      {
+        "page": "request-lifecycle.html",
+        "anchor": "구성-실패를-좁히는-분기",
+        "destination": "request-diagnosis.html#구성-실패를-좁히는-분기"
+      },
+      {
+        "page": "en/request-lifecycle.html",
+        "anchor": "구성-실패를-좁히는-분기",
+        "destination": "en/request-diagnosis.html#구성-실패를-좁히는-분기"
+      }
+    ],
+    "search": {
+      "ko": {
+        "entries": 279,
+        "errors": []
+      },
+      "en/": {
+        "entries": 279,
+        "errors": []
+      }
+    },
+    "source_links": {
+      "count": 1727,
+      "commits": {
+        "e117198c015057761bb0bbaa85f963c41ce412d7": 1726,
+        "main": 1
+      }
+    },
+    "input_comparisons": {
+      "facts": {
+        "current_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "manifest_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+        "matches": true
+      },
+      "sections": {
+        "current_sha256": "2cddad2fac3fd70f9ad7f0195cd8ddc94780de4f6606fc21433314b7653b78b1",
+        "manifest_sha256": "2cddad2fac3fd70f9ad7f0195cd8ddc94780de4f6606fc21433314b7653b78b1",
+        "matches": true
+      },
+      "consistency_review": {
+        "current_sha256": "0cc8ef0811099f33f21df0e0b648f4d1661c324e91225c7e4b7f59e7c6b42ed4",
+        "manifest_sha256": "53282e8bc2430f873a0faf34e0055c570f31e0a5c9052977e6c2489dcbb558a4",
+        "matches": false
+      }
+    },
+    "manuscripts": {
+      "camera-model.md": {
+        "sha256": "989bc982c29d5f954351175dd047503acdc3e4f8f436483c68faaacb0039c193",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "camera-requests.md": {
+        "sha256": "851ddef5d4edd20e376d6032d434160b18e70cbc3feb0760e4876efb07e22303",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "component-index.md": {
+        "sha256": "dfce9f9759111ace21d69854aa863db3db4102d4e420f3ab76c996a700cea296",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "framebuffer-allocator.md": {
+        "sha256": "3d5029b441064c6887a48ae8358e832d2174a67ce4988946be4aaedcc23fd252",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "ipa-algorithms.md": {
+        "sha256": "e202735de552ff4a4b62d41f887dd387e6725a8302ab29534961134bfec091c8",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "ipa-module-validation.md": {
+        "sha256": "cf8d4dac5f36396053eba3baa747cf98cf1fc81b0f9c94b13f19eab318700c0c",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "ipa.md": {
+        "sha256": "c60cb5dfe4915093941ac67356ba565d16b6f1bb617cb1da4b74512bc7222bf3",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "ipu3-lsc-flow.md": {
+        "sha256": "57b56715e49810b76241ddfe9ed1e0938c8091467faa0affc1ea71e28b47bc7f",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "ipu3-lsc-prepare.md": {
+        "sha256": "df7de2be710300635c3c9a8268870b2adc98a92be964e0168f6e7a0fc4f14824",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "ipu3-lsc.md": {
+        "sha256": "bc4878b0d8f7ce324ad64433430d5308745f47a6850a427df6136cfd7f50ff43",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "onboarding.md": {
+        "sha256": "7d108603625a94ab54996cc9aa5fc97a26267557869129c35b599976dbc27e01",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "overview.md": {
+        "sha256": "68edaff49437d98e2287d3d36ae45d457d236785d3acc64a23753d015dcf8e6b",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "pipeline-handler.md": {
+        "sha256": "b5f28b41c9f6f206710dab6a34acc21f03e178d47608a555ec2d7cdec67837e0",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "pipeline-requests.md": {
+        "sha256": "2c10d98d4cb5e46b907a65005b0a77f8ea406533fa3c85b388f9c838c0d98819",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "request-diagnosis.md": {
+        "sha256": "548554f30ee8c6402572b1446925d4cfe1f1317da3d9e20a721b40897908d9c3",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "request-lifecycle.md": {
+        "sha256": "4c9ad90724c032685d542a1a13365d0925af86d25137f38267f3dce4a3b0bb01",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "rkisp1-dewarp.md": {
+        "sha256": "60890cf64721eeb06008afa596790cf65e61e8ba368c35ca84b870a17bf7fd01",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "scenarios/camera_start.md": {
+        "sha256": "59344a00ed97b12bdff29eaf9f99b0d6eb225d3366d4b946158ef3bc0211a2f6",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "scenarios/camera_stop.md": {
+        "sha256": "360dc634bfe92719eae79fe8e5fe703fc2931d14d1d4b3abc87f901d07a7df75",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "scenarios/complete_request.md": {
+        "sha256": "5fdb6e76516c89dc8a4530ee5eba8afe3af0ca79e47d7c231651631501103a1d",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "scenarios/configure.md": {
+        "sha256": "5812ca12c95acc0f3460caeac847c3e8f7b676aba7b8eebbd90b2dc593134d38",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "scenarios/index.md": {
+        "sha256": "a9c476a021146077a5cd7ab40889c8482f39c0dd69266901990f711b8040e875",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "scenarios/manager_start.md": {
+        "sha256": "84ff9463e9fc93d7c8a6d5fce7db286704a462f3bd9313edad55fe4f72ec5749",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "scenarios/queue_request.md": {
+        "sha256": "c08d5f3611c570f1e7d5aa663da029480dcfd0604e913d5c1709d495b706ba32",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "team-overview.md": {
+        "sha256": "7862a9a99aa66441df8678a11aca4b1c9058eeba57c33f9cabb42931b4fff1e3",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "vendor-assurance.md": {
+        "sha256": "1d2022443d964da87685bfb98106ed855f3a888e67fee690dc0671c1e5c7aa1c",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "vendor-integration.md": {
+        "sha256": "721f776f759eb8bf43d3f5e9357688c3cf52bbf9084a0d31e4183dac040d51c6",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      },
+      "vendor-overview.md": {
+        "sha256": "ae597e6addc0f9efb1e5a82fdcf458df727d188593c43348d3cd3ce65bc0dc43",
+        "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7"
+      }
+    },
+    "queue_request_navigation": {
+      "href_present": true,
+      "target_exists": true,
+      "semantic_verdict": "insufficient-evidence retained; docs navigation not runtime sequencing"
+    },
+    "source_link_validation": {
+      "immutable_links_checked": 1726,
+      "git_blobs": 465,
+      "errors": [],
+      "mutable_documentation_link": "https://github.com/TTolsun/camera-hal-sdd-generator/blob/main/docs/libcamera/records/model-comparison.md",
+      "mutable_doc_exists_in_merged_main": true
+    }
+  },
+  "public": {
+    "main": "8f936663f82f71c729baaf34f0259b6580edd6b7",
+    "build_id": "815398b2088e5031e6ef0e19fc5b8e7612f7c0ce7ee3c32a2f0051f2b94bb8ce",
+    "html_pages": 50,
+    "new_bilingual_url_404": 10,
+    "new_site_pr": null,
+    "existing_pr50": "draft proof-only;414files publication/issue141;docs0",
+    "pages_run": 40615953548
+  },
+  "pending": [
+    "Final same-input site manifest/catalog/report/manuscripts/run.json alignment and publication",
+    "Final catalog/source-page hashes/report/manuscripts/manifest/run.json alignment",
+    "Public SDD PR and Pages/live60pages/old32anchors/search/source links/browser interactions",
+    "Issue150 growth justification and required human review; automated review is not human approval"
+  ],
+  "documentation_links": {
+    "passed": 377,
+    "test": "tests/test_docs_links.py"
+  },
+  "recorded_completed_native_audit": {
+    "checked_at_utc": "2026-10-28T22:42:10.131639+00:00",
+    "scope": "Exact native proof of recorded completed report53282e8b; not current post-merge/publication gate",
+    "report_sha256": "53282e8bc2430f873a0faf34e0055c570f31e0a5c9052977e6c2489dcbb558a4",
+    "actual_runtime_policy": "89c9b2af7aff91f4b6e06ba1bd149eb7f38dbf271e95fb71420b8120036fc684",
+    "total_findings": 386,
+    "human_review": "pending",
+    "new_llm_calls": 0,
+    "batches_verified": 87,
+    "receipts_verified": 87
+  },
+  "current_merged_policy_audit": {
+    "checked_at_utc": "2026-10-28T22:43:45.358047+00:00",
+    "scope": "frozen final candidate, not public deployment/human approval",
+    "merged_commit": "0f477b0b1f8c46215a4a618960b7a856b3316957",
+    "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+    "policy_sha256": "19eb352e6730b1eab46255a4a4b4384e9c097ff75ef601efbaacbf39d7718b2c",
+    "contracts": [
+      {
+        "id": "request-completion",
+        "claims": 91,
+        "batches": 19,
+        "statuses": {
+          "compatible": 90,
+          "insufficient-evidence": 1
+        },
+        "source_domains": {
+          "project-source": 27
+        }
+      },
+      {
+        "id": "stopping-cancellation",
+        "claims": 61,
+        "batches": 17,
+        "statuses": {
+          "compatible": 61
+        },
+        "source_domains": {
+          "project-source": 24
+        }
+      },
+      {
+        "id": "ownership-reuse",
+        "claims": 63,
+        "batches": 11,
+        "statuses": {
+          "compatible": 63
+        },
+        "source_domains": {
+          "project-source": 16
+        }
+      },
+      {
+        "id": "callbacks-synchronization",
+        "claims": 84,
+        "batches": 26,
+        "statuses": {
+          "compatible": 84
+        },
+        "source_domains": {
+          "project-source": 35
+        }
+      },
+      {
+        "id": "scenario-analysis",
+        "claims": 87,
+        "batches": 15,
+        "statuses": {
+          "compatible": 87
+        },
+        "source_domains": {
+          "project-source": 35,
+          "analysis-definition": 1
+        }
+      }
+    ],
+    "new_llm_calls": 0,
+    "ledger": {
+      "original_sha256": "20138dc3c37721047cd2d721566fda81b2f7c0eb7082f27350c33b66fcc29785",
+      "recorded_final_sha256": "53282e8bc2430f873a0faf34e0055c570f31e0a5c9052977e6c2489dcbb558a4",
+      "current_final_sha256": "f59687b142459eb1af2770624e4ba554b95cdb1947a9094fdb4639ebb13acfaa",
+      "original_cases": 90,
+      "exact_coverage": true,
+      "all90_current_compatible": true,
+      "triage": {
+        "direct-source-supply-gap": 73,
+        "actual-omitted-negated-assertion": 2,
+        "needs-source-and-scope-review": 15
+      },
+      "lineage_summary": {
+        "same-id": 120,
+        "preserved-origin": 6,
+        "explicit question merge verified by question_lineage source union and actor requirement": 2
+      }
+    },
+    "old_callback_claim_ids_preserved": 87,
+    "current_merged_runtime_gate": "passed with unmodified merged checks and preserved actual runtime bytes",
+    "reported_summary": {
+      "status": "passed",
+      "fresh_batches": 0,
+      "reused_batches": 88,
+      "human_review": "pending",
+      "assessment": "automatic model review; not human approval",
+      "comparison_scope": "Every target is compared with supplied sources and all primary claims. Secondary pairs are compared when in the same batch; this is not an exhaustive all-pairs proof."
+    },
+    "unresolved": [
+      {
+        "contract": "request-completion",
+        "claim_id": "scenarios/queue_request.md/paragraph/28",
+        "peers": [
+          "request-diagnosis.md/diagnosis/7",
+          "request-lifecycle.md/journey/10",
+          "request-lifecycle.md/stopping/6"
+        ],
+        "status": "insufficient-evidence",
+        "condition": "The claim identifies a subsequent documentation step after queueing.",
+        "actor": "The linked step names PipelineHandler::completeRequest.",
+        "timing": "The link presents completion notification as a next step.",
+        "scope": "The supplied sources establish the function's contract but do not establish the linked document's existence or contents.",
+        "reason": "The named function is associated with request completion, consistent with the peers, but the supplied excerpts do not verify the link target or its presentation as the next documentation step.",
+        "sources": [
+          {
+            "source_id": "request-lifecycle/journey/request-notice",
+            "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+          }
+        ],
+        "claim_quote": "다음 단계: [요청 완료 통지 (PipelineHandler::completeRequest)](complete_request.md)\n"
+      }
+    ],
+    "remaining_navigation": {
+      "from": "scenarios/queue_request.md",
+      "to": "scenarios/complete_request.md",
+      "rendered_href": "complete_request.html",
+      "target_entry": "PipelineHandler::completeRequest(Request *)",
+      "local_target_exists": true,
+      "semantic_verdict_unchanged": true,
+      "final_site_and_public_url_check": "pending"
+    },
+    "owner_input_changes": [],
+    "batches_verified": 88,
+    "receipts_verified": 88,
+    "receipt_hashes": {
+      "8050898299034f24a07ecd56e258f842/001.receipt.json": "b28d27e2718f0a8e3de259a945e024be3f70f60bd1fd491c69cc3f332aa57797",
+      "8050898299034f24a07ecd56e258f842/002.receipt.json": "58d540eea5a1cc2f5a0326db9a6169bb005f3eb0fa0dd6140aea78ae05a876cd",
+      "8050898299034f24a07ecd56e258f842/003.receipt.json": "a7799a665d24e4d6972af69795ffce1e00dc446cbdcb30d93e1ac7c4f7da046c",
+      "8050898299034f24a07ecd56e258f842/004.receipt.json": "7a5fab959dd1c6d66c408b846ebc43780de88c80367bf5ff0c7a555c35ccd2e0",
+      "8050898299034f24a07ecd56e258f842/005.receipt.json": "ca0d5a2d9319ffce334bc5384fd5012a26fc08c48594f6f43636986ee3bcc832",
+      "8050898299034f24a07ecd56e258f842/006.receipt.json": "6875dd437065c83ddb4a62ce64f2a21fa58f57740aab053d8e8b0c9edef64655",
+      "8050898299034f24a07ecd56e258f842/007.receipt.json": "a8c66377924421e6bfd9fb93d630af79dbf32b317fc473800d6176784451783f",
+      "8050898299034f24a07ecd56e258f842/008.receipt.json": "6332658ccfa31130ec0165a10dc7da89a2948c860b50dd21559f8891295f5a9c",
+      "8050898299034f24a07ecd56e258f842/009.receipt.json": "e401f18a418bf911b890fd201ab7b5a710085b1f24894af44da14b3b49f007e0",
+      "8050898299034f24a07ecd56e258f842/010.receipt.json": "c25799c47ea22dbe7f1d0203f68bae050b5deefdd4db13c172ebe00f2bcef8ed",
+      "8050898299034f24a07ecd56e258f842/011.receipt.json": "93362e4762bea126e13d43021325a7d5fab63197c3a4aac99376d7765b7ddf57",
+      "8050898299034f24a07ecd56e258f842/012.receipt.json": "b96dd6fda5aa477e8203b5aa50efdfbe1a977f5c8c39a32fc916999146c2434a",
+      "8050898299034f24a07ecd56e258f842/013.receipt.json": "c04bc3db38d398320d9f2f5abd12640b2a8eed9628280243862319f944b8638b",
+      "8050898299034f24a07ecd56e258f842/014.receipt.json": "aa07496fbe261a8e936d890737ba3b52edf7a10793f2846d1d9a12844bcf1575",
+      "8050898299034f24a07ecd56e258f842/015.receipt.json": "e39b05cc56db207997dd9a135f50b2e4452e1b8ab9d0991d2a5d42dac5387bc9",
+      "8050898299034f24a07ecd56e258f842/016.receipt.json": "05737b91187df4bb8300a329f84658b686249555d828065fdca135d0a35bcf45",
+      "8050898299034f24a07ecd56e258f842/017.receipt.json": "96e604e8e54f46a2f54143c0b0daaaacc161f343fe08ef91979f85a16138f211",
+      "8050898299034f24a07ecd56e258f842/018.receipt.json": "386ea3f1f75b5e1f3c3a54be295964dafe8f9c217a523dce129029c3489ff394",
+      "8050898299034f24a07ecd56e258f842/019.receipt.json": "b367b4c96ef481685635944fc35a0ae76cbbf2f1578196ca137b272fb7b56133",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/001.receipt.json": "0d1af5e7a3b521fb50ff8c74f12d179a7ea827e72aecb52197a122caec32241a",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/002.receipt.json": "e597a61fe783a61455adf8119fb87d9f631b4daa6778057145a591a2d3b27ec0",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/003.receipt.json": "5a1173f828a41a4e47b8e187bfd1ae4e64c39da89e551c943a5d6ff69e6b6652",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/004.receipt.json": "57996dee6096ed4938c24069c3da07c8156c66788cb017123758872f7b022a52",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/005.receipt.json": "2017fabb8ea353b2f8dc8c01cec483c74a0358d0d27fe3cad2357646cfd6cc74",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/006.receipt.json": "1b7a122b552639e1715ce01e976f40419293328ae32bbc3793dd6c15282a8dae",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/007.receipt.json": "69021588642b0795f7ed5fc9ffeb0dc9f845d3c53512264e814bd7ea9e799733",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/008.receipt.json": "b1626cd67f219b2eaa533f7f386771c00111643ab007cdb40508f21b3a9a0396",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/009.receipt.json": "542ce6ec893aa99337e7649d8905575c3696f10d37641ae0eda9c1b006c6991c",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/010.receipt.json": "8befb7103a6aeee3f85252a9831638d7fdcbd7def68abd5a6bb5bea106389cd3",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/011.receipt.json": "fa67d98de24a4f7dc1d3f2bc4bd6396bd97fcf77e71fee9c66a83ff5e6d9decf",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/012.receipt.json": "b037ab8712a8eb9e469e6a94cf3b2303760ed29e983dcb02f365af2c623c784c",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/013.receipt.json": "aeefbdbba8914b2f229b9114afdc5ccc28014fc6a112ea4ea1b7d84acbefa079",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/014.receipt.json": "684a762f91e3b2b172562da3780eede67b4e1df9c1f8f0cbb3018f5c5b3ac370",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/015.receipt.json": "f0a2cdd8eacf4abc0f055505b9d6e79b28a1a00e57748f211756cfb6539b855e",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/016.receipt.json": "f267ad8a2d70bc13b5c19a76902ba3d66f9e9d5d476dd568e8ada27686e45535",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/017.receipt.json": "8b1aaaae9bda6423d04d988a7d5d2a5879da02378f7e4dae1400b5b18b406e8f",
+      "1605a0b50585495890d38192d919f175/001.receipt.json": "a691943c30bee89125889ca319989fd966cb370fa8877df85a10b8cd3dddcddb",
+      "1605a0b50585495890d38192d919f175/002.receipt.json": "cedb9ec77666418afbe1ebfab85b8d358b735768c8eb3c48f4377e17e79b97bc",
+      "1605a0b50585495890d38192d919f175/003.receipt.json": "03bdd80702d2b398a9710a668b15b3805b067507bd93ab2cedb155ddf1827441",
+      "1605a0b50585495890d38192d919f175/004.receipt.json": "bc56d792fb7988d2b44eea786274784c502dcab6dfc1c461fb70d04f10f27c80",
+      "1605a0b50585495890d38192d919f175/005.receipt.json": "cff5950e23da00863ba14628fd7743867d92e8db1ae30386bb657592635caf51",
+      "1605a0b50585495890d38192d919f175/006.receipt.json": "bad9387a1313eae1a3e652c7f522b9185652a7d322044512f07ad8d356f86e1c",
+      "1605a0b50585495890d38192d919f175/007.receipt.json": "31d79de851aae125124bbda0c85c9c6ee29c2f5a8ac83c0b453ac3fe12fb7dca",
+      "1605a0b50585495890d38192d919f175/008.receipt.json": "8e5479b40022a959ec2b818b53a424d2788275fc67d4de75d7a4fcaa25994481",
+      "1605a0b50585495890d38192d919f175/009.receipt.json": "3e6c361af29f2e30423a24cdfac1b64e6b82d778e3674118e85b48326ca2f070",
+      "1605a0b50585495890d38192d919f175/010.receipt.json": "247c53fe62be16b66f1de12254ef01bf43f77645316190d358c5ce3851cc21ce",
+      "1605a0b50585495890d38192d919f175/011.receipt.json": "3307373f74066dce7a4a46a95bd890802cf90448cc967fdb872f5dd03ab035dc",
+      "8d6636b2687b4859b20ea9bf937843e4/001.receipt.json": "99a6d521ec9e69ebae6b62d8181abe2b923d3a80e48cdff5beea5fe0b04736da",
+      "8d6636b2687b4859b20ea9bf937843e4/002.receipt.json": "0ac5b3c57872cdfe4826b3d96c00ee6fa4dedaf9ec05a27653be2e42d9d9cfab",
+      "8d6636b2687b4859b20ea9bf937843e4/003.receipt.json": "01f6b603e9ccd0362f364027f3633ea1b2ef3c6eae716fda1562c61599806a4a",
+      "8d6636b2687b4859b20ea9bf937843e4/004.receipt.json": "43095c98ebdb7f69378747ee05c6797f3b762c7f8b9264c67395e47fbfd47cc6",
+      "8d6636b2687b4859b20ea9bf937843e4/005.receipt.json": "fdbb2e0867bd25d71c09de67c1e17e7cf244a84a6eda96b9892a6227ab868dd6",
+      "8d6636b2687b4859b20ea9bf937843e4/006.receipt.json": "2b0b79bb90e088ad713ec5e736b0d337af1be032cdffe75e72923ff9dcca0c37",
+      "8d6636b2687b4859b20ea9bf937843e4/007.receipt.json": "810820490566e0eacc14abccd93a305c2b1292ce242324857509d844e0ca13dc",
+      "8d6636b2687b4859b20ea9bf937843e4/008.receipt.json": "28224f6f229adc49f48e5b7b2440f9cc4341030038680220b5f049dce77597c1",
+      "8d6636b2687b4859b20ea9bf937843e4/009.receipt.json": "aae6252c9b42c0fdc7508266cb517cc69aa64d506c9ef4e98c23ebc2b60a9205",
+      "8d6636b2687b4859b20ea9bf937843e4/010.receipt.json": "c6497965c632dacca56ebcb7054940c8603c160faa3e626b6af6d298b258a207",
+      "8d6636b2687b4859b20ea9bf937843e4/011.receipt.json": "38236a8634fd4823c810046773ab58aff1dbba3779710a73cb7288e7bb5bae9b",
+      "8d6636b2687b4859b20ea9bf937843e4/012.receipt.json": "77e157bf933c4deb9fff175e370634a757020afbe80a3f63d6bfc5f2bf4807ca",
+      "8d6636b2687b4859b20ea9bf937843e4/013.receipt.json": "4796741bb42c7b1f1693d4b9570f5224e59738d1fde6bdd11acf0b2b582f7e5d",
+      "8d6636b2687b4859b20ea9bf937843e4/014.receipt.json": "d5e3b0a09399ddd7f83487caf4f93a6140b442bc4ffad0bcdde36852fad69a06",
+      "8d6636b2687b4859b20ea9bf937843e4/015.receipt.json": "c7a2c74ed5b82cfd5c54e80dec32a1bddaeec5c4222213366da06ca993fcbc09",
+      "8d6636b2687b4859b20ea9bf937843e4/016.receipt.json": "d5c8f9930b3dacc3d2bbfe0de6603acfd70f0fb0df80b0127037f80d1b6db3bc",
+      "8d6636b2687b4859b20ea9bf937843e4/017.receipt.json": "bcd8aa511b3963da9c6f2caad2912e508defdf66a86036025034ced0e96b9a31",
+      "8d6636b2687b4859b20ea9bf937843e4/018.receipt.json": "cd3e98f7d89032ba5b2f04b01164b5478246088aca3f067c4eb2e525cd20a7cb",
+      "8d6636b2687b4859b20ea9bf937843e4/019.receipt.json": "c98a43a1b09e1defe6ccf50fb91d4c3a4aa5f5a1a71ccaf54c1ae956ce18c4c3",
+      "8d6636b2687b4859b20ea9bf937843e4/020.receipt.json": "f43af52a1698d116bdddf567a0ca458335e385d7f341ee6c7021713fee816070",
+      "8d6636b2687b4859b20ea9bf937843e4/021.receipt.json": "9fcd6a0227949df281d80bfa34804c195bc401682ec5e15729e9991a83abe6db",
+      "8d6636b2687b4859b20ea9bf937843e4/022.receipt.json": "3299d61d6636f2d0ff1188cee3f695e1cb7a22967b1e4803cccec4a61cb7800e",
+      "8d6636b2687b4859b20ea9bf937843e4/023.receipt.json": "1558f8cfd246d829dbef2e7185f7e5dd2635da7807d4d5a252d24c74621b6594",
+      "8d6636b2687b4859b20ea9bf937843e4/024.receipt.json": "42e24a4b6fdd0d4760bec7f1dbe1dae90acdef91fa62c233ba92537610e2ce50",
+      "8d6636b2687b4859b20ea9bf937843e4/025.receipt.json": "69314b72edd5919e38137b00adc4ac79a66c91ba2c964a679bfde281b1a61236",
+      "8d6636b2687b4859b20ea9bf937843e4/026.receipt.json": "7c040cdd4993926eb72238812dead3701d464bb20f7f31c9ad0145a9c1641b38",
+      "be6c764da5084c0cafe356388f10b73c/001.receipt.json": "62d06f8f9a491ad0939d578b430be1edcfda3b31f8a8d2d41e31a23872b38194",
+      "be6c764da5084c0cafe356388f10b73c/002.receipt.json": "522b0265d3dfc4959664b6dc5c18543064a16ae4eca0aaaa35980be5dde3dfb7",
+      "be6c764da5084c0cafe356388f10b73c/003.receipt.json": "d3f6bc0ab0cf41b0417ee05c750ef5ccf154d0394695017e93834e5123cc1c04",
+      "be6c764da5084c0cafe356388f10b73c/004.receipt.json": "0b974cedd4a58cd2178e37042535db91e2464d39b28562ff801633edc6ec4c13",
+      "be6c764da5084c0cafe356388f10b73c/005.receipt.json": "ab53b4ae34a1d51a7e7a3108eaee714ad0ca9a2faf45fe8e10506ba7ccc76f93",
+      "be6c764da5084c0cafe356388f10b73c/006.receipt.json": "b6a0d02ad4115c3ec3e00d01b220aeaa058d53468deb8d57e15aaed53dd494a2",
+      "be6c764da5084c0cafe356388f10b73c/007.receipt.json": "43bd18ee530638cf70e363d7f2add72136742751c882dccfe70ad020e56530de",
+      "be6c764da5084c0cafe356388f10b73c/008.receipt.json": "82361a2348d669eb00541c1e811d4a53656ca298ad022031984a7ca9f8b60aee",
+      "be6c764da5084c0cafe356388f10b73c/009.receipt.json": "f248edbcc54f332fbb2b8096dd2ce7e09f928a24837f40096fc50e6e6f820de3",
+      "be6c764da5084c0cafe356388f10b73c/010.receipt.json": "0fcb3550291f374619103b6368a8ea5d76ac3059832d4a8b62cc7e453395d36f",
+      "be6c764da5084c0cafe356388f10b73c/011.receipt.json": "79f3a9c1ad7c87ddf663f9830cc2d21eabc8e7bef8c81581226649a24588e8ed",
+      "be6c764da5084c0cafe356388f10b73c/012.receipt.json": "360a53b2d0e3a3530735a7c01ed22ae929c630da307fe557dc5636ba492383fc",
+      "be6c764da5084c0cafe356388f10b73c/013.receipt.json": "79b7a86ecf6107f677bd728619820e3a746b30a04603ce04bb4ee2892d49a60c",
+      "be6c764da5084c0cafe356388f10b73c/014.receipt.json": "00960dbb16b3e56718bb0bab0864fcb815d967bb95d40889f7168eb044742875",
+      "be6c764da5084c0cafe356388f10b73c/015.receipt.json": "5804341bc6e7f82a3ac3729bb8cc10bee4309005159e9e78ee02ac34bf35ff9f"
+    },
+    "native_proof_checks": [
+      "exact current system/user/schema and execution identity",
+      "completed Codex CLI stdout, original response and JSON schema",
+      "model gpt-6.1-terra and model_reasoning_effort=high",
+      "current source-bound checkpoint checksum and exact verdicts",
+      "unmodified current consistency.enforce gate passed"
+    ]
+  },
+  "ordering_regression": {
+    "passed": 1,
+    "test": "test_recovered_topic_mapping_order_preserves_exact_audit_requests",
+    "generator_main": "0f477b0b1f8c46215a4a618960b7a856b3316957"
+  }
+}
