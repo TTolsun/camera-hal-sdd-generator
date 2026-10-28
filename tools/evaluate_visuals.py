@@ -28,7 +28,7 @@ def main():
     from sdd.generated_visuals import expand_draft
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True, help='New public-fixture output directory')
-    parser.add_argument('--runner', choices=('hermes', 'opencode', 'claude'), default='hermes')
+    parser.add_argument('--runner', choices=('hermes', 'opencode', 'claude', 'codex'), default='hermes')
     parser.add_argument('--model', default='')
     parser.add_argument('--cli-arg', action='append', default=[])
     parser.add_argument('--with-prose', action='store_true', help='Also generate a source-bound answer through the CLI')

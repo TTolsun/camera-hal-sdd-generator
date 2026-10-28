@@ -14,6 +14,26 @@ from sdd.provenance import verify_calls
 from test_evaluate_pipeline import configure
 
 
+def test_cli_model_and_arguments_enter_config_impact_without_render_only_redrafting(cli_trial, tmp_path, monkeypatch):
+    from sdd.facts.model import KnowledgeModel
+    from sdd.impact import config_changes
+    from sdd.trial_workspace import clone_config
+    cfg = cli_trial('codex', model='fixture-model')
+    out = tmp_path/'execution-impact'
+    evaluate(cfg, out)
+    selected = clone_config(cfg, out)
+    model = KnowledgeModel.load(selected.facts_path)
+    monkeypatch.setattr(Agent, 'chat', lambda *a, **k: pytest.fail('Impact analysis must not call a model'))
+    assert config_changes(selected, model) == {}
+    selected.raw.setdefault('site', {})['title'] = 'Presentation only'
+    assert config_changes(selected, model) == {}
+    selected.agent.model = 'another-model'
+    assert set(config_changes(selected, model)) == {'entry'}
+    selected.agent.model = 'fixture-model'
+    selected.agent.args = ['-c', 'model_reasoning_effort="high"']
+    assert set(config_changes(selected, model)) == {'entry'}
+
+
 @pytest.fixture
 def cli_trial(tmp_cfg, tmp_path, monkeypatch):
     cfg = configure(tmp_cfg)
@@ -61,11 +81,17 @@ if 'kind' in data:
 else:
     answer = {'statements': [dict(text='initialize()에서 callbacks_에 콜백을 저장합니다.',
         quote_id=quote, covers=['start'], kind='behavior')]}
+    if runner == 'codex':
+        answer['statements'][0]['evidence'] = [quote.rsplit(':', 1)[0]]
 text = json.dumps(answer, ensure_ascii=False)
 if runner == 'hermes':
     print(text)
 elif runner == 'claude':
     print(json.dumps(dict(type='result', subtype='success', is_error=False, result=text)))
+elif runner == 'codex':
+    print(json.dumps(dict(type='turn.started')))
+    print(json.dumps(dict(type='item.completed', item=dict(type='agent_message', text=text))))
+    print(json.dumps(dict(type='turn.completed', usage=dict(output_tokens=10))))
 else:
     print(json.dumps(dict(type='text', part={'text': text})))
     print(json.dumps(dict(type='step_finish', part={'reason': 'stop'})))
@@ -82,7 +108,7 @@ else:
     return select
 
 
-@pytest.mark.parametrize('runner', ['hermes', 'opencode', 'claude'])
+@pytest.mark.parametrize('runner', ['hermes', 'opencode', 'claude', 'codex'])
 @pytest.mark.parametrize('model', ['', 'chosen/model'])
 def test_fresh_cli_trial_generates_verifies_audits_and_repeats(cli_trial, tmp_path, runner, model):
     cfg = cli_trial(runner, model=model)

@@ -698,8 +698,7 @@ sections:
         end: '*/'
     parts:
     - id: success
-      question: 단일 파이프라인에 필요한 모든 미디어 장치를 찾았을 때 match 구현자가 지켜야 할 의무를 설명하세요. MediaDevice::acquire, Camera 생성·저장·카메라 매니저 등록과
-        true 반환을 포함하세요. 다른 파이프라인의 장치까지 확보하는 것으로 확대하지 마세요. 질문의 모든 항목을 한 문장으로 설명하세요.
+      question: 단일 파이프라인에 필요한 모든 미디어 장치를 찾았을 때 match 구현자가 지켜야 할 의무를 설명하세요. MediaDevice::acquire, Camera 생성·저장·카메라 매니저 등록과 true 반환을 포함하세요. 다른 파이프라인의 장치까지 확보하는 것으로 확대하지 마세요. 질문의 모든 항목을 한 문장으로 설명하세요.
       sources:
       - handler
       answer_contract:
@@ -711,8 +710,7 @@ sections:
         - - 등록
         - - 'true'
     - id: failure
-      question: match 구현자가 필요한 장치를 모두 찾지 못했을 때 지켜야 할 계약을 설명하세요. 아직 확보하지 않은 경우와 이미 일부 확보한 경우를 구분하고 false 반환까지 포함하세요. 질문의 모든
-        항목을 한 문장으로 설명하세요.
+      question: match 구현자가 필요한 장치를 모두 찾지 못했을 때 지켜야 할 계약을 설명하세요. 아직 확보하지 않은 경우와 이미 일부 확보한 경우를 구분하고 false 반환까지 포함하세요. 질문의 모든 항목을 한 문장으로 설명하세요.
       sources:
       - failure
       answer_contract:
@@ -734,8 +732,7 @@ sections:
           message: 원문은 새 인스턴스의 반복 호출 절차를 설명합니다. 호출 사이의 시간을 보장하는 부사 없이 절차만 설명하세요.
   - id: configuration
     title: 구현할 설정 인터페이스
-    question: 하드웨어 구현자가 generateConfiguration()과 configure()를 구현할 때 각각 받는 입력, 만들어야 할 출력과 실패 반환값을 설명하세요. 호출자의 API 사용 절차와 구현자의
-      의무를 구분하세요.
+    question: 하드웨어 구현자가 generateConfiguration()과 configure()를 구현할 때 각각 받는 입력, 만들어야 할 출력과 실패 반환값을 설명하세요. 호출자의 API 사용 절차와 구현자의 의무를 구분하세요.
     covers:
     - configuration
     sources:
@@ -1138,8 +1135,7 @@ sections:
           }'
     parts:
     - id: order
-      question: 공통 stop에서 waitingRequests.swap(data->waitingRequests_)와 stopDevice(camera) 중 무엇이 먼저 실행됩니까? 두 호출의 순서만 한 문장으로
-        설명하세요.
+      question: 공통 stop에서 waitingRequests.swap(data->waitingRequests_)와 stopDevice(camera) 중 무엇이 먼저 실행됩니까? 두 호출의 순서만 한 문장으로 설명하세요.
       sources:
       - stop-order
       answer_contract:
@@ -1160,9 +1156,10 @@ sections:
         - - stopDevice
         - - completeRequest
     - id: device
-      question: stopDevice의 장치 구현자가 캡처·요청 처리와 남은 요청에 대해 지켜야 하는 중단·취소·오류 완료 의무를 설명하세요. 이는 선언의 계약입니다. 질문의 모든 항목을 한 문장으로 설명하세요.
+      question: stopDevice의 장치 구현자가 실행 중인 스트림과 그 장치의 미완료 요청에 대해 지켜야 하는 중단·취소·오류 완료 의무를 설명하세요. 공통 stop이 따로 옮겨 처리하는 waitingRequests_와 이 API의 pending 요청을 같은 범위로 설명하지 말고, 장치 구현자가 처리하는 요청의 조건을 드러내세요. 선언의 의무와 공통 구현의 처리 순서를 구분하여 두 문장 이내로 설명하세요.
       sources:
       - device
+      - stop
       answer_contract:
         basis: contract
         required_terms:
@@ -1185,8 +1182,7 @@ sections:
         - - queuedRequests_
         reject_patterns: []
     - id: final-state
-      question: 대기 요청을 처리한 뒤 stop의 마지막 두 ASSERT가 확인하는 큐와 requestSequence_에 저장하는 값을 한 문장으로 설명하세요. ASSERT를 실기기 종료 검증 결과로 확대하지
-        마세요.
+      question: 대기 요청을 처리한 뒤 stop의 마지막 두 ASSERT가 확인하는 큐와 requestSequence_에 저장하는 값을 한 문장으로 설명하세요. ASSERT를 실기기 종료 검증 결과로 확대하지 마세요.
       sources:
       - stop
       answer_contract:
@@ -3432,6 +3428,10 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Create a request object for the camera
       end: std::unique_ptr<Request> Camera::createRequest
+    - id: reuse
+      file: src/libcamera/request.cpp
+      start: \brief Reset the request for reuse
+      end: "_d()->metadata_.clear();\n}"
     parts:
     - id: state
       question: Camera::createRequest()는 어느 카메라 상태에서 호출할 수 있습니까? 상태 이름을 모두 포함해 한 문장으로 답하세요.
@@ -3442,9 +3442,10 @@ sections:
       sources:
       - create
     - id: reuse
-      question: Request::reuse() 함수는 재사용할 요청의 상태에 어떤 처리를 합니까? 그 함수 호출과 요청 재사용의 순서가 드러나게 한 문장으로 설명하세요.
+      question: Request::reuse()가 초기화하는 정보와 재사용 요청을 큐에 넣기 전에 호출해야 하는 순서를 소스의 API 계약으로 한 문장에 설명하세요. 세부 버퍼 플래그 처리는 다른 절에서 다룹니다.
       sources:
       - create
+      - reuse
   - id: lifecycle
     title: 캡처 세션의 상태와 자원
     question: 캡처 준비 순서, 시작 이후 요청 처리, 정지와 최종 해제, 해제 전 반복 시작·정지와 재설정을 설명하세요. 최종 해제 단계를 빠뜨리지 마세요.

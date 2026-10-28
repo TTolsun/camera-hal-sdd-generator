@@ -55,6 +55,10 @@ def fake_cli(tmp_path, output, *, code=0, delay=0):
     ('opencode', '\n'.join(json.dumps(e) for e in [
         {'type': 'text', 'part': {'text': '최종 응답'}},
         {'type': 'step_finish', 'part': {'reason': 'stop'}}])),
+    ('codex', '\n'.join(json.dumps(e) for e in [
+        {'type': 'turn.started'},
+        {'type': 'item.completed', 'item': {'type': 'agent_message', 'text': json.dumps({'text': '최종 응답'}, ensure_ascii=False)}},
+        {'type': 'turn.completed', 'usage': {'output_tokens': 3}}])),
 ])
 def test_cli_stdin_unicode_long_prompt_and_receipt(tmp_path, runner, output, monkeypatch):
     monkeypatch.setattr(Agent, '_post', lambda *a: pytest.fail('CLI must not call HTTP'))
@@ -63,7 +67,8 @@ def test_cli_stdin_unicode_long_prompt_and_receipt(tmp_path, runner, output, mon
     dump = tmp_path / 'prompts'
     user = '공개 입력 $(echo unsafe); `x` & "quotes"\n' * 1400
     schema = {'type': 'object'}
-    assert Agent(cfg, dump).chat('system rules', user, response_schema=schema) == '최종 응답'
+    expected = json.dumps({'text': '최종 응답'}, ensure_ascii=False) if runner == 'codex' else '최종 응답'
+    assert Agent(cfg, dump).chat('system rules', user, response_schema=schema) == expected
     captured = json.loads((tmp_path / 'input.json').read_text(encoding='utf-8'))
     assert user in captured['prompt'] and json.dumps(schema) in captured['prompt']
     assert user not in captured['argv']
@@ -99,6 +104,70 @@ def test_claude_native_schema_output_and_receipt_bind_actual_arguments(tmp_path)
     assert captured['argv'][-2:] == ['--effort', 'high']
     record = load_record(agent.last_receipt, root=dump/'calls')
     assert verify_cli_receipt(record.request, record.raw, record.receipt, dump/'calls', cfg)['runner'] == 'claude'
+
+
+def test_codex_native_schema_and_high_effort_have_receipt_bound_output(tmp_path):
+    from sdd.call_records import load_record
+    from sdd.cli_provenance import verify_cli_receipt
+    schema = dict(type='object', additionalProperties=False, required=['status'], properties=dict(status=dict(type='string')))
+    output = '\n'.join(json.dumps(e) for e in [dict(type='thread.started', thread_id='fixture-thread'),
+        dict(type='turn.started'), dict(type='item.completed', item=dict(type='agent_message', text='{"status":"ok"}')),
+        dict(type='turn.completed', usage=dict(input_tokens=20, output_tokens=5))])
+    cmd = fake_cli(tmp_path, output)
+    script = Path(cmd[1])
+    script.write_text(script.read_text(encoding='utf-8').replace('time.sleep(',
+        f"assert json.loads(Path('response-schema.json').read_text(encoding='utf-8')) == {schema!r}\ntime.sleep("), encoding='utf-8')
+    cfg = AgentConfig(runner='codex', model='gpt-6.1-terra', args=['-c', 'model_reasoning_effort="high"'], command=cmd)
+    dump = tmp_path/'prompts';agent = Agent(cfg, dump)
+    assert json.loads(agent.chat('Use supplied sources only.', 'Return status.', response_schema=schema)) == {'status': 'ok'}
+    captured = json.loads((tmp_path/'input.json').read_text(encoding='utf-8'))
+    assert captured['argv'][:2] == ['exec', '--ignore-user-config']
+    assert captured['argv'][-2:] == ['-c', 'model_reasoning_effort="high"']
+    assert '--output-schema' in captured['argv'] and '--ephemeral' in captured['argv']
+    record = load_record(agent.last_receipt, root=dump/'calls')
+    assert record.receipt['provider']['provider']['completion_event'] == 'turn.completed'
+    assert verify_cli_receipt(record.request, record.raw, record.receipt, dump/'calls', cfg)['model'] == 'gpt-6.1-terra'
+    assert not Path(captured['cwd']).exists()
+
+
+@pytest.mark.parametrize('events', [
+    [dict(type='turn.failed')], [dict(type='error')],
+    [dict(type='turn.started'), dict(type='item.completed', item=dict(type='agent_message', text='partial'))],
+    [dict(type='turn.started'), dict(type='turn.started')],
+    [dict(type='turn.started'), dict(type='item.completed', item=dict(type='command_execution', command='unrequested'))],
+    [dict(type='turn.started'), dict(type='turn.completed')],
+])
+def test_codex_error_tool_use_and_incomplete_turns_cannot_be_success(events):
+    from sdd.cli_agent import decode_response
+    with pytest.raises(ValueError):
+        decode_response('codex', '\n'.join(json.dumps(e) for e in events))
+
+
+@pytest.mark.parametrize('response', ['{"uniqueItems":["duplicate","duplicate"]}', '{}'])
+def test_codex_wire_schema_preserves_properties_and_original_constraints(tmp_path, response):
+    from sdd.cli_schema import codex_schema
+    schema = dict(type='object', additionalProperties=False, required=['uniqueItems'], properties={
+        'uniqueItems': dict(type='array', uniqueItems=True, items=dict(type='string'), minItems=1)})
+    wire = codex_schema(schema)
+    assert 'uniqueItems' in wire['properties']
+    assert 'uniqueItems' not in wire['properties']['uniqueItems']
+    assert wire['properties']['uniqueItems']['minItems'] == 1
+    assert schema['properties']['uniqueItems']['uniqueItems'] is True
+    output = '\n'.join(json.dumps(e) for e in [dict(type='turn.started'),
+        dict(type='item.completed', item=dict(type='agent_message', text=response)),
+        dict(type='turn.completed')])
+    dump = tmp_path/'prompts'
+    with pytest.raises(AgentError):
+        Agent(AgentConfig(runner='codex', command=fake_cli(tmp_path, output)), dump).chat('s', 'u', response_schema=schema)
+    assert list(dump.glob('cli/*.stdout.txt'))
+    assert not list(dump.glob('calls/*/*.receipt.json'))
+
+
+def test_codex_archived_schema_validation_cannot_fetch_remote_references(monkeypatch):
+    from sdd.cli_schema import validate_original
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **k: pytest.fail('No schema network retrieval'))
+    with pytest.raises(ValueError, match='original output schema'):
+        validate_original('{}', {'$ref': 'https://untrusted.example/remote-schema.json'})
 
 
 @pytest.mark.parametrize('permanent', [False, True])
