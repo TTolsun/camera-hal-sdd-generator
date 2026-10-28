@@ -33,6 +33,67 @@ from test_design_contracts import contract
 from test_generated_design import generated
 
 
+def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_cfg, visual):
+    import json
+    section, model, graph, write = visual
+    tmp_cfg.raw.setdefault('site', {})['overview_visual'] = dict(section='device', visual='stop-flow')
+    Generator(tmp_cfg, model, None).run()
+    site = export_site(tmp_cfg)
+    before = (site/'site-manifest.json').read_bytes()
+    index = (site/'index.html').read_text(encoding='utf-8')
+    assert '종료의 분기' in index and '대기 요청은 어떻게 끝납니까?' in index
+    assert 'href="index.stop-flow.mmd"' in index
+    assert 'device.html#source-' in index and 'href="#source-' not in index
+    assert (site/'index.stop-flow.mmd').read_bytes() == (site/'device.stop-flow.mmd').read_bytes()
+    export_site(tmp_cfg)
+    assert (site/'site-manifest.json').read_bytes() == before
+    assert json.loads(before)['outputs']['index.stop-flow.mmd']
+    tmp_cfg.raw['visuals']['on_stale'] = 'omit'
+    graph['nodes'][0]['evidence'][0]['sha256'] = '0'*64
+    write()
+    with pytest.raises(ValueError):
+        export_site(tmp_cfg)
+    assert (site/'site-manifest.json').read_bytes() == before
+
+
+@pytest.mark.parametrize('selection', [dict(section='missing', visual='stop-flow'),
+                                      dict(section='device', visual='missing'),
+                                      dict(section='device', visual='stop-flow', unknown=True)])
+def test_index_reuse_rejects_missing_or_invalid_selection(tmp_cfg, visual, selection):
+    _, model, _, _ = visual
+    Generator(tmp_cfg, model, None).run()
+    tmp_cfg.raw.setdefault('site', {})['overview_visual'] = selection
+    with pytest.raises(ValueError):
+        export_site(tmp_cfg)
+
+
+@pytest.mark.parametrize('collision', [False, True])
+def test_overview_preserves_existing_index_visuals_and_authorship(tmp_cfg, visual, collision):
+    from sdd.document_metadata import split_frontmatter
+    from sdd.export_site import _prepare_page_body
+    section, model, graph, _ = visual
+    own = {**copy.deepcopy(section), 'id': 'index-page', 'output': 'index.md', 'title': '별도 작성한 인덱스'}
+    own_graph = {**copy.deepcopy(graph), 'id': graph['id'] if collision else 'own-flow', 'title': '원래 인덱스 그림'}
+    model.evidence['index-page/shutdown/stop'] = copy.deepcopy(model.evidence['device/shutdown/stop'])
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section, own]}, allow_unicode=True), encoding='utf-8')
+    (tmp_cfg.root/'visuals.yaml').write_text(yaml.safe_dump(dict(schema=1, sections={'device': [graph], 'index-page': [own_graph]}), allow_unicode=True), encoding='utf-8')
+    model.save(tmp_cfg.facts_path)
+    Generator(tmp_cfg, model, None).run()
+    tmp_cfg.raw.setdefault('site', {})['overview_visual'] = dict(section='device', visual=graph['id'])
+    if collision:
+        with pytest.raises(ValueError, match='conflicts'):
+            export_site(tmp_cfg)
+        return
+    site = export_site(tmp_cfg)
+    assert (site/'index.own-flow.mmd').is_file() and (site/'index.stop-flow.mmd').is_file()
+    html = (site/'index.html').read_text(encoding='utf-8')
+    assert 'index.own-flow.mmd' in html and 'index.stop-flow.mmd' in html
+    texts = {name: (tmp_cfg.sdd_dir/name).read_text(encoding='utf-8') for name in ['index.md','device.md']}
+    before, _ = split_frontmatter(texts['index.md'])
+    _, after, _, _, rendered = _prepare_page_body(tmp_cfg, 'index.md', texts, {'index.md': own, 'device.md': section}, [], model)
+    assert before == after and len(rendered) == 2
+
+
 def test_opt_in_omits_stale_interpretation_and_removes_old_download(tmp_cfg, visual):
     section, model, graph, write = visual
     Generator(tmp_cfg, model, None).run()

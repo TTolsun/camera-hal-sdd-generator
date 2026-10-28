@@ -65,6 +65,7 @@ class SiteConfig:
     nav_groups: list[str] = field(default_factory=list)
     require_approval: bool = False
     intro: str | None = None
+    overview_visual: dict | None = None
     english_catalog: str | None = None
     mermaid_dir: str | None = None
     mermaid: str = ''
