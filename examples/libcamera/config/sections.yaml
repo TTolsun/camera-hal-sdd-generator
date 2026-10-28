@@ -4990,25 +4990,18 @@ sections:
         - pattern: 해서는\s*안|사용하면\s*안|반드시
           message: 원문의 should not 권고를 must not 의무로 강화하지 마세요.
     - id: handler-access
-      question: completeRequest가 반환한 뒤 파이프라인 핸들러의 요청 접근 금지 계약만 설명하세요.
+      question: completeRequest와 cancelRequest의 반환 후 요청 접근 의무를 두 함수의 근거로 함께 비교하세요. 취소 함수의 처리와 같은 규칙이 적용되는 주체·시점을 구분하고, 다른 호출자나 애플리케이션까지 의무를 확대하지 마세요. 같은 접근 의무를 두 문장으로 반복하지 마세요.
       sources:
       - complete-access
       - completion
+      - cancel-rules
       answer_contract:
         basis: contract
         required_terms:
         - - completeRequest
-        - - 접근
-    - id: cancel-access
-      question: cancelRequest 반환 후 요청 접근의 금지 의무를 두 근거로 설명하세요. completeRequest 규칙을 이어받는다고만 쓰지 말고 접근 의무를 명시하세요.
-      sources:
-      - cancel-rules
-      - complete-access
-      answer_contract:
-        basis: contract
-        required_terms:
         - - cancelRequest
         - - 접근
+        - - 파이프라인 핸들러
   - id: stopping
     title: 정지와 연결 해제를 구분하기
     question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을 구분하세요. PipelineHandler::stop의 waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소, queuedRequests_/waitingRequests_ ASSERT를 조사 지점에 연결하세요. stopDevice 내부에서 멎음과 반환 후 큐가 남음, 별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요. 실행 시험 결과나 보장된 타임아웃을 만들지 마세요.

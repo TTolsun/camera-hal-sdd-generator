@@ -1,0 +1,838 @@
+{
+  "schema": 1,
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "cases": [
+    {
+      "id": "extracted-analysis-scope",
+      "expected": {
+        "scope": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "scope",
+          "peers": [],
+          "status": "compatible",
+          "condition": "The claim concerns the extracted call list and deferred targets in the supplied analysis representation.",
+          "actor": "The extractor records passed method or function references; queue or signal implementations determine execution details.",
+          "timing": "The representation does not establish callback execution timing or thread, or guarantee asynchronous execution.",
+          "scope": "Static analysis representation only; it does not establish runtime branch counts or product behavior.",
+          "reason": "The definitions describe a call map without branch ancestry and record deferred references without tracing their execution order or thread. This supports the stated limits.",
+          "sources": [
+            {
+              "source_id": "@analysis/scenario/queue_request",
+              "source_quote": "{\"generator_definitions\": [{\"file\": \"src/sdd/facts/model.py\", \"line\": 73, \"name\": \"Message\", \"sha256\": \"4e0b4766c0d7eab15773e8a9349e6cd49ebd08cc52dfe7b2fba49616d03c1648\", \"text\": \"@dataclass\\nclass Message:\\n    src: str                       # participant display name\\n    dst: str\\n    name: str                      # 호출된 함수 이름\\n    loc: Location | None = None    # 호출 지점\\n    note: str = \\\"\\\"                 # 예: \\\"virtual 후보\\\" (정적으로 확정되지 않은 호출)\"}, {\"file\": \"src/sdd/facts/model.py\", \"line\": 82, \"name\": \"Scenario\", \"sha256\": \"b1f6188925808def6094453b5159214d8be4a2e398d299600b8d190e8236a6e3\", \"text\": \"@dataclass\\nclass Scenario:\\n    id: str\\n    title: str\\n    entry: str                     # from 함수 시그니처\\n    participants: list[str] = field(default_factory=list)\\n    messages: list[Message] = field(default_factory=list)\\n    mermaid: str = \\\"\\\"              # clang-uml 이 만든 Mermaid 본문\\n    unresolved: int = 0            # 정적으로 끊긴 호출 수 (virtual / function pointer)\\n    # 인자로 넘어간 메서드 수. 대상은 알지만 실행 시점과 스레드는 큐·신호 구현이 정한다.\\n    deferred: int = 0\"}, {\"file\": \"src/sdd/facts/callgraph.py\", \"line\": 148, \"name\": \"_deferred_targets\", \"sha256\": \"0b7c4a80ddd83f08782249229a78f9a878bb234dad15ca69fa24966428904a56\", \"text\": \"def _deferred_targets(node: cindex.Cursor, scope: SourceScope, callee_usr: str) -> list[cindex.Cursor]:\\n    \\\"\\\"\\\"호출 인자로 넘어간 메서드·함수 선언을 모은다.\\n\\n    `invokeMethod(&PipelineHandler::queueRequest, ...)` 나 `connect(&Class::slot)` 처럼 메서드를\\n    값으로 넘기면, 그 메서드는 이 호출 자리에서 실행되지 않는다. 실행 시점과 스레드는 큐나 신호\\n    구현이 정하므로 정적 추적으로는 순서를 알 수 없다. 대상 이름은 알 수 있으므로 경계로 기록한다.\\n    중첩된 호출 표현식은 바깥 순회가 따로 보기 때문에 여기서는 들어가지 않는다.\\n    \\\"\\\"\\\"\\n    found: list[cindex.Cursor] = []\\n    seen: set[str] = set()\\n\\n    def walk(n: cindex.Cursor) -> None:\\n        for child in n.get_children():\\n            if child.kind == cindex.CursorKind.CALL_EXPR:\\n                continue\\n            if child.kind == cindex.CursorKind.DECL_REF_EXPR:\\n                target = child.referenced\\n                if (target is not None and target.kind in (METHOD_KINDS | FUNCTION_KINDS)\\n                        and scope.contains(target)):\\n                    usr = target.get_usr()\\n                    if usr and usr != callee_usr and usr not in seen:\\n                        seen.add(usr)\\n                        found.append(target)\\n            walk(child)\\n\\n    walk(node)\\n    return found\"}, {\"file\": \"src/sdd/facts/callgraph.py\", \"line\": 292, \"name\": \"trace\", \"sha256\": \"8769562486ac0baeb37bf1c6d844cc8d2fd1d5c4eefb3e424e21f9e5c68a0ec8\", \"text\": \"def trace(g: Graph, entry: FuncDef, depth: int) -> tuple[list[Message], int, int]:\\n    messages: list[Message] = []\\n    unresolved = 0\\n    deferred = 0\\n\\n    def visit(fd: FuncDef, level: int, path: set[str]) -> None:\\n        nonlocal unresolved, deferred\\n        if level >= depth or len(messages) >= _MAX_MESSAGES:\\n            return\\n        for call in fd.calls:\\n            if call.kind == \\\"deferred\\\":\\n                # 대상은 알지만 이 자리에서 실행되지 않는다. 따라 들어가면 없는 순서를 만들게 된다.\\n                deferred += 1\\n                target = g.defs.get(call.callee_usr)\\n                messages.append(Message(src=fd.owner, dst=(target.owner if target else call.callee_owner),\\n                                        name=call.callee_name, loc=call.loc,\\n                                        note=\\\"예약된 호출, 실행 순서는 정적으로 확인 불가\\\"))\\n                continue\\n            if call.kind in (\\\"pointer\\\", \\\"callable\\\", \\\"unresolved\\\"):\\n                unresolved += 1\\n                label = {\\\"pointer\\\": \\\"함수 포인터, 정적 추적 불가\\\", \\\"callable\\\": \\\"콜백 객체, 정적 추적 불가\\\",\\n                         \\\"unresolved\\\": \\\"정적 추적 불가\\\"}[call.kind]\\n                messages.append(Message(src=fd.owner, dst=call.callee_owner, name=call.callee_name,\\n                                        loc=call.loc, note=label))\\n                continue\\n            targets = [call.callee_usr]\\n            note = \\\"\\\"\\n            if call.kind == \\\"virtual\\\":\\n                over = g.overrides.get(call.callee_usr, [])\\n                # 기반 구현이 있으면(순수 가상이 아니면) 그것도 후보다.\\n                base_def = g.defs.get(call.callee_usr)\\n                targets = ([call.callee_usr] if base_def else []) + over\\n                if len(targets) > 1:\\n                    note = \\\"virtual 후보\\\"\\n                elif targets:\\n                    note = \\\"virtual, 현재 구현 하나\\\"   # 지금은 하나지만 동적 디스패치라는 사실은 남긴다.\\n                else:\\n                    unresolved += 1\\n                    messages.append(Message(src=fd.owner, dst=call.callee_owner, name=call.callee_name,\\n                                            loc=call.loc, note=\\\"virtual, override 없음\\\"))\\n                    continue\\n            for t_usr in targets:\\n                t = g.defs.get(t_usr)\\n                owner = t.owner if t else call.callee_owner\\n                messages.append(Message(src=fd.owner, dst=owner, name=call.callee_name, loc=call.loc, note=note))\\n                if t and t_usr not in path:\\n                    visit(t, level + 1, path | {t_usr})\\n\\n    visit(entry, 0, {entry.usr})\\n    return messages, unresolved, deferred\"}, {\"file\": \"src/sdd/scenario_document.py\", \"line\": 62, \"name\": \"build\", \"sha256\": \"23bf4f1fe1e5c07cf6ab5972431d49b5b0fb800d8197d655d580c851bb886f96\", \"text\": \"    \\\"\\\"\\\"Focus rules select evidence, not prose assertions or execution stages.\\n\\n    Legacy flat facts do not carry branch ancestry. Draw a call *map*, not a\\n    sequence across candidates. The full extracted trace stays in this page.\\n    \\\"\\\"\\\"\"}], \"kind\": \"analysis-definition\", \"project_source_commit\": \"e117198c015057761bb0bbaa85f963c41ce412d7\", \"scenario\": {\"annotated_messages\": [{\"dst\": \"PipelineHandler\", \"loc\": {\"file\": \"src/libcamera/camera.cpp\", \"line\": 1376}, \"name\": \"queueRequest\", \"note\": \"예약된 호출, 실행 순서는 정적으로 확인 불가\", \"src\": \"Camera\"}], \"deferred\": 1, \"entry\": \"Camera::queueRequest(Request *)\", \"id\": \"queue_request\", \"messages_total\": 80, \"unresolved\": 0}, \"scope\": \"Analysis representation only; not product runtime, hardware or callback-thread evidence.\"}"
+            }
+          ],
+          "claim_quote": "The extracted call list does not establish runtime branch counts or callback execution threads; a deferred target records a passed method reference rather than a guarantee of asynchronous execution."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\001.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "analysis-is-not-runtime-evidence",
+      "expected": {
+        "unsupported": "insufficient-evidence"
+      },
+      "findings": [
+        {
+          "claim_id": "unsupported",
+          "peers": [],
+          "status": "insufficient-evidence",
+          "condition": "Every device execution and every callback.",
+          "actor": "The claim specifies a single CameraManager thread.",
+          "timing": "The claim requires asynchronous execution in all cases.",
+          "scope": "The supplied source describes an analysis representation, not product runtime or callback-thread behavior.",
+          "reason": "The analysis definition does not establish callback execution, timing, or thread ownership, so it cannot substantiate the universal runtime guarantee.",
+          "sources": [
+            {
+              "source_id": "@analysis/scenario/queue_request",
+              "source_quote": "{\"generator_definitions\": [{\"file\": \"src/sdd/facts/model.py\", \"line\": 73, \"name\": \"Message\", \"sha256\": \"4e0b4766c0d7eab15773e8a9349e6cd49ebd08cc52dfe7b2fba49616d03c1648\", \"text\": \"@dataclass\\nclass Message:\\n    src: str                       # participant display name\\n    dst: str\\n    name: str                      # 호출된 함수 이름\\n    loc: Location | None = None    # 호출 지점\\n    note: str = \\\"\\\"                 # 예: \\\"virtual 후보\\\" (정적으로 확정되지 않은 호출)\"}, {\"file\": \"src/sdd/facts/model.py\", \"line\": 82, \"name\": \"Scenario\", \"sha256\": \"b1f6188925808def6094453b5159214d8be4a2e398d299600b8d190e8236a6e3\", \"text\": \"@dataclass\\nclass Scenario:\\n    id: str\\n    title: str\\n    entry: str                     # from 함수 시그니처\\n    participants: list[str] = field(default_factory=list)\\n    messages: list[Message] = field(default_factory=list)\\n    mermaid: str = \\\"\\\"              # clang-uml 이 만든 Mermaid 본문\\n    unresolved: int = 0            # 정적으로 끊긴 호출 수 (virtual / function pointer)\\n    # 인자로 넘어간 메서드 수. 대상은 알지만 실행 시점과 스레드는 큐·신호 구현이 정한다.\\n    deferred: int = 0\"}, {\"file\": \"src/sdd/facts/callgraph.py\", \"line\": 148, \"name\": \"_deferred_targets\", \"sha256\": \"0b7c4a80ddd83f08782249229a78f9a878bb234dad15ca69fa24966428904a56\", \"text\": \"def _deferred_targets(node: cindex.Cursor, scope: SourceScope, callee_usr: str) -> list[cindex.Cursor]:\\n    \\\"\\\"\\\"호출 인자로 넘어간 메서드·함수 선언을 모은다.\\n\\n    `invokeMethod(&PipelineHandler::queueRequest, ...)` 나 `connect(&Class::slot)` 처럼 메서드를\\n    값으로 넘기면, 그 메서드는 이 호출 자리에서 실행되지 않는다. 실행 시점과 스레드는 큐나 신호\\n    구현이 정하므로 정적 추적으로는 순서를 알 수 없다. 대상 이름은 알 수 있으므로 경계로 기록한다.\\n    중첩된 호출 표현식은 바깥 순회가 따로 보기 때문에 여기서는 들어가지 않는다.\\n    \\\"\\\"\\\"\\n    found: list[cindex.Cursor] = []\\n    seen: set[str] = set()\\n\\n    def walk(n: cindex.Cursor) -> None:\\n        for child in n.get_children():\\n            if child.kind == cindex.CursorKind.CALL_EXPR:\\n                continue\\n            if child.kind == cindex.CursorKind.DECL_REF_EXPR:\\n                target = child.referenced\\n                if (target is not None and target.kind in (METHOD_KINDS | FUNCTION_KINDS)\\n                        and scope.contains(target)):\\n                    usr = target.get_usr()\\n                    if usr and usr != callee_usr and usr not in seen:\\n                        seen.add(usr)\\n                        found.append(target)\\n            walk(child)\\n\\n    walk(node)\\n    return found\"}, {\"file\": \"src/sdd/facts/callgraph.py\", \"line\": 292, \"name\": \"trace\", \"sha256\": \"8769562486ac0baeb37bf1c6d844cc8d2fd1d5c4eefb3e424e21f9e5c68a0ec8\", \"text\": \"def trace(g: Graph, entry: FuncDef, depth: int) -> tuple[list[Message], int, int]:\\n    messages: list[Message] = []\\n    unresolved = 0\\n    deferred = 0\\n\\n    def visit(fd: FuncDef, level: int, path: set[str]) -> None:\\n        nonlocal unresolved, deferred\\n        if level >= depth or len(messages) >= _MAX_MESSAGES:\\n            return\\n        for call in fd.calls:\\n            if call.kind == \\\"deferred\\\":\\n                # 대상은 알지만 이 자리에서 실행되지 않는다. 따라 들어가면 없는 순서를 만들게 된다.\\n                deferred += 1\\n                target = g.defs.get(call.callee_usr)\\n                messages.append(Message(src=fd.owner, dst=(target.owner if target else call.callee_owner),\\n                                        name=call.callee_name, loc=call.loc,\\n                                        note=\\\"예약된 호출, 실행 순서는 정적으로 확인 불가\\\"))\\n                continue\\n            if call.kind in (\\\"pointer\\\", \\\"callable\\\", \\\"unresolved\\\"):\\n                unresolved += 1\\n                label = {\\\"pointer\\\": \\\"함수 포인터, 정적 추적 불가\\\", \\\"callable\\\": \\\"콜백 객체, 정적 추적 불가\\\",\\n                         \\\"unresolved\\\": \\\"정적 추적 불가\\\"}[call.kind]\\n                messages.append(Message(src=fd.owner, dst=call.callee_owner, name=call.callee_name,\\n                                        loc=call.loc, note=label))\\n                continue\\n            targets = [call.callee_usr]\\n            note = \\\"\\\"\\n            if call.kind == \\\"virtual\\\":\\n                over = g.overrides.get(call.callee_usr, [])\\n                # 기반 구현이 있으면(순수 가상이 아니면) 그것도 후보다.\\n                base_def = g.defs.get(call.callee_usr)\\n                targets = ([call.callee_usr] if base_def else []) + over\\n                if len(targets) > 1:\\n                    note = \\\"virtual 후보\\\"\\n                elif targets:\\n                    note = \\\"virtual, 현재 구현 하나\\\"   # 지금은 하나지만 동적 디스패치라는 사실은 남긴다.\\n                else:\\n                    unresolved += 1\\n                    messages.append(Message(src=fd.owner, dst=call.callee_owner, name=call.callee_name,\\n                                            loc=call.loc, note=\\\"virtual, override 없음\\\"))\\n                    continue\\n            for t_usr in targets:\\n                t = g.defs.get(t_usr)\\n                owner = t.owner if t else call.callee_owner\\n                messages.append(Message(src=fd.owner, dst=owner, name=call.callee_name, loc=call.loc, note=note))\\n                if t and t_usr not in path:\\n                    visit(t, level + 1, path | {t_usr})\\n\\n    visit(entry, 0, {entry.usr})\\n    return messages, unresolved, deferred\"}, {\"file\": \"src/sdd/scenario_document.py\", \"line\": 62, \"name\": \"build\", \"sha256\": \"23bf4f1fe1e5c07cf6ab5972431d49b5b0fb800d8197d655d580c851bb886f96\", \"text\": \"    \\\"\\\"\\\"Focus rules select evidence, not prose assertions or execution stages.\\n\\n    Legacy flat facts do not carry branch ancestry. Draw a call *map*, not a\\n    sequence across candidates. The full extracted trace stays in this page.\\n    \\\"\\\"\\\"\"}], \"kind\": \"analysis-definition\", \"project_source_commit\": \"e117198c015057761bb0bbaa85f963c41ce412d7\", \"scenario\": {\"annotated_messages\": [{\"dst\": \"PipelineHandler\", \"loc\": {\"file\": \"src/libcamera/camera.cpp\", \"line\": 1376}, \"name\": \"queueRequest\", \"note\": \"예약된 호출, 실행 순서는 정적으로 확인 불가\", \"src\": \"Camera\"}], \"deferred\": 1, \"entry\": \"Camera::queueRequest(Request *)\", \"id\": \"queue_request\", \"messages_total\": 80, \"unresolved\": 0}, \"scope\": \"Analysis representation only; not product runtime, hardware or callback-thread evidence.\"}"
+            }
+          ],
+          "claim_quote": "Every callback always runs asynchronously on a single CameraManager thread in every device execution."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\002.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "abbreviated-private-member-receiver",
+      "expected": {
+        "qualified": "compatible",
+        "abbreviated": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "qualified",
+          "peers": [
+            "abbreviated"
+          ],
+          "status": "compatible",
+          "condition": "During reuse, regardless of the ReuseBuffers flag.",
+          "actor": "Request::reuse() operates on the request's private metadata member.",
+          "timing": "After resetting the request and clearing its controls.",
+          "scope": "Metadata clearing within Request::reuse().",
+          "reason": "The source supports the qualified call. The peer abbreviates the same member call without asserting a different receiver or object.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/reuse",
+              "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+            }
+          ],
+          "claim_quote": "Request::reuse() clears the metadata by calling _d()->metadata_.clear()."
+        },
+        {
+          "claim_id": "abbreviated",
+          "peers": [
+            "qualified"
+          ],
+          "status": "compatible",
+          "condition": "During reuse, regardless of the ReuseBuffers flag.",
+          "actor": "Request::reuse() operates on the request's private metadata member.",
+          "timing": "After resetting the request and clearing its controls.",
+          "scope": "Metadata clearing within Request::reuse().",
+          "reason": "The named function and source identify the same metadata member and clearing action; omitting the private accessor does not assert a different receiver or object.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/reuse",
+              "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+            }
+          ],
+          "claim_quote": "Request::reuse() calls metadata_.clear() to clear its metadata."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\003.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "different-member-is-not-a-receiver-abbreviation",
+      "expected": {
+        "wrong": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "wrong",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "When Request::reuse() is called, regardless of the buffer reuse flag.",
+          "actor": "Request::reuse().",
+          "timing": "During request reset, before subsequent requeueing.",
+          "scope": "Clearing request controls and metadata.",
+          "reason": "The source clears controls and metadata with separate calls on different members. The controls call does not perform the stated metadata clearing.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/reuse",
+              "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+            }
+          ],
+          "claim_quote": "Request::reuse() clears its metadata by calling controls_.clear(); this controls call performs the metadata clearing."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\004.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "buffer-is-request-completion",
+      "expected": {
+        "wrong": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "wrong",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "The last buffer completes during normal capture.",
+          "actor": "Pipeline handlers must explicitly complete the request.",
+          "timing": "After the last buffer completes, the request does not complete automatically.",
+          "scope": "The completeBuffer API contract for buffer and request completion.",
+          "reason": "The claim asserts automatic request completion, while the source expressly requires an explicit completeRequest() call.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "When the last buffer completes during normal capture, the request always completes automatically."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\005.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "explicit-request-completion",
+      "expected": {
+        "normal": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "normal",
+          "peers": [],
+          "status": "compatible",
+          "condition": "The last buffer completes during normal processing.",
+          "actor": "The pipeline handler.",
+          "timing": "After the last buffer completes, request completion requires an explicit call.",
+          "scope": "The completeBuffer and completeRequest API contract; no device behavior is established.",
+          "reason": "The source states that completing the last buffer does not automatically complete the request and requires pipeline handlers to complete requests explicitly.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "Completing the last buffer during normal processing does not automatically complete the request; the pipeline handler must explicitly call completeRequest()."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\006.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "stop-versus-normal",
+      "expected": {
+        "stopped": "compatible",
+        "normal": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "stopped",
+          "peers": [
+            "normal"
+          ],
+          "status": "compatible",
+          "condition": "Queued requests when the pipeline handler is stopped with stop().",
+          "actor": "The pipeline handler signals request completion using completeRequest().",
+          "timing": "When the pipeline handler stops.",
+          "scope": "Request completion for queued requests.",
+          "reason": "The source supports both automatic completion on stopping and the pipeline handler's obligation to signal completion. The normal-processing peer addresses a different event and condition.",
+          "sources": [
+            {
+              "source_id": "vendor-overview/benefits/completion",
+              "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+            },
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "Tracking queued requests ensures their completion when the pipeline handler is stopped with stop(); the pipeline handler must signal completion with completeRequest()."
+        },
+        {
+          "claim_id": "normal",
+          "peers": [
+            "stopped"
+          ],
+          "status": "compatible",
+          "condition": "The last buffer completes during normal processing.",
+          "actor": "The pipeline handler completes the request explicitly with completeRequest().",
+          "timing": "After the last buffer completes; buffer completion itself does not automatically complete the request.",
+          "scope": "The relationship between buffer completion and request completion.",
+          "reason": "The source explicitly distinguishes completion of the last buffer from completion of its request. The stopping peer describes a separate condition.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            },
+            {
+              "source_id": "vendor-overview/benefits/completion",
+              "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+            }
+          ],
+          "claim_quote": "The last buffer completing during normal processing does not itself complete the request."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\007.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "application-owns-request",
+      "expected": {
+        "owner": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "owner",
+          "peers": [],
+          "status": "compatible",
+          "condition": "A request is returned successfully; the function may be called in the Configured or Running state.",
+          "actor": "The caller owns the request and is responsible for deleting it.",
+          "timing": "Ownership passes when the request is returned; deletion may occur in the completion handler.",
+          "scope": "The request returned by Camera::createRequest().",
+          "reason": "The source explicitly assigns ownership and deletion responsibility to the caller.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/create",
+              "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+            }
+          ],
+          "claim_quote": "The caller owns the Request returned by Camera::createRequest() and is responsible for deleting it."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\008.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "wrong-request-owner",
+      "expected": {
+        "owner": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "owner",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "A request is successfully returned by createRequest(), called while the camera is Configured or Running.",
+          "actor": "The caller owns the returned request and is responsible for deleting it.",
+          "timing": "Ownership passes to the caller on return; deletion may occur in the completion handler.",
+          "scope": "Requests returned by Camera::createRequest().",
+          "reason": "The claim assigns ownership to the camera and prohibits application deletion, contrary to the source's caller ownership and deletion responsibility.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/create",
+              "source_quote": "\\brief Create a request object for the camera\n * \\param[in] cookie Opaque cookie for application use\n *\n * This function creates an empty request for the application to fill with\n * buffers and parameters, and queue for capture.\n *\n * The \\a cookie is stored in the request and is accessible through the\n * Request::cookie() function at any time. It is typically used by applications\n * to map the request to an external resource in the request completion\n * handler, and is completely opaque to libcamera.\n *\n * The ownership of the returned request is passed to the caller, which is\n * responsible for deleting it. The request may be deleted in the completion\n * handler, or reused after resetting its state with Request::reuse().\n *\n * \\context This function is \\threadsafe. It may only be called when the camera\n * is in the Configured or Running state as defined in \\ref camera_operation.\n *\n * \\return A pointer to the newly created request, or nullptr on error\n */\nstd::unique_ptr<Request> Camera::createRequest(uint64_t cookie)"
+            }
+          ],
+          "claim_quote": "Camera owns every Request returned by createRequest(); the application must never delete it."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\009.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "access-after-complete-request",
+      "expected": {
+        "access": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "access",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "The pipeline handler has called completeRequest() for the completed request.",
+          "actor": "Pipeline handler.",
+          "timing": "After completeRequest() returns.",
+          "scope": "Access to the request passed to completeRequest().",
+          "reason": "The source prohibits access after the function returns, while the claim permits continued access.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/complete-access",
+              "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+            }
+          ],
+          "claim_quote": "After completeRequest() returns, the pipeline handler may continue accessing that request."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\010.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "completion-call-order-versus-return-order",
+      "expected": {
+        "calls": "compatible",
+        "returns": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "calls",
+          "peers": [
+            "returns"
+          ],
+          "status": "compatible",
+          "condition": "The request is complete.",
+          "actor": "The pipeline handler calls completeRequest() on the CameraManager thread.",
+          "timing": "Calls may occur in any order once requests are complete.",
+          "scope": "Ordering of calls to completeRequest().",
+          "reason": "The source permits calls without an ordering constraint while separately guaranteeing submission-order returns to the application.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/journey/request-notice",
+              "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+            }
+          ],
+          "claim_quote": "Pipeline handlers may call completeRequest() on completed requests without an ordering constraint."
+        },
+        {
+          "claim_id": "returns",
+          "peers": [
+            "calls"
+          ],
+          "status": "compatible",
+          "condition": "Requests are returned through the completeRequest() API.",
+          "actor": "The completion API returns requests to the application.",
+          "timing": "Requests are returned in submission order.",
+          "scope": "The API guarantee for request returns to the application.",
+          "reason": "The source explicitly guarantees submission-order returns, independently of the order in which the pipeline handler calls completeRequest().",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/journey/request-notice",
+              "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+            }
+          ],
+          "claim_quote": "Requests are returned to the application in their submission order."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\011.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "wrong-return-order",
+      "expected": {
+        "returns": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "returns",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "Completed requests may be reported to the function without an ordering constraint.",
+          "actor": "The pipeline handler signals completion; the camera returns requests to the application.",
+          "timing": "The function may be called on complete requests in any order, but requests are returned in submission order.",
+          "scope": "Request completion and return to the application.",
+          "reason": "The claim says return order always follows hardware processing completion regardless of submission order, while the source guarantees submission order.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/journey/request-notice",
+              "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+            }
+          ],
+          "claim_quote": "Requests are always returned to the application in the order their hardware processing finishes, regardless of submission order."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\012.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "unsupported-stop-deadline",
+      "expected": {
+        "deadline": "insufficient-evidence"
+      },
+      "findings": [
+        {
+          "claim_id": "deadline",
+          "peers": [],
+          "status": "insufficient-evidence",
+          "condition": "Stopping a supported camera.",
+          "actor": "The pipeline handler invokes stopDevice() for the camera.",
+          "timing": "The source describes immediate stopping and request completion but specifies no 10-millisecond bound for the function to return.",
+          "scope": "The claim covers every supported camera and the duration of stopDevice().",
+          "reason": "The source contract does not establish a numerical execution deadline or device performance across all supported cameras.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/shutdown/stop",
+              "source_quote": "void PipelineHandler::stop(Camera *camera)\n{\n\t/*\n\t * Take all waiting requests so that they are not requeued in response\n\t * to completeRequest() being called inside stopDevice(). Cancel them\n\t * after the device to keep them in order.\n\t */\n\tCamera::Private *data = camera->_d();\n\tstd::queue<Request *> waitingRequests;\n\twaitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests complete. */\n\tstopDevice(camera);\n\n\t/* Cancel and signal as complete all waiting requests. */\n\twhile (!waitingRequests.empty()) {\n\t\tRequest *request = waitingRequests.front();\n\t\twaitingRequests.pop();\n\n\t\t/*\n\t\t * Cancel all requests by marking them as cancelled and calling\n\t\t * doQueueRequest() instead of cancelRequest(). This ensures\n\t\t * that the requests get a sequence number and are temporarily\n\t\t * added to queuedRequests_ so they can be properly completed in\n\t\t * completeRequest().\n\t\t */\n\t\trequest->_d()->cancel();\n\t\tdoQueueRequest(request);\n\t}\n\n\t/* Make sure no requests are pending. */\n\tASSERT(data->queuedRequests_.empty());\n\tASSERT(data->waitingRequests_.empty());\n\n\tdata->requestSequence_ = 0;\n}"
+            },
+            {
+              "source_id": "vendor-integration/shutdown/device",
+              "source_quote": "\\fn PipelineHandler::stopDevice()\n * \\brief Stop capturing from all running streams\n * \\param[in] camera The camera to stop\n *\n * This function stops capturing and processing requests immediately. All\n * pending requests are cancelled and complete immediately in an error state.\n */"
+            }
+          ],
+          "claim_quote": "Every supported camera completes stopDevice() within 10 milliseconds."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\013.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "synchronization-responsibility",
+      "expected": {
+        "synchronization": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "synchronization",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "When synchronization is necessary.",
+          "actor": "The caller is responsible for synchronization; the Camera class generally does not provide it between these functions.",
+          "timing": "When functions affecting camera state require synchronization with each other.",
+          "scope": "Functions affecting the camera state as defined by the source contract.",
+          "reason": "The claim asserts universal internal synchronization and denies caller responsibility, contrary to the source.",
+          "sources": [
+            {
+              "source_id": "overview/boundary/synchronization",
+              "source_quote": "Functions that affect the camera state as defined below are generally not\n * synchronized with each other by the Camera class. The caller is responsible\n * for ensuring their synchronization if necessary.\n *\n * \\subsection Camera States"
+            }
+          ],
+          "claim_quote": "Camera internally synchronizes all functions that change camera state, so the caller never needs to synchronize them."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\014.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "weakened-english-obligation",
+      "expected": {
+        "ko": "compatible",
+        "en": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "ko",
+          "peers": [
+            "en"
+          ],
+          "status": "compatible",
+          "condition": "When a pipeline handler completes a request.",
+          "actor": "Pipeline handler.",
+          "timing": "Explicit request completion, including after the last buffer completes.",
+          "scope": "Project-source request completion contract.",
+          "reason": "The source requires explicit request completion with completeRequest(); the English peer incorrectly makes that call optional.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "파이프라인 핸들러는 요청을 완료하려면 completeRequest()를 명시적으로 호출해야 합니다."
+        },
+        {
+          "claim_id": "en",
+          "peers": [
+            "ko"
+          ],
+          "status": "contradiction",
+          "condition": "When a pipeline handler completes a request.",
+          "actor": "Pipeline handler.",
+          "timing": "Explicit request completion, including after the last buffer completes.",
+          "scope": "Project-source request completion contract.",
+          "reason": "The source requires completeRequest() explicitly, whereas this claim says the call is optional and not required. The Korean peer preserves the obligation.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "The pipeline handler may optionally call completeRequest() to complete a request; this call is not required."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\015.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "omitted-completion-condition",
+      "expected": {
+        "unclear": "ambiguous"
+      },
+      "findings": [
+        {
+          "claim_id": "unclear",
+          "peers": [],
+          "status": "ambiguous",
+          "condition": "The claim omits whether the pipeline is stopping or a buffer has completed during normal processing.",
+          "actor": "The pipeline handler signals request completion.",
+          "timing": "Automatic completion is described when the pipeline handler stops; completion of the last buffer does not automatically complete the request.",
+          "scope": "Request completion, distinct from buffer completion.",
+          "reason": "The unqualified claim can describe stopping behavior, but it does not preserve the condition that distinguishes it from explicit request completion after buffer processing.",
+          "sources": [
+            {
+              "source_id": "vendor-overview/benefits/completion",
+              "source_quote": "Keeping track of queued requests ensures automatic completion of all requests\n * when the pipeline handler is stopped with stop(). Request completion shall be\n * signalled by the pipeline handler using the completeRequest() function."
+            },
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "Requests are completed automatically."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\016.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "incorrect-original-correct-english",
+      "expected": {
+        "ko": "contradiction",
+        "en": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "ko",
+          "peers": [
+            "en"
+          ],
+          "status": "contradiction",
+          "condition": "Normal buffer processing when the last buffer completes.",
+          "actor": "The pipeline handler must explicitly complete the request.",
+          "timing": "After the last buffer completes.",
+          "scope": "Request completion following buffer completion.",
+          "reason": "The claim asserts automatic request completion without another call, contrary to the source and the English claim.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "정상 버퍼 처리에서 마지막 버퍼가 완료되면 추가 호출 없이 요청이 자동으로 완료됩니다."
+        },
+        {
+          "claim_id": "en",
+          "peers": [
+            "ko"
+          ],
+          "status": "compatible",
+          "condition": "Normal buffer processing when the last buffer completes.",
+          "actor": "The pipeline handler.",
+          "timing": "After the last buffer completes.",
+          "scope": "Request completion following buffer completion.",
+          "reason": "The source supports both the lack of automatic request completion and the obligation to call completeRequest() explicitly. The Korean claim conflicts with this contract.",
+          "sources": [
+            {
+              "source_id": "vendor-integration/request/buffer",
+              "source_quote": "\\brief Complete a buffer for a request\n * \\param[in] request The request the buffer belongs to\n * \\param[in] buffer The buffer that has completed\n *\n * This function shall be called by pipeline handlers to signal completion of\n * the \\a buffer part of the \\a request. It notifies applications of buffer\n * completion and updates the request's internal buffer tracking. The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest().\n *\n * \\context This function shall be called from the CameraManager thread.\n *\n * \\return True if all buffers contained in the request have completed, false\n * otherwise\n */\nbool PipelineHandler::completeBuffer"
+            }
+          ],
+          "claim_quote": "Normal completion of the last buffer does not automatically complete the request; the pipeline handler must explicitly call completeRequest()."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\017.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "actual-bilingual-private-member-abbreviation",
+      "expected": {
+        "ko": "compatible",
+        "en": "compatible"
+      },
+      "findings": [
+        {
+          "claim_id": "ko",
+          "peers": [
+            "en"
+          ],
+          "status": "compatible",
+          "condition": "Request::ReuseBuffers is set for buffer reuse.",
+          "actor": "Request::reuse clears the request's controls and metadata; the application selects the reuse flag.",
+          "timing": "During request reuse, before requeueing.",
+          "scope": "Request reset, previously added buffers, and associated fences.",
+          "reason": "Both language claims agree with the source. The shortened metadata member call identifies the same clear action and object despite omitting the private accessor.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/reuse",
+              "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+            },
+            {
+              "source_id": "request-lifecycle/resources/reuse-flags",
+              "source_quote": "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+            }
+          ],
+          "claim_quote": "Request::reuse는 controls_.clear()를 호출해 controls_를 비웁니다. Request::reuse는 metadata_.clear()를 호출해 metadata_를 비웁니다. Request::ReuseBuffers 플래그는 addBuffer()로 이전에 추가한 버퍼를 재사용하도록 유지합니다. 버퍼에 연결된 펜스는 재사용하지 않습니다."
+        },
+        {
+          "claim_id": "en",
+          "peers": [
+            "ko"
+          ],
+          "status": "compatible",
+          "condition": "Request::ReuseBuffers is set for buffer reuse.",
+          "actor": "Request::reuse clears the request's controls and metadata; the application selects the reuse flag.",
+          "timing": "During request reuse, before requeueing.",
+          "scope": "Request reset, previously added buffers, and associated fences.",
+          "reason": "Both language claims agree with the source. The shortened metadata member call identifies the same clear action and object despite omitting the private accessor.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/reuse",
+              "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+            },
+            {
+              "source_id": "request-lifecycle/resources/reuse-flags",
+              "source_quote": "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+            }
+          ],
+          "claim_quote": "Request::reuse calls controls_.clear() to clear controls_. Request::reuse calls metadata_.clear() to clear metadata_. The Request::ReuseBuffers flag keeps buffers previously added with addBuffer() available for reuse. Fences attached to the buffers are not reused."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\018.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "explicit-other-request-receiver",
+      "expected": {
+        "wrong": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "wrong",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "On invocation of Request::reuse(), regardless of the ReuseBuffers flag.",
+          "actor": "The invoked Request object.",
+          "timing": "During reuse(), before the call returns.",
+          "scope": "The request's own metadata.",
+          "reason": "The source clears metadata through the invoked object's private accessor; the claim explicitly identifies a different Request object.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/reuse",
+              "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+            }
+          ],
+          "claim_quote": "Request::reuse() clears the metadata_ of another Request object instead of the metadata belonging to the Request on which reuse() was invoked."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\019.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "different-member-action",
+      "expected": {
+        "wrong": "contradiction"
+      },
+      "findings": [
+        {
+          "claim_id": "wrong",
+          "peers": [],
+          "status": "contradiction",
+          "condition": "Request reuse, regardless of the ReuseBuffers flag.",
+          "actor": "Request::reuse()",
+          "timing": "During the reuse call.",
+          "scope": "Action on the request's metadata collection.",
+          "reason": "The source calls clear() on the metadata collection; the claim explicitly says it calls reset() instead.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/reuse",
+              "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+            }
+          ],
+          "claim_quote": "Request::reuse() calls metadata_.reset() instead of metadata_.clear() to reset the metadata collection."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\020.receipt.json",
+      "correct": true
+    },
+    {
+      "id": "unestablished-abbreviated-receiver",
+      "expected": {
+        "unknown": "insufficient-evidence"
+      },
+      "findings": [
+        {
+          "claim_id": "unknown",
+          "peers": [],
+          "status": "insufficient-evidence",
+          "condition": "The claim concerns an undocumented external helper with no established connection to Request.",
+          "actor": "The claimed helper is not identified in the source.",
+          "timing": "The helper's invocation timing is not established.",
+          "scope": "An independent collection attributed to the helper.",
+          "reason": "The source establishes a metadata clear within Request::reuse, but does not establish whether the claimed external helper or its collection exists.",
+          "sources": [
+            {
+              "source_id": "request-lifecycle/resources/reuse",
+              "source_quote": "\\brief Reset the request for reuse\n * \\param[in] flags Indicate whether or not to reuse the buffers\n *\n * Reset the status and controls associated with the request, to allow it to\n * be reused and requeued without destruction. This function shall be called\n * prior to queueing the request to the camera, in lieu of constructing a new\n * request. The application can reuse the buffers that were previously added\n * to the request via addBuffer() by setting \\a flags to ReuseBuffers.\n */\nvoid Request::reuse(ReuseFlag flags)\n{\n\tLIBCAMERA_TRACEPOINT(request_reuse, this);\n\n\t_d()->reset();\n\n\tif (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;\n\n\tcontrols_.clear();\n\t_d()->metadata_.clear();\n}\n\n/**\n * \\fn Request::controls()"
+            }
+          ],
+          "claim_quote": "An undocumented external helper calls metadata_.clear() on its own collection, whose receiver and connection to Request are not established."
+        }
+      ],
+      "receipt": "C:\\Users\\baboe\\.codex\\worktrees\\704a\\camera-hal-sdd-generator\\build\\goal\\consistency-cases-terra-e117-v7\\build\\prompts\\calls\\f611df9bcedc4975a5ba2a9aa7898bc1\\021.receipt.json",
+      "correct": true
+    }
+  ],
+  "human_review": "pending",
+  "scope": "Synthetic evaluation statements, not published manuscript content; actual selected CLI calls.",
+  "metrics": {
+    "cases": 21,
+    "claims": 27,
+    "correct": 27,
+    "contradictions": 10,
+    "detected": 10,
+    "missed": 0,
+    "false_positives": 0,
+    "compatible": 13,
+    "undetermined": 4
+  },
+  "profile_verification": {
+    "completed_receipts": 21,
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "runner": "codex",
+    "receipts": [
+      {
+        "sha256": "0be3a9373b82393e226ae034da003cc57ee1f37d18ab23b3b116e3601ed0479a",
+        "tag": "consistency_case_extracted-analysis-scope"
+      },
+      {
+        "sha256": "1a1468a0f17949b05664df760b7ce713f06e63219ac073fbe487168c036a80ec",
+        "tag": "consistency_case_analysis-is-not-runtime-evidence"
+      },
+      {
+        "sha256": "ba0cc12a261025d94e37625fab3466eaa56e5456e35eb20036d1f588dc2d3339",
+        "tag": "consistency_case_abbreviated-private-member-receiver"
+      },
+      {
+        "sha256": "4f5b404f9bb135c7fdb24f734e566a77369f6544d5226405354f84917945e1f3",
+        "tag": "consistency_case_different-member-is-not-a-receiver-abbreviation"
+      },
+      {
+        "sha256": "2ee3fb25934e8e8e3e8301511922f5b580a0902e66517b3462981a5d47a39270",
+        "tag": "consistency_case_buffer-is-request-completion"
+      },
+      {
+        "sha256": "f6e9b068b9ebc69cb65998a7f032da59fb5ecec139573e566f66b32cbbeef04f",
+        "tag": "consistency_case_explicit-request-completion"
+      },
+      {
+        "sha256": "3d1ea5efaf0b134e6a0ed3d8386eb7b4aab1b66758868b481139f27e7dd66144",
+        "tag": "consistency_case_stop-versus-normal"
+      },
+      {
+        "sha256": "db3ea356980677908d6b5079bcc8e804e8242bafc49623ffe985815d107804b3",
+        "tag": "consistency_case_application-owns-request"
+      },
+      {
+        "sha256": "8b4f09cac13946df918b2802cadbb3d1b6fa6b42e47c31027232debdd0701a39",
+        "tag": "consistency_case_wrong-request-owner"
+      },
+      {
+        "sha256": "f989f96a74ee029d787939627fbb5a6d2cdc9aeaa984fa0d295f0c00fd469fcb",
+        "tag": "consistency_case_access-after-complete-request"
+      },
+      {
+        "sha256": "588a1d3ee32489dd377364be09699ca7ac4a1b39189d66b641f2bc68beb42774",
+        "tag": "consistency_case_completion-call-order-versus-return-order"
+      },
+      {
+        "sha256": "4c98e4a339e796b75823f433c2e0a2d322e44cbf2ebc1c6f89fdc6144c8b939c",
+        "tag": "consistency_case_wrong-return-order"
+      },
+      {
+        "sha256": "62c4f44048abe855021a26c52912965c5853bffe753d571f4e6fe3b99135f651",
+        "tag": "consistency_case_unsupported-stop-deadline"
+      },
+      {
+        "sha256": "2a665cc36d80b51cdb7c154f75fa980d1d3cc770809393b4fcc4abb01ee12e31",
+        "tag": "consistency_case_synchronization-responsibility"
+      },
+      {
+        "sha256": "af4f8de7e0c0edd06399ad240205803f9682b444e1c9ba0f236e45ce0b13a7cb",
+        "tag": "consistency_case_weakened-english-obligation"
+      },
+      {
+        "sha256": "65e42250a2b3fea1b684f5cf28a9fff69d2ee2698472c7e889571f53ae029951",
+        "tag": "consistency_case_omitted-completion-condition"
+      },
+      {
+        "sha256": "12369a825154b64be4e20ce380a929ecf8593f1859762bc423ad7c26a8154964",
+        "tag": "consistency_case_incorrect-original-correct-english"
+      },
+      {
+        "sha256": "5c2e2fcf0533e237c095ecfc7319cacbc41e0e708f3daf06cef7ed388cff6bc6",
+        "tag": "consistency_case_actual-bilingual-private-member-abbreviation"
+      },
+      {
+        "sha256": "a1b647151504a7422a10d9eeadeb53550e45d704a1feea7f6f94fd722d5c26ad",
+        "tag": "consistency_case_explicit-other-request-receiver"
+      },
+      {
+        "sha256": "34d70b77440bd0fd51e5a22ce227e13d4a0b4134e9654c29bb0bb23757d8cbfa",
+        "tag": "consistency_case_different-member-action"
+      },
+      {
+        "sha256": "f2ce80f37896771f52be2ca0fd84d48b7cad26793cdcfd5c325ccc8ea58c633c",
+        "tag": "consistency_case_unestablished-abbreviated-receiver"
+      }
+    ],
+    "canonical_backend_model_attestation": "Not independently exposed by Codex JSONL; explicit selection and actual arguments verified."
+  }
+}
