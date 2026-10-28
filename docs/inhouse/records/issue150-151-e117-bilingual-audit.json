@@ -2182,7 +2182,7 @@
     "pages_run": 40615953548
   },
   "pending": [
-    "PR158 stable request ordering, new current-policy full CLI audit and real post-merge reuse",
+    "Final same-input site manifest/catalog/report/manuscripts/run.json alignment and publication",
     "Final catalog/source-page hashes/report/manuscripts/manifest/run.json alignment",
     "Public SDD PR and Pages/live60pages/old32anchors/search/source links/browser interactions",
     "Issue150 growth justification and required human review; automated review is not human approval"
@@ -2190,5 +2190,249 @@
   "documentation_links": {
     "passed": 377,
     "test": "tests/test_docs_links.py"
+  },
+  "recorded_completed_native_audit": {
+    "checked_at_utc": "2026-10-28T22:42:10.131639+00:00",
+    "scope": "Exact native proof of recorded completed report53282e8b; not current post-merge/publication gate",
+    "report_sha256": "53282e8bc2430f873a0faf34e0055c570f31e0a5c9052977e6c2489dcbb558a4",
+    "actual_runtime_policy": "89c9b2af7aff91f4b6e06ba1bd149eb7f38dbf271e95fb71420b8120036fc684",
+    "total_findings": 386,
+    "human_review": "pending",
+    "new_llm_calls": 0,
+    "batches_verified": 87,
+    "receipts_verified": 87
+  },
+  "current_merged_policy_audit": {
+    "checked_at_utc": "2026-10-28T22:43:45.358047+00:00",
+    "scope": "frozen final candidate, not public deployment/human approval",
+    "merged_commit": "0f477b0b1f8c46215a4a618960b7a856b3316957",
+    "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+    "policy_sha256": "19eb352e6730b1eab46255a4a4b4384e9c097ff75ef601efbaacbf39d7718b2c",
+    "contracts": [
+      {
+        "id": "request-completion",
+        "claims": 91,
+        "batches": 19,
+        "statuses": {
+          "compatible": 90,
+          "insufficient-evidence": 1
+        },
+        "source_domains": {
+          "project-source": 27
+        }
+      },
+      {
+        "id": "stopping-cancellation",
+        "claims": 61,
+        "batches": 17,
+        "statuses": {
+          "compatible": 61
+        },
+        "source_domains": {
+          "project-source": 24
+        }
+      },
+      {
+        "id": "ownership-reuse",
+        "claims": 63,
+        "batches": 11,
+        "statuses": {
+          "compatible": 63
+        },
+        "source_domains": {
+          "project-source": 16
+        }
+      },
+      {
+        "id": "callbacks-synchronization",
+        "claims": 84,
+        "batches": 26,
+        "statuses": {
+          "compatible": 84
+        },
+        "source_domains": {
+          "project-source": 35
+        }
+      },
+      {
+        "id": "scenario-analysis",
+        "claims": 87,
+        "batches": 15,
+        "statuses": {
+          "compatible": 87
+        },
+        "source_domains": {
+          "project-source": 35,
+          "analysis-definition": 1
+        }
+      }
+    ],
+    "new_llm_calls": 0,
+    "ledger": {
+      "original_sha256": "20138dc3c37721047cd2d721566fda81b2f7c0eb7082f27350c33b66fcc29785",
+      "recorded_final_sha256": "53282e8bc2430f873a0faf34e0055c570f31e0a5c9052977e6c2489dcbb558a4",
+      "current_final_sha256": "f59687b142459eb1af2770624e4ba554b95cdb1947a9094fdb4639ebb13acfaa",
+      "original_cases": 90,
+      "exact_coverage": true,
+      "all90_current_compatible": true,
+      "triage": {
+        "direct-source-supply-gap": 73,
+        "actual-omitted-negated-assertion": 2,
+        "needs-source-and-scope-review": 15
+      },
+      "lineage_summary": {
+        "same-id": 120,
+        "preserved-origin": 6,
+        "explicit question merge verified by question_lineage source union and actor requirement": 2
+      }
+    },
+    "old_callback_claim_ids_preserved": 87,
+    "current_merged_runtime_gate": "passed with unmodified merged checks and preserved actual runtime bytes",
+    "reported_summary": {
+      "status": "passed",
+      "fresh_batches": 0,
+      "reused_batches": 88,
+      "human_review": "pending",
+      "assessment": "automatic model review; not human approval",
+      "comparison_scope": "Every target is compared with supplied sources and all primary claims. Secondary pairs are compared when in the same batch; this is not an exhaustive all-pairs proof."
+    },
+    "unresolved": [
+      {
+        "contract": "request-completion",
+        "claim_id": "scenarios/queue_request.md/paragraph/28",
+        "peers": [
+          "request-diagnosis.md/diagnosis/7",
+          "request-lifecycle.md/journey/10",
+          "request-lifecycle.md/stopping/6"
+        ],
+        "status": "insufficient-evidence",
+        "condition": "The claim identifies a subsequent documentation step after queueing.",
+        "actor": "The linked step names PipelineHandler::completeRequest.",
+        "timing": "The link presents completion notification as a next step.",
+        "scope": "The supplied sources establish the function's contract but do not establish the linked document's existence or contents.",
+        "reason": "The named function is associated with request completion, consistent with the peers, but the supplied excerpts do not verify the link target or its presentation as the next documentation step.",
+        "sources": [
+          {
+            "source_id": "request-lifecycle/journey/request-notice",
+            "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+          }
+        ],
+        "claim_quote": "다음 단계: [요청 완료 통지 (PipelineHandler::completeRequest)](complete_request.md)\n"
+      }
+    ],
+    "remaining_navigation": {
+      "from": "scenarios/queue_request.md",
+      "to": "scenarios/complete_request.md",
+      "rendered_href": "complete_request.html",
+      "target_entry": "PipelineHandler::completeRequest(Request *)",
+      "local_target_exists": true,
+      "semantic_verdict_unchanged": true,
+      "final_site_and_public_url_check": "pending"
+    },
+    "owner_input_changes": [],
+    "batches_verified": 88,
+    "receipts_verified": 88,
+    "receipt_hashes": {
+      "8050898299034f24a07ecd56e258f842/001.receipt.json": "b28d27e2718f0a8e3de259a945e024be3f70f60bd1fd491c69cc3f332aa57797",
+      "8050898299034f24a07ecd56e258f842/002.receipt.json": "58d540eea5a1cc2f5a0326db9a6169bb005f3eb0fa0dd6140aea78ae05a876cd",
+      "8050898299034f24a07ecd56e258f842/003.receipt.json": "a7799a665d24e4d6972af69795ffce1e00dc446cbdcb30d93e1ac7c4f7da046c",
+      "8050898299034f24a07ecd56e258f842/004.receipt.json": "7a5fab959dd1c6d66c408b846ebc43780de88c80367bf5ff0c7a555c35ccd2e0",
+      "8050898299034f24a07ecd56e258f842/005.receipt.json": "ca0d5a2d9319ffce334bc5384fd5012a26fc08c48594f6f43636986ee3bcc832",
+      "8050898299034f24a07ecd56e258f842/006.receipt.json": "6875dd437065c83ddb4a62ce64f2a21fa58f57740aab053d8e8b0c9edef64655",
+      "8050898299034f24a07ecd56e258f842/007.receipt.json": "a8c66377924421e6bfd9fb93d630af79dbf32b317fc473800d6176784451783f",
+      "8050898299034f24a07ecd56e258f842/008.receipt.json": "6332658ccfa31130ec0165a10dc7da89a2948c860b50dd21559f8891295f5a9c",
+      "8050898299034f24a07ecd56e258f842/009.receipt.json": "e401f18a418bf911b890fd201ab7b5a710085b1f24894af44da14b3b49f007e0",
+      "8050898299034f24a07ecd56e258f842/010.receipt.json": "c25799c47ea22dbe7f1d0203f68bae050b5deefdd4db13c172ebe00f2bcef8ed",
+      "8050898299034f24a07ecd56e258f842/011.receipt.json": "93362e4762bea126e13d43021325a7d5fab63197c3a4aac99376d7765b7ddf57",
+      "8050898299034f24a07ecd56e258f842/012.receipt.json": "b96dd6fda5aa477e8203b5aa50efdfbe1a977f5c8c39a32fc916999146c2434a",
+      "8050898299034f24a07ecd56e258f842/013.receipt.json": "c04bc3db38d398320d9f2f5abd12640b2a8eed9628280243862319f944b8638b",
+      "8050898299034f24a07ecd56e258f842/014.receipt.json": "aa07496fbe261a8e936d890737ba3b52edf7a10793f2846d1d9a12844bcf1575",
+      "8050898299034f24a07ecd56e258f842/015.receipt.json": "e39b05cc56db207997dd9a135f50b2e4452e1b8ab9d0991d2a5d42dac5387bc9",
+      "8050898299034f24a07ecd56e258f842/016.receipt.json": "05737b91187df4bb8300a329f84658b686249555d828065fdca135d0a35bcf45",
+      "8050898299034f24a07ecd56e258f842/017.receipt.json": "96e604e8e54f46a2f54143c0b0daaaacc161f343fe08ef91979f85a16138f211",
+      "8050898299034f24a07ecd56e258f842/018.receipt.json": "386ea3f1f75b5e1f3c3a54be295964dafe8f9c217a523dce129029c3489ff394",
+      "8050898299034f24a07ecd56e258f842/019.receipt.json": "b367b4c96ef481685635944fc35a0ae76cbbf2f1578196ca137b272fb7b56133",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/001.receipt.json": "0d1af5e7a3b521fb50ff8c74f12d179a7ea827e72aecb52197a122caec32241a",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/002.receipt.json": "e597a61fe783a61455adf8119fb87d9f631b4daa6778057145a591a2d3b27ec0",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/003.receipt.json": "5a1173f828a41a4e47b8e187bfd1ae4e64c39da89e551c943a5d6ff69e6b6652",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/004.receipt.json": "57996dee6096ed4938c24069c3da07c8156c66788cb017123758872f7b022a52",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/005.receipt.json": "2017fabb8ea353b2f8dc8c01cec483c74a0358d0d27fe3cad2357646cfd6cc74",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/006.receipt.json": "1b7a122b552639e1715ce01e976f40419293328ae32bbc3793dd6c15282a8dae",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/007.receipt.json": "69021588642b0795f7ed5fc9ffeb0dc9f845d3c53512264e814bd7ea9e799733",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/008.receipt.json": "b1626cd67f219b2eaa533f7f386771c00111643ab007cdb40508f21b3a9a0396",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/009.receipt.json": "542ce6ec893aa99337e7649d8905575c3696f10d37641ae0eda9c1b006c6991c",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/010.receipt.json": "8befb7103a6aeee3f85252a9831638d7fdcbd7def68abd5a6bb5bea106389cd3",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/011.receipt.json": "fa67d98de24a4f7dc1d3f2bc4bd6396bd97fcf77e71fee9c66a83ff5e6d9decf",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/012.receipt.json": "b037ab8712a8eb9e469e6a94cf3b2303760ed29e983dcb02f365af2c623c784c",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/013.receipt.json": "aeefbdbba8914b2f229b9114afdc5ccc28014fc6a112ea4ea1b7d84acbefa079",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/014.receipt.json": "684a762f91e3b2b172562da3780eede67b4e1df9c1f8f0cbb3018f5c5b3ac370",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/015.receipt.json": "f0a2cdd8eacf4abc0f055505b9d6e79b28a1a00e57748f211756cfb6539b855e",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/016.receipt.json": "f267ad8a2d70bc13b5c19a76902ba3d66f9e9d5d476dd568e8ada27686e45535",
+      "9eaff2fdbaad4bf8be1dd86d1262b497/017.receipt.json": "8b1aaaae9bda6423d04d988a7d5d2a5879da02378f7e4dae1400b5b18b406e8f",
+      "1605a0b50585495890d38192d919f175/001.receipt.json": "a691943c30bee89125889ca319989fd966cb370fa8877df85a10b8cd3dddcddb",
+      "1605a0b50585495890d38192d919f175/002.receipt.json": "cedb9ec77666418afbe1ebfab85b8d358b735768c8eb3c48f4377e17e79b97bc",
+      "1605a0b50585495890d38192d919f175/003.receipt.json": "03bdd80702d2b398a9710a668b15b3805b067507bd93ab2cedb155ddf1827441",
+      "1605a0b50585495890d38192d919f175/004.receipt.json": "bc56d792fb7988d2b44eea786274784c502dcab6dfc1c461fb70d04f10f27c80",
+      "1605a0b50585495890d38192d919f175/005.receipt.json": "cff5950e23da00863ba14628fd7743867d92e8db1ae30386bb657592635caf51",
+      "1605a0b50585495890d38192d919f175/006.receipt.json": "bad9387a1313eae1a3e652c7f522b9185652a7d322044512f07ad8d356f86e1c",
+      "1605a0b50585495890d38192d919f175/007.receipt.json": "31d79de851aae125124bbda0c85c9c6ee29c2f5a8ac83c0b453ac3fe12fb7dca",
+      "1605a0b50585495890d38192d919f175/008.receipt.json": "8e5479b40022a959ec2b818b53a424d2788275fc67d4de75d7a4fcaa25994481",
+      "1605a0b50585495890d38192d919f175/009.receipt.json": "3e6c361af29f2e30423a24cdfac1b64e6b82d778e3674118e85b48326ca2f070",
+      "1605a0b50585495890d38192d919f175/010.receipt.json": "247c53fe62be16b66f1de12254ef01bf43f77645316190d358c5ce3851cc21ce",
+      "1605a0b50585495890d38192d919f175/011.receipt.json": "3307373f74066dce7a4a46a95bd890802cf90448cc967fdb872f5dd03ab035dc",
+      "8d6636b2687b4859b20ea9bf937843e4/001.receipt.json": "99a6d521ec9e69ebae6b62d8181abe2b923d3a80e48cdff5beea5fe0b04736da",
+      "8d6636b2687b4859b20ea9bf937843e4/002.receipt.json": "0ac5b3c57872cdfe4826b3d96c00ee6fa4dedaf9ec05a27653be2e42d9d9cfab",
+      "8d6636b2687b4859b20ea9bf937843e4/003.receipt.json": "01f6b603e9ccd0362f364027f3633ea1b2ef3c6eae716fda1562c61599806a4a",
+      "8d6636b2687b4859b20ea9bf937843e4/004.receipt.json": "43095c98ebdb7f69378747ee05c6797f3b762c7f8b9264c67395e47fbfd47cc6",
+      "8d6636b2687b4859b20ea9bf937843e4/005.receipt.json": "fdbb2e0867bd25d71c09de67c1e17e7cf244a84a6eda96b9892a6227ab868dd6",
+      "8d6636b2687b4859b20ea9bf937843e4/006.receipt.json": "2b0b79bb90e088ad713ec5e736b0d337af1be032cdffe75e72923ff9dcca0c37",
+      "8d6636b2687b4859b20ea9bf937843e4/007.receipt.json": "810820490566e0eacc14abccd93a305c2b1292ce242324857509d844e0ca13dc",
+      "8d6636b2687b4859b20ea9bf937843e4/008.receipt.json": "28224f6f229adc49f48e5b7b2440f9cc4341030038680220b5f049dce77597c1",
+      "8d6636b2687b4859b20ea9bf937843e4/009.receipt.json": "aae6252c9b42c0fdc7508266cb517cc69aa64d506c9ef4e98c23ebc2b60a9205",
+      "8d6636b2687b4859b20ea9bf937843e4/010.receipt.json": "c6497965c632dacca56ebcb7054940c8603c160faa3e626b6af6d298b258a207",
+      "8d6636b2687b4859b20ea9bf937843e4/011.receipt.json": "38236a8634fd4823c810046773ab58aff1dbba3779710a73cb7288e7bb5bae9b",
+      "8d6636b2687b4859b20ea9bf937843e4/012.receipt.json": "77e157bf933c4deb9fff175e370634a757020afbe80a3f63d6bfc5f2bf4807ca",
+      "8d6636b2687b4859b20ea9bf937843e4/013.receipt.json": "4796741bb42c7b1f1693d4b9570f5224e59738d1fde6bdd11acf0b2b582f7e5d",
+      "8d6636b2687b4859b20ea9bf937843e4/014.receipt.json": "d5e3b0a09399ddd7f83487caf4f93a6140b442bc4ffad0bcdde36852fad69a06",
+      "8d6636b2687b4859b20ea9bf937843e4/015.receipt.json": "c7a2c74ed5b82cfd5c54e80dec32a1bddaeec5c4222213366da06ca993fcbc09",
+      "8d6636b2687b4859b20ea9bf937843e4/016.receipt.json": "d5c8f9930b3dacc3d2bbfe0de6603acfd70f0fb0df80b0127037f80d1b6db3bc",
+      "8d6636b2687b4859b20ea9bf937843e4/017.receipt.json": "bcd8aa511b3963da9c6f2caad2912e508defdf66a86036025034ced0e96b9a31",
+      "8d6636b2687b4859b20ea9bf937843e4/018.receipt.json": "cd3e98f7d89032ba5b2f04b01164b5478246088aca3f067c4eb2e525cd20a7cb",
+      "8d6636b2687b4859b20ea9bf937843e4/019.receipt.json": "c98a43a1b09e1defe6ccf50fb91d4c3a4aa5f5a1a71ccaf54c1ae956ce18c4c3",
+      "8d6636b2687b4859b20ea9bf937843e4/020.receipt.json": "f43af52a1698d116bdddf567a0ca458335e385d7f341ee6c7021713fee816070",
+      "8d6636b2687b4859b20ea9bf937843e4/021.receipt.json": "9fcd6a0227949df281d80bfa34804c195bc401682ec5e15729e9991a83abe6db",
+      "8d6636b2687b4859b20ea9bf937843e4/022.receipt.json": "3299d61d6636f2d0ff1188cee3f695e1cb7a22967b1e4803cccec4a61cb7800e",
+      "8d6636b2687b4859b20ea9bf937843e4/023.receipt.json": "1558f8cfd246d829dbef2e7185f7e5dd2635da7807d4d5a252d24c74621b6594",
+      "8d6636b2687b4859b20ea9bf937843e4/024.receipt.json": "42e24a4b6fdd0d4760bec7f1dbe1dae90acdef91fa62c233ba92537610e2ce50",
+      "8d6636b2687b4859b20ea9bf937843e4/025.receipt.json": "69314b72edd5919e38137b00adc4ac79a66c91ba2c964a679bfde281b1a61236",
+      "8d6636b2687b4859b20ea9bf937843e4/026.receipt.json": "7c040cdd4993926eb72238812dead3701d464bb20f7f31c9ad0145a9c1641b38",
+      "be6c764da5084c0cafe356388f10b73c/001.receipt.json": "62d06f8f9a491ad0939d578b430be1edcfda3b31f8a8d2d41e31a23872b38194",
+      "be6c764da5084c0cafe356388f10b73c/002.receipt.json": "522b0265d3dfc4959664b6dc5c18543064a16ae4eca0aaaa35980be5dde3dfb7",
+      "be6c764da5084c0cafe356388f10b73c/003.receipt.json": "d3f6bc0ab0cf41b0417ee05c750ef5ccf154d0394695017e93834e5123cc1c04",
+      "be6c764da5084c0cafe356388f10b73c/004.receipt.json": "0b974cedd4a58cd2178e37042535db91e2464d39b28562ff801633edc6ec4c13",
+      "be6c764da5084c0cafe356388f10b73c/005.receipt.json": "ab53b4ae34a1d51a7e7a3108eaee714ad0ca9a2faf45fe8e10506ba7ccc76f93",
+      "be6c764da5084c0cafe356388f10b73c/006.receipt.json": "b6a0d02ad4115c3ec3e00d01b220aeaa058d53468deb8d57e15aaed53dd494a2",
+      "be6c764da5084c0cafe356388f10b73c/007.receipt.json": "43bd18ee530638cf70e363d7f2add72136742751c882dccfe70ad020e56530de",
+      "be6c764da5084c0cafe356388f10b73c/008.receipt.json": "82361a2348d669eb00541c1e811d4a53656ca298ad022031984a7ca9f8b60aee",
+      "be6c764da5084c0cafe356388f10b73c/009.receipt.json": "f248edbcc54f332fbb2b8096dd2ce7e09f928a24837f40096fc50e6e6f820de3",
+      "be6c764da5084c0cafe356388f10b73c/010.receipt.json": "0fcb3550291f374619103b6368a8ea5d76ac3059832d4a8b62cc7e453395d36f",
+      "be6c764da5084c0cafe356388f10b73c/011.receipt.json": "79f3a9c1ad7c87ddf663f9830cc2d21eabc8e7bef8c81581226649a24588e8ed",
+      "be6c764da5084c0cafe356388f10b73c/012.receipt.json": "360a53b2d0e3a3530735a7c01ed22ae929c630da307fe557dc5636ba492383fc",
+      "be6c764da5084c0cafe356388f10b73c/013.receipt.json": "79b7a86ecf6107f677bd728619820e3a746b30a04603ce04bb4ee2892d49a60c",
+      "be6c764da5084c0cafe356388f10b73c/014.receipt.json": "00960dbb16b3e56718bb0bab0864fcb815d967bb95d40889f7168eb044742875",
+      "be6c764da5084c0cafe356388f10b73c/015.receipt.json": "5804341bc6e7f82a3ac3729bb8cc10bee4309005159e9e78ee02ac34bf35ff9f"
+    },
+    "native_proof_checks": [
+      "exact current system/user/schema and execution identity",
+      "completed Codex CLI stdout, original response and JSON schema",
+      "model gpt-6.1-terra and model_reasoning_effort=high",
+      "current source-bound checkpoint checksum and exact verdicts",
+      "unmodified current consistency.enforce gate passed"
+    ]
+  },
+  "ordering_regression": {
+    "passed": 1,
+    "test": "test_recovered_topic_mapping_order_preserves_exact_audit_requests",
+    "generator_main": "0f477b0b1f8c46215a4a618960b7a856b3316957"
   }
 }
