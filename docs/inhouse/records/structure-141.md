@@ -8,8 +8,8 @@
 - 전용 작업 트리의 구현 브랜치는 `codex/issue-141-structure`이며, 병합 후 공개 검증 기록은 `codex/issue-141-publication`에서 관리합니다. 다른 세션의 변경이나 미커밋 파일을 가져오지 않았습니다.
 - Windows 로컬 검증은 uv 0.12.15, Python 3.14.7과 잠금 파일의 pytest 9.1.1·libclang 18.1.1을 사용합니다. 시스템 Python은 3.12.10입니다.
 - 기본 uv 캐시 권한·네트워크 실패는 작업 트리 전용 캐시와 의존성 설치로 해결했습니다. 샌드박스는 테스트용 로컬 bare clone을 거부하므로 전체 회귀는 실행별 제한 해제와 독립 임시 경로를 사용합니다. 원래 SHA는 Git archive로 고정하여 검증합니다. 소스 수정과 겹친 중간 기준 실행은 기준 결과로 계산하지 않습니다.
-- 공식 libcamera HEAD는 `182307a772ebebf173ee84911906da707718485f`이며, 현재 공개 SDD의 입력 `2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f`와 구분합니다.
-- 사용자 실행별 지시로 실제 LLM은 `sdd.claude.local.yaml`의 `cli/claude/claude-haiku-5-5`, `args: [--effort, high]`를 사용합니다. 공개 기본 Hermes/Qwen 프로필은 수정하지 않습니다.
+- 착수 시 공식 libcamera HEAD는 `182307a772ebebf173ee84911906da707718485f`였으며, 재개 시 새 HEAD `e117198c015057761bb0bbaa85f963c41ce412d7`도 별도 추출했습니다. 공개 SDD `8f93666`의 입력 `2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f`와 고정 비교·새 upstream 검증을 구분합니다.
+- 초기 실제 LLM 시험은 사용자 지시로 `sdd.claude.local.yaml`의 `cli/claude/claude-haiku-5-5`, `args: [--effort, high]`를 사용했습니다. 후속 지시로 신규 문서·번역·LLM 검토는 `gpt-6.1-terra`와 `model_reasoning_effort="high"`를 선택한 CLI로 실행하도록 전환합니다. 과거 기록과 공개 기본 Hermes/Qwen 프로필은 당시 값으로 보존합니다.
 
 | #141 완료 항목 | 상태와 근거 |
 | --- | --- |
@@ -112,6 +112,20 @@ Mermaid 로딩 실패도 [별도 로컬 시험 기록](https://github.com/TTolsu
 이전 공개 그림 제목 주소 6개는 병합 설정에서 원래 페이지의 그림과 명시적 이동 앵커가 함께 빠져 있어 최종 후보 확인 대상으로 남겼습니다. 아직 실제 새 HTML의 실패로 단정하지 않았고, 담당 세션에 보존 여부를 문의했습니다. 해당 구현을 여기서 수정하지 않습니다. 최종 원고·영어 카탈로그·문서 감사·사이트·이전 주소·Pages·새 소스의 실제 URL 검증이 끝나기 전에는 #141과 Goal을 종료하지 않습니다.
 
 담당 세션의 [PR #148](https://github.com/TTolsun/camera-hal-sdd-generator/pull/148)이 `5474ac75c282517a4d10666d8f5b887911bdc029`로 main에 병합된 뒤에만 추가 반영했습니다. 이 변경의 공용 표시 렌더러 `site_markdown.py`를 기존 렌더러 의존 금지 검사에 포함합니다. core 소비자와 순수 판정 계층의 직접·상대·별칭·함수 내부 import에 같은 제한을 적용하며, 다른 세션의 의미 판정·영수증·그림 주소 구현을 수정하거나 점수에 가산하지 않습니다. 구조·의존성·문서 링크 회귀 412개가 통과했고, 실제 검사 함수에 격리된 임시 소스의 금지 import를 주입한 대조 시험 10개는 모두 거절됐으며 정상 대조 2개는 통과했습니다. 운영 소스는 이 대조 시험에서 수정하지 않았습니다. 이전 주소 6개의 설정 보강은 최종 공개 HTML에서 별도로 검증해야 합니다.
+
+## 새 upstream과 최근 공개본의 독립 대조
+
+재개 시 공식 HEAD는 `e117198c015057761bb0bbaa85f963c41ce412d7`입니다. 앞선 고정 입력 `182307a7` 이후 Virtual 파이프라인의 프레임률 처리 한 커밋·파일 3개가 바뀌었습니다. [수동 미러 동기화](https://github.com/TTolsun/libcamera-sdd/actions/runs/40741406788)가 성공했고 공식·로컬·공개 소스 트리 `8ad47ebe8c6ad6f956f82a5312c8e07005cb5125`의 일치를 확인했습니다. 공개 정기 예약은 설치하지 않았습니다.
+
+다른 세션과 분리한 소스 작업 트리와 병합 생성기 `5474ac7`에서 전체 10개 파이프라인·7개 IPA를 빌드했습니다. 실제 Ninja 작업 392개, 300 TU 추출, 클래스 1,412개·함수 569개·시나리오 6개와 파싱 오류·누락 진입점 0개를 기록했습니다. facts 해시는 `8965e5862cc2c1175703f9380f7b4f0ab69d8f91237c961e25f3fb16eeef63fd`입니다. 초기 bootstrap Python의 libclang 미설치는 실패로 남기고, 의존성 잠금이 같은 기존 환경에서 명시적으로 재실행했습니다. 원래 실행·입력은 보존했습니다.
+
+[독립 Git 대조 기록](https://github.com/TTolsun/libcamera-sdd/blob/7fe64399b8b4dc5285bb3fe3d7348f55c13152f2/publication/issue141/current-e117/git-span-verification.json)은 blob 538개의 위치 8,600개, 발췌 289개와 문맥 121개를 검증했습니다. 기존 실제 소스의 클래스·함수 이름은 모두 남고 제외된 이전 생성 선언은 앞선 전체 시험과 같은 클래스 101개·함수 20개입니다. 모델 호출은 0회이며, 추출 당시 Claude 설정을 보존한 스냅샷은 신규 Claude 추론이나 Terra 문서 생성의 근거가 아닙니다.
+
+다른 세션이 병합한 공개 PR #51 / `8f936663f82f71c729baaf34f0259b6580edd6b7`의 세 원고와 영어 카탈로그도 고정 입력으로 추가 대조했습니다. 원래 생성기 `45609e4`와 리팩터링 병합 `350a9d3`의 [출력 154개가 서로 및 실제 공개본과 모두 같았고](https://github.com/TTolsun/libcamera-sdd/blob/7fe64399b8b4dc5285bb3fe3d7348f55c13152f2/publication/issue141/fixed-public-pr51/comparison.json), 두 실행 모두 HTML 50개·깨진 링크 0개였습니다. 모든 모델 호출은 예외로 차단했고 입력 바이트도 전후 동일합니다. 이 실험의 소스는 `2c4b67c0`이며 새 `e117198c` 생성·배포를 대신하지 않습니다.
+
+공개 `8f93666`의 `run.json`과 사이트 manifest는 build_id가 서로 다릅니다. [같은 커밋에서 읽은 관측값](https://github.com/TTolsun/libcamera-sdd/blob/7fe64399b8b4dc5285bb3fe3d7348f55c13152f2/publication/issue141/public-pr51-metadata.json)을 보존했으며, 최종 공유 배포에서는 메타데이터·manifest·실제 URL의 일치를 확인해야 합니다. 진행 중 후보의 실패로 단정하거나 이 기록에서 별도 게시물을 고치지 않았습니다.
+
+공통 Terra CLI 연동과 최종 `e117198c` 문서·번역·게시 작업은 기존 공개 생성 세션이 주도합니다. #141은 실제 병합 후 구조 제한·동작 보존·소스 범위와 공유 공개 결과를 확인합니다. 독립 Codex 시제품 `808eabc`와 실제 Terra High 연결 시험은 보존했고 중복 PR은 만들지 않았습니다. 시제품의 회귀 109개 통과·2개 제외와 짧은 실제 호출 성공은 공통 구현의 필수 CI나 libcamera 문서·Pages 완료가 아닙니다. 최종 공개 조건은 여전히 미완료입니다.
 
 ## 구조 재평가 기준
 
