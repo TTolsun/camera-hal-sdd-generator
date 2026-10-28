@@ -33,6 +33,40 @@ from test_design_contracts import contract
 from test_generated_design import generated
 
 
+def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_cfg, visual):
+    import json
+    section, model, graph, write = visual
+    tmp_cfg.raw.setdefault('site', {})['overview_visual'] = dict(section='device', visual='stop-flow')
+    Generator(tmp_cfg, model, None).run()
+    site = export_site(tmp_cfg)
+    before = (site/'site-manifest.json').read_bytes()
+    index = (site/'index.html').read_text(encoding='utf-8')
+    assert '종료의 분기' in index and '대기 요청은 어떻게 끝납니까?' in index
+    assert 'href="index.stop-flow.mmd"' in index
+    assert 'device.html#source-' in index and 'href="#source-' not in index
+    assert (site/'index.stop-flow.mmd').read_bytes() == (site/'device.stop-flow.mmd').read_bytes()
+    export_site(tmp_cfg)
+    assert (site/'site-manifest.json').read_bytes() == before
+    assert json.loads(before)['outputs']['index.stop-flow.mmd']
+    tmp_cfg.raw['visuals']['on_stale'] = 'omit'
+    graph['nodes'][0]['evidence'][0]['sha256'] = '0'*64
+    write()
+    with pytest.raises(ValueError):
+        export_site(tmp_cfg)
+    assert (site/'site-manifest.json').read_bytes() == before
+
+
+@pytest.mark.parametrize('selection', [dict(section='missing', visual='stop-flow'),
+                                      dict(section='device', visual='missing'),
+                                      dict(section='device', visual='stop-flow', unknown=True)])
+def test_index_reuse_rejects_missing_or_invalid_selection(tmp_cfg, visual, selection):
+    _, model, _, _ = visual
+    Generator(tmp_cfg, model, None).run()
+    tmp_cfg.raw.setdefault('site', {})['overview_visual'] = selection
+    with pytest.raises(ValueError):
+        export_site(tmp_cfg)
+
+
 def test_opt_in_omits_stale_interpretation_and_removes_old_download(tmp_cfg, visual):
     section, model, graph, write = visual
     Generator(tmp_cfg, model, None).run()
