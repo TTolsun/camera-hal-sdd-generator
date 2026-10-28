@@ -117,7 +117,7 @@ def test_split_validator_remains_visible_in_build_provenance(tmp_cfg, sample_mod
     assert before['build_id'] != after['build_id']
 
 
-@pytest.mark.parametrize('runner', ['hermes', 'claude', 'opencode'])
+@pytest.mark.parametrize('runner', ['hermes', 'claude', 'opencode', 'codex'])
 @pytest.mark.parametrize('schema_mode', ['none', 'object'])
 def test_checkpoint_execution_identity_keeps_legacy_fingerprint(generated, tmp_cfg, monkeypatch, runner, schema_mode):
     """Moving argv assembly must not invalidate existing unit checkpoint keys."""

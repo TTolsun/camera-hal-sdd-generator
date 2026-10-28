@@ -19,6 +19,11 @@
     "claude/none": "2e3779bf63fba4e7f4da93a5ab1979b7d28516287aab35420f87f980fa0f551e",
     "claude/object": "d2cddbab922622b44a18cfcee45d77146d9c8b3e6087952facf5f321075393d3",
     "opencode/none": "4630b1375a1d85581c251f22e9d7728431b35818a74152ecc62b43ae60a931b4",
-    "opencode/object": "4630b1375a1d85581c251f22e9d7728431b35818a74152ecc62b43ae60a931b4"
+    "opencode/object": "4630b1375a1d85581c251f22e9d7728431b35818a74152ecc62b43ae60a931b4",
+    "codex/none": "8065569d2210641d45b9d985a5e8933fb6428b3e41a1c78a20efa89bc7098f7a",
+    "codex/object": "caf3548f842d670b79e44fd2827af86a4cc3ead16bd618876bf03aa26ef001c8"
+  },
+  "additional_runner_source_sha": {
+    "codex": "572c55a7723cde52bc0de3a20d51a3b2302ec67e"
   }
 }

@@ -25,7 +25,8 @@ SOLID 원칙 중 단일 책임과 의존 방향을 우선 적용합니다. 실�
 | `design_execution.py` | 한 단위의 호출·입력 예산·기존 제한 재시도와 grounding 호출을 관리합니다. |
 | `design_types.py` | `RequestPlan`, `TopicPrompt`, `UnitRequest`, `UnitResult`, `DesignResult`로 경계 값을 명명합니다. 저장하는 schema 1은 바꾸지 않습니다. |
 | `design_trials.py`, `design_compat.py` | 명시적 HTTP 비교 체크포인트·기록 재생을 연결하고, 과거 HTTP 정책 해시의 정확한 허용 쌍을 판정합니다. CLI 실패의 대체 실행기로 사용하지 않습니다. |
-| `cli_checkpoint.py` | 운영 CLI에서 검증된 단위를 보존하고 원래 호출·입력·정책을 대조합니다. 저장·재검증을 새 호출이나 사람 승인으로 표시하지 않습니다. |
+| `cli_checkpoint.py` | 운영 CLI에서 검증된 단위를 보존하고 원래 호출·입력·정책을 대조합니다. 실행 식별자의 인자 조립은 이 경계에서 수행하며, 생성 core는 CLI 프로토콜을 해석하지 않습니다. 저장·재검증을 새 호출이나 사람 승인으로 표시하지 않습니다. |
+| `cli_agent.py`, `cli_schema.py` | 선택한 CLI의 실행·완료 응답을 처리하고 네이티브 출력 schema를 연결합니다. `cli_schema`는 원래 JSON Schema 검증도 담당합니다. 생성 core와 순수 판정 계층은 이 구체적인 프로토콜 모듈을 가져오지 않습니다. |
 | `generation_run.py` | 실행·문서별 호출·시간 한도와 실제 단위 상태를 기록합니다. 답변의 의미 판정과 원고 조립을 맡지 않습니다. |
 | `cli_provenance.py` | CLI stdout·호출 메타데이터와 요청·응답을 대조합니다. 실행기를 호출하거나 원고를 고치지 않습니다. |
 | `consistency.py` | 프로젝트 계약 설정·문서·소스 근거와 선택한 CLI의 문서 간 대조를 연결합니다. 자동 판정과 사람 승인을 구분하며 게시할 인용을 원문과 대조합니다. |
