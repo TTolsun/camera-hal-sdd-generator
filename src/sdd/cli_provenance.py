@@ -7,7 +7,8 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Callable
 
 from .config import AgentConfig
-from .cli_agent import RUNNERS, build_prompt as assemble_prompt, decode_response
+from .cli_agent import RUNNERS, build_prompt as assemble_prompt, decode_response, arguments as invocation_arguments
+from .cli_schema import schema_hash, validate_original
 from .trial_workspace import is_link
 
 PromptBuilder = Callable[[str, str, dict | None], str]
@@ -76,6 +77,14 @@ def verify_cli_receipt(request: dict, response: str, receipt: dict, calls: Path,
             or not (request['response_schema'] is None or isinstance(request['response_schema'], dict))
             or not isinstance(response, str) or not response.strip()):
         raise ValueError('Invalid CLI request or response archive')
+    arguments_verified = bool(expected.command or expected.args)
+    if arguments_verified:
+        recorded = metadata.get('arguments')
+        native = invocation_arguments(expected, request['response_schema'])
+        if (not isinstance(recorded, list) or any(not isinstance(value, str) for value in recorded)
+                or (recorded != expected.command[1:] + native if expected.command
+                    else recorded[-len(native):] != native)):
+            raise ValueError('CLI arguments differ from the expected configuration')
     request_hash = _digest(json.dumps(request, ensure_ascii=False, sort_keys=True))
     if (receipt.get('request_sha256') != request_hash
             or receipt.get('response_sha256') != _digest(response)):
@@ -98,5 +107,10 @@ def verify_cli_receipt(request: dict, response: str, receipt: dict, calls: Path,
             or _digest(decoded) != receipt.get('response_sha256')
             or provider != metadata.get('provider')):
         raise ValueError('CLI decoded response or provider metadata mismatch')
+    if expected.runner == 'codex':
+        if metadata.get('native_schema_sha256') != schema_hash(request['response_schema']):
+            raise ValueError('Codex native schema hash mismatch')
+        validate_original(decoded, request['response_schema'])
     return {'runner': expected.runner, 'model': expected.model, 'model_selection': selection,
-            'producer': expected.label, 'stdout_sha256': metadata['stdout_sha256']}
+            'producer': expected.label, 'stdout_sha256': metadata['stdout_sha256'],
+            'arguments_verified': arguments_verified}

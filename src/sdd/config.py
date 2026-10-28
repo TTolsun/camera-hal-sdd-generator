@@ -394,8 +394,8 @@ def load(path: Path | None = None) -> Config:
     if kind not in ('cli', 'dry-run', 'response-bundle', 'ollama', 'openai-compatible'):
         raise ValueError('agent.kind는 cli, dry-run, response-bundle, ollama, openai-compatible 중 하나여야 합니다.')
     runner = str(agent_raw.get('runner', 'hermes'))
-    if kind == 'cli' and runner not in ('hermes', 'opencode', 'claude'):
-        raise ValueError('agent.runner는 hermes, opencode, claude 중 하나여야 합니다.')
+    if kind == 'cli' and runner not in ('hermes', 'opencode', 'claude', 'codex'):
+        raise ValueError('agent.runner는 hermes, opencode, claude, codex 중 하나여야 합니다.')
     if 'allow_direct_api' in agent_raw and not isinstance(agent_raw['allow_direct_api'], bool):
         raise ValueError('agent.allow_direct_api는 boolean이어야 합니다.')
 

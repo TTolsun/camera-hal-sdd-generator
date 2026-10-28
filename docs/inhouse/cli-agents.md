@@ -1,6 +1,6 @@
 # 문서 생성 CLI 선택
 
-**기본 Hermes CLI로 실행하고, 필요할 때 `agent.runner`를 `opencode` 또는 `claude`로 바꾸세요.** 모델과 제공자는 선택한 CLI의 설정을 사용합니다. 생성기는 해당 CLI를 독립적으로 실행하며 다른 CLI나 모델 API로 자동 전환하지 않습니다.
+**기본 Hermes CLI로 실행하고, 필요할 때 `agent.runner`를 `opencode`, `claude`, `codex`로 바꾸세요.** 모델과 제공자는 선택한 CLI의 설정을 사용합니다. 생성기는 해당 CLI를 독립적으로 실행하며 다른 CLI나 모델 API로 자동 전환하지 않습니다.
 
 ```yaml
 agent:
@@ -13,7 +13,7 @@ agent:
 ## 실행기와 모델 변경
 
 1. 사용할 CLI를 설치하고 사내에서 허용한 모델·제공자·인증을 해당 CLI에 설정합니다. Hermes 뒤에서 Qwen을 제공하는 서버로 Ollama를 사용할 수 있습니다. 이 경우에도 호출 순서는 생성기 → Hermes CLI → Qwen입니다.
-2. `sdd.local.yaml`에서 `agent.runner`를 선택합니다. `hermes`, `opencode`, `claude`를 지원합니다. OpenCode나 Claude Code를 선택하면 Hermes를 거치지 않습니다.
+2. `sdd.local.yaml`에서 `agent.runner`를 선택합니다. `hermes`, `opencode`, `claude`, `codex`를 지원합니다. OpenCode나 Claude Code를 선택하면 Hermes를 거치지 않습니다.
 3. `uv run sdd --config <CFG> doctor`를 실행합니다. CLI 모드의 doctor는 실행 파일과 버전만 확인하며 모델 호출 성공을 뜻하지 않습니다.
 4. 공개 입력 또는 사내에서 허용된 입력으로 `generate`를 실행하고 원응답·검사 결과를 확인합니다. CLI가 없거나 실패하면 설치·인증·모델 설정을 고친 뒤 같은 실행기로 다시 실행합니다.
 
@@ -46,6 +46,26 @@ agent:
 OpenCode나 Claude Code로 바꿀 때도 해당 CLI의 모델 ID와 인자를 함께 지정합니다. 추가 인자가 없으면 `args: []`로 Hermes 전용 인자를 지웁니다. 공통 생성기에는 공개 Qwen 모델을 하드코딩하지 않습니다.
 
 CLI 실행 파일이나 사내 실행 래퍼를 지정해야 한다면 `command: ["/approved/path/hermes"]`처럼 실행 접두사를 인자 목록으로 적습니다. 생성기가 각 CLI의 비대화형 옵션을 이어 붙입니다. 셸 명령 문자열을 넣지 않으며 인증 토큰은 `args`나 `command`에 넣지 않습니다. 각 CLI에서 승인된 인증 수단으로 관리합니다.
+
+## Codex CLI의 Terra High
+
+사용자가 선택한 루트 `sdd.yaml`의 문서 작성 프로필은 다음과 같습니다. 공개 Hermes/Qwen 예제와 과거 실행 기록은 당시 설정을 유지합니다.
+
+```yaml
+agent:
+  kind: cli
+  runner: codex
+  model: gpt-6.1-terra
+  args: [-c, 'model_reasoning_effort="high"']
+```
+
+생성기 → Codex CLI → 선택한 모델 순서로 독립 실행합니다. 기존 CLI 로그인을 사용하며 직접 모델 API나 다른 실행기로 자동 전환하지 않습니다. 비대화형 `exec --json`의 완료 이벤트와 최종 응답, 실제 모델·추론 인자, 원본 stdout 해시를 영수증으로 남깁니다. 응답 schema가 있으면 빈 호출 폴더에 같은 schema 파일을 만들고 `--output-schema`로 전달합니다. 불완전 완료·실패 이벤트·예상하지 않은 도구 사용은 성공으로 처리하지 않습니다. Codex strict 전송이 지원하지 않는 `uniqueItems`는 전송용 복사본에서만 제외하고, 원래 schema는 프롬프트·원본 요청에 보존합니다. 응답과 재사용 영수증은 원래 전체 schema로 다시 검사하므로 중복·필수 항목 위반은 실패합니다. 전송 schema 해시도 영수증에 결합하며 외부 schema 참조를 가져오지 않습니다.
+
+이 경로는 사용자 전역 실행 설정·프로젝트 지침을 불러오지 않고, 읽기 전용 임시 작업공간에서 문서 응답만 요청합니다. 모델·추론 강도는 명시적인 호출 인자로 지정합니다. JSONL에 서버가 실제 모델 이름을 별도로 보고하지 않는 경우, 영수증은 명시한 CLI 인자와 완료를 입증하며 서버 내부의 모델 식별자를 독립 확인했다는 뜻은 아닙니다.
+
+모델을 바꾸면 재사용 입력이 달라집니다. 기존 모델 원고나 영수증의 모델명을 새 모델로 고치지 말고, 현재 입력·정책·실행 출처를 확인해 필요한 생성·검토를 수행하세요.
+
+기준: [GPT-6.1 Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra), [Codex 비대화형 실행](https://learn.chatgpt.com/docs/non-interactive-mode).
 
 ## 호출·응답 검증
 

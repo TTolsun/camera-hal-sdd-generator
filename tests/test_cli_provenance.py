@@ -47,6 +47,12 @@ def archive(tmp_path, monkeypatch):
                 {'type': 'text', 'part': {'text': answer}},
                 {'type': 'step_finish', 'sessionID': 'fake-session', 'part': {'reason': 'stop'}},
             ])
+        elif runner == 'codex':
+            output = '\n'.join(json.dumps(e) for e in [
+                {'type': 'turn.started'},
+                {'type': 'item.completed', 'item': {'type': 'agent_message', 'text': answer}},
+                {'type': 'turn.completed', 'usage': {'output_tokens': 10}},
+            ])
         else:
             output = answer
         captured = tmp_path / 'captured-stdin.txt'
@@ -76,7 +82,7 @@ def archive(tmp_path, monkeypatch):
     return create
 
 
-@pytest.mark.parametrize('runner', ['hermes', 'opencode', 'claude'])
+@pytest.mark.parametrize('runner', ['hermes', 'opencode', 'claude', 'codex'])
 @pytest.mark.parametrize('model', ['', 'chosen/model'])
 def test_real_agent_archives_from_fake_subprocess_are_verified(archive, runner, model):
     args = archive(runner, model)
@@ -89,6 +95,26 @@ def test_real_agent_archives_from_fake_subprocess_are_verified(archive, runner, 
     assert report['model_selection'] == ('explicit' if model else 'cli-default')
     assert report['producer'] == f'cli/{runner}/{model or "cli-default"}'
     assert 'human_approval' not in report
+
+
+@pytest.mark.parametrize('change', ['effort', 'prefix', 'recorded-model'])
+def test_configured_cli_arguments_cannot_be_changed_or_relabelled(archive, change):
+    args = archive('codex')
+    if change == 'effort':
+        args['expected'].args = ['-c', 'model_reasoning_effort="high"']
+    elif change == 'prefix':
+        args['expected'].command.append('different-wrapper-argument')
+    else:
+        recorded = args['receipt']['provider']['arguments']
+        recorded[recorded.index('--model')+1] = 'another-model'
+    with pytest.raises(ValueError, match='arguments differ'):
+        verify_cli_receipt(**args)
+
+
+def test_model_only_archive_audit_does_not_claim_argument_profile_verification(archive):
+    args = archive('codex')
+    args['expected'].command = []
+    assert verify_cli_receipt(**args)['arguments_verified'] is False
 
 
 @pytest.mark.parametrize('field,value', [
