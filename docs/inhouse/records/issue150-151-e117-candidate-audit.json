@@ -1,0 +1,1506 @@
+{
+  "schema": 1,
+  "checked_at_utc": "2026-10-28T20:09:01.191925+00:00",
+  "classification": "saved Korean candidate; not final bilingual release",
+  "verification_generator": "572c55a7723cde52bc0de3a20d51a3b2302ec67e",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "translation_units": 300,
+  "selected_agent": {
+    "kind": "cli",
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "snapshot_hashes": {
+    "sdd.codex.local.yaml": "fbfc2521efbd72f14a6915e2ac66052c983e92869bab80d61d33ef4b2871b42e",
+    "sections.yaml": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+    "facts/facts.json": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+    "manuscripts/camera-model.md": "d83c18e0b68957cc3b6801b24d25ced09d9d28983f8542c1ae748d6e3b309fb0",
+    "manuscripts/camera-requests.md": "8d8ec160937e76f2e7ac28da02c597c5d930d43a42c70ab9dd2ab45767c5471f",
+    "manuscripts/component-index.md": "8d379a25823d3b93bcf06741c87764129af6a0e29116215bd96ced7f76cafddc",
+    "manuscripts/framebuffer-allocator.md": "99bdf8adbcf0d196c5f3c7aec3d2022595773ddf5dca1a8ec379e6eff78fc728",
+    "manuscripts/ipa-algorithms.md": "a38ab0a370ca37b90ea4bec963933a8a9ee9646090a3eb7c634d33547038e751",
+    "manuscripts/ipa-module-validation.md": "51c4c06c09489b4fefc1f765953e4a34281424ddf2e9bb77fc87357b982b2435",
+    "manuscripts/ipa.md": "c883cfea730029d6f6353deb9c515f00afa40e8197384c9286ebdd25cea79a65",
+    "manuscripts/ipu3-lsc-flow.md": "8ee59ed7d8b65262681fc0ab7f02e0faa8934d350a8d4ff4228eb8807f597f48",
+    "manuscripts/ipu3-lsc-prepare.md": "39886c1fcebb52f57697a706177486558c1a5f96cc2b53f4858a6c667aeb068c",
+    "manuscripts/ipu3-lsc.md": "bc4878b0d8f7ce324ad64433430d5308745f47a6850a427df6136cfd7f50ff43",
+    "manuscripts/onboarding.md": "f87f6848927ca4cba930280d4deac51c5032718e3f3059c00887e0e937919cb2",
+    "manuscripts/overview.md": "c2e8a0bf3319c8435bc66e6f1fe5a438aeeadbfc840cd3c22c12d239d557ac2b",
+    "manuscripts/pipeline-handler.md": "c55b2127e103669ace75438384cb6c637e92e1d8527fe5caf1057cadc29b91ce",
+    "manuscripts/pipeline-requests.md": "f0d958526087155a375e94128f738e501289bf563ba37a7a9c2f8826966e08ff",
+    "manuscripts/request-diagnosis.md": "0386b97f25a74bff42e098f73f238bd095ecec68161b832aac715f3062f085ef",
+    "manuscripts/request-lifecycle.md": "b33d18c5894236e4d89a64c64eeaddbeb3fe636d77e33c0338d3af2d23020bd8",
+    "manuscripts/rkisp1-dewarp.md": "258e9de19c3c3c7789db140277ae577deef203924748291bf660bba879a6b2f1",
+    "manuscripts/scenarios/camera_start.md": "59344a00ed97b12bdff29eaf9f99b0d6eb225d3366d4b946158ef3bc0211a2f6",
+    "manuscripts/scenarios/camera_stop.md": "360dc634bfe92719eae79fe8e5fe703fc2931d14d1d4b3abc87f901d07a7df75",
+    "manuscripts/scenarios/complete_request.md": "5fdb6e76516c89dc8a4530ee5eba8afe3af0ca79e47d7c231651631501103a1d",
+    "manuscripts/scenarios/configure.md": "5812ca12c95acc0f3460caeac847c3e8f7b676aba7b8eebbd90b2dc593134d38",
+    "manuscripts/scenarios/index.md": "1d9449e107abb33d2bcdd9f7b299340ea2f695c65d5e5a031a3dcb6330453796",
+    "manuscripts/scenarios/manager_start.md": "84ff9463e9fc93d7c8a6d5fce7db286704a462f3bd9313edad55fe4f72ec5749",
+    "manuscripts/scenarios/queue_request.md": "c08d5f3611c570f1e7d5aa663da029480dcfd0604e913d5c1709d495b706ba32",
+    "manuscripts/team-overview.md": "e0d740f15ffcca161c46d7c6f7b755e69b8cab3af99f545a976588e7ebc1995b",
+    "manuscripts/vendor-assurance.md": "1a4f43619f5423decffdc90f87c8deba9dede9d3f85df5c629051059c2b8a9ea",
+    "manuscripts/vendor-integration.md": "30d90bc628f73cb6912c37258fb3a42c251e9491f0941b6f8449cfd280a07816",
+    "manuscripts/vendor-overview.md": "981a5a12197284da7d79e9aaf14265e06bd618f6c618a0460d6a2ca2024ac4de",
+    "build/design-review.json": "86d2d54946d622fc2f0ffcd3f4c1831f58ca7a39735b53081a266e34b300d976",
+    "build/document-health.json": "a49703c02700f36553bf55b2e61e9a414e9e5cf2be7f6467d959f45eac0211b1",
+    "build/impact.json": "873cf154e23f18664ec093dc52cc97ce4ed2dd6ce0d6d3f4992f86817d73f3e7"
+  },
+  "pages": {
+    "vendor-overview.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 3930,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:42+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "value",
+        "support",
+        "capabilities",
+        "benefits",
+        "queue-limit"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "value",
+        "support",
+        "capabilities",
+        "benefits",
+        "queue-limit"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "value": "cli/codex/gpt-6.1-terra",
+        "support": "cli/codex/gpt-6.1-terra",
+        "capabilities": "cli/codex/gpt-6.1-terra",
+        "benefits": "cli/codex/gpt-6.1-terra",
+        "queue-limit": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 15,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "vendor-assurance.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 1787,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:44+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "constraints",
+        "measurement"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "constraints",
+        "measurement"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "constraints": "cli/codex/gpt-6.1-terra",
+        "measurement": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 10,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "vendor-integration.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 5700,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:47+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "integration",
+        "boundary",
+        "configuration",
+        "request",
+        "algorithm",
+        "shutdown",
+        "validation"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "integration",
+        "boundary",
+        "configuration",
+        "request",
+        "algorithm",
+        "shutdown",
+        "validation"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "integration": "cli/codex/gpt-6.1-terra",
+        "boundary": "cli/codex/gpt-6.1-terra",
+        "configuration": "cli/codex/gpt-6.1-terra",
+        "request": "cli/codex/gpt-6.1-terra",
+        "algorithm": "cli/codex/gpt-6.1-terra",
+        "shutdown": "cli/codex/gpt-6.1-terra",
+        "validation": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 37,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "pipeline-handler.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 4680,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:49+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "responsibility",
+        "configuration",
+        "shutdown",
+        "input-search-boundary"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "responsibility",
+        "configuration",
+        "shutdown",
+        "input-search-boundary"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "responsibility": "cli/codex/gpt-6.1-terra",
+        "configuration": "cli/codex/gpt-6.1-terra",
+        "shutdown": "cli/codex/gpt-6.1-terra",
+        "input-search-boundary": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 9,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "pipeline-requests.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 3815,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:50+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "queue",
+        "completion"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "queue",
+        "completion"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "queue": "cli/codex/gpt-6.1-terra",
+        "completion": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 22,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "ipa.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 9398,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:52+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "selection",
+        "execution",
+        "interface",
+        "lifetime",
+        "errors"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "selection",
+        "execution",
+        "interface",
+        "lifetime",
+        "errors"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "selection": "cli/codex/gpt-6.1-terra",
+        "execution": "cli/codex/gpt-6.1-terra",
+        "interface": "cli/codex/gpt-6.1-terra",
+        "lifetime": "cli/codex/gpt-6.1-terra",
+        "errors": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 27,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "ipa-algorithms.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 2462,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:53+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "tuning",
+        "dma-import",
+        "softisp-lsc"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "tuning",
+        "dma-import",
+        "softisp-lsc"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "tuning": "cli/codex/gpt-6.1-terra",
+        "dma-import": "cli/codex/gpt-6.1-terra",
+        "softisp-lsc": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 7,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "ipu3-lsc-flow.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 2536,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:55+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "integration",
+        "setup",
+        "request",
+        "metadata"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "integration",
+        "setup",
+        "request",
+        "metadata"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "integration": "cli/codex/gpt-6.1-terra",
+        "setup": "cli/codex/gpt-6.1-terra",
+        "request": "cli/codex/gpt-6.1-terra",
+        "metadata": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 12,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": [
+        "[의미 중복] request 5번째 설명이 앞의 request 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 두 번째 인자로 `frameContext.…\" ≈ \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 첫 번째 인자로 `context.activ…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+      ]
+    },
+    "ipu3-lsc-prepare.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 2500,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:56+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "prepare"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "prepare"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "prepare": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 1,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": [
+        "[의미 중복] prepare 2번째 설명이 앞의 prepare 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `frameContext.lsc.update`가 false이고 `frameContext.lsc.…\" ≈ \"`Lsc::prepare`는 `frameContext.lsc.update`가 거짓이고 `frameContext.lsc.ena…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+      ]
+    },
+    "rkisp1-dewarp.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 4008,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:58+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "ownership",
+        "parameters",
+        "application"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "ownership",
+        "parameters",
+        "application"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "ownership": "cli/codex/gpt-6.1-terra",
+        "parameters": "cli/codex/gpt-6.1-terra",
+        "application": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 12,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "team-overview.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 3010,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:51:59+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "role",
+        "inputs",
+        "outputs",
+        "boundaries"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "role",
+        "inputs",
+        "outputs",
+        "boundaries"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "role": "cli/codex/gpt-6.1-terra",
+        "inputs": "cli/codex/gpt-6.1-terra",
+        "outputs": "cli/codex/gpt-6.1-terra",
+        "boundaries": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 10,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "overview.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 3875,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:52:01+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "discovery",
+        "responsibility",
+        "creation",
+        "lifecycle",
+        "request",
+        "completion",
+        "boundary",
+        "verification",
+        "queue-limit"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "discovery",
+        "responsibility",
+        "creation",
+        "lifecycle",
+        "request",
+        "completion",
+        "boundary",
+        "verification",
+        "queue-limit"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "discovery": "cli/codex/gpt-6.1-terra",
+        "responsibility": "cli/codex/gpt-6.1-terra",
+        "creation": "cli/codex/gpt-6.1-terra",
+        "lifecycle": "cli/codex/gpt-6.1-terra",
+        "request": "cli/codex/gpt-6.1-terra",
+        "completion": "cli/codex/gpt-6.1-terra",
+        "boundary": "cli/codex/gpt-6.1-terra",
+        "verification": "cli/codex/gpt-6.1-terra",
+        "queue-limit": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 25,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "onboarding.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 930,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:52:02+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "try",
+        "why"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "try",
+        "why"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "try": "cli/codex/gpt-6.1-terra",
+        "why": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 5,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "camera-model.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 4654,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:52:03+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "responsibility",
+        "state",
+        "shutdown",
+        "concurrency",
+        "disconnection"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "responsibility",
+        "state",
+        "shutdown",
+        "concurrency",
+        "disconnection"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "responsibility": "cli/codex/gpt-6.1-terra",
+        "state": "cli/codex/gpt-6.1-terra",
+        "shutdown": "cli/codex/gpt-6.1-terra",
+        "concurrency": "cli/codex/gpt-6.1-terra",
+        "disconnection": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 18,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "camera-requests.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 3417,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:52:05+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "request",
+        "lifetime"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "request",
+        "lifetime"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "request": "cli/codex/gpt-6.1-terra",
+        "lifetime": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 22,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "request-lifecycle.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 7586,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:52:06+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "journey",
+        "resources",
+        "stopping",
+        "review"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "journey",
+        "resources",
+        "stopping",
+        "review"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "journey": "cli/codex/gpt-6.1-terra",
+        "resources": "cli/codex/gpt-6.1-terra",
+        "stopping": "cli/codex/gpt-6.1-terra",
+        "review": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 46,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "request-diagnosis.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 4310,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:52:08+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "configuration-failure",
+        "diagnosis"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "configuration-failure",
+        "diagnosis"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "configuration-failure": "cli/codex/gpt-6.1-terra",
+        "diagnosis": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 16,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "scenarios/index.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": null,
+      "status": "ok",
+      "prose_chars": 65,
+      "generation_method": "deterministic",
+      "generated_at": "2026-10-28 19:52:08+00:00"
+    },
+    "component-index.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": null,
+      "status": "ok",
+      "prose_chars": 75,
+      "generation_method": "extracted-structure",
+      "generated_at": "2026-10-28 19:52:08+00:00"
+    },
+    "ipu3-lsc.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": null,
+      "status": "ok",
+      "prose_chars": 1231,
+      "generation_method": "extracted-structure",
+      "generated_at": "2026-10-27 20:47:22+00:00"
+    },
+    "ipa-module-validation.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 382,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:52:09+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "metadata",
+        "signature"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "metadata",
+        "signature"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "metadata": "cli/codex/gpt-6.1-terra",
+        "signature": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 2,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "framebuffer-allocator.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "agent": "cli/codex/gpt-6.1-terra",
+      "status": "ok",
+      "prose_chars": 1005,
+      "generation_method": "facts-and-llm",
+      "generated_at": "2026-10-28 19:52:11+00:00",
+      "body_hash_matches": true,
+      "input_fingerprint_matches": true,
+      "topic_ids": [
+        "reference-lifetime",
+        "allocation-failure",
+        "free-result"
+      ],
+      "reused_topics": [],
+      "generated_topics": [
+        "reference-lifetime",
+        "allocation-failure",
+        "free-result"
+      ],
+      "replayed_units": [],
+      "topic_agents": {
+        "reference-lifetime": "cli/codex/gpt-6.1-terra",
+        "allocation-failure": "cli/codex/gpt-6.1-terra",
+        "free-result": "cli/codex/gpt-6.1-terra"
+      },
+      "checkpoint_unit_count": 6,
+      "validation_policy_matches": false,
+      "validation_policy_differences": [
+        "design_validation",
+        "duplicates"
+      ],
+      "validation_model_matches": true,
+      "style_policy_matches": true,
+      "merged_generator_verification": "passed",
+      "reported_findings": [],
+      "reported_repeated_sentences": []
+    },
+    "scenarios/camera_start.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "generation_method": "extracted-scenario"
+    },
+    "scenarios/camera_stop.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "generation_method": "extracted-scenario"
+    },
+    "scenarios/complete_request.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "generation_method": "extracted-scenario"
+    },
+    "scenarios/configure.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "generation_method": "extracted-scenario"
+    },
+    "scenarios/manager_start.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "generation_method": "extracted-scenario"
+    },
+    "scenarios/queue_request.md": {
+      "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+      "generation_method": "extracted-scenario"
+    }
+  },
+  "page_inventory": {
+    "expected": [
+      "camera-model.md",
+      "camera-requests.md",
+      "component-index.md",
+      "framebuffer-allocator.md",
+      "ipa-algorithms.md",
+      "ipa-module-validation.md",
+      "ipa.md",
+      "ipu3-lsc-flow.md",
+      "ipu3-lsc-prepare.md",
+      "ipu3-lsc.md",
+      "onboarding.md",
+      "overview.md",
+      "pipeline-handler.md",
+      "pipeline-requests.md",
+      "request-diagnosis.md",
+      "request-lifecycle.md",
+      "rkisp1-dewarp.md",
+      "scenarios/camera_start.md",
+      "scenarios/camera_stop.md",
+      "scenarios/complete_request.md",
+      "scenarios/configure.md",
+      "scenarios/index.md",
+      "scenarios/manager_start.md",
+      "scenarios/queue_request.md",
+      "team-overview.md",
+      "vendor-assurance.md",
+      "vendor-integration.md",
+      "vendor-overview.md"
+    ],
+    "actual": [
+      "camera-model.md",
+      "camera-requests.md",
+      "component-index.md",
+      "framebuffer-allocator.md",
+      "ipa-algorithms.md",
+      "ipa-module-validation.md",
+      "ipa.md",
+      "ipu3-lsc-flow.md",
+      "ipu3-lsc-prepare.md",
+      "ipu3-lsc.md",
+      "onboarding.md",
+      "overview.md",
+      "pipeline-handler.md",
+      "pipeline-requests.md",
+      "request-diagnosis.md",
+      "request-lifecycle.md",
+      "rkisp1-dewarp.md",
+      "scenarios/camera_start.md",
+      "scenarios/camera_stop.md",
+      "scenarios/complete_request.md",
+      "scenarios/configure.md",
+      "scenarios/index.md",
+      "scenarios/manager_start.md",
+      "scenarios/queue_request.md",
+      "team-overview.md",
+      "vendor-assurance.md",
+      "vendor-integration.md",
+      "vendor-overview.md"
+    ],
+    "missing": [],
+    "extra": []
+  },
+  "git_evidence": {
+    "available": 290,
+    "blob_files": 34,
+    "errors": []
+  },
+  "owner_input_changes": [],
+  "new_or_removed_manuscripts": [],
+  "receipt_inventory_changed": false,
+  "generation_runs": [
+    {
+      "name": "3027968cd91f4eeb8388defcf2d689df.json",
+      "sha256": "690d299d22f48d3e1c75d3a42e9935ae2ad6f19b99ccc0ddda1e6806e60aedd7",
+      "stable": true,
+      "calls": {
+        "completed": 626
+      },
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "seconds": 142.21900000004098
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "failed",
+          "failure_kind": "validation",
+          "seconds": 96.71899999998277
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "seconds": 347.51500000001397
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "seconds": 107.04699999996228
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "seconds": 211.125
+        },
+        {
+          "section": "ipa",
+          "status": "failed",
+          "failure_kind": "grounding-rejected",
+          "seconds": 285.40600000001723
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "seconds": 71.375
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "failed",
+          "failure_kind": "validation",
+          "seconds": 85.56300000002375
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "failed",
+          "failure_kind": "validation",
+          "seconds": 16.42200000002049
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "seconds": 113.17199999996228
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "seconds": 103.09299999999348
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "seconds": 228.43700000003446
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "seconds": 41.36000000004424
+        },
+        {
+          "section": "camera-model",
+          "status": "failed",
+          "failure_kind": "validation",
+          "seconds": 154.9220000000205
+        },
+        {
+          "section": "camera-requests",
+          "status": "failed",
+          "failure_kind": "validation",
+          "seconds": 245.60999999998603
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "passed",
+          "seconds": 430.375
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "seconds": 158.06200000003446
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "seconds": 19.64100000000326
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "seconds": 61.75
+        }
+      ],
+      "seconds": 2946.5,
+      "human_review": "pending"
+    },
+    {
+      "name": "49e1042114004c76a9606fa382f5ed57.json",
+      "sha256": "f2ad898140149eb42d1ed74fb0b7daea9c92ed794d1982628aba78071e2b5816",
+      "stable": true,
+      "calls": {
+        "running": 1
+      },
+      "documents": [],
+      "seconds": 0.015,
+      "human_review": "pending"
+    },
+    {
+      "name": "7ddfd6995a3a4cf78906d7d6c661e9ad.json",
+      "sha256": "f9caad1d61d3af6d5467b234fd67ff7b28dc87d7a6738aed21b6ad6f8cded4e1",
+      "stable": true,
+      "calls": {
+        "failed": 3,
+        "running": 1
+      },
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "failed",
+          "failure_kind": "cli-failure",
+          "seconds": 4.577999999979511
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "failed",
+          "failure_kind": "cli-failure",
+          "seconds": 3.687000000034459
+        },
+        {
+          "section": "vendor-integration",
+          "status": "failed",
+          "failure_kind": "cli-failure",
+          "seconds": 4.2189999999827705
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "running"
+        }
+      ],
+      "seconds": 34.75,
+      "human_review": "pending"
+    },
+    {
+      "name": "d2876f2037234b96b1c9420a7a70b4d3.json",
+      "sha256": "7bff21e723c7a243e5c30bb09ed11f9733ad39957d48c744b632bf5d416705bd",
+      "stable": true,
+      "calls": {
+        "completed": 38
+      },
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "seconds": 2.7030000000377186
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "passed",
+          "seconds": 19.92199999996228
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "seconds": 6.938000000023749
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "seconds": 1.8130000000237487
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "seconds": 3.7339999999967404
+        },
+        {
+          "section": "ipa",
+          "status": "passed",
+          "seconds": 25.09299999999348
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "seconds": 1.5619999999762513
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "seconds": 30.20299999997951
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "failed",
+          "failure_kind": "validation",
+          "seconds": 21.57800000003772
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "seconds": 2.8130000000237487
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "seconds": 2.2660000000032596
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "seconds": 5.437000000034459
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "seconds": 1.172000000020489
+        },
+        {
+          "section": "camera-model",
+          "status": "passed",
+          "seconds": 52.78099999995902
+        },
+        {
+          "section": "camera-requests",
+          "status": "passed",
+          "seconds": 47.79700000002049
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "passed",
+          "seconds": 7.655999999959022
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "seconds": 2.73499999998603
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "seconds": 0.40600000001722947
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "seconds": 1.0160000000032596
+        }
+      ],
+      "seconds": 265.578,
+      "human_review": "pending"
+    },
+    {
+      "name": "d9d0f98c5bcc4cbebd64c302ce717b67.json",
+      "sha256": "f768202145c25bc95e0e6a9a1884d9a671c2cc98dc8561657106168846382f52",
+      "stable": true,
+      "calls": {
+        "completed": 27
+      },
+      "documents": [
+        {
+          "section": "vendor-overview",
+          "status": "passed",
+          "seconds": 1.9060000000172295
+        },
+        {
+          "section": "vendor-assurance",
+          "status": "passed",
+          "seconds": 1.1570000000065193
+        },
+        {
+          "section": "vendor-integration",
+          "status": "passed",
+          "seconds": 4.73499999998603
+        },
+        {
+          "section": "pipeline-handler",
+          "status": "passed",
+          "seconds": 1.3910000000032596
+        },
+        {
+          "section": "pipeline-requests",
+          "status": "passed",
+          "seconds": 3.5310000000172295
+        },
+        {
+          "section": "ipa",
+          "status": "passed",
+          "seconds": 4.5
+        },
+        {
+          "section": "ipa-algorithms",
+          "status": "passed",
+          "seconds": 1.2179999999934807
+        },
+        {
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "seconds": 1.7660000000032596
+        },
+        {
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "seconds": 113.84399999998277
+        },
+        {
+          "section": "rkisp1-dewarp",
+          "status": "passed",
+          "seconds": 2.0929999999934807
+        },
+        {
+          "section": "team-overview",
+          "status": "passed",
+          "seconds": 1.6560000000172295
+        },
+        {
+          "section": "overview",
+          "status": "passed",
+          "seconds": 3.7969999999622814
+        },
+        {
+          "section": "onboarding",
+          "status": "passed",
+          "seconds": 0.8439999999827705
+        },
+        {
+          "section": "camera-model",
+          "status": "passed",
+          "seconds": 2.8439999999827705
+        },
+        {
+          "section": "camera-requests",
+          "status": "passed",
+          "seconds": 3.452999999979511
+        },
+        {
+          "section": "request-lifecycle",
+          "status": "passed",
+          "seconds": 7.344000000040978
+        },
+        {
+          "section": "request-diagnosis",
+          "status": "passed",
+          "seconds": 2.7810000000172295
+        },
+        {
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "seconds": 0.375
+        },
+        {
+          "section": "framebuffer-allocator-boundary",
+          "status": "passed",
+          "seconds": 1.1089999999967404
+        }
+      ],
+      "seconds": 228.375,
+      "human_review": "pending"
+    },
+    {
+      "name": "ec00e88ce020446cb666c0950b827184.json",
+      "sha256": "d9cb33f7e1d78de7a192d446b8f0a19c80389b703527c17e7880713420d32945",
+      "stable": true,
+      "calls": {},
+      "documents": [],
+      "seconds": 0.375,
+      "human_review": "pending"
+    }
+  ],
+  "new_llm_calls_by_this_audit": 0,
+  "remaining_gates": [
+    "English catalog and RAW glossary work still in progress",
+    "No final consistency report/site manifest/Pages publication claim",
+    "Pending PR154 policy differences are not classified as final candidate defects",
+    "No human approval or internal HAL/device validation"
+  ],
+  "raw_audit_sha256": "e8b136bc5409433a7248a96b38823b4a93810a7211c6c3b6977d28f32992c5c4",
+  "local_raw_audit": "build/issue150-audit/e117-20261028-200900/audit.json",
+  "receipt_summary": {
+    "total": 692,
+    "verified": 692,
+    "arguments_verified": 692,
+    "stable": 692,
+    "profile": "cli/codex/gpt-6.1-terra; model_reasoning_effort=high",
+    "errors": [],
+    "checks_sha256": "928be3fb52942a54fa1a9f6dc49c2e5572c735037fe61c443dcf5599e9449788"
+  },
+  "checkpoint_summary": {
+    "units": 302,
+    "unique_checkpoints": 302,
+    "unique_linked_receipts": 628,
+    "all_linked_receipts_verified": true,
+    "all_checks_passed": true,
+    "revalidated": {
+      "True": 302
+    },
+    "new_grounding_review": {
+      "False": 302
+    },
+    "bindings_sha256": "9ff393cf4664849c18175ea0623c9b9dc0ceb857ef162e8aa5b637737ac422b4"
+  },
+  "human_approval": "not performed",
+  "internal_hal_validation": "not performed",
+  "device_validation": "not performed",
+  "final_publication": "not verified;current publicmain8f936663",
+  "post149_verification": {
+    "generator": "0ed2a6e1b16a7500c1afb33c653316eed67f8044",
+    "checked_at_utc": "2026-10-28T20:14:38.727247+00:00",
+    "same_fixed_snapshot": "e117-20261028-200900",
+    "pages": {
+      "vendor-overview.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "vendor-assurance.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "vendor-integration.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "pipeline-handler.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "pipeline-requests.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "ipa.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "ipa-algorithms.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "ipu3-lsc-flow.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "ipu3-lsc-prepare.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "rkisp1-dewarp.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "team-overview.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "overview.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "onboarding.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "camera-model.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "camera-requests.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "request-lifecycle.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "request-diagnosis.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "ipa-module-validation.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      },
+      "framebuffer-allocator.md": {
+        "verification": "passed",
+        "policy_differences": [
+          "design_validation",
+          "duplicates"
+        ]
+      }
+    },
+    "live_core_snapshot_unchanged": true
+  },
+  "public_pr50_snapshot": {
+    "head": "a2c39c0a3f5af8e1969b528f71e4002e1a9b0957",
+    "draft": true,
+    "changed_files": 414,
+    "docs_changed": 0,
+    "scope": "publication/issue141"
+  }
+}
