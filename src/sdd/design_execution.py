@@ -43,14 +43,12 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
     store = None
     if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
-        from .cli_checkpoint import Capture, UnitStore, validation_policy, validation_model, style_policy, checksum
+        from .cli_checkpoint import (Capture, UnitStore, execution_identity, validation_policy,
+                                     validation_model, style_policy, checksum)
         from .grounding import policy_hash
-        from .cli_agent import arguments
         identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,
                         request=dict(system=system, user=base_user, response_schema=schema),
-                        execution=dict(runner=cfg.agent.runner, model=cfg.agent.model,
-                                       command=cfg.agent.command, args=cfg.agent.args,
-                                       arguments=arguments(cfg.agent, schema)),
+                        execution=execution_identity(cfg.agent, schema),
                         prompt_policy=unit_policy, validation_policy=validation_policy(),
                         validation_model=validation_model(model),
                         validation_answers=checksum(answers),
