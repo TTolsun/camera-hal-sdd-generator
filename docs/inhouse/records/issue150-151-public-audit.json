@@ -1,0 +1,2340 @@
+{
+  "schema": 1,
+  "status": "independent audit complete; final publication pending",
+  "human_approval": "not performed",
+  "internal_hal_validation": "not performed",
+  "device_validation": "not performed",
+  "checked_at_utc": "2026-10-28T18:08:02.186343+00:00",
+  "live_checked_at_utc": "2026-10-28T18:09:06.638160+00:00",
+  "generator_main": "5474ac75c282517a4d10666d8f5b887911bdc029",
+  "public_main": "8f936663f82f71c729baaf34f0259b6580edd6b7",
+  "official_upstream": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "public_site_verification": {
+    "html_pages": 50,
+    "broken_links": 0,
+    "manifest_verified": true
+  },
+  "public_pages": {
+    "expected": [
+      "camera-model.html",
+      "camera-requests.html",
+      "component-index.html",
+      "framebuffer-allocator.html",
+      "glossary.html",
+      "index.html",
+      "ipa-algorithms.html",
+      "ipa-module-validation.html",
+      "ipa.html",
+      "ipu3-lsc-flow.html",
+      "ipu3-lsc-prepare.html",
+      "ipu3-lsc.html",
+      "onboarding.html",
+      "overview.html",
+      "pipeline-handler.html",
+      "pipeline-requests.html",
+      "request-diagnosis.html",
+      "request-lifecycle.html",
+      "rkisp1-dewarp.html",
+      "scenarios/camera_start.html",
+      "scenarios/camera_stop.html",
+      "scenarios/complete_request.html",
+      "scenarios/configure.html",
+      "scenarios/index.html",
+      "scenarios/manager_start.html",
+      "scenarios/queue_request.html",
+      "team-overview.html",
+      "vendor-assurance.html",
+      "vendor-integration.html",
+      "vendor-overview.html"
+    ],
+    "published_ko": [
+      "camera-model.html",
+      "component-index.html",
+      "framebuffer-allocator.html",
+      "glossary.html",
+      "index.html",
+      "ipa-module-validation.html",
+      "ipa.html",
+      "ipu3-lsc-flow.html",
+      "ipu3-lsc.html",
+      "onboarding.html",
+      "overview.html",
+      "pipeline-handler.html",
+      "request-lifecycle.html",
+      "rkisp1-dewarp.html",
+      "scenarios/camera_start.html",
+      "scenarios/camera_stop.html",
+      "scenarios/complete_request.html",
+      "scenarios/configure.html",
+      "scenarios/index.html",
+      "scenarios/manager_start.html",
+      "scenarios/queue_request.html",
+      "team-overview.html",
+      "vendor-assurance.html",
+      "vendor-integration.html",
+      "vendor-overview.html"
+    ],
+    "published_en": [
+      "camera-model.html",
+      "component-index.html",
+      "framebuffer-allocator.html",
+      "glossary.html",
+      "index.html",
+      "ipa-module-validation.html",
+      "ipa.html",
+      "ipu3-lsc-flow.html",
+      "ipu3-lsc.html",
+      "onboarding.html",
+      "overview.html",
+      "pipeline-handler.html",
+      "request-lifecycle.html",
+      "rkisp1-dewarp.html",
+      "scenarios/camera_start.html",
+      "scenarios/camera_stop.html",
+      "scenarios/complete_request.html",
+      "scenarios/configure.html",
+      "scenarios/index.html",
+      "scenarios/manager_start.html",
+      "scenarios/queue_request.html",
+      "team-overview.html",
+      "vendor-assurance.html",
+      "vendor-integration.html",
+      "vendor-overview.html"
+    ],
+    "missing_ko": [
+      "camera-requests.html",
+      "ipa-algorithms.html",
+      "ipu3-lsc-prepare.html",
+      "pipeline-requests.html",
+      "request-diagnosis.html"
+    ],
+    "missing_en": [
+      "camera-requests.html",
+      "ipa-algorithms.html",
+      "ipu3-lsc-prepare.html",
+      "pipeline-requests.html",
+      "request-diagnosis.html"
+    ],
+    "extra_ko": [],
+    "extra_en": []
+  },
+  "public_manifest": {
+    "build_id": "815398b2088e5031e6ef0e19fc5b8e7612f7c0ce7ee3c32a2f0051f2b94bb8ce",
+    "sha256": "128acaf07935bf811b476ccaaaf8a0973c9145810c7e3735172274a1e6cd66a3",
+    "inputs": {
+      "configuration": "5165ddbc20881e9faab1847e713ad47a1b895813e5fc64428a04948414034bc4",
+      "english_catalog": "45ae209f4470c70866ec0a6529a2ece16199d5a8b321d01620a3161a1b9f6e01",
+      "facts": "a8f2760f9177826b8b3f21f77184392669fe10b50f316a5748b7daa7af850815",
+      "intro": "e905b9be7897159fefd0128ddf12038121a30b5ccaa5966908cee203a53d3914",
+      "markdown/camera-model.md": "2cdad831ab053f634824de1b5d62b1e64a53d9d5a65e001836cacfa09f22df58",
+      "markdown/component-index.md": "67aae7a19393a4f946a6c42a7e26a5c3701604aaeec48a1cd6509f75870ed399",
+      "markdown/framebuffer-allocator.md": "2b8e0ed513b34b8cf53278d40257af0a1f2ba4447d430399462889ec6c78656d",
+      "markdown/ipa-module-validation.md": "83eed65ccdca1a8d90b1f95f828f951efcc65039baa85942a0ced9e4d22ad0bb",
+      "markdown/ipa.md": "63ab2f564581175f7795728175f2e8020d6284340949df3e0d732a02da0431f4",
+      "markdown/ipu3-lsc-flow.md": "5087b0d711879facd35299cc92f31848f6fec71b502c383b98e344086fe5ebb7",
+      "markdown/ipu3-lsc.md": "0081ce549b99ab08f6c0771d59dd34e445b1b9cffbad97ef11e167f100eaa162",
+      "markdown/onboarding.md": "e9a15520bfbbf5bbc989a7029fba209309ec9c391c28027669de9edad3659104",
+      "markdown/overview.md": "b19f066181b256fd99cef8678057a052f134a63e93ddaf67d010e0047cf2ece5",
+      "markdown/pipeline-handler.md": "464a535e14a040876b2bcef4a6932e63e91e2fd527c100d737b35665531da3cb",
+      "markdown/request-lifecycle.md": "a7059afcaaf287472eb88e4a33e14463e50969c17ad37372f993a5aa39533fca",
+      "markdown/rkisp1-dewarp.md": "d4fcfeb9e2123448a937f66e46517c0ad9cc9a15ec43327dc735cb976b1e6cc3",
+      "markdown/scenarios/camera_start.md": "01150dee5a0bb0a76408b0e7018607955c8246aa9d7a875b016af6a0036f8802",
+      "markdown/scenarios/camera_stop.md": "beabab2c7d0624c4a9feb9200c8cc2e0b705293f0267945cf3a78a06c6c698b7",
+      "markdown/scenarios/complete_request.md": "559961fd7e802e7145995680d711a6c851a00d13a3fc34d1ead4cbb4586cd282",
+      "markdown/scenarios/configure.md": "9680e461576404d3ebcde861aee45dc0a7bd096a106358ba5960925ec1f4bfed",
+      "markdown/scenarios/index.md": "42ad39a90be8c6c4f53735f7fe4b60e60e0029276360dca10414a949f7985cc3",
+      "markdown/scenarios/manager_start.md": "eac7f1b56828bb75c1b9584356ec6bd6ca8f070d382dbd328adcad1359b8c59b",
+      "markdown/scenarios/queue_request.md": "21d053df568aa485d1d7bb46c9e2c1b24bea085a1efa41a140920512ab8af9fd",
+      "markdown/team-overview.md": "4e557dff3d4e3b13774be6fdac96789f77bc94a3e20b8ae51d70d241ae9cdaee",
+      "markdown/vendor-assurance.md": "a690ae50bd5f188d4b026e2497c07cc3dc895215caf2fe4b7a6a529db1071231",
+      "markdown/vendor-integration.md": "d03878f5ecd7d3d138435a0e6c12f4d8de35ca2cdd0979ad51e81e95c9712366",
+      "markdown/vendor-overview.md": "9f130b7c6590f8e0d6e57e7c1257d865ad5f9cc2790841c450c4505e6b40745d",
+      "sections": "d5ad3bbc371c805b464578596ed96be17d2efe74a25000d7a3b845735874f7a5",
+      "visuals": "0fc3dea479d6fa3e2ec2f1bb62fea0796388dece80b2989a7ad0eef596fd9f6a"
+    }
+  },
+  "public_run_record": {
+    "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+    "generator_commit": "696f59dea33bd36940f7c694742fd92adc03c43a",
+    "build_id": "4bb51d3d0979d1d9284cb2776a7210ee890b3202bf80ec8bda7c7e7575ec0e8a",
+    "validation": {
+      "html_pages": 25,
+      "broken_links": 0,
+      "manifest_verified": true,
+      "repeat_identical": true
+    },
+    "prepared_at": "2026-10-28T01:34:22.607158+00:00",
+    "build_id_matches_manifest": false
+  },
+  "public_manuscripts": {
+    "camera-model.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "ollama/qwen3.5:9b",
+      "generated_at": "2026-10-26 14:23:24+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 8786,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "component-index.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:31+00:00",
+      "generation_method": "extracted-structure",
+      "prose_chars": 75,
+      "generated_design_keys": []
+    },
+    "framebuffer-allocator.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "cli/hermes/qwen3.5:9b-ctx64k",
+      "generated_at": "2026-10-26 19:59:13+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 891,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "ipa-module-validation.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "cli/claude/claude-haiku-5-5",
+      "generated_at": "2026-10-27 12:55:27+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 595,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "ipa.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "ollama/qwen3.5:9b",
+      "generated_at": "2026-10-26 14:23:09+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 11493,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "maintenance_lineage",
+        "maintenance_mode",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "ipu3-lsc-flow.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "cli/claude/claude-haiku-5-5",
+      "generated_at": "2026-10-27 23:01:29+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 10007,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "ipu3-lsc.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:11+00:00",
+      "generation_method": "extracted-structure",
+      "prose_chars": 1231,
+      "generated_design_keys": []
+    },
+    "onboarding.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "cli/hermes/qwen3.5:9b-ctx64k",
+      "generated_at": "2026-10-27 01:23:22+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 1048,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "overview.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "ollama/qwen3.5:9b",
+      "generated_at": "2026-10-26 14:23:21+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 4119,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "pipeline-handler.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "cli/claude/claude-haiku-5-5",
+      "generated_at": "2026-10-27 20:55:56+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 11211,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "request-lifecycle.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "ollama/qwen3.5:9b",
+      "generated_at": "2026-10-26 14:23:28+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 11141,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "rkisp1-dewarp.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "cli/claude/claude-haiku-5-5",
+      "generated_at": "2026-10-27 13:34:07+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 7386,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "scenarios/camera_start.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:29+00:00",
+      "generation_method": "extracted-scenario",
+      "prose_chars": 897,
+      "generated_design_keys": []
+    },
+    "scenarios/camera_stop.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:29+00:00",
+      "generation_method": "extracted-scenario",
+      "prose_chars": 857,
+      "generated_design_keys": []
+    },
+    "scenarios/complete_request.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:29+00:00",
+      "generation_method": "extracted-scenario",
+      "prose_chars": 1010,
+      "generated_design_keys": []
+    },
+    "scenarios/configure.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:29+00:00",
+      "generation_method": "extracted-scenario",
+      "prose_chars": 1098,
+      "generated_design_keys": []
+    },
+    "scenarios/index.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:29+00:00",
+      "generation_method": "deterministic",
+      "prose_chars": 65,
+      "generated_design_keys": []
+    },
+    "scenarios/manager_start.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:29+00:00",
+      "generation_method": "extracted-scenario",
+      "prose_chars": 873,
+      "generated_design_keys": []
+    },
+    "scenarios/queue_request.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": null,
+      "generated_at": "2026-10-26 14:23:29+00:00",
+      "generation_method": "extracted-scenario",
+      "prose_chars": 947,
+      "generated_design_keys": []
+    },
+    "team-overview.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "response-bundle/claude-haiku-5-5-subagent-high",
+      "generated_at": "2026-10-27 00:53:12+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 3649,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "vendor-assurance.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "cli/hermes/qwen3.5:9b-ctx64k",
+      "generated_at": "2026-10-27 01:03:50+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 1820,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "vendor-integration.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "cli/claude/claude-haiku-5-5",
+      "generated_at": "2026-10-27 21:11:09+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 6435,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    },
+    "vendor-overview.md": {
+      "manifest_hash_matches": true,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "agent": "response-bundle/claude-haiku-5-5-subagent-high",
+      "generated_at": "2026-10-27 00:53:30+00:00",
+      "generation_method": "facts-and-llm",
+      "prose_chars": 3862,
+      "generated_design_keys": [
+        "answers",
+        "body_sha256",
+        "generated_topics",
+        "grounding_policy",
+        "grounding_review",
+        "input_fingerprint",
+        "replayed_units",
+        "reused_topics",
+        "schema",
+        "topic_agents",
+        "topic_inputs"
+      ]
+    }
+  },
+  "catalog": {
+    "path": "publication/issue107-claude-part2/english.json",
+    "sha256": "45ae209f4470c70866ec0a6529a2ece16199d5a8b321d01620a3161a1b9f6e01",
+    "manifest_hash_matches": true,
+    "review_status": "human-review-pending",
+    "strings": 1826,
+    "pages": 25,
+    "source_page_hash_mismatches": [],
+    "catalog_pair_errors": [
+      {
+        "source": "\"자동 검사 통과\"는 인용한 코드 위치와 문장 형식을 기계로 확인했다는 뜻이며, 사람의 내용 승인이 아닙니다. 문서 상단에 검토 상태를, 아래 생성 근거에 분석 커밋과 자동 검사 결과를 표시합니다. 코드 발췌와 대조한 설명도 내용이 맞는지 사람이 검토해야 합니다.",
+        "translated": "\"Automatic checks passed\" means a machine checked the cited code locations and the sentence form; it is not human approval of the content. Each document shows its review status at the top, and its analysis commit and automatic check result in the generation evidence at the bottom. Explanations checked against code excerpts still need a person to confirm that they are correct.",
+        "error": "The source states a binding obligation or prohibition. Preserve it with must/shall or must not; should weakens the contract."
+      },
+      {
+        "source": "가상 호출 후보·예약 대상 등 확인이 필요한 경계 기록이 17개 있습니다. 추적 범위와 경계 표에서 후보를 구분한 뒤 실제 객체와 연결 방식을 확인해야 합니다.",
+        "translated": "17 boundary records need verification, including virtual-call candidates and dispatch targets. Distinguish candidates in the trace-scope and boundary table, then check the actual objects and connection types.",
+        "error": "The source states a binding obligation or prohibition. Preserve it with must/shall or must not; should weakens the contract."
+      },
+      {
+        "source": "가상 호출 후보·예약 대상 등 확인이 필요한 경계 기록이 1개 있습니다. 추적 범위와 경계 표에서 후보를 구분한 뒤 실제 객체와 연결 방식을 확인해야 합니다.",
+        "translated": "1 boundary records need verification, including virtual-call candidates and dispatch targets. Distinguish candidates in the trace-scope and boundary table, then check the actual objects and connection types.",
+        "error": "The source states a binding obligation or prohibition. Preserve it with must/shall or must not; should weakens the contract."
+      },
+      {
+        "source": "가상 호출 후보·예약 대상 등 확인이 필요한 경계 기록이 20개 있습니다. 추적 범위와 경계 표에서 후보를 구분한 뒤 실제 객체와 연결 방식을 확인해야 합니다.",
+        "translated": "20 boundary records need verification, including virtual-call candidates and dispatch targets. Distinguish candidates in the trace-scope and boundary table, then check the actual objects and connection types.",
+        "error": "The source states a binding obligation or prohibition. Preserve it with must/shall or must not; should weakens the contract."
+      },
+      {
+        "source": "가상 호출 후보·예약 대상 등 확인이 필요한 경계 기록이 2개 있습니다. 추적 범위와 경계 표에서 후보를 구분한 뒤 실제 객체와 연결 방식을 확인해야 합니다.",
+        "translated": "2 boundary records need verification, including virtual-call candidates and dispatch targets. Distinguish candidates in the trace-scope and boundary table, then check the actual objects and connection types.",
+        "error": "The source states a binding obligation or prohibition. Preserve it with must/shall or must not; should weakens the contract."
+      },
+      {
+        "source": "메서드 전달 대상이며 동기·비동기 여부는 호출부에서 확인해야 합니다.",
+        "translated": "Method-dispatch target; check the call site to determine whether execution is synchronous or asynchronous.",
+        "error": "The source states a binding obligation or prohibition. Preserve it with must/shall or must not; should weakens the contract."
+      },
+      {
+        "source": "조건 분기, 반복 횟수와 실제 실행 스레드는 이 호출 목록만으로 확정할 수 없습니다. 가상 호출 후보는 실제 객체에 따라 선택됩니다. 예약 표시는 인자로 전달한 메서드 대상을 뜻하며, 비동기 실행을 보증하지 않습니다. 호출부의 연결 방식과 동기화 계약을 확인해야 합니다.",
+        "translated": "This call list alone cannot establish conditional branches, iteration counts or actual execution threads. The actual object determines the virtual-call candidate. A dispatch marker identifies a method passed as an argument; it does not guarantee asynchronous execution. Check the connection type and synchronization contract at the call site.",
+        "error": "The source states a binding obligation or prohibition. Preserve it with must/shall or must not; should weakens the contract."
+      }
+    ],
+    "english_unprotected_korean": {}
+  },
+  "catalog_displayed_error_occurrences": 29,
+  "catalog_displayed_error_pages": {
+    "index.html": 1,
+    "scenarios/camera_start.html": 7,
+    "scenarios/camera_stop.html": 5,
+    "scenarios/complete_request.html": 2,
+    "scenarios/configure.html": 5,
+    "scenarios/manager_start.html": 4,
+    "scenarios/queue_request.html": 5
+  },
+  "search": {
+    "ko": {
+      "entries": 259,
+      "broken": [],
+      "example": [
+        {
+          "title": "libcamera 설계 문서",
+          "page": "libcamera 설계 문서",
+          "url": "index.html"
+        }
+      ]
+    },
+    "en/": {
+      "entries": 259,
+      "broken": [],
+      "example": [
+        {
+          "title": "libcamera Design Documentation",
+          "page": "libcamera Design Documentation",
+          "url": "index.html"
+        }
+      ]
+    }
+  },
+  "legacy_anchor_routes": [
+    {
+      "page": "pipeline-handler.html",
+      "q": "요청 준비와 장치 큐의 조건과 근거를 대조하세요.",
+      "to": "pipeline-requests.md#요청-준비와-장치-큐",
+      "anchor": "요청-준비와-장치-큐",
+      "public_anchor_present": true
+    },
+    {
+      "page": "pipeline-handler.html",
+      "q": "버퍼 완료와 요청 반환의 조건과 근거를 대조하세요.",
+      "to": "pipeline-requests.md#버퍼-완료와-요청-반환",
+      "anchor": "버퍼-완료와-요청-반환",
+      "public_anchor_present": true
+    },
+    {
+      "page": "pipeline-handler.html",
+      "q": "“요청이 대기하거나 장치로 가는 조건” 그림을 확인하세요.",
+      "to": "pipeline-requests.md#요청이-대기하거나-장치로-가는-조건",
+      "anchor": "요청이-대기하거나-장치로-가는-조건",
+      "public_anchor_present": true
+    },
+    {
+      "page": "pipeline-handler.html",
+      "q": "“버퍼 완료에서 요청 반환까지” 그림을 확인하세요.",
+      "to": "pipeline-requests.md#버퍼-완료에서-요청-반환까지",
+      "anchor": "버퍼-완료에서-요청-반환까지",
+      "public_anchor_present": true
+    },
+    {
+      "page": "ipa.html",
+      "q": "보정 전 튜닝 파일의 조건과 근거를 대조하세요.",
+      "to": "ipa-algorithms.md#보정-전-튜닝-파일",
+      "anchor": "보정-전-튜닝-파일",
+      "public_anchor_present": true
+    },
+    {
+      "page": "ipa.html",
+      "q": "소프트웨어 ISP 입력 버퍼의 텍스처 형식의 조건과 근거를 대조하세요.",
+      "to": "ipa-algorithms.md#소프트웨어-isp-입력-버퍼의-텍스처-형식",
+      "anchor": "소프트웨어-isp-입력-버퍼의-텍스처-형식",
+      "public_anchor_present": true
+    },
+    {
+      "page": "ipa.html",
+      "q": "소프트웨어 ISP 셰이더의 렌즈 음영 보정의 조건과 근거를 대조하세요.",
+      "to": "ipa-algorithms.md#소프트웨어-isp-셰이더의-렌즈-음영-보정",
+      "anchor": "소프트웨어-isp-셰이더의-렌즈-음영-보정",
+      "public_anchor_present": true
+    },
+    {
+      "page": "ipu3-lsc-flow.html",
+      "q": "파라미터 갱신 조건의 조건과 근거를 대조하세요.",
+      "to": "ipu3-lsc-prepare.md#파라미터-갱신-조건",
+      "anchor": "파라미터-갱신-조건",
+      "public_anchor_present": true
+    },
+    {
+      "page": "ipu3-lsc-flow.html",
+      "q": "“LSC 파라미터를 갱신하는 분기” 그림을 확인하세요.",
+      "to": "ipu3-lsc-prepare.md#lsc-파라미터를-갱신하는-분기",
+      "anchor": "lsc-파라미터를-갱신하는-분기",
+      "public_anchor_present": true
+    },
+    {
+      "page": "camera-model.html",
+      "q": "요청 생성과 완료의 조건과 근거를 대조하세요.",
+      "to": "camera-requests.md#요청-생성과-완료",
+      "anchor": "요청-생성과-완료",
+      "public_anchor_present": true
+    },
+    {
+      "page": "camera-model.html",
+      "q": "소유권과 재사용의 조건과 근거를 대조하세요.",
+      "to": "camera-requests.md#소유권과-재사용",
+      "anchor": "소유권과-재사용",
+      "public_anchor_present": true
+    },
+    {
+      "page": "camera-model.html",
+      "q": "“요청과 버퍼를 유지할 기간” 그림을 확인하세요.",
+      "to": "camera-requests.md#요청과-버퍼를-유지할-기간",
+      "anchor": "요청과-버퍼를-유지할-기간",
+      "public_anchor_present": true
+    },
+    {
+      "page": "request-lifecycle.html",
+      "q": "구성 실패를 좁히는 순서의 조건과 근거를 대조하세요.",
+      "to": "request-diagnosis.md#구성-실패를-좁히는-순서",
+      "anchor": "구성-실패를-좁히는-순서",
+      "public_anchor_present": true
+    },
+    {
+      "page": "request-lifecycle.html",
+      "q": "실패 위치별 확인 순서의 조건과 근거를 대조하세요.",
+      "to": "request-diagnosis.md#실패-위치별-확인-순서",
+      "anchor": "실패-위치별-확인-순서",
+      "public_anchor_present": true
+    },
+    {
+      "page": "request-lifecycle.html",
+      "q": "“요청이 대기하거나 장치로 가는 조건” 그림을 확인하세요.",
+      "to": "request-diagnosis.md#요청이-대기하거나-장치로-가는-조건",
+      "anchor": "요청이-대기하거나-장치로-가는-조건",
+      "public_anchor_present": true
+    },
+    {
+      "page": "request-lifecycle.html",
+      "q": "“구성 실패를 좁히는 분기” 그림을 확인하세요.",
+      "to": "request-diagnosis.md#구성-실패를-좁히는-분기",
+      "anchor": "구성-실패를-좁히는-분기",
+      "public_anchor_present": true
+    }
+  ],
+  "input_verification": {
+    "source_links": {
+      "checked": 1721,
+      "immutable_blobs": 465,
+      "errors": []
+    },
+    "archived_facts": {
+      "path": "qwen-full/publication/facts.json",
+      "sha256": "dc230198da02a1abcc4576c494ba95669678608e3a98f7262b84047e6a30bf19",
+      "matches_site_input": false,
+      "source_commit": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+      "available_excerpts": 258,
+      "excerpt_errors": []
+    },
+    "page_fingerprints": {
+      "vendor-overview": {
+        "recorded_evidence": "04c9a33369a1f4ac2eb82dee6c29fa458e105e321c6a0841eb9eaa1672b7a5d0",
+        "recorded_design": "04c9a33369a1f4ac2eb82dee6c29fa458e105e321c6a0841eb9eaa1672b7a5d0",
+        "current_section_with_archived_facts": "5ace1fb7b1213323b9a0cf5c07068f21eace21f9f4e2368e43331837a84f3c53",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "vendor-assurance": {
+        "recorded_evidence": "cc822f4f1c5839eb5afbf30c08ee84ea83a34c887d5a4ff0cad9049b75ae2c98",
+        "recorded_design": "cc822f4f1c5839eb5afbf30c08ee84ea83a34c887d5a4ff0cad9049b75ae2c98",
+        "current_section_with_archived_facts": "cc822f4f1c5839eb5afbf30c08ee84ea83a34c887d5a4ff0cad9049b75ae2c98",
+        "matches_current_questions_on_archived_facts": true
+      },
+      "vendor-integration": {
+        "recorded_evidence": "8a073758cd8aa53cdaa36ac6881dbb4850eb801e90b5edcbc9ded5d83e2137ea",
+        "recorded_design": "8a073758cd8aa53cdaa36ac6881dbb4850eb801e90b5edcbc9ded5d83e2137ea",
+        "current_section_with_archived_facts": "0bd5fa1c238cb28620fd167b72bf9736dcad34eb908229aec3f6a5c9d540bf42",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "pipeline-handler": {
+        "recorded_evidence": "0129b91370eccf4659f5e61748d6efad60fb4ba8627692b68ec471354695ac07",
+        "recorded_design": "0129b91370eccf4659f5e61748d6efad60fb4ba8627692b68ec471354695ac07",
+        "current_section_with_archived_facts": "d0f461819d32afa99d2bd791078db44632855b206ecafd132eb203219574ba9b",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "ipa": {
+        "recorded_evidence": "84611553aff2de125c4a301d56f8b196027713cb1261cbeea7f5b956cb7d641f",
+        "recorded_design": "84611553aff2de125c4a301d56f8b196027713cb1261cbeea7f5b956cb7d641f",
+        "current_section_with_archived_facts": "81d4716deda7c87086cb4ccf55b25d6a5f75a070774ce00e377c4642f4b17564",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "ipu3-lsc-flow": {
+        "recorded_evidence": "5951e563c34787a5bf8e4224b9873d5b13a40acbf1a2e6164398faa95dfc098a",
+        "recorded_design": "5951e563c34787a5bf8e4224b9873d5b13a40acbf1a2e6164398faa95dfc098a",
+        "current_section_with_archived_facts": "e0aaf2de3bf1bf4ae475ed727d75d555e5c5bc9403e67e24876005e3e8d434d8",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "rkisp1-dewarp": {
+        "recorded_evidence": "102fa65a8da38877ad5c63f8eafc0cc581fd4c572c0ea7a32e23dd24b9b6a8f2",
+        "recorded_design": "102fa65a8da38877ad5c63f8eafc0cc581fd4c572c0ea7a32e23dd24b9b6a8f2",
+        "current_section_with_archived_facts": "102fa65a8da38877ad5c63f8eafc0cc581fd4c572c0ea7a32e23dd24b9b6a8f2",
+        "matches_current_questions_on_archived_facts": true
+      },
+      "team-overview": {
+        "recorded_evidence": "591da4e17d16add42fbe67cf79417ecb3d0838749a258b54acd788e3d47dcb4a",
+        "recorded_design": "591da4e17d16add42fbe67cf79417ecb3d0838749a258b54acd788e3d47dcb4a",
+        "current_section_with_archived_facts": "77ce406173b835e2d10e41324ddb6768029bab0024b6bcddedf4d7a2f21fe332",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "overview": {
+        "recorded_evidence": "d2bfc66af60c434e721875ce43383cac9ecb81fa9ffde9b3792560cdc8927057",
+        "recorded_design": "d2bfc66af60c434e721875ce43383cac9ecb81fa9ffde9b3792560cdc8927057",
+        "current_section_with_archived_facts": "be63952af0c22bd954305da1bc3ab8cd95363ffb0acf8bffa6ae5f402e266019",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "onboarding": {
+        "recorded_evidence": "d2b44ee8ee6419354654dfbfdca9d03a3db3a8f2b7a6241475d23ba5372012af",
+        "recorded_design": "d2b44ee8ee6419354654dfbfdca9d03a3db3a8f2b7a6241475d23ba5372012af",
+        "current_section_with_archived_facts": "92f1438980a7cf6f161276bc08809e0e73165f2bc7c177b5795604f64d674012",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "camera-model": {
+        "recorded_evidence": "1f6d950269beb67147e34134ce549914b9e38bf3e3edb089731b058856a96c76",
+        "recorded_design": "1f6d950269beb67147e34134ce549914b9e38bf3e3edb089731b058856a96c76",
+        "current_section_with_archived_facts": "0d7c62e80bc17084cf5f521c3598de889d77cb82119c95168f552de815a9e3a0",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "request-lifecycle": {
+        "recorded_evidence": "26e9dd4d3890bf3acc2ea9e184ba4168a9e6352c49d050693e3b32c553c1de9d",
+        "recorded_design": "26e9dd4d3890bf3acc2ea9e184ba4168a9e6352c49d050693e3b32c553c1de9d",
+        "current_section_with_archived_facts": "01a34e3b7a25cee73022837ca983cfd4ba00cf2cfd269e2f4746d1183973f99f",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "ipa-module-validation": {
+        "recorded_evidence": "ee9673275e0bd838a4d1d9097cd779a993621b88c714b97f4822b5c6ab5af73d",
+        "recorded_design": "ee9673275e0bd838a4d1d9097cd779a993621b88c714b97f4822b5c6ab5af73d",
+        "current_section_with_archived_facts": "e6275cfa6ccb8146bd2c85b639b1deef379062fa6af937f0ce6d84a13feec8d2",
+        "matches_current_questions_on_archived_facts": false
+      },
+      "framebuffer-allocator-boundary": {
+        "recorded_evidence": "3769312205c82e09f7823f75fa569e1849a3bc14f68d50ac1361cfbf73cc89e4",
+        "recorded_design": "3769312205c82e09f7823f75fa569e1849a3bc14f68d50ac1361cfbf73cc89e4",
+        "current_section_with_archived_facts": "8ef0f8b5f9a00acde7f3016c77b4fdc6a354250b757b4bf69e0996c858f3d337",
+        "matches_current_questions_on_archived_facts": false
+      }
+    },
+    "warning": "Archive is not the exact manifest input; current question comparison is an offline incompatibility test, not a certified historical rebuild."
+  },
+  "live": {
+    "checked_at_utc": "2026-10-28T18:09:06.638160+00:00",
+    "base_url": "https://ttolsun.github.io/libcamera-sdd/",
+    "manifest_build_id": "815398b2088e5031e6ef0e19fc5b8e7612f7c0ce7ee3c32a2f0051f2b94bb8ce",
+    "public_git_build_id": "815398b2088e5031e6ef0e19fc5b8e7612f7c0ce7ee3c32a2f0051f2b94bb8ce",
+    "manifest_equal_to_public_git": true,
+    "outputs": {
+      ".nojekyll": {
+        "status": 200,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-0\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "assets/glossary.json": {
+        "status": 200,
+        "sha256": "7b4281a25f5f542feb3ff2521217617246e9526e4c188e923f76b301a703725d",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-329b\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "assets/reading.css": {
+        "status": 200,
+        "sha256": "73dd1ec50893a9ee9fb234214c601032cbf93bf1992b7028a71507efc62312c7",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-3c81\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "assets/search.json": {
+        "status": 200,
+        "sha256": "fca9f86ebeb7d8447ad732a1d6876f235a2a6325b5b8772b678a73aed94fcc4c",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-9e4d\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "assets/site.js": {
+        "status": 200,
+        "sha256": "cedfa5d920686ad13cbec70a7459ce763e880ad65d933b7661f6bc4894afe07a",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-5c6a\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "camera-model.camera-states.mmd": {
+        "status": 200,
+        "sha256": "5e85a4c3e7a1d552aeb77c6b7597fc00b699a9a35fa5513822cf28841494a2b3",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-431\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "camera-model.html": {
+        "status": 200,
+        "sha256": "e3cc336466ac47197de4b1973f8a27defbc4ac1f0b3afab9c1c300e0e76f91fb",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1e475\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "camera-model.md": {
+        "status": 200,
+        "sha256": "2cdad831ab053f634824de1b5d62b1e64a53d9d5a65e001836cacfa09f22df58",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1ea2d\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "camera-model.mmd": {
+        "status": 200,
+        "sha256": "690ab03aa464e0ffe621eef21923985d37e72c0473694e8e52eca7098245bdd4",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-12d\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "camera-model.request-ownership.mmd": {
+        "status": 200,
+        "sha256": "d18fe13f4a366288653e3eaf78360c49c303c2c97b59cf9474e5f9eb18d94ef1",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-3e9\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "component-index.html": {
+        "status": 200,
+        "sha256": "9c65b5244b856b7effbbed466cbd045b47e3551190e7a2235111fcceed97acb3",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-a21d0\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "component-index.md": {
+        "status": 200,
+        "sha256": "67aae7a19393a4f946a6c42a7e26a5c3701604aaeec48a1cd6509f75870ed399",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-2e05a\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/assets/glossary.json": {
+        "status": 200,
+        "sha256": "91d88c583b58e04660c80fc5b20363c279926565f30a50a106501a27fa5b33c0",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-2e75\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/assets/search.json": {
+        "status": 200,
+        "sha256": "fe7a64d586e572cebe8233b9fe45a3bc9f7ee9f2503b4a3f57d43ed5946b8bae",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-a147\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/camera-model.camera-states.mmd": {
+        "status": 200,
+        "sha256": "a8c7790379fe1cb8cb3800cf33b0708c9d4385ccaa25a99bed5a8023f1b30bc0",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-265\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/camera-model.html": {
+        "status": 200,
+        "sha256": "42ccf08046a8edc206f13ae475614d76c39dac202e66cca1233afe5cde08483e",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1daab\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/camera-model.mmd": {
+        "status": 200,
+        "sha256": "1d7efe7fca9de028e001ee19359ace61e5d717f1be60a7b842ecae908ce184aa",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-146\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/camera-model.request-ownership.mmd": {
+        "status": 200,
+        "sha256": "42744bc1d72b762c621280145976abd4190d7a6128356285ff644490fa820f1b",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-1a7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/component-index.html": {
+        "status": 200,
+        "sha256": "684fb587504f7b85761943a0d6a762366dc00dc5b6802dbd5bee34e435d78791",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-a9ba2\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/framebuffer-allocator.html": {
+        "status": 200,
+        "sha256": "2b0605d4dc7a7e260154464476d2d57e3096a8984e5379fc1888c5c13b25f4ff",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-5636\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/glossary.html": {
+        "status": 200,
+        "sha256": "9c71231eceedc0c44b61c71c46be201af2696a1c4afc121f94ddafea7cc70efc",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-460a\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/index.html": {
+        "status": 200,
+        "sha256": "e411d2134b546c16ab325447984c67a6fcd1036ca61694f7a0f08d24158c4422",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-54af\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/ipa-module-validation.html": {
+        "status": 200,
+        "sha256": "4be22b47749b381d3f779d403f137337d83f51e277e76b12344ab3e1e63ccfe8",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-4295\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/ipa.execution-boundaries.mmd": {
+        "status": 200,
+        "sha256": "7fc0f97b4ed5e423618a189c4a584df5fef079e165c20f29dc4de794e6536566",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-12f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/ipa.html": {
+        "status": 200,
+        "sha256": "e419f4ecb3e7be1a13c9286068d2dd39d1019683a258b7913675467ab5bf496b",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-23d0a\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/ipa.mmd": {
+        "status": 200,
+        "sha256": "d0e69379cb493fec9d18f3dc4375295f5e17fbeac793901378cbebd5360a0e69",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-285\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/ipa.proxy-selection.mmd": {
+        "status": 200,
+        "sha256": "761d0477defa9f8fba46e1937bace6d484ad04100196d0dcfb012524551c93a1",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-23f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/ipu3-lsc-flow.html": {
+        "status": 200,
+        "sha256": "ab983bf47100a38e96632ff54b0703fbf8a4bcdaecaa4eb5e5d7cb38157e1061",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-13d4d\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/ipu3-lsc-flow.lsc-request-input.mmd": {
+        "status": 200,
+        "sha256": "14aaf86298f486f74ccbbc02aface043a1b0cb192629b96b146fa5b24e78d8e7",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-171\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/ipu3-lsc-flow.lsc-update-gates.mmd": {
+        "status": 200,
+        "sha256": "621b289a3e478068a9f08728e6f881a915190013e6f1b45fc982fba3f6ab716f",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-28e\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/ipu3-lsc-flow.mmd": {
+        "status": 200,
+        "sha256": "dec53bc1593b832cc101f916d7c57c6546ba5565ac5cca1aac385818a03feff1",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-26b\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/ipu3-lsc.html": {
+        "status": 200,
+        "sha256": "4284678ffbb3c38c86f94169123c5214ba739065a925fdf378931ec95057ad0b",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-5144\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/ipu3-lsc.mmd": {
+        "status": 200,
+        "sha256": "3fff97d9131e5648b1b5c4dc9d4b0e3703495280646079fb4d7078364f585ad1",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-2b5\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/onboarding.html": {
+        "status": 200,
+        "sha256": "6a7c5dc5fc00b52232e85f65f62e6bc3a745a77f032768cf486c3e7c9252f2bc",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-4fc2\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/overview.discovery-map.mmd": {
+        "status": 200,
+        "sha256": "abeb6af146263006b85be3f26e8dbc75c4c8c56fde7171813160f29833041b77",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-155\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/overview.html": {
+        "status": 200,
+        "sha256": "c7b0e19141ee1576dd5e7c88c42fa010a1559fd6e6fab2f0890456f2f659e9e8",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-10301\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/overview.mmd": {
+        "status": 200,
+        "sha256": "e67062a0eaa7b20e35034d94af48044bbac03df281e42ec03d1441a9679d505d",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1e2\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/overview.submission-completion.mmd": {
+        "status": 200,
+        "sha256": "c693cae76b2e8926171dcf3ff4ae190e44de3a727560c76399db671c13adf3a2",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-14e\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/pipeline-handler.buffer-request-completion.mmd": {
+        "status": 200,
+        "sha256": "eaaf02e5281fc0c31921bb705ee5c54c71c6b57948119b484f42242fd7a5d066",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1a7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/pipeline-handler.html": {
+        "status": 200,
+        "sha256": "9392295019378a14f001db7fc3c287333a3bc1da28b2fd16ca88fd45f87ebffb",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1b304\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/pipeline-handler.mmd": {
+        "status": 200,
+        "sha256": "43b0a7f55a610280603b6d4785c74a0e17c971f55bcfcd5791bb0d12ce1391b7",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-43e\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/pipeline-handler.queue-gates.mmd": {
+        "status": 200,
+        "sha256": "2d6e658c5d3ae66b6d455f83b7f6dd9bc017dd710033b60ff4970b6390200dcf",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-270\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/request-lifecycle.configure-failures.mmd": {
+        "status": 200,
+        "sha256": "4ef946d8d431b47b45a82c38775619200deed026953ed1406b2ec1a93628f51d",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1f9\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/request-lifecycle.html": {
+        "status": 200,
+        "sha256": "a95f74ae87896ae7d8ab56a7b09fd4dfea3a27dc46dfe0319491e8d40d105b15",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-25d72\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/request-lifecycle.queue-gates.mmd": {
+        "status": 200,
+        "sha256": "2d6e658c5d3ae66b6d455f83b7f6dd9bc017dd710033b60ff4970b6390200dcf",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-270\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/request-lifecycle.request-ownership.mmd": {
+        "status": 200,
+        "sha256": "42744bc1d72b762c621280145976abd4190d7a6128356285ff644490fa820f1b",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1a7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/request-lifecycle.request-stages.mmd": {
+        "status": 200,
+        "sha256": "7a6bc242203f35b026a4ce0028eb695504a928605123067ce1e84a18e8d48619",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-2f1\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/request-lifecycle.stop-order.mmd": {
+        "status": 200,
+        "sha256": "57458b4cb76d02f488238322d23716557b1ff6bca8b9aaf9a3ef8512b03a8524",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-164\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/rkisp1-dewarp.dewarp-input-branches.mmd": {
+        "status": 200,
+        "sha256": "fc1fdf444a1c6eb336eae27cc0ee38e14e320aa45b3428d1e153292e18539989",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1f2\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/rkisp1-dewarp.html": {
+        "status": 200,
+        "sha256": "969ca8dc266d7e54f2659c574a5d7b178c2cdd2b1efd68e266d4d53ee39db0b9",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-113de\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/rkisp1-dewarp.per-camera-parameters.mmd": {
+        "status": 200,
+        "sha256": "161045c1577f88e8046734c75caaa438ee4834b953a0ea8eaf2bdee03819d894",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-194\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/scenarios/camera_start.html": {
+        "status": 200,
+        "sha256": "5d0c9e0c3bea1d01109b687ef8e2edb54f67dc08b496868ffa43c8eafa7287c4",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-8beb\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/scenarios/camera_start.mmd": {
+        "status": 200,
+        "sha256": "463ddd545a36ef84c474609f8947302ba23234afc1b4abc721385411784a81b3",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-b7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/scenarios/camera_stop.html": {
+        "status": 200,
+        "sha256": "6fb5ae7a46de8c27d56644c51f1eaebf97468f15e99f6113af82bb313abfa6d2",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-72cc\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/scenarios/camera_stop.mmd": {
+        "status": 200,
+        "sha256": "456661060179c150d56aa448477ee99014ca00a4c338e8c5612a382fc302ff58",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-da\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/scenarios/complete_request.html": {
+        "status": 200,
+        "sha256": "a80fea47a1a1cc69a19c4967737237310bbaa9cc629ffb533a44968099bfbde5",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1507c\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/scenarios/complete_request.mmd": {
+        "status": 200,
+        "sha256": "6515eda0d550b25f6c9e38d5a53d5d440ee2e918baf9fa2d55ed3a434ca3b839",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-3b2\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/scenarios/configure.html": {
+        "status": 200,
+        "sha256": "42c6df9ef6f8ad09d64f1e2b4c94c46d194e8355ca93e34b1b3245e82e35bd58",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-1a210\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/scenarios/configure.mmd": {
+        "status": 200,
+        "sha256": "3aa7bdc4ad3551d2ca394cc02f3d3e60eeb360c46ee11fc8b175cdcaa4d8a456",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-36a\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/scenarios/index.html": {
+        "status": 200,
+        "sha256": "95507670c6844de3d74ea1e081dece044903f9f6b9cfb5dc79c0ba144cb497ba",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-2e66\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/scenarios/manager_start.html": {
+        "status": 200,
+        "sha256": "2a9544282d65d0c529c837771e0de9f8decf9dbaca0b7ad91e1a84f11b93f979",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-72db\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/scenarios/manager_start.mmd": {
+        "status": 200,
+        "sha256": "6c9b74221d0d1ba79ad2a9651394e9d68f82d905aef97d296f8e5ed80bb5150b",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-4a\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/scenarios/queue_request.html": {
+        "status": 200,
+        "sha256": "514e1741e3c47fb904b9d4bf8f2c30c046320adb45c0b190c8ab317f681dec84",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-c0b4\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/scenarios/queue_request.mmd": {
+        "status": 200,
+        "sha256": "f0a5519deb55e79fe0087a573c731289284692417e6ac3cd4d0e6e3fbe3e9a96",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-bc\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/team-overview.camera-stack.mmd": {
+        "status": 200,
+        "sha256": "2d06331fb5ecb1dd82882545466c5fd34158b0e8034f04f0893d4262c5ac15a9",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1ef\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/team-overview.html": {
+        "status": 200,
+        "sha256": "64ace50712ed5b4c58c12390337a4fb41b7a9c3ae46a682f3807e2539fb68f1f",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-aebc\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/vendor-assurance.html": {
+        "status": 200,
+        "sha256": "d9d86a143d20bdfaf640e9952b2ec5d445b5f2d9a7b18f5fd6c638d971f20390",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-7ca8\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/vendor-assurance.mmd": {
+        "status": 200,
+        "sha256": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1bf\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/vendor-assurance.validation-results.mmd": {
+        "status": 200,
+        "sha256": "fb38e0386e1ab5ff9ea46770215bafe727286ceb88fbcf8d5857c9316eef6b8e",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-2d6\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/vendor-integration.html": {
+        "status": 200,
+        "sha256": "6aab14ed68733cb7aa84920841ac2a096a1043e8a1383e68ab8bdaaad3d1dd18",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-12f89\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/vendor-integration.integration-stages.mmd": {
+        "status": 200,
+        "sha256": "983fe490eb3c912fb72c8bb01437d1286f68695fd9328398ac06cf52189ce1a9",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-19f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/vendor-integration.mmd": {
+        "status": 200,
+        "sha256": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-1bf\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "en/vendor-overview.camera-stack.mmd": {
+        "status": 200,
+        "sha256": "2d06331fb5ecb1dd82882545466c5fd34158b0e8034f04f0893d4262c5ac15a9",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1ef\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/vendor-overview.hardware-boundary.mmd": {
+        "status": 200,
+        "sha256": "aa2f38181369f97ef681e1647793914029e4d8bf42a4d23e2e23443423831aaa",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-11d\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/vendor-overview.html": {
+        "status": 200,
+        "sha256": "e9044c84e42876a3127a98453ebcf9b25fa814867acf8953bde55cba002a8b59",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-c93d\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "en/vendor-overview.mmd": {
+        "status": 200,
+        "sha256": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1bf\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "framebuffer-allocator.html": {
+        "status": 200,
+        "sha256": "a18606f185c6005f27388920a83bcd8b6bd0a7827d24bbcf3c3cf0cc80fb4cf5",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-54b0\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "framebuffer-allocator.md": {
+        "status": 200,
+        "sha256": "2b8e0ed513b34b8cf53278d40257af0a1f2ba4447d430399462889ec6c78656d",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-2b7b\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "glossary.html": {
+        "status": 200,
+        "sha256": "f6dc3a5486e43fee8f3e01d9bfe2da4fefadd201b977ba4e10840963df991775",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-49d7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "index.html": {
+        "status": 200,
+        "sha256": "91474d03267d582372114508aa306188dcd2037fcb9826774aaa870adda93f09",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-548f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipa-module-validation.html": {
+        "status": 200,
+        "sha256": "30f6fe1a0ed150cb14ce0ca5027f16341b41418e6382dfec72f383379cec0cf8",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-415d\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipa-module-validation.md": {
+        "status": 200,
+        "sha256": "83eed65ccdca1a8d90b1f95f828f951efcc65039baa85942a0ced9e4d22ad0bb",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1ebb\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipa.execution-boundaries.mmd": {
+        "status": 200,
+        "sha256": "46bb6eb7dfd9ae6c5fb4f2b89db1228f9b511502be8b5b07043d9b8211a82a59",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-2d7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipa.html": {
+        "status": 200,
+        "sha256": "cc43b44ff543d02f54ac023edad64d5f9922d6aecd8a99f207326d91cfb08297",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-24691\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "ipa.md": {
+        "status": 200,
+        "sha256": "63ab2f564581175f7795728175f2e8020d6284340949df3e0d732a02da0431f4",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1f9ea\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipa.mmd": {
+        "status": 200,
+        "sha256": "ec587fa0163f0e627e9fcc07e4e4e99869e1a00b38a2502f0b7d03f07f7d4a02",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-263\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipa.proxy-selection.mmd": {
+        "status": 200,
+        "sha256": "77dbdea126cba18b2d48abd52e619658ecec0b7ccf5e8a5fd2693930ed9c3e82",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-43b\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "ipu3-lsc-flow.html": {
+        "status": 200,
+        "sha256": "651774a4eb41d405175981daf0764ec422d271f8dbe39dff3c00a51360b143f1",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-1465c\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "ipu3-lsc-flow.lsc-request-input.mmd": {
+        "status": 200,
+        "sha256": "ed87531e592c84a87205e32b6fe0cef780790cd7bbe0dbf28a49648cd3e505bb",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-31f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipu3-lsc-flow.lsc-update-gates.mmd": {
+        "status": 200,
+        "sha256": "7ce5b082b75f63bc2104888814724e516f362a19d5e1029df3aed6beb78e5fff",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-51f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "ipu3-lsc-flow.md": {
+        "status": 200,
+        "sha256": "5087b0d711879facd35299cc92f31848f6fec71b502c383b98e344086fe5ebb7",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-11451\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipu3-lsc-flow.mmd": {
+        "status": 200,
+        "sha256": "6a6e6b5f0ccbaa5968acf53a19759696d136d9cfe9ebd6ac4ad592f366336f57",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-254\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipu3-lsc.html": {
+        "status": 200,
+        "sha256": "cccb852c74747e1738b6b4bc582733ee91ad02b958e11abb6bb79a60b0d4561d",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-506f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "ipu3-lsc.md": {
+        "status": 200,
+        "sha256": "0081ce549b99ab08f6c0771d59dd34e445b1b9cffbad97ef11e167f100eaa162",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-1488\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "ipu3-lsc.mmd": {
+        "status": 200,
+        "sha256": "59fcc049c77263468ebfc9fff3af8f63caa64d1675cb11fd89e660bdd190197f",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-29c\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "onboarding.html": {
+        "status": 200,
+        "sha256": "a15e2d9ed69315652d0467cd3278bf26f7e1f01d6fe8a166da5d2ba52bbbfaaa",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-4f4a\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "onboarding.md": {
+        "status": 200,
+        "sha256": "e9a15520bfbbf5bbc989a7029fba209309ec9c391c28027669de9edad3659104",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-313f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "overview.discovery-map.mmd": {
+        "status": 200,
+        "sha256": "bfb7e6587c9da8b077a45b750bf58fa30d5730e46892e37e416d63b67aa064ec",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-2e7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "overview.html": {
+        "status": 200,
+        "sha256": "9968444c9c377a9c1ca5af6ba2308c460e08db65800f9aa1d821ed969c75e354",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-1084f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "overview.md": {
+        "status": 200,
+        "sha256": "b19f066181b256fd99cef8678057a052f134a63e93ddaf67d010e0047cf2ece5",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-f009\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "overview.mmd": {
+        "status": 200,
+        "sha256": "3696b45c0a5ffe5c8347308c3a4c2071bc379567084d6ccfd42ae7e61f11f5d8",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1be\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "overview.submission-completion.mmd": {
+        "status": 200,
+        "sha256": "3f6df056f59139183044282e82dd927bc81b44a42f249435713b41cd4c731d7d",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-2ee\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "pipeline-handler.buffer-request-completion.mmd": {
+        "status": 200,
+        "sha256": "3df370886ddaf79ac10b16e29d5e6cb4b0a466243e650b1f86a6754c840cad34",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-3c5\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "pipeline-handler.html": {
+        "status": 200,
+        "sha256": "a9860eb7eb3fde549f1444de0c0e8bf42d1b21ba6790c6fab5313d586e7a1b70",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-1bc90\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "pipeline-handler.md": {
+        "status": 200,
+        "sha256": "464a535e14a040876b2bcef4a6932e63e91e2fd527c100d737b35665531da3cb",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1a6ff\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "pipeline-handler.mmd": {
+        "status": 200,
+        "sha256": "66eb1db6ac7db3cf5534f4d86bb0b4cde21a6fa2ade0c79c8aca08736faf1b45",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-403\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "pipeline-handler.queue-gates.mmd": {
+        "status": 200,
+        "sha256": "aa74ca3e6912e006f0070d9d1a7d9c86501c4ad8f4019f1011cef9af32b649f6",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-614\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "request-lifecycle.configure-failures.mmd": {
+        "status": 200,
+        "sha256": "5c2e63fb237fd2c6b06949c88f3dfb49b5b3966dd1a1c1487b0918358bb9278f",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-459\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "request-lifecycle.html": {
+        "status": 200,
+        "sha256": "56d4c110a255e353ce55f531726413fa5e5d0e8af7da89dce4e2955fbf25e168",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-273b0\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "request-lifecycle.md": {
+        "status": 200,
+        "sha256": "a7059afcaaf287472eb88e4a33e14463e50969c17ad37372f993a5aa39533fca",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-234d4\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "request-lifecycle.queue-gates.mmd": {
+        "status": 200,
+        "sha256": "aa74ca3e6912e006f0070d9d1a7d9c86501c4ad8f4019f1011cef9af32b649f6",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-614\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "request-lifecycle.request-ownership.mmd": {
+        "status": 200,
+        "sha256": "d18fe13f4a366288653e3eaf78360c49c303c2c97b59cf9474e5f9eb18d94ef1",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-3e9\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "request-lifecycle.request-stages.mmd": {
+        "status": 200,
+        "sha256": "c5c87e4cc9ef6436564be7d3c3cedbbe7181c781c76f5853f396c5cf4734a0fb",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-6cd\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "request-lifecycle.stop-order.mmd": {
+        "status": 200,
+        "sha256": "2cf2751afe696ecdcc01755586f5e30e10ff942fc8134b5fc0d74e54c9196f5e",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-32e\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "rkisp1-dewarp.dewarp-input-branches.mmd": {
+        "status": 200,
+        "sha256": "c76a7aa7bfa3466ad4b4fd62afdf6962e39c261d095fc287428245d89c5536ed",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-4bc\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "rkisp1-dewarp.html": {
+        "status": 200,
+        "sha256": "c1589171f845b0d239b7c57461a5dab9c84a81342cad856528209f7d05f95cb8",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-11c0e\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "rkisp1-dewarp.md": {
+        "status": 200,
+        "sha256": "d4fcfeb9e2123448a937f66e46517c0ad9cc9a15ec43327dc735cb976b1e6cc3",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-daca\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "rkisp1-dewarp.per-camera-parameters.mmd": {
+        "status": 200,
+        "sha256": "bf8d7b47f6c52dde0818000f60f94a95063b8bc6453c2112fc61c46c978e3cb3",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-38c\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "scenarios/camera_start.html": {
+        "status": 200,
+        "sha256": "b0eac54c3c481d54af72adadd5bdd3a3c3128d3cfc0487adfa72825da93bf530",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-8f9c\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/camera_start.md": {
+        "status": 200,
+        "sha256": "01150dee5a0bb0a76408b0e7018607955c8246aa9d7a875b016af6a0036f8802",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-29d8\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/camera_start.mmd": {
+        "status": 200,
+        "sha256": "e07d0fa1a938b85056ef8a996fc515a7b5bf05699107495fbd5b6ad0b7706141",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-b7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/camera_stop.html": {
+        "status": 200,
+        "sha256": "171c9866da29c17015bbd60f1d448849f40c27ef1fb0093923ac372f55909c16",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-75d0\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "scenarios/camera_stop.md": {
+        "status": 200,
+        "sha256": "beabab2c7d0624c4a9feb9200c8cc2e0b705293f0267945cf3a78a06c6c698b7",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-22d4\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/camera_stop.mmd": {
+        "status": 200,
+        "sha256": "c18283a561aeba1d081a9a50a32a9052fd822432daccac71a1e94b98da10540d",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-da\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "scenarios/complete_request.html": {
+        "status": 200,
+        "sha256": "e9cabeb9832cd317f5a2ccb49ddfd4edae75f55ad7d7bf5f2daf5492c73da62a",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-15b5f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "scenarios/complete_request.md": {
+        "status": 200,
+        "sha256": "559961fd7e802e7145995680d711a6c851a00d13a3fc34d1ead4cbb4586cd282",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-7050\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/complete_request.mmd": {
+        "status": 200,
+        "sha256": "401f900561a3cf240d8d130635578c9b7deb17d4bbf7eabc789cd5f4c002cde6",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-397\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/configure.html": {
+        "status": 200,
+        "sha256": "df1bd3869ebdd244222c9f8ffaf9dfef7ba85df6d8f78153be758b805a67d8f2",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-1af85\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "scenarios/configure.md": {
+        "status": 200,
+        "sha256": "9680e461576404d3ebcde861aee45dc0a7bd096a106358ba5960925ec1f4bfed",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-87cd\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "scenarios/configure.mmd": {
+        "status": 200,
+        "sha256": "9c7046ce312dee06559edfebf193652accb8fad9f6ec3642b67f919c1f647fe0",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-34f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "scenarios/index.html": {
+        "status": 200,
+        "sha256": "37587cdd3daae12792e8e523588ad654347f63493f21147a11ce0b738330ef8b",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-2dc1\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/index.md": {
+        "status": 200,
+        "sha256": "42ad39a90be8c6c4f53735f7fe4b60e60e0029276360dca10414a949f7985cc3",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-a29\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/manager_start.html": {
+        "status": 200,
+        "sha256": "7e4234006e9b76f26d5d80b59b7fcf0a875a9ed7e29f894160a60502ffe06c92",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-75af\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/manager_start.md": {
+        "status": 200,
+        "sha256": "eac7f1b56828bb75c1b9584356ec6bd6ca8f070d382dbd328adcad1359b8c59b",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-23f0\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/manager_start.mmd": {
+        "status": 200,
+        "sha256": "6c9b74221d0d1ba79ad2a9651394e9d68f82d905aef97d296f8e5ed80bb5150b",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-4a\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/queue_request.html": {
+        "status": 200,
+        "sha256": "fdcc8b98270858f043ba41bedb383bace48e3945d2c7ca2de54b1d8099e8eee3",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-c6ad\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "scenarios/queue_request.md": {
+        "status": 200,
+        "sha256": "21d053df568aa485d1d7bb46c9e2c1b24bea085a1efa41a140920512ab8af9fd",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-3865\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "scenarios/queue_request.mmd": {
+        "status": 200,
+        "sha256": "fe706ba1fba0fd26c0eed770ea17ba1e9d398ed8cf5e81eb347e72d8e29715f2",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-bc\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "team-overview.camera-stack.mmd": {
+        "status": 200,
+        "sha256": "e1281dba29cfa30b28ba7ff3ef8107592579b8efa2ab1f937f66c90b107a88f1",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-467\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "team-overview.html": {
+        "status": 200,
+        "sha256": "19b2453ccb10d7f5b9d8d5a82adac4d570d7d76c0e7ee34117ed5d6fcb29aa0f",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-b4a1\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "team-overview.md": {
+        "status": 200,
+        "sha256": "4e557dff3d4e3b13774be6fdac96789f77bc94a3e20b8ae51d70d241ae9cdaee",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-8d7e\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "vendor-assurance.html": {
+        "status": 200,
+        "sha256": "2ad320eea14a7e3c9d0d6ac8cd17ed3d4125fa764dd455db1b7ae06eae2f6a8a",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-82b3\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "vendor-assurance.md": {
+        "status": 200,
+        "sha256": "a690ae50bd5f188d4b026e2497c07cc3dc895215caf2fe4b7a6a529db1071231",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-8629\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "vendor-assurance.mmd": {
+        "status": 200,
+        "sha256": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1a2\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-assurance.validation-results.mmd": {
+        "status": 200,
+        "sha256": "9a70be5a03531b4b69fb776be584b8835b3eade94a09d6cec67e81c111d8c9c7",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-7f0\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-integration.html": {
+        "status": 200,
+        "sha256": "30967776ccbe30b5bf3817d04d7b54d04ef5d827af5aa3ab2660422b925d8e3d",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1327e\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-integration.integration-stages.mmd": {
+        "status": 200,
+        "sha256": "c279ae797ea8c0d49cda3694757e5c9601d1048884545d067bc05a51b8f3293f",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-35b\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-integration.md": {
+        "status": 200,
+        "sha256": "d03878f5ecd7d3d138435a0e6c12f4d8de35ca2cdd0979ad51e81e95c9712366",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-fe1e\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-integration.mmd": {
+        "status": 200,
+        "sha256": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1a2\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-overview.camera-stack.mmd": {
+        "status": 200,
+        "sha256": "e1281dba29cfa30b28ba7ff3ef8107592579b8efa2ab1f937f66c90b107a88f1",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-467\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-overview.hardware-boundary.mmd": {
+        "status": 200,
+        "sha256": "e82c8ee3f61d208ae1d2560fd96efd87ed9c7caed5951768f1a94bdc5333de18",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-2a3\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-overview.html": {
+        "status": 200,
+        "sha256": "913e51962b6fe275082c26a770a97aa3b34721521b34d474501d0c98fd84d3f1",
+        "matches_public_git": true,
+        "etag": "\"6ae15177-cf71\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT"
+      },
+      "vendor-overview.md": {
+        "status": 200,
+        "sha256": "9f130b7c6590f8e0d6e57e7c1257d865ad5f9cc2790841c450c4505e6b40745d",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-adb7\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "vendor-overview.mmd": {
+        "status": 200,
+        "sha256": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+        "matches_public_git": true,
+        "etag": "\"6ae15176-1a2\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:50 GMT"
+      },
+      "": {
+        "status": 200,
+        "sha256": "91474d03267d582372114508aa306188dcd2037fcb9826774aaa870adda93f09",
+        "etag": "\"6ae15177-548f\"",
+        "last_modified": "Wed, 28 Oct 2026 01:35:51 GMT",
+        "matches_public_git_index": true
+      },
+      "camera-requests.html": {
+        "status": 404
+      },
+      "ipa-algorithms.html": {
+        "status": 404
+      },
+      "ipu3-lsc-prepare.html": {
+        "status": 404
+      },
+      "pipeline-requests.html": {
+        "status": 404
+      },
+      "request-diagnosis.html": {
+        "status": 404
+      },
+      "en/camera-requests.html": {
+        "status": 404
+      },
+      "en/ipa-algorithms.html": {
+        "status": 404
+      },
+      "en/ipu3-lsc-prepare.html": {
+        "status": 404
+      },
+      "en/pipeline-requests.html": {
+        "status": 404
+      },
+      "en/request-diagnosis.html": {
+        "status": 404
+      }
+    }
+  },
+  "candidate": {
+    "path": "owner/publication-final",
+    "status": "in progress; no release verdict",
+    "pages": {
+      "camera-model.md": {
+        "sha256": "6bf432dce74075a2d39298bd45a6ad14a12d17561f29f6267945246660b7b792",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 9181,
+        "ratio_to_public_prose": 1.045,
+        "topic_ids": [
+          "responsibility",
+          "state",
+          "shutdown",
+          "concurrency",
+          "disconnection"
+        ]
+      },
+      "camera-requests.md": {
+        "sha256": "9f03aac3e6b64ec14aa24fbb0764c0acf5adbd819fb42aac7d535af954cc170d",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 6547,
+        "ratio_to_public_prose": null,
+        "topic_ids": [
+          "request",
+          "lifetime"
+        ]
+      },
+      "component-index.md": {
+        "sha256": "588d9c85ecc545db83bad86839161bf348016ed6cdccdb602bd5985caf10ae74",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 75,
+        "ratio_to_public_prose": 1.0,
+        "topic_ids": []
+      },
+      "framebuffer-allocator.md": {
+        "sha256": "a0adb17f970beac7c0fb347aa514f97e699c06b80bc59d1e55005ba8eaefa35a",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 1420,
+        "ratio_to_public_prose": 1.5937,
+        "topic_ids": [
+          "reference-lifetime",
+          "allocation-failure",
+          "free-result"
+        ]
+      },
+      "ipa-algorithms.md": {
+        "sha256": "ccd8fcbebdde05baccfcdb0a32d853e0ab1373c5d4c05fed1cdebfdc18aae79f",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 6581,
+        "ratio_to_public_prose": null,
+        "topic_ids": [
+          "tuning",
+          "dma-import",
+          "softisp-lsc"
+        ]
+      },
+      "ipa-module-validation.md": {
+        "sha256": "c86e7fd1d5122a54f20b26008225bce27bfbc7d2b8a3408a227f76b38dafda59",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 592,
+        "ratio_to_public_prose": 0.995,
+        "topic_ids": [
+          "metadata",
+          "signature"
+        ]
+      },
+      "ipa.md": {
+        "sha256": "66e7829d6c7357abade20499e35957c2a5fa094e097837a987f337923707b912",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 14559,
+        "ratio_to_public_prose": 1.2668,
+        "topic_ids": [
+          "selection",
+          "execution",
+          "interface",
+          "lifetime",
+          "errors"
+        ]
+      },
+      "ipu3-lsc-flow.md": {
+        "sha256": "8a4d3939d81b3f07051111ac64666fbb034f155f4fdd9728915a4474c0bfa81f",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 5229,
+        "ratio_to_public_prose": 0.5225,
+        "topic_ids": [
+          "integration",
+          "setup",
+          "request",
+          "metadata"
+        ]
+      },
+      "ipu3-lsc-prepare.md": {
+        "sha256": "86ebc55f1d81e7bd0a8870128dbb1e39b76c3ca5d82786284b0a43797c2027e6",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 5272,
+        "ratio_to_public_prose": null,
+        "topic_ids": [
+          "prepare"
+        ]
+      },
+      "ipu3-lsc.md": {
+        "sha256": "b87d6a0301aff2e6827fac2f40771c71ecbb5b5951b9b304fa2e1099edee7a9b",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 1231,
+        "ratio_to_public_prose": 1.0,
+        "topic_ids": []
+      },
+      "onboarding.md": {
+        "sha256": "882126214981cfabf6baf65c999d7f89fa4137b7d66b6a63b20ecd5fb19bef53",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 1206,
+        "ratio_to_public_prose": 1.1508,
+        "topic_ids": [
+          "try",
+          "why"
+        ]
+      },
+      "overview.md": {
+        "sha256": "8e815a0c6a6045c094ae454ab96329e2113417b4931ec8e0a93831b5e7f4085f",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 5247,
+        "ratio_to_public_prose": 1.2739,
+        "topic_ids": [
+          "discovery",
+          "responsibility",
+          "creation",
+          "lifecycle",
+          "request",
+          "completion",
+          "boundary",
+          "verification",
+          "queue-limit"
+        ]
+      },
+      "pipeline-handler.md": {
+        "sha256": "a1c74396f869c1618606b742c21d0795181c346ff3624e323da9393c7f601306",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 6735,
+        "ratio_to_public_prose": 0.6007,
+        "topic_ids": [
+          "responsibility",
+          "configuration",
+          "shutdown",
+          "input-search-boundary"
+        ]
+      },
+      "pipeline-requests.md": {
+        "sha256": "321f4a5ee129c289ba15c4d12a3bb637d863b971745b63f7c6643551330f0b4f",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 6628,
+        "ratio_to_public_prose": null,
+        "topic_ids": [
+          "queue",
+          "completion"
+        ]
+      },
+      "request-diagnosis.md": {
+        "sha256": "55c3d95d656fb96ff76d7d08943a1d9b12e74045b0e1e312ab6c924e681f760c",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 6524,
+        "ratio_to_public_prose": null,
+        "topic_ids": [
+          "configuration-failure",
+          "diagnosis"
+        ]
+      },
+      "request-lifecycle.md": {
+        "sha256": "eec62c6fe8ac2e9669588aa6f1a3b985e3ca6a18fcd7d32d0c84ae78ac1eb259",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 13964,
+        "ratio_to_public_prose": 1.2534,
+        "topic_ids": [
+          "journey",
+          "resources",
+          "stopping",
+          "review"
+        ]
+      },
+      "rkisp1-dewarp.md": {
+        "sha256": "aa1efbf21d656f14df0bf7c00d0067ada64ed5ac8518021973921e448ac6a550",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 8039,
+        "ratio_to_public_prose": 1.0884,
+        "topic_ids": [
+          "ownership",
+          "parameters",
+          "application"
+        ]
+      },
+      "scenarios/camera_start.md": {
+        "sha256": "c79c4e93f9f3f9de060b1989c519727a7bd5169315b2ca4d07b5d938895d37f4",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 897,
+        "ratio_to_public_prose": 1.0,
+        "topic_ids": []
+      },
+      "scenarios/camera_stop.md": {
+        "sha256": "04632f8cb2fdbfa7ca2341ed6130da9096c0e30c491488b77a7a3975a195b538",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 857,
+        "ratio_to_public_prose": 1.0,
+        "topic_ids": []
+      },
+      "scenarios/complete_request.md": {
+        "sha256": "170ee321ffb8eca6b4f160c111ddc6894f37686b1c489efee998b31885b65444",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 1009,
+        "ratio_to_public_prose": 0.999,
+        "topic_ids": []
+      },
+      "scenarios/configure.md": {
+        "sha256": "58258329c50f9d914ccf91fd305cdf56e94f3e538c8cc6ae208075a16fcfb572",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 1098,
+        "ratio_to_public_prose": 1.0,
+        "topic_ids": []
+      },
+      "scenarios/index.md": {
+        "sha256": "5d842aa846ddc02865f6fbbe9ba25b5df567b88c4f1bf76b432b1d36ab987146",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 65,
+        "ratio_to_public_prose": 1.0,
+        "topic_ids": []
+      },
+      "scenarios/manager_start.md": {
+        "sha256": "6f5bc8c6a8dbc34203dece8cb671b4167d3de4b2bc24e670c9e3a4df1e9ecd27",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 873,
+        "ratio_to_public_prose": 1.0,
+        "topic_ids": []
+      },
+      "scenarios/queue_request.md": {
+        "sha256": "481144eb6048a5a318c060918e74092b3c9bb7d1dbfb9df09e10a2e140ce6ceb",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 947,
+        "ratio_to_public_prose": 1.0,
+        "topic_ids": []
+      },
+      "team-overview.md": {
+        "sha256": "037af3dc924127b79ba7100cd719ddbdfd61dadec4dec6a716da8e004b98abd3",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 3800,
+        "ratio_to_public_prose": 1.0414,
+        "topic_ids": [
+          "role",
+          "inputs",
+          "outputs",
+          "boundaries"
+        ]
+      },
+      "vendor-assurance.md": {
+        "sha256": "0dbea1ae2eda547a99f683ae6aee618272694d866f622bcdac0c315337a5eea7",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 1978,
+        "ratio_to_public_prose": 1.0868,
+        "topic_ids": [
+          "constraints",
+          "measurement"
+        ]
+      },
+      "vendor-integration.md": {
+        "sha256": "126a85d9b269303d9c3e3d477be8bb0486808d81aa716d69819c78adf1cf6723",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 7186,
+        "ratio_to_public_prose": 1.1167,
+        "topic_ids": [
+          "integration",
+          "boundary",
+          "configuration",
+          "request",
+          "algorithm",
+          "shutdown",
+          "validation"
+        ]
+      },
+      "vendor-overview.md": {
+        "sha256": "627cc24f32393c848da276702bc2e86a9c441860c48afbe8d8c36c3583657c48",
+        "source_commit": "182307a772ebebf173ee84911906da707718485f",
+        "prose_chars": 4552,
+        "ratio_to_public_prose": 1.1787,
+        "topic_ids": [
+          "value",
+          "support",
+          "capabilities",
+          "benefits",
+          "queue-limit"
+        ]
+      }
+    },
+    "facts/facts.json": {
+      "sha256": "1645154099044eca8e2bf78eb7706e42ff6be054e46b11ce3d02f9817a706d3b",
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "schema": null
+    },
+    "english.json": {
+      "sha256": "5ede708b198b32d8f63b42ba06b86c4337850426d414d4b0d3a3fb32c8299de1",
+      "source_commit": null,
+      "schema": 1,
+      "page_count": 30,
+      "missing_expected": []
+    },
+    "build/consistency-review.json": {
+      "sha256": "5ca539b4856903918f9cef454066ffdfe105794c335140d3c790a4fcb28b0cf2",
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "schema": 1,
+      "verdicts": {
+        "insufficient-evidence": 103,
+        "compatible": 270,
+        "ambiguous": 7,
+        "contradiction": 5
+      }
+    },
+    "build/document-health.json": {
+      "sha256": "6e60ad42c28f2a3f4caeae217d77818cffc3844e02a46e76c64e47563cf8ad49",
+      "source_commit": "182307a772ebebf173ee84911906da707718485f",
+      "schema": 1
+    }
+  },
+  "candidate_impact": {
+    "sha256": "1324b7b01123b78912b24cf093ed764d037bd3faa7124516107ce4526d423b24",
+    "source_commit": null,
+    "schema": null,
+    "base": "2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f",
+    "head": "182307a772ebebf173ee84911906da707718485f",
+    "affected_sections": null,
+    "needs_regeneration": null,
+    "config_changes": null
+  },
+  "candidate_impacted_sections": [
+    "camera-model",
+    "camera-requests",
+    "component-index",
+    "ipa",
+    "ipa-algorithms",
+    "ipu3-lsc",
+    "ipu3-lsc-flow",
+    "ipu3-lsc-prepare",
+    "overview",
+    "pipeline-handler",
+    "pipeline-requests",
+    "request-diagnosis",
+    "request-lifecycle",
+    "scenarios",
+    "vendor-assurance",
+    "vendor-integration",
+    "vendor-overview"
+  ],
+  "local_llm_calls": 0,
+  "candidate_reads_only": true,
+  "site_or_manuscript_edits": 0,
+  "methods": [
+    "verify_site with manifest hashes and internal targets",
+    "search index file and fragment targets",
+    "source URL Git blob existence and line bounds",
+    "select_span plus text, line and SHA-256 for archived facts excerpts",
+    "display_pairs and _validate_text on exact published catalog",
+    "unprotected display_strings for English residual Korean",
+    "restored Korean page source_hash before language selector insertion",
+    "fingerprint on current sections with archived facts (not an exact historical rebuild)"
+  ],
+  "local_regression": {
+    "command": "python -m pytest tests/test_routes.py tests/test_site_localization.py tests/test_translation.py tests/test_document_health.py tests/test_reader_profiles.py -q",
+    "passed": 94
+  },
+  "limitations": [
+    "Published exact facts bytes not found; archived facts source/quotes are verified separately.",
+    "Candidate was in progress; old contradiction counts are historical, not a verdict on its latest manuscripts.",
+    "Formal obligation check rejects 7 catalog items; imperative-equivalence is not decided by regex.",
+    "No new LLM generation, translation, semantic audit or historical-response replay.",
+    "No final new-layout release or human approval."
+  ]
+}
