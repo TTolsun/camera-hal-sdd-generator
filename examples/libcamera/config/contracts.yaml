@@ -5,22 +5,28 @@ contracts:
   primary: request-lifecycle.md
   documents: [vendor-overview.md, onboarding.md, vendor-integration.md, overview.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md, scenarios/queue_request.md]
   match: 'completeBuffer|completeRequest|requestCompleted|자동.{0,12}완료|완료.{0,8}(통지|알림)'
-  evidence: [vendor-integration/request/buffer, request-lifecycle/journey/request-notice, request-lifecycle/journey/queue, request-lifecycle/journey/completion]
+  evidence: [vendor-integration/request/buffer, request-lifecycle/journey/request-notice, request-lifecycle/journey/queue, request-lifecycle/journey/completion, vendor-overview/benefits/completion, request-lifecycle/stopping/stop, request-lifecycle/journey/device-queue]
 - id: stopping-cancellation
   question: 정상 요청 처리와 정지 중 취소를 나누어 공통 stop과 장치 stopDevice의 책임·반환 시점·미완료 요청 처리를 대조하세요.
   primary: request-lifecycle.md
   documents: [vendor-overview.md, onboarding.md, vendor-integration.md, overview.md, pipeline-handler.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md, scenarios/queue_request.md]
   match: 'stop(?:Device)?|Stopping|취소|cancelRequest'
-  evidence: [vendor-integration/shutdown/stop, vendor-integration/shutdown/device, request-lifecycle/resources/cancel-rules, request-lifecycle/journey/completion]
+  evidence: [vendor-integration/shutdown/stop, vendor-integration/shutdown/device, request-lifecycle/resources/cancel-rules, request-lifecycle/journey/completion, vendor-overview/benefits/completion, request-lifecycle/stopping/stop, request-lifecycle/stopping/disconnect-internal, request-lifecycle/stopping/disconnect-todo-owner]
 - id: ownership-reuse
   question: 생성된 Request의 소유자·삭제 책임, 완료 통지 전후 접근·재사용의 조건과 금지 범위가 문서와 언어판 사이에서 같은지 확인하세요.
   primary: request-lifecycle.md
   documents: [vendor-integration.md, overview.md, camera-model.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md, scenarios/queue_request.md]
   match: '소유|재사용|reuse|삭제|수명|완료.{0,12}접근'
-  evidence: [request-lifecycle/resources/create, request-lifecycle/resources/reuse, request-lifecycle/resources/reuse-flags, request-lifecycle/resources/reuse-status, request-lifecycle/resources/complete-access, request-lifecycle/resources/buffer]
+  evidence: [request-lifecycle/resources/create, request-lifecycle/resources/reuse, request-lifecycle/resources/reuse-flags, request-lifecycle/resources/reuse-status, request-lifecycle/resources/complete-access, request-lifecycle/resources/buffer, overview/discovery/manager]
 - id: callbacks-synchronization
   question: 함수 호출 스레드와 콜백의 실행 스레드, 상태 변경 동기화의 책임, 통지와 반환 순서의 보장 범위를 구분하고 한영 의무·금지 표현을 대조하세요.
   primary: request-lifecycle.md
+  documents: [vendor-integration.md, overview.md, camera-model.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md]
+  match: '스레드|동기화|thread|콜백|requestCompleted|제출 순서'
+  evidence: [overview/boundary/synchronization, overview/boundary/completion, vendor-integration/request/completion-context, request-lifecycle/journey/request-notice, camera-model/concurrency/create, camera-model/concurrency/queue, camera-model/concurrency/start, camera-model/concurrency/stop, camera-model/concurrency/callback-signal]
+- id: scenario-analysis
+  question: 정적 호출 목록·예약 표기·가상 후보가 뜻하는 분석 범위를 실제 제품의 콜백 스레드·실행 보장과 구분하고 한영 설명을 대조하세요.
+  primary: scenarios/queue_request.md
   documents: [vendor-integration.md, overview.md, camera-model.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md, scenarios/queue_request.md]
   match: '스레드|동기화|thread|콜백|requestCompleted|제출 순서'
   evidence: [overview/boundary/synchronization, overview/boundary/completion, vendor-integration/request/completion-context, request-lifecycle/journey/request-notice, camera-model/concurrency/create, camera-model/concurrency/queue, camera-model/concurrency/start, camera-model/concurrency/stop, camera-model/concurrency/callback-signal]

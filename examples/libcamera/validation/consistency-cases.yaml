@@ -1,6 +1,23 @@
 # Synthetic statements for evaluation only. These are never manuscript inputs.
 # Expected verdicts are removed before the selected CLI sees a case.
 cases:
+- id: extracted-analysis-scope
+  sources: ['@analysis/scenario/queue_request']
+  claims:
+    scope: {text: 'The extracted call list does not establish runtime branch counts or callback execution threads; a deferred target records a passed method reference rather than a guarantee of asynchronous execution.', evidence_domain: analysis-representation, expected: compatible}
+- id: analysis-is-not-runtime-evidence
+  sources: ['@analysis/scenario/queue_request']
+  claims:
+    unsupported: {text: 'Every callback always runs asynchronously on a single CameraManager thread in every device execution.', expected: insufficient-evidence}
+- id: abbreviated-private-member-receiver
+  sources: [request-lifecycle/resources/reuse]
+  claims:
+    qualified: {text: 'Request::reuse() clears the metadata by calling _d()->metadata_.clear().', expected: compatible}
+    abbreviated: {text: 'Request::reuse() calls metadata_.clear() to clear its metadata.', expected: compatible}
+- id: different-member-is-not-a-receiver-abbreviation
+  sources: [request-lifecycle/resources/reuse]
+  claims:
+    wrong: {text: 'Request::reuse() clears its metadata by calling controls_.clear(); this controls call performs the metadata clearing.', expected: contradiction}
 - id: buffer-is-request-completion
   sources: [vendor-integration/request/buffer]
   claims:
@@ -64,3 +81,36 @@ cases:
         completeRequest().
       translation_of: ko
       expected: compatible
+- id: actual-bilingual-private-member-abbreviation
+  sources:
+  - request-lifecycle/resources/reuse
+  - request-lifecycle/resources/reuse-flags
+  claims:
+    ko:
+      text: Request::reuse는 controls_.clear()를 호출해 controls_를 비웁니다. Request::reuse는 metadata_.clear()를 호출해 metadata_를 비웁니다. Request::ReuseBuffers 플래그는 addBuffer()로 이전에 추가한 버퍼를 재사용하도록 유지합니다. 버퍼에 연결된 펜스는 재사용하지 않습니다.
+      expected: compatible
+    en:
+      text: Request::reuse calls controls_.clear() to clear controls_. Request::reuse calls metadata_.clear() to clear metadata_. The Request::ReuseBuffers flag keeps buffers previously added with addBuffer() available for reuse. Fences attached
+        to the buffers are not reused.
+      expected: compatible
+- id: explicit-other-request-receiver
+  sources:
+  - request-lifecycle/resources/reuse
+  claims:
+    wrong:
+      text: Request::reuse() clears the metadata_ of another Request object instead of the metadata belonging to the Request on which reuse() was invoked.
+      expected: contradiction
+- id: different-member-action
+  sources:
+  - request-lifecycle/resources/reuse
+  claims:
+    wrong:
+      text: Request::reuse() calls metadata_.reset() instead of metadata_.clear() to reset the metadata collection.
+      expected: contradiction
+- id: unestablished-abbreviated-receiver
+  sources:
+  - request-lifecycle/resources/reuse
+  claims:
+    unknown:
+      text: An undocumented external helper calls metadata_.clear() on its own collection, whose receiver and connection to Request are not established.
+      expected: insufficient-evidence
