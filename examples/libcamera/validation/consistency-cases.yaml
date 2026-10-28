@@ -1,6 +1,15 @@
 # Synthetic statements for evaluation only. These are never manuscript inputs.
 # Expected verdicts are removed before the selected CLI sees a case.
 cases:
+- id: abbreviated-private-member-receiver
+  sources: [request-lifecycle/resources/reuse]
+  claims:
+    qualified: {text: 'Request::reuse() clears the metadata by calling _d()->metadata_.clear().', expected: compatible}
+    abbreviated: {text: 'Request::reuse() calls metadata_.clear() to clear its metadata.', expected: compatible}
+- id: different-member-is-not-a-receiver-abbreviation
+  sources: [request-lifecycle/resources/reuse]
+  claims:
+    wrong: {text: 'Request::reuse() clears its metadata by calling controls_.clear(); this controls call performs the metadata clearing.', expected: contradiction}
 - id: buffer-is-request-completion
   sources: [vendor-integration/request/buffer]
   claims:

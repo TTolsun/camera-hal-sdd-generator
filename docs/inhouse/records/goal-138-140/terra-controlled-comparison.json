@@ -1,0 +1,792 @@
+{
+  "schema": 1,
+  "human_review": "pending",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "profile": {
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "scope": "Same final questions, facts, native CLI executable, input limit and budgets. Three documents each independently generated three times per code version. Fresh empty caches; recovery is separate. Local execution is shared; provider-side scheduling/model implementation cannot be controlled or independently attested.",
+  "phases": {
+    "before": {
+      "numerator": 5,
+      "denominator": 9,
+      "first_attempt_numerator": 3,
+      "calls": 143,
+      "cumulative_trial_seconds": 844.015999999945,
+      "reused_units": 0,
+      "wall_clock_observation": [
+        {
+          "phase": "terra-controlled-before-v2",
+          "start_utc": "2026-10-28T19:53:44.192096+00:00",
+          "last_stdout_utc": "2026-10-28T20:06:13.316092+00:00",
+          "observed_stdout_wall_seconds": 749.1239969730377
+        },
+        {
+          "phase": "terra-controlled-short-before",
+          "start_utc": "2026-10-28T20:06:35.221570+00:00",
+          "last_stdout_utc": "2026-10-28T20:08:18.589576+00:00",
+          "observed_stdout_wall_seconds": 103.3680055141449
+        }
+      ],
+      "trials": [
+        {
+          "round": 1,
+          "section": "ipu3-lsc-flow",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/request/frame-argument: LLM 답변 검증 실패: [의미 중복] request 5번째 설명이 앞의 request 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::queueRequest`는 공통 `lscAlgo_.queueRequest` 호출의 두 번째 인자로 `frameCo…\" ≈ \"`Lsc::queueRequest`는 공통 `lscAlgo_.queueRequest` 호출의 첫 번째 인자로 `context…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+          "seconds": 95.875,
+          "calls": 20,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-flow_integration_build": "newly-generated",
+            "ipu3-lsc-flow_integration_active": "newly-generated",
+            "ipu3-lsc-flow_integration_frame": "newly-generated",
+            "ipu3-lsc-flow_integration_queue": "newly-generated",
+            "ipu3-lsc-flow_setup": "newly-generated",
+            "ipu3-lsc-flow_request_default": "newly-generated",
+            "ipu3-lsc-flow_request_default-update": "newly-generated",
+            "ipu3-lsc-flow_request_delegate": "newly-generated",
+            "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+            "ipu3-lsc-flow_request_frame-argument": "failed",
+            "ipu3-lsc-flow_request_controls-argument": "not-started",
+            "ipu3-lsc-flow_metadata": "not-started"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+            "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+            "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+            "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-before-v2/1/ipu3-lsc-flow/build/generation-runs/69704b06b54547ce85d8f9d6c6c84503.json",
+          "first_attempt_passed": false,
+          "retries_observed": 1
+        },
+        {
+          "round": 1,
+          "section": "ipu3-lsc-prepare",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nipu3-lsc-prepare: ipu3-lsc-prepare/prepare/disabled-exit: LLM 답변 검증 실패: [의미 중복] prepare 5번째 설명이 앞의 prepare 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `config->general.shd_enable`에 `frameContext.lsc.enabl…\" ≈ \"`Lsc::prepare`는 `config->general.shd_enable`에 `frameContext.lsc.enabl…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+          "seconds": 54.875,
+          "calls": 10,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+            "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+            "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+            "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+            "ipu3-lsc-prepare_prepare_disabled-exit": "failed",
+            "ipu3-lsc-prepare_prepare_grid": "not-started",
+            "ipu3-lsc-prepare_prepare_crop": "not-started",
+            "ipu3-lsc-prepare_prepare_gain": "not-started",
+            "ipu3-lsc-prepare_prepare_black-level": "not-started",
+            "ipu3-lsc-prepare_prepare_lut": "not-started",
+            "ipu3-lsc-prepare_prepare_lut-channels": "not-started",
+            "ipu3-lsc-prepare_prepare_remember": "not-started",
+            "ipu3-lsc-prepare_prepare_remember-quantized": "not-started"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-before-v2/1/ipu3-lsc-prepare/build/generation-runs/b9822d3310894e5fbb92ae4617be0f1f.json",
+          "first_attempt_passed": false,
+          "retries_observed": 1
+        },
+        {
+          "round": 2,
+          "section": "ipu3-lsc-flow",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/request/controls-argument: LLM 답변 검증 실패: [의미 중복] request 6번째 설명이 앞의 request 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"공통 `lscAlgo_.queueRequest` 호출의 세 번째 인자는 `controls`입니다.\" ≈ \"`Lsc::queueRequest`는 공통 `lscAlgo_.queueRequest` 호출의 첫 번째 인자로 `context…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+          "seconds": 127.93699999997625,
+          "calls": 23,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-flow_integration_build": "newly-generated",
+            "ipu3-lsc-flow_integration_active": "newly-generated",
+            "ipu3-lsc-flow_integration_frame": "newly-generated",
+            "ipu3-lsc-flow_integration_queue": "newly-generated",
+            "ipu3-lsc-flow_setup": "newly-generated",
+            "ipu3-lsc-flow_request_default": "newly-generated",
+            "ipu3-lsc-flow_request_default-update": "newly-generated",
+            "ipu3-lsc-flow_request_delegate": "newly-generated",
+            "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+            "ipu3-lsc-flow_request_frame-argument": "newly-generated",
+            "ipu3-lsc-flow_request_controls-argument": "failed",
+            "ipu3-lsc-flow_metadata": "not-started"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+            "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+            "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+            "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-before-v2/2/ipu3-lsc-flow/build/generation-runs/76fe0dd43ae540e9a86af6fa2b78dab9.json",
+          "first_attempt_passed": false,
+          "retries_observed": 3
+        },
+        {
+          "round": 2,
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "error": null,
+          "seconds": 171.625,
+          "calls": 29,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+            "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+            "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+            "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+            "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+            "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+            "ipu3-lsc-prepare_prepare_crop": "newly-generated",
+            "ipu3-lsc-prepare_prepare_gain": "newly-generated",
+            "ipu3-lsc-prepare_prepare_black-level": "newly-generated",
+            "ipu3-lsc-prepare_prepare_lut": "newly-generated",
+            "ipu3-lsc-prepare_prepare_lut-channels": "newly-generated",
+            "ipu3-lsc-prepare_prepare_remember": "newly-generated",
+            "ipu3-lsc-prepare_prepare_remember-quantized": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-before-v2/2/ipu3-lsc-prepare/build/generation-runs/602a11e4d0d4473a84ac71ac9e1f5962.json",
+          "first_attempt_passed": false,
+          "retries_observed": 4
+        },
+        {
+          "round": 3,
+          "section": "ipu3-lsc-flow",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nipu3-lsc-flow: ipu3-lsc-flow/request/frame-argument: LLM 답변 검증 실패: [의미 중복] request 5번째 설명이 앞의 request 4번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 두 번째 인자로 `frameContext.…\" ≈ \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 첫 번째 인자로 `context.activ…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+          "seconds": 111.54599999997299,
+          "calls": 20,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-flow_integration_build": "newly-generated",
+            "ipu3-lsc-flow_integration_active": "newly-generated",
+            "ipu3-lsc-flow_integration_frame": "newly-generated",
+            "ipu3-lsc-flow_integration_queue": "newly-generated",
+            "ipu3-lsc-flow_setup": "newly-generated",
+            "ipu3-lsc-flow_request_default": "newly-generated",
+            "ipu3-lsc-flow_request_default-update": "newly-generated",
+            "ipu3-lsc-flow_request_delegate": "newly-generated",
+            "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+            "ipu3-lsc-flow_request_frame-argument": "failed",
+            "ipu3-lsc-flow_request_controls-argument": "not-started",
+            "ipu3-lsc-flow_metadata": "not-started"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+            "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+            "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+            "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-before-v2/3/ipu3-lsc-flow/build/generation-runs/d941a1401737484fbe8f04fb0650891b.json",
+          "first_attempt_passed": false,
+          "retries_observed": 1
+        },
+        {
+          "round": 3,
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "error": null,
+          "seconds": 182.34399999998277,
+          "calls": 29,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+            "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+            "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+            "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+            "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+            "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+            "ipu3-lsc-prepare_prepare_crop": "newly-generated",
+            "ipu3-lsc-prepare_prepare_gain": "newly-generated",
+            "ipu3-lsc-prepare_prepare_black-level": "newly-generated",
+            "ipu3-lsc-prepare_prepare_lut": "newly-generated",
+            "ipu3-lsc-prepare_prepare_lut-channels": "newly-generated",
+            "ipu3-lsc-prepare_prepare_remember": "newly-generated",
+            "ipu3-lsc-prepare_prepare_remember-quantized": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-before-v2/3/ipu3-lsc-prepare/build/generation-runs/81c4060dc37540cb90828651b895b521.json",
+          "first_attempt_passed": false,
+          "retries_observed": 4
+        },
+        {
+          "round": 1,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 29.280999999959022,
+          "calls": 4,
+          "reused_units": 0,
+          "units": {
+            "ipa-module-validation_metadata_checks": "newly-generated",
+            "ipa-module-validation_signature_file-result": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+            "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-short-before/1/ipa-module-validation/build/generation-runs/de5499eaa8664ced8fc5dcc2ad3698bc.json",
+          "first_attempt_passed": true,
+          "retries_observed": 0
+        },
+        {
+          "round": 2,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 34.45400000002701,
+          "calls": 4,
+          "reused_units": 0,
+          "units": {
+            "ipa-module-validation_metadata_checks": "newly-generated",
+            "ipa-module-validation_signature_file-result": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+            "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-short-before/2/ipa-module-validation/build/generation-runs/364ecff2aca840a58728dd8bb5163a5e.json",
+          "first_attempt_passed": true,
+          "retries_observed": 0
+        },
+        {
+          "round": 3,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 36.07900000002701,
+          "calls": 4,
+          "reused_units": 0,
+          "units": {
+            "ipa-module-validation_metadata_checks": "newly-generated",
+            "ipa-module-validation_signature_file-result": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-wire-20261029-034646",
+          "topic_inputs": {
+            "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+            "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-short-before/3/ipa-module-validation/build/generation-runs/f5fa5e2ff24e42748b750c41f9726338.json",
+          "first_attempt_passed": true,
+          "retries_observed": 0
+        }
+      ]
+    },
+    "after": {
+      "numerator": 8,
+      "denominator": 9,
+      "first_attempt_numerator": 3,
+      "calls": 162,
+      "cumulative_trial_seconds": 973.719000000041,
+      "reused_units": 0,
+      "wall_clock_observation": [
+        {
+          "phase": "terra-controlled-after",
+          "start_utc": "2026-10-28T19:54:05.848670+00:00",
+          "last_stdout_utc": "2026-10-28T20:08:44.903058+00:00",
+          "observed_stdout_wall_seconds": 879.0543878078461
+        },
+        {
+          "phase": "terra-controlled-short-after",
+          "start_utc": "2026-10-28T20:06:48.741546+00:00",
+          "last_stdout_utc": "2026-10-28T20:08:31.244476+00:00",
+          "observed_stdout_wall_seconds": 102.50293016433716
+        }
+      ],
+      "trials": [
+        {
+          "round": 1,
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "error": null,
+          "seconds": 133.10899999999674,
+          "calls": 26,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-flow_integration_build": "newly-generated",
+            "ipu3-lsc-flow_integration_active": "newly-generated",
+            "ipu3-lsc-flow_integration_frame": "newly-generated",
+            "ipu3-lsc-flow_integration_queue": "newly-generated",
+            "ipu3-lsc-flow_setup": "newly-generated",
+            "ipu3-lsc-flow_request_default": "newly-generated",
+            "ipu3-lsc-flow_request_default-update": "newly-generated",
+            "ipu3-lsc-flow_request_delegate": "newly-generated",
+            "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+            "ipu3-lsc-flow_request_frame-argument": "newly-generated",
+            "ipu3-lsc-flow_request_controls-argument": "newly-generated",
+            "ipu3-lsc-flow_metadata": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+            "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+            "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+            "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-after/1/ipu3-lsc-flow/build/generation-runs/c0d7aa73d484462c95a73b5664736e07.json",
+          "first_attempt_passed": false,
+          "retries_observed": 4
+        },
+        {
+          "round": 1,
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "error": null,
+          "seconds": 151.11000000004424,
+          "calls": 27,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+            "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+            "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+            "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+            "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+            "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+            "ipu3-lsc-prepare_prepare_crop": "newly-generated",
+            "ipu3-lsc-prepare_prepare_gain": "newly-generated",
+            "ipu3-lsc-prepare_prepare_black-level": "newly-generated",
+            "ipu3-lsc-prepare_prepare_lut": "newly-generated",
+            "ipu3-lsc-prepare_prepare_lut-channels": "newly-generated",
+            "ipu3-lsc-prepare_prepare_remember": "newly-generated",
+            "ipu3-lsc-prepare_prepare_remember-quantized": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-after/1/ipu3-lsc-prepare/build/generation-runs/29433a2f09da40ad836a477489fc55ce.json",
+          "first_attempt_passed": false,
+          "retries_observed": 2
+        },
+        {
+          "round": 2,
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "error": null,
+          "seconds": 149.65600000001723,
+          "calls": 25,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-flow_integration_build": "newly-generated",
+            "ipu3-lsc-flow_integration_active": "newly-generated",
+            "ipu3-lsc-flow_integration_frame": "newly-generated",
+            "ipu3-lsc-flow_integration_queue": "newly-generated",
+            "ipu3-lsc-flow_setup": "newly-generated",
+            "ipu3-lsc-flow_request_default": "newly-generated",
+            "ipu3-lsc-flow_request_default-update": "newly-generated",
+            "ipu3-lsc-flow_request_delegate": "newly-generated",
+            "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+            "ipu3-lsc-flow_request_frame-argument": "newly-generated",
+            "ipu3-lsc-flow_request_controls-argument": "newly-generated",
+            "ipu3-lsc-flow_metadata": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+            "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+            "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+            "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-after/2/ipu3-lsc-flow/build/generation-runs/722028e673b94f99a652a995dfa297f7.json",
+          "first_attempt_passed": false,
+          "retries_observed": 2
+        },
+        {
+          "round": 2,
+          "section": "ipu3-lsc-prepare",
+          "status": "failed",
+          "error": "설계 항목 검증 실패:\nipu3-lsc-prepare: ipu3-lsc-prepare/prepare/crop: LLM 답변 검증 실패: [의미 중복] prepare 7번째 설명이 앞의 prepare 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `frameContext.lsc.update`가 거짓일 때 LSC가 비활성화되어 있거나, 현재 …\" ≈ \"`Lsc::prepare`는 `frameContext.lsc.update`가 거짓이고 `frameContext.lsc.ena…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.",
+          "seconds": 100.35999999998603,
+          "calls": 16,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+            "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+            "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+            "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+            "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+            "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+            "ipu3-lsc-prepare_prepare_crop": "failed",
+            "ipu3-lsc-prepare_prepare_gain": "not-started",
+            "ipu3-lsc-prepare_prepare_black-level": "not-started",
+            "ipu3-lsc-prepare_prepare_lut": "not-started",
+            "ipu3-lsc-prepare_prepare_lut-channels": "not-started",
+            "ipu3-lsc-prepare_prepare_remember": "not-started",
+            "ipu3-lsc-prepare_prepare_remember-quantized": "not-started"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-after/2/ipu3-lsc-prepare/build/generation-runs/fc12d1843abd4aa4910ebc9bbe1a43b2.json",
+          "first_attempt_passed": false,
+          "retries_observed": 3
+        },
+        {
+          "round": 3,
+          "section": "ipu3-lsc-flow",
+          "status": "passed",
+          "error": null,
+          "seconds": 168.64000000001397,
+          "calls": 25,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-flow_integration_build": "newly-generated",
+            "ipu3-lsc-flow_integration_active": "newly-generated",
+            "ipu3-lsc-flow_integration_frame": "newly-generated",
+            "ipu3-lsc-flow_integration_queue": "newly-generated",
+            "ipu3-lsc-flow_setup": "newly-generated",
+            "ipu3-lsc-flow_request_default": "newly-generated",
+            "ipu3-lsc-flow_request_default-update": "newly-generated",
+            "ipu3-lsc-flow_request_delegate": "newly-generated",
+            "ipu3-lsc-flow_request_shared-argument": "newly-generated",
+            "ipu3-lsc-flow_request_frame-argument": "newly-generated",
+            "ipu3-lsc-flow_request_controls-argument": "newly-generated",
+            "ipu3-lsc-flow_metadata": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "integration": "12d59804e173e60a6e65adfe49268566a0531fb18d8e422b04d8f1e695bb60f6",
+            "setup": "c8cf788ee614f95ad8bdfa60dcda39e748699dc180d5017ec22a708abb4dd73d",
+            "request": "cd047773596ea6be4e89529a7ed7bd5a318d28b10edfebeca944950421fd07cd",
+            "metadata": "3c934b8d73d77210f6eb4b834440a6fb5d6407102dce0b8dda96f57415e8c803"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-after/3/ipu3-lsc-flow/build/generation-runs/7c8f3e6502a34daa9216eb86ad508fe1.json",
+          "first_attempt_passed": false,
+          "retries_observed": 2
+        },
+        {
+          "round": 3,
+          "section": "ipu3-lsc-prepare",
+          "status": "passed",
+          "error": null,
+          "seconds": 171.54699999996228,
+          "calls": 31,
+          "reused_units": 0,
+          "units": {
+            "ipu3-lsc-prepare_prepare_disabled-no-update": "newly-generated",
+            "ipu3-lsc-prepare_prepare_ct-threshold": "newly-generated",
+            "ipu3-lsc-prepare_prepare_upload": "newly-generated",
+            "ipu3-lsc-prepare_prepare_enable": "newly-generated",
+            "ipu3-lsc-prepare_prepare_disabled-exit": "newly-generated",
+            "ipu3-lsc-prepare_prepare_grid": "newly-generated",
+            "ipu3-lsc-prepare_prepare_crop": "newly-generated",
+            "ipu3-lsc-prepare_prepare_gain": "newly-generated",
+            "ipu3-lsc-prepare_prepare_black-level": "newly-generated",
+            "ipu3-lsc-prepare_prepare_lut": "newly-generated",
+            "ipu3-lsc-prepare_prepare_lut-channels": "newly-generated",
+            "ipu3-lsc-prepare_prepare_remember": "newly-generated",
+            "ipu3-lsc-prepare_prepare_remember-quantized": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "prepare": "1095dde2f86f1028c36fc3fca403ec07dbd04b0d518123a2c52e3c7610e4b942"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-after/3/ipu3-lsc-prepare/build/generation-runs/02b6d2e740c54b749ca7a484dbf8ab2c.json",
+          "first_attempt_passed": false,
+          "retries_observed": 8
+        },
+        {
+          "round": 1,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 35.92200000002049,
+          "calls": 4,
+          "reused_units": 0,
+          "units": {
+            "ipa-module-validation_metadata_checks": "newly-generated",
+            "ipa-module-validation_signature_file-result": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+            "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-short-after/1/ipa-module-validation/build/generation-runs/66baad1c23e44f69bbfb3ad0b7d30aaa.json",
+          "first_attempt_passed": true,
+          "retries_observed": 0
+        },
+        {
+          "round": 2,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 33.125,
+          "calls": 4,
+          "reused_units": 0,
+          "units": {
+            "ipa-module-validation_metadata_checks": "newly-generated",
+            "ipa-module-validation_signature_file-result": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+            "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-short-after/2/ipa-module-validation/build/generation-runs/b1ea675c38274ae2924cec58b0084842.json",
+          "first_attempt_passed": true,
+          "retries_observed": 0
+        },
+        {
+          "round": 3,
+          "section": "ipa-module-validation",
+          "status": "passed",
+          "error": null,
+          "seconds": 30.25,
+          "calls": 4,
+          "reused_units": 0,
+          "units": {
+            "ipa-module-validation_metadata_checks": "newly-generated",
+            "ipa-module-validation_signature_file-result": "newly-generated"
+          },
+          "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+          "runtime": "$WORKSPACE\\build\\goal\\runtime-snapshots\\terra-e117-recovery-v4-20261029-044717",
+          "topic_inputs": {
+            "metadata": "5eccc9296eb5b459571275ea01beee7ff65d0da0bbe04662d02dfa9d3862c676",
+            "signature": "0fea9fb5f17cc8c74bd59a3d848c11eea92c3c0c7ead3e5d0342adfd82fb7766"
+          },
+          "sections_sha256": "2f53ddb6e57b6c3e2130ec411c0284e738c67d835721a384b6ed19d0ecb72799",
+          "source_facts_sha256": "5a7b15bd0e48d453efb2b61b52cbd8cf228ffc8809d2398d894f68040435885c",
+          "limits": {
+            "max_calls": 1600,
+            "max_seconds": 14400,
+            "document_max_calls": 160,
+            "document_max_seconds": 7200,
+            "max_input_chars": 40000,
+            "timeout_sec": 600,
+            "max_retries": 1
+          },
+          "generation_run": "terra-controlled-short-after/3/ipa-module-validation/build/generation-runs/c810da4b25db4567b3d440570d8f0368.json",
+          "first_attempt_passed": true,
+          "retries_observed": 0
+        }
+      ]
+    }
+  },
+  "matched_input_pairs": 9,
+  "remaining_new_failure": "After round2 ipu3-lsc-prepare crop repeated earlier guards; correct validation rejection, not a parser false positive. Preserved as a fresh failure. Separate same-input recovery does not change this denominator."
+}
