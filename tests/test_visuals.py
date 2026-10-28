@@ -67,6 +67,33 @@ def test_index_reuse_rejects_missing_or_invalid_selection(tmp_cfg, visual, selec
         export_site(tmp_cfg)
 
 
+@pytest.mark.parametrize('collision', [False, True])
+def test_overview_preserves_existing_index_visuals_and_authorship(tmp_cfg, visual, collision):
+    from sdd.document_metadata import split_frontmatter
+    from sdd.export_site import _prepare_page_body
+    section, model, graph, _ = visual
+    own = {**copy.deepcopy(section), 'id': 'index-page', 'output': 'index.md', 'title': '별도 작성한 인덱스'}
+    own_graph = {**copy.deepcopy(graph), 'id': graph['id'] if collision else 'own-flow', 'title': '원래 인덱스 그림'}
+    model.evidence['index-page/shutdown/stop'] = copy.deepcopy(model.evidence['device/shutdown/stop'])
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section, own]}, allow_unicode=True), encoding='utf-8')
+    (tmp_cfg.root/'visuals.yaml').write_text(yaml.safe_dump(dict(schema=1, sections={'device': [graph], 'index-page': [own_graph]}), allow_unicode=True), encoding='utf-8')
+    model.save(tmp_cfg.facts_path)
+    Generator(tmp_cfg, model, None).run()
+    tmp_cfg.raw.setdefault('site', {})['overview_visual'] = dict(section='device', visual=graph['id'])
+    if collision:
+        with pytest.raises(ValueError, match='conflicts'):
+            export_site(tmp_cfg)
+        return
+    site = export_site(tmp_cfg)
+    assert (site/'index.own-flow.mmd').is_file() and (site/'index.stop-flow.mmd').is_file()
+    html = (site/'index.html').read_text(encoding='utf-8')
+    assert 'index.own-flow.mmd' in html and 'index.stop-flow.mmd' in html
+    texts = {name: (tmp_cfg.sdd_dir/name).read_text(encoding='utf-8') for name in ['index.md','device.md']}
+    before, _ = split_frontmatter(texts['index.md'])
+    _, after, _, _, rendered = _prepare_page_body(tmp_cfg, 'index.md', texts, {'index.md': own, 'device.md': section}, [], model)
+    assert before == after and len(rendered) == 2
+
+
 def test_opt_in_omits_stale_interpretation_and_removes_old_download(tmp_cfg, visual):
     section, model, graph, write = visual
     Generator(tmp_cfg, model, None).run()

@@ -311,13 +311,15 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
         from .visuals import render_values
         # Revalidate the original definition and source pins for its new output
         # path; do not copy HTML, prose, stale diagrams or a model's answer.
-        visuals = render_values(cfg, model, {**original, 'output': 'index.md'}, [selected[0][0]])
-        block = visuals[0][1].replace('\n### ', '\n## ', 1)
+        if any(value[0]['id'] == selection['visual'] for value in visuals):
+            raise ValueError('Overview visual ID conflicts with an existing index visual')
+        reused = render_values(cfg, model, {**original, 'output': 'index.md'}, [selected[0][0]])
+        visuals += reused
+        block = reused[0][1].replace('\n### ', '\n## ', 1)
         block = re.sub(r'\]\(#(source-[0-9a-f]{16})\)',
                        lambda match: '](' + target + '#' + match[1] + ')', block)
         first, separator, rest = body.lstrip('\n').partition('\n\n')
         body = first + '\n\n' + block + (separator + rest if separator else '')
-        meta = {**meta, 'source_commit': model.meta['source_commit'], 'generation_method': 'extracted-structure'}
     return page_title, meta, body, diagram_source, visuals
 
 
