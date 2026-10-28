@@ -47,6 +47,12 @@ def archive(tmp_path, monkeypatch):
                 {'type': 'text', 'part': {'text': answer}},
                 {'type': 'step_finish', 'sessionID': 'fake-session', 'part': {'reason': 'stop'}},
             ])
+        elif runner == 'codex':
+            output = '\n'.join(json.dumps(e) for e in [
+                {'type': 'turn.started'},
+                {'type': 'item.completed', 'item': {'type': 'agent_message', 'text': answer}},
+                {'type': 'turn.completed', 'usage': {'output_tokens': 10}},
+            ])
         else:
             output = answer
         captured = tmp_path / 'captured-stdin.txt'
@@ -76,7 +82,7 @@ def archive(tmp_path, monkeypatch):
     return create
 
 
-@pytest.mark.parametrize('runner', ['hermes', 'opencode', 'claude'])
+@pytest.mark.parametrize('runner', ['hermes', 'opencode', 'claude', 'codex'])
 @pytest.mark.parametrize('model', ['', 'chosen/model'])
 def test_real_agent_archives_from_fake_subprocess_are_verified(archive, runner, model):
     args = archive(runner, model)

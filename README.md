@@ -6,7 +6,7 @@
 
 **사내 Camera HAL에 처음 적용한다면 [1단계: 준비물](docs/inhouse/01-prepare.md)을 여세요.** 전체 문서 지도는 [docs/README.md](docs/README.md)에 있습니다.
 
-**모델 호출은 기본 Hermes CLI를 경유합니다.** OpenCode 또는 Claude Code로 바꾸려면 [CLI 선택 안내](docs/inhouse/cli-agents.md)의 `agent.runner`를 설정합니다. 모델·제공자는 선택한 CLI 설정을 사용하며 직접 모델 API로 자동 전환하지 않습니다.
+**모델 호출은 선택한 CLI를 경유합니다.** Hermes, OpenCode, Claude Code 또는 Codex CLI를 사용하려면 [CLI 선택 안내](docs/inhouse/cli-agents.md)의 `agent.runner`를 설정합니다. 모델·제공자는 선택한 CLI 설정을 사용하며 직접 모델 API로 자동 전환하지 않습니다.
 
 C++ Camera HAL 소스에서 검토용 설계 문서(SDD)를 만들고, 새 커밋이 올라올 때마다 바뀐 부분만 다시 만드는 생성기입니다.
 

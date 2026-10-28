@@ -11,14 +11,15 @@ import tempfile
 import time
 from contextlib import contextmanager
 from .trial_workspace import is_link
+from .cli_schema import schema_bytes, schema_hash, validate_original
 
 
-RUNNERS = ('hermes', 'opencode', 'claude')
+RUNNERS = ('hermes', 'opencode', 'claude', 'codex')
 
 
 def command(cfg):
     if cfg.runner not in RUNNERS:
-        raise ValueError('agent.runner must be hermes, opencode or claude')
+        raise ValueError('agent.runner must be hermes, opencode, claude or codex')
     prefix = cfg.command or [cfg.runner]
     if any(not isinstance(a, str) or not a for a in [*prefix, *cfg.args]):
         raise ValueError('CLI command and args must contain nonempty strings')
@@ -81,6 +82,39 @@ def decode_response(runner, stdout):
         if not isinstance(result, str):
             raise ValueError('Claude Code final result is not text')
         return result.strip(), {k: data[k] for k in ('model', 'session_id', 'usage', 'modelUsage') if k in data}
+    if runner == 'codex':
+        answer, metadata, started, finished = '', {}, False, False
+        for line in stdout.splitlines():
+            event = json.loads(line)
+            if not isinstance(event, dict):
+                raise ValueError('Codex event is not an object')
+            kind = event.get('type')
+            if kind in ('error', 'turn.failed'):
+                raise ValueError('Codex returned a failed turn')
+            if kind == 'thread.started':
+                metadata['thread_id'] = event.get('thread_id')
+            elif kind == 'turn.started':
+                if started:
+                    raise ValueError('Codex returned multiple turns')
+                started = True
+            elif kind in ('item.started', 'item.updated', 'item.completed'):
+                item = event.get('item')
+                if not isinstance(item, dict) or item.get('type') not in ('agent_message', 'reasoning'):
+                    raise ValueError('Codex inference used an unexpected tool or item')
+                if finished or not started:
+                    raise ValueError('Codex item outside its active turn')
+                if kind == 'item.completed' and item['type'] == 'agent_message':
+                    answer = item.get('text')
+                    if not isinstance(answer, str):
+                        raise ValueError('Codex final message is not text')
+            elif kind == 'turn.completed':
+                if not started or finished or not answer:
+                    raise ValueError('Codex completion has no final answer')
+                finished = True
+                metadata.update(completion_event=kind, usage=event.get('usage', {}))
+        if not finished:
+            raise ValueError('Codex final completion event is missing')
+        return answer.strip(), metadata
     parts, metadata, finished = [], {}, False
     for line in stdout.splitlines():
         event = json.loads(line)
@@ -122,6 +156,15 @@ def arguments(cfg, schema=None):
                 '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--no-session-persistence']
         if schema is not None:
             argv += ['--json-schema', json.dumps(schema, ensure_ascii=False)]
+    elif cfg.runner == 'codex':
+        argv = ['exec', '--ignore-user-config', '--ignore-rules', '--ephemeral',
+                '--skip-git-repo-check', '--sandbox', 'read-only',
+                '--disable', 'shell_tool', '--disable', 'multi_agent', '--disable', 'plugins',
+                '--disable', 'apps', '--disable', 'shell_snapshot', '--disable', 'skill_search',
+                '-c', 'project_doc_max_bytes=0', '-c', 'approval_policy="never"',
+                '-c', 'web_search="disabled"', '--json']
+        if schema is not None:
+            argv += ['--output-schema', 'response-schema.json']
     else:
         argv = ['run', '--format', 'json']
     if cfg.model:
@@ -168,6 +211,8 @@ def chat(cfg, system, user, schema, dump_dir):
         parent.mkdir(parents=True, exist_ok=True)
     with call_workspace(parent) as (work, cleanup):
         env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1', 'NO_COLOR': '1'}
+        if cfg.runner == 'codex' and schema is not None:
+            (work / 'response-schema.json').write_bytes(schema_bytes(schema))
         argv += arguments(cfg, schema)
         if cfg.runner == 'opencode':
             # CLI-native permissions: inference only, without nesting other agents.
@@ -194,6 +239,8 @@ def chat(cfg, system, user, schema, dump_dir):
             raise RuntimeError(f'{cfg.runner} CLI가 실패했습니다 (exit {result.returncode}). 로컬 실행 기록을 확인하세요. 다른 실행기로 대체하지 않습니다.')
         try:
             response, provider = decode_response(cfg.runner, result.stdout)
+            if cfg.runner == 'codex':
+                validate_original(response, schema)
         except (KeyError, TypeError, ValueError) as exc:
             raise RuntimeError(f'{cfg.runner} CLI 응답 형식 또는 완료 상태를 확인할 수 없습니다.') from exc
         if not response:
@@ -208,4 +255,6 @@ def chat(cfg, system, user, schema, dump_dir):
                     'provider': provider}
         if dump_dir:
             metadata['stdout_path'] = str(raw.relative_to(dump_dir).as_posix())
+        if cfg.runner == 'codex':
+            metadata['native_schema_sha256'] = schema_hash(schema)
         return response, metadata
