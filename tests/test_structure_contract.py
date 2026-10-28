@@ -115,3 +115,34 @@ def test_split_validator_remains_visible_in_build_provenance(tmp_cfg, sample_mod
     assert before['outputs'] == after['outputs']
     assert before['engine']['design_response.py'] != after['engine']['design_response.py']
     assert before['build_id'] != after['build_id']
+
+
+@pytest.mark.parametrize('runner', ['hermes', 'claude', 'opencode'])
+@pytest.mark.parametrize('schema_mode', ['none', 'object'])
+def test_checkpoint_execution_identity_keeps_legacy_fingerprint(generated, tmp_cfg, monkeypatch, runner, schema_mode):
+    """Moving argv assembly must not invalidate existing unit checkpoint keys."""
+    from sdd import cli_checkpoint, design_execution
+    fixture = json.loads((Path(__file__).parent / 'fixtures' / 'cli-execution-141.json').read_text(encoding='utf-8'))
+    tmp_cfg.agent.kind, tmp_cfg.agent.runner = 'cli', runner
+    tmp_cfg.agent.model = 'fixture-model'
+    tmp_cfg.agent.command = ['fixture-cli', 'subcommand']
+    tmp_cfg.agent.args = ['--custom', '한글']
+    tmp_cfg.raw.setdefault('review', {})['cli_checkpoint'] = True
+    schema = None if schema_mode == 'none' else fixture['schema']
+    monkeypatch.setattr(design_execution, 'response_schema', lambda *args: schema)
+    captured = []
+
+    class CapturedIdentity(Exception):
+        pass
+
+    def capture(cfg, identity):
+        captured.append(identity['execution'])
+        raise CapturedIdentity
+
+    monkeypatch.setattr(cli_checkpoint, 'UnitStore', capture)
+    section, model, _, _ = generated
+    with pytest.raises(CapturedIdentity):
+        design_execution._request_unit(tmp_cfg, model, object(), section, section['design_topics'][0],
+                                       (None, 'fixed-system', 'fixed-policy'), False, None, {})
+    assert len(captured) == 1
+    assert cli_checkpoint.checksum(captured[0]) == fixture['fingerprints'][f'{runner}/{schema_mode}']
