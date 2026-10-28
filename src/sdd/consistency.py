@@ -18,7 +18,7 @@ from .state_io import save
 from .trial_workspace import contained_path
 from .cli_checkpoint import Capture, UnitStore
 from .cli_agent import arguments
-from .consistency_sources import source as evidence_source, citation_refs, canonicalize
+from .consistency_sources import source as evidence_source, citation_refs, canonicalize, contains_statement
 from .consistency_analysis import paragraph_refs
 
 STATUSES = ('compatible', 'contradiction', 'ambiguous', 'insufficient-evidence')
@@ -33,6 +33,9 @@ SYSTEM = (
     'Evidence marked analysis-definition establishes only an extractor or diagram representation '
     'and its limits. It cannot establish product runtime behavior, callback execution, ownership '
     'or device performance. Keep this provenance domain separate from project-source contracts. '
+    'An unestablished external actor or helper is insufficient evidence, not a contradiction '
+    'merely because the excerpt describes another named function. Distinguish that missing '
+    'scope from an explicitly wrong receiver/action for the same source function invocation. '
     'Compare underlying objects and effects, not call spelling alone. A shortened member call '
     'that omits a receiver/accessor qualifier is compatible when the supplied source and named '
     'function unambiguously identify the same member, action and object. Omission alone is not '
@@ -141,9 +144,12 @@ def request(cfg, model, group):
             # paragraphs and their existing source citations for the reviewer.
             for index, paragraph in enumerate(body.split('\n\n')):
                 if re.search(group['match'], paragraph, re.I) and not paragraph.startswith(('#', '<', '```', '|')):
-                    refs = citation_refs(model, paragraph) + paragraph_refs(cfg, model, meta, paragraph)
+                    analysis_refs = paragraph_refs(cfg, model, meta, paragraph)
+                    refs = citation_refs(model, paragraph) + analysis_refs
                     key = f'{name}/paragraph/{index}'
                     claims[key] = dict(document=name, topic=None, language='ko', text=paragraph, evidence=refs)
+                    if analysis_refs:
+                        claims[key]['evidence_domain'] = 'analysis-representation'
                     all_statements[key] = dict(claims[key])
                     if catalog:
                         visible[key] = displayed(paragraph, name)
@@ -161,7 +167,7 @@ def request(cfg, model, group):
         matches = [key for key, claim in claims.items() if claim['language']=='ko'
                    and not key.startswith('catalog/')
                    and claim['document'] == pair['document']
-                   and len(visible.get(key, '')) >= 12 and visible[key] in shown]
+                   and visible.get(key) and contains_statement(visible[key], shown)]
         if not matches:
             continue
         value = catalog.get(pair['key'])
@@ -172,7 +178,7 @@ def request(cfg, model, group):
         # matching statement's direct proof, including other clauses in it.
         refs = list(dict.fromkeys(sid for key, claim in all_statements.items()
             if claim['document'] == pair['document']
-            and len(visible.get(key, '')) >= 12 and visible[key] in shown
+            and visible.get(key) and contains_statement(visible[key], shown)
             for sid in claim['evidence']))
         for sid in refs:
             sources[sid] = evidence_source(model, sid)
@@ -180,6 +186,8 @@ def request(cfg, model, group):
                            evidence=refs, origin_claims=matches)
         claims[key+'/en'] = dict(document=pair['document'], topic=None, language='en',
                                  text=translated, evidence=refs, translation_of=key, origin_claims=matches)
+        if all(claims[origin].get('evidence_domain') == 'analysis-representation' for origin in matches):
+            claims[key]['evidence_domain'] = claims[key+'/en']['evidence_domain'] = 'analysis-representation'
     if not claims:
         raise ValueError(f"No contract claims found: {group['id']}")
     if not any(claim['document'] == group['primary'] and claim['language'] == 'ko'
@@ -239,6 +247,13 @@ def validate(payload, raw, *, assembled=False):
             if assembled and ref['source_quote'] != original:
                 raise ValueError('Invalid consistency source quote')
             ref['source_quote'] = original
+        if row['status'] in ('compatible', 'contradiction'):
+            kinds = [payload['sources'][ref['source_id']].get('kind') for ref in row['sources']]
+            analysis = claim.get('evidence_domain') == 'analysis-representation'
+            if not analysis and all(kind == 'analysis-definition' for kind in kinds):
+                raise ValueError('Analysis definitions cannot support a definite project-runtime verdict')
+            if analysis and 'analysis-definition' not in kinds:
+                raise ValueError('An analysis representation verdict requires its analysis definition')
         row['claim_quote'] = claim['text']
     return findings
 

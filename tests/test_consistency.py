@@ -133,6 +133,22 @@ def test_uncertain_assessment_is_exposed_without_claiming_source_support(contrac
     assert validate(payload, json.dumps(dict(findings=findings)))[0]['status'] == 'insufficient-evidence'
 
 
+@pytest.mark.parametrize('status', ['compatible', 'contradiction'])
+def test_analysis_only_proof_cannot_certify_project_runtime_contracts(contract_case, status):
+    payload, findings = contract_case
+    payload['sources']['source']['kind'] = 'analysis-definition'
+    for row in findings:
+        row['status'] = status
+    with pytest.raises(ValueError, match='cannot support a definite project-runtime'):
+        validate(payload, json.dumps(dict(findings=findings)))
+    for claim in payload['claims'].values():
+        claim['evidence_domain'] = 'analysis-representation'
+    assert validate(payload, json.dumps(dict(findings=findings)))
+    del payload['sources']['source']['kind']
+    with pytest.raises(ValueError, match='requires its analysis definition'):
+        validate(payload, json.dumps(dict(findings=findings)))
+
+
 def test_peer_claims_cannot_hide_missing_primary_contract(tmp_cfg):
     from sdd.consistency import request
     from sdd.facts.model import KnowledgeModel

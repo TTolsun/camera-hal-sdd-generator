@@ -120,8 +120,32 @@ def test_batches_preserve_direct_and_all_primary_sources_and_fit_exact_cli_promp
 
 def test_existing_citation_resolves_verified_context_and_keeps_unresolved_citations_visible():
     model = KnowledgeModel(meta={'source_commit': 'a'*40}, evidence={
-        'broad': record('a\nb\nc\nd\ne'), 'narrow': record('b\nc', line=2)})
+        'broad': record('a\nb\nc\nd\ne'), 'narrow': record('b\nc', line=2),
+        'unavailable': dict(status='unavailable', file='device.cpp'),
+        'unrelated-malformed': dict(status='available', file='device.cpp', line=100, text=None)})
     assert citation_refs(model, '분기 근거는 `device.cpp:2`와 `missing.cpp:1`입니다.') == ['narrow']
     model.evidence['narrow']['commit'] = 'b'*40
     with pytest.raises(ValueError, match='Invalid consistency source'):
         citation_refs(model, '근거 `device.cpp:2`입니다.')
+
+
+def test_visible_short_statements_need_complete_sentence_boundaries():
+    from sdd.consistency_sources import contains_statement
+    assert contains_statement('완료합니다.', '완료합니다.')
+    assert contains_statement('완료합니다.', '준비합니다. 완료합니다. 반환합니다.')
+    assert not contains_statement('완료합니다.', '요청을 완료합니다.')
+    assert not contains_statement('', '완료합니다.')
+
+
+def test_short_displayed_contract_translation_is_not_omitted(tmp_cfg):
+    text = '완료합니다.'
+    artifact = dict(answers={'q': [dict(text=text, evidence=['a'])]})
+    tmp_cfg.sdd_dir.mkdir(parents=True)
+    (tmp_cfg.sdd_dir/'primary.md').write_text('---\nsource_commit: '+'a'*40
+        +'\nsection: doc\ngenerated_design: '+json.dumps(artifact, ensure_ascii=False)+'\n---\n\n'+text, encoding='utf-8')
+    model = KnowledgeModel(meta={'source_commit': 'a'*40}, evidence={'doc/q/a': record('The caller completes the request.')})
+    catalog = tmp_cfg.root/'english.json'
+    catalog.write_text(json.dumps({'strings': {text: 'Completion is prohibited.'}}), encoding='utf-8')
+    tmp_cfg.raw.setdefault('site', {})['english_catalog'] = str(catalog)
+    actual = request(tmp_cfg, model, dict(id='short', primary='primary.md', documents=['primary.md'], match='완료'))
+    assert any(claim['language']=='en' and claim['text']=='Completion is prohibited.' for claim in actual['claims'].values())

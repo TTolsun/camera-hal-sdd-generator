@@ -30,14 +30,34 @@ def citation_refs(model, text):
         file, _, number = cite.rpartition(':')
         candidates = []
         for sid, record in model.evidence.items():
-            if record.get('file') != file:
+            if record.get('file') != file or record.get('status') != 'available':
                 continue
-            candidate = source(model, sid)
-            if candidate['line'] <= int(number) <= candidate['line'] + candidate['text'].count('\n'):
+            excerpt = record.get('context', record)
+            start, body = excerpt.get('line'), excerpt.get('text')
+            if (type(start) is int and isinstance(body, str)
+                    and start <= int(number) <= start + body.count('\n')):
+                candidate = source(model, sid)
                 candidates.append((len(candidate['text']), sid))
         if candidates:
             refs.append(min(candidates)[1])
     return list(dict.fromkeys(refs))
+
+
+def contains_statement(statement, paragraph):
+    """Match a complete visible statement, including short statements and code."""
+    if not statement:
+        return False
+    if statement == paragraph:
+        return True
+    start = paragraph.find(statement)
+    while start >= 0:
+        end = start + len(statement)
+        before = paragraph[:start].rstrip()
+        if ((not before or before.endswith(('.', '!', '?')))
+                and (end == len(paragraph) or paragraph[end].isspace())):
+            return True
+        start = paragraph.find(statement, start + 1)
+    return False
 
 
 def canonicalize(claims, sources, shared):

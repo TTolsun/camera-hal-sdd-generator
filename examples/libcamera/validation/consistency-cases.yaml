@@ -4,7 +4,7 @@ cases:
 - id: extracted-analysis-scope
   sources: ['@analysis/scenario/queue_request']
   claims:
-    scope: {text: 'The extracted call list does not establish runtime branch counts or callback execution threads; a deferred target records a passed method reference rather than a guarantee of asynchronous execution.', expected: compatible}
+    scope: {text: 'The extracted call list does not establish runtime branch counts or callback execution threads; a deferred target records a passed method reference rather than a guarantee of asynchronous execution.', evidence_domain: analysis-representation, expected: compatible}
 - id: analysis-is-not-runtime-evidence
   sources: ['@analysis/scenario/queue_request']
   claims:
