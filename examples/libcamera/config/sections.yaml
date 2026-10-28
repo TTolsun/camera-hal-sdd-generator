@@ -483,8 +483,7 @@ sections:
         reject_patterns: []
   - id: measurement
     title: 성능 근거를 읽는 기준
-    question: DebayerCpu 벤치마크는 통계 수집과 디베이어 처리만 측정하고 캡처와 출력을 제외합니다. Software ISP를 쓰는 cam 또는 qcam에서 실행되는 참고 절차를 설명하세요. 제품 전체
-      지연이나 이 문서의 실제 측정 결과로 표현하지 마세요.
+    question: DebayerCpu 내장 벤치마크가 측정에 포함하거나 제외하는 단계는 무엇이며, upstream은 어떤 실행 환경과 도구를 안내합니까? 참고 실행 절차와 이 문서에서 실제로 수행한 측정을 구분하세요.
     covers:
     - measurement
     sources:
@@ -494,8 +493,7 @@ sections:
       end: or "qcam" with a pipeline using the Software ISP.
     parts:
     - id: scope
-      question: DebayerCpu 벤치마크의 통계 수집·디베이어 처리 시간 측정 범위와 캡처·출력 제외를 한 문단으로 설명하세요. 제품 전체 지연 수치로 해석하지 마세요. 질문의 모든 항목을 한 문장으로
-        설명하세요.
+      question: DebayerCpu 벤치마크는 어떤 처리 단계의 시간을 측정하며 캡처와 출력도 포함합니까? 소스에 명시된 측정 경계를 한 문장으로 설명하고 제품 전체 지연으로 확대하지 마세요.
       sources:
       - benchmark
       answer_contract:
@@ -506,8 +504,7 @@ sections:
         - - 출력
         reject_patterns: []
     - id: procedure
-      question: Software ISP를 사용하는 cam 또는 qcam에서 내장 벤치마크를 이용하는 upstream 절차를 설명하세요. 이 근거는 실행 방법이며 이 문서가 대상 제품을 측정한 결과는 아닙니다.
-        질문의 모든 항목을 한 문장으로 설명하세요.
+      question: upstream이 이 벤치마크 실행에 안내하는 파이프라인 환경과 실행 도구는 무엇입니까? 환경과 도구만 한 문장으로 설명하고 앞 답변의 측정 단계·포함·제외 범위를 반복하지 마세요. 실제 실행 기록이 없는 측정 결과를 주장하지 마세요.
       sources:
       - benchmark
       answer_contract:
@@ -2231,8 +2228,19 @@ sections:
         - - sendSync
         - - call
         - - out
+    - id: sync-send
+      question: IPCPipeUnixSocket::call은 소켓에 어떤 인자를 보내며 송신 실패 때 무엇을 정리하고 반환합니까? 소켓에 넘기는 값과 callData_ 항목을 가리키는 반복자의 역할을 구분하세요. 응답 대기는 다음 답변에서 다루세요.
+      sources:
+      - ipc
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - send
+        - - message
+        - - erase
     - id: sync-timeout
-      question: IPCPipeUnixSocket::call의 소켓 송신 실패, 응답 대기 타이머·완료 조건과 타임아웃 정리·반환을 설명하세요. sendSync의 외부 반환 처리는 반복하지 마세요.
+      question: IPCPipeUnixSocket::call의 응답 대기 타이머와 완료 조건은 무엇이며, 시간 초과와 정상 완료 때 항목 정리·반환은 어떻게 달라집니까? 반복자가 대기 조건 검사와 정리에서 쓰이는 위치를 확인하세요. 앞 답변의 송신 처리와 sendSync의 외부 반환 처리는 반복하지 마세요.
       sources:
       - ipc
       max_statements: 2
@@ -3985,7 +3993,7 @@ sections:
         - - 동기화
   - id: shutdown
     title: 오류와 종료
-    question: queueRequest()의 오류 반환과 RequestPending·controls 정보 맵·활성 스트림 검사를 설명하세요. stop()에서 실행 중이 아닌 경우 실제 반환값, 실행 중 상태 전환과 ConnectionTypeBlocking 호출, 동기 취소·완료를 구분하세요. 주석과 구현이 다르면 실제 분기를 우선하세요.
+    question: queueRequest()의 오류 반환과 RequestPending·controls 정보 맵·활성 스트림 검사를 설명하세요. stop()에서 실행 중이 아닌 경우 실제 반환값, 실행 중 상태 전환과 ConnectionTypeBlocking 호출, 동기 취소·완료를 구분하세요. 주석과 구현이 다르면 실제 분기를 우선하세요. 호출자의 동기화 의무는 동시성 절에서 다루므로 이 절에서는 반복하지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -4242,7 +4250,7 @@ sections:
         - - queueRequest
         - - 버퍼
     - id: queue-owner
-      question: 이 if가 요청이 어느 카메라에서 생성됐는지 비교하는 조건만 설명하세요.
+      question: 이 if는 요청이 어느 카메라에서 생성됐는지 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
       sources:
       - queue-owner-guard
       answer_contract:
@@ -4250,13 +4258,6 @@ sections:
         required_terms:
         - - camera
           - 카메라
-    - id: queue-owner-return
-      question: 이 분기의 return 문 뒤에 적힌 오류 코드 값을 코드 식별자 그대로 설명하세요. 조건 설명으로 대신하지 마세요.
-      sources:
-      - queue-owner-guard
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - -EXDEV
     - id: queue-status
       question: Camera::queueRequest의 RequestPending 상태 비교와 일치하지 않을 때의 반환값만 설명하세요.
@@ -4268,52 +4269,31 @@ sections:
         - - RequestPending
         - - -EINVAL
     - id: queue-controls
-      question: 이 if에서 Request::controls().infoMap()과 Camera::controls()의 주소를 비교하는 조건만 설명하세요. infoMap 이름을 사용하세요.
+      question: 이 if에서 Request::controls().infoMap()과 Camera::controls()의 주소를 어떻게 비교하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? infoMap 이름을 사용하고 조건과 반환값을 한 문장으로 연결하세요.
       sources:
       - queue-controls-guard
       answer_contract:
         basis: implementation
         required_terms:
         - - infoMap
-    - id: queue-controls-return
-      question: 이 분기의 return 문 뒤에 적힌 오류 코드 값을 코드 식별자 그대로 설명하세요. 조건 설명으로 대신하지 마세요.
-      sources:
-      - queue-controls-guard
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - -EINVAL
     - id: queue-buffers
-      question: 이 if가 검사하는 buffers의 조건만 설명하세요.
+      question: 이 if는 buffers에 어떤 조건을 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
       sources:
       - queue-buffers-guard
       answer_contract:
         basis: implementation
         required_terms:
         - - buffers
-    - id: queue-buffers-return
-      question: 이 분기의 return 문 뒤에 적힌 오류 코드 값을 코드 식별자 그대로 설명하세요. 조건 설명으로 대신하지 마세요.
-      sources:
-      - queue-buffers-guard
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - -EINVAL
     - id: queue-stream
-      question: 이 if가 검사하는 activeStreams_의 스트림 포함 조건만 설명하세요.
+      question: 이 if는 activeStreams_의 스트림 포함 여부를 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
       sources:
       - queue-stream-guard
       answer_contract:
         basis: implementation
         required_terms:
         - - activeStreams_
-    - id: queue-stream-return
-      question: 이 분기의 return 문 뒤에 적힌 오류 코드 값을 코드 식별자 그대로 설명하세요. 조건 설명으로 대신하지 마세요.
-      sources:
-      - queue-stream-guard
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - -EINVAL
     - id: completion-signal
       question: queueRequest의 성공 반환과 requestCompleted 완료 통지를 구분하세요. 이 함수가 큐에 넣자마자 완료 신호를 직접 발행한다고 쓰지 마세요.

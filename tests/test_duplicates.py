@@ -1175,6 +1175,56 @@ def _found_pair(left, right, source=CALL_SOURCE, left_quote=None, right_quote=No
     return statement_findings(model, 's', {'t': rows})
 
 
+TERRA_ARGUMENT_SOURCE = 'lscAlgo_.queueRequest(context.activeState.lsc, frameContext.lsc, controls);'
+TERRA_SHARED_ARGUMENT = '`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 첫 번째 인자로 `context.activeState.lsc`를 전달합니다.'
+TERRA_FRAME_ARGUMENT = '`Lsc::queueRequest`는 공통 `lscAlgo_.queueRequest` 호출의 두 번째 인자로 `frameContext.lsc`를 전달합니다.'
+
+
+def test_real_terra_distinct_argument_positions_need_exact_source_bound_values():
+    assert similar(TERRA_SHARED_ARGUMENT, TERRA_FRAME_ARGUMENT)
+    assert _found_pair(TERRA_SHARED_ARGUMENT, TERRA_FRAME_ARGUMENT, TERRA_ARGUMENT_SOURCE) == []
+    assert _found_pair(TERRA_FRAME_ARGUMENT, TERRA_SHARED_ARGUMENT, TERRA_ARGUMENT_SOURCE) == []
+
+
+@pytest.mark.parametrize('source', [
+    '// ' + TERRA_ARGUMENT_SOURCE,
+    'const char *example = "' + TERRA_ARGUMENT_SOURCE + '";',
+    TERRA_ARGUMENT_SOURCE.replace('frameContext.lsc', 'otherContext.lsc'),
+    TERRA_ARGUMENT_SOURCE.replace('frameContext.lsc', 'convert(frameContext.lsc)'),
+    'void lscAlgo_.queueRequest(Context context, Context frameContext, Controls controls);',
+])
+def test_argument_novelty_rejects_unproved_or_ambiguous_source(source):
+    assert len(_found_pair(TERRA_SHARED_ARGUMENT, TERRA_FRAME_ARGUMENT, source)) == 1
+
+
+def test_argument_novelty_preserves_duplicates_and_does_not_hide_mixed_claims():
+    first = TERRA_SHARED_ARGUMENT
+    second = TERRA_FRAME_ARGUMENT
+    assert len(_found_pair(first, first.replace('전달합니다', '넘깁니다'), TERRA_ARGUMENT_SOURCE)) == 1
+    assert len(_found_pair(first, second.replace('두 번째', '세 번째'), TERRA_ARGUMENT_SOURCE)) == 1
+    assert len(_found_pair(first, second + ' ' + first, TERRA_ARGUMENT_SOURCE)) >= 1
+    assert len(_found_pair(first, second, TERRA_ARGUMENT_SOURCE, right_quote='missing quote')) == 1
+    from sdd.duplicates import _different_arguments
+    model = _sourced_model(TERRA_ARGUMENT_SOURCE)
+    model.evidence['s/t/x']['sha256'] = 'tampered'
+    assert not _different_arguments(model, 's', 't',
+        dict(text=second, quote=TERRA_ARGUMENT_SOURCE, evidence=['x']),
+        dict(text=first, quote=TERRA_ARGUMENT_SOURCE, evidence=['x']))
+
+
+def test_real_terra_korean_false_and_english_true_distinguish_lsc_branches():
+    disabled = '`Lsc::prepare`는 `frameContext.lsc.update`가 거짓이고 `frameContext.lsc.enabled`도 거짓이면 즉시 반환합니다.'
+    threshold = '`Lsc::prepare`는 `frameContext.lsc.update`가 false이고 `frameContext.lsc.enabled`가 true일 때, 현재 원래 색온도 `ct`와 `lastAppliedCt_`의 절대 차이가 `kColourTemperatureQuantization / 2`보다 작으면 조기 반환합니다.'
+    assert not similar(disabled, threshold)
+    assert similar(disabled, disabled.replace('거짓', 'false'))
+
+
+@pytest.mark.parametrize('tail', ['참고하면', '참조하면', '참이 아니면', '거짓이 아니면', '거짓말이면'])
+def test_korean_boolean_words_and_negations_do_not_establish_literal_values(tail):
+    from sdd.duplicates import _members
+    assert _members('frameContext.lsc.enabled가 ' + tail)['frameContext.lsc.enabled'] is None
+
+
 def test_source_backed_call_addition_is_directional_and_aliases_are_not_novel():
     detail = BASE_CLAIM + ' finish(request) 함수를 호출합니다.'
     assert _found_pair(BASE_CLAIM, detail) == []

@@ -28,9 +28,12 @@ _SUBJECT = re.compile(
 _MEMBER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:(?:\([^()\n]*\))?(?:\.|->)[A-Za-z_][A-Za-z0-9_]*)+")
 _OWNED_FIELD = re.compile(rf"({_NAME})\s*(?:(?:구조체|클래스)\s*)?의\s*({_NAME})\s*(?:필드|멤버)")
 _VALUE = r"(?:true|false|nullptr|NULL|null|-E[A-Z0-9_]+|[+-]?\d+(?:\.\d+)?)"
+# Only affirmative Korean copulas establish a literal value. Words such as
+# 참고/참조 and negations such as 참이 아니면 must not become equality claims.
+_KOREAN_BOOLEAN = r"(?:참|거짓)(?=(?:이고|이면|일\s*때|인\s*경우|입니다|이다)(?:\s|[,.;!?]|$))"
 _BOUND_VALUE = re.compile(
     rf"^\s*(?:의\s*)?(?:값|필드)?\s*(?:에는|은|는|이|가|을|를|에|도)?\s*"
-    rf"(==|!=|=|is\s+not|is)?\s*({_VALUE})(?![A-Za-z0-9_])")
+    rf"(==|!=|=|is\s+not|is)?\s*({_VALUE}|{_KOREAN_BOOLEAN})(?![A-Za-z0-9_])")
 _CONDITION = re.compile(r"으면|이면|라면|다면|하면|되면|경우|(?:일|할|될|인|는)\s*때")
 _VARIABLE_LABEL = re.compile(r"(?<![\w:])\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)")
 _CALL = re.compile(rf"(?<![A-Za-z0-9_:])({_NAME})\s*\(")
@@ -113,7 +116,8 @@ def _same_member(left: str, right: str) -> bool:
 
 
 def _value(value: str) -> str:
-    return 'null' if value in ('null', 'NULL', 'nullptr') else value
+    return {'null': 'null', 'NULL': 'null', 'nullptr': 'null',
+            '참': 'true', '거짓': 'false'}.get(value, value)
 
 
 def _outcomes(text: str) -> set[str]:
@@ -213,6 +217,49 @@ def _source_calls(source: str) -> set[str]:
                      or re.fullmatch(assignment, prefix))):
             names.add(match[1])
     return names
+
+
+def _argument_claim(text: str) -> tuple[str, str, int, str] | None:
+    """Recognize a whole, single-fact argument claim, without extra assertions."""
+    member = r'[A-Za-z_][A-Za-z0-9_]*(?:(?:\.|->)[A-Za-z_][A-Za-z0-9_]*)+'
+    match = re.fullmatch(
+        rf'\s*({_NAME})\s*(?:는|은)\s*(?:공통\s+)?({member})\s*(?:호출)?의\s*'
+        rf'(첫|두|세)\s*번째\s*인자로\s*({_NAME}(?:(?:\.|->)[A-Za-z_][A-Za-z0-9_]*)*)\s*'
+        r'(?:를|을)\s*(?:전달합니다|넘깁니다)[.]?\s*',
+        _CITATION.sub(' ', text).replace('`', ''))
+    if not match:
+        return None
+    owner, callee, ordinal, value = match.groups()
+    return owner, callee, {'첫': 0, '두': 1, '세': 2}[ordinal], value
+
+
+def _argument_vectors(quote: str, callee: str) -> set[tuple[str, ...]]:
+    # Restrict proof to standalone member calls with simple arguments. Comments,
+    # literals, declarations and nested/ambiguous expressions do not prove this.
+    value = rf'{_NAME}(?:(?:\.|->)[A-Za-z_][A-Za-z0-9_]*)*'
+    vectors = set()
+    for match in re.finditer(rf'(?m)^\s*{re.escape(callee)}\s*\(([^()]*)\)\s*;', _code(quote)):
+        arguments = tuple(part.strip() for part in match[1].split(','))
+        if arguments and all(re.fullmatch(value, part) for part in arguments):
+            vectors.add(arguments)
+    return vectors
+
+
+def _different_arguments(model, section_id: str, topic_id: str, later: dict, earlier: dict,
+                         *, earlier_topic: str | None = None) -> bool:
+    claims = [_argument_claim(row['text']) for row in (earlier, later)]
+    if any(claim is None for claim in claims):
+        return False
+    before, after = claims
+    if before[:2] != after[:2] or before[2] == after[2]:
+        return False
+    rows = ((earlier_topic or topic_id, earlier), (topic_id, later))
+    if not all(_source_text(model, section_id, tid, row) for tid, row in rows):
+        return False
+    common = (_argument_vectors(earlier['quote'], before[1])
+              & _argument_vectors(later['quote'], after[1]))
+    return any(all(position < len(vector) and vector[position] == value
+                   for _, _, position, value in claims) for vector in common)
 
 
 def _code(source: str) -> str:
@@ -324,6 +371,8 @@ def _clip(text: str, limit: int = 70) -> str:
 def _repeats(model, section_id: str, topic_id: str, later: dict, earlier: dict,
              *, earlier_topic: str | None = None) -> bool:
     return (similar(later['text'], earlier['text']) and not _different_guards(later, earlier)
+            and not _different_arguments(model, section_id, topic_id, later, earlier,
+                                          earlier_topic=earlier_topic)
             and not _novel_features(model, section_id, topic_id, later, earlier,
                                     earlier_topic=earlier_topic))
 
