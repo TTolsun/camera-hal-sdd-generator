@@ -96,16 +96,22 @@ def _subject(text: str) -> str | None:
 
 def _members(text: str) -> dict[str, tuple[str, str] | None]:
     members = {}
+
+    def remember(name, value):
+        # A later assertion about the same member cannot erase an earlier one.
+        # Ambiguous/mixed values provide no proof that two paragraphs differ.
+        members[name] = value if name not in members or members[name] == value else None
+
     for match in _MEMBER.finditer(text):
         name = re.sub(r"\([^()]*\)", '', match[0]).replace('->', '.')
         value = _BOUND_VALUE.match(text[match.end():])
         operator = '!=' if value and value[1] in ('!=', 'is not') else '=='
-        members[name] = (operator, _value(value[2])) if value else None
+        remember(name, (operator, _value(value[2])) if value else None)
     for match in _OWNED_FIELD.finditer(text):
         name = match[1] + '.' + match[2]
         value = _BOUND_VALUE.match(text[match.end():])
         operator = '!=' if value and value[1] in ('!=', 'is not') else '=='
-        members.setdefault(name, (operator, _value(value[2])) if value else None)
+        remember(name, (operator, _value(value[2])) if value else None)
     return members
 
 

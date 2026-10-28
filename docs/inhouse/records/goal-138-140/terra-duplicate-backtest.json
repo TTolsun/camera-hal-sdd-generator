@@ -1,0 +1,159 @@
+{
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "new_llm_calls": 0,
+  "kind": "deterministic backtest of preserved failed native responses; not new generation",
+  "pairs": [
+    {
+      "section": "ipu3-lsc-flow",
+      "topic": "request",
+      "tags": [
+        "ipu3-lsc-flow_request_shared-argument_0",
+        "ipu3-lsc-flow_request_frame-argument_0"
+      ],
+      "before_findings": [
+        "[의미 중복] request 2번째 설명이 앞의 request 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::queueRequest`는 공통 `lscAlgo_.queueRequest` 호출의 두 번째 인자로 `frameCo…\" ≈ \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 첫 번째 인자로 `context.activ…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+      ],
+      "after_findings": [],
+      "receipts": [
+        {
+          "path": "3453424845b34a559e3a5bde433bb2f5/280.receipt.json",
+          "sha256": "30bc19fa8b64438540b3f7bfa4b1b2e7d31b54034b78fcf990d2fd6baf8b2dab",
+          "verified": {
+            "runner": "codex",
+            "model": "gpt-6.1-terra",
+            "model_selection": "explicit",
+            "producer": "cli/codex/gpt-6.1-terra",
+            "stdout_sha256": "0574e1ea119129b451a05079f54e3b33e64b97cd4409f37800a8cf66a9120dca",
+            "arguments_verified": true
+          }
+        },
+        {
+          "path": "3453424845b34a559e3a5bde433bb2f5/282.receipt.json",
+          "sha256": "881ff7664890a0d5787306d11a6e593a17070eae7672aae6223c6b01f36b5184",
+          "verified": {
+            "runner": "codex",
+            "model": "gpt-6.1-terra",
+            "model_selection": "explicit",
+            "producer": "cli/codex/gpt-6.1-terra",
+            "stdout_sha256": "95e9dd11b7405089fc675c2993a33da242d54c205f99fdfb03acd51a82fe1cd9",
+            "arguments_verified": true
+          }
+        }
+      ]
+    },
+    {
+      "section": "ipu3-lsc-flow",
+      "topic": "request",
+      "tags": [
+        "ipu3-lsc-flow_request_shared-argument_0",
+        "ipu3-lsc-flow_request_frame-argument_1"
+      ],
+      "before_findings": [
+        "[의미 중복] request 2번째 설명이 앞의 request 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 두 번째 인자로 `frameContext.…\" ≈ \"`Lsc::queueRequest`는 `lscAlgo_.queueRequest`의 첫 번째 인자로 `context.activ…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+      ],
+      "after_findings": [],
+      "receipts": [
+        {
+          "path": "3453424845b34a559e3a5bde433bb2f5/280.receipt.json",
+          "sha256": "30bc19fa8b64438540b3f7bfa4b1b2e7d31b54034b78fcf990d2fd6baf8b2dab",
+          "verified": {
+            "runner": "codex",
+            "model": "gpt-6.1-terra",
+            "model_selection": "explicit",
+            "producer": "cli/codex/gpt-6.1-terra",
+            "stdout_sha256": "0574e1ea119129b451a05079f54e3b33e64b97cd4409f37800a8cf66a9120dca",
+            "arguments_verified": true
+          }
+        },
+        {
+          "path": "3453424845b34a559e3a5bde433bb2f5/283.receipt.json",
+          "sha256": "3ca2e79065d73cf1ae95bae2a96ddf59b786c1cf3204f36971cb701fbd8babed",
+          "verified": {
+            "runner": "codex",
+            "model": "gpt-6.1-terra",
+            "model_selection": "explicit",
+            "producer": "cli/codex/gpt-6.1-terra",
+            "stdout_sha256": "18abafafde25654ac0002b49b8c5c4e5ad4fd435e5cfd223ca62159ab7b276d8",
+            "arguments_verified": true
+          }
+        }
+      ]
+    },
+    {
+      "section": "ipu3-lsc-prepare",
+      "topic": "prepare",
+      "tags": [
+        "ipu3-lsc-prepare_prepare_disabled-no-update_0",
+        "ipu3-lsc-prepare_prepare_ct-threshold_0"
+      ],
+      "before_findings": [
+        "[의미 중복] prepare 2번째 설명이 앞의 prepare 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `frameContext.lsc.update`가 false이고 `frameContext.lsc.…\" ≈ \"`Lsc::prepare`는 `frameContext.lsc.update`가 거짓이고 `frameContext.lsc.ena…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+      ],
+      "after_findings": [],
+      "receipts": [
+        {
+          "path": "3453424845b34a559e3a5bde433bb2f5/284.receipt.json",
+          "sha256": "fc9a671217a67de69ca29028a83197125e83447e15f3831694554254117262bd",
+          "verified": {
+            "runner": "codex",
+            "model": "gpt-6.1-terra",
+            "model_selection": "explicit",
+            "producer": "cli/codex/gpt-6.1-terra",
+            "stdout_sha256": "d7d21210d95ef0f770afb60d535f74dd134955697edffb2e535aaeda4b1b0143",
+            "arguments_verified": true
+          }
+        },
+        {
+          "path": "3453424845b34a559e3a5bde433bb2f5/286.receipt.json",
+          "sha256": "a4c15285dc931c0546165dce420d4364e56a4ede88c0e5316c5fd70f2e98b218",
+          "verified": {
+            "runner": "codex",
+            "model": "gpt-6.1-terra",
+            "model_selection": "explicit",
+            "producer": "cli/codex/gpt-6.1-terra",
+            "stdout_sha256": "6edc009ef6d6931a87ce6bc2ef0deaa0f7ed1293e914e05cfb6ac38c31f6896a",
+            "arguments_verified": true
+          }
+        }
+      ]
+    },
+    {
+      "section": "ipu3-lsc-prepare",
+      "topic": "prepare",
+      "tags": [
+        "ipu3-lsc-prepare_prepare_disabled-no-update_0",
+        "ipu3-lsc-prepare_prepare_ct-threshold_1"
+      ],
+      "before_findings": [
+        "[의미 중복] prepare 2번째 설명이 앞의 prepare 1번째 설명과 같은 근거로 같은 내용을 되풀이합니다: \"`Lsc::prepare`는 `frameContext.lsc.update`가 false이고 `frameContext.lsc.…\" ≈ \"`Lsc::prepare`는 `frameContext.lsc.update`가 거짓이고 `frameContext.lsc.ena…\". 앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다."
+      ],
+      "after_findings": [],
+      "receipts": [
+        {
+          "path": "3453424845b34a559e3a5bde433bb2f5/284.receipt.json",
+          "sha256": "fc9a671217a67de69ca29028a83197125e83447e15f3831694554254117262bd",
+          "verified": {
+            "runner": "codex",
+            "model": "gpt-6.1-terra",
+            "model_selection": "explicit",
+            "producer": "cli/codex/gpt-6.1-terra",
+            "stdout_sha256": "d7d21210d95ef0f770afb60d535f74dd134955697edffb2e535aaeda4b1b0143",
+            "arguments_verified": true
+          }
+        },
+        {
+          "path": "3453424845b34a559e3a5bde433bb2f5/287.receipt.json",
+          "sha256": "561708ecf27d9305875137be3ed8bb88e6d1960bff02b1ebec1ec5bb3d688a64",
+          "verified": {
+            "runner": "codex",
+            "model": "gpt-6.1-terra",
+            "model_selection": "explicit",
+            "producer": "cli/codex/gpt-6.1-terra",
+            "stdout_sha256": "c8b7c5034fd41de7d2342cc48e323a067c2bdff0f11134cd8885bb89ee176ff9",
+            "arguments_verified": true
+          }
+        }
+      ]
+    }
+  ]
+}

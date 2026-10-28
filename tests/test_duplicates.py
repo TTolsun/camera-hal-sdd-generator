@@ -1225,6 +1225,20 @@ def test_korean_boolean_words_and_negations_do_not_establish_literal_values(tail
     assert _members('frameContext.lsc.enabled가 ' + tail)['frameContext.lsc.enabled'] is None
 
 
+@pytest.mark.parametrize('literal', ['참이면', 'true이면', '참고하면'])
+def test_repeated_member_values_cannot_hide_a_repeated_condition(literal):
+    first = '`Lsc::prepare`는 `frameContext.lsc.enabled`가 거짓이면 즉시 반환합니다.'
+    mixed = first + ' `frameContext.lsc.enabled`가 ' + literal + ' 즉시 반환합니다.'
+    assert similar(first, mixed)
+    assert len(_found_pair(first, mixed, 'if (!frameContext.lsc.enabled) { return; }')) >= 1
+
+
+def test_repeated_same_member_value_and_korean_synonym_remain_unambiguous():
+    from sdd.duplicates import _members
+    same = 'frameContext.lsc.enabled가 거짓이면 검사하고 frameContext.lsc.enabled가 false이면 반환합니다.'
+    assert _members(same)['frameContext.lsc.enabled'] == ('==', 'false')
+
+
 def test_source_backed_call_addition_is_directional_and_aliases_are_not_novel():
     detail = BASE_CLAIM + ' finish(request) 함수를 호출합니다.'
     assert _found_pair(BASE_CLAIM, detail) == []
