@@ -71,7 +71,7 @@
   sidebar.addEventListener('click', event => {
     if (event.target.closest('a[href]')) setMenu(false, false);
   });
-  mobile.addEventListener('change', () => { if (!mobile.matches) setMenu(false); });
+  mobile.addEventListener('change', () => { if (!mobile.matches) setMenu(false, false); });
   document.addEventListener('keydown', event => {
     if (!menuOpen) return;
     if (event.key === 'Escape') {
