@@ -312,3 +312,12 @@ def test_identical_text_in_different_files_is_not_one_bound_function_record():
     rows[0]['evidence'] = ['a']
     rows[1]['evidence'] = ['b']
     assert duplicates.statement_findings(model, 's', {'t': rows})
+
+
+@pytest.mark.parametrize('reference', ['경계값', '해당 값'])
+def test_comparison_limit_reference_names_the_immediately_preceding_bound(reference):
+    source, rows = fixture('unqualified-member-guard')
+    rows[-1]['text'] = rows[-1]['text'].replace('경계값', reference)
+    assert findings(source, rows) == []
+    rows[-1]['text'] = rows[-1]['text'].replace(reference + ' 이상이면', reference + ' 미만이면')
+    assert findings(source, rows)  # reversing the complementary comparison remains rejected
