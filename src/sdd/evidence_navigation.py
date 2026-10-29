@@ -18,6 +18,22 @@ _ITEMS = re.compile(_ITEM)
 _LOCAL = re.compile(r'<a href="(#source-[0-9a-f]{16})">([^<>]+:\d+)</a>')
 
 
+def fold_source_details(document: str) -> str:
+    """Collapse the generated excerpt collection, preserving each inner inspector."""
+    def section(match):
+        heading, body = match.groups()
+        count = len(re.findall(r'<a id="source-[0-9a-f]{16}"></a>', body))
+        return (heading + '\n<details class="source-excerpts"><summary>소스 발췌 '
+                + f'<span>{count}</span>개</summary>\n' + body + '\n</details>\n')
+
+    # SourceDetails emits an introduction followed by anchor/inspector pairs.
+    # Stop at the last pair so trailing review metadata stays outside the fold.
+    intro = re.escape('<p>같은 발췌는 한 번만 싣습니다. 필요한 원문을 펼쳐 설명과 대조하세요.</p>')
+    inspector = r'<p><a id="source-[0-9a-f]{16}"></a></p>\s*<details class="note">.*?</details>'
+    return re.sub(r'(<h2 id="소스-근거">소스 근거</h2>)\s*('
+                  + intro + r'(?:\s*' + inspector + r')+)\s*', section, document, flags=re.S)
+
+
 def _panel(refs: list[tuple[str, str]], scope: str, destinations=None) -> str:
     groups = defaultdict(list)
     for cite, element in refs:

@@ -3,7 +3,7 @@ import html
 import json
 import re
 
-from sdd.evidence_navigation import compact_evidence
+from sdd.evidence_navigation import compact_evidence, fold_source_details
 from sdd.export_site import _render
 from sdd.site_localization import DisplayText, display_strings
 
@@ -77,3 +77,39 @@ def test_each_heading_gets_only_its_own_evidence_and_duplicate_claims_do_not_gro
     first, second = result.split('<h2>B</h2>')
     assert first.count('title="a.cpp:1"') == 1 and 'b.cpp' not in first
     assert second.count('title="b.cpp:2"') == 1 and 'a.cpp' not in second
+
+
+def test_source_collection_folds_without_changing_excerpts_or_adjacent_sections():
+    from sdd.contract_render import SourceDetails
+    sources = SourceDetails()
+    sources.records = {
+        'source-' + digit * 16: ({}, dict(file=f'src/{digit}.cpp', line=1,
+                                        end_line=3, sha256=digit * 64,
+                                        text='// Preserve <condition>\nreturn 0;'))
+        for digit in ('1', '2')
+    }
+    review = '\n\n??? note "근거와 검토 정보"\n    사람 검토 전입니다.\n'
+    body = '## 설명\n\n설명입니다.\n\n' + sources.render() + review + '\n\n## 다음 절\n\n다음 설명입니다.'
+    rendered, toc, _ = _render(body, 'test.md', set(), None, '', '')
+    assert '<summary>소스 발췌 <span>2</span>개</summary>' in rendered
+    assert '<details class="source-excerpts">' in rendered
+    assert '소스-근거' in toc
+    assert '</details>\n<details class="note">\n<summary>근거와 검토 정보</summary>' in rendered
+    assert rendered.index('근거와 검토 정보') < rendered.index('<h2 id="다음-절">')
+    assert 'open' not in rendered
+    for digit in ('1', '2'):
+        assert rendered.count(f'id="source-{digit * 16}"') == 1
+        assert digit * 64 in rendered
+    assert rendered.count('Preserve &lt;condition&gt;') == 2
+    assert fold_source_details(rendered) == rendered
+    assert '소스 발췌 {{1}}개' in display_strings(rendered)
+    parser = DisplayText(lambda value: value.replace('소스 발췌 {{1}}개', 'Source excerpts · {{1}}'))
+    parser.feed(rendered)
+    assert '<summary>Source excerpts · <span>2</span></summary>' in ''.join(parser.output)
+
+
+def test_ordinary_source_heading_and_example_markup_are_not_folded():
+    source = '<h2 id="소스-근거">소스 근거</h2><p>Ordinary explanation.</p>'
+    assert fold_source_details(source) == source
+    example = '<pre><code>' + source.replace('<', '&lt;').replace('>', '&gt;') + '</code></pre>'
+    assert fold_source_details(example) == example
