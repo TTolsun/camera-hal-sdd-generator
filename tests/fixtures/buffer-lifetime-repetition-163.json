@@ -1,0 +1,75 @@
+{
+  "source_commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "original_run": "60b1bf48442840808eecd0e46851648e",
+  "previous_receipts": [
+    "60b1bf48442840808eecd0e46851648e/436.receipt.json",
+    "60b1bf48442840808eecd0e46851648e/437.receipt.json"
+  ],
+  "retry_receipt": "60b1bf48442840808eecd0e46851648e/457.receipt.json",
+  "derivation": "Unedited native texts; retry quote resolved from the same buffer:0 passage as the accepted prior statement.",
+  "raw_retry_response": "{\"statements\":[{\"text\":\"`Request::addBuffer()`는 요청에 버퍼의 참조를 저장합니다. 호출자는 요청 완료 콜백이 호출될 때까지 버퍼가 유효하게 유지되도록 해야 합니다.\",\"quote_id\":\"buffer:0\",\"evidence\":[\"buffer\"],\"covers\":[\"lifetime\"],\"kind\":\"behavior\"}]}",
+  "evidence": {
+    "request/buffer": {
+      "commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+      "selector": {
+        "id": "buffer",
+        "file": "src/libcamera/request.cpp",
+        "start": "\\brief Add a FrameBuffer with its associated Stream to the Request",
+        "end": "int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,"
+      },
+      "status": "available",
+      "file": "src/libcamera/request.cpp",
+      "line": 442,
+      "end_line": 475,
+      "text": "\\brief Add a FrameBuffer with its associated Stream to the Request\n * \\param[in] stream The stream the buffer belongs to\n * \\param[in] buffer The FrameBuffer to add to the request\n * \\param[in] fence The optional fence\n *\n * A reference to the buffer is stored in the request. The caller is responsible\n * for ensuring that the buffer will remain valid until the request complete\n * callback is called.\n *\n * A request can only contain one buffer per stream. If a buffer has already\n * been added to the request for the same stream, this function returns -EEXIST.\n *\n * A Fence can be optionally associated with the \\a buffer.\n *\n * When a valid Fence is provided to this function, \\a fence is moved to \\a\n * buffer and this Request will only be queued to the device once the\n * fences of all its buffers have been correctly signalled. Ownership of the\n * fence will only be taken in case of success, otherwise the fence will\n * be left unmodified.\n *\n * If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request. Attempting to add a buffer that still\n * contains a fence to a request will result in this function returning -EEXIST.\n *\n * \\sa FrameBuffer::releaseFence()\n *\n * \\return 0 on success or a negative error code otherwise\n * \\retval -EEXIST The request already contains a buffer for the stream\n *  or the buffer still references a fence\n * \\retval -EINVAL The buffer does not reference a valid Stream\n */\nint Request::addBuffer(const Stream *stream, FrameBuffer *buffer,",
+      "sha256": "65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876",
+      "whole_file": false
+    },
+    "lifetime/buffer": {
+      "commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+      "selector": {
+        "id": "buffer",
+        "file": "src/libcamera/request.cpp",
+        "start": "\\brief Add a FrameBuffer with its associated Stream to the Request",
+        "end": "int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,"
+      },
+      "status": "available",
+      "file": "src/libcamera/request.cpp",
+      "line": 442,
+      "end_line": 475,
+      "text": "\\brief Add a FrameBuffer with its associated Stream to the Request\n * \\param[in] stream The stream the buffer belongs to\n * \\param[in] buffer The FrameBuffer to add to the request\n * \\param[in] fence The optional fence\n *\n * A reference to the buffer is stored in the request. The caller is responsible\n * for ensuring that the buffer will remain valid until the request complete\n * callback is called.\n *\n * A request can only contain one buffer per stream. If a buffer has already\n * been added to the request for the same stream, this function returns -EEXIST.\n *\n * A Fence can be optionally associated with the \\a buffer.\n *\n * When a valid Fence is provided to this function, \\a fence is moved to \\a\n * buffer and this Request will only be queued to the device once the\n * fences of all its buffers have been correctly signalled. Ownership of the\n * fence will only be taken in case of success, otherwise the fence will\n * be left unmodified.\n *\n * If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request. Attempting to add a buffer that still\n * contains a fence to a request will result in this function returning -EEXIST.\n *\n * \\sa FrameBuffer::releaseFence()\n *\n * \\return 0 on success or a negative error code otherwise\n * \\retval -EEXIST The request already contains a buffer for the stream\n *  or the buffer still references a fence\n * \\retval -EINVAL The buffer does not reference a valid Stream\n */\nint Request::addBuffer(const Stream *stream, FrameBuffer *buffer,",
+      "sha256": "65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876",
+      "whole_file": false
+    }
+  },
+  "answers": {
+    "request": [
+      {
+        "text": "`Request::addBuffer()`는 요청에 버퍼의 참조를 저장합니다. 호출자는 요청 완료 콜백이 호출될 때까지 버퍼가 유효하도록 해야 합니다.",
+        "evidence": [
+          "buffer"
+        ],
+        "covers": [
+          "request"
+        ],
+        "kind": "behavior",
+        "quote": "\\brief Add a FrameBuffer with its associated Stream to the Request\n * \\param[in] stream The stream the buffer belongs to\n * \\param[in] buffer The FrameBuffer to add to the request\n * \\param[in] fence The optional fence\n *\n * A reference to the buffer is stored in the request. The caller is responsible\n * for ensuring that the buffer will remain valid until the request complete\n * callback is called.\n *\n * A request can only contain one buffer per stream. If a buffer has already\n * been added to the request for the same stream, this function returns -EEXIST.\n *\n * A Fence can be optionally associated with the \\a buffer.\n *\n * When a valid Fence is provided to this function, \\a fence is moved to \\a\n * buffer and this Request will only be queued to the device once the\n * fences of all its buffers have been correctly signalled. Ownership of the\n * fence will only be taken in case of success, otherwise the fence will\n * be left unmodified.\n *\n * If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request. Attempting to add a buffer that still\n * contains a fence to a request will result in this function returning -EEXIST.\n *\n * \\sa FrameBuffer::releaseFence()\n *\n * \\return 0 on success or a negative error code otherwise\n * \\retval -EEXIST The request already contains a buffer for the stream\n *  or the buffer still references a fence\n * \\retval -EINVAL The buffer does not reference a valid Stream\n */\nint Request::addBuffer(const Stream *stream, FrameBuffer *buffer,",
+        "part_id": "buffer-lifetime"
+      }
+    ],
+    "lifetime": [
+      {
+        "text": "`Request::addBuffer()`는 요청에 버퍼의 참조를 저장합니다. 호출자는 요청 완료 콜백이 호출될 때까지 버퍼가 유효하게 유지되도록 해야 합니다.",
+        "evidence": [
+          "buffer"
+        ],
+        "covers": [
+          "lifetime"
+        ],
+        "kind": "behavior",
+        "quote": "\\brief Add a FrameBuffer with its associated Stream to the Request\n * \\param[in] stream The stream the buffer belongs to\n * \\param[in] buffer The FrameBuffer to add to the request\n * \\param[in] fence The optional fence\n *\n * A reference to the buffer is stored in the request. The caller is responsible\n * for ensuring that the buffer will remain valid until the request complete\n * callback is called.\n *\n * A request can only contain one buffer per stream. If a buffer has already\n * been added to the request for the same stream, this function returns -EEXIST.\n *\n * A Fence can be optionally associated with the \\a buffer.\n *\n * When a valid Fence is provided to this function, \\a fence is moved to \\a\n * buffer and this Request will only be queued to the device once the\n * fences of all its buffers have been correctly signalled. Ownership of the\n * fence will only be taken in case of success, otherwise the fence will\n * be left unmodified.\n *\n * If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request. Attempting to add a buffer that still\n * contains a fence to a request will result in this function returning -EEXIST.\n *\n * \\sa FrameBuffer::releaseFence()\n *\n * \\return 0 on success or a negative error code otherwise\n * \\retval -EEXIST The request already contains a buffer for the stream\n *  or the buffer still references a fence\n * \\retval -EINVAL The buffer does not reference a valid Stream\n */\nint Request::addBuffer(const Stream *stream, FrameBuffer *buffer,",
+        "part_id": "buffer-validity"
+      }
+    ]
+  }
+}

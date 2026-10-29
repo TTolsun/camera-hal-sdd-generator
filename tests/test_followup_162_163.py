@@ -16,6 +16,22 @@ def test_original_crop_retry_remains_rejected():
     assert found and '[의미 중복]' in found[0]
 
 
+def test_original_buffer_lifetime_retry_remains_rejected():
+    data = json.loads((Path(__file__).parent / 'fixtures/buffer-lifetime-repetition-163.json').read_text(encoding='utf-8'))
+    model = SimpleNamespace(evidence={'camera-requests/' + k: v for k, v in data['evidence'].items()})
+    assert data['answers']['lifetime'][0]['text'] == json.loads(data['raw_retry_response'])['statements'][0]['text']
+    found = statement_findings(model, 'camera-requests', data['answers'])
+    assert found and '[의미 중복]' in found[0]
+
+
+def test_original_value_benefit_retry_remains_rejected():
+    data = json.loads((Path(__file__).parent / 'fixtures/value-benefit-repetition-163.json').read_text(encoding='utf-8'))
+    model = SimpleNamespace(evidence={'vendor-overview/value/' + k: v for k, v in data['evidence'].items()})
+    assert data['answers']['value'][1]['text'] == json.loads(data['raw_retry_response'])['statements'][0]['text']
+    found = statement_findings(model, 'vendor-overview', data['answers'])
+    assert found and '[의미 중복]' in found[0]
+
+
 def test_scenario_navigation_uses_content_and_preserves_identifiers():
     body = ('## 이 흐름에서 확인할 것\n\n`Camera::queueRequest()`에서 정적 호출을 찾습니다. 다음 문장입니다.\n\n'
             '## 주요 확인 지점\n\n아래 항목은 코드 탐색 지점이며 실행 순서가 아닙니다.\n\n'
@@ -49,6 +65,16 @@ def test_combined_questions_preserve_all_unique_argument_and_completion_contract
     assert buffer['sources'] == ['buffer', 'completion-context']
     assert ['CameraManager'] in buffer['answer_contract']['required_terms']
     assert all('completion-context' != p['id'] for p in parts('vendor-integration', 'request'))
+    assert all('buffer-lifetime' != p['id'] for p in parts('camera-requests', 'request'))
+    validity = next(p for p in parts('camera-requests', 'lifetime') if p['id'] == 'buffer-validity')
+    assert validity['sources'] == ['buffer']
+    assert validity['answer_contract'] == {'basis': 'contract', 'required_terms': [['버퍼'], ['콜백']]}
+    value_parts = parts('vendor-overview', 'value')
+    assert all(p['id'] != 'easier' for p in value_parts)
+    definition = next(p for p in value_parts if p['id'] == 'what')
+    assert definition['sources'] == ['what', 'for', 'product-official-stack']
+    assert all([term] in definition['answer_contract']['required_terms']
+               for term in ['Linux', 'libcamera', 'Android', 'ChromeOS', '하드웨어', '알고리즘', 'API'])
     enable = next(p for p in parts('ipu3-lsc-prepare', 'prepare') if p['id'] == 'enable')
     assert enable['sources'] == ['enable-branch']
     assert enable['answer_contract']['required_terms'] == [['shd_enable'], ['enabled'], ['반환', 'return']]
