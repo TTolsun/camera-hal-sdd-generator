@@ -1,0 +1,31 @@
+{
+  "source_commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "scope": "Structured generated answer text only; same public source, excludes code and audit metadata",
+  "pages": [
+    {
+      "page": "vendor-integration.md",
+      "before": 3787,
+      "after": 3633
+    },
+    {
+      "page": "camera-requests.md",
+      "before": 2246,
+      "after": 2020
+    },
+    {
+      "page": "request-lifecycle.md",
+      "before": 5200,
+      "after": 3880
+    },
+    {
+      "page": "request-diagnosis.md",
+      "before": 3252,
+      "after": 2505
+    },
+    {
+      "page": "rkisp1-dewarp.md",
+      "before": 2371,
+      "after": 2315
+    }
+  ]
+}

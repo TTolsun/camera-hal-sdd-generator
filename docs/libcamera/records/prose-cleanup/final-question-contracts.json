@@ -1,0 +1,456 @@
+[
+  {
+    "kind": "same-page-owner",
+    "section": "vendor-integration",
+    "removed_part": "integration/hardware",
+    "owner": "boundary/success",
+    "preserved_terms": [
+      [
+        "match"
+      ],
+      [
+        "Camera"
+      ],
+      [
+        "등록"
+      ]
+    ]
+  },
+  {
+    "kind": "overlapping-source-owner",
+    "old_source": {
+      "id": "handler",
+      "file": "src/libcamera/pipeline_handler.cpp",
+      "start": "This function is the main entry point of the pipeline handler.",
+      "end": "camera manager.\n *",
+      "scope": {
+        "start": "\\fn PipelineHandler::match(DeviceEnumerator *enumerator)",
+        "end": "*/"
+      }
+    },
+    "owner_source": {
+      "id": "handler",
+      "file": "src/libcamera/pipeline_handler.cpp",
+      "start": "This function is the main entry point of the pipeline handler.",
+      "end": "return false.\n *",
+      "scope": {
+        "start": "\\fn PipelineHandler::match(DeviceEnumerator *enumerator)",
+        "end": "*/"
+      }
+    },
+    "owner": "vendor-integration/boundary/handler"
+  },
+  {
+    "kind": "same-page-term-owner",
+    "section": "vendor-integration",
+    "term": "completeBuffer",
+    "owner": "request/buffer",
+    "condition_owner": "request/completion"
+  },
+  {
+    "kind": "topic-scope",
+    "section": "camera-model",
+    "topic": "shutdown"
+  },
+  {
+    "section": "camera-requests",
+    "topic": "lifetime",
+    "combined": [
+      "reset",
+      "reset-controls",
+      "reset-metadata"
+    ],
+    "sources": [
+      "reuse-status",
+      "reuse-controls",
+      "reuse-metadata"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "RequestPending"
+      ],
+      [
+        "controls_"
+      ],
+      [
+        "metadata_"
+      ]
+    ]
+  },
+  {
+    "section": "camera-requests",
+    "topic": "lifetime",
+    "combined": [
+      "reuse-fences",
+      "reuse-advice"
+    ],
+    "sources": [
+      "reuse-flags",
+      "reuse-advice"
+    ],
+    "basis": "description",
+    "required_terms": [
+      [
+        "ReuseBuffers"
+      ],
+      [
+        "버퍼"
+      ],
+      [
+        "펜스",
+        "fence",
+        "Fence"
+      ],
+      [
+        "유지"
+      ],
+      [
+        "권고",
+        "권장",
+        "좋습니다",
+        "바람직",
+        "피하는"
+      ],
+      [
+        "않",
+        "피",
+        "자제"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "resources",
+    "combined": [
+      "reset",
+      "reset-controls",
+      "reset-metadata"
+    ],
+    "sources": [
+      "reuse-status",
+      "reuse-controls",
+      "reuse-metadata"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "RequestPending"
+      ],
+      [
+        "controls_"
+      ],
+      [
+        "metadata_"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "resources",
+    "combined": [
+      "reuse-fences",
+      "reuse-advice"
+    ],
+    "sources": [
+      "reuse-flags",
+      "reuse-advice"
+    ],
+    "basis": "description",
+    "required_terms": [
+      [
+        "ReuseBuffers"
+      ],
+      [
+        "버퍼"
+      ],
+      [
+        "펜스",
+        "fence",
+        "Fence"
+      ],
+      [
+        "유지"
+      ],
+      [
+        "권고",
+        "권장",
+        "좋습니다",
+        "바람직",
+        "피하는"
+      ],
+      [
+        "않",
+        "피",
+        "자제"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "review",
+    "combined": [
+      "reuse-state-record",
+      "reuse-data-record"
+    ],
+    "sources": [
+      "record-status",
+      "record-controls",
+      "record-metadata"
+    ],
+    "basis": "investigation",
+    "required_terms": [
+      [
+        "status_"
+      ],
+      [
+        "기록"
+      ],
+      [
+        "controls_"
+      ],
+      [
+        "metadata_"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "review",
+    "combined": [
+      "stop-record",
+      "stop-queued-record"
+    ],
+    "sources": [
+      "record-device",
+      "record-queued",
+      "record-waiting"
+    ],
+    "basis": "investigation",
+    "required_terms": [
+      [
+        "stopDevice"
+      ],
+      [
+        "기록"
+      ],
+      [
+        "queuedRequests_"
+      ],
+      [
+        "waitingRequests_"
+      ]
+    ]
+  },
+  {
+    "section": "pipeline-handler",
+    "topic": "input-search-boundary",
+    "combined": [
+      "bounds",
+      "crop"
+    ],
+    "sources": [
+      "search"
+    ],
+    "basis": "description",
+    "required_terms": [
+      [
+        "minIfWidth"
+      ],
+      [
+        "minIfHeight"
+      ]
+    ]
+  },
+  {
+    "section": "pipeline-requests",
+    "topic": "queue",
+    "combined": [
+      "capacity",
+      "capacity-exit"
+    ],
+    "sources": [
+      "capacity-branch"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "doQueueRequests"
+      ],
+      [
+        "maxQueuedRequestsDevice_"
+      ],
+      [
+        "break",
+        "중단"
+      ]
+    ]
+  },
+  {
+    "section": "pipeline-requests",
+    "topic": "queue",
+    "combined": [
+      "submit-tracking",
+      "sequence"
+    ],
+    "sources": [
+      "tracking-call",
+      "sequence-assignment"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "queuedRequests_"
+      ],
+      [
+        "sequence_"
+      ],
+      [
+        "requestSequence_"
+      ],
+      [
+        "증가 전",
+        "이전 값",
+        "이전값",
+        "기존 값",
+        "기존값"
+      ]
+    ]
+  },
+  {
+    "kind": "topic-scope",
+    "section": "ipa",
+    "topic": "lifetime"
+  },
+  {
+    "section": "ipa",
+    "topic": "execution",
+    "combined": [
+      "isolated",
+      "isolated-valid",
+      "isolated-store",
+      "isolated-ready"
+    ],
+    "sources": [
+      "isolated",
+      "isolated-valid",
+      "isolated-store",
+      "isolated-ready"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "IPCPipeUnixSocket"
+      ],
+      [
+        "recv"
+      ],
+      [
+        "connect",
+        "연결"
+      ],
+      [
+        "ipc_"
+      ],
+      [
+        "move"
+      ],
+      [
+        "valid_"
+      ],
+      [
+        "true"
+      ]
+    ]
+  },
+  {
+    "section": "ipu3-lsc-prepare",
+    "topic": "prepare",
+    "combined": [
+      "remember",
+      "remember-quantized"
+    ],
+    "sources": [
+      "stored-ct",
+      "stored-quantized-ct"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "lastAppliedCt_"
+      ],
+      [
+        "ct"
+      ],
+      [
+        "lastAppliedQuantizedCt_"
+      ],
+      [
+        "quantizedCt"
+      ]
+    ]
+  },
+  {
+    "section": "rkisp1-dewarp",
+    "topic": "application",
+    "combined": [
+      "configure",
+      "output-size",
+      "sensor-crop"
+    ],
+    "sources": [
+      "input-size",
+      "configure",
+      "output-size",
+      "sensor-crop"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "setInputSize"
+      ],
+      [
+        "inputCfg"
+      ],
+      [
+        "setOutputSize"
+      ],
+      [
+        "outputCfg"
+      ],
+      [
+        "setSensorCrop"
+      ],
+      [
+        "sensorCrop_"
+      ]
+    ]
+  },
+  {
+    "section": "rkisp1-dewarp",
+    "topic": "application",
+    "combined": [
+      "crop-metadata",
+      "dewarp-metadata"
+    ],
+    "sources": [
+      "crop-metadata",
+      "dewarp-metadata"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "ScalerCrop"
+      ],
+      [
+        "effectiveScalerCrop"
+      ],
+      [
+        "hasDewarpParams_"
+      ],
+      [
+        "LensDewarpEnable"
+      ]
+    ]
+  }
+]

@@ -17,7 +17,7 @@ contracts:
   primary: request-lifecycle.md
   documents: [vendor-integration.md, overview.md, camera-model.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md, scenarios/queue_request.md]
   match: '소유|재사용|reuse|삭제|수명|완료.{0,12}접근'
-  evidence: [request-lifecycle/resources/create, request-lifecycle/resources/reuse, request-lifecycle/resources/reuse-flags, request-lifecycle/resources/reuse-status, request-lifecycle/resources/complete-access, request-lifecycle/resources/buffer, overview/discovery/manager]
+  evidence: [request-lifecycle/resources/create, request-lifecycle/resources/reuse, request-lifecycle/resources/reuse-flags, camera-requests/lifetime/reuse-status, request-lifecycle/resources/complete-access, request-lifecycle/resources/buffer, overview/discovery/manager]
 - id: callbacks-synchronization
   question: 함수 호출 스레드와 콜백의 실행 스레드, 상태 변경 동기화의 책임, 통지와 반환 순서의 보장 범위를 구분하고 한영 의무·금지 표현을 대조하세요.
   primary: request-lifecycle.md

@@ -1,0 +1,8 @@
+{
+  "source_commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "file": "src/libcamera/pipeline_handler.cpp",
+  "old_sha256": "267d5dd1754b80e045953603315f92badb81db0dc06d9f1288312cb2ce4854bf",
+  "owner_sha256": "f71446293f48c042c9685cc078c8474d78182a065365d2c02185640d8bdb385c",
+  "old_excerpt_is_substring_of_owner": true,
+  "owner": "vendor-integration/boundary/handler"
+}
