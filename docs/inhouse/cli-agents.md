@@ -33,6 +33,18 @@ OpenCode에서는 `runner: opencode`와 해당 CLI의 `provider/model` ID를, Cl
 
 공개 libcamera의 기본 프로필은 [예제 설정](../../examples/libcamera/sdd.yaml)에 저장합니다. 같은 환경에서 새 Qwen 시험을 실행할 때는 이 모델과 `high`를 사용합니다. 기존 HTTP·CLI 시험 기록의 모델이나 추론 설정은 바꾸지 않습니다.
 
+이 프로젝트의 LLM 검토는 별도 실행 설정에서 독립 Codex CLI의 `gpt-6.1-terra`와 reasoning effort `high`를 사용합니다. 생성·번역용 Hermes 프로필은 유지하고, 검토 명령에는 검토용 설정 경로를 명시합니다. 과거 실행 기록은 당시 모델·인자를 그대로 보존합니다.
+
+```yaml
+agent:
+  kind: cli
+  runner: codex
+  model: gpt-6.1-terra
+  args: [-c, 'model_reasoning_effort="high"']
+```
+
+위 블록은 전체 실행 설정에서 교체할 `agent` 항목입니다. 소스·facts·원고·검토 정책을 포함한 별도 전체 설정에 적용하고 해당 파일을 `--config`로 지정합니다. 실행에 실패하면 검토 미완료를 보고하며 직접 API나 다른 CLI로 대체하지 않습니다. 자동 검토 결과는 사람 승인이 아닙니다.
+
 사내에서는 자체 `sdd.yaml`을 사용하거나 `sdd.local.yaml`로 모델·제공자·추론 강도를 교체할 수 있습니다. 예를 들어 다음 값은 공개 예제의 `model`과 `args`를 대체합니다. `args`는 목록 전체가 교체되므로 사용할 실행기의 인자를 모두 적으세요.
 
 ```yaml
