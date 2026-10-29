@@ -1,0 +1,217 @@
+{
+  "scope": "Preregistered before new generation; public example only.",
+  "source_commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "moved_topic": "queue-limit",
+  "destination": "pipeline-requests.md#장치-요청-한도와-대기-큐",
+  "pages": {
+    "vendor-overview": {
+      "before_requirements": [
+        "value",
+        "support",
+        "capabilities",
+        "benefits",
+        "queue-limit"
+      ],
+      "after_requirements": [
+        "value",
+        "support",
+        "capabilities",
+        "benefits"
+      ],
+      "before_topics": [
+        "value",
+        "support",
+        "capabilities",
+        "benefits",
+        "queue-limit"
+      ],
+      "after_topics": [
+        "value",
+        "support",
+        "capabilities",
+        "benefits"
+      ],
+      "reader_scope": {
+        "revision": 1,
+        "change_reason": "독자의 개요 과업을 고정하고 장치별 요청 수의 기본 한도는 기존 연동 상세로 이동합니다. 준비 실패·완료·소유권의 필수 조건과 예외는 유지합니다.",
+        "tasks": [
+          {
+            "id": "adoption",
+            "goal": "고객사가 기능과 근거 있는 강점, 적용 조건을 이해하고 도입 범위를 고릅니다.",
+            "completion": "제품의 목적·기능·조건에 답하는 절과 근거에 도달합니다.",
+            "requirements": [
+              "value",
+              "support",
+              "capabilities",
+              "benefits"
+            ]
+          }
+        ],
+        "optional": [
+          {
+            "id": "implementation-detail",
+            "location": "vendor-integration.md",
+            "reason": "내부 상세는 과업에 필요한 조건과 예외를 유지한 채 연결해서 읽습니다."
+          },
+          {
+            "id": "queue-limit-detail",
+            "location": "pipeline-requests.md#장치-요청-한도와-대기-큐",
+            "reason": "장치별 큐의 기본 수치는 연동 구현 상세에서 확인합니다. 개요의 요청 준비·실패·완료 조건은 유지합니다."
+          }
+        ],
+        "excluded": [
+          {
+            "id": "all-features",
+            "reason": "전체 기능·모든 하드웨어 조합의 참조서는 이 개요의 목적이 아닙니다."
+          }
+        ],
+        "removed_requirements": [
+          "queue-limit"
+        ]
+      }
+    },
+    "overview": {
+      "before_requirements": [
+        "responsibility",
+        "discovery",
+        "creation",
+        "lifecycle",
+        "request",
+        "completion",
+        "boundary",
+        "verification",
+        "queue-limit"
+      ],
+      "after_requirements": [
+        "responsibility",
+        "discovery",
+        "creation",
+        "lifecycle",
+        "request",
+        "completion",
+        "boundary",
+        "verification"
+      ],
+      "before_topics": [
+        "discovery",
+        "responsibility",
+        "creation",
+        "lifecycle",
+        "request",
+        "completion",
+        "boundary",
+        "verification",
+        "queue-limit"
+      ],
+      "after_topics": [
+        "discovery",
+        "responsibility",
+        "creation",
+        "lifecycle",
+        "request",
+        "completion",
+        "boundary",
+        "verification"
+      ],
+      "reader_scope": {
+        "revision": 1,
+        "change_reason": "독자의 개요 과업을 고정하고 장치별 요청 수의 기본 한도는 기존 연동 상세로 이동합니다. 준비 실패·완료·소유권의 필수 조건과 예외는 유지합니다.",
+        "tasks": [
+          {
+            "id": "onboarding",
+            "goal": "신입사원이 전체 구조와 대표 흐름을 이해하고 첫 코드 탐색 순서를 찾습니다.",
+            "completion": "책임·대표 요청 흐름·첫 파일·필수 예외와 확인 조건을 찾습니다.",
+            "requirements": [
+              "responsibility",
+              "discovery",
+              "creation",
+              "lifecycle",
+              "request",
+              "completion",
+              "boundary",
+              "verification"
+            ]
+          }
+        ],
+        "optional": [
+          {
+            "id": "implementation-detail",
+            "location": "scenarios/index.md",
+            "reason": "내부 상세는 과업에 필요한 조건과 예외를 유지한 채 연결해서 읽습니다."
+          },
+          {
+            "id": "queue-limit-detail",
+            "location": "pipeline-requests.md#장치-요청-한도와-대기-큐",
+            "reason": "장치별 큐의 기본 수치는 연동 구현 상세에서 확인합니다. 개요의 요청 준비·실패·완료 조건은 유지합니다."
+          }
+        ],
+        "excluded": [
+          {
+            "id": "all-features",
+            "reason": "전체 기능·모든 하드웨어 조합의 참조서는 이 개요의 목적이 아닙니다."
+          }
+        ],
+        "removed_requirements": [
+          "queue-limit"
+        ]
+      }
+    },
+    "team-overview": {
+      "before_requirements": [
+        "role",
+        "inputs",
+        "outputs",
+        "boundaries"
+      ],
+      "after_requirements": [
+        "role",
+        "inputs",
+        "outputs",
+        "boundaries"
+      ],
+      "before_topics": [
+        "role",
+        "inputs",
+        "outputs",
+        "boundaries"
+      ],
+      "after_topics": [
+        "role",
+        "inputs",
+        "outputs",
+        "boundaries"
+      ],
+      "reader_scope": {
+        "revision": 1,
+        "change_reason": "출력을 보기 전에 독자의 필수 과업과 완료 범위를 고정합니다.",
+        "tasks": [
+          {
+            "id": "collaboration",
+            "goal": "타팀이 HAL의 역할·입출력·인터페이스와 협업 책임을 구분합니다.",
+            "completion": "역할·입출력·책임 경계에 답하는 절과 근거에 도달합니다.",
+            "requirements": [
+              "role",
+              "inputs",
+              "outputs",
+              "boundaries"
+            ]
+          }
+        ],
+        "optional": [
+          {
+            "id": "implementation-detail",
+            "location": "scenarios/index.md",
+            "reason": "내부 상세는 과업에 필요한 조건과 예외를 유지한 채 연결해서 읽습니다."
+          }
+        ],
+        "excluded": [
+          {
+            "id": "all-features",
+            "reason": "전체 기능·모든 하드웨어 조합의 참조서는 이 개요의 목적이 아닙니다."
+          }
+        ],
+        "removed_requirements": []
+      }
+    }
+  }
+}

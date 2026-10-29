@@ -1,0 +1,49 @@
+sections:
+- design_generation: llm
+  design_requirements:
+  - id: value
+    question: 가상 구성 fixture-a의 고객 필요와 사용 상황, capture 진입점의 구조적 이점, 해당 릴리스·센서·빌드에서 확인된
+      제공 상태와 조건을 설명하세요. 미확인을 미지원으로 쓰지 말고, 측정이나 비교 결과를 만들지 마세요.
+  design_topics:
+  - covers:
+    - value
+    id: capture
+    product:
+      feature: capture
+      id: fixture-a
+    question: 가상 구성 fixture-a의 고객 필요와 사용 상황, capture 진입점의 구조적 이점, 해당 릴리스·센서·빌드에서 확인된
+      제공 상태와 조건을 설명하세요. 미확인을 미지원으로 쓰지 말고, 측정이나 비교 결과를 만들지 마세요.
+    sources:
+    - end: void capture() { acquireImage(); }
+      file: capture.cpp
+      id: code
+      start: // FICTIONAL
+    title: 고객 필요와 제공 조건
+  id: fixture-a
+  kind: prose
+  show_evidence: true
+  title: fixture-a 가상 시험
+- design_generation: llm
+  design_requirements:
+  - id: value
+    question: 가상 구성 fixture-b의 고객 필요와 사용 상황, capture 진입점의 구조적 이점, 해당 릴리스·센서·빌드에서 확인된
+      제공 상태와 조건을 설명하세요. 미확인을 미지원으로 쓰지 말고, 측정이나 비교 결과를 만들지 마세요.
+  design_topics:
+  - covers:
+    - value
+    id: capture
+    product:
+      feature: capture
+      id: fixture-b
+    question: 가상 구성 fixture-b의 고객 필요와 사용 상황, capture 진입점의 구조적 이점, 해당 릴리스·센서·빌드에서 확인된
+      제공 상태와 조건을 설명하세요. 미확인을 미지원으로 쓰지 말고, 측정이나 비교 결과를 만들지 마세요.
+    sources:
+    - end: void capture() { acquireImage(); }
+      file: capture.cpp
+      id: code
+      start: // FICTIONAL
+    title: 고객 필요와 제공 조건
+  id: fixture-b
+  kind: prose
+  show_evidence: true
+  title: fixture-b 가상 시험

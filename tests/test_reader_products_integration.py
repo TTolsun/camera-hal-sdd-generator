@@ -1,5 +1,6 @@
 """Exercise new inputs through existing generation/publication transactions."""
 import copy
+import hashlib
 import json
 
 import pytest
@@ -66,6 +67,10 @@ def test_product_only_change_blocks_old_manuscript_then_failed_generation_preser
     site = export_site(tmp_cfg)
     before = path.read_bytes()
     manifest = (site/'site-manifest.json').read_bytes()
+    from sdd.localization_cli import prepare_catalog
+    catalog = tmp_cfg.root/'translation-review.json'
+    prepare_catalog(tmp_cfg, catalog, translate=False)
+    prior_pages = json.loads(catalog.read_text(encoding='utf-8'))['pages']
     data['products'][0]['features'][0]['usage'] = 'New fictional customer condition.'
     save_product()
     assert 'device' in config_changes(tmp_cfg, model)
@@ -78,3 +83,20 @@ def test_product_only_change_blocks_old_manuscript_then_failed_generation_preser
         Generator(tmp_cfg, model, Failed()).run()
     assert path.read_bytes() == before
     assert (site/'site-manifest.json').read_bytes() == manifest
+    # A source-identical product-material revision requires a new manuscript
+    # and page translation review. No fake translation is published by this test.
+    material = tmp_cfg.root/'spec.txt'
+    material.write_bytes(material.read_bytes() + b'FICTIONAL revision 2: clarified integration scope.\n')
+    data['evidence'][0].update(version='2', sha256=hashlib.sha256(material.read_bytes()).hexdigest())
+    save_product()
+    for source in tmp_cfg.sections()[0]['design_topics'][0]['sources']:
+        if source.get('kind') == 'product':
+            model.evidence[f"device/stop/{source['id']}"] = record(source, model.meta['source_commit'])
+    model.save(tmp_cfg.facts_path)
+    calls = len(agent.calls)
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) > calls
+    prepare_catalog(tmp_cfg, catalog, translate=False)
+    current = json.loads(catalog.read_text(encoding='utf-8'))
+    assert current['pages']['device.html'] != prior_pages['device.html']
+    assert current['review_status'] == 'human-review-pending'
