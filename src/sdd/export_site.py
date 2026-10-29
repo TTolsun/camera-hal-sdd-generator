@@ -201,11 +201,16 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
             texts["index.md"] = (cfg.root / str(intro)).read_text(encoding="utf-8")
         else:
             texts["index.md"] = "# 문서 안내\n\n코드에서 추출한 구조와 문장별 근거를 함께 확인하세요.\n"
-        texts["index.md"] += "\n## 문서 목록\n\n| 문서 | 검사 결과 | 검토 상태 |\n|---|---|---|\n"
+        texts["index.md"] += "\n## 문서 검증 현황 {#문서-목록}\n\n"
+        status_groups = {}
         for _, name, rel in entries:
             check_name, result, _ = _check(split_frontmatter(texts[rel])[0])
             label = _approval_label(approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))
-            texts["index.md"] += f"| [{name}]({rel}) | {check_name} {result} | {label} |\n"
+            status_groups.setdefault((f'{check_name} {result}', label), []).append((name, rel))
+        for (check, approval), pages in status_groups.items():
+            summary = (f'<span>{html.escape(check)}</span> · <span>{html.escape(approval)}</span> '
+                       f'(<span>{len(pages)}</span>)')
+            texts['index.md'] += f'??? note "{summary}"\n' + ''.join(f'    - [{name}]({rel})\n' for name, rel in pages) + '\n'
         entries.insert(0, ("시작하기", "문서 안내", "index.md"))
         approval_states["index.md"] = "unreviewed"
     # 용어집은 표시용이다. 원고를 바꾸지 않고, 뜻이 없는 약어가 있으면 게시 전에 멈춘다.
@@ -353,6 +358,12 @@ def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_
         search.append({"title": page_title, "page": page_title, "url": _html_path(rel)})
 
         search.extend(_heading_search(tokens, page_title, rel))
+    from .reading_cleanup import class_targets, link_related_classes
+    targets = class_targets({_html_path(rel): page[2] for rel, page in rendered_pages.items()
+                             if sections.get(rel, {}).get('kind') == 'per-package'})
+    for rel, (page_title, meta, content, toc) in rendered_pages.items():
+        if sections.get(rel, {}).get('kind', 'prose') == 'prose':
+            rendered_pages[rel] = (page_title, meta, link_related_classes(content, _html_path(rel), targets), toc)
     return rendered_pages, search, diagram_sources, visual_sources
 
 
@@ -454,6 +465,10 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
         page_title, meta, content, toc = rendered_pages[rel]
         nav = _navigation_html(entries, sections, rel, current)
         previous_next = _pagination_html(entries, sections, index, rel, current)
+        from .reading_cleanup import merge_next_step
+        for i, following in enumerate(previous_next):
+            if following.startswith('<a class="next"'):
+                content, previous_next[i] = merge_next_step(content, following)
         info = []
         method_label, method_scope = generation_info(str(meta.get("generation_method", "")))
         if meta:

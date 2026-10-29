@@ -117,7 +117,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         engine = {p.name: digest(p) for p in [code_root / "diagrams.py", code_root / "visuals.py", code_root / "export_site.py",
                                             code_root / "document_health.py", code_root / "evidence_navigation.py",
                                             code_root / "site_localization.py", code_root / "site_markdown.py",
-                                            code_root / "index_navigation.py",
+                                            code_root / "index_navigation.py", code_root / "reading_cleanup.py",
                                             code_root / "document_metadata.py", code_root / "scenario_document.py",
                                             code_root / "design_contracts.py", code_root / "evidence.py",
                                             code_root / "contract_schema.py", code_root / "reader_profiles.py",
