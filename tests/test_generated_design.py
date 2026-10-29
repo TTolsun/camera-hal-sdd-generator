@@ -1152,7 +1152,14 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
     assert len(designs) == 19
-    assert sum(len(section['design_topics']) for section in designs) == 69
+    # #164 moves duplicate overview queue limits to the existing request detail.
+    assert sum(len(section['design_topics']) for section in designs) == 68
+    by_id = {section['id']: section for section in designs}
+    for page in ('vendor-overview', 'overview'):
+        assert 'queue-limit' not in {t['id'] for t in by_id[page]['design_topics']}
+        assert any(d['location'].startswith('pipeline-requests.md#')
+                   for d in by_id[page]['reader_scope']['optional'])
+    assert 'queue-limit' in {t['id'] for t in by_id['pipeline-requests']['design_topics']}
     for section in designs:
         assert section['design_generation'] == 'llm'
         assert not configuration_errors(section)

@@ -465,6 +465,13 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
         if cfg.paths.get('consistency_file'):
             info.append('<dt>문서 간 계약</dt><dd><a href="' + _href('contract-consistency.json', current)
                         + '">자동 대조 보고서</a> · 사람 검토 전</dd>')
+        section = sections.get(rel, {})
+        if section.get('reader_scope'):
+            info.append('<dt>독자 범위</dt><dd><a href="' + _href('reader-scope.json', current)
+                        + '">과업별 답변과 미검토 범위</a></dd>')
+        if any(t.get('_product_context') for t in section.get('design_topics', [])):
+            info.append('<dt>제품 설명 입력</dt><dd><a href="' + _href('product-context.json', current)
+                        + '">적용 범위·조건·자료</a></dd>')
         if rel in sections or (cfg.sdd_dir / rel).is_file():
             (out / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(cfg.sdd_dir / rel, out / rel)
@@ -536,6 +543,29 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, ledger, diagram_sources,
                  mermaid_src, title=title, asset_version=asset_version, terms_version=terms_version)
     _write_search(out, rendered_pages, search, terms)
+    task_reports, product_reports = {}, {}
+    for rel, section in sections.items():
+        if section.get('reader_scope'):
+            from . import generated_design
+            from .design_contracts import enforce
+            checked = (generated_design.verify(model, section, texts[rel], cfg=cfg)
+                       if generated_design.enabled(section) else enforce(model, section))
+            task_reports[rel] = checked['reader_scope']
+            from .site_build import Page
+            for detail in section['reader_scope']['optional']:
+                target, _, anchor = detail['location'].partition('#')
+                target = out / _html_path(target)
+                if not target.is_file() or (anchor and anchor not in Page(target).ids):
+                    raise ValueError('Reader optional detail target or anchor is missing: ' + detail['location'])
+        contexts = {t['id']: t['_product_context'] for t in section.get('design_topics', [])
+                    if '_product_context' in t}
+        if contexts:
+            product_reports[rel] = contexts
+    for name, records in (('reader-scope', task_reports), ('product-context', product_reports)):
+        if records:
+            (out / (name + '.json')).write_text(json.dumps(
+                {'schema': 1, 'source_commit': model.meta.get('source_commit'), 'pages': records},
+                ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8', newline='\n')
     if cfg.paths.get('consistency_file') and check_consistency:
         shutil.copyfile(cfg.build_dir/'consistency-review.json', out/'contract-consistency.json')
     from .site_localization import localize_site

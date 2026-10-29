@@ -1,0 +1,15 @@
+{
+  "source_commit": "faeab8bff751a77d47809107e47b44a0ffa098e1",
+  "outputs": [
+    "build\\sdd\\fixture-a.md",
+    "build\\sdd\\fixture-b.md"
+  ],
+  "calls": 4,
+  "states": {
+    "fixture-a": "offered",
+    "fixture-b": "unknown"
+  },
+  "human_review": "pending",
+  "real_product_validation": "not-run",
+  "simulation": true
+}

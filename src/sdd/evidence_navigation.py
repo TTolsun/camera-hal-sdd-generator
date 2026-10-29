@@ -6,6 +6,7 @@ The renderer owns HTML presentation; extraction and contract validation stay ups
 from __future__ import annotations
 
 import html
+import json
 import re
 from collections import defaultdict
 
@@ -56,9 +57,9 @@ def _panel(refs: list[tuple[str, str]], scope: str, destinations=None) -> str:
         groups[file].append(element)
     rows = ''.join('<li><code>' + html.escape(file) + '</code><span class="evidence-lines">'
                    + ' · '.join(items) + '</span></li>' for file, items in groups.items())
-    name = '문단 근거' if scope == 'paragraph' else '절 전체 근거'
+    name = '절 전체 근거'
     return (f'<details class="evidence-links evidence-{scope}"><summary>{name} '
-            f'<span>{len(refs)}</span>개</summary><ul>{rows}</ul></details>')
+            f'<span>{len({cite for cite, _ in refs})}</span>개</summary><ul>{rows}</ul></details>')
 
 
 def compact_evidence(document: str, valid: set[str]) -> str:
@@ -70,6 +71,8 @@ def compact_evidence(document: str, valid: set[str]) -> str:
     for match in _LOCAL.finditer(document):
         destinations[html.unescape(match[2])].add(match[1])
 
+    refs_in_section = []
+
     def paragraph(match):
         body = match[1]
         if body.startswith('근거 원문: '):
@@ -78,7 +81,8 @@ def compact_evidence(document: str, valid: set[str]) -> str:
             if links and _LOCAL.sub('', index).replace(' · ', '').strip() == '':
                 refs = [(html.unescape(m[2]), m[0]) for m in links]
                 if all(cite in valid for cite, _ in refs):
-                    return _panel(refs, 'section')
+                    refs_in_section.extend(refs)
+                    return ''
             return match[0]
         # Citation-only paragraphs have no claim to attach a disclosure to.
         # In particular, do not mistake the first citation for prose and fold
@@ -97,9 +101,46 @@ def compact_evidence(document: str, valid: set[str]) -> str:
             if not item.startswith('<a ') and len(local) == 1:
                 item = f'<a href="{next(iter(local))}">{item}</a>'
             refs.append((cite, item))
-        return '<p>' + body[:suffix.start()] + '</p>' + _panel(refs, 'paragraph', destinations)
+        refs_in_section.extend(refs)
+        # A non-interactive audit attribute retains the exact paragraph-to-link
+        # mapping. It adds no focus target, accessible announcement or search text.
+        mapping = html.escape(json.dumps(refs, ensure_ascii=False), quote=True)
+        return '<p data-sdd-evidence="' + mapping + '">' + body[:suffix.start()] + '</p>'
 
     # Never interpret example HTML inside code blocks as document navigation.
+    def section(body):
+        refs_in_section.clear()
+        chunks = re.split(r'(<pre\b[^>]*>.*?</pre>)', body, flags=re.S)
+        rendered = ''.join(chunk if i % 2 else re.sub(r'<p>(.*?)</p>', paragraph, chunk, flags=re.S)
+                           for i, chunk in enumerate(chunks))
+        # Preserve every distinct pinned host and local destination, including
+        # citations absent from the generated excerpt index. Never choose an
+        # arbitrary excerpt when multiple local versions exist.
+        refs = list(dict.fromkeys(refs_in_section))
+        hosted = {cite for cite, element in refs if 'class="citation"' in element}
+        refs = [(cite, element) for cite, element in refs
+                if not (cite in hosted and len(destinations[cite]) == 1 and _LOCAL.fullmatch(element))]
+        # The generated index and an offline paragraph can spell the same
+        # destination with/without <code>. Keep a single visible link.
+        seen = set()
+        unique = []
+        for cite, element in refs:
+            href = re.search(r'href="([^"]+)"', element)
+            key = (cite, href[1] if href else element)
+            if key not in seen:
+                seen.add(key)
+                unique.append((cite, element))
+        refs = unique
+        return rendered + (_panel(refs, 'section', destinations) if refs else '')
+
+    # Headings inside examples must not become section boundaries.
     chunks = re.split(r'(<pre\b[^>]*>.*?</pre>)', document, flags=re.S)
-    return ''.join(chunk if i % 2 else re.sub(r'<p>(.*?)</p>', paragraph, chunk, flags=re.S)
-                   for i, chunk in enumerate(chunks))
+    protected = []
+    for i in range(1, len(chunks), 2):
+        protected.append(chunks[i])
+        chunks[i] = f'\x00SDD_PRE_{len(protected) - 1}\x00'
+    parts = re.split(r'(<h[1-6]\b[^>]*>.*?</h[1-6]>)', ''.join(chunks), flags=re.S)
+    result = ''.join(part if i % 2 else section(part) for i, part in enumerate(parts))
+    for i, block in enumerate(protected):
+        result = result.replace(f'\x00SDD_PRE_{i}\x00', block)
+    return result

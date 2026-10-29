@@ -1,0 +1,20 @@
+{
+  "scope": "Private render-only comparison at published e117 input; existing bilingual audit was not rerun by this proof. Final integrated publication is separate.",
+  "new_model_calls": 0,
+  "manuscripts_unchanged": true,
+  "translation": {
+    "pages": 30,
+    "strings": 1730,
+    "missing_translations": 0,
+    "human_review": "pending",
+    "replayed_http_calls": 0,
+    "translation_replays": []
+  },
+  "site": {
+    "html_pages": 60,
+    "broken_links": 0,
+    "manifest_verified": true
+  },
+  "paragraph_controls": 0,
+  "build_id": "2e177a1e503af59a255cfcb0d3d9cf432f1d471cf0346949233e9a300c022e62"
+}

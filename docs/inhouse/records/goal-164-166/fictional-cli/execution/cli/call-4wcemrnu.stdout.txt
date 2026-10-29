@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a1888e-3a46-7603-a5df-ad5960160669"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"statements\":[{\"text\":\"가상 테스트 구성 `fixture-b`의 고객은 통합자가 제공한 장치 구현을 통해 이미지를 획득해야 합니다. 사용 상황은 가상의 촬영 통합 실습입니다. 코드에서 `capture()`는 통합 시 제공되는 장치 이미지 획득 동작 `acquireImage()`를 호출하며, 이 진입점을 분리하면 통합 과정에서 장치 구현을 선택할 수 있습니다. `fixture-b` 릴리스 `r1`의 센서 B와 빌드 Y 구성에서는 `capture` 제공 여부가 확인되지 않았습니다.\",\"quote_id\":\"code:0\",\"evidence\":[\"code\",\"product-spec-b\"],\"covers\":[\"value\"],\"kind\":\"behavior\"}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":14729,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":167,"reasoning_output_tokens":0}}

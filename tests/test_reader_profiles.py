@@ -180,7 +180,7 @@ def test_inhouse_template_cannot_silently_publish_empty_contracts(tmp_cfg):
     from sdd.design_contracts import audit
     sections = yaml.safe_load((ROOT / 'examples/inhouse-template/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     profiles = [s for s in sections if s.get('reader_profile')]
-    assert {s['reader_profile'] for s in profiles} == {'vendor-overview', 'vendor', 'vendor-assurance', 'developer'}
+    assert {s['reader_profile'] for s in profiles} == {'vendor-overview', 'vendor', 'vendor-assurance', 'developer', 'team'}
     for sec in profiles:
         assert configuration_errors(sec) == []
         assert audit(KnowledgeModel(), sec)['status'] == 'incomplete'

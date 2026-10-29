@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a1888e-5020-7fa3-bbcc-21e38fa80389"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"reviews\":[{\"index\":0,\"supported\":true,\"reason\":\"고객 필요, 사용 상황, 호출 구조와 구현 선택의 이점 및 해당 구성의 제공 여부가 미확인이라는 내용이 두 출처에 직접 명시되어 있습니다.\"}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":12906,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":64,"reasoning_output_tokens":0}}

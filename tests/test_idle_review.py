@@ -59,6 +59,30 @@ def test_idle_adds_one_topic_and_does_not_repeat(idle_case, monkeypatch):
     assert not (cfg.sdd_dir / "approvals.json").exists()
 
 
+def test_interrupted_promotion_rechecks_product_assets(idle_case, monkeypatch):
+    cfg, target = idle_case
+    cfg.raw['products'] = {'file': 'products.yaml'}
+    material = cfg.root / 'products.yaml'
+    original_bytes = b'schema: 1\nproducts: []\nevidence: []\n'
+    material.write_bytes(original_bytes)
+    monkeypatch.setattr(idle_review, '_ask', lambda *a: proposal())
+    copyfile = idle_review.shutil.copyfile
+    def interrupt(src, dst, *args, **kwargs):
+        if str(dst).endswith('scenarios.yaml.idle-tmp'):
+            raise OSError('interrupted')
+        return copyfile(src, dst, *args, **kwargs)
+    monkeypatch.setattr(idle_review.shutil, 'copyfile', interrupt)
+    with pytest.raises(OSError, match='interrupted'):
+        idle_review.run(cfg, target, 'product-guard')
+    material.write_bytes(original_bytes + b'# changed conditions input\n')
+    monkeypatch.setattr(idle_review.shutil, 'copyfile', copyfile)
+    monkeypatch.setattr(idle_review, '_ask', lambda *a: pytest.fail('Must resume without a new model call.'))
+    with pytest.raises(RuntimeError, match='제품 입력 파일'):
+        idle_review.run(cfg, target, 'product-guard')
+    material.write_bytes(original_bytes)
+    assert idle_review.run(cfg, target, 'product-guard')['status'] == 'applied'
+
+
 @pytest.mark.parametrize("failure", ["foreign_section", "bad_evidence", "approval", "invalid_json"])
 def test_rejected_proposals_preserve_inputs(idle_case, monkeypatch, failure):
     cfg, target = idle_case

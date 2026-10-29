@@ -40,7 +40,8 @@ def configuration_errors(section: dict) -> list[str]:
                 values = st.get(field, [])
                 if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
                     errors.append(f"{topic['id']}/{field}는 문자열 목록이어야 합니다.")
-    return errors + profile_errors(section) + generated_errors(section)
+    from .reader_scope import configuration_errors as scope_errors
+    return errors + profile_errors(section) + generated_errors(section) + scope_errors(section)
 
 
 def generated_errors(section):

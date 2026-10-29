@@ -63,6 +63,8 @@ def validate_output(cfg: Config, out: Path, *, previous: Iterable[Path] = ()) ->
                   [site.get('intro'), site.get('english_catalog'), site.get('mermaid_dir'), visuals.get('file')]
                   if path]
     protected += [reject_symlinks(path).resolve() for path in previous]
+    from .product_context import input_paths
+    protected += input_paths(cfg)
     if (out.exists() or cfg.root.resolve().is_relative_to(out)
             or any(path.resolve().is_relative_to(out) or out.is_relative_to(path.resolve())
                    for path in protected)):
@@ -77,6 +79,10 @@ def clone_config(cfg: Config, out: Path, *, sections_file: Path | None = None) -
                        scenarios_file=cfg.scenarios_file, clang_uml_file=cfg.clang_uml_file,
                        prompts=cfg.prompts_dir, templates=cfg.templates_dir, style=cfg.style_dir,
                        glossary_file=cfg.paths.get('glossary_file', cfg.config_dir / 'glossary.yaml'))
+    from .product_context import input_paths
+    product_inputs = input_paths(cfg)
+    if product_inputs:
+        trial.paths['products_file'] = product_inputs[0]
     trial.paths = {key: Path(value).resolve() for key, value in trial.paths.items()}
     trial.root = Path(out).resolve()
     trial.sdd_dir = trial.root / 'manuscripts'

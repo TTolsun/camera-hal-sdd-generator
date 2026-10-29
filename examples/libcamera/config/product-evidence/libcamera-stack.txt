@@ -1,0 +1,9 @@
+.. SPDX-License-Identifier: CC-BY-SA-4.0
+.. Source: https://gitlab.freedesktop.org/camera/libcamera/-/blob/212c689fcf2450bbfbaab25c7472895ac277b5d6/Documentation/introduction.rst
+.. Unmodified excerpt; project documentation, not a commercial product specification.
+
+libcamera provides a complete camera stack for Linux-based systems to abstract
+the configuration of hardware and image control algorithms required to obtain
+desirable results from the camera through the kernel's APIs, reducing those
+operations to a simple and consistent method for developers. In short instead of
+having to deal with this:

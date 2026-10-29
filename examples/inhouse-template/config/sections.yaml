@@ -10,6 +10,24 @@ sections:
     title: 시스템 개요
     link: overview.md
 - id: vendor-overview
+  reader_scope:
+    revision: 1
+    change_reason: 출력을 보기 전에 독자의 필수 과업과 완료 범위를 고정합니다.
+    tasks:
+    - id: adoption
+      goal: '실제 HAL 자료 확보 후: 고객사가 기능과 근거 있는 강점, 적용 조건을 이해하고 도입 범위를 고릅니다.'
+      completion: 제품의 목적·기능·조건에 답하는 절과 근거에 도달합니다.
+      requirements:
+      - capabilities
+      - benefits
+    optional:
+    - id: implementation-detail
+      location: vendor-contract.md
+      reason: 내부 상세는 과업에 필요한 조건과 예외를 유지한 채 연결해서 읽습니다.
+    excluded:
+    - id: all-features
+      reason: 전체 기능·모든 하드웨어 조합의 참조서는 이 개요의 목적이 아닙니다.
+    removed_requirements: []
   group: For Vendor
   nav_section: 도입 판단
   title: 제품 개요
@@ -187,7 +205,110 @@ sections:
     title: 시스템 개요
     link: overview.md
   design_generation: llm
+- id: team-overview
+  group: For Developer
+  nav_section: 구조 이해
+  title: 타팀이 확인할 역할과 책임
+  kind: prose
+  output: team-overview.md
+  reader_profile: team
+  reader: HAL과 연동하는 다른 팀의 개발자
+  lead: 실제 HAL의 역할·입출력·책임 경계를 확인하세요.
+  design_generation: llm
+  show_evidence: true
+  facts:
+    classes: []
+  watch:
+  - '**/*.cpp'
+  - '**/*.h'
+  design_requirements:
+  - id: role
+    question: 이 프로젝트는 무엇을 하며 누구의 어떤 문제를 풉니까?
+    aspects:
+    - role
+  - id: inputs
+    question: 이 프로젝트는 무엇을 입력으로 받습니까?
+    aspects:
+    - inputs
+  - id: outputs
+    question: 이 프로젝트는 무엇을 결과로 내놓습니까?
+    aspects:
+    - outputs
+  - id: boundaries
+    question: 어느 계층·팀과 책임이 나뉩니까?
+    aspects:
+    - boundaries
+  design_topics:
+  - id: role
+    title: 이 프로젝트는 무엇을 하며 누구의 어떤 문제를 풉니까?
+    question: 이 프로젝트는 무엇을 하며 누구의 어떤 문제를 풉니까?
+    covers:
+    - role
+    sources: []
+  - id: inputs
+    title: 이 프로젝트는 무엇을 입력으로 받습니까?
+    question: 이 프로젝트는 무엇을 입력으로 받습니까?
+    covers:
+    - inputs
+    sources: []
+  - id: outputs
+    title: 이 프로젝트는 무엇을 결과로 내놓습니까?
+    question: 이 프로젝트는 무엇을 결과로 내놓습니까?
+    covers:
+    - outputs
+    sources: []
+  - id: boundaries
+    title: 어느 계층·팀과 책임이 나뉩니까?
+    question: 어느 계층·팀과 책임이 나뉩니까?
+    covers:
+    - boundaries
+    sources: []
+  reader_scope:
+    revision: 1
+    change_reason: 타팀의 필수 과업을 실제 HAL 자료 확보 전에 고정합니다.
+    tasks:
+    - id: collaboration
+      goal: 타팀이 역할·입출력·협업 책임을 구분합니다.
+      completion: 네 필수 질문의 답과 근거를 찾습니다.
+      requirements:
+      - role
+      - inputs
+      - outputs
+      - boundaries
+    optional:
+    - id: implementation-detail
+      location: vendor-contract.md
+      reason: 연동 호출 상세를 연결해서 읽습니다.
+    excluded:
+    - id: all-functions
+      reason: 전체 함수 참조서는 타팀 개요의 목적이 아닙니다.
+    removed_requirements: []
+  next:
+    title: 시스템 개요
+    link: overview.md
 - id: overview
+  reader_scope:
+    revision: 1
+    change_reason: 출력을 보기 전에 독자의 필수 과업과 완료 범위를 고정합니다.
+    tasks:
+    - id: onboarding
+      goal: '실제 HAL 자료 확보 후: 신입사원이 전체 구조와 대표 흐름을 이해하고 첫 코드 탐색 순서를 찾습니다.'
+      completion: 책임·대표 요청 흐름·첫 파일·필수 예외와 확인 조건을 찾습니다.
+      requirements:
+      - entry
+      - responsibility
+      - boundaries
+      - lifecycle
+      - concurrency
+      - verification
+    optional:
+    - id: implementation-detail
+      location: scenarios/index.md
+      reason: 내부 상세는 과업에 필요한 조건과 예외를 유지한 채 연결해서 읽습니다.
+    excluded:
+    - id: all-features
+      reason: 전체 기능·모든 하드웨어 조합의 참조서는 이 개요의 목적이 아닙니다.
+    removed_requirements: []
   group: For Developer
   nav_section: 구조 이해
   title: 시스템 개요

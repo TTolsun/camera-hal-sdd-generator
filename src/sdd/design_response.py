@@ -181,6 +181,8 @@ def materialize(model, section, answers, enforce_repeats=True):
                 raise ValueError('렌더링되지 않는 Doxygen 명령을 설명 문단에 복사할 수 없습니다. 문서 표식 대신 질문의 내용을 설명하세요.')
         from .answer_contracts import validate as validate_answer_contract
         validate_answer_contract(topic, statements)
+        from .product_context import validate_text as validate_product_text
+        validate_product_text(topic, statements)
         topic['statements'] = statements
         for source in topic['sources']:
             key = f"{section['id']}/{topic['id']}/{source['id']}"
@@ -295,6 +297,7 @@ def decode_unit(model, section, topic, raw, sources, passages):
         raise ValueError(' / '.join(errors))
     subset.pop('reader_profile', None)
     subset.pop('reader_family', None)
+    subset.pop('reader_scope', None)
     try:
         validate_answers(model, subset, candidate, allow_limited=bool(topic.get('_statement_kind')))
     except ValueError as exc:
