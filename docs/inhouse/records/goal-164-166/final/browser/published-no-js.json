@@ -1,0 +1,26 @@
+{
+  "build_id": "cb84b114360f52a7bde777951e99a396d8b96bba5581963673fe7878a62d9f2d",
+  "method": "Exact published HTML bytes; document scripting disabled by CSP without changing global browser settings",
+  "ko": {
+    "excerptOpen": true,
+    "hasHash": true,
+    "mermaidSvg": 0,
+    "paragraphRows": 0,
+    "sectionOpen": true,
+    "sourceCollectionOpen": true,
+    "url": "http://127.0.0.1:8771/vendor-overview.html#source-34fda84500757231"
+  },
+  "en": {
+    "excerptOpen": true,
+    "hasHash": true,
+    "mermaidSvg": 0,
+    "paragraphRows": 0,
+    "sectionOpen": true,
+    "sourceCollectionOpen": true,
+    "url": "http://127.0.0.1:8771/en/vendor-overview.html#source-34fda84500757231"
+  },
+  "keyboardClose": {
+    "activeTag": "SUMMARY",
+    "open": false
+  }
+}

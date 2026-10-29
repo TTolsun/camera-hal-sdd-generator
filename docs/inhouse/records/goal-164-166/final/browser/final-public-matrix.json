@@ -1,0 +1,165 @@
+{
+  "build_id": "cb84b114360f52a7bde777951e99a396d8b96bba5581963673fe7878a62d9f2d",
+  "checks": [
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 4,
+      "url": "https://ttolsun.github.io/libcamera-sdd/vendor-overview.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 7,
+      "url": "https://ttolsun.github.io/libcamera-sdd/vendor-integration.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 5,
+      "url": "https://ttolsun.github.io/libcamera-sdd/camera-model.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 0,
+      "url": "https://ttolsun.github.io/libcamera-sdd/scenarios/index.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 0,
+      "url": "https://ttolsun.github.io/libcamera-sdd/scenarios/queue_request.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 4,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/vendor-overview.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 7,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/vendor-integration.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 5,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/camera-model.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 0,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/scenarios/index.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 1425,
+      "sectionPanels": 0,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/scenarios/queue_request.html",
+      "width": 1440
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 4,
+      "url": "https://ttolsun.github.io/libcamera-sdd/vendor-overview.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 7,
+      "url": "https://ttolsun.github.io/libcamera-sdd/vendor-integration.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 5,
+      "url": "https://ttolsun.github.io/libcamera-sdd/camera-model.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 0,
+      "url": "https://ttolsun.github.io/libcamera-sdd/scenarios/index.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 0,
+      "url": "https://ttolsun.github.io/libcamera-sdd/scenarios/queue_request.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 4,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/vendor-overview.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 7,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/vendor-integration.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 5,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/camera-model.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 0,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/scenarios/index.html",
+      "width": 390
+    },
+    {
+      "badLabel": false,
+      "paragraphRows": 0,
+      "scrollWidth": 375,
+      "sectionPanels": 0,
+      "url": "https://ttolsun.github.io/libcamera-sdd/en/scenarios/queue_request.html",
+      "width": 390
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-10-29T20:42:38.109433+00:00",
+  "command": [
+    "git",
+    "ls-remote",
+    "https://gitlab.freedesktop.org/camera/libcamera.git",
+    "HEAD"
+  ],
+  "observed_head": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "matches_frozen_source": true
+}

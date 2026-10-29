@@ -1,0 +1,69 @@
+"""Read-only independent Pages verification after the public PR is deployed."""
+from pathlib import Path
+from urllib.request import urlopen
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime,timezone
+from html.parser import HTMLParser
+from urllib.parse import quote,unquote,urlsplit
+import hashlib,json,argparse
+ap=argparse.ArgumentParser();ap.add_argument('--build-id',required=True);ap.add_argument('--commit',required=True);ap.add_argument('--pages-run',required=True);ap.add_argument('--public-pr',type=int,required=True);a=ap.parse_args()
+base='https://ttolsun.github.io/libcamera-sdd/';out=Path('build/goal-164-166/final-public');out.mkdir(exist_ok=True)
+def read(path):
+ with urlopen(base+quote(path,safe='/#'),timeout=40) as r:
+  assert r.status==200,path
+  return r.read()
+raw=read('site-manifest.json');manifest=json.loads(raw);assert manifest['build_id']==a.build_id
+with urlopen('https://raw.githubusercontent.com/TTolsun/libcamera-sdd/'+a.commit+'/docs/site-manifest.json',timeout=40) as r:
+ assert r.read()==raw,'Live manifest differs from the merged public commit'
+def check(item):
+ path,sha=item;data=read(path);assert hashlib.sha256(data).hexdigest()==sha,path
+ target=out/'site'/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+ if path.endswith('.html'):assert b'evidence-paragraph' not in data,path
+ return dict(path=path,http=200,sha256=sha)
+with ThreadPoolExecutor(max_workers=6) as pool:rows=list(pool.map(check,manifest['outputs'].items()))
+assert read('site-manifest.json')==raw,'Deployment changed during verification'
+(out/'site/site-manifest.json').write_bytes(raw)
+scope=json.loads((out/'site/reader-scope.json').read_text(encoding='utf-8'));product=json.loads((out/'site/product-context.json').read_text(encoding='utf-8'))
+source='212c689fcf2450bbfbaab25c7472895ac277b5d6';assert scope['source_commit']==product['source_commit']==source
+tasks={}
+name_adaptations=[]
+preregistered=json.loads(Path('docs/inhouse/records/goal-164-166/preregistered-scope.json').read_text(encoding='utf-8'))
+class Links(HTMLParser):
+ def __init__(self):super().__init__();self.ids=set();self.hrefs=[]
+ def handle_starttag(self,tag,attrs):
+  attrs=dict(attrs)
+  if 'id' in attrs:self.ids.add(attrs['id'])
+  if tag=='a' and 'href' in attrs:self.hrefs.append(attrs['href'])
+for page,p in scope['pages'].items():
+ assert p['human_task_test']=='pending'
+ expected=preregistered['pages'][page.removesuffix('.md')]['reader_scope']
+ assert p['removed_requirements']==expected['removed_requirements']
+ for expected_task in expected['tasks']:
+  actual=next(t for t in p['tasks'] if t['id']==expected_task['id'])
+  assert all(actual[k]==expected_task[k] for k in ['completion','requirements']),page
+  if actual['goal']!=expected_task['goal']:
+   assert page=='team-overview.md' and actual['goal']==expected_task['goal'].replace('HAL','libcamera',1),page
+   name_adaptations.append(dict(page=page,preregistered_goal=expected_task['goal'],public_goal=actual['goal'],reason='Public test target naming only; original preregistration retained. Completion text and required IDs are identical.'))
+ for optional in p['optional']:
+  target=optional['location'].replace('.md','.html');path,_,fragment=target.partition('#')
+  links=Links();links.feed((out/'site'/path).read_text(encoding='utf-8'))
+  assert not fragment or unquote(fragment) in links.ids,target
+ for t in p['tasks']:
+  assert t['unresolved']==[] and t['status']=='structurally-linked',page
+  tasks[t['id']]=dict(page=page,evidence=len(t['evidence']),unresolved=t['unresolved'])
+value=product['pages']['vendor-overview.md']['value']
+assert value['product']['scope']=='project' and value['product']['simulation'] is False
+assert value['availability']=='offered' and value['measurement']=='unknown' and value['human_review']=='pending'
+material=value['evidence']['official-stack']
+for prefix,label in [('', '제품 자료:'),('en/', 'Product documentation:')]:
+ text=(out/'site'/prefix/'vendor-overview.html').read_text(encoding='utf-8')
+ assert label+' product-evidence/libcamera/official-stack.txt:1' in text
+ assert material['sha256'] in text
+ links=Links();links.feed(text)
+ assert any(h.startswith('#source-') for h in links.hrefs)
+ assert not any('/blob/' in h and '/product-evidence/' in h for h in links.hrefs)
+for p in [out/'site/index.html',out/'site/en/index.html']:
+ text=p.read_text(encoding='utf-8');assert '문단 근거의' not in text and 'in paragraph evidence' not in text
+proof=dict(checked_at=datetime.now(timezone.utc).isoformat(),public_pr=a.public_pr,public_commit=a.commit,pages_run=a.pages_run,build_id=a.build_id,source_commit=source,manifest_sha256=hashlib.sha256(raw).hexdigest(),manifest_matches_public_merge=True,all_manifest_outputs_verified=len(rows),html_pages=sum(r['path'].endswith('.html') for r in rows),paragraph_rows=0,stable_manifest=True,tasks=tasks,preregistered_completion_and_required_ids_unchanged=True,public_name_adaptations=name_adaptations,optional_detail_anchors_resolve=True,product_availability=value['availability'],measurement=value['measurement'],human_review='pending',internal_hal_validation='not-run',outputs=rows)
+(out/'http-proof.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps({k:v for k,v in proof.items() if k!='outputs'},ensure_ascii=False),flush=True)
