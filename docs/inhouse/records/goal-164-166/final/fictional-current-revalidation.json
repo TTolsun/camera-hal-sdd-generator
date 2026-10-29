@@ -1,0 +1,21 @@
+{
+  "source_commit": "faeab8bff751a77d47809107e47b44a0ffa098e1",
+  "states": {
+    "fixture-a": {
+      "availability": "offered",
+      "measurement": "unknown",
+      "simulation": true,
+      "human_review": "pending"
+    },
+    "fixture-b": {
+      "availability": "unknown",
+      "measurement": "unknown",
+      "simulation": true,
+      "human_review": "pending"
+    }
+  },
+  "original_cli_receipts_verified": 4,
+  "current_checks": "passed",
+  "new_model_calls": 0,
+  "real_product_validation": "not-run"
+}

@@ -1,0 +1,429 @@
+{
+  "pages": [
+    {
+      "page": "camera-model.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 16,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 14
+    },
+    {
+      "page": "camera-requests.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 18,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 9
+    },
+    {
+      "page": "component-index.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/camera-model.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 16,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 14
+    },
+    {
+      "page": "en/camera-requests.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 18,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 9
+    },
+    {
+      "page": "en/component-index.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/framebuffer-allocator.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 5,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 3
+    },
+    {
+      "page": "en/glossary.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/index.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/ipa-algorithms.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 9,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 7
+    },
+    {
+      "page": "en/ipa-module-validation.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 2,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 2
+    },
+    {
+      "page": "en/ipa.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 24,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 26
+    },
+    {
+      "page": "en/ipu3-lsc-flow.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 7,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 7
+    },
+    {
+      "page": "en/ipu3-lsc-prepare.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 8,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 5
+    },
+    {
+      "page": "en/ipu3-lsc.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 8
+    },
+    {
+      "page": "en/onboarding.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 4,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 4
+    },
+    {
+      "page": "en/overview.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 19,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 11
+    },
+    {
+      "page": "en/pipeline-handler.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 6,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 13
+    },
+    {
+      "page": "en/pipeline-requests.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 17,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 8
+    },
+    {
+      "page": "en/request-diagnosis.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 17,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 13
+    },
+    {
+      "page": "en/request-lifecycle.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 38,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 19
+    },
+    {
+      "page": "en/rkisp1-dewarp.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 13,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 10
+    },
+    {
+      "page": "en/scenarios/camera_start.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/scenarios/camera_stop.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/scenarios/complete_request.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/scenarios/configure.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/scenarios/index.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/scenarios/manager_start.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/scenarios/queue_request.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "en/team-overview.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 13,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 8
+    },
+    {
+      "page": "en/vendor-assurance.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 9,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 3
+    },
+    {
+      "page": "en/vendor-integration.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 34,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 13
+    },
+    {
+      "page": "en/vendor-overview.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 14,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 10
+    },
+    {
+      "page": "framebuffer-allocator.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 5,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 3
+    },
+    {
+      "page": "glossary.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "index.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "ipa-algorithms.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 9,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 7
+    },
+    {
+      "page": "ipa-module-validation.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 2,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 2
+    },
+    {
+      "page": "ipa.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 24,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 26
+    },
+    {
+      "page": "ipu3-lsc-flow.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 7,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 7
+    },
+    {
+      "page": "ipu3-lsc-prepare.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 8,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 5
+    },
+    {
+      "page": "ipu3-lsc.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 8
+    },
+    {
+      "page": "onboarding.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 4,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 4
+    },
+    {
+      "page": "overview.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 19,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 11
+    },
+    {
+      "page": "pipeline-handler.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 6,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 13
+    },
+    {
+      "page": "pipeline-requests.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 17,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 8
+    },
+    {
+      "page": "request-diagnosis.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 17,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 13
+    },
+    {
+      "page": "request-lifecycle.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 38,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 19
+    },
+    {
+      "page": "rkisp1-dewarp.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 13,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 10
+    },
+    {
+      "page": "scenarios/camera_start.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "scenarios/camera_stop.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "scenarios/complete_request.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "scenarios/configure.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "scenarios/index.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "scenarios/manager_start.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "scenarios/queue_request.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 0,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 0
+    },
+    {
+      "page": "team-overview.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 13,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 8
+    },
+    {
+      "page": "vendor-assurance.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 9,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 3
+    },
+    {
+      "page": "vendor-integration.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 34,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 13
+    },
+    {
+      "page": "vendor-overview.html",
+      "all_prior_source_destinations_preserved": true,
+      "source_anchor_count": 14,
+      "code_blocks_unchanged": true,
+      "paragraph_mappings": 10
+    }
+  ],
+  "checked_pages": 60,
+  "policy": "All prior hosted source and local excerpt destinations preserved; code block text hashes unchanged; original manuscript hashes checked separately.",
+  "human_review": "pending",
+  "comparison": "Same e117 manuscripts, facts and translation; only compact_evidence implementation before/after PR182. Historical public55 full-link comparison failed on 3 camera-model class-index links removed by separate reading_cleanup changes; it is not a preservation pass.",
+  "render_model_calls": 0
+}

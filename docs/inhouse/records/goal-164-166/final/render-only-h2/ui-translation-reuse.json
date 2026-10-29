@@ -1,0 +1,12 @@
+{
+  "source_public_ref": "e9322a2e",
+  "source_catalog": "publication/reader-cleanup/english.json",
+  "source_git_blob_sha": "a301574a04a2cf1ebcb33ffece5d7fb75f5d7225",
+  "source_url": "https://github.com/TTolsun/libcamera-sdd/blob/e9322a2e/publication/reader-cleanup/english.json",
+  "reused_exact_keys": [
+    "가상 호출 후보·예약 대상 등 확인이 필요한 경계 기록이 9개 있습니다. 추적 범위와 경계 항목에서 후보를 구분한 뒤 실제 객체와 연결 방식을 확인해야 합니다."
+  ],
+  "translation": "There are 9 boundary records that require verification, such as virtual call candidates and reservation targets. You must distinguish the candidates using the trace scope and boundary entries, then verify the actual object and linking method.",
+  "new_model_calls": 0,
+  "note": "Exact already-published PR58 translation reused; neither preparation attempt executed a native model call. Historical writer config retained for pure visual validation."
+}
