@@ -89,13 +89,16 @@ def test_actual_qwen_postincrement_error_is_rejected_by_project_contract():
     data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
     topic = next(t for s in data['sections'] if s['id'] == 'pipeline-requests'
                  for t in s['design_topics'] if t['id'] == 'queue')
-    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'sequence')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'submit-tracking')
+    tracking = '요청을 queuedRequests_에 추가합니다. '
     bad = 'requestSequence_ 값을 증가시키고 그 증가된 값을 sequence_에 저장합니다.'
     with pytest.raises(ValueError):
-        check(rule, [statement(bad)], 'sequence')
+        check(rule, [statement(tracking + bad)], 'submit-tracking')
+    with pytest.raises(ValueError, match='후위'):
+        check(rule, [statement(tracking + '증가 전 값을 버리고 requestSequence_의 증가된 값을 sequence_에 저장합니다.')], 'submit-tracking')
     for text in ['sequence_에는 requestSequence_의 증가 전 값을 저장하고 카운터는 후위 증가합니다.',
                  'requestSequence_의 이전 값이 sequence_에 대입된 뒤 requestSequence_가 증가합니다.']:
-        check(rule, [statement(text)], 'sequence')
+        check(rule, [statement(tracking + text)], 'submit-tracking')
 
 
 def test_reuse_fence_recommendation_is_not_strengthened_to_must_not():
@@ -103,11 +106,12 @@ def test_reuse_fence_recommendation_is_not_strengthened_to_must_not():
     data = yaml.safe_load((root / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))
     topic = next(t for s in data['sections'] if s['id'] == 'camera-requests'
                  for t in s['design_topics'] if t['id'] == 'lifetime')
-    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'reuse-advice')
+    rule = next(p['answer_contract'] for p in topic['parts'] if p['id'] == 'reuse-fences')
     assert rule['basis'] == 'description'
-    check(rule, [statement('펜스는 재사용되지 않으며, 펜스를 쓰는 경우 이 플래그를 피하도록 권고합니다.')], 'fence')
-    with pytest.raises(ValueError):
-        check(rule, [statement('펜스를 사용하는 경우 이 플래그 사용은 권고되지 않으며 사용해서는 안 됩니다.')], 'fence')
+    buffers = 'ReuseBuffers로 기존 버퍼를 유지해도 '
+    check(rule, [statement(buffers + '펜스는 재사용되지 않으며, 펜스를 쓰는 경우 이 플래그를 피하도록 권고합니다.')], 'fence')
+    with pytest.raises(ValueError, match='should not'):
+        check(rule, [statement(buffers + '펜스를 사용하는 경우 이 플래그 사용은 권고되지 않으며 사용해서는 안 됩니다.')], 'fence')
 def test_explicit_answer_budget_keeps_coverage_and_saved_answer_limit():
     topic = dict(id='branch', parts=[dict(id='flow', sources=['source'], max_statements=3,
         answer_contract=dict(basis='implementation', required_terms=[['condition'], ['return']]))])
