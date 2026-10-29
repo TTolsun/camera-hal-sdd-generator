@@ -1,0 +1,227 @@
+{
+  "schema": 1,
+  "human_review": "pending",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "profile": {
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "version": "codex-cli 0.165.0-alpha.1.2",
+    "executable_sha256": "0c09e45bc76433756eb2d492f6db0ce6f269967e6618f4a6ae73e2fa239694b8",
+    "runner": "codex"
+  },
+  "series": {
+    "before": {
+      "expected_samples": 9,
+      "completed_samples": 9,
+      "passed": 8,
+      "first_attempt_passed": 4,
+      "new_calls": 168,
+      "reuse": 0,
+      "elapsed_seconds": 813.138105100079
+    },
+    "after-crop-v1": {
+      "expected_samples": 9,
+      "completed_samples": 9,
+      "passed": 7,
+      "first_attempt_passed": 4,
+      "new_calls": 161,
+      "reuse": 0,
+      "elapsed_seconds": 802.670089399966
+    },
+    "after-crop-v2": {
+      "expected_samples": 9,
+      "completed_samples": 9,
+      "passed": 9,
+      "first_attempt_passed": 5,
+      "new_calls": 170,
+      "reuse": 0,
+      "elapsed_seconds": 846.4821828001295
+    },
+    "after-crop-v3": {
+      "expected_samples": 9,
+      "completed_samples": 9,
+      "passed": 6,
+      "first_attempt_passed": 4,
+      "new_calls": 129,
+      "reuse": 0,
+      "elapsed_seconds": 892.9626234999741
+    },
+    "after-final": {
+      "expected_samples": 9,
+      "completed_samples": 9,
+      "passed": 8,
+      "first_attempt_passed": 6,
+      "new_calls": 139,
+      "reuse": 0,
+      "elapsed_seconds": 1016.0638377000578
+    },
+    "after-grouped-v5": {
+      "expected_samples": 9,
+      "completed_samples": 9,
+      "passed": 9,
+      "first_attempt_passed": 6,
+      "new_calls": 149,
+      "reuse": 0,
+      "elapsed_seconds": 994.4224219000898
+    }
+  },
+  "final_current_generator_verification": {
+    "human_review": "pending",
+    "fresh_samples": 9,
+    "passed": 9,
+    "manuscript_revalidation_is_not_new_inference": true,
+    "results": [
+      {
+        "round": 1,
+        "section": "ipa-module-validation",
+        "manuscript_sha256": "f9b70c02dbec8cdbeb0a4b7befd43b1e3990fd306eaace0e3864d1b854a5a64f",
+        "current_generator_verification": "passed",
+        "crop_text": []
+      },
+      {
+        "round": 1,
+        "section": "ipu3-lsc-flow",
+        "manuscript_sha256": "36a1ccd40c499bd0968878291e92afaf5c2f674c6fb49fbe698381cc919c2273",
+        "current_generator_verification": "passed",
+        "crop_text": []
+      },
+      {
+        "round": 1,
+        "section": "ipu3-lsc-prepare",
+        "manuscript_sha256": "e41ee79fa8c71cec79a7e8239fc5f2947603e9072756302bc0955ac04ff0a86e",
+        "current_generator_verification": "passed",
+        "crop_text": [
+          "`Lsc::prepare`가 좌표 설정에 도달했을 때 `polynomial_`이 참이면 `config->grid.x_start`와 `config->grid.y_start`에 각각 0을 대입합니다. 그렇지 않으면 `config->grid.x_start`에 `(cropWidth_ - sensorWidth_) / 2`를, `config->grid.y_start`에 `(cropHeight_ - sensorHeight_) / 2`를 대입합니다."
+        ]
+      },
+      {
+        "round": 2,
+        "section": "ipa-module-validation",
+        "manuscript_sha256": "8f09f35cd1ca658061f22b3a6ab7c8ec86cb07e87d08c654801695d8955b18be",
+        "current_generator_verification": "passed",
+        "crop_text": []
+      },
+      {
+        "round": 2,
+        "section": "ipu3-lsc-flow",
+        "manuscript_sha256": "4ab7bdd63baa7324e732c511acda663aee5a80cf200b7f7319b78a0e19e09b33",
+        "current_generator_verification": "passed",
+        "crop_text": []
+      },
+      {
+        "round": 2,
+        "section": "ipu3-lsc-prepare",
+        "manuscript_sha256": "ced6775536a27a61e771f321df1ab7d5631e442d3c26141f2d7fcd98b66f1e40",
+        "current_generator_verification": "passed",
+        "crop_text": [
+          "`Lsc::prepare`가 좌표 설정에 도달했을 때 `polynomial_`이 참이면 `grid.x_start`와 `grid.y_start`에 각각 0을 대입합니다. 거짓이면 `grid.x_start`에 `(cropWidth_ - sensorWidth_) / 2`를, `grid.y_start`에 `(cropHeight_ - sensorHeight_) / 2`를 대입합니다."
+        ]
+      },
+      {
+        "round": 3,
+        "section": "ipa-module-validation",
+        "manuscript_sha256": "37455821d05f84c3a007b571042653a1293d576e04287f79c7c13248c3714ad3",
+        "current_generator_verification": "passed",
+        "crop_text": []
+      },
+      {
+        "round": 3,
+        "section": "ipu3-lsc-flow",
+        "manuscript_sha256": "654c473b971fca8b73088d3b225406d176919fb83009efa67023e10ef3b69deb",
+        "current_generator_verification": "passed",
+        "crop_text": []
+      },
+      {
+        "round": 3,
+        "section": "ipu3-lsc-prepare",
+        "manuscript_sha256": "34f8bcba5d4bda2c0cbe7d9052e4965400f732664067ef050fb0aff59000c0c5",
+        "current_generator_verification": "passed",
+        "crop_text": [
+          "`Lsc::prepare`가 좌표 설정에 도달하면, `polynomial_`이 참일 때 `config->grid.x_start`와 `config->grid.y_start`에 각각 0을 대입합니다. `polynomial_`이 거짓일 때는 `config->grid.x_start`에 `(cropWidth_ - sensorWidth_) / 2`를, `config->grid.y_start`에 `(cropHeight_ - sensorHeight_) / 2`를 대입합니다."
+        ]
+      }
+    ]
+  },
+  "interruption": {
+    "schema": 1,
+    "human_review": "pending",
+    "independent_fresh_sample": false,
+    "experiment": "Real owned Codex/Terra process-tree interruption during crop after six original units",
+    "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "runs": [
+      {
+        "step": "actual-interruption",
+        "seconds": 92.02244390000124,
+        "validated_prefix_units": 6,
+        "worker_pid": 31928,
+        "native_pids": [
+          13632
+        ],
+        "inflight_call_status": "started; completion unknown; never counted as success",
+        "completed_receipts": 14,
+        "old_output_preserved": true
+      },
+      {
+        "step": "resume",
+        "status": "passed",
+        "error": null,
+        "calls": 16,
+        "seconds": 112.74728279997362,
+        "new_receipt_tags": [
+          "ipu3-lsc-prepare_prepare_crop_0",
+          "ipu3-lsc-prepare_prepare_crop_0_grounding",
+          "ipu3-lsc-prepare_prepare_gain_0",
+          "ipu3-lsc-prepare_prepare_gain_0_grounding",
+          "ipu3-lsc-prepare_prepare_black-level_0",
+          "ipu3-lsc-prepare_prepare_black-level_0_grounding",
+          "ipu3-lsc-prepare_prepare_black-level_1",
+          "ipu3-lsc-prepare_prepare_black-level_1_grounding",
+          "ipu3-lsc-prepare_prepare_lut_0",
+          "ipu3-lsc-prepare_prepare_lut_0_grounding",
+          "ipu3-lsc-prepare_prepare_lut-channels_0",
+          "ipu3-lsc-prepare_prepare_lut-channels_0_grounding",
+          "ipu3-lsc-prepare_prepare_remember_0",
+          "ipu3-lsc-prepare_prepare_remember_0_grounding",
+          "ipu3-lsc-prepare_prepare_remember-quantized_0",
+          "ipu3-lsc-prepare_prepare_remember-quantized_0_grounding"
+        ],
+        "validated_prefix_unnecessary_generation_calls": 0,
+        "body_sha256": "b1548daa76202b5cb2623dc91e1626a08d38e93e95f93b4cc8bd4afd618dbd7f"
+      },
+      {
+        "step": "repeat",
+        "status": "passed",
+        "error": null,
+        "calls": 0,
+        "seconds": 10.014571200008504,
+        "new_receipt_tags": [],
+        "validated_prefix_unnecessary_generation_calls": 0,
+        "body_sha256": "b1548daa76202b5cb2623dc91e1626a08d38e93e95f93b4cc8bd4afd618dbd7f"
+      }
+    ],
+    "prefix_receipt_tags": [
+      "ipu3-lsc-prepare_prepare_grid_0",
+      "ipu3-lsc-prepare_prepare_grid_0_grounding",
+      "ipu3-lsc-prepare_prepare_enable_0",
+      "ipu3-lsc-prepare_prepare_enable_0_grounding",
+      "ipu3-lsc-prepare_prepare_upload_0",
+      "ipu3-lsc-prepare_prepare_upload_0_grounding",
+      "ipu3-lsc-prepare_prepare_disabled-exit_0",
+      "ipu3-lsc-prepare_prepare_disabled-exit_1",
+      "ipu3-lsc-prepare_prepare_disabled-exit_1_grounding",
+      "ipu3-lsc-prepare_prepare_ct-threshold_0",
+      "ipu3-lsc-prepare_prepare_ct-threshold_0_grounding",
+      "ipu3-lsc-prepare_prepare_disabled-no-update_0",
+      "ipu3-lsc-prepare_prepare_disabled-no-update_0_grounding"
+    ]
+  }
+}
