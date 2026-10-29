@@ -90,10 +90,9 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         verify_site(stage, manifest=False)
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
-        if cfg.raw.get('products', {}).get('file'):
-            from .product_context import input_paths
-            for index, path in enumerate(input_paths(cfg)):
-                inputs[f'products/{index}'] = digest(path)
+        from .product_context import input_paths
+        for index, path in enumerate(input_paths(cfg)):
+            inputs[f'products/{index}'] = digest(path)
         inputs["configuration"] = hashlib.sha256(json.dumps(cfg.raw, sort_keys=True, default=str).encode()).hexdigest()
         if cfg.paths.get('consistency_file'):
             inputs['consistency_configuration'] = digest(cfg.paths['consistency_file'])

@@ -61,7 +61,8 @@ def _scope(cfg, target, options, seen):
             for offset in range(0, len(text), width - min(500, width // 2)):
                 key = hashlib.sha256(json.dumps([target, sec["id"], file, offset, width,
                                                 options.get("revision", 1), sec.get('reader_scope'),
-                                                [t.get('_product_context') for t in sec.get('design_topics', [])]]).encode()).hexdigest()
+                                                [t['_product_context'] for t in sec.get('design_topics', [])
+                                                 if t.get('_product_context')]]).encode()).hexdigest()
                 if key not in seen:
                     return key, sec, {"file": file, "offset": offset, "total_chars": len(text),
                                       "text": text[offset:offset + width]}
@@ -279,9 +280,17 @@ def _stage(cfg, target, data, work):
     return mappings
 
 
-def _promote(path, state):
+def _review_identity(cfg, identity):
+    return hashlib.sha256((identity + json.dumps(cfg.sections(), sort_keys=True)).encode()).hexdigest()
+
+
+def _promote(cfg, path, state):
     pending = state["pending"]
     # Check the entire transaction before changing any authoritative input.
+    for name, expected in pending.get('input_guard', {}).items():
+        source = Path(name)
+        if not source.is_file() or digest(source) != expected:
+            raise RuntimeError('누락 보완의 제품 입력 파일이 변경됐습니다. 기록을 확인하세요.')
     for entry in pending["files"]:
         src, dst = Path(entry["staged"]), Path(entry["target"])
         if digest(src) != entry["new"] or (digest(dst) if dst.exists() else None) not in {entry["old"], entry["new"]}:
@@ -297,6 +306,7 @@ def _promote(path, state):
     for key in ('input_identity', 'scope_decision', 'reviewed_scope', 'unreviewed_scope'):
         if key in pending:
             result[key] = pending[key]
+    result['input_identity'] = _review_identity(cfg, pending['identity'])
     state["seen"][pending["key"]] = result
     state["jobs"][pending["job"]] = result
     state.pop("pending")
@@ -309,9 +319,10 @@ def run(cfg, target, job_id):
     prepare(cfg)
     options = cfg.automation.idle_review
     revision = options.get("revision", 1)
-    identity = hashlib.sha256(json.dumps({"target": target, "raw": cfg.raw, 'sections': cfg.sections(),
+    identity = hashlib.sha256(json.dumps({"target": target, "raw": cfg.raw,
         "paths": [str(p.resolve()) for p in (cfg.source_root, cfg.sections_file, cfg.scenarios_file,
                                               cfg.facts_path, cfg.sdd_dir)]}, sort_keys=True).encode()).hexdigest()
+    input_identity = _review_identity(cfg, identity)
     path = cfg.build_dir / "idle-review-state.json"
     state = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"schema": 1, "seen": {}, "jobs": {}}
     if state.get("schema") != 1:
@@ -321,19 +332,19 @@ def run(cfg, target, job_id):
             raise RuntimeError("진행 중인 누락 보완을 기존 작업으로 먼저 재개하세요.")
         if state["pending"]["identity"] != identity:
             raise RuntimeError("진행 중인 누락 보완의 설정이 바뀌었습니다. 기존 설정으로 재개하세요.")
-        return _promote(path, state)
+        return _promote(cfg, path, state)
     if job_id in state["jobs"]:
         prior = state['jobs'][job_id]
         scoped = any(s.get('reader_scope') or any(t.get('_product_context') for t in s.get('design_topics', []))
                      for s in cfg.sections())
-        if not scoped or prior.get('input_identity') == identity:
+        if not scoped or prior.get('input_identity') == input_identity:
             return prior
     if KnowledgeModel.load(cfg.facts_path).meta.get("source_commit") != target:
         raise ValueError("누락 점검의 facts와 대상 커밋이 다릅니다.")
     scope = _scope(cfg, target, options, state["seen"])
     if scope is None:
         result = {"status": "exhausted", "reason": "설정한 범위의 미점검 소스 창이 없습니다.",
-                  'input_identity': identity, 'reviewed_windows': len(state['seen']),
+                  'input_identity': input_identity, 'reviewed_windows': len(state['seen']),
                   'unreviewed_scope': 'Files outside configured watch patterns and real reader task performance.'}
         state["jobs"][job_id] = result
         save(path, state)
@@ -358,7 +369,9 @@ def run(cfg, target, job_id):
             if _snapshot(cfg) != before:
                 raise RuntimeError("Hermes 점검 중 원본 설정·facts·원고가 변경됐습니다.")
             state["pending"] = {"job": job_id, "key": key, "identity": identity,
-                'input_identity': identity, 'scope_decision': data.get('scope_decision'),
+                'input_identity': input_identity, 'scope_decision': data.get('scope_decision'),
+                'input_guard': {name: value for name, value in before.items()
+                                if name not in {str(dst.resolve()) for _, dst in mappings}},
                 'reviewed_scope': {'file': excerpt['file'], 'offset': excerpt['offset'],
                                    'chars': len(excerpt['text']), 'total_chars': excerpt['total_chars']},
                 'unreviewed_scope': 'Other windows, other files and real reader task performance.',
@@ -367,7 +380,7 @@ def run(cfg, target, job_id):
                 "files": [{"staged": str(src.resolve()), "target": str(dst.resolve()), "new": digest(src),
                            "old": before.get(str(dst.resolve()))} for src, dst in mappings]}
             save(path, state)
-            return _promote(path, state)
+            return _promote(cfg, path, state)
     except (ValueError, RuntimeError, OSError, subprocess.SubprocessError) as exc:
         if state.get("pending"):
             raise
@@ -379,7 +392,7 @@ def run(cfg, target, job_id):
     result['reviewed_scope'] = {'file': excerpt['file'], 'offset': excerpt['offset'],
                                 'chars': len(excerpt['text']), 'total_chars': excerpt['total_chars']}
     result['unreviewed_scope'] = 'Other windows, other files and real reader task performance.'
-    result['input_identity'] = identity
+    result['input_identity'] = input_identity
     result.update(section=section["id"], file=excerpt["file"], offset=excerpt["offset"], audit=str(work),
                   target=target, revision=revision)
     state["seen"][key] = result

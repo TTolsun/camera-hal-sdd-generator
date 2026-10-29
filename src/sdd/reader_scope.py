@@ -124,9 +124,7 @@ def candidate(section, data):
     return assessment
 
 
-def validate_locations(sections):
-    from .config import section_output
-    outputs = {section_output(s) for s in sections}
+def validate_locations(sections, outputs):
     for section in sections:
         if not section.get('reader_scope'):
             continue

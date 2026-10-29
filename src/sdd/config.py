@@ -326,7 +326,8 @@ class Config:
         data = _load_yaml(self.sections_file)
         from .product_context import bind
         from .reader_scope import validate_locations
-        return validate_locations(bind(self, list(data.get("sections", []) or [])))
+        sections = bind(self, list(data.get("sections", []) or []))
+        return validate_locations(sections, {section_output(s) for s in sections})
 
     def scenarios(self) -> list[dict[str, Any]]:
         data = _load_yaml(self.scenarios_file)
