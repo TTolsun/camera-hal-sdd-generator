@@ -1,0 +1,90 @@
+{
+  "source_commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "manuscript_sha256": "3beca6ad2d55eb163270d2c5ed942a2d04ca4e29e75fac43fb3a8c760cbe4cd8",
+  "actual_statements": [
+    {
+      "text": "`libcamera`는 Linux, Android, ChromeOS를 대상으로 하는 오픈 소스 복합 카메라 지원 라이브러리입니다. Linux 커널 장치 드라이버와 연결하고 개발자에게 API를 제공해 Linux 시스템에서 복합 카메라로 이미지를 캡처하는 작업의 복잡함을 줄입니다.",
+      "evidence": [
+        "what"
+      ],
+      "covers": [
+        "value"
+      ],
+      "kind": "behavior",
+      "quote": "libcamera is an open source complex camera support library for Linux, Android\nand ChromeOS. The library interfaces with Linux kernel device drivers and\nprovides an intuitive API to developers in order to simplify the complexity\ninvolved in capturing images from complex cameras on Linux systems.",
+      "part_id": "what"
+    },
+    {
+      "text": "`libcamera`는 Linux 기반 시스템에 완전한 카메라 스택을 제공합니다. 이 스택은 커널 API를 통해 카메라에서 원하는 결과를 얻는 데 필요한 하드웨어 구성과 이미지 제어 알고리즘을 추상화하여, 개발자가 이 작업을 간단하고 일관된 방식으로 다루게 합니다.",
+      "evidence": [
+        "product-official-stack"
+      ],
+      "covers": [
+        "value"
+      ],
+      "kind": "behavior",
+      "quote": "libcamera provides a complete camera stack for Linux-based systems to abstract\nthe configuration of hardware and image control algorithms required to obtain\ndesirable results from the camera through the kernel's APIs, reducing those\noperations to a simple and consistent method for developers. In short instead of\nhaving to deal with this:",
+      "part_id": "what"
+    },
+    {
+      "text": "가장 아래 계층은 카메라 하드웨어를 제어하고 사용자 공간에 저수준 인터페이스를 제공합니다. 커널 드라이버는 `Media Controller API`, `V4L2 Video Device API`, `V4L2 Subdev API`로 이루어진 Linux 커널의 `V4L2` API 계열을 통해 이 인터페이스를 제공합니다.",
+      "evidence": [
+        "stack"
+      ],
+      "covers": [
+        "value"
+      ],
+      "kind": "behavior",
+      "quote": "* The kernel drivers control the camera hardware and expose a\n  low-level interface to userspace through the Linux kernel V4L2\n  family of APIs (Media Controller API, V4L2 Video Device API and\n  V4L2 Subdev API).",
+      "part_id": "layers"
+    },
+    {
+      "text": "두 번째 계층은 카메라 장치를 제어하고 상위 계층이 사용할 인터페이스를 제공합니다. `libcamera` 프레임워크의 핵심 구성 요소인 `libcamera`가 장치 제어를 맡고 네이티브 C++ API를 제공합니다. 선택적인 언어 바인딩으로 다른 프로그래밍 언어에서도 `libcamera`와 연동할 수 있습니다. Linux 기반 시스템에서 `libcamera`는 커널 API를 통한 하드웨어 설정과 이미지 제어 알고리즘을 추상화해 개발자에게 단순하고 일관된 방법을 제공합니다.",
+      "evidence": [
+        "stack",
+        "product-official-stack"
+      ],
+      "covers": [
+        "value"
+      ],
+      "kind": "behavior",
+      "quote": "* The libcamera framework is the core part of the stack. It\n  handles all control of the camera devices in its core component,\n  libcamera, and exposes a native C++ API to upper layers. Optional\n  language bindings allow interfacing to libcamera from other\n  programming languages.",
+      "part_id": "layers"
+    },
+    {
+      "text": "세 번째 계층은 다른 프레임워크에서 `libcamera`와 연동하는 구성 요소를 가리킵니다. 이 계층을 `libcamera` adaptation이라고 하며, 예로 `V4L2` 호환 계층, `gstreamer`의 `libcamera` 요소, `libcamera` 기반 Android 카메라 HAL 구현이 있습니다.",
+      "evidence": [
+        "stack"
+      ],
+      "covers": [
+        "value"
+      ],
+      "kind": "behavior",
+      "quote": "* The libcamera adaptation is an umbrella term designating the\n  components that interface to libcamera in other frameworks.\n  Notable examples are a V4L2 compatibility layer, a gstreamer\n  libcamera element, and an Android camera HAL implementation based\n  on libcamera.",
+      "part_id": "layers"
+    },
+    {
+      "text": "가장 위 계층은 `libcamera` 프레임워크나 `libcamera` adaptation을 기반으로 동작하는 애플리케이션과 상위 프레임워크입니다. 이 계층은 `libcamera` 프로젝트의 범위 밖에 있습니다.",
+      "evidence": [
+        "stack"
+      ],
+      "covers": [
+        "value"
+      ],
+      "kind": "behavior",
+      "quote": "* The applications and upper level frameworks are based on the\n  libcamera framework or libcamera adaptation, and are outside of\n  the scope of the libcamera project.",
+      "part_id": "layers"
+    }
+  ],
+  "independent_review": {
+    "classification": "avoidable-duplicate",
+    "reason": "첫 절의 둘째 문단이 커널 API를 통한 하드웨어 구성과 이미지 제어 알고리즘의 추상화 및 개발자에게 제공하는 단순하고 일관된 방법을 이미 설명합니다. 계층 질문은 각 계층의 역할과 기술 이름을 요구하며, 해당 절의 나머지 문장은 장치 제어, 네이티브 C++ API와 선택적 언어 바인딩을 설명합니다. 따라서 마지막 추상화 문장은 별도 독자 과업에 필요한 반복이 아닙니다.",
+    "necessary_contracts": [
+      "첫 절에서 제품의 정의와 대상 및 하드웨어 구성과 이미지 제어 알고리즘을 다루는 작업의 변화를 설명해야 합니다.",
+      "계층 절에서 네 계층을 아래에서 위 순서로 설명하고 각 계층의 역할과 기술 이름을 연결해야 합니다.",
+      "프레임워크 계층의 장치 제어, 네이티브 C++ API와 선택적 언어 바인딩 설명을 유지해야 합니다."
+    ],
+    "recommendation": "scope-question-and-regenerate"
+  },
+  "note": "Actual source212 candidate and actual independent CLI scope verdict. Positive contrast is constructed only inside the regression test, never used as a generated manuscript."
+}
