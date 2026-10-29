@@ -45,6 +45,10 @@ def test_combined_questions_preserve_all_unique_argument_and_completion_contract
     assert completion['sources'] == ['completion', 'notification']
     assert completion['answer_contract']['basis'] == 'contract'
     assert all('notification' != p['id'] for p in parts('vendor-integration', 'request'))
+    buffer = next(p for p in parts('vendor-integration', 'request') if p['id'] == 'buffer')
+    assert buffer['sources'] == ['buffer', 'completion-context']
+    assert ['CameraManager'] in buffer['answer_contract']['required_terms']
+    assert all('completion-context' != p['id'] for p in parts('vendor-integration', 'request'))
     enable = next(p for p in parts('ipu3-lsc-prepare', 'prepare') if p['id'] == 'enable')
     assert enable['sources'] == ['enable-branch']
     assert enable['answer_contract']['required_terms'] == [['shd_enable'], ['enabled'], ['반환', 'return']]
