@@ -1683,9 +1683,9 @@ sections:
         - - prepared
         - - doQueueRequests
     - id: waiting
-      question: PipelineHandler::queueRequest가 요청을 waitingRequests_에 추가한 뒤 prepare에 시간
-        인자 300ms를 전달하는 순서를 한 문장으로 연결하세요. 큐 추가를 다음 문장에서 되풀이하거나 같은 수치를 풀어 쓰거나 고정 지연으로 해석하지
-        마세요.
+      question: PipelineHandler::queueRequest가 요청이 가리키는 카메라의 내부 waitingRequests_에 요청을
+        추가한 뒤 prepare에 시간 인자 300ms를 전달하는 순서를 한 문장으로 연결하세요. 카메라의 큐라는 소유 범위를 생략하지 말고 큐 추가나
+        같은 수치를 되풀이하거나 고정 지연으로 해석하지 마세요.
       sources:
       - waiting-call
       - waiting-code
@@ -1698,6 +1698,7 @@ sections:
           - 300 ms
           - 300밀리초
           - 300 밀리초
+        - - 카메라
       max_statements: 1
     - id: fences
       question: Request::Private::prepare에서 획득 펜스 대기와 선택적 timeout 인자가 하는 일을 설명하세요.
