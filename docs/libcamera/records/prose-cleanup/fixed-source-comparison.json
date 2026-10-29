@@ -1,0 +1,39 @@
+{
+  "scope": "Structured generated answer text only, excluding rendered layout, code quotes and audit metadata.",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "pages": [
+    {
+      "page": "ipa.md",
+      "answer_paragraphs_before": 35,
+      "answer_paragraphs_after": 31,
+      "chars_before": 6797,
+      "chars_after": 5672,
+      "manuscript_sha256": "9c612a73d9d42aa4a7a373614d8fbd0d1c730580c4f59c0b6d164366f4ab725e"
+    },
+    {
+      "page": "ipu3-lsc-flow.md",
+      "answer_paragraphs_before": 15,
+      "answer_paragraphs_after": 11,
+      "chars_before": 1708,
+      "chars_after": 1439,
+      "manuscript_sha256": "5f834efeaf46cbcf685675a13b2dd8bc7af8303db815e718e3528c89ad9cf520"
+    },
+    {
+      "page": "team-overview.md",
+      "answer_paragraphs_before": 10,
+      "answer_paragraphs_after": 10,
+      "chars_before": 2145,
+      "chars_after": 1888,
+      "manuscript_sha256": "00030dde1e3f98bf8fab7d2aebdbc19d016d08e322ba52a3eb9dad2da57d1bae"
+    },
+    {
+      "page": "framebuffer-allocator.md",
+      "answer_paragraphs_before": 6,
+      "answer_paragraphs_after": 6,
+      "chars_before": 621,
+      "chars_after": 596,
+      "manuscript_sha256": "d755734610f5376abc3ac80911aa4eacdadca86d6b436cca265f7b7ec53de993"
+    }
+  ],
+  "human_review": "pending"
+}

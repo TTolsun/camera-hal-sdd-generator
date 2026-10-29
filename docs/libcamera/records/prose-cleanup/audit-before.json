@@ -1,0 +1,1257 @@
+{
+  "schema": 1,
+  "scope": "Published e9322a2: every reader paragraph and list item on all 60 Korean/English pages; folded evidence, tables, figures and code excluded.",
+  "model": "gpt-6.1-terra",
+  "reasoning_effort": "high",
+  "runner": "codex",
+  "human_review": "pending",
+  "pages": [
+    {
+      "page": "component-index.html",
+      "decision": "keep",
+      "reason": "짧은 안내와 추출 사실의 범위가 필요하며 영문판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "en/component-index.html",
+      "decision": "keep",
+      "reason": "짧은 안내와 추출 사실의 범위가 필요하며 한국어판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "en/index.html",
+      "decision": "keep",
+      "reason": "독자별 경로와 문서 사용법이 각각 다른 목적을 가지며 한국어판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "en/onboarding.html",
+      "decision": "keep",
+      "reason": "실행 명령과 요청 완료 계약이 서로 다른 정보를 제공하며 한국어판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "en/overview.html",
+      "decision": "keep",
+      "reason": "개요의 계약과 그림 설명은 독립적으로 읽는 데 유용하며 한국어판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "en/team-overview.html",
+      "decision": "change",
+      "reason": "계층 설명 뒤에 적응 계층의 정의·예시와 프로젝트 범위가 반복됩니다.",
+      "findings": [
+        {
+          "units": [
+            "p007",
+            "p010",
+            "p011"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "p010은 p007의 적응 계층 정의와 예시를 다시 설명하고, p011은 p007의 애플리케이션 범위 경계를 반복합니다.",
+          "suggestion": "p007의 계층 설명을 유지하고 p010과 p011에서는 이미 설명한 부분을 짧게 연결하세요.",
+          "preserve": [
+            "적응 계층의 V4L2·gstreamer·Android HAL 예시",
+            "적응 구성 요소의 저장소 위치와 이동 가능성",
+            "애플리케이션과 상위 프레임워크의 프로젝트 범위 경계",
+            "장치별 Pipeline Handler 기여 책임",
+            "IPA 제공 및 라이선스 조건"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/vendor-assurance.html",
+      "decision": "keep",
+      "reason": "검증 결과별 조건과 성능 측정 범위가 고유하며 한국어판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "en/vendor-integration.html",
+      "decision": "change",
+      "reason": "설정, 완료, 모듈 선택과 정지 설명에 같은 계약이나 순서가 반복됩니다.",
+      "findings": [
+        {
+          "units": [
+            "p007"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "configure() 구현자의 추가 검증 금지가 연속해서 두 번 나옵니다.",
+          "suggestion": "금지 사항을 한 번만 설명하고 사용자 정의 필드에 관한 문장과 결합하세요.",
+          "preserve": [
+            "generateConfiguration()의 카메라 상태 변경 금지",
+            "validate()에 의한 사전 검증 보장",
+            "파생 CameraConfiguration의 사용자 정의 필드에 의존할 수 있음"
+          ]
+        },
+        {
+          "units": [
+            "p009",
+            "p010"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "p010에서 completeRequest()의 명시적 호출 의무가 두 번 나오고 completeBuffer()의 스레드도 p009에서 반복됩니다.",
+          "suggestion": "p010에서는 마지막 버퍼 완료와 요청 완료의 차이를 한 번 설명하고 스레드 설명은 p009에 두세요.",
+          "preserve": [
+            "마지막 버퍼 완료 후에도 요청이 자동 완료되지 않음",
+            "핸들러의 completeRequest() 호출 의무",
+            "completeBuffer()의 CameraManager 스레드 조건과 버퍼 추적 갱신"
+          ]
+        },
+        {
+          "units": [
+            "p011",
+            "p012"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "첫 번째 일치 모듈을 반환하고 검색이 끝난다는 설명이 겹칩니다.",
+          "suggestion": "첫 일치 반환을 한 번 설명하고 호출 인자와 실패·프록시 조건을 이어서 정리하세요.",
+          "preserve": [
+            "name, minVersion, maxVersion 인자 순서",
+            "첫 일치 모듈의 module.get() 반환",
+            "불일치 시 module과 createIPA의 nullptr 반환",
+            "서명 유효성에 따른 Threaded 및 Isolated 프록시 선택"
+          ]
+        },
+        {
+          "units": [
+            "p014",
+            "p015"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "대기 요청을 옮기고 stopDevice() 뒤에 취소해 doQueueRequest()로 처리하는 순서가 반복됩니다.",
+          "suggestion": "중복 순서를 한 번 기술하고 각 문단의 추가 세부사항을 합치세요.",
+          "preserve": [
+            "waitingRequests.swap(data->waitingRequests_)와 재큐 방지 목적",
+            "stopDevice()의 즉시 중단 및 미완료 요청 오류 완료 의무",
+            "대기 요청의 순서대로 취소와 doQueueRequest() 처리",
+            "순번 부여 및 queuedRequests_ 임시 추가와 completeRequest() 완료",
+            "두 큐의 ASSERT 및 requestSequence_ 초기화"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/vendor-overview.html",
+      "decision": "change",
+      "reason": "장치 요청 한도에 관한 대기 큐 설명이 한 문단 안에서 반복됩니다.",
+      "findings": [
+        {
+          "units": [
+            "p015"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "한도를 넘는 요청이 내부 큐에서 기다렸다가 나중에 하드웨어에 전달된다는 내용이 두 문장에 중복됩니다.",
+          "suggestion": "대기와 후속 전달을 한 번으로 합치세요.",
+          "preserve": [
+            "maxQueuedRequestsDevice 기본값 32",
+            "maxQueuedRequestsDevice_의 장치 요청 수 제한",
+            "한도를 넘는 요청의 내부 대기와 이후 하드웨어 전달"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "index.html",
+      "decision": "keep",
+      "reason": "독자별 경로와 문서 사용법이 각각 다른 목적을 가지며 영문판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "onboarding.html",
+      "decision": "keep",
+      "reason": "실행 명령과 요청 완료 계약이 서로 다른 정보를 제공하며 영문판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "overview.html",
+      "decision": "keep",
+      "reason": "개요의 계약과 그림 설명은 독립적으로 읽는 데 유용하며 영문판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "team-overview.html",
+      "decision": "change",
+      "reason": "계층 설명 뒤에 적응 계층의 정의·예시와 프로젝트 범위가 반복됩니다.",
+      "findings": [
+        {
+          "units": [
+            "p007",
+            "p010",
+            "p011"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "p010은 p007의 적응 계층 정의와 예시를 다시 설명하고, p011은 p007의 애플리케이션 범위 경계를 반복합니다.",
+          "suggestion": "p007의 계층 설명을 유지하고 p010과 p011에서는 이미 설명한 부분을 짧게 연결하세요.",
+          "preserve": [
+            "적응 계층의 V4L2·gstreamer·Android HAL 예시",
+            "적응 구성 요소의 저장소 위치와 이동 가능성",
+            "애플리케이션과 상위 프레임워크의 프로젝트 범위 경계",
+            "장치별 Pipeline Handler 기여 책임",
+            "IPA 제공 및 라이선스 조건"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "vendor-assurance.html",
+      "decision": "keep",
+      "reason": "검증 결과별 조건과 성능 측정 범위가 고유하며 영문판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "vendor-integration.html",
+      "decision": "change",
+      "reason": "영문판과 마찬가지로 설정, 완료, 모듈 선택과 정지 설명에 반복이 있습니다.",
+      "findings": [
+        {
+          "units": [
+            "p007"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "configure() 구현자의 추가 검증 금지가 연속해서 두 번 나옵니다.",
+          "suggestion": "금지 사항을 한 번만 설명하고 사용자 정의 필드에 관한 문장과 결합하세요.",
+          "preserve": [
+            "generateConfiguration()의 카메라 상태 변경 금지",
+            "validate()에 의한 사전 검증 보장",
+            "파생 CameraConfiguration의 사용자 정의 필드에 의존할 수 있음"
+          ]
+        },
+        {
+          "units": [
+            "p009",
+            "p010"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "p010에서 completeRequest()의 명시적 호출 의무가 두 번 나오고 completeBuffer()의 스레드도 p009에서 반복됩니다.",
+          "suggestion": "p010에서는 마지막 버퍼 완료와 요청 완료의 차이를 한 번 설명하고 스레드 설명은 p009에 두세요.",
+          "preserve": [
+            "마지막 버퍼 완료 후에도 요청이 자동 완료되지 않음",
+            "핸들러의 completeRequest() 호출 의무",
+            "completeBuffer()의 CameraManager 스레드 조건과 버퍼 추적 갱신"
+          ]
+        },
+        {
+          "units": [
+            "p011",
+            "p012"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "첫 번째 일치 모듈을 반환하고 검색이 끝난다는 설명이 겹칩니다.",
+          "suggestion": "첫 일치 반환을 한 번 설명하고 호출 인자와 실패·프록시 조건을 이어서 정리하세요.",
+          "preserve": [
+            "name, minVersion, maxVersion 인자 순서",
+            "첫 일치 모듈의 module.get() 반환",
+            "불일치 시 module과 createIPA의 nullptr 반환",
+            "서명 유효성에 따른 Threaded 및 Isolated 프록시 선택"
+          ]
+        },
+        {
+          "units": [
+            "p014",
+            "p015"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "대기 요청을 옮기고 stopDevice() 뒤에 취소해 doQueueRequest()로 처리하는 순서가 반복됩니다.",
+          "suggestion": "중복 순서를 한 번 기술하고 각 문단의 추가 세부사항을 합치세요.",
+          "preserve": [
+            "waitingRequests.swap(data->waitingRequests_)와 재큐 방지 목적",
+            "stopDevice()의 즉시 중단 및 미완료 요청 오류 완료 의무",
+            "대기 요청의 순서대로 취소와 doQueueRequest() 처리",
+            "순번 부여 및 queuedRequests_ 임시 추가와 completeRequest() 완료",
+            "두 큐의 ASSERT 및 requestSequence_ 초기화"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "vendor-overview.html",
+      "decision": "change",
+      "reason": "장치 요청 한도에 관한 대기 큐 설명이 한 문단 안에서 반복되며 영문판에도 같은 반복이 있습니다.",
+      "findings": [
+        {
+          "units": [
+            "p015"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "한도를 넘는 요청이 내부 큐에서 기다렸다가 나중에 하드웨어에 전달된다는 내용이 두 문장에 중복됩니다.",
+          "suggestion": "대기와 후속 전달을 한 번으로 합치세요.",
+          "preserve": [
+            "maxQueuedRequestsDevice 기본값 32",
+            "maxQueuedRequestsDevice_의 장치 요청 수 제한",
+            "한도를 넘는 요청의 내부 대기와 이후 하드웨어 전달"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "camera-model.html",
+      "decision": "keep",
+      "reason": "상태·오류·동기화 설명은 서로 다른 조건과 책임을 다루며, 짧은 안내와 도식 설명도 독립적인 맥락에 필요합니다. 영문판과 내용이 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "camera-requests.html",
+      "decision": "change",
+      "reason": "요청 검사와 재사용 설명에 직접적인 반복이 있습니다. 영문판에도 같은 반복이 있습니다.",
+      "findings": [
+        {
+          "units": [
+            "p004",
+            "p005"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "버퍼가 없는 요청의 거부와 다른 카메라의 요청에 대한 -EXDEV가 연이어 반복됩니다.",
+          "suggestion": "공통 설명을 한 번으로 합치고 검사 순서를 유지하세요.",
+          "preserve": [
+            "제출 전 버퍼 하나 이상",
+            "다른 카메라의 요청에 대한 -EXDEV",
+            "접근·카메라·상태·제어·빈 버퍼 검사 순서와 반환값"
+          ]
+        },
+        {
+          "units": [
+            "p003",
+            "p007"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "버퍼를 완료 콜백까지 유효하게 유지할 책임이 두 번 설명됩니다.",
+          "suggestion": "상세 책임은 한곳에 두고 소유권 절에서는 짧게 연결하세요.",
+          "preserve": [
+            "스트림당 버퍼 하나와 -EEXIST",
+            "완료 콜백까지의 버퍼 유효성",
+            "Fence 성공·실패 시 소유권과 변경 여부"
+          ]
+        },
+        {
+          "units": [
+            "p010"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "ReuseBuffers에서 각 버퍼에 현재 요청을 설정하는 동작이 두 문장에 반복됩니다.",
+          "suggestion": "요청 설정과 pending_ 추가를 한 번의 순서 설명으로 합치세요.",
+          "preserve": [
+            "타임아웃 후 펜스가 버퍼에 남는 조건",
+            "다른 요청에서 재사용 전 releaseFence()",
+            "ReuseBuffers일 때 setRequest(this) 후 pending_ 추가"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/camera-model.html",
+      "decision": "keep",
+      "reason": "The state, error, and synchronization passages cover distinct conditions and responsibilities. The English content corresponds to the Korean version.",
+      "findings": []
+    },
+    {
+      "page": "en/camera-requests.html",
+      "decision": "change",
+      "reason": "The same direct repetitions occur in the Korean and English versions.",
+      "findings": [
+        {
+          "units": [
+            "p004",
+            "p005"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The empty-buffer rejection and -EXDEV for a request from another camera are repeated.",
+          "suggestion": "Consolidate those statements while retaining the check order.",
+          "preserve": [
+            "At least one buffer before submission",
+            "-EXDEV for a request from another camera",
+            "Access, camera, status, controls, and empty-buffer checks and their returns"
+          ]
+        },
+        {
+          "units": [
+            "p003",
+            "p007"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The buffer-validity responsibility is stated twice.",
+          "suggestion": "Keep the detailed obligation once and use a short ownership reminder in the other passage.",
+          "preserve": [
+            "One buffer per stream and -EEXIST",
+            "Buffer validity until the completion callback",
+            "Fence ownership and unchanged state on failure"
+          ]
+        },
+        {
+          "units": [
+            "p010"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "Setting the current request on each reused buffer is stated twice.",
+          "suggestion": "Combine the request association and pending_ insertion into one ordered explanation.",
+          "preserve": [
+            "Timeout and fence remaining on the buffer",
+            "releaseFence() before reuse in another request",
+            "setRequest(this) followed by insertion into pending_ when ReuseBuffers is set"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/framebuffer-allocator.html",
+      "decision": "change",
+      "reason": "The allocation return description is unnecessarily wordy in both language versions.",
+      "findings": [
+        {
+          "units": [
+            "p003"
+          ],
+          "kind": "verbose",
+          "reason": "The final sentence explains the location and sign-independent return of ret at unnecessary length.",
+          "suggestion": "State concisely that exportFrameBuffers()'s return value is returned after negative-result cleanup.",
+          "preserve": [
+            "Duplicate insertion logs an error and returns -EBUSY",
+            "A negative export result removes the corresponding buffers_ entry",
+            "The export result is returned regardless of sign"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/pipeline-handler.html",
+      "decision": "change",
+      "reason": "The IPU3 minimum-height calculation is repeated in adjacent paragraphs in both language versions.",
+      "findings": [
+        {
+          "units": [
+            "p017",
+            "p018"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The minIfHeight formula and lower search boundary are restated.",
+          "suggestion": "Keep the formula and search boundaries once, then connect the height guard and calculateBDS() detail to them.",
+          "preserve": [
+            "Both width and height formulas",
+            "Search loop order for both searches",
+            "Empty configuration below kIFMaxCropHeight and the wrap explanation",
+            "Aligned ifHeight boundary and calculateBDS() call"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/pipeline-requests.html",
+      "decision": "change",
+      "reason": "A few implementation explanations repeat wording without adding a distinct contract; the Korean version has the same issues.",
+      "findings": [
+        {
+          "units": [
+            "p002",
+            "p007"
+          ],
+          "kind": "verbose",
+          "reason": "The 300 ms unit conversion and explanation of postfix increment repeat information already conveyed.",
+          "suggestion": "State the timeout once and combine the sequence assignment with its increment.",
+          "preserve": [
+            "prepare receives 300 ms",
+            "sequence_ receives the pre-increment requestSequence_ value and requestSequence_ increments",
+            "Cancelled-request and device-submission branches"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/request-diagnosis.html",
+      "decision": "change",
+      "reason": "Several adjacent investigation steps repeat the same checks; the Korean version has corresponding repetitions.",
+      "findings": [
+        {
+          "units": [
+            "p005",
+            "p006"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "Both passages ask to check the same disconnected condition and -ENODEV result.",
+          "suggestion": "Combine the investigation steps.",
+          "preserve": [
+            "Observe allowDisconnected and disconnected_",
+            "Return -ENODEV before state comparison",
+            "Inclusive range, 0 result, ASSERT, log and -EACCES order"
+          ]
+        },
+        {
+          "units": [
+            "p007",
+            "p008"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The Adjusted consequences and caller's duty to inspect the configuration are repeated.",
+          "suggestion": "Explain Adjusted once and retain the separate Camera::configure validation check.",
+          "preserve": [
+            "Adjusted means the configuration is valid after adjustment",
+            "Any stream parameters may change and stream configurations may be removed",
+            "Inspect the original result and adjusted configuration",
+            "Check -EINVAL when validate() differs from Valid"
+          ]
+        },
+        {
+          "units": [
+            "p014"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The leading request's prepared_ check after the queue-limit comparison is described twice.",
+          "suggestion": "Combine the observations and both prepared_ branches.",
+          "preserve": [
+            "Pending-request and successful-submission context",
+            "Equality with maxQueuedRequestsDevice_ causes loop exit",
+            "False exits; true removes the leading request and calls doQueueRequest"
+          ]
+        },
+        {
+          "units": [
+            "p015",
+            "p016"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The cancelled_ and queueRequestDevice return branches are repeated.",
+          "suggestion": "Keep one ordered investigation step.",
+          "preserve": [
+            "queuedRequests_ insertion and sequence_ assignment",
+            "Cancelled request completes and returns",
+            "Nonzero queueRequestDevice result leads to cancelRequest"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/request-lifecycle.html",
+      "decision": "change",
+      "reason": "The overview repeats several statements internally and reproduces detail available on focused pages. The Korean version has the same issues.",
+      "findings": [
+        {
+          "units": [
+            "p011",
+            "p012",
+            "p017",
+            "p027"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "Each passage repeats a fact: explicit request completion, the pending-head break, reused-buffer association, or the disconnect TODO.",
+          "suggestion": "State each fact once, retaining the additional actions and boundaries in its passage.",
+          "preserve": [
+            "queueRequestDevice error return and CameraManager thread for completeBuffer",
+            "Explicit completeRequest after the last buffer",
+            "Pending-head break, buffer assertion, removal and ordered return",
+            "ReuseBuffers association followed by pending_ insertion, clear behavior and RequestPending",
+            "disconnect signal and pending-request TODO during running disconnection"
+          ]
+        },
+        {
+          "units": [
+            "p020",
+            "p023",
+            "p024",
+            "p025",
+            "p030"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The stop branches, local-queue handling, and empty-queue investigation points recur in detail.",
+          "suggestion": "Consolidate repeated observations while keeping the diagram's stop/disconnection boundary and the distinct diagnostic checkpoints.",
+          "preserve": [
+            "Not-running 0 and negative access-check return",
+            "CameraStopping before blocking PipelineHandler::stop and eventual CameraConfigured",
+            "stopDevice entry and return, stall investigation, cancellation and doQueueRequest argument",
+            "Both queue assertions before requestSequence_ reset"
+          ]
+        },
+        {
+          "units": [
+            "p013",
+            "p016",
+            "p017",
+            "p018",
+            "p019"
+          ],
+          "kind": "cross-page-repeat",
+          "reason": "Detailed request, buffer, fence and reuse contracts also appear in en/camera-requests.html and en/pipeline-requests.html.",
+          "suggestion": "Keep a short lifecycle and safety summary here and link to the focused pages for repeated detail.",
+          "preserve": [
+            "Caller ownership and buffer validity through the completion callback",
+            "Fence transfer, failure and timeout/retrieval boundaries",
+            "ReuseBuffers and fence recommendation",
+            "No handler access after completeRequest or cancelRequest returns"
+          ]
+        },
+        {
+          "units": [
+            "p009",
+            "p010",
+            "p011",
+            "p012"
+          ],
+          "kind": "cross-page-repeat",
+          "reason": "Detailed queue and completion mechanics also appear in en/pipeline-requests.html.",
+          "suggestion": "Retain the submission-to-completion overview and link to the focused page for the repeated mechanics.",
+          "preserve": [
+            "Submission success is not capture completion",
+            "Preparation and device-queue limits",
+            "Cancellation and device-submission failure",
+            "Explicit completion, submission-order return and relevant thread"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/scenarios/camera_stop.html",
+      "decision": "keep",
+      "reason": "The repeated trace conventions are necessary context for this independently delivered scenario; its counts and boundaries are specific to the page and match the Korean version.",
+      "findings": []
+    },
+    {
+      "page": "en/scenarios/complete_request.html",
+      "decision": "keep",
+      "reason": "The trace limitations and page-specific counts provide necessary context, and the content matches the Korean version.",
+      "findings": []
+    },
+    {
+      "page": "en/scenarios/queue_request.html",
+      "decision": "keep",
+      "reason": "The trace limitations and page-specific counts provide necessary context, and the content matches the Korean version.",
+      "findings": []
+    },
+    {
+      "page": "framebuffer-allocator.html",
+      "decision": "change",
+      "reason": "할당 반환값 설명이 한영판 모두 불필요하게 늘어져 있습니다.",
+      "findings": [
+        {
+          "units": [
+            "p003"
+          ],
+          "kind": "verbose",
+          "reason": "마지막 문장이 ret 반환 위치와 부호에 관계없는 반환을 길게 설명합니다.",
+          "suggestion": "음수 결과 정리 후 exportFrameBuffers()의 반환값을 그대로 반환한다고 간결하게 설명하세요.",
+          "preserve": [
+            "중복 삽입 시 오류 기록과 -EBUSY",
+            "내보내기 결과가 음수이면 해당 buffers_ 항목 제거",
+            "부호와 관계없이 내보내기 결과 반환"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "pipeline-handler.html",
+      "decision": "change",
+      "reason": "IPU3 최소 높이 계산이 한영판 모두 인접 문단에서 반복됩니다.",
+      "findings": [
+        {
+          "units": [
+            "p017",
+            "p018"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "minIfHeight 공식과 탐색 하한이 다시 설명됩니다.",
+          "suggestion": "공식과 탐색 경계는 한 번만 두고 높이 가드와 calculateBDS() 설명을 연결하세요.",
+          "preserve": [
+            "폭과 높이 공식",
+            "두 탐색의 바깥쪽 반복 순서",
+            "kIFMaxCropHeight 미만의 빈 설정과 래핑 설명",
+            "정렬된 ifHeight 경계와 calculateBDS() 호출"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "pipeline-requests.html",
+      "decision": "change",
+      "reason": "일부 구현 설명이 별도 계약을 추가하지 않고 표현을 반복합니다. 영문판도 같습니다.",
+      "findings": [
+        {
+          "units": [
+            "p002",
+            "p007"
+          ],
+          "kind": "verbose",
+          "reason": "300ms의 단위 환산과 후위 증가 연산 설명이 이미 전달한 내용을 되풀이합니다.",
+          "suggestion": "시간을 한 번만 쓰고 시퀀스 대입과 증가를 한 설명으로 합치세요.",
+          "preserve": [
+            "prepare에 300ms 전달",
+            "sequence_에 증가 전 requestSequence_ 값을 대입하고 requestSequence_ 증가",
+            "취소된 요청과 장치 제출 분기"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "request-diagnosis.html",
+      "decision": "change",
+      "reason": "인접 조사 단계에서 같은 검사를 반복합니다. 영문판에도 같은 반복이 있습니다.",
+      "findings": [
+        {
+          "units": [
+            "p005",
+            "p006"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "연결 해제 조건과 -ENODEV 확인을 두 번 요청합니다.",
+          "suggestion": "조사 단계를 합치세요.",
+          "preserve": [
+            "allowDisconnected와 disconnected_ 관찰",
+            "상태 비교 전 -ENODEV 반환",
+            "양 끝을 포함한 범위와 0 반환",
+            "ASSERT·로그·-EACCES 순서"
+          ]
+        },
+        {
+          "units": [
+            "p007",
+            "p008"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "Adjusted의 결과와 호출자의 확인 책임이 반복됩니다.",
+          "suggestion": "Adjusted 설명은 한 번만 두고 Camera::configure의 별도 검증 확인을 유지하세요.",
+          "preserve": [
+            "Adjusted는 조정 후 유효한 구성",
+            "어느 스트림의 파라미터든 변경 가능하고 스트림 구성 제거 가능",
+            "원래 반환값과 조정된 구성 관찰",
+            "validate() 결과가 Valid와 다를 때 -EINVAL 확인"
+          ]
+        },
+        {
+          "units": [
+            "p014"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "큐 한도 비교 후 선두 요청의 prepared_를 확인하는 단계가 반복됩니다.",
+          "suggestion": "관찰 단계와 양쪽 분기를 합치세요.",
+          "preserve": [
+            "제출 성공 후 대기 요청이 있는 조건",
+            "maxQueuedRequestsDevice_와 같으면 반복 종료",
+            "false면 종료, true면 선두 제거 후 doQueueRequest 호출"
+          ]
+        },
+        {
+          "units": [
+            "p015",
+            "p016"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "cancelled_와 queueRequestDevice 반환값 분기가 반복됩니다.",
+          "suggestion": "순서가 있는 하나의 조사 단계로 합치세요.",
+          "preserve": [
+            "queuedRequests_ 추가와 sequence_ 설정",
+            "취소된 요청의 완료 및 즉시 반환",
+            "queueRequestDevice의 0이 아닌 결과에 따른 cancelRequest"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "request-lifecycle.html",
+      "decision": "change",
+      "reason": "문단 안의 직접 반복과 전문 페이지에 이미 있는 상세 설명이 있습니다. 영문판도 같습니다.",
+      "findings": [
+        {
+          "units": [
+            "p011",
+            "p012",
+            "p017",
+            "p027"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "각각 명시적 요청 완료, 대기 중인 선두 요청에서의 중단, 재사용 버퍼 연결, 연결 해제 TODO를 반복합니다.",
+          "suggestion": "각 사실을 한 번만 설명하고 문단의 다른 동작과 경계는 유지하세요.",
+          "preserve": [
+            "queueRequestDevice 오류 반환과 completeBuffer의 CameraManager 스레드",
+            "마지막 버퍼 뒤 별도 completeRequest",
+            "선두 대기 시 중단, 버퍼 검사, 제거와 제출 순서 반환",
+            "ReuseBuffers에서 연결 후 pending_ 추가, 비우기와 RequestPending",
+            "disconnected 신호와 실행 중 연결 해제의 대기 요청 TODO"
+          ]
+        },
+        {
+          "units": [
+            "p020",
+            "p023",
+            "p024",
+            "p025",
+            "p030"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "정지 분기, 지역 큐 처리와 큐 비어 있음 조사 지점이 상세하게 되풀이됩니다.",
+          "suggestion": "반복 관찰 항목을 합치되 정지와 연결 해제의 경계 및 서로 다른 진단 지점은 유지하세요.",
+          "preserve": [
+            "실행 중이 아닐 때 0과 접근 검사 음수 반환",
+            "차단 방식 PipelineHandler::stop 이전 CameraStopping과 이후 CameraConfigured",
+            "stopDevice 진입·복귀, 멎음 조사, 취소와 doQueueRequest 인자",
+            "requestSequence_ 초기화 전 두 큐의 ASSERT"
+          ]
+        },
+        {
+          "units": [
+            "p013",
+            "p016",
+            "p017",
+            "p018",
+            "p019"
+          ],
+          "kind": "cross-page-repeat",
+          "reason": "요청·버퍼·펜스·재사용 상세가 camera-requests.html과 pipeline-requests.html에도 있습니다.",
+          "suggestion": "이 페이지에는 수명과 안전 경계의 짧은 요약을 두고 상세 페이지로 연결하세요.",
+          "preserve": [
+            "호출자의 요청 소유권과 완료 콜백까지 버퍼 유효성",
+            "펜스 이전·실패·타임아웃과 회수 경계",
+            "ReuseBuffers와 펜스 사용 권고",
+            "completeRequest 또는 cancelRequest 반환 후 핸들러의 접근 금지"
+          ]
+        },
+        {
+          "units": [
+            "p009",
+            "p010",
+            "p011",
+            "p012"
+          ],
+          "kind": "cross-page-repeat",
+          "reason": "큐와 완료의 상세 동작이 pipeline-requests.html에도 있습니다.",
+          "suggestion": "제출에서 완료까지의 개요를 유지하고 반복 상세는 전문 페이지로 연결하세요.",
+          "preserve": [
+            "제출 성공과 촬영 완료의 구분",
+            "준비 대기와 장치 큐 한도",
+            "취소 및 장치 제출 실패",
+            "명시적 완료, 제출 순서 반환과 관련 스레드"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "scenarios/camera_stop.html",
+      "decision": "keep",
+      "reason": "반복되는 추적 규칙은 독립 전달 문서의 안전 경계이며, 숫자와 경계는 이 시나리오에 고유합니다. 영문판과 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "scenarios/complete_request.html",
+      "decision": "keep",
+      "reason": "추적 한계와 페이지별 숫자는 필요한 맥락이며 영문판과 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "scenarios/queue_request.html",
+      "decision": "keep",
+      "reason": "추적 한계와 페이지별 숫자는 필요한 맥락이며 영문판과 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "en/glossary.html",
+      "decision": "change",
+      "reason": "A few entries repeat their own headwords; the paired Korean entries have the same issue.",
+      "findings": [
+        {
+          "units": [
+            "p018",
+            "p021"
+          ],
+          "kind": "verbose",
+          "reason": "ETIMEDOUT and FPS are repeated immediately after their entry labels.",
+          "suggestion": "Remove the repeated headwords and retain the definitions.",
+          "preserve": [
+            "IPC response wait and the file-specific 2000 ms limit",
+            "FPS means frames per second"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/ipa-algorithms.html",
+      "decision": "keep",
+      "reason": "The paired texts retain distinct format mappings, failure branches, shader order, and interface facts without material repetition.",
+      "findings": []
+    },
+    {
+      "page": "en/ipa-module-validation.html",
+      "decision": "keep",
+      "reason": "The two return cases are distinct and concise in both languages.",
+      "findings": []
+    },
+    {
+      "page": "en/ipa.html",
+      "decision": "change",
+      "reason": "Constructor and failure details recur within the page; the Korean version follows the same structure.",
+      "findings": [
+        {
+          "units": [
+            "p015",
+            "p016",
+            "p017",
+            "p027"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "Threaded constructor failure and success paths are repeated across these paragraphs.",
+          "suggestion": "Consolidate the detailed constructor account and retain a short lifecycle summary with a link to it.",
+          "preserve": [
+            "load failure and null createInterface return before connections",
+            "error including ipam->path()",
+            "unique_ptr ownership",
+            "setIPA, per-event handler connections and valid_ assignment"
+          ]
+        },
+        {
+          "units": [
+            "p018",
+            "p019",
+            "p030"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The Isolated constructor connection and ownership sequence is repeated.",
+          "suggestion": "Keep one detailed constructor account and shorten the lifecycle paragraph to a reference plus its destructor behavior.",
+          "preserve": [
+            "empty worker path and disconnected IPC errors",
+            "recv connection to this object's recvMessage",
+            "std::move ownership into ipc_ and valid_ assignment",
+            "conditional asynchronous Exit message with increasing sequence number"
+          ]
+        },
+        {
+          "units": [
+            "p011",
+            "p014",
+            "p015",
+            "p028"
+          ],
+          "kind": "verbose",
+          "reason": "The lifecycle summary repeats init, start, and asynchronous invocation already described in detail.",
+          "suggestion": "Keep the detailed descriptions and shorten the later lifecycle recap, linking to them.",
+          "preserve": [
+            "init return behavior and moveToThread order",
+            "ProxyRunning and blocking start",
+            "ordinary synchronous direct calls",
+            "asynchronous assertion and queued invocation"
+          ]
+        },
+        {
+          "units": [
+            "p021",
+            "p025",
+            "p026",
+            "p031",
+            "p032",
+            "p033",
+            "p034"
+          ],
+          "kind": "verbose",
+          "reason": "The load, createInterface, sendSync and call paths are described again in the failure section.",
+          "suggestion": "Use one detailed account for each function and replace repeated detail with short links; retain the lifecycle contract alongside it.",
+          "preserve": [
+            "createInterface may be called repeatedly after successful load and must not be called on an invalid or unloaded module",
+            "load and createInterface return values and cleanup",
+            "sendSync error logging and optional output",
+            "unchecked insertion, iterator cleanup, current-thread event processing, 2000 ms timeout and matching-cookie reception",
+            "message passed to send and completion returns"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/ipu3-lsc-flow.html",
+      "decision": "change",
+      "reason": "Some sentences repeat the same condition or restate a type parameter; the Korean counterpart has the same repetitions.",
+      "findings": [
+        {
+          "units": [
+            "p004"
+          ],
+          "kind": "verbose",
+          "reason": "The type argument IPAFrameContext is already explicit in FCQueue<IPAFrameContext>.",
+          "suggestion": "Remove the restatement of the type argument.",
+          "preserve": [
+            "lsc.cpp inclusion and Lsc role",
+            "active and frame state field types",
+            "frameContexts type"
+          ]
+        },
+        {
+          "units": [
+            "p008",
+            "p011"
+          ],
+          "kind": "verbose",
+          "reason": "The same first-frame condition and function name are repeated sentence by sentence, and one call's arguments are split across paragraphs.",
+          "suggestion": "Combine the two assignments under their shared condition and present the three call arguments together.",
+          "preserve": [
+            "both enabled and update become true only under the stated first-frame condition",
+            "active state, frame state and controls argument order"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/ipu3-lsc-prepare.html",
+      "decision": "keep",
+      "reason": "The summary and detailed branches serve different reading points, and the remaining assignments and conditions are distinct.",
+      "findings": []
+    },
+    {
+      "page": "en/ipu3-lsc.html",
+      "decision": "keep",
+      "reason": "Each extracted inheritance or field-reference fact concerns a distinct class; the extraction scope is retained.",
+      "findings": []
+    },
+    {
+      "page": "en/rkisp1-dewarp.html",
+      "decision": "change",
+      "reason": "One configured-stream condition is repeated in adjacent paragraphs in both languages.",
+      "findings": [
+        {
+          "units": [
+            "p013",
+            "p014"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "The immediate return for an unconfigured stream and the statement that setControls processes only configured streams express the same boundary.",
+          "suggestion": "State the boundary once and continue with the dynamic-control condition.",
+          "preserve": [
+            "unconfigured setControls returns before processing and logging",
+            "info.update, running_ and supportsRequests conditions and error",
+            "updateControlInfos limits and default",
+            "populateMetadata's separate configured-stream check and ScalerCrop value"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "en/scenarios/camera_start.html",
+      "decision": "keep",
+      "reason": "The concise repeated scenario conventions provide local navigation and trace safety boundaries; page-specific counts are distinct.",
+      "findings": []
+    },
+    {
+      "page": "en/scenarios/configure.html",
+      "decision": "keep",
+      "reason": "The scenario retains its own counts and local explanation of trace and execution boundaries.",
+      "findings": []
+    },
+    {
+      "page": "en/scenarios/index.html",
+      "decision": "keep",
+      "reason": "The single navigation paragraph is concise and matches the Korean version.",
+      "findings": []
+    },
+    {
+      "page": "en/scenarios/manager_start.html",
+      "decision": "keep",
+      "reason": "The scenario retains its own counts and local explanation of trace and execution boundaries.",
+      "findings": []
+    },
+    {
+      "page": "glossary.html",
+      "decision": "change",
+      "reason": "Repeated entry labels and two awkward Korean descriptions can be shortened without changing their English counterparts' meaning.",
+      "findings": [
+        {
+          "units": [
+            "p018",
+            "p021"
+          ],
+          "kind": "verbose",
+          "reason": "표제어 ETIMEDOUT와 FPS를 정의 시작에서 다시 씁니다.",
+          "suggestion": "반복된 표제어를 빼고 정의를 간결하게 정리합니다.",
+          "preserve": [
+            "IPC 응답 대기와 이 파일의 2000ms 제한",
+            "FPS가 초당 프레임 수라는 뜻"
+          ]
+        },
+        {
+          "units": [
+            "p030",
+            "p041"
+          ],
+          "kind": "translation-repeat",
+          "reason": "두 항목의 '이 문서에서는 … 문서가 적은 플랫폼으로 나옵니다'는 영어판의 문서상 지원 설명보다 불필요하게 늘어져 있습니다.",
+          "suggestion": "문서에서 해당 플랫폼을 지원 대상으로 나열한다는 표현을 간결하게 정리합니다.",
+          "preserve": [
+            "IPU6의 IPU 세대와 전용 핸들러 없는 범용 simple 파이프라인 지원",
+            "RK3399의 Rockchip SoC와 rkisp1 핸들러 지원",
+            "각 설명이 이 문서의 기술 범위라는 점"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "ipa-algorithms.html",
+      "decision": "keep",
+      "reason": "영어판과 대조해도 형식 대응, 오류 분기, 셰이더 처리 순서와 인터페이스의 고유 정보가 유지됩니다.",
+      "findings": []
+    },
+    {
+      "page": "ipa-module-validation.html",
+      "decision": "keep",
+      "reason": "두 반환 사례는 서로 다른 조건이며 한영 설명도 간결합니다.",
+      "findings": []
+    },
+    {
+      "page": "ipa.html",
+      "decision": "change",
+      "reason": "생성자와 실패 경로의 상세 설명이 같은 페이지에서 반복되며 영어판에도 같은 중복이 있습니다.",
+      "findings": [
+        {
+          "units": [
+            "p015",
+            "p016",
+            "p017",
+            "p027"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "Threaded 생성자의 실패·성공 경로를 여러 번 설명합니다.",
+          "suggestion": "상세 경로를 한곳에 모으고 수명주기 부분에는 짧은 요약과 연결을 둡니다.",
+          "preserve": [
+            "load 실패와 null createInterface 반환 시 연결 전 종료",
+            "ipam->path()를 포함한 오류",
+            "unique_ptr 소유권",
+            "setIPA, 이벤트별 핸들러 연결과 valid_ 설정"
+          ]
+        },
+        {
+          "units": [
+            "p018",
+            "p019",
+            "p030"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "Isolated 생성자의 연결 및 소유권 이전 순서가 반복됩니다.",
+          "suggestion": "생성자 상세를 한곳에 두고 수명주기 요약에서는 이를 연결하면서 소멸자 동작을 남깁니다.",
+          "preserve": [
+            "빈 worker 경로와 IPC 연결 실패 오류",
+            "현재 객체의 recvMessage 연결",
+            "std::move로 ipc_에 소유권 이전과 valid_ 설정",
+            "ipc_가 있을 때 증가하는 시퀀스 번호를 담은 Exit 메시지의 비동기 전송"
+          ]
+        },
+        {
+          "units": [
+            "p011",
+            "p014",
+            "p015",
+            "p028"
+          ],
+          "kind": "verbose",
+          "reason": "뒤의 수명주기 요약이 앞서 설명한 init, start, 비동기 호출을 다시 풀이합니다.",
+          "suggestion": "상세 설명을 기준으로 두고 뒤의 요약을 짧게 줄여 연결합니다.",
+          "preserve": [
+            "init 반환형에 따른 반환과 moveToThread 순서",
+            "ProxyRunning 설정과 블로킹 start",
+            "일반 동기 메서드의 직접 호출",
+            "비동기 상태 단언과 큐 호출"
+          ]
+        },
+        {
+          "units": [
+            "p021",
+            "p025",
+            "p026",
+            "p031",
+            "p032",
+            "p033",
+            "p034"
+          ],
+          "kind": "verbose",
+          "reason": "load, createInterface, sendSync와 call의 경로가 실패 절에서 다시 상세히 나타납니다.",
+          "suggestion": "함수별 상세 설명을 한곳에 모으고 반복 부분은 짧게 연결하되 수명주기 계약은 남깁니다.",
+          "preserve": [
+            "load 성공 후 createInterface 반복 호출 가능 및 유효하지 않거나 로드되지 않은 모듈에서 호출 금지",
+            "반환값과 핸들 정리",
+            "sendSync 오류 로그와 선택적 출력",
+            "삽입 성공 여부 미확인, 반복자 정리, 현재 스레드 이벤트 처리, 2000ms 시간 초과와 쿠키 일치 수신",
+            "send에 message 전달과 완료 시 반환"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "ipu3-lsc-flow.html",
+      "decision": "change",
+      "reason": "같은 조건과 이미 표시된 타입 인자를 반복하며 영어판에도 같은 문제가 있습니다.",
+      "findings": [
+        {
+          "units": [
+            "p004"
+          ],
+          "kind": "verbose",
+          "reason": "FCQueue<IPAFrameContext>에 타입 인자가 이미 표시되어 있습니다.",
+          "suggestion": "타입 인자를 다시 설명하는 부분을 줄입니다.",
+          "preserve": [
+            "lsc.cpp 포함과 Lsc 역할",
+            "활성 및 프레임 상태 필드 타입",
+            "frameContexts 타입"
+          ]
+        },
+        {
+          "units": [
+            "p008",
+            "p011"
+          ],
+          "kind": "verbose",
+          "reason": "첫 프레임 조건과 함수 이름이 문장마다 반복되고 한 호출의 인자가 문단에 나뉘어 있습니다.",
+          "suggestion": "공통 조건 아래 두 대입을 묶고 호출의 세 인자를 함께 제시합니다.",
+          "preserve": [
+            "해당 첫 프레임 조건에서 enabled와 update에 각각 true 설정",
+            "활성 상태, 프레임 상태, controls 인자 순서"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "ipu3-lsc-prepare.html",
+      "decision": "keep",
+      "reason": "분기 요약은 상세 조건의 짧은 안내이며 나머지 조건과 대입은 서로 다른 정보입니다.",
+      "findings": []
+    },
+    {
+      "page": "ipu3-lsc.html",
+      "decision": "keep",
+      "reason": "추출된 기반 클래스와 필드 참조는 각각 다른 클래스에 관한 사실이며 추출 범위도 명시합니다.",
+      "findings": []
+    },
+    {
+      "page": "rkisp1-dewarp.html",
+      "decision": "change",
+      "reason": "인접 문단에서 구성되지 않은 스트림의 setControls 경계를 반복합니다.",
+      "findings": [
+        {
+          "units": [
+            "p013",
+            "p014"
+          ],
+          "kind": "adjacent-repeat",
+          "reason": "구성되지 않은 스트림에서 즉시 반환한다는 설명과 구성된 스트림만 처리한다는 설명이 중복됩니다.",
+          "suggestion": "경계를 한 번 설명한 뒤 동적 제어 조건으로 이어갑니다.",
+          "preserve": [
+            "구성되지 않은 setControls는 처리와 로그 전에 반환",
+            "info.update, running_, supportsRequests 조건과 오류",
+            "updateControlInfos의 최솟값·최댓값·기본값",
+            "populateMetadata의 별도 구성 검사와 ScalerCrop 값"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "scenarios/camera_start.html",
+      "decision": "keep",
+      "reason": "반복되는 시나리오 안내는 각 문서의 독립적인 탐색과 안전 경계에 필요하며 수치는 페이지별로 다릅니다.",
+      "findings": []
+    },
+    {
+      "page": "scenarios/configure.html",
+      "decision": "keep",
+      "reason": "해당 시나리오의 수치와 추적·실행 경계를 문서 안에서 간결하게 제공합니다.",
+      "findings": []
+    },
+    {
+      "page": "scenarios/index.html",
+      "decision": "keep",
+      "reason": "한 문단의 탐색 안내가 간결하며 영어판과 대응합니다.",
+      "findings": []
+    },
+    {
+      "page": "scenarios/manager_start.html",
+      "decision": "keep",
+      "reason": "해당 시나리오의 수치와 추적·실행 경계를 문서 안에서 간결하게 제공합니다.",
+      "findings": []
+    }
+  ]
+}

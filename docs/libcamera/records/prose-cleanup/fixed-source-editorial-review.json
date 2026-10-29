@@ -1,0 +1,28 @@
+{
+  "pages": [
+    {
+      "page": "ipa",
+      "unresolved_repetition": [],
+      "lost_required_information": [],
+      "notes": "생성자와 IPC의 상세 경로가 각각 한곳에 정리되었고, 수명주기 계약과 소멸자 동작도 보존되었습니다."
+    },
+    {
+      "page": "ipu3-lsc-flow",
+      "unresolved_repetition": [],
+      "lost_required_information": [],
+      "notes": "첫 프레임의 두 대입과 위임 호출의 세 인자가 각각 함께 정리되었습니다."
+    },
+    {
+      "page": "team-overview",
+      "unresolved_repetition": [],
+      "lost_required_information": [],
+      "notes": "계층 개요는 짧아졌으며, 적응 계층의 예시와 저장소 위치, 프로젝트 경계와 제조사 책임은 다른 절에 보존되었습니다."
+    },
+    {
+      "page": "framebuffer-allocator",
+      "unresolved_repetition": [],
+      "lost_required_information": [],
+      "notes": "내보내기 결과의 조건부 정리와 부호에 관계없는 반환이 보존되었습니다."
+    }
+  ]
+}

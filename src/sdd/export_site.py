@@ -442,6 +442,7 @@ def _navigation_html(entries, sections, rel, current):
 
 def _pagination_html(entries, sections, index, rel, current):
     previous_next = []
+    previous_href = None
     for offset, label in [(-1, "이전"), (1, "다음")]:
         other = index + offset
         fragment = ''
@@ -453,6 +454,9 @@ def _pagination_html(entries, sections, index, rel, current):
         if 0 <= other < len(entries):
             _, dest_title, dest_rel = entries[other]
             destination_href = _href(_html_path(dest_rel), current) + ('#' + quote(fragment) if fragment else '')
+            if offset == 1 and destination_href == previous_href:
+                previous_next.clear()
+            previous_href = destination_href
             previous_next.append(f'<a class="{"previous" if offset < 0 else "next"}" href="{destination_href}"><small>{label}</small>{html.escape(dest_title)} {"←" if offset < 0 else "→"}</a>')
     return previous_next
 
