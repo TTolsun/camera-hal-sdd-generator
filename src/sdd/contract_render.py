@@ -63,4 +63,13 @@ def _source_detail(record: dict, title: str) -> str:
     body = (f"`{record['file']}:{record['line']}`에서 시작하는 발췌입니다. "
             f"종료 줄은 {record['end_line']}이며, 아래 원문을 설명과 대조할 수 있습니다.\n\n"
             f"SHA-256: `{record['sha256']}`\n\n{fence}text\n{raw}\n{fence}")
-    return f'??? note "소스 근거: {title}"\n' + "\n".join("    " + line for line in body.splitlines())
+    label = '소스 근거'
+    if record.get('origin') == 'product-material':
+        label = '제품 자료'
+        doc = record['product_record']
+        metadata = {key: doc[key] for key in ('type', 'supplier', 'version', 'date', 'valid_until',
+                                             'product', 'release', 'configuration', 'feature', 'conditions', 'sha256')}
+        import json
+        body = '소스와 별도로 제공된 자료입니다. 제공자·버전·적용 범위를 아래 기록에서 확인하세요. 자동 검사는 사람 승인이 아닙니다.\n\n' + body
+        body += '\n\n```json\n' + json.dumps(metadata, ensure_ascii=False, indent=2) + '\n```'
+    return f'??? note "{label}: {title}"\n' + "\n".join("    " + line for line in body.splitlines())

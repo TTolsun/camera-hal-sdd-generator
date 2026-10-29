@@ -21,6 +21,9 @@ paths:
   templates: ../../templates
   style: ../../style
 
+products:
+  file: config/products.yaml
+
 facts:
   # libcamera 는 src/ 와 include/ 아래로만 나뉘므로 1 이면 패키지가 3 개로 뭉친다.
   # 3 이면 src/libcamera/pipeline, src/ipa/ipu3 처럼 검토 단위로 쓸 수 있는 18 개가 나온다.
@@ -31,10 +34,10 @@ tools:
 
 agent:
   kind: cli
-  runner: hermes
-  # 공개 libcamera 시험 프로필이며 사내 모델·제공자·reasoning은 model/args로 바꾼다.
-  model: qwen3.5:9b-ctx64k
-  args: [--provider, custom, --reasoning, high]
+  runner: codex
+  # 사용자 지정 기본값. 각 CLI는 독립 실행하며 사내 모델·제공자는 별도 설정으로 바꾼다.
+  model: gpt-6.1-terra
+  args: [-c, 'model_reasoning_effort="high"']
   max_input_chars: 40000
   timeout_sec: 600
   full_style_guides: false

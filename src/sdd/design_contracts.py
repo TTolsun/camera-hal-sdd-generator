@@ -71,9 +71,13 @@ def audit(model: KnowledgeModel, section: dict, allow_limited: bool = False) -> 
             findings.append(f"{key}: 근거에 연결된 설계 답변이 없습니다 ({state}).")
         rows.append({"id": key, "question": req.get("question", ""), "status": state,
                      "topics": answers[key], "limitations": limits[key]})
-    return {"status": "incomplete" if findings else "documented", "requirements": rows,
+    from .reader_scope import report as scope_report
+    result = {"status": "incomplete" if findings else "documented", "requirements": rows,
             "findings": list(dict.fromkeys(findings)), "human_review": "pending",
             "scope": "Required answers and unchanged source bindings; not semantic or runtime approval."}
+    if section.get('reader_scope'):
+        result['reader_scope'] = scope_report(section, rows, model)
+    return result
 
 
 def enforce(model: KnowledgeModel, section: dict, allow_limited: bool = False) -> dict:

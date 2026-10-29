@@ -49,10 +49,14 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
     rendered = re.sub(r'href="([^"]+)"', link, rendered)
     if model and source_url and re.fullmatch(r"[0-9a-f]{40}", commit):
         valid = model.citations() if commit == model.meta.get("source_commit") else set()
+        product_citations = {f"{r['file']}:{r['line']}" for r in model.evidence.values()
+                             if r.get('origin') == 'product-material'}
 
         def citation(match: re.Match) -> str:
             cite = html.unescape(match[1])
             if cite not in valid:
+                return match[0]
+            if cite in product_citations:
                 return match[0]
             file, line = cite.rsplit(":", 1)
             if PurePosixPath(file).is_absolute() or ".." in PurePosixPath(file).parts:

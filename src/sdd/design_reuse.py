@@ -12,6 +12,8 @@ def subset(model, section, ids):
     selected['design_topics'] = [t for t in selected['design_topics'] if t['id'] in ids]
     requirements = {r for t in selected['design_topics'] for r in t['covers']}
     selected['design_requirements'] = [r for r in selected['design_requirements'] if r['id'] in requirements]
+    # Bind the complete scope in the input identity, but validate partial units
+    # against their selected questions. The complete page checks all tasks.
     pinned = copy.copy(model)
     prefixes = tuple(f"{section['id']}/{tid}/" for tid in ids)
     pinned.evidence = {k: v for k, v in model.evidence.items() if k.startswith(prefixes)}
@@ -63,6 +65,7 @@ def reusable(model, section, previous, inputs, validate=None):
         pinned, selected = subset(model, section, [tid])
         selected.pop('reader_profile', None)
         selected.pop('reader_family', None)
+        selected.pop('reader_scope', None)
         selected_answers = copy.deepcopy(answers[tid])
         try:
             if validate:

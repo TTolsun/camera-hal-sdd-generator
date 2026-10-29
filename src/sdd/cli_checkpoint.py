@@ -36,7 +36,8 @@ def validation_policy():
     root = Path(__file__).parent
     policy = {name: hashlib.sha256((root / (name + '.py')).read_bytes()).hexdigest()
               for name in ('manuscript', 'semantic', 'duplicates', 'design_contracts', 'validate',
-                           'reader_profiles', 'contract_schema', 'answer_contracts')}
+                           'reader_profiles', 'contract_schema', 'answer_contracts',
+                           'reader_scope', 'product_context')}
     # All pure response helpers participate, including quote resolution and
     # normalization called transitively by the selected validation functions.
     policy['design_response'] = hashlib.sha256((root/'design_response.py').read_bytes()).hexdigest()

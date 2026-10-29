@@ -1,0 +1,40 @@
+# 가상 시험 전용입니다. 실제 제품 정보·성능·지원 보장으로 게시하지 않습니다.
+# 실제 자료를 확보한 뒤 별도 products.yaml을 작성하고 sdd.yaml의 products.file로 선택합니다.
+# 주제에 product: {id: fictional-a, feature: capture}를 연결합니다.
+schema: 1
+products:
+  - id: fictional-a
+    scope: product
+    release: fixture-r1
+    configuration: fictional-sensor-a-build-x
+    simulation: true
+    as_of: '2026-10-30'
+    features:
+      - id: capture
+        need: 시험 고객이 이미지 입력 경로를 확인합니다.
+        usage: 가상 센서 A와 빌드 X를 사용하는 정적 생성 시험입니다.
+        availability: unknown
+        conditions: [fictional sensor A, fictional build X]
+        exclusions: []
+        implementation: [] # 실제 주제의 소스 ID로 채웁니다.
+        evidence: [] # 실제 제품 담당자의 자료를 연결하기 전에는 미확인입니다.
+        claims:
+          - kind: structural
+            evidence: []
+  - id: fictional-b
+    scope: product
+    release: fixture-r1
+    configuration: fictional-sensor-b-build-y
+    simulation: true
+    as_of: '2026-10-30'
+    features:
+      - id: capture
+        need: 시험 고객이 이미지 입력 경로를 확인합니다.
+        usage: 같은 SW의 다른 가상 구성을 비교합니다.
+        availability: unknown
+        conditions: [fictional sensor B, fictional build Y]
+        exclusions: []
+        implementation: []
+        evidence: []
+        claims: []
+evidence: []

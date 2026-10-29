@@ -44,6 +44,8 @@ def _assemble_generation(cfg, model, section, answers, inputs, reused, replayed,
                 'topic_agents': {tid: origins.get(tid, cfg.agent.label) for tid in answers},
                 'grounding_review': 'passed' if policy['design_grounding'] else 'not-run',
                 'grounding_policy': policy.get('grounding_policy')}
+    if section.get('reader_scope'):
+        artifact['reader_scope'] = section['reader_scope']
     if cfg.agent.kind == 'cli':
         from .cli_checkpoint import validation_policy, validation_model, style_policy
         artifact['validation_policy'] = validation_policy()
@@ -134,6 +136,8 @@ def verify(model, section, manuscript, *, cfg=None):
         raise ValueError('LLM 설계 답변 기록이 없거나 형식이 잘못되었습니다.')
     if artifact.get('input_fingerprint') != fingerprint(model, section):
         raise ValueError('LLM 설계 입력 근거·질문이 변경되어 재생성이 필요합니다.')
+    if artifact.get('reader_scope') != section.get('reader_scope'):
+        raise ValueError('LLM 원고의 독자 범위 기록이 현재 계약과 다릅니다.')
     if artifact.get('body_sha256') != digest(body.strip()):
         raise ValueError('LLM 설계 답변 기록과 원고 본문이 일치하지 않습니다.')
     # 게시 검증에서는 중복 문장 검사를 경고로만 둔다. 이미 만든 원고를 나중에 생긴 휴리스틱으로 막지 않고, 생성할 때와
@@ -146,7 +150,8 @@ def verify(model, section, manuscript, *, cfg=None):
     for topic in resolved['design_topics']:
         text, _ = contract_text(pinned, section['id'], topic)
         legacy, _ = contract_text(pinned, section['id'], topic, grouped=False)
-        if all(f"## {topic['title']}\n\n{candidate}" not in body for candidate in (text, legacy)):
+        from .product_context import scope_notice
+        if all(f"## {topic['title']}\n\n{scope_notice(topic)}{candidate}" not in body for candidate in (text, legacy)):
             raise ValueError('LLM 설계 답변이 원고에 없습니다.')
     return report
 
