@@ -81,6 +81,7 @@ details.evidence-section{border-top:1px solid var(--line);border-left:0;margin:8
 
 /* Mobile navigation is a viewport drawer; static navigation remains available without scripts. */
 .menu-backdrop,.sidebar-close{display:none}
+html{scrollbar-gutter:stable}
 .previous-route:not(:target){display:none}.previous-route{scroll-margin-top:calc(var(--site-header-height,68px) + 16px);padding:12px;border:1px solid var(--line);margin:12px 0}.previous-route p{margin:0 0 4px;font-size:12px;color:var(--muted)}
 html.menu-open,html.menu-open body{overflow:hidden}
 .evidence-return{position:sticky;top:calc(var(--site-header-height,68px) + 8px);z-index:2;margin:10px 0;background:#fff}

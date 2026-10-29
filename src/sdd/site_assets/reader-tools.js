@@ -30,9 +30,11 @@
     document.querySelector('.brand'), document.querySelector('#search-open'), document.querySelector('.language-selector')].filter(Boolean);
   let inertBefore = [];
   let menuOpen = false;
+  let menuScroll = null;
   function setMenu(open, restore = true) {
     open = open && mobile.matches;
     if (open === menuOpen) return;
+    if (open) menuScroll = {x: scrollX, y: scrollY};
     menuOpen = open;
     sidebar.classList.toggle('is-open', open);
     document.documentElement.classList.toggle('menu-open', open);
@@ -46,14 +48,19 @@
       sidebar.setAttribute('role', 'dialog');
       sidebar.setAttribute('aria-modal', 'true');
       sidebar.setAttribute('aria-label', t('문서 메뉴', 'Documentation menu'));
-      (sidebar.querySelector('a[aria-current="page"]') || closeMenu).focus({preventScroll: true});
-      sidebar.querySelector('a[aria-current="page"]')?.scrollIntoView({block: 'nearest', behavior: 'instant'});
+      const activeLink = sidebar.querySelector('a[aria-current="page"]') || closeMenu;
+      activeLink.focus({preventScroll: true});
+      const target = activeLink.getBoundingClientRect(), box = sidebar.getBoundingClientRect();
+      if (target.top < box.top || target.bottom > box.bottom) {
+        sidebar.scrollTop += target.top - box.top - sidebar.clientHeight / 2;
+      }
     } else {
       backgrounds.forEach((node, i) => { node.inert = inertBefore[i]; });
       sidebar.removeAttribute('role');
       sidebar.removeAttribute('aria-modal');
       sidebar.removeAttribute('aria-label');
       if (restore) menu.focus({preventScroll: true});
+      if (restore && menuScroll) window.scrollTo({left: menuScroll.x, top: menuScroll.y, behavior: 'instant'});
     }
   }
   menu.hidden = false;
