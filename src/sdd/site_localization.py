@@ -36,10 +36,11 @@ def english_diagram(source: str) -> str:
 
 
 class DisplayText(HTMLParser):
-    def __init__(self, translate, observe=None):
+    def __init__(self, translate, observe=None, *, context_observer=None):
         super().__init__(convert_charrefs=True)
         self.translate = translate
         self.observe = observe
+        self.context_observer = context_observer
         self.tree = {'raw': '', 'end': '', 'children': [], 'protected': False, 'attrs': []}
         self.stack = [self.tree]
 
@@ -70,13 +71,18 @@ class DisplayText(HTMLParser):
                 translated = self.translate(text)
                 if sorted(re.findall(r'\{\{\d+\}\}', translated)) != sorted(tokens):
                     raise RuntimeError('English translation changed inline placeholders')
-                if self.observe:
+                if self.observe or self.context_observer:
                     def original(child):
                         return child if isinstance(child, str) else ''.join(original(c) for c in child['children'])
                     original_tokens = {f'{{{{{i}}}}}': original(c) for i, c in enumerate(children) if not isinstance(c, str)}
                     visible_tokens = {key: html.unescape(re.sub(r'<[^>]*>', '', value)) for key, value in tokens.items()}
                     resolve = lambda value, values: re.sub(r'\{\{\d+\}\}', lambda m: values[m[0]], value).strip()
-                    self.observe(text.strip(), resolve(text, original_tokens), resolve(translated, visible_tokens))
+                    if self.observe:
+                        self.observe(text.strip(), resolve(text, original_tokens), resolve(translated, visible_tokens))
+                    if self.context_observer:
+                        attrs = dict(node['attrs'])
+                        attrs['data-sdd-evidence'] = json.dumps(node.get('context_evidence', []))
+                        self.context_observer(text.strip(), resolve(text, original_tokens), original_tokens, attrs)
                 body = html.escape(translated, quote=False)
                 body = re.sub(r'\{\{\d+\}\}', lambda m: tokens[m[0]], body)
             else:
@@ -90,6 +96,15 @@ class DisplayText(HTMLParser):
         protected |= "mermaid" in (values.get("class") or "").split()
         node = {'raw': self.get_starttag_text(), 'end': '', 'children': [], 'protected': protected, 'attrs': attrs, 'tag': tag,
                 'mermaid': 'mermaid' in (values.get('class') or '').split()}
+        if self.context_observer:
+            declared = json.loads(values.get('data-sdd-evidence', '[]'))
+            if not isinstance(declared, list):
+                raise ValueError('Malformed translation source references')
+            refs = self.stack[-1].get('context_evidence', []) + declared
+            node['context_evidence'] = []
+            for ref in refs:
+                if ref not in node['context_evidence']:
+                    node['context_evidence'].append(ref)
         self.stack[-1]['children'].append(node)
         if tag not in VOID:
             self.stack.append(node)
