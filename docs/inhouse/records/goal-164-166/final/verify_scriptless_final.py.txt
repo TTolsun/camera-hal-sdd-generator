@@ -1,0 +1,11 @@
+from pathlib import Path
+from urllib.request import urlopen
+import hashlib,json
+base=Path('build/goal-164-166');rows=[]
+for name in ['vendor-overview.html','en/vendor-overview.html']:
+ with urlopen('http://127.0.0.1:8771/'+name,timeout=20) as r:
+  data=r.read();csp=r.headers['Content-Security-Policy']
+ assert data==(base/'final-public/site'/name).read_bytes()
+ assert "script-src 'none'" in csp and 'allow-scripts' not in csp
+ rows.append(dict(page=name,exact_published_bytes=True,sha256=hashlib.sha256(data).hexdigest(),csp=csp))
+(base/'browser/published-no-js-http.json').write_text(json.dumps(dict(build_id='cb84b114360f52a7bde777951e99a396d8b96bba5581963673fe7878a62d9f2d',pages=rows),indent=2)+'\n',encoding='utf-8');print('Both scriptless documents match exact verified public bytes')

@@ -1,0 +1,19 @@
+{
+  "recorded_at": "2026-10-29T18:57:27.025408+00:00",
+  "method": "Direct human user confirmation from this chat after actual Chrome Ctrl+P checks. Agent could not operate native Chrome because URL verification was unavailable.",
+  "targets": [
+    "https://ttolsun.github.io/libcamera-sdd/vendor-overview.html",
+    "https://ttolsun.github.io/libcamera-sdd/en/vendor-overview.html"
+  ],
+  "public_pr": 57,
+  "build_id": "b409cfc4cbb03e6db8e9397b520089f3a2be84659a85ef33559680ce3b697c3d",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "confirmation": "한영 미리보기에서 두 조건을 확인했습니다",
+  "checks": {
+    "paragraph_evidence_rows_absent": true,
+    "section_evidence_retained": true
+  },
+  "agent_operated_preview": false,
+  "content_reader_study_163": "not-performed",
+  "actual_print_job": "not-requested"
+}

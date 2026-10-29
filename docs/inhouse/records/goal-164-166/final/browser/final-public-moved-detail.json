@@ -1,0 +1,5 @@
+{
+  "heading": "장치 요청 한도와 대기 큐",
+  "paragraph": "PipelineHandler 생성자 선언에서 maxQueuedRequestsDevice의 기본값은 32입니다. maxQueuedRequestsDevice_는 파이프라인 핸들러가 기반 하드웨어에 한 번에 큐에 넣는 요청 수를 제한합니다. 애플리케이션이 장치 한도보다 많은 요청을 제출하면 나머지 요청은 나중에 하드웨어에 큐잉될 때까지 내부 대기 큐에서 기다립니다.",
+  "url": "https://ttolsun.github.io/libcamera-sdd/pipeline-requests.html#%EC%9E%A5%EC%B9%98-%EC%9A%94%EC%B2%AD-%ED%95%9C%EB%8F%84%EC%99%80-%EB%8C%80%EA%B8%B0-%ED%81%90"
+}

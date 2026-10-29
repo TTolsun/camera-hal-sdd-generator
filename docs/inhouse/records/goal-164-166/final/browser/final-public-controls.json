@@ -1,0 +1,42 @@
+{
+  "build_id": "cb84b114360f52a7bde777951e99a396d8b96bba5581963673fe7878a62d9f2d",
+  "keyboardOpen": {
+    "activeTag": "SUMMARY",
+    "open": true
+  },
+  "keyboardClosed": {
+    "activeTag": "SUMMARY",
+    "open": false
+  },
+  "search": {
+    "h1": "요청 완료 통지 (PipelineHandler::completeRequest)",
+    "url": "https://ttolsun.github.io/libcamera-sdd/scenarios/complete_request.html"
+  },
+  "zoom": {
+    "dialog": true,
+    "matchedNodes": 1,
+    "statusText": [
+      "1개 일치",
+      "93%"
+    ]
+  },
+  "language": {
+    "h1": "libcamera Product Overview",
+    "url": "https://ttolsun.github.io/libcamera-sdd/en/vendor-overview.html"
+  },
+  "excerptTarget": {
+    "anchorPresent": true,
+    "sourceCollectionOpen": true,
+    "url": "https://ttolsun.github.io/libcamera-sdd/en/vendor-overview.html#source-34fda84500757231"
+  },
+  "excerpt": {
+    "excerptOpen": true,
+    "hasHash": true,
+    "text": "Source evidence: Documentation/introduction.rst:10\nBack to explanation\n\nExcerpt starting at Documentation/introduction.rst:10. The end line is 13, and you can compare the original text below with the explanation.\n\nSHA-256: 84621541899cba7430b844bc03d13fc8e6f3f03e7c30556df0bf1cd11007494c\n\nlibcamera is an open source complex camera support library for Linux, Android\nand ChromeOS. The library interfaces with Linux kerne"
+  },
+  "fullSource": {
+    "notFound": false,
+    "sourceTextPresent": true,
+    "url": "https://github.com/TTolsun/libcamera-sdd/blob/212c689fcf2450bbfbaab25c7472895ac277b5d6/Documentation/introduction.rst#L10"
+  }
+}

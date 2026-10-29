@@ -1,0 +1,17 @@
+{
+  "build_id": "cb84b114360f52a7bde777951e99a396d8b96bba5581963673fe7878a62d9f2d",
+  "pages": [
+    {
+      "page": "vendor-overview.html",
+      "exact_published_bytes": true,
+      "sha256": "4599e66b4b8176343422637194b7cb6d3a54ce9f1729525c0df41143a3ebe7c3",
+      "csp": "sandbox allow-same-origin allow-popups allow-top-navigation; script-src 'none'"
+    },
+    {
+      "page": "en/vendor-overview.html",
+      "exact_published_bytes": true,
+      "sha256": "14a2419f5a0c743321b99f18a726751aff865337926bc4704321e33a9988fd32",
+      "csp": "sandbox allow-same-origin allow-popups allow-top-navigation; script-src 'none'"
+    }
+  ]
+}

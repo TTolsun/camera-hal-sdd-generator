@@ -1,0 +1,11 @@
+{
+  "source_commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "native_cli_status": "passed",
+  "new_model_calls": 0,
+  "whole_scoped_files_identical": {
+    "overview.md": "88a1af7da312705d3ff5a7720fd63e5cd2f9cbb3bc12f63aa2edb32d0aa238cd",
+    "team-overview.md": "499bf38923e17aa28d49bfc056d798f6e484a28e5a6a67bfc68e15d5d282cdc0",
+    "vendor-overview.md": "ab6f8fc3366ad0c88bea81aba0fae6cbcff40f93eec5ffbd52f761b73dfecfe3"
+  },
+  "legacy_scope": "The whole-file assertion is for these three scoped documents; it is not a claim that all legacy generated_at metadata is byte-identical."
+}

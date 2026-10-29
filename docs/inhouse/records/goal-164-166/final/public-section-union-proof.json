@@ -1,0 +1,310 @@
+{
+  "scope": "Every mapped paragraph hyperlink must remain accessible in its parent H1/H2 section panel. Static HTML inspection, not human evaluation.",
+  "build_id": "cb84b114360f52a7bde777951e99a396d8b96bba5581963673fe7878a62d9f2d",
+  "pages": [
+    {
+      "page": "camera-model.html",
+      "paragraph_mappings": 17,
+      "verified_mapped_link_destinations": 28
+    },
+    {
+      "page": "camera-requests.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 20
+    },
+    {
+      "page": "component-index.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/camera-model.html",
+      "paragraph_mappings": 17,
+      "verified_mapped_link_destinations": 28
+    },
+    {
+      "page": "en/camera-requests.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 20
+    },
+    {
+      "page": "en/component-index.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/framebuffer-allocator.html",
+      "paragraph_mappings": 3,
+      "verified_mapped_link_destinations": 5
+    },
+    {
+      "page": "en/glossary.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/index.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/ipa-algorithms.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 13
+    },
+    {
+      "page": "en/ipa-module-validation.html",
+      "paragraph_mappings": 2,
+      "verified_mapped_link_destinations": 2
+    },
+    {
+      "page": "en/ipa.html",
+      "paragraph_mappings": 20,
+      "verified_mapped_link_destinations": 30
+    },
+    {
+      "page": "en/ipu3-lsc-flow.html",
+      "paragraph_mappings": 6,
+      "verified_mapped_link_destinations": 9
+    },
+    {
+      "page": "en/ipu3-lsc-prepare.html",
+      "paragraph_mappings": 6,
+      "verified_mapped_link_destinations": 10
+    },
+    {
+      "page": "en/ipu3-lsc.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 8
+    },
+    {
+      "page": "en/onboarding.html",
+      "paragraph_mappings": 5,
+      "verified_mapped_link_destinations": 5
+    },
+    {
+      "page": "en/overview.html",
+      "paragraph_mappings": 10,
+      "verified_mapped_link_destinations": 16
+    },
+    {
+      "page": "en/pipeline-handler.html",
+      "paragraph_mappings": 14,
+      "verified_mapped_link_destinations": 16
+    },
+    {
+      "page": "en/pipeline-requests.html",
+      "paragraph_mappings": 9,
+      "verified_mapped_link_destinations": 22
+    },
+    {
+      "page": "en/request-diagnosis.html",
+      "paragraph_mappings": 13,
+      "verified_mapped_link_destinations": 17
+    },
+    {
+      "page": "en/request-lifecycle.html",
+      "paragraph_mappings": 20,
+      "verified_mapped_link_destinations": 43
+    },
+    {
+      "page": "en/rkisp1-dewarp.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 15
+    },
+    {
+      "page": "en/scenarios/camera_start.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/scenarios/camera_stop.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/scenarios/complete_request.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/scenarios/configure.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/scenarios/index.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/scenarios/manager_start.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/scenarios/queue_request.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "en/team-overview.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 12
+    },
+    {
+      "page": "en/vendor-assurance.html",
+      "paragraph_mappings": 3,
+      "verified_mapped_link_destinations": 9
+    },
+    {
+      "page": "en/vendor-integration.html",
+      "paragraph_mappings": 12,
+      "verified_mapped_link_destinations": 32
+    },
+    {
+      "page": "en/vendor-overview.html",
+      "paragraph_mappings": 9,
+      "verified_mapped_link_destinations": 13
+    },
+    {
+      "page": "framebuffer-allocator.html",
+      "paragraph_mappings": 3,
+      "verified_mapped_link_destinations": 5
+    },
+    {
+      "page": "glossary.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "index.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "ipa-algorithms.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 13
+    },
+    {
+      "page": "ipa-module-validation.html",
+      "paragraph_mappings": 2,
+      "verified_mapped_link_destinations": 2
+    },
+    {
+      "page": "ipa.html",
+      "paragraph_mappings": 20,
+      "verified_mapped_link_destinations": 30
+    },
+    {
+      "page": "ipu3-lsc-flow.html",
+      "paragraph_mappings": 6,
+      "verified_mapped_link_destinations": 9
+    },
+    {
+      "page": "ipu3-lsc-prepare.html",
+      "paragraph_mappings": 6,
+      "verified_mapped_link_destinations": 10
+    },
+    {
+      "page": "ipu3-lsc.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 8
+    },
+    {
+      "page": "onboarding.html",
+      "paragraph_mappings": 5,
+      "verified_mapped_link_destinations": 5
+    },
+    {
+      "page": "overview.html",
+      "paragraph_mappings": 10,
+      "verified_mapped_link_destinations": 16
+    },
+    {
+      "page": "pipeline-handler.html",
+      "paragraph_mappings": 14,
+      "verified_mapped_link_destinations": 16
+    },
+    {
+      "page": "pipeline-requests.html",
+      "paragraph_mappings": 9,
+      "verified_mapped_link_destinations": 22
+    },
+    {
+      "page": "request-diagnosis.html",
+      "paragraph_mappings": 13,
+      "verified_mapped_link_destinations": 17
+    },
+    {
+      "page": "request-lifecycle.html",
+      "paragraph_mappings": 20,
+      "verified_mapped_link_destinations": 43
+    },
+    {
+      "page": "rkisp1-dewarp.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 15
+    },
+    {
+      "page": "scenarios/camera_start.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "scenarios/camera_stop.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "scenarios/complete_request.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "scenarios/configure.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "scenarios/index.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "scenarios/manager_start.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "scenarios/queue_request.html",
+      "paragraph_mappings": 0,
+      "verified_mapped_link_destinations": 0
+    },
+    {
+      "page": "team-overview.html",
+      "paragraph_mappings": 8,
+      "verified_mapped_link_destinations": 12
+    },
+    {
+      "page": "vendor-assurance.html",
+      "paragraph_mappings": 3,
+      "verified_mapped_link_destinations": 9
+    },
+    {
+      "page": "vendor-integration.html",
+      "paragraph_mappings": 12,
+      "verified_mapped_link_destinations": 32
+    },
+    {
+      "page": "vendor-overview.html",
+      "paragraph_mappings": 9,
+      "verified_mapped_link_destinations": 13
+    }
+  ],
+  "html_pages": 60,
+  "paragraph_mappings": 378,
+  "mapped_link_destinations": 650,
+  "all_preserved": true
+}
