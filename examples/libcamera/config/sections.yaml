@@ -3281,11 +3281,11 @@ sections:
   semantic_review: true
 - id: team-overview
   reader_scope:
-    revision: 1
-    change_reason: 출력을 보기 전에 독자의 필수 과업과 완료 범위를 고정합니다.
+    revision: 2
+    change_reason: 공개 예제의 대상을 libcamera로 명시하여 사내 HAL의 미확인 사항을 본문에 덧붙이지 않게 합니다.
     tasks:
     - id: collaboration
-      goal: 타팀이 HAL의 역할·입출력·인터페이스와 협업 책임을 구분합니다.
+      goal: 타팀이 libcamera의 역할·입출력·인터페이스와 협업 책임을 구분합니다.
       completion: 역할·입출력·책임 경계에 답하는 절과 근거에 도달합니다.
       requirements:
       - role
