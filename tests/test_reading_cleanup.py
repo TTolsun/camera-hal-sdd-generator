@@ -151,3 +151,22 @@ def test_generated_status_groups_preserve_all_pages_and_nonpassing_states(tmp_cf
     assert '<span>인용 검사 확인 필요</span>' in page and '<span>인용 검사 통과</span>' in page
     assert page.count('<span>사람 검토 전</span>') >= 2
     assert 'href="device.html"' in page and 'href="nested/detail.html"' in page
+
+
+def test_pagination_merges_same_destination_into_the_requested_next_step():
+    from sdd.export_site import _pagination_html
+    entries = [('', '지원 범위와 검증', 'assurance.md'), ('', '연동', 'integration.md'), ('', '상세', 'detail.md')]
+    links = _pagination_html(entries, {'integration.md': {'next': {'link': 'assurance.md'}}},
+                             1, 'integration.md', 'integration.html')
+    assert links == ['<a class="next" href="assurance.html"><small>다음</small>지원 범위와 검증 →</a>']
+
+
+@pytest.mark.parametrize('destination', ['assurance.md#scope', 'detail.md'])
+def test_pagination_keeps_distinct_page_or_fragment_destinations(destination):
+    from sdd.export_site import _pagination_html
+    entries = [('', '같은 제목', 'assurance.md'), ('', '연동', 'integration.md'), ('', '같은 제목', 'detail.md')]
+    links = _pagination_html(entries, {'integration.md': {'next': {'link': destination}}},
+                             1, 'integration.md', 'integration.html')
+    assert len(links) == 2
+    assert links[0].startswith('<a class="previous" href="assurance.html">')
+    assert ('href="' + destination.replace('.md', '.html') + '"') in links[1]
