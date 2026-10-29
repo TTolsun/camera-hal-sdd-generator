@@ -1485,9 +1485,9 @@ sections:
       scope:
         start: ImgUDevice::PipeConfig ImgUDevice::calculatePipeConfig(Pipe *pipe)
         end: '
-    
+
           }
-    
+
           '
     parts:
     - id: bounds
