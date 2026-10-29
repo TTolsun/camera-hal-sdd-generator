@@ -1,0 +1,48 @@
+"""Read-only current-policy check of one authentic completed public CLI unit."""
+from pathlib import Path
+import hashlib, json
+from sdd.config import load
+from sdd.facts.model import KnowledgeModel
+from sdd.design_request import prepare_requests, _design_units, _unit_request, _unit_tag
+from sdd.design_response import response_schema
+from sdd.design_execution import _validate_unit_response
+from sdd.cli_checkpoint import UnitStore, execution_identity, validation_policy, validation_model, style_policy, checksum
+from sdd.grounding import policy_hash
+
+cfg = load(Path('C:/Users/baboe/.codex/worktrees/d9d0/camera-hal-sdd-generator/build/issues-162-163/publication/sdd.codex.local.yaml'))
+model = KnowledgeModel.load(cfg.facts_path)
+section = next(s for s in cfg.sections() if s['id'] == 'vendor-overview')
+topic = _design_units(section, {})[0]
+plan = prepare_requests(cfg, model, section, None)
+focus, system, unit_policy = plan.prompts[topic['id']]
+request = _unit_request(model, section, topic, focus)
+schema = response_schema(topic, request.passages)
+identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,
+    request=dict(system=system, user=request.user, response_schema=schema),
+    execution=execution_identity(cfg.agent, schema), prompt_policy=unit_policy,
+    validation_policy=validation_policy(), validation_model=validation_model(model),
+    validation_answers=checksum({}), style_policy=style_policy(cfg),
+    grounding_policy=policy_hash(), revision=cfg.review.design_revision)
+store = UnitStore(cfg, identity)
+def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
+before = sha(store.path)
+cached = store.read()
+assert cached is not None
+saved, reviewer = cached
+assert saved['identity']['validation_policy'] != identity['validation_policy']
+original_records = {name: sha(store.calls / name) for name in saved['receipts']}
+statements = _validate_unit_response(cfg, model, reviewer, section, topic, saved['raw'],
+    request.sources, request.passages, _unit_tag(section, topic), True,
+    request.source_files, request.scopes, request.context_records, prior_answers={})
+assert statements == saved['statements']
+assert sha(store.path) == before
+assert original_records == {name: sha(store.calls / name) for name in saved['receipts']}
+proof = dict(scope='One unchanged completed public CLI unit, current checks plus exact original grounding receipt; not a new model call or whole-batch result.',
+    unit=_unit_tag(section, topic), source_commit=model.meta['source_commit'],
+    checkpoint=str(store.path), checkpoint_sha256=before, new_model_calls=0,
+    original_receipts_unchanged=original_records, validation_policy_changed=True,
+    changed_checks=[key for key, value in identity['validation_policy'].items() if saved['identity']['validation_policy'].get(key) != value],
+    current_validation='passed', saved_statement_bytes_preserved=True, human_review='pending')
+out = Path('build/goal-164-166/current-checkpoint-revalidation.json')
+out.write_text(json.dumps(proof, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+print(json.dumps(proof), flush=True)

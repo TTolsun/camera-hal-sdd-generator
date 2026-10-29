@@ -1,0 +1,61 @@
+"""Compare only verified reader manuscripts at the same historical source."""
+from pathlib import Path
+import hashlib,json
+import yaml
+from sdd.config import load,section_output
+from sdd.facts.model import KnowledgeModel
+from sdd.document_metadata import split_frontmatter
+from sdd.generated_design import verify
+from sdd.markdown_text import slugify
+
+base=Path('build/goal-164-166'); before=base/'public-repo/publication/goal-138-140'
+cfg=load(base/'scope-after-e117/sdd.yaml')
+old_model=KnowledgeModel.load(before/'facts/facts.json');new_model=KnowledgeModel.load(cfg.facts_path)
+source='e117198c015057761bb0bbaa85f963c41ce412d7'
+assert old_model.meta['source_commit']==new_model.meta['source_commit']==source
+assert {k:v for k,v in old_model.to_dict().items() if k!='evidence'}=={k:v for k,v in new_model.to_dict().items() if k!='evidence'}
+fixed=json.loads((base/'preregistered-scope.json').read_text(encoding='utf-8'))
+old={s['id']:s for s in yaml.safe_load((before/'sections.yaml').read_text(encoding='utf-8'))['sections']}
+new={s['id']:s for s in cfg.sections()}
+def describe(model,section,path,scope):
+    text=path.read_text(encoding='utf-8');meta,_=split_frontmatter(text)
+    assert meta['source_commit']==source
+    checked=verify(model,section,text,cfg=cfg)
+    assert checked['status']=='documented'
+    answers=meta['generated_design']['answers']
+    titles={t['id']:t['title'] for t in section['design_topics']}
+    tasks=[]
+    for task in scope['tasks']:
+        questions=[]
+        for rid in task['requirements']:
+            topics=[tid for tid,rows in answers.items() if any(rid in r.get('covers',[]) and r.get('kind','behavior')!='limitation' for r in rows)]
+            questions.append(dict(requirement=rid,locations=[dict(topic=tid,markdown=section_output(section)+'#'+slugify(titles[tid])) for tid in topics]))
+        tasks.append(dict(id=task['id'],goal=task['goal'],completion=task['completion'],questions=questions,missing=[q['requirement'] for q in questions if not q['locations']]))
+    return dict(manuscript_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+        requirements=[r['id'] for r in section['design_requirements']],topics=list(answers),tasks=tasks,
+        prose_chars=sum(len(r['text']) for rows in answers.values() for r in rows),
+        metric_scope='Verified generated statement text; excerpts/diagrams/metadata excluded. Not a quality score or human task success.',
+        current_structural_validation='passed',grounding=meta['generated_design'].get('grounding_review'),human_review='pending')
+pages={}
+for sid,registered in fixed['pages'].items():
+    scope=registered['reader_scope'];assert new[sid]['reader_scope']==scope
+    assert [t['id'] for t in old[sid]['design_topics']]==registered['before_topics']
+    assert [t['id'] for t in new[sid]['design_topics']]==registered['after_topics']
+    left=describe(old_model,old[sid],before/'manuscripts'/section_output(old[sid]),scope)
+    right=describe(new_model,new[sid],cfg.sdd_dir/section_output(new[sid]),scope)
+    assert not any(t['missing'] for t in right['tasks'])
+    old_hashes={r['sha256'] for k,r in old_model.evidence.items() if k.startswith(sid+'/')}
+    new_hashes={r['sha256'] for k,r in new_model.evidence.items() if k.startswith(sid+'/')}
+    moved_hashes={r['sha256'] for k,r in old_model.evidence.items() if k.startswith(sid+'/queue-limit/')}
+    assert not (old_hashes-new_hashes-moved_hashes),sid
+    pages[sid]=dict(before=left,after=right,change_reason=scope['change_reason'],optional=scope['optional'],excluded=scope['excluded'],
+        removed_requirements=scope['removed_requirements'],retained_nonmoved_source_hashes=True,
+        moved_topic='queue-limit' if 'queue-limit' in left['topics'] and 'queue-limit' not in right['topics'] else None)
+report=dict(scope='Three reader manuscripts only, both at the same published e117 source and extracted structural facts. Product input excluded to isolate #164; actual source212 product integration and deployment are separate.',
+    source_commit=source,scope_preregistered_before_generation=True,
+    timing_note='Reader tasks were fixed before new outputs. This e117 comparison was selected after the prior-contract source212 attempt failed; that failure and all 95 calls remain recorded.',
+    pages=pages,moved_detail=dict(destination=fixed['destination'],status='Declared existing detail destination; its actual generated content/link is verified in the separate integrated source212 publication.'),
+    cli_run='scope-after-e117-v1',manuscript_lineage='94 new calls, followed by a zero-call repeat that exposed unnecessary metadata rewriting, then a corrected zero-call byte-stable repeat; all runs retained separately.',publication_status='Not a complete publishable workspace; inspect the full CLI exit/lifecycle record separately.',
+    human_task_test='pending',internal_hal_validation='not-run')
+out=base/'reader-scope-same-e117.json';out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps({k:{'before_chars':v['before']['prose_chars'],'after_chars':v['after']['prose_chars'],'missing':sum(len(t['missing']) for t in v['after']['tasks'])} for k,v in pages.items()}),flush=True)

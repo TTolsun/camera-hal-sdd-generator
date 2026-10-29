@@ -1,0 +1,8 @@
+{
+  "method": "Native link followed from CSP-sandboxed document with scripting disabled",
+  "result": {
+    "sourceTextVisible": true,
+    "title": "libcamera-sdd/Documentation/introduction.rst at e117198c015057761bb0bbaa85f963c41ce412d7 · TTolsun/libcamera-sdd",
+    "url": "https://github.com/TTolsun/libcamera-sdd/blob/e117198c015057761bb0bbaa85f963c41ce412d7/Documentation/introduction.rst#L10"
+  }
+}
