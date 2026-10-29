@@ -1,0 +1,130 @@
+{
+  "source_commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "prior_receipts": [
+    "60b1bf48442840808eecd0e46851648e/001.receipt.json",
+    "60b1bf48442840808eecd0e46851648e/002.receipt.json"
+  ],
+  "retry_receipt": "e73003925f134885ba8fbf5ecf2ac9df/004.receipt.json",
+  "derivation": "Unedited native statement texts; retry quote resolved by the existing source_passages/resolve_passages functions.",
+  "raw_retry_response": "{\"statements\":[{\"text\":\"`libcamera`는 Linux 기반 시스템에서 카메라의 원하는 결과를 얻는 데 필요한 하드웨어 구성과 이미지 제어 알고리즘을 커널 API를 통해 추상화합니다. 따라서 개발자는 이 작업을 간단하고 일관된 방식으로 다룰 수 있습니다.\",\"quote_id\":\"product-official-stack:1\",\"evidence\":[\"product-official-stack\"],\"covers\":[\"value\"],\"kind\":\"behavior\"}]}",
+  "evidence": {
+    "what": {
+      "commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+      "selector": {
+        "id": "what",
+        "file": "Documentation/introduction.rst",
+        "start": "libcamera is an open source complex camera support library",
+        "end": "involved in capturing images from complex cameras on Linux systems."
+      },
+      "status": "available",
+      "file": "Documentation/introduction.rst",
+      "line": 10,
+      "end_line": 13,
+      "text": "libcamera is an open source complex camera support library for Linux, Android\nand ChromeOS. The library interfaces with Linux kernel device drivers and\nprovides an intuitive API to developers in order to simplify the complexity\ninvolved in capturing images from complex cameras on Linux systems.",
+      "sha256": "84621541899cba7430b844bc03d13fc8e6f3f03e7c30556df0bf1cd11007494c",
+      "whole_file": false
+    },
+    "for": {
+      "commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+      "selector": {
+        "id": "for",
+        "file": "Documentation/introduction.rst",
+        "start": "libcamera provides a complete camera stack for Linux-based systems to abstract",
+        "end": "having to deal with this:"
+      },
+      "status": "available",
+      "file": "Documentation/introduction.rst",
+      "line": 45,
+      "end_line": 49,
+      "text": "libcamera provides a complete camera stack for Linux-based systems to abstract\nthe configuration of hardware and image control algorithms required to obtain\ndesirable results from the camera through the kernel's APIs, reducing those\noperations to a simple and consistent method for developers. In short instead of\nhaving to deal with this:",
+      "sha256": "56f623776b7eab9511de1f32c1f3080c4eab37239185f5134db6b2644760b1f5",
+      "whole_file": false
+    },
+    "product-official-stack": {
+      "commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+      "selector": {
+        "id": "product-official-stack",
+        "file": "product-evidence/libcamera/official-stack.txt",
+        "start": "product-official-stack",
+        "end": "product-official-stack",
+        "kind": "product",
+        "product_record": {
+          "id": "official-stack",
+          "type": "project-document",
+          "supplier": "libcamera official upstream; CC-BY-SA-4.0; URL in local material",
+          "version": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+          "date": "2026-10-30",
+          "valid_until": "2026-10-30",
+          "product": "libcamera",
+          "release": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+          "configuration": "public-source-documentation",
+          "feature": "camera-stack",
+          "conditions": [
+            "Linux-based systems",
+            "Kernel drivers and the relevant pipeline implementation are required."
+          ],
+          "availability": "offered",
+          "file": "product-evidence/libcamera-stack.txt",
+          "sha256": "fdd39a9c11328e6bb549203a2395b3f9331fa15d5e2da711b703643e299f8fc0"
+        },
+        "text": ".. SPDX-License-Identifier: CC-BY-SA-4.0\n.. Source: https://gitlab.freedesktop.org/camera/libcamera/-/blob/212c689fcf2450bbfbaab25c7472895ac277b5d6/Documentation/introduction.rst\n.. Unmodified excerpt; project documentation, not a commercial product specification.\n\nlibcamera provides a complete camera stack for Linux-based systems to abstract\nthe configuration of hardware and image control algorithms required to obtain\ndesirable results from the camera through the kernel's APIs, reducing those\noperations to a simple and consistent method for developers. In short instead of\nhaving to deal with this:\n"
+      },
+      "status": "available",
+      "origin": "product-material",
+      "product_record": {
+        "id": "official-stack",
+        "type": "project-document",
+        "supplier": "libcamera official upstream; CC-BY-SA-4.0; URL in local material",
+        "version": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+        "date": "2026-10-30",
+        "valid_until": "2026-10-30",
+        "product": "libcamera",
+        "release": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+        "configuration": "public-source-documentation",
+        "feature": "camera-stack",
+        "conditions": [
+          "Linux-based systems",
+          "Kernel drivers and the relevant pipeline implementation are required."
+        ],
+        "availability": "offered",
+        "file": "product-evidence/libcamera-stack.txt",
+        "sha256": "fdd39a9c11328e6bb549203a2395b3f9331fa15d5e2da711b703643e299f8fc0"
+      },
+      "file": "product-evidence/libcamera/official-stack.txt",
+      "line": 1,
+      "end_line": 10,
+      "text": ".. SPDX-License-Identifier: CC-BY-SA-4.0\n.. Source: https://gitlab.freedesktop.org/camera/libcamera/-/blob/212c689fcf2450bbfbaab25c7472895ac277b5d6/Documentation/introduction.rst\n.. Unmodified excerpt; project documentation, not a commercial product specification.\n\nlibcamera provides a complete camera stack for Linux-based systems to abstract\nthe configuration of hardware and image control algorithms required to obtain\ndesirable results from the camera through the kernel's APIs, reducing those\noperations to a simple and consistent method for developers. In short instead of\nhaving to deal with this:\n",
+      "sha256": "fdd39a9c11328e6bb549203a2395b3f9331fa15d5e2da711b703643e299f8fc0",
+      "whole_file": true
+    }
+  },
+  "answers": {
+    "value": [
+      {
+        "text": "`libcamera`는 Linux, Android, ChromeOS를 대상으로 복잡한 카메라를 지원하는 오픈 소스 라이브러리입니다. Linux 커널 장치 드라이버와 연동하고 개발자에게 API를 제공해 Linux 시스템에서 복잡한 카메라로 이미지를 캡처하는 작업을 단순화합니다. 또한 Linux 기반 시스템에 카메라 스택을 제공하며, 커널 API를 통해 필요한 하드웨어와 이미지 제어 알고리즘의 구성을 추상화해 개발자가 일관된 방식으로 다룰 수 있게 합니다.",
+        "evidence": [
+          "what",
+          "product-official-stack"
+        ],
+        "covers": [
+          "value"
+        ],
+        "kind": "behavior",
+        "quote": "libcamera is an open source complex camera support library for Linux, Android\nand ChromeOS. The library interfaces with Linux kernel device drivers and\nprovides an intuitive API to developers in order to simplify the complexity\ninvolved in capturing images from complex cameras on Linux systems.",
+        "part_id": "what"
+      },
+      {
+        "text": "`libcamera`는 Linux 기반 시스템에서 카메라의 원하는 결과를 얻는 데 필요한 하드웨어 구성과 이미지 제어 알고리즘을 커널 API를 통해 추상화합니다. 따라서 개발자는 이 작업을 간단하고 일관된 방식으로 다룰 수 있습니다.",
+        "evidence": [
+          "product-official-stack"
+        ],
+        "covers": [
+          "value"
+        ],
+        "kind": "behavior",
+        "quote": "libcamera provides a complete camera stack for Linux-based systems to abstract\nthe configuration of hardware and image control algorithms required to obtain\ndesirable results from the camera through the kernel's APIs, reducing those\noperations to a simple and consistent method for developers. In short instead of\nhaving to deal with this:",
+        "part_id": "easier"
+      }
+    ]
+  }
+}
