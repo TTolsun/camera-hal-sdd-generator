@@ -6,7 +6,7 @@ import re
 from pathlib import PurePosixPath
 from urllib.parse import quote,urlsplit
 import markdown
-from .evidence_navigation import compact_evidence
+from .evidence_navigation import compact_evidence, fold_source_details
 from .export_html import _mermaid_fence
 from .facts.model import KnowledgeModel
 SOURCE_LINK_TEMPLATES = {
@@ -64,6 +64,7 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
         rendered = re.sub(r"<code>([^<>]+:\d+)</code>", citation, rendered)
     valid = model.citations() if model and commit == model.meta.get("source_commit") else set()
     rendered = compact_evidence(rendered, valid)
+    rendered = fold_source_details(rendered)
 
     def table_wrapper(match: re.Match) -> str:
         table = match[0]

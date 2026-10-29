@@ -145,8 +145,10 @@ class UnitStore:
             arguments = record.receipt['provider'].get('arguments')
             # A historical receipt without actual CLI arguments is insufficient
             # for this optimization; ordinary manuscript provenance is separate.
-            from .cli_agent import command, arguments as invocation_arguments
-            expected = command(self.cfg.agent)[1:] + invocation_arguments(self.cfg.agent, record.request['response_schema'])
+            from .cli_agent import arguments as invocation_arguments
+            # Validating an archived call does not execute its historical binary.
+            # Keep the exact configured prefix arguments without resolving PATH.
+            expected = self.cfg.agent.command[1:] + invocation_arguments(self.cfg.agent, record.request['response_schema'])
             if arguments != expected:
                 raise ValueError('CLI checkpoint arguments mismatch')
             rows.append(record)

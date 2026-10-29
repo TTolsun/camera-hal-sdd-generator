@@ -11,8 +11,12 @@
     const anchor = target?.parentElement?.tagName === 'P' ? target.parentElement : target;
     const panel = anchor?.nextElementSibling;
     if (panel?.tagName === 'DETAILS') {
+      for (let parent = panel.parentElement; parent; parent = parent.parentElement) {
+        if (parent.tagName === 'DETAILS') parent.open = true;
+      }
       panel.open = true;
       panel.querySelector('summary')?.focus({preventScroll: true});
+      panel.scrollIntoView({block: 'start'});
     }
   }
   window.addEventListener('hashchange', revealEvidence);

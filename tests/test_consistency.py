@@ -202,6 +202,12 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
     report = audit(tmp_cfg, model, agent())
     assert report['status']=='passed' and report['human_review']=='pending'
     enforce(tmp_cfg, model)
+    with monkeypatch.context() as missing_cli:
+        def unavailable(cfg):
+            raise RuntimeError('Historical CLI binary was removed by an app update')
+        missing_cli.setattr('sdd.cli_agent.command', unavailable)
+        enforce(tmp_cfg, model)
+        assert len(calls) == 1  # Archive validation never needs to launch a CLI.
     for field in ('claims', 'sources', 'source_aliases'):
         altered = copy.deepcopy(report)
         altered['contracts'][0][field] = {}
