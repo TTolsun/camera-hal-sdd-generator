@@ -2911,8 +2911,9 @@ sections:
         - - 반환
           - return
     - id: ct-threshold
-      question: update가 false이며 enabled가 true인 경로에서 원래 색온도 차이와 양자화 색온도 비교는 어떤 순서로
-        조기 반환을 결정합니까? 두 검사와 각 경계 조건을 함께 한 문장으로 설명하고 공통 전제는 한 번만 쓰세요.
+      question: frameContext.lsc.update가 false이며 frameContext.lsc.enabled가 true인 경로에서 원래 색온도
+        차이와 양자화 색온도 비교는 어떤 순서로 조기 반환을 결정합니까? 조건의 소유 멤버 경로를 명시하고 두 검사와 각 경계 조건을 함께 한 문장으로 설명하세요.
+        공통 전제는 한 번만 쓰세요.
       sources:
       - prepare
       - constants
@@ -2923,6 +2924,8 @@ sections:
         - - kColourTemperatureQuantization
         - - quantizedCt
         - - lastAppliedQuantizedCt_
+        - - frameContext.lsc.update
+        - - frameContext.lsc.enabled
       max_statements: 1
     - id: upload
       question: 앞의 조기 반환을 통과한 경로에서 params->use.acc_shd에 기록하는 값과 그 플래그의 의미만 설명하세요.
@@ -2993,8 +2996,8 @@ sections:
         - - interpolateComponents
         - - quantizedCt
     - id: lut-channels
-      question: LUT의 lut->sets 배열에 set의 r·gr·gb·b 채널을 어디로 대입하는지 설명하세요. 루프 한도나 저장 색온도는
-        이 질문의 범위가 아닙니다.
+      question: LUT의 lut->sets 배열에 set의 r·gr·gb·b 채널을 어디로 대입하는지 설명하세요. 각 채널의 입력식과
+        인덱스를 포함한 완전한 목적 필드 경로를 명시해 매핑을 바로 대조할 수 있게 쓰세요. 루프 한도나 저장 색온도는 이 질문의 범위가 아닙니다.
       sources:
       - lut-writes
       answer_contract:
@@ -3002,6 +3005,14 @@ sections:
         required_terms:
         - - lut
           - LUT
+        - - lut->sets[s].r_and_gr[c].r
+        - - lut->sets[s].r_and_gr[c].gr
+        - - lut->sets[s].gb_and_b[c].gb
+        - - lut->sets[s].gb_and_b[c].b
+        - - 'set.at("r")[i]'
+        - - 'set.at("gr")[i]'
+        - - 'set.at("gb")[i]'
+        - - 'set.at("b")[i]'
     - id: remember
       question: ct를 lastAppliedCt_에, quantizedCt를 lastAppliedQuantizedCt_에 저장하는 두 대입을
         한 문장으로 설명하세요. 좌변·우변이라는 자명한 풀이를 되풀이하거나 변수를 함수 인자·함수 마지막 줄로 해석하지 마세요.

@@ -303,7 +303,7 @@ def _different_bound_booleans(model, section_id, topic_id, later, earlier, *, ea
         return False
     comparison = re.fullmatch(
         r'먼저\s+(?:원래\s+[가-힣]+\s+)?`([^`]+)`와\s*`([^`]+)`의\s*절대\s*차이가\s*'
-        r'`([^`]+)`보다\s*작을\s*때\s*반환하고,\s*그\s*차이가\s*경계값\s*이상이면\s*'
+        r'`([^`]+)`보다\s*작을\s*때\s*반환하고,\s*(?:그\s*차이가\s*(?:경계값|해당\s*값)\s*이상이면|그렇지\s*않으면)\s*'
         r'`([^`]+)`가\s*`([^`]+)`와\s*같을\s*때\s*반환합니다[.]?', claims[positive][5])
     if not comparison:
         return False
@@ -344,9 +344,23 @@ def _indexed_channel_writes(text):
         r'`([^`]+)`(?:과|와)\s*`([^`]+)`(?:을|를|은|는)\s*각각\s*'
         r'`([^`]+)`(?:과|와)\s*`([^`]+)`에\s*대입합니다[.]?\s*',
         _CITATION.sub(' ', text))
-    if not match:
-        return None
-    owner, container, a, b, va, vb, da, db = match.groups()
+    if match:
+        owner, container, a, b, va, vb, da, db = match.groups()
+    else:
+        shorthand = re.fullmatch(
+            r'\s*(?:또한\s*)?(?:`([^`]+)`(?:는|은)\s*)?(?:LUT의\s*)?'
+            r'`([^`]+)`에서\s*`([^`]+)`(?:과|와)\s*`([^`]+)`에\s*각각\s*'
+            r'`([^`]+)`의\s*`([^`]+)`(?:과|와)\s*`([^`]+)`\s*채널의\s*'
+            r'`([^`]+)`번째\s*값을\s*대입합니다[.]?\s*', _CITATION.sub(' ', text))
+        if not shorthand:
+            return None
+        owner, base, a, b, container, read_a, read_b, index = shorthand.groups()
+        if (a, b) != (read_a, read_b):
+            return None
+        # Normalize a complete member/index description, not manuscript prose.
+        # The caller still proves these exact LHS/RHS instructions in source.
+        va, vb = (f'{container}.at("{channel}")[{index}]' for channel in (a, b))
+        da, db = (f'{base}.{channel}' for channel in (a, b))
     ident = r'[A-Za-z_][A-Za-z0-9_]*'
     if ((owner and not re.fullmatch(_NAME + r'(?:\(\))?', owner))
             or (container and not re.fullmatch(_NAME, container)) or a == b):
