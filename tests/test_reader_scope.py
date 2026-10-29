@@ -70,6 +70,20 @@ def test_scope_change_invalidates_completion_and_topic_reuse(sample_model):
     assert topic_inputs(sample_model, sec, 'fixed policy') == inputs
 
 
+def test_already_covered_accepts_existing_statement_contract_but_not_only_a_limitation():
+    sec = section()
+    sec['design_topics'][0].pop('covers')
+    statement = {'text': 'Fixed source-based input contract.', 'covers': ['inputs'], 'evidence': ['source']}
+    sec['design_topics'][0]['statements'] = [statement]
+    data = decision('already-covered')
+    data.update(kind='no_gap')
+    data['scope_decision']['evidence'] = ['source-window']
+    assert candidate(sec, data)['disposition'] == 'already-covered'
+    statement['kind'] = 'limitation'
+    with pytest.raises(ValueError, match='does not cover'):
+        candidate(sec, data)
+
+
 def test_report_has_reachable_answers_selected_evidence_and_separate_review_states(sample_model):
     sample_model.evidence['guide/input-flow/source'] = {'text': 'fixed source'}
     sec = section()

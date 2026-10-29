@@ -492,7 +492,7 @@ def test_configured_next_overrides_menu_order_and_preserves_anchor(tmp_cfg, samp
     assert '<a class="next" href="device.html#evidence">' in page
 
 
-def test_navigation_table_has_mobile_layout_without_changing_data_tables(tmp_cfg, sample_model):
+def test_redundant_navigation_table_is_removed_without_changing_data_tables(tmp_cfg, sample_model):
     prepare(tmp_cfg, sample_model)
     path = tmp_cfg.sdd_dir / 'device.md'
     with path.open('a', encoding='utf-8') as f:
@@ -500,7 +500,8 @@ def test_navigation_table_has_mobile_layout_without_changing_data_tables(tmp_cfg
         f.write('\n| 데이터 | 값 |\n|---|---|\n| 상태 | 정상 |\n')
     out = export_site(tmp_cfg)
     page = (out / 'device.html').read_text(encoding='utf-8')
-    assert page.count('class="table-scroll reading-routes"') == 1
+    assert '지금 확인할 내용' not in page
+    assert '<td>확인합니다.</td>' not in page
     assert page.count('class="table-scroll"') == 1
 
 

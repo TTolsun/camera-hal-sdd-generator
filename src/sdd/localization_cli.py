@@ -44,7 +44,8 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
             pages[path.relative_to(out).as_posix()] = source_hash(document)
             units.update(display_strings(document))
         for entry in json.loads((out / 'assets/search.json').read_text(encoding='utf-8')):
-            units.update(entry[k].strip() for k in ('title', 'page') if KOREAN.search(entry[k]))
+            fields = ('page',) if entry.get('kind') == 'symbol' else ('title', 'page')
+            units.update(entry[k].strip() for k in fields if KOREAN.search(entry[k]))
         if (out / 'assets/glossary.json').exists():
             # The in-page term popover reads these names and definitions, so they need translations too.
             for item in json.loads((out / 'assets/glossary.json').read_text(encoding='utf-8')):

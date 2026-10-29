@@ -2,34 +2,6 @@
 
 (() => {
   'use strict';
-  // Evidence links resolve to deduplicated excerpts. Open the target on arrival;
-  // without JavaScript, the same anchor and native summary remain usable.
-  function revealEvidence() {
-    const id = location.hash.slice(1);
-    if (!/^source-[0-9a-f]{16}$/.test(id)) return;
-    const target = document.getElementById(id);
-    const anchor = target?.parentElement?.tagName === 'P' ? target.parentElement : target;
-    const panel = anchor?.nextElementSibling;
-    if (panel?.tagName === 'DETAILS') {
-      for (let parent = panel.parentElement; parent; parent = parent.parentElement) {
-        if (parent.tagName === 'DETAILS') parent.open = true;
-      }
-      panel.open = true;
-      panel.querySelector('summary')?.focus({preventScroll: true});
-      panel.scrollIntoView({block: 'start'});
-    }
-  }
-  window.addEventListener('hashchange', revealEvidence);
-  document.addEventListener('click', event => {
-    const link = event.target.closest('a[href^="#source-"]');
-    if (link && link.hash === location.hash) {
-      event.preventDefault();
-      revealEvidence();
-      document.getElementById(location.hash.slice(1))?.scrollIntoView({block: 'start'});
-    }
-  });
-  window.addEventListener('pageshow', revealEvidence);
-
   const config = JSON.parse(document.querySelector('#site-config').textContent);
   const english = config.language === 'en';
   const t = (ko, en) => english ? en : ko;
@@ -54,13 +26,6 @@
       link.href = target.href;
     }));
   }
-  document.body.classList.add('js');
-  const menu = document.querySelector('#menu-toggle');
-  menu.hidden = false;
-  menu.addEventListener('click', () => {
-    const open = document.querySelector('#sidebar').classList.toggle('is-open');
-    menu.setAttribute('aria-expanded', String(open));
-  });
   // Share the preference across pages and editions, but not across hosted sites.
   const sidebar = document.querySelector('#sidebar');
   const layout = sidebar.parentElement;
@@ -175,6 +140,21 @@
   document.querySelectorAll('dialog [data-close]').forEach(button => {
     button.addEventListener('click', () => button.closest('dialog').close());
   });
+  document.querySelectorAll('dialog').forEach(dialog => {
+    const outside = event => {
+      const box = dialog.getBoundingClientRect();
+      return event.clientX < box.left || event.clientX > box.right
+        || event.clientY < box.top || event.clientY > box.bottom;
+    };
+    let backdropDown = false;
+    dialog.addEventListener('pointerdown', event => {
+      backdropDown = event.target === dialog && outside(event);
+    });
+    dialog.addEventListener('click', event => {
+      if (backdropDown && event.target === dialog && outside(event)) dialog.close();
+      backdropDown = false;
+    });
+  });
 
   const searchDialog = document.querySelector('#search-dialog');
   const searchOpen = document.querySelector('#search-open');
@@ -196,23 +176,28 @@
     // Glossary terms match on their own names only; otherwise "용어" would list every term
     // because they all belong to the glossary page.
     const text = item => item.url.includes('#term-') ? item.title : `${item.title} ${item.page}`;
-    const matches = index.filter(item => text(item).toLocaleLowerCase().includes(query))
+    const matches = index.filter(item => (query || item.kind !== 'symbol')
+        && text(item).toLocaleLowerCase().includes(query))
       .map((item, order) => ({item, order, rank: query ? rank(item) : 2}))
       .sort((a, b) => a.rank - b.rank || a.order - b.order).map(({item}) => item);
     results.replaceChildren();
-    matches.forEach(item => {
+    matches.slice(0, 100).forEach(item => {
       const li = document.createElement('li');
       const a = document.createElement('a');
       a.href = new URL(item.url, root).href;
       a.textContent = item.title;
       const small = document.createElement('small');
-      small.textContent = item.page;
+      const kind = item.kind === 'symbol' ? t('코드 요소', 'Symbol')
+        : item.url.includes('#term-') ? t('용어', 'Term')
+        : item.url.includes('#') ? t('절', 'Section') : t('문서', 'Document');
+      small.textContent = kind + (item.page === item.title ? '' : ` · ${item.page}`);
       a.append(small);
       a.addEventListener('click', () => searchDialog.close());
       li.append(a);
       results.append(li);
     });
-    count.textContent = t(`${matches.length}개 결과 · 문서 제목, 절 제목과 용어를 검색합니다.`, `${matches.length} results · Searching document titles, section titles and terms.`);
+    count.textContent = t(`${matches.length}개 결과 · 문서·절·용어·코드 요소`, `${matches.length} results · Documents, sections, terms and symbols`)
+      + (matches.length > 100 ? t(' · 상위 100개 표시 · 검색어를 더 입력하세요.', ' · First 100 shown · Refine your search.') : '');
   }
   async function openSearch() {
     if (document.querySelector('dialog[open]')) return;
@@ -302,6 +287,10 @@
     document.querySelector('#diagram-title').textContent = trigger.getAttribute('data-title') || t('다이어그램', 'Diagram');
     diagramDialog.showModal();
     fit();
+    if (window.matchMedia('(max-width: 760px)').matches && active.scale < .85) {
+      scale(.85, false);
+      viewport.scrollTo(0, 0);
+    }
     nodeInput.focus();
   }
   diagramDialog.addEventListener('close', () => {
