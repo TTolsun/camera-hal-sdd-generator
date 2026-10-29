@@ -18,7 +18,7 @@ def fixture(name):
     r = case(name)
     source = r['source']
     row = dict(text=r['text'], quote=r['quote'], evidence=['x'])
-    if name == 'indexed-channel-writes':
+    if name.startswith('indexed-channel'):
         rows = [row]
     else:
         before = {**r['earlier'], 'evidence': ['x']}
@@ -42,7 +42,7 @@ def findings(source, rows):
     return duplicates.statement_findings(model, 's', {'t': rows})
 
 
-@pytest.mark.parametrize('name', ['indexed-channel-writes', 'unqualified-member-guard'])
+@pytest.mark.parametrize('name', ['indexed-channel-writes', 'indexed-channel-member-shorthand', 'unqualified-member-guard'])
 def test_actual_native_false_positive_is_distinct_with_original_bound_sources(name):
     source, rows = fixture(name)
     assert hashlib.sha256(source['text'].encode()).hexdigest() == source['sha256']
@@ -51,7 +51,7 @@ def test_actual_native_false_positive_is_distinct_with_original_bound_sources(na
     assert duplicates.SIMILARITY == .7 and duplicates.MINIMUM_SHARED == 6
 
 
-@pytest.mark.parametrize('name', ['indexed-channel-writes', 'unqualified-member-guard'])
+@pytest.mark.parametrize('name', ['indexed-channel-writes', 'indexed-channel-member-shorthand', 'unqualified-member-guard'])
 @pytest.mark.parametrize('change', ['missing-quote', 'unknown-quote', 'bad-hash', 'unavailable'])
 def test_distinctions_need_authentic_bound_source(name, change):
     source, rows = fixture(name)
@@ -321,3 +321,19 @@ def test_comparison_limit_reference_names_the_immediately_preceding_bound(refere
     assert findings(source, rows) == []
     rows[-1]['text'] = rows[-1]['text'].replace(reference + ' 이상이면', reference + ' 미만이면')
     assert findings(source, rows)  # reversing the complementary comparison remains rejected
+
+
+@pytest.mark.parametrize('change', ['swapped-read', 'wrong-index', 'repeated-pair', 'extra-effect'])
+def test_member_index_shorthand_retains_full_mapping_proof(change):
+    source, rows = fixture('indexed-channel-member-shorthand')
+    text = rows[0]['text']
+    if change == 'swapped-read':
+        text = text.replace('`set`의 `gb`와 `b`', '`set`의 `b`와 `gb`')
+    elif change == 'wrong-index':
+        text = text.replace('`i`번째', '`other`번째')
+    elif change == 'repeated-pair':
+        text = text.replace('lut->sets[s].gb_and_b[c]', 'lut->sets[s].r_and_gr[c]').replace('`gb`와 `b`', '`r`과 `gr`')
+    else:
+        text = text.replace('또한', '커널을 활성화하고 또한')
+    rows[0]['text'] = text
+    assert findings(source, rows)

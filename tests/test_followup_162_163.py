@@ -148,3 +148,22 @@ def test_module_selection_has_one_owner_and_keeps_both_function_returns():
     assert call['sources'] == ['module-call']
     assert all([term] in call['answer_contract']['required_terms']
                for term in ['module', 'name', 'minVersion', 'maxVersion'])
+
+
+def test_lut_mapping_question_requires_explicit_source_expressions_without_new_sources():
+    cfg = load(Path(__file__).parents[1] / 'examples/libcamera/sdd.yaml')
+    sec = next(s for s in cfg.sections() if s['id'] == 'ipu3-lsc-prepare')
+    topic = next(t for t in sec['design_topics'] if t['id'] == 'prepare')
+    part = next(p for p in topic['parts'] if p['id'] == 'lut-channels')
+    assert part['sources'] == ['lut-writes']
+    assert part['answer_contract']['basis'] == 'implementation'
+    source = json.loads((Path(__file__).parent / 'fixtures/source-bound-distinctions-162.json').read_text(encoding='utf-8'))['records'][0]['source']['text']
+    for channel, group in [('r', 'r_and_gr'), ('gr', 'r_and_gr'), ('gb', 'gb_and_b'), ('b', 'gb_and_b')]:
+        for term in [f'lut->sets[s].{group}[c].{channel}', f'set.at("{channel}")[i]']:
+            assert [term] in part['answer_contract']['required_terms'] and term in source
+    assert ['lut', 'LUT'] in part['answer_contract']['required_terms']
+    # An actual completed native canonical mapping fits the unchanged output cap.
+    from sdd.answer_contracts import check
+    record = json.loads((Path(__file__).parent / 'fixtures/source-bound-distinctions-162.json').read_text(encoding='utf-8'))['records'][0]
+    assert len(record['text']) <= 600
+    assert not check(part['answer_contract'], [{'text': record['text']}], 'mapping')
