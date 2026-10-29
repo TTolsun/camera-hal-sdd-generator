@@ -31,6 +31,22 @@ def _snapshot(cfg):
     return {str(p.resolve()): digest(p) for p in paths if p.is_file()}
 
 
+def _reader_inputs(cfg, section):
+    """Bind a scoped judgment to its actual questions and current manuscript."""
+    if not section.get('reader_scope'):
+        return None
+    inputs = {key: section.get(key) for key in ('design_requirements', 'design_topics')}
+    from .cli_checkpoint import style_policy, validation_policy
+    inputs.update(facts_sha256=digest(cfg.facts_path) if cfg.facts_path.is_file() else None,
+                  style_policy=style_policy(cfg), validation_policy=validation_policy(),
+                  review_policy=digest(Path(__file__)))
+    if section.get('design_generation') == 'llm':
+        from .config import section_output
+        path = cfg.sdd_dir / section_output(section)
+        inputs['manuscript_sha256'] = digest(path) if path.is_file() else None
+    return inputs
+
+
 def _scope(cfg, target, options, seen):
     """Walk bounded, overlapping source windows. No window means no model call."""
     allowed = options.get("sections")
@@ -49,6 +65,7 @@ def _scope(cfg, target, options, seen):
             continue
         if sec.get("kind", "prose") not in {"prose", "per-scenario"}:
             continue
+        reader_inputs = _reader_inputs(cfg, sec)
         patterns = options.get("files", sec.get("watch", []))
         if not isinstance(patterns, list) or any(not isinstance(p, str) for p in patterns):
             raise ValueError("idle_review.files는 glob 목록이어야 합니다.")
@@ -59,10 +76,13 @@ def _scope(cfg, target, options, seen):
             text = subprocess.check_output(["git", "show", f"{target}:./{file}"], cwd=cfg.source_root,
                                            encoding="utf-8")
             for offset in range(0, len(text), width - min(500, width // 2)):
-                key = hashlib.sha256(json.dumps([target, sec["id"], file, offset, width,
-                                                options.get("revision", 1), sec.get('reader_scope'),
-                                                [t['_product_context'] for t in sec.get('design_topics', [])
-                                                 if t.get('_product_context')]]).encode()).hexdigest()
+                identity = [target, sec["id"], file, offset, width,
+                            options.get("revision", 1), sec.get('reader_scope'),
+                            [t['_product_context'] for t in sec.get('design_topics', [])
+                             if t.get('_product_context')]]
+                if sec.get('reader_scope'):
+                    identity.append(reader_inputs)
+                key = hashlib.sha256(json.dumps(identity, sort_keys=bool(sec.get('reader_scope'))).encode()).hexdigest()
                 if key not in seen:
                     return key, sec, {"file": file, "offset": offset, "total_chars": len(text),
                                       "text": text[offset:offset + width]}
@@ -106,6 +126,26 @@ def _prompt(cfg, section, excerpt):
     selected = {k: section.get(k) for k in ("id", "title", "kind", "design_requirements", "reader_scope")}
     selected["topics"] = [{k: t.get(k) for k in ("id", "question", "statements")}
                           for t in section.get("design_topics", [])]
+    if section.get('reader_scope') and section.get('design_generation') == 'llm':
+        from .config import section_output
+        from .document_metadata import split_frontmatter
+        from .generated_design import verify
+        manuscript = cfg.sdd_dir / section_output(section)
+        text = manuscript.read_text(encoding='utf-8')
+        meta, _ = split_frontmatter(text)
+        model = KnowledgeModel.load(cfg.facts_path)
+        if meta.get('source_commit') != model.meta.get('source_commit'):
+            raise ValueError('누락 점검의 기존 원고와 facts 커밋이 다릅니다.')
+        verify(model, section, text, cfg=cfg)
+        answers = meta['generated_design']['answers']
+        for topic in selected['topics']:
+            # Give the actual verified explanations, rather than question-only
+            # placeholders. Full statement text retains conditions/exceptions;
+            # quote internals are already checked by verify, not repeated here.
+            topic['statements'] = [{key: row.get(key) for key in ('text', 'evidence', 'covers', 'kind')}
+                                   for row in answers[topic['id']]]
+        selected['existing_manuscript'] = {'sha256': digest(manuscript),
+            'source_commit': meta['source_commit'], 'validation': 'current checks; human review pending'}
     # The prose writer prompt requires Markdown and full paragraphs; it conflicts
     # with this bounded JSON reviewer, especially for smaller local models.
     style = cfg.style_dir / "README.md"
@@ -121,6 +161,16 @@ def _prompt(cfg, section, excerpt):
             'Only required can add_topic. Reuse the EXISTING task requirement ID and question; use a new topic ID. '
             'For optional-detail/already-covered/out-of-scope/deferred return needs_review, without new prose. '
             'no_gap applies only to this window, never whole-guide completion. ')
+    prose_example = (
+        '{"kind":"add_topic","section":"existing-id","reason":"why missing",'
+        '"requirement":{"id":"new-id","question":"..."},'
+        '"topic":{"id":"same-new-id","title":"...","question":"same question",'
+        '"sources":[{"id":"source-id","file":"given file","start":"exact unique text","end":"exact later text"}],'
+        '"statements":[{"text":"Korean factual explanation","evidence":["source-id"],"covers":["new-id"]}]}}')
+    if section.get('reader_scope'):
+        prose_example = (prose_example.replace('"id":"new-id"', '"id":"existing-required-id"')
+                         .replace('"id":"same-new-id"', '"id":"new-topic-id"')
+                         .replace('"covers":["new-id"]', '"covers":["existing-required-id"]'))
     return (scope_instruction + "You review one source excerpt for a missing documentation contract. "
             "Apply these writing rules only to JSON text fields, not to the response format:\n" + writing + "\n\n"
             "Find at most ONE substantive omission supported by this source window. "
@@ -131,11 +181,7 @@ def _prompt(cfg, section, excerpt):
             "not a request to explain every listed topic. Look specifically for an explicit source fact missing from existing statements. "
             "Return ONLY one JSON object. For no omission: {\"kind\":\"no_gap\",\"reason\":\"...\"}. "
             "For insufficient evidence: {\"kind\":\"needs_review\",\"reason\":\"...\"}. "
-            "For prose sections: {\"kind\":\"add_topic\",\"section\":\"existing-id\",\"reason\":\"why missing\","
-            "\"requirement\":{\"id\":\"new-id\",\"question\":\"...\"},"
-            "\"topic\":{\"id\":\"same-new-id\",\"title\":\"...\",\"question\":\"same question\","
-            "\"sources\":[{\"id\":\"source-id\",\"file\":\"given file\",\"start\":\"exact unique text\",\"end\":\"exact later text\"}],"
-            "\"statements\":[{\"text\":\"Korean factual explanation\",\"evidence\":[\"source-id\"],\"covers\":[\"new-id\"]}]}}. "
+            "For prose sections: " + prose_example + ". "
             "Source start/end must both occur in the supplied window. Do not supply hashes. "
             "For per-scenario sections only: {\"kind\":\"add_scenario\",\"section\":\"existing-id\","
             "\"reason\":\"why missing\",\"scenario\":{\"id\":\"new-id\",\"title\":\"Korean title\","
@@ -281,7 +327,12 @@ def _stage(cfg, target, data, work):
 
 
 def _review_identity(cfg, identity):
-    return hashlib.sha256((identity + json.dumps(cfg.sections(), sort_keys=True)).encode()).hexdigest()
+    sections = cfg.sections()
+    payload = json.dumps(sections, sort_keys=True)
+    scoped = [_reader_inputs(cfg, section) for section in sections if section.get('reader_scope')]
+    if scoped:
+        payload += json.dumps(scoped, sort_keys=True)
+    return hashlib.sha256((identity + payload).encode()).hexdigest()
 
 
 def _promote(cfg, path, state):
