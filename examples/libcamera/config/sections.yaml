@@ -1508,7 +1508,7 @@ sections:
       question: 첫 탐색은 폭 바깥·높이 안쪽, 두 번째는 높이 바깥·폭 안쪽이라는 중첩 순서와 각 최소값 이상 반복 조건을 짧게 설명하세요.
         두 번째 탐색 전 alignUp으로 두 값을 재초기화함을 구분하고, 안쪽 반복마다 바깥 반복 변수를 다시 초기화한다고 추정하지 마세요. calculateBDSHeight
         주석의 최대 높이 자르기·최솟값 감김 조건과 kIFAlignWidth·kIFAlignHeight 감소도 보존하세요. 최소값 공식은 앞 문단에서
-        설명했으므로 반복하지 말고 완전한 문장으로 마치세요.
+        설명했으므로 반복하지 말고 완전한 문장으로 마치세요. 입력 포매터는 풀어 쓰고 뜻이 없는 IF 약어를 사용하지 마세요.
       sources:
       - search
       max_statements: 3
@@ -1521,6 +1521,9 @@ sections:
         - - calculateBDSHeight
         - - kIFAlignHeight
         - - kIFAlignWidth
+        reject_patterns:
+        - pattern: (?<![A-Za-z0-9_])IF(?![A-Za-z0-9_])
+          message: 이 질문은 계산식과 분기를 묻습니다. 대상은 선언된 변수·함수 이름으로 명시하고 풀이 없는 IF 약어를 도입하지 마세요.
   design_requirements:
   - id: responsibility
     question: 핸들러는 어떤 객체와 장치를 만들고 관리합니까?
