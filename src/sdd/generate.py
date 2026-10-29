@@ -625,11 +625,7 @@ def _routes_from_config(sec: dict[str, Any]) -> list[routes.NavigationRoute] | N
 
 
 def _routes_from_headings(body: str) -> list[tuple[str, str]] | None:
-    heads = [h for h in re.findall(r"^## (.+)$", body, re.M)
-             if h not in ('소스 근거', '클래스 관계', '관련 클래스')][:6]
-    if len(heads) < 2:
-        return None
-    return [(f"{h} 절을 확인합니다.", f"#{slugify(h)}") for h in heads]
+    return routes.from_heading_content(body)
 
 
 def _hidden_message(m: Any, hide: dict[str, Any]) -> bool:
