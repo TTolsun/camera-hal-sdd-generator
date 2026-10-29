@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "passed",
+  "fresh_directory": true,
+  "logical_files": 61739,
+  "bytes_verified": 505159417,
+  "archive_sha256": "898cdff390b965f1d5d6413bf9df26c1ef38f8be3c5e8dcd0385339f3383e3a3",
+  "index_sha256": "cd1fd148a6615d76108f49c32116000d3e5d4478f1cf377efc1babe19d322c66",
+  "unique_content_files": 24808,
+  "unique_completed_receipts": 3939,
+  "record_loader_sample": "publication-e117/build/prompts/calls/03b77f4a6ecb49ae885b0b9a5320246b/001.receipt.json",
+  "seconds": 15.34299999999348,
+  "scope": "Every restored logical path checked after restoration for original byte count and SHA256; exact file count checked. Failed and interrupted histories remain included. Copies are not new model calls.",
+  "human_review": "pending",
+  "restoration_phase": "v2 started in an asserted fresh directory and restored every path; this follow-up rechecks every restored byte and count after correcting only the verification wrapper CallRecord.raw field.",
+  "restoration_log_sha256": "65ea5034968ee8deb7f1c94542fd3963ede8b18ee5ae1d96a12d21b2a180c72f"
+}

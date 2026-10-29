@@ -1,0 +1,160 @@
+{
+  "schema": 1,
+  "scope": "Current public Terra candidate compared with the preserved pre-Terra latest-candidate baseline, not the post-success rolled baseline. No old growth approval is inherited.",
+  "baseline_path": "latest-candidate/build/document-baseline.json",
+  "baseline_sha256": "f2d5831b009c2044bf3bb32ab0587e1d332849db3915b0957fce45173a3f5205",
+  "removed_growth_overrides": {
+    "vendor-overview.md": 2.0
+  },
+  "findings": [],
+  "ratios": [
+    {
+      "document": "camera-model.md",
+      "before": 8786,
+      "after": 4654,
+      "ratio": 0.5297063510129751
+    },
+    {
+      "document": "component-index.md",
+      "before": 75,
+      "after": 75,
+      "ratio": 1.0
+    },
+    {
+      "document": "framebuffer-allocator.md",
+      "before": 891,
+      "after": 1005,
+      "ratio": 1.127946127946128
+    },
+    {
+      "document": "ipa-module-validation.md",
+      "before": 595,
+      "after": 382,
+      "ratio": 0.6420168067226891
+    },
+    {
+      "document": "ipa.md",
+      "before": 11493,
+      "after": 9398,
+      "ratio": 0.8177151309492735
+    },
+    {
+      "document": "ipu3-lsc-flow.md",
+      "before": 5595,
+      "after": 2536,
+      "ratio": 0.45326184092940125
+    },
+    {
+      "document": "ipu3-lsc.md",
+      "before": 1231,
+      "after": 1231,
+      "ratio": 1.0
+    },
+    {
+      "document": "onboarding.md",
+      "before": 1048,
+      "after": 930,
+      "ratio": 0.8874045801526718
+    },
+    {
+      "document": "overview.md",
+      "before": 4119,
+      "after": 3875,
+      "ratio": 0.9407623209516873
+    },
+    {
+      "document": "pipeline-handler.md",
+      "before": 6696,
+      "after": 4680,
+      "ratio": 0.6989247311827957
+    },
+    {
+      "document": "request-lifecycle.md",
+      "before": 11141,
+      "after": 7547,
+      "ratio": 0.6774077730903869
+    },
+    {
+      "document": "rkisp1-dewarp.md",
+      "before": 7386,
+      "after": 4008,
+      "ratio": 0.5426482534524777
+    },
+    {
+      "document": "scenarios/camera_start.md",
+      "before": 897,
+      "after": 897,
+      "ratio": 1.0
+    },
+    {
+      "document": "scenarios/camera_stop.md",
+      "before": 857,
+      "after": 857,
+      "ratio": 1.0
+    },
+    {
+      "document": "scenarios/complete_request.md",
+      "before": 1010,
+      "after": 1009,
+      "ratio": 0.999009900990099
+    },
+    {
+      "document": "scenarios/configure.md",
+      "before": 1098,
+      "after": 1098,
+      "ratio": 1.0
+    },
+    {
+      "document": "scenarios/index.md",
+      "before": 65,
+      "after": 65,
+      "ratio": 1.0
+    },
+    {
+      "document": "scenarios/manager_start.md",
+      "before": 873,
+      "after": 873,
+      "ratio": 1.0
+    },
+    {
+      "document": "scenarios/queue_request.md",
+      "before": 947,
+      "after": 947,
+      "ratio": 1.0
+    },
+    {
+      "document": "team-overview.md",
+      "before": 3649,
+      "after": 3010,
+      "ratio": 0.8248835297341738
+    },
+    {
+      "document": "vendor-assurance.md",
+      "before": 1820,
+      "after": 1787,
+      "ratio": 0.9818681318681318
+    },
+    {
+      "document": "vendor-integration.md",
+      "before": 5827,
+      "after": 5700,
+      "ratio": 0.9782049081860306
+    },
+    {
+      "document": "vendor-overview.md",
+      "before": 3862,
+      "after": 3930,
+      "ratio": 1.0176074572760228
+    }
+  ],
+  "human_review": "pending",
+  "retained_raw_markdown_limits": {
+    "component-index.md": {
+      "max_markdown_chars": 250000
+    },
+    "request-lifecycle.md": {
+      "max_markdown_chars": 160000
+    },
+    "vendor-overview.md": {}
+  }
+}
