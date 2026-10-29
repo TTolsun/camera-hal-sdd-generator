@@ -29,6 +29,8 @@ def test_empty_route_table_is_not_published():
 
 def test_custom_route_cell_content_and_fragments_are_not_discarded():
     for row in ('| [추가 안내](other.md) | [본문](#body) |',
+                '| `코드 예제` | [본문](#body) |',
+                '| ![그림](image.png) | [본문](#body) |',
                 '| <a id="legacy"></a>내용 | 목적지 없음 |',
                 '| 내용 | [본문](#body) 뒤에 추가 지시 |'):
         rendered, _, _ = _render('| 지금 확인할 내용 | 이동할 절 |\n|---|---|\n' + row,

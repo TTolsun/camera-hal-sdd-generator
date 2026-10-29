@@ -34,6 +34,9 @@ def _remove_route_tables(document: str) -> str:
             # may contain additional content and must remain intact.
             if len(cells) != 2 or re.search(r'<a\b[^>]*href=', cells[0]):
                 return source
+            question = re.sub(r'<a id="[^"]+"></a>', '', cells[0])
+            if re.search(r'<[^>]+>', question):
+                return source
             destinations = re.findall(r'<a\b[^>]*href="[^"]+"[^>]*>.*?</a>', cells[1], re.S)
             if not destinations:
                 return source
