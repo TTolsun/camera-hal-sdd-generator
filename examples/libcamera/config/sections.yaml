@@ -4541,15 +4541,6 @@ sections:
         - - 하나
           - 1개
           - 한 개
-    - id: buffer-lifetime
-      question: addBuffer에 전달하는 버퍼는 어떤 콜백이 호출될 때까지 유효해야 합니까? 버퍼 유효 기간 계약만 설명하세요.
-      sources:
-      - buffer
-      answer_contract:
-        basis: contract
-        required_terms:
-        - - 버퍼
-        - - 콜백
     - id: queue-input
       question: queueRequest를 호출하기 전에 호출자가 요청에 채워야 하는 최소 입력 조건만 설명하세요.
       sources:
