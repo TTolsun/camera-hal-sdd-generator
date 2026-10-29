@@ -2198,13 +2198,16 @@ sections:
         - - ConnectionTypeBlocking
     - id: sync
       question: init·start·stop을 제외한 일반 동기 메서드 분기에서 ipa_ 호출 경로만 설명하세요. 모든 동기 메서드를
-        worker 스레드 실행으로 묶지 마세요.
+        worker 스레드 실행으로 묶지 말고, init·start·stop 제외라는 한정은 본문에도 남기세요.
       sources:
       - dispatch
       answer_contract:
         basis: implementation
         required_terms:
         - - ipa_
+        - - init
+        - - start
+        - - stop
     - id: async
       question: 이 원문 단언문에 사용된 매크로 이름과 검사식을 코드 식별자로 그대로 설명하세요. 실행 수명이나 안전 보장은 추정하지
         마세요.
@@ -2236,26 +2239,30 @@ sections:
         - - load
           - 로드
     - id: constructor-interface
-      question: Threaded 생성자의 createInterface 호출과 반환 포인터가 없을 때의 처리만 설명하세요.
+      question: Threaded 생성자는 load()가 성공한 경우에만 createInterface를 호출한다는 선행 조건을 먼저 명시하세요.
+        반환 포인터가 없을 때 ipam->path()를 포함한 오류 기록·반환과,
+        성공한 인터페이스를 unique_ptr로 소유하여 proxy_에 연결하는 동작을 설명하세요.
+        이어지는 이벤트 connect의 수신 객체·Handler 메서드와 valid_ 설정까지 네 문장 이내로 묶으세요.
+        같은 소유권·연결 동작을 다시 풀어 쓰지 말고 load 실패는 앞 질문에서 다루세요.
       sources:
       - ctor-interface
-      answer_contract:
-        basis: implementation
-        required_terms:
-        - - createInterface
-    - id: constructor-events
-      question: 생성되는 코드의 이 connect 호출이 IPA 이벤트를 연결하는 수신 객체와 Handler 메서드를 설명하세요. 템플릿
-        반복을 런타임 반복문으로 쓰지 마세요.
-      sources:
       - ctor-events
       answer_contract:
         basis: implementation
         required_terms:
+        - - createInterface
+        - - load
+        - - path
+        - - unique_ptr
+        - - setIPA
         - - connect
           - 연결
         - - Handler
+        - - valid_
+        - - 'true'
     - id: isolated
-      question: Isolated 생성자가 worker 경로로 IPCPipeUnixSocket을 생성하고 연결 실패를 처리하는 경로만 설명하세요.
+      question: Isolated 생성자의 worker 경로 검색·실패 반환과 IPCPipeUnixSocket 생성·연결 실패 반환까지만
+        설명하세요. 뒤의 recv 연결, ipc_ 이동, valid_ 설정은 각각 별도 질문에서 다루므로 반복하지 마세요.
       sources:
       - isolated
       answer_contract:
@@ -2301,16 +2308,17 @@ sections:
         required_terms:
         - - resolvePath
     - id: ipc
-      question: IPCPipeUnixSocket::sendSync가 call에 전달하는 인자와 readyRead가 수신 응답의 쿠키를
-        대기 항목과 연결하는 동작만 설명하세요. 송신 실패·타임아웃·최종 반환값은 생성과 IPC 실패 절에서
-        다루므로 여기서 반복하지 마세요.
+      question: readyRead가 수신 실패·헤더 길이를 검사한 뒤 응답 쿠키로 대기 항목을 찾고,
+        일치하면 응답을 이동하여 완료를 표시하는 동작만 설명하세요. callData_ 삽입과 sendSync의
+        호출 인자·오류·응답 반환은 생성과 IPC 실패 절에서 다루므로 반복하지 마세요.
       sources:
       - ipc
       answer_contract:
         basis: implementation
         required_terms:
-        - - sendSync
-        - - call
+        - - readyRead
+        - - cookie
+        - - done
     - id: ipc-async
       question: IPCPipeUnixSocket::sendAsync의 소켓 전송과 반환 경로만 설명하세요. 동기 응답 처리로 바꾸지 마세요.
       sources:
@@ -2323,7 +2331,9 @@ sections:
   - id: interface
     title: 프레임 입력과 결과 인터페이스
     question: IPU3와 RKISP1 인터페이스에 선언된 요청·통계 입력 및 paramsComputed·metadataReady 결과를
-      각각 함수 이름과 인자에서 설명하세요. [async] 메서드와 EventInterface를 구분하고 선언만으로 실행 타이밍을 보장하지 마세요.
+      각각 함수 이름과 인자에서 설명하세요. 두 EventInterface의 setSensorControls도 포함하고,
+      IPU3의 frame·sensorControls·lensControls와 RKISP1의 frame·sensorControls 인자 차이를 보존하세요.
+      [async] 메서드와 EventInterface를 구분하고 선언만으로 실행 타이밍을 보장하지 마세요.
     sources:
     - id: ipu3-api
       file: include/libcamera/ipa/ipu3.mojom
@@ -2419,7 +2429,8 @@ sections:
         - - out
     - id: sync-send
       question: IPCPipeUnixSocket::call은 소켓에 어떤 인자를 보내며 송신 실패 때 무엇을 정리하고 반환합니까? 소켓에
-        넘기는 값과 callData_ 항목을 가리키는 반복자의 역할을 구분하세요. 응답 대기는 다음 답변에서 다루세요.
+        넘기는 값과 callData_ 항목을 가리키는 반복자의 역할을 구분하세요. insert 결과에서 사용하는 필드와
+        삽입 성공 여부 검사 유무는 이 함수 범위 안에서만 설명하세요. 응답 대기와 readyRead의 수신 처리는 반복하지 마세요.
       sources:
       - ipc
       max_statements: 1
@@ -2431,8 +2442,8 @@ sections:
         - - erase
     - id: sync-timeout
       question: IPCPipeUnixSocket::call의 응답 대기 타이머와 완료 조건은 무엇이며, 시간 초과와 정상 완료 때 항목
-        정리·반환은 어떻게 달라집니까? 반복자가 대기 조건 검사와 정리에서 쓰이는 위치를 확인하세요. 앞 답변의 송신 처리와 sendSync의
-        외부 반환 처리는 반복하지 마세요.
+        정리·반환은 어떻게 달라집니까? 대기 중 현재 스레드의 processEvents 호출도 포함하세요.
+        앞 답변의 송신 처리, readyRead의 수신 처리와 sendSync의 외부 반환은 반복하지 마세요.
       sources:
       - ipc
       max_statements: 2
@@ -2442,6 +2453,7 @@ sections:
         - - 2000ms
         - - ETIMEDOUT
         - - erase
+        - - processEvents
   design_requirements:
   - id: selection
     question: 어떤 IPA 모듈과 실행 방식이 선택됩니까?
@@ -3471,9 +3483,8 @@ sections:
       end: repository (for instance the gstreamer libcamera element).
     parts:
     - id: api
-      question: 애플리케이션이 이 프로젝트에서 받아 쓰는 것이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음 나올 때 쉬운 말로
-        풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고
-        원문 그대로 쓰세요.
+      question: 애플리케이션에 제공하는 네이티브 C++ API의 용도와 선택적인 언어 바인딩만 쉬운 말로 두 문장 이내로
+        설명하세요. Camera 클래스의 내부 구조·인스턴스 수·상세 제어 동작은 카메라와 요청 모델 문서에서 다루므로 덧붙이지 마세요.
       sources:
       - framework
       - camera
@@ -3529,9 +3540,10 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: vendors
-      question: 장치 제조사가 이 프로젝트에 직접 기여하거나 따로 제공하는 부분이 무엇인지 한 문단으로 설명하세요. 전문 용어는 처음
-        나올 때 쉬운 말로 풀어 쓰고, 소스에 없는 장점이나 조직의 역할은 추가하지 마세요. 제품 이름 libcamera와 코드 식별자는 번역하거나
-        음차하지 말고 원문 그대로 쓰세요.
+      question: 먼저 장치 제조사가 Pipeline Handler를 기여해야 하는 의무와, IPA Module을 별도로 제공할 수 있다는
+        가능성을 구분하여 설명하세요. IPA 제공 가능성의 주체도 장치 제조사로 명시하세요.
+        libcamera에 포함된 IPA Module의 자유 소프트웨어 라이선스와, libcamera 소스를 포함하지 않는 외부 모듈의
+        별도 라이선스 허용 조건을 모두 보존하세요. 전문 용어는 처음 나올 때 쉽게 풀고 제품 이름·식별자는 원문 표기를 유지하세요.
       sources:
       - handler
       - ipa
@@ -3539,7 +3551,12 @@ sections:
       max_statements: 1
       answer_contract:
         basis: description
-        required_terms: []
+        required_terms:
+        - - Pipeline Handler
+          - PipelineHandler
+        - - IPA
+        - - 자유
+        - - 소스
         reject_patterns: []
   next:
     title: 시스템 개요

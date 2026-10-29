@@ -62,6 +62,13 @@ def test_combined_questions_preserve_all_unique_argument_and_completion_contract
     assert defaults['sources'] == ['request']
     assert defaults['answer_contract']['required_terms'] == [['enabled'], ['update'], ['true']]
     assert {p['id'] for p in request_parts} == {'default', 'delegate'}
+    constructors = parts('ipa', 'execution')
+    interface = next(p for p in constructors if p['id'] == 'constructor-interface')
+    assert interface['sources'] == ['ctor-interface', 'ctor-events']
+    assert all([term] in interface['answer_contract']['required_terms']
+               for term in ['createInterface', 'unique_ptr', 'setIPA', 'Handler', 'valid_', 'true'])
+    assert ['connect', '연결'] in interface['answer_contract']['required_terms']
+    assert all(p['id'] != 'constructor-events' for p in constructors)
     completion = next(p for p in parts('vendor-integration', 'request') if p['id'] == 'completion')
     assert completion['sources'] == ['completion', 'notification']
     assert completion['answer_contract']['basis'] == 'contract'
