@@ -38,6 +38,44 @@ from .semantic import relation_facts, structural_text
 _FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
 
 
+def _cached_scope_page(section, artifact, previous, candidate):
+    """Compare unchanged prose only when every pending unit was checkpointed.
+
+    Receipt-bound revalidation already happened before assembly. Per-run receipt
+    lists remain in generation-runs; all inputs, answers, policies, body and
+    review states still participate in the existing preservation comparison.
+    """
+    expected = {(unit['id'], unit.get('_part_id'), unit.get('_subpart_id'))
+                for unit in generated_design._design_units(section, artifact['reused_topics'])}
+    checkpoints = artifact.get('checkpoint_units', [])
+    actual = {(row['topic'], row.get('part'), row.get('subpart')) for row in checkpoints}
+    if actual != expected or len(checkpoints) != len(expected):
+        return False
+    from .document_metadata import split_frontmatter
+    from .reader_scope import preserve_unchanged
+    import yaml
+
+    old, _ = split_frontmatter(previous)
+    old_rows = old.get('generated_design', {}).get('checkpoint_units', [])
+    if not isinstance(old_rows, list) or any(not isinstance(row, dict) for row in old_rows):
+        return False
+    # Keep every original receipt binding. Only the per-run reuse/revalidation
+    # annotations may differ; changed or damaged origin metadata is rewritten.
+    def origin(row):
+        return json.dumps({k: v for k, v in row.items()
+                           if k not in ('revalidated', 'new_grounding_review')}, sort_keys=True)
+    old_origins = [origin(row) for row in old_rows]
+    if len(set(old_origins)) != len(old_origins) or not set(old_origins) <= {origin(row) for row in checkpoints}:
+        return False
+
+    def comparison(text):
+        meta, body = split_frontmatter(text)
+        meta.get('generated_design', {}).pop('checkpoint_units', None)
+        return '---\n' + yaml.safe_dump(meta, allow_unicode=True) + '---\n' + body
+
+    return preserve_unchanged(comparison(previous), comparison(candidate))
+
+
 class Generator:
     def __init__(self, cfg: Config, model: KnowledgeModel, agent: ChatPort, *, replay_http=False, all_design_units=False):
         from .reader_profiles import family_errors
@@ -567,12 +605,10 @@ class Generator:
             from_manuscript(self.cfg, self.model, sec, page)
         if sec.get('reader_scope') and generated_design.enabled(sec) and path.exists():
             current = self.generated_designs[sec['id']][3]
-            if set(current['reused_topics']) == {t['id'] for t in sec['design_topics']}:
-                from .reader_scope import preserve_unchanged
-                previous = path.read_text(encoding='utf-8')
-                if preserve_unchanged(previous, page):
-                    generated_design.verify(self.model, sec, previous, cfg=self.cfg)
-                    return path
+            previous = path.read_text(encoding='utf-8')
+            if _cached_scope_page(sec, current, previous, page):
+                generated_design.verify(self.model, sec, previous, cfg=self.cfg)
+                return path
         return self._write(path, page)
 
     def _render(self, *args, **kwargs):
