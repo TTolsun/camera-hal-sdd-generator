@@ -2301,8 +2301,9 @@ sections:
         required_terms:
         - - resolvePath
     - id: ipc
-      question: IPCPipeUnixSocket::sendSync의 call 호출과 응답 반환 경로만 설명하세요. 응답 대기는 함께 제공된
-        call 구현의 범위에서 설명하세요.
+      question: IPCPipeUnixSocket::sendSync가 call에 전달하는 인자와 readyRead가 수신 응답의 쿠키를
+        대기 항목과 연결하는 동작만 설명하세요. 송신 실패·타임아웃·최종 반환값은 생성과 IPC 실패 절에서
+        다루므로 여기서 반복하지 마세요.
       sources:
       - ipc
       answer_contract:
@@ -2340,8 +2341,10 @@ sections:
     - interface
   - id: lifetime
     title: IPA 객체와 종료 순서
-    question: 모듈 로딩과 인터페이스 생성 실패, Threaded 프록시의 start/stop과 thread 정리 순서, Isolated
-      프록시 생성과 종료 경계를 코드에서 구분하세요.
+    question: 호출자가 load 성공 뒤 createInterface를 사용할 수 있는 횟수와 호출 전제를 설명하고,
+      Threaded stop의 상태 검사·호출·스레드 정리 순서와 Isolated 소멸자의 종료 메시지 조건을 설명하세요.
+      모듈 로드 실패의 상세 분기는 생성과 IPC 실패 절에서, 프록시 생성·init·start는 실행 경로 절에서
+      다루므로 여기서 다시 설명하지 마세요. 고유한 종료 조건은 생략하지 마세요.
     sources:
     - id: load
       file: src/libcamera/ipa_module.cpp
@@ -2713,8 +2716,8 @@ sections:
         - - lsc
       max_statements: 1
     - id: queue
-      question: IPAContext의 frameContexts 필드 타입과 그 타입 인자로 전달된 프레임 컨텍스트 타입만 설명하세요.
-        프레임 생성 동작은 추정하지 마세요.
+      question: IPAContext의 frameContexts 필드 타입을 FCQueue<IPAFrameContext>라는 전체 표기로 한 번만
+        설명하세요. 타입 인자를 다시 풀어 쓰거나 프레임 생성 동작을 추정하지 마세요.
       sources:
       - context
       answer_contract:
@@ -2758,25 +2761,19 @@ sections:
     - request
     parts:
     - id: default
-      question: 첫 프레임이고 LensShadingCorrectionEnable 제어가 없을 때 enabled에 쓰는 값만 설명하세요.
+      question: 첫 프레임이고 LensShadingCorrectionEnable 제어가 없을 때 enabled와 update에 쓰는 값을
+        한 문장으로 함께 설명하세요. 공통 조건은 한 번만 쓰세요.
       sources:
       - request
       answer_contract:
         basis: implementation
         required_terms:
         - - enabled
-        - - 'true'
-    - id: default-update
-      question: 첫 프레임이고 LensShadingCorrectionEnable 제어가 없을 때 update에 쓰는 값만 설명하세요.
-      sources:
-      - request
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - update
         - - 'true'
     - id: delegate
-      question: 이 공통 호출식에서 호출 대상 객체와 메서드의 이름만 설명하세요. 인자별 설명은 다음 질문에서 다룹니다.
+      question: 공통 lscAlgo_.queueRequest 호출의 대상과 첫 번째·두 번째·세 번째 인자를 한 문장에 순서대로
+        설명하세요. context.activeState.lsc, frameContext.lsc, controls를 모두 보존하고 역할이나 효과는 추정하지 마세요.
       sources:
       - delegate-call
       answer_contract:
@@ -2784,13 +2781,6 @@ sections:
         required_terms:
         - - lscAlgo_
         - - queueRequest
-    - id: arguments
-      question: 이 공통 queueRequest 호출에 전달하는 첫 번째·두 번째·세 번째 인자를 한 문장에 순서대로 나열하세요. 세 코드 표현을 모두 보존하고 역할이나 효과는 추정하지 마세요. 호출 대상은 앞 질문에서 다뤘으므로 반복하지 마세요.
-      sources:
-      - delegate-call
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - context.activeState.lsc
         - - frameContext.lsc
         - - controls
@@ -3409,8 +3399,9 @@ sections:
         reject_patterns: []
       max_statements: 1
     - id: layers
-      question: 카메라를 쓰는 소프트웨어가 네 계층으로 나뉘는 모습을 아래에서 위 순서로 쉽게 설명하세요. 공식 문서의 작업과 연결 관계를
-        중심으로 쉬운 문장을 쓰세요. 제품 이름 libcamera와 코드 식별자는 번역하거나 음차하지 말고 원문 그대로 쓰세요.
+      question: 네 계층의 이름과 위아래 연결 순서만 한 문장으로 소개하세요. 커널 드라이버, libcamera 프레임워크,
+        적응 계층, 애플리케이션·상위 프레임워크를 포함하세요. 계층별 입출력·연동 예·프로젝트 범위는 뒤의 받는 것,
+        내놓는 것, 협업 경계 절에서 다루므로 여기서 풀어 쓰지 마세요. 제품 이름 libcamera는 원문 표기를 유지하세요.
       sources:
       - stack
       max_statements: 1
@@ -6427,9 +6418,9 @@ sections:
         - pattern: ret\s*(?:<=|==)\s*0|0\s*이하
           message: 실패 조건은 ret < 0이며 0을 실패로 처리하지 않습니다.
     - id: export-return
-      question: FrameBufferAllocator::allocate에서 exportFrameBuffers 호출 이후 마지막 return
-        ret 자체는 ret의 부호를 검사하는 조건문의 본문에 속합니까? 주변 if문의 범위와 반환 위치를 대조하여 최종 반환의 조건 유무와
-        반환값만 한 문장으로 설명하세요. 항목 제거 조건을 반환 조건으로 대신하지 마세요. 한국어 합니다체로 쓰고 코드 식별자는 백틱으로 표시하세요.
+      question: FrameBufferAllocator::allocate가 exportFrameBuffers의 결과 ret를 음수 여부와 관계없이
+        반환하는지 한 문장으로 설명하세요. if문의 범위는 근거에서 확인하되 본문에서는 반환 결과만 간결하게 쓰세요.
+        앞 문장의 항목 제거 조건을 반복하거나 반환 조건으로 대신하지 마세요. 코드 식별자는 백틱으로 표시하세요.
       sources:
       - export-return-code
       max_statements: 1
