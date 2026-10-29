@@ -1,0 +1,7 @@
+participant_id,perspective,task_id,build_id,start_url,page_anchor,answer,evidence_url,started_at,ended_at,elapsed_seconds,author_help,correct,completed_without_help,reading_ease_1_to_5,blocked_reason,reading_experience
+P01,new_developer,index,,,,,,,,,,,,,,
+P01,new_developer,overview,,,,,,,,,,,,,,
+P02,other_team,vendor_overview,,,,,,,,,,,,,,
+P02,other_team,vendor_assurance,,,,,,,,,,,,,,
+P03,non_author,vendor_integration,,,,,,,,,,,,,,
+P03,non_author,queue_request,,,,,,,,,,,,,,

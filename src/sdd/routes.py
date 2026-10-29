@@ -7,6 +7,8 @@
 from __future__ import annotations
 
 import re
+import markdown
+from markdown.inlinepatterns import BACKTICK_RE
 from dataclasses import dataclass
 from pathlib import Path
 from .markdown_text import slugify
@@ -58,6 +60,57 @@ def repeats_title(q: str, title: str) -> bool:
     rest = re.sub(r"[\s.`'\"]", "", q.replace(title, ""))
     rest = _BOILERPLATE.sub("", rest)
     return len(rest) <= 2
+
+
+def from_heading_content(body: str) -> list[tuple[str, str]] | None:
+    """Use the section's own first prose sentence as an internal route lead.
+
+    Table rows, code, source panels and title-only boilerplate cannot explain
+    what a reader will learn. Omit such a row instead of inventing a purpose.
+    Existing explicit routes and heading anchors remain unchanged.
+    """
+    # Use the Markdown block grammar already installed by the generator.
+    # Read its tree before inline/HTML rendering, retaining code backticks in
+    # prose while excluding tables, code, comments and collapsed source panels.
+    parser = markdown.Markdown(extensions=['tables', 'pymdownx.details', 'pymdownx.superfences'])
+    lines = body.splitlines()
+    for preprocessor in parser.preprocessors:
+        lines = preprocessor.run(lines)
+    tree = parser.parser.parseDocument(lines).getroot()
+    result, title, found = [], None, False
+    for block in tree:
+        if block.tag == 'h1':
+            title, found = None, False
+            continue
+        if block.tag == 'h2':
+            title, found = ''.join(block.itertext()).strip(), False
+            continue
+        if (not title or found or block.tag != 'p'
+                or title in ('소스 근거', '클래스 관계', '관련 클래스')):
+            continue
+        text = ''.join(block.itertext())
+        # SuperFences may put its stash and immediately following prose into
+        # one paragraph. Remove only parser placeholders, never their contents.
+        text = re.sub(r'\x02[^\x03]*\x03', '', text)
+        if not text.strip():
+            continue
+        # Sentence boundaries require whitespace after punctuation, so
+        # dotted C++ members and source filenames stay whole.
+        lead = re.split(r'(?<=[.!?。])\s+', ' '.join(text.split()), maxsplit=1)[0]
+        if repeats_title(lead, title):
+            continue
+        # The table parser already protects pipes in Markdown code spans.
+        # Entities inside backticks would instead display as literal text.
+        pieces, cursor = [], 0
+        for span in re.finditer(BACKTICK_RE, lead, re.S):
+            pieces.extend([lead[cursor:span.start()].replace('|', '&#124;'), span[0]])
+            cursor = span.end()
+        pieces.append(lead[cursor:].replace('|', '&#124;'))
+        result.append((''.join(pieces), f'#{slugify(title)}'))
+        found = True
+        if len(result) == 6:
+            break
+    return result if len(result) >= 2 else None
 
 
 def warnings(sections: list[dict], page_titles: dict[str, str]) -> list[str]:
