@@ -20,6 +20,8 @@ def test_all_records_survive_presentation_and_hidden_boundaries_stay_visible():
     doc = build(sc, {"hide": {"names": ["work*", "queue", "run"]}})
     assert sc == original
     assert doc.hidden == 75  # Boundaries are not filtered, even by a wildcard.
+    assert f"호출 기록 {len(sc.messages)}개" in doc.introduction
+    assert f"hide 규칙에 해당하는 호출은 {doc.hidden}개" in doc.details
     for message in sc.messages:
         assert f"`{message.loc.cite()}`" in doc.details
     assert "76–78 / 78개" in doc.details
