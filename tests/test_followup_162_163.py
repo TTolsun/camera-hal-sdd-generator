@@ -53,10 +53,15 @@ def test_combined_questions_preserve_all_unique_argument_and_completion_contract
     def parts(section, topic):
         sec = next(s for s in cfg.sections() if s['id'] == section)
         return next(t for t in sec['design_topics'] if t['id'] == topic)['parts']
-    arguments = next(p for p in parts('ipu3-lsc-flow', 'request') if p['id'] == 'arguments')
+    request_parts = parts('ipu3-lsc-flow', 'request')
+    arguments = next(p for p in request_parts if p['id'] == 'delegate')
     assert arguments['sources'] == ['delegate-call']
     assert arguments['answer_contract']['required_terms'] == [
-        ['context.activeState.lsc'], ['frameContext.lsc'], ['controls']]
+        ['lscAlgo_'], ['queueRequest'], ['context.activeState.lsc'], ['frameContext.lsc'], ['controls']]
+    defaults = next(p for p in request_parts if p['id'] == 'default')
+    assert defaults['sources'] == ['request']
+    assert defaults['answer_contract']['required_terms'] == [['enabled'], ['update'], ['true']]
+    assert {p['id'] for p in request_parts} == {'default', 'delegate'}
     completion = next(p for p in parts('vendor-integration', 'request') if p['id'] == 'completion')
     assert completion['sources'] == ['completion', 'notification']
     assert completion['answer_contract']['basis'] == 'contract'
