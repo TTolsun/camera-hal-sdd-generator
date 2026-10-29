@@ -18,6 +18,7 @@
 
 | 기록 | 주제 |
 |---|---|
+| [#162·#163 후속 검증](records/goal-162-163/progress.md) | 독립 Terra 신규 생성·실패/복구, 고정 가독성 비교와 실제 독자 평가 자료 |
 | [CLI 실행기 시험](records/cli-runners.md) | Hermes → Qwen 두 커밋 재생성, Claude 인증 실패와 OpenCode 미설치 구분 |
 | [두 커밋 변경 반영](records/revision-validation.md) | 2026-09-21 A/B 커밋 부분 통과 |
 | [범위 검사](records/coverage-validation.md) | 2026-09-21 범위 누락 검출 |
