@@ -919,7 +919,8 @@ sections:
         - - configure
         - - validate
     - id: configure-fields
-      question: 이미 검증된 구성을 받는 configure 구현자가 파생 CameraConfiguration에 저장된 어떤 정보에 의존할 수 있는지 허용 범위를 설명하세요. 검증된 입력이라는 전제는 보존하되, 추가 검증 금지 의무를 설명한 앞 문장 전체를 되풀이하지 마세요.
+      question: configure 구현이 자체 CameraConfiguration 파생 클래스의 사용자 정의 필드에 의존할 수 있는 허용 범위만
+        한 문장으로 설명하세요. 검증된 입력 전제와 추가 검증 금지는 바로 앞 질문에서 설명하므로 반복하지 마세요.
       sources:
       - configure-fields
       answer_contract:
@@ -927,6 +928,7 @@ sections:
         required_terms:
         - - configure
         - - 필드
+      max_statements: 1
     - id: configure-stream
       question: configure 구현자가 각 StreamConfiguration에 Stream을 연결할 때 지켜야 하는 의무를 설명하세요.
         질문의 모든 항목을 한 문장으로 설명하세요.
@@ -1243,9 +1245,9 @@ sections:
         - - stopDevice
         - - completeRequest
     - id: device
-      question: stopDevice의 장치 구현자가 실행 중인 스트림과 그 장치의 미완료 요청에 대해 지켜야 하는 중단·취소·오류 완료
-        의무를 설명하세요. 공통 stop이 따로 옮겨 처리하는 waitingRequests_와 이 API의 pending 요청을 같은 범위로
-        설명하지 말고, 장치 구현자가 처리하는 요청의 조건을 드러내세요. 선언의 의무와 공통 구현의 처리 순서를 구분하여 두 문장 이내로 설명하세요.
+      question: stopDevice 구현자가 실행 중인 스트림의 캡처·요청 처리를 즉시 중단하고, 그 장치의 미완료 요청을 모두 취소해 즉시
+        오류 상태로 완료해야 하는 의무만 한 문장으로 설명하세요. 이 장치 요청을 공통 stop이 따로 옮기는 waitingRequests_와 혼동하지
+        마세요. 공통 stop의 분리·호출·취소 순서는 앞뒤 질문에서 설명하므로 다시 나열하지 마세요.
       sources:
       - device
       - stop
@@ -1256,6 +1258,7 @@ sections:
         - - 취소
         - - 오류
         reject_patterns: []
+      max_statements: 1
     - id: waiting
       question: stopDevice 뒤 대기 요청을 cancel하고 doQueueRequest로 전달하는 처리와 그 경로에서의 순번·queuedRequests_
         사용을 한 문장으로 설명하세요.
@@ -3242,10 +3245,12 @@ sections:
         - - hasDewarpParams_
         - - LensDewarpEnable
     - id: unconfigured-controls
-      question: 이 if 조건 안의 return 제어문이 setControls의 실행 흐름을 어떻게 끝내는지만 설명하세요. isConfigured
-        함수 자체가 실행을 중단한다고 쓰지 마세요.
+      question: setControls는 isConfigured(stream)이 거짓이면 return으로 종료하며, 구성된 스트림에서는 info.update와
+        running_이 참이고 converter_.supportsRequests()가 거짓일 때 동적 제어 오류 로그를 기록한다는 두 경로를 한
+        문장씩 설명하세요. 미구성 시 반환을 두 번 쓰지 마세요. 다른 함수인 populateMetadata의 미구성 반환은 별도 질문에서 다룹니다.
       sources:
       - controls-entry
+      - controls
       answer_contract:
         basis: implementation
         required_terms:
@@ -3253,17 +3258,10 @@ sections:
         - - 반환
           - return
           - 종료
-    - id: runtime
-      question: setControls에서 동적 제어 설정 오류 로그를 기록하는 전체 if 조건을 설명하세요. info.update, running_,
-        supportsRequests의 세 항을 모두 보존하세요.
-      sources:
-      - controls
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - update
         - - running_
         - - supportsRequests
+      max_statements: 2
     - id: metadata
       question: populateMetadata가 isConfigured 검사에서 설정되지 않은 스트림이면 하는 일만 설명하세요.
       sources:
@@ -4563,7 +4561,8 @@ sections:
           - 1개
           - 한 개
     - id: queue-input
-      question: queueRequest를 호출하기 전에 호출자가 요청에 채워야 하는 최소 입력 조건만 설명하세요.
+      question: queueRequest를 호출하기 전에 요청에 캡처 버퍼를 하나 이상 채워야 하는 최소 입력 조건만 한 문장으로 설명하세요.
+        생성 카메라 검사와 오류 코드는 다음 질문에서 다루므로 반복하지 마세요.
       sources:
       - queue
       answer_contract:
@@ -4571,6 +4570,7 @@ sections:
         required_terms:
         - - queueRequest
         - - 버퍼
+      max_statements: 1
     - id: queue-owner
       question: 이 if는 요청이 어느 카메라에서 생성됐는지 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을
         한 문장으로 연결하세요.
@@ -4755,22 +4755,18 @@ sections:
         - - releaseFence
       max_statements: 1
     - id: reset-buffer-link
-      question: ReuseBuffers 분기에서 기존 버퍼를 현재 요청에 연결하는 호출만 설명하세요.
+      question: Request::reuse의 ReuseBuffers 분기에서 기존 bufferMap_의 각 버퍼에 setRequest(this)로
+        현재 요청을 연결한 뒤 pending_에 추가하는 동작을 한 문장으로 설명하세요. 같은 조건과 연결 동작은 한 번만 쓰세요.
       sources:
       - reuse-link-call
+      - reuse-buffers
       answer_contract:
         basis: implementation
         required_terms:
         - - ReuseBuffers
         - - setRequest
-    - id: reset-pending
-      question: ReuseBuffers 분기에서 기존 버퍼를 pending_에 추가하는 동작만 설명하세요.
-      sources:
-      - reuse-buffers
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - pending_
+      max_statements: 1
     - id: reset-buffer-clear
       question: ReuseBuffers가 없는 else 분기에서 bufferMap_에 수행하는 동작만 설명하세요.
       sources:
@@ -5005,24 +5001,18 @@ sections:
         - - queueRequest
         - - 완료
     - id: waiting
-      question: 대기 큐와 장치 큐 한도로 요청 전달을 제한하는 두 변수 이름을 설명하세요.
+      question: waitingRequests_의 선두 요청 prepared_가 거짓이면 뒤 요청도 전달하지 않는 조건과, queuedRequests_
+        크기가 maxQueuedRequestsDevice_ 한도에 도달하면 전달을 중단하는 조건을 구분해 두 문장 이내로 설명하세요. 같은 선두 준비
+        조건을 되풀이하지 마세요.
       sources:
       - device-queue
-      max_statements: 1
+      - waiting-prepared
+      max_statements: 2
       answer_contract:
         basis: implementation
         required_terms:
         - - waitingRequests_
         - - maxQueuedRequestsDevice_
-    - id: waiting-prepared
-      question: 선두 요청의 준비 여부를 읽는 멤버 이름과 그 값이 이 분기에 사용되는 방식만 설명하세요. 다른 메서드 정의의 누락,
-        원문 범위의 평가나 추가 확인 과제는 이 질문의 범위가 아닙니다.
-      sources:
-      - waiting-prepared
-      max_statements: 1
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - prepared_
     - id: dispatch
       question: 이 void 함수의 취소 여부 분기와 각 호출을 설명하세요. 반환값을 지어내지 마세요.
@@ -5037,7 +5027,7 @@ sections:
         - - completeRequest
         - - queueRequestDevice
     - id: device-result
-      question: 이 함수의 이름과 성공 시 반환값을 설명하세요.
+      question: queueRequestDevice 함수 이름과 성공 시 0, 오류 시 음수 오류 코드를 반환하는 계약을 한 문장으로 설명하세요.
       sources:
       - device-contract
       max_statements: 1
@@ -5046,54 +5036,34 @@ sections:
         required_terms:
         - - queueRequestDevice
         - - '0'
-    - id: device-error
-      question: 이 반환 주석에서 오류 시 반환하는 정수의 부호를 설명하세요.
-      sources:
-      - device-contract
-      max_statements: 1
-      answer_contract:
-        basis: description
-        required_terms:
         - - 음수
     - id: buffer-complete
-      question: 버퍼 완료를 알릴 때 호출해야 하는 함수 의무를 설명하세요.
+      question: 파이프라인 핸들러가 버퍼 완료를 알릴 때 CameraManager 스레드에서 completeBuffer를 호출해야 한다는 의무와,
+        마지막 버퍼 완료만으로 요청이 자동 완료되지 않아 completeRequest를 별도로 명시 호출해야 한다는 의무를 두 짧은 문장 이내로 연결하세요.
+        마지막 버퍼 조건이나 요청 완료 의무를 되풀이하지 마세요.
       sources:
       - buffer-notice
       - completion
-      max_statements: 1
+      - request-duty
+      max_statements: 2
       answer_contract:
         basis: contract
         required_terms:
         - - completeBuffer
         - - 완료
-    - id: request-duty
-      question: 마지막 버퍼가 완료된 후 핸들러가 명시적으로 호출해야 하는 요청 완료 함수 의무를 설명하세요.
-      sources:
-      - request-duty
-      max_statements: 1
-      answer_contract:
-        basis: contract
-        required_terms:
         - - completeRequest
     - id: request-complete
-      question: completeRequest에서 queuedRequests_의 확인 순서, RequestPending 조건이 반복에 미치는
-        영향, 요청을 애플리케이션으로 넘기는 시점을 한 문단으로 설명하세요. complete()·requestComplete()·doQueueRequests()의
-        내부 구현이나 별도 확인 과제는 이 질문의 범위가 아닙니다.
+      question: completeRequest가 queuedRequests_의 앞부터 확인하며 RequestPending이면 반복을 중단하고,
+        그렇지 않으면 대기 버퍼가 없음을 확인해 제거하고 requestComplete로 애플리케이션에 제출 순서대로 반환하는 경로를 두 문장 이내로
+        설명하세요. 선두 Pending 조건을 마지막에 다시 쓰지 마세요.
       sources:
       - request-notice
-      max_statements: 1
+      - completed-head
+      max_statements: 2
       answer_contract:
         basis: implementation
         required_terms:
         - - completeRequest
-    - id: request-head
-      question: 이 분기가 판단하는 요청 상태 상수를 코드 그대로 설명하세요.
-      sources:
-      - completed-head
-      max_statements: 1
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - RequestPending
     answer_contract:
       basis: description
@@ -5264,22 +5234,18 @@ sections:
         - - releaseFence
       max_statements: 1
     - id: reset-buffer-link
-      question: ReuseBuffers 분기에서 기존 버퍼를 현재 요청에 연결하는 호출만 설명하세요.
+      question: Request::reuse의 ReuseBuffers 분기에서 기존 bufferMap_의 각 버퍼에 setRequest(this)로
+        현재 요청을 연결한 뒤 pending_에 추가하는 동작을 한 문장으로 설명하세요. 같은 조건과 연결 동작은 한 번만 쓰세요.
       sources:
       - reuse-link-call
+      - reuse-buffers
       answer_contract:
         basis: implementation
         required_terms:
         - - ReuseBuffers
         - - setRequest
-    - id: reset-pending
-      question: ReuseBuffers 분기에서 기존 버퍼를 pending_에 추가하는 동작만 설명하세요.
-      sources:
-      - reuse-buffers
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - pending_
+      max_statements: 1
     - id: reset-buffer-clear
       question: ReuseBuffers가 없는 else 분기에서 bufferMap_에 수행하는 동작만 설명하세요.
       sources:
@@ -5442,35 +5408,26 @@ sections:
     - stopping
     parts:
     - id: camera-entry
-      question: Camera::stop에서 먼저 실제 상태와 미실행 시 0 반환을 관찰하고 실행 중 경로와 구분하는 조사 계획을 설명하세요.
+      question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed
+        음수 반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop
+        호출 진입·복귀를 관찰하세요. 호출 뒤의 pending 요청 ASSERT와 CameraConfigured 상태·0 반환도 포함하되 상태 설정과
+        블로킹 호출을 다른 문장으로 되풀이하지 마세요.
       sources:
       - stop
+      - stopping-call
       answer_contract:
         basis: investigation
         required_terms:
         - - stop
         - - '0'
-    - id: blocking
-      question: 실행 중 stop의 setState가 전달하는 상태 값을 관찰하는 지점만 설명하세요.
-      sources:
-      - stopping-call
-      answer_contract:
-        basis: investigation
-        required_terms:
         - - CameraStopping
           - Stopping
-    - id: blocking-call
-      question: PipelineHandler::stop에 대한 ConnectionTypeBlocking 호출의 진입과 복귀를 관찰하는
-        지점만 설명하세요.
-      sources:
-      - stopping-call
-      answer_contract:
-        basis: investigation
-        required_terms:
         - - ConnectionTypeBlocking
+      max_statements: 3
     - id: device-entry
-      question: PipelineHandler::stop이 waitingRequests_를 분리하는 지점과 stopDevice 진입·복귀를
-        비교하여 장치 내부에서 멎은 경우와 반환한 경우를 나누는 계획을 설명하세요.
+      question: PipelineHandler::stop이 waitingRequests_를 분리하는 지점과 stopDevice 진입·복귀를 관찰하여
+        장치 내부에서 멎은 경우와 반환한 경우를 구분하는 조사 계획만 두 문장 이내로 설명하세요. 반환 후 요청 취소·doQueueRequest 호출과
+        ASSERT는 다음 질문에서 다루므로 여기서는 열거하지 마세요.
       sources:
       - device-stop
       answer_contract:
@@ -5478,6 +5435,7 @@ sections:
         required_terms:
         - - waitingRequests_
         - - stopDevice
+      max_statements: 2
     - id: pending
       question: 발췌의 함수 호출 이름과 전달하는 요청 인자를 기록하는 조사 계획을 설명하세요. 정지 경로의 전체 함수를 열거하는 질문은
         아닙니다.
@@ -5488,7 +5446,9 @@ sections:
         required_terms:
         - - doQueueRequest
     - id: queue-assertions
-      question: stop의 두 ASSERT가 검사하는 큐와 실제 검사 지점을 관찰하는 계획을 설명하세요. 미래 실행의 보장으로 쓰지 마세요.
+      question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를 해당 검사
+        지점에서 관찰하는 계획과 뒤의 requestSequence_ 0 초기화만 한 문장으로 설명하세요. 앞서 설명한 대기 큐 분리·장치 정지·요청
+        취소를 다시 나열하거나 ASSERT를 미래 실행 보장으로 쓰지 마세요.
       sources:
       - stop-assertions
       answer_contract:
@@ -5497,9 +5457,11 @@ sections:
         - - queuedRequests_
         - - waitingRequests_
         - - ASSERT
+      max_statements: 1
     - id: completion
-      question: completeRequest 호출과 그 이후 애플리케이션 전달을 조사할 때 함수의 명시된 CameraManager 문맥과
-        별도 콜백 실행 확인을 구분하세요.
+      question: 정지 중 completeRequest 호출 조사에서 CameraManager 호출 문맥, 반환 뒤 핸들러의 요청 접근 금지와
+        제출 순서 반환 계약을 한 문장으로 짧게 연결하고 실제 애플리케이션 콜백 실행은 별도로 관찰한다는 계획을 덧붙이세요. 일반 완료 경로의 RequestPending
+        반복 분기와 요청 제거 과정을 다시 설명하지 마세요.
       sources:
       - completion
       answer_contract:
@@ -5507,6 +5469,7 @@ sections:
         required_terms:
         - - completeRequest
         - - CameraManager
+      max_statements: 2
     - id: disconnect
       question: 이 disconnect 구현에서 호출하는 내부 처리 함수만 설명하세요.
       sources:
@@ -5525,26 +5488,17 @@ sections:
         required_terms:
         - - disconnected
     - id: disconnect-todo
-      question: 이 TODO가 아직 처리 대상으로 남겨 둔 자원은 무엇입니까?
+      question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한 문장으로
+        설명하세요. TODO의 소속 함수와 미완료 자원·조건을 한 번만 쓰세요.
       sources:
       - disconnect-todo
+      - disconnect-todo-owner
       answer_contract:
         basis: description
         required_terms:
         - - 요청
           - Request
           - request
-        reject_patterns:
-        - pattern: exportFrameBuffers
-          message: 발췌 끝의 다음 함수를 TODO 소속으로 바꾸지 마세요.
-      max_statements: 1
-    - id: disconnect-todo-owner
-      question: 이 TODO가 속한 함수 이름을 코드 선언에서 읽어 설명하세요.
-      sources:
-      - disconnect-todo-owner
-      answer_contract:
-        basis: description
-        required_terms:
         - - disconnect
         reject_patterns:
         - pattern: exportFrameBuffers
@@ -5642,25 +5596,18 @@ sections:
         - - status_
         - - 기록
     - id: reuse-data-record
-      question: 소스 기반 조사에서 이 clear 호출의 대상 변수를 기록 항목으로 제안하세요.
+      question: Request::reuse의 controls_.clear()와 metadata_.clear()에서 관찰할 두 대상 변수 controls_·metadata_를
+        조사 기록 항목으로 한 문장에 제안하세요. 같은 기록 안내를 두 번 쓰지 마세요.
       sources:
       - record-controls
+      - record-metadata
       max_statements: 1
       answer_contract:
         basis: investigation
         required_terms:
         - - controls_
         - - 기록
-    - id: reuse-metadata-record
-      question: 소스 기반 조사에서 이 clear 호출의 대상 변수를 기록 항목으로 제안하세요.
-      sources:
-      - record-metadata
-      max_statements: 1
-      answer_contract:
-        basis: investigation
-        required_terms:
         - - metadata_
-        - - 기록
     - id: completion-record
       question: 소스 기반 조사 기록에 넣을 선두 요청의 상태 조회식을 코드 그대로 명시하고 기록할 항목으로 제안하세요.
       sources:
@@ -5683,27 +5630,18 @@ sections:
         - - stopDevice
         - - 기록
     - id: stop-queued-record
-      question: 제안하는 조사 계획으로, 이 ASSERT가 검사하는 큐의 식과 비어 있는지 여부를 기록 항목에 넣으세요. API 보장이나
-        기존 기록 기능의 유무를 평가하는 질문이 아닙니다.
+      question: stop의 두 ASSERT가 검사하는 data->queuedRequests_와 data->waitingRequests_ 각각의
+        빈 상태를 조사 기록 항목으로 한 문장에 제안하세요. 두 큐의 식을 모두 보존하고 기존 기록이나 실행 결과로 쓰지 마세요.
       sources:
       - record-queued
+      - record-waiting
       max_statements: 1
       answer_contract:
         basis: investigation
         required_terms:
         - - queuedRequests_
         - - 기록
-    - id: stop-waiting-record
-      question: 제안하는 조사 계획으로, 이 ASSERT가 검사하는 큐의 식과 비어 있는지 여부를 기록 항목에 넣으세요. API 보장이나
-        기존 기록 기능의 유무를 평가하는 질문이 아닙니다.
-      sources:
-      - record-waiting
-      max_statements: 1
-      answer_contract:
-        basis: investigation
-        required_terms:
         - - waitingRequests_
-        - - 기록
     design_prompt: focused
   design_requirements:
   - id: journey
@@ -5788,34 +5726,29 @@ sections:
         - pattern: CameraAcquired.{0,25}(?:이고|이면서|동시에).{0,25}CameraConfigured|CameraConfigured.{0,25}(?:이고|이면서|동시에).{0,25}CameraAcquired
           message: 상태 범위의 두 경계를 동시에 만족하는 상태로 바꾸지 마세요.
     - id: access
-      question: isAccessAllowed에서 disconnected_와 allowDisconnected 조건에 따라 -ENODEV가
-        나오는 분기만 관찰하는 조사 계획을 설명하세요.
+      question: 기존 isAccessAllowed 호출의 조사 계획을 두 문장 이내로 설명하세요. allowDisconnected가 거짓이고
+        disconnected_가 참인 -ENODEV 선행 분기를 먼저 구분하고, 그 밖에는 currentState·low·high의 범위 비교와
+        범위 안 0 반환, 범위 밖 ASSERT·로그·-EACCES 코드 위치를 관찰하세요. 연결 해제 조건을 두 번 쓰거나 ASSERT 뒤의 실제
+        반환 실행을 보장하지 마세요.
       sources:
       - access
+      - state-range
       answer_contract:
         basis: investigation
         required_terms:
         - - disconnected_
         - - -ENODEV
-    - id: access-state
-      question: isAccessAllowed의 currentState, low, high와 범위 비교 결과를 기록하고, 범위 밖 분기에서
-        ASSERT·로그·-EACCES가 놓인 코드 위치를 확인하는 조사 항목만 제안하세요. 값을 한 번 읽는 이유나 추가 함수 호출 지시는
-        덧붙이지 마세요. ASSERT 이후의 실행 결과를 보장하지 마세요.
-      sources:
-      - state-range
-      answer_contract:
-        basis: investigation
-        required_terms:
         - - currentState
         - - low
         - - high
         reject_patterns:
         - pattern: 배열|인덱스
           message: 상태 범위 비교를 배열 인덱스로 해석하지 마세요.
-      max_statements: 1
+      max_statements: 2
     - id: validation-effects
-      question: Adjusted에서 파라미터 변경과 스트림 구성 삭제가 가능한 범위를 설명하세요. 원래 validate 호출의 결과를
-        관찰하며 재호출하지 마세요.
+      question: Adjusted가 유효해지도록 조정된 구성이며 모든 스트림의 파라미터 변경이나 스트림 구성 삭제가 가능하다는 결과 범위만 한
+        문장으로 설명하세요. 호출자의 확인 의무는 다음 질문에서 다루므로 반복하지 마세요. 조사 시 기존 validate 결과를 관찰하며 재호출하지
+        마세요.
       sources:
       - validation-changes
       - validate
@@ -5826,6 +5759,7 @@ sections:
         - - 가능
           - 수 있
           - 수있
+      max_statements: 1
     - id: validation-caller
       question: Adjusted의 호출자가 지켜야 하는 확인 의무만 설명하세요.
       sources:
@@ -5848,8 +5782,9 @@ sections:
         - - -EINVAL
       max_statements: 1
     - id: device-configure
-      question: 상태·검증을 통과했으면 실제 pipe_의 configure 호출 반환값과 호출 스택의 구체 구현을 관찰해 실패 위치를
-        좁히는 계획을 설명하세요. 구체 클래스 이름은 추정하지 마세요.
+      question: 앞선 상태·검증을 통과한 기존 pipe_->configure 호출의 반환값과 호출 스택의 구체 구현을 관찰하는 조사 계획만 두
+        문장 이내로 설명하세요. 비영 반환값의 전달은 포함하되 0 반환 이후 cfg.stream의 null 검사·Fatal 로그·activeStreams_
+        초기화·-EINVAL 경로는 다음 질문에서 다루므로 여기서는 반복하지 마세요.
       sources:
       - configure-code
       - configure
@@ -5859,6 +5794,7 @@ sections:
         - - pipe_
         - - configure
         - - 반환
+      max_statements: 2
     - id: stream-link
       question: 이 cfg.stream() 결과와 null 검사, Fatal 로그 및 소스의 -EINVAL 경로를 관찰할 위치를 설명하세요.
         실제 복구나 반환이 검증됐다고 쓰지 마세요.
@@ -6040,29 +5976,22 @@ sections:
         - - break
       max_statements: 1
     - id: cancelled
-      question: doQueueRequest의 cancelled_ 값과 그 조건이 참인 분기의 완료 함수 호출·반환 위치를 함께 관찰하는
-        조사 항목을 한 문단으로 제안하세요.
+      question: doQueueRequest 조사에서 cancelled_가 참이면 completeRequest 호출 뒤 반환하는 경로와, 거짓이면
+        원래 queueRequestDevice 호출의 ret를 관찰하고 ret가 0이 아닐 때 cancelRequest로 가는 경로를 두 문장 이내로
+        대비하세요. 취소된 경우와 장치 제출 오류 분기를 각각 한 번만 쓰세요.
       sources:
       - cancelled-branch
+      - device-result-branch
       answer_contract:
         basis: investigation
         required_terms:
         - - doQueueRequest
         - - cancelled_
         - - completeRequest
-      max_statements: 1
-    - id: device-result
-      question: queueRequestDevice 원래 호출의 반환값과 오류일 때 취소 함수를 호출하는 분기를 함께 관찰하는 조사 항목을
-        한 문단으로 제안하세요.
-      sources:
-      - device-result-branch
-      answer_contract:
-        basis: investigation
-        required_terms:
         - - queueRequestDevice
         - - 반환
         - - cancelRequest
-      max_statements: 1
+      max_statements: 2
     - id: buffer-completion
       question: completeBuffer의 버퍼 추적 결과와 별도 completeRequest 호출 여부를 구분해 확인하는 계획을 설명하세요.
         마지막 버퍼 완료를 자동 요청 완료로 바꾸지 마세요.
