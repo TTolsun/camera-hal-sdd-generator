@@ -81,6 +81,9 @@ details.evidence-section{border-top:1px solid var(--line);border-left:0;margin:8
 
 /* Mobile navigation is a viewport drawer; static navigation remains available without scripts. */
 .menu-backdrop,.sidebar-close{display:none}
+.coverage-links li{margin-bottom:14px}.coverage-links p{margin:3px 0}.related-symbols li{overflow-wrap:anywhere}
+.call-checkpoint{display:grid;grid-template-columns:minmax(100px,140px) minmax(0,1fr);gap:8px 16px}.call-checkpoint dt{font-weight:600}.call-checkpoint dd{margin:0;overflow-wrap:anywhere}
+@media(max-width:760px){.call-checkpoint{grid-template-columns:1fr;gap:3px}.call-checkpoint dd{margin-bottom:10px}}
 html{scrollbar-gutter:stable}
 .previous-route:not(:target){display:none}.previous-route{scroll-margin-top:calc(var(--site-header-height,68px) + 16px);padding:12px;border:1px solid var(--line);margin:12px 0}.previous-route p{margin:0 0 4px;font-size:12px;color:var(--muted)}
 html.menu-open,html.menu-open body{overflow:hidden}

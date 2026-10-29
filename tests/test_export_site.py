@@ -536,4 +536,4 @@ def test_page_state_uses_plain_words_and_keeps_status_code_in_evidence(tmp_cfg, 
     assert '소스 발췌에 연결한 설계 설명' in evidence
     index = (out / 'index.html').read_text(encoding='utf-8')
     assert '<code>ok</code>' not in index and '<code>needs-review</code>' not in index
-    assert '>인용 검사 확인 필요</td>' in index
+    assert '>인용 검사 확인 필요</span>' in index
