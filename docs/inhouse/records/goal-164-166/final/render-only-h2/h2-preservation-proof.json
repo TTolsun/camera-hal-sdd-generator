@@ -425,5 +425,6 @@
   "policy": "All prior hosted source and local excerpt destinations preserved; code block text hashes unchanged; original manuscript hashes checked separately.",
   "human_review": "pending",
   "comparison": "Same e117 manuscripts, facts and translation; only compact_evidence implementation before/after PR182. Historical public55 full-link comparison failed on 3 camera-model class-index links removed by separate reading_cleanup changes; it is not a preservation pass.",
-  "render_model_calls": 0
+  "render_model_calls": 0,
+  "paragraph_mapping_sequences_identical": true
 }
