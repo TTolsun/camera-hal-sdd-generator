@@ -14,6 +14,43 @@ SOURCE_LINK_TEMPLATES = {
     "gitiles": "{url}/+/{commit}/{file}#{line}",
 }
 
+def _remove_route_tables(document: str) -> str:
+    """Drop redundant reading choices; keep old row fragments usable without JS."""
+    def table(match):
+        source = match[0]
+        head = re.search(r'<thead>(.*?)</thead>', source, re.S)
+        labels = [html.unescape(re.sub(r'<[^>]+>', '', cell)).strip()
+                  for cell in re.findall(r'<th\b[^>]*>(.*?)</th>', head[1], re.S)] if head else []
+        if labels != ['지금 확인할 내용', '이동할 절']:
+            return source
+        aliases = []
+        for row in re.findall(r'<tr>(.*?)</tr>', source, re.S):
+            cells = re.findall(r'<td\b[^>]*>(.*?)</td>', row, re.S)
+            if not cells:
+                continue
+            if not any(cell.strip() for cell in cells):
+                continue
+            # Only discard the generated shape. Unrecognized/custom navigation
+            # may contain additional content and must remain intact.
+            if len(cells) != 2 or re.search(r'<a\b[^>]*href=', cells[0]):
+                return source
+            destinations = re.findall(r'<a\b[^>]*href="[^"]+"[^>]*>.*?</a>', cells[1], re.S)
+            if not destinations:
+                return source
+            remainder = re.sub(r'<a\b[^>]*href="[^"]+"[^>]*>.*?</a>', '', cells[1], flags=re.S)
+            if remainder.replace('·', '').strip():
+                return source
+            links = ' · '.join(re.sub(r'\s+id="[^"]+"', '', link) for link in destinations)
+            for anchor in re.findall(r'\bid="([^"]+)"', row):
+                aliases.append(f'<div class="previous-route" id="{anchor}"><p>이전 링크의 목적지</p>'
+                               + links + '</div>')
+        return '\n'.join(aliases)
+
+    chunks = re.split(r'(<pre\b[^>]*>.*?</pre>)', document, flags=re.S)
+    return ''.join(chunk if i % 2 else re.sub(r'<table>.*?</table>', table, chunk, flags=re.S)
+                   for i, chunk in enumerate(chunks))
+
+
 def _href(rel: str, current: str) -> str:
     return quote(posixpath.relpath(rel, posixpath.dirname(current) or "."), safe="/.-")
 
@@ -65,6 +102,7 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
     valid = model.citations() if model and commit == model.meta.get("source_commit") else set()
     rendered = compact_evidence(rendered, valid)
     rendered = fold_source_details(rendered)
+    rendered = _remove_route_tables(rendered)
 
     def table_wrapper(match: re.Match) -> str:
         table = match[0]

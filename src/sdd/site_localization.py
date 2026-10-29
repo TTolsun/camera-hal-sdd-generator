@@ -238,7 +238,8 @@ def localize_site(cfg, out: Path) -> None:
         path.write_text(selector(original, rel, False), encoding='utf-8', newline='\n')
     search = json.loads((out / 'assets/search.json').read_text(encoding='utf-8'))
     for entry in search:
-        entry['title'] = translate(entry['title'])
+        if entry.get('kind') != 'symbol':
+            entry['title'] = translate(entry['title'])
         entry['page'] = translate(entry['page'])
     dest = out / 'en/assets/search.json'
     dest.parent.mkdir(parents=True, exist_ok=True)

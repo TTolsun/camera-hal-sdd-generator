@@ -7,6 +7,34 @@ from sdd.export_site import _render
 from sdd.site_localization import DisplayText, display_strings
 
 
+def test_removed_route_table_preserves_old_fragments_and_unrelated_content():
+    body = ('| **지금 확인할 내용** | **이동할 절** |\n|---|---|\n'
+            '| <a id="old-route"></a>중복 안내입니다. | [요청 문서](request.md#lifetime) |\n\n'
+            '## 본문\n\n본문을 유지합니다.\n\n'
+            '| 상태 | 의미 |\n|---|---|\n| 완료 | 재사용 가능 |\n\n'
+            '| 시작할 문서 | 이유 |\n|---|---|\n| [개요](overview.md) | 처음 읽습니다. |')
+    rendered, _, _ = _render(body, 'test.md', {'test.md', 'request.md', 'overview.md'}, None, '', '')
+    assert '지금 확인할 내용' not in rendered and '중복 안내입니다.' not in rendered
+    assert '<div class="previous-route" id="old-route">' in rendered
+    assert '<a href="request.html#lifetime">요청 문서</a>' in rendered
+    assert '<h2 id="본문">본문</h2>' in rendered and '본문을 유지합니다.' in rendered
+    assert '재사용 가능' in rendered and '시작할 문서' in rendered
+
+
+def test_empty_route_table_is_not_published():
+    rendered, _, _ = _render('| 지금 확인할 내용 | 이동할 절 |\n|---|---|', 'a.md', set(), None, '', '')
+    assert '<table' not in rendered and '지금 확인할 내용' not in rendered
+
+
+def test_custom_route_cell_content_and_fragments_are_not_discarded():
+    for row in ('| [추가 안내](other.md) | [본문](#body) |',
+                '| <a id="legacy"></a>내용 | 목적지 없음 |',
+                '| 내용 | [본문](#body) 뒤에 추가 지시 |'):
+        rendered, _, _ = _render('| 지금 확인할 내용 | 이동할 절 |\n|---|---|\n' + row,
+                                 'a.md', {'other.md'}, None, '', '')
+        assert '<table>' in rendered and '지금 확인할 내용' in rendered
+
+
 def test_grouped_disclosures_preserve_all_destinations_and_claim_association():
     source = ('<p>Keep this claim and <code>identifier</code>. '
               '<a class="citation" href="https://example/commit/a#L1"><code>src/a.cpp:1</code></a>, '
