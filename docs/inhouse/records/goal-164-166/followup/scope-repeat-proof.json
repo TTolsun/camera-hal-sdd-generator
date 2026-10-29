@@ -1,0 +1,23 @@
+{
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "fix_commit": "b0f80f3c11e38726da42f5c429b32df4b55899d4",
+  "before_fix_unnecessary_rewrite": true,
+  "fixed_repeat_new_model_calls": 0,
+  "fixed_repeat_manuscript_bytes_unchanged": true,
+  "before_hashes": {
+    "overview.md": "1cd57d8e35ab8fe06ebaff343d47a2592bf10d7062bc9abcf0534e5b3a5fbc1c",
+    "team-overview.md": "5d12aff53c5bcd15ba01855b1d8b179c13004c36c8ecd76223b35319639820e1",
+    "vendor-overview.md": "f0093385803cfe855c3d2ac3f3f0100f8557150db0f29d299aa657db3c89f2b0"
+  },
+  "after_hashes": {
+    "overview.md": "1cd57d8e35ab8fe06ebaff343d47a2592bf10d7062bc9abcf0534e5b3a5fbc1c",
+    "team-overview.md": "5d12aff53c5bcd15ba01855b1d8b179c13004c36c8ecd76223b35319639820e1",
+    "vendor-overview.md": "f0093385803cfe855c3d2ac3f3f0100f8557150db0f29d299aa657db3c89f2b0"
+  },
+  "topics_and_pages_unchanged": true,
+  "full_cli_status": "failed",
+  "full_cli_reason": "The isolated three-reader workspace lacks other configured pages; lifecycle gate remains enabled. This is not a full publication pass.",
+  "human_task_test": "pending",
+  "checkout_head": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "commit_note": "Raw run.json source_commit records the source checkout HEAD (212); actual facts/manuscripts/excerpts were pinned to e117 and verified at that revision. Raw historical records are not edited."
+}

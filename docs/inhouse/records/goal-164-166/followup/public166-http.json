@@ -1,0 +1,401 @@
+{
+  "checked_at": "2026-10-29T18:27:45.919659+00:00",
+  "public_pr": 57,
+  "public_commit": "4796de239971223fd664f5efc5821d4053c5042c",
+  "pages_run": 40928172429,
+  "generator_commit": "f2ece74e68fe5db20e9c78c515ef47f80b39007b",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "build_id": "b409cfc4cbb03e6db8e9397b520089f3a2be84659a85ef33559680ce3b697c3d",
+  "manifest_sha256": "ad6e79a24f40cfb7ab7f96424db599b7f75430559c5c799c67112dc617c1bf72",
+  "scope": "Every manifest HTML/CSS/JS presentation output, exact HTTP byte hashes. Other outputs are outside this independent check; full 255-output verification is separately archived by PR57.",
+  "html_pages": 60,
+  "paragraph_rows": 0,
+  "outputs": [
+    {
+      "path": "assets/reader-tools.js",
+      "http": 200,
+      "sha256": "e115598308bbc974871d54af921a806ddc9f50ebacc8b800d430824bd55c7e10",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "assets/reading.css",
+      "http": 200,
+      "sha256": "aba940305b0bfa055a5b75a7386615880ae0355d6f24ebb648d2f658b2c60e14",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "assets/site.js",
+      "http": 200,
+      "sha256": "7ce04e83b0b063b5b37073e46b32c9c38b3d53c252453fa138a80ec32a8e84ed",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "camera-model.html",
+      "http": 200,
+      "sha256": "d178c44a59552839a7e5e5353b7a305a1b48bfef630c7296231fe2c698b117be",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "camera-requests.html",
+      "http": 200,
+      "sha256": "cebc9167d41f37aba6c700708fb73ddc8d833d2850fcf9c56eaaac1bd97974e1",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "component-index.html",
+      "http": 200,
+      "sha256": "445bae586eb40c34f9a17ee552c829130939bf2c6e678da55115431fa1d8642b",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/camera-model.html",
+      "http": 200,
+      "sha256": "f92447ace1c3fa4a3bc7521705eae7467f2eebd5c8cd6234a77491bbac7f7f26",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/camera-requests.html",
+      "http": 200,
+      "sha256": "5fb93e7a8ff2e83aae9aa00dd03802af016f5434990326722dbf9e53f5d77b0d",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/component-index.html",
+      "http": 200,
+      "sha256": "0e4f3f33071fbbd099f937f323ef26bb54b8f1437bf6ed4381dba6fab31fc8f2",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/framebuffer-allocator.html",
+      "http": 200,
+      "sha256": "ff78f889c1a77917b7fdf954bb0a2e847150481bdc72595f2649f095c64f20d9",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/glossary.html",
+      "http": 200,
+      "sha256": "b341126be1f6d39ef85f6ec5e213d1e72c35e7328474cc421228f35b2a07ccd0",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/index.html",
+      "http": 200,
+      "sha256": "77f9e8d6a75269985404411351231ff07c8936f3b8375b809b188cc4a3979854",
+      "guide_mentions_removed_control": true
+    },
+    {
+      "path": "en/ipa-algorithms.html",
+      "http": 200,
+      "sha256": "b05d764b91f66a2c02c3469fb989a2b5d8aa797874087f8cfa3b05a452daaca1",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/ipa-module-validation.html",
+      "http": 200,
+      "sha256": "52ccce4d031748d1f91dd333daa630d7a519b3f415afd8d5134bc7eb3675f3ae",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/ipa.html",
+      "http": 200,
+      "sha256": "e350f1c74b10540b07801ee1d594dc2e18cfa16bd2ee47f73d43e54c4277bc26",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/ipu3-lsc-flow.html",
+      "http": 200,
+      "sha256": "27f31f94ea508e5492eec02d2c637f3d90721638f26a2faa547bb30dc909fd37",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/ipu3-lsc-prepare.html",
+      "http": 200,
+      "sha256": "ef26fde043edb668a06b0d352f86d278cdfbbdfd6c4da1a2d4dcccb89367666b",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/ipu3-lsc.html",
+      "http": 200,
+      "sha256": "9ddd2e927f047d684fd0c81193e45e21c49206f7deb9668a393821d755d3bb80",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/onboarding.html",
+      "http": 200,
+      "sha256": "afd7ecb1fbfea572f96dcc425fdcbdf47e0c6168f33fb05f36b7c950b1cfa86c",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/overview.html",
+      "http": 200,
+      "sha256": "3ac7261eb627cb9f6826d476a50696c2bf145d99f1f526bbf1bc6fcfa1b83255",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/pipeline-handler.html",
+      "http": 200,
+      "sha256": "b7cf586d6b683c1ed3efa40428fdbb7b45bd1db010cd6bdd418091c548cd9fdb",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/pipeline-requests.html",
+      "http": 200,
+      "sha256": "f07b4e4c7c5f346518908fafd5579563a6e8222c8daad71313d20b0f82313949",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/request-diagnosis.html",
+      "http": 200,
+      "sha256": "61001e114b479d63e83d2ecd643aea8c702b697807019aa46303944ebc4e7713",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/request-lifecycle.html",
+      "http": 200,
+      "sha256": "7e12def0bc89e533024728bb031b9dca5a3ef6343aba649e677c3dd6c3cdcf79",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/rkisp1-dewarp.html",
+      "http": 200,
+      "sha256": "558fcbddf87537bbe8a5fbe89409d32ad83cb04fdd59efb7ad420f622cbdf672",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/scenarios/camera_start.html",
+      "http": 200,
+      "sha256": "242888fd94e3c745069327f23fd4563aab763a374f4456789c8dd47f85c5580c",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/scenarios/camera_stop.html",
+      "http": 200,
+      "sha256": "249c2996b5a779db5c9b5b9552673c4354573f5741ec205610aff33138d2af50",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/scenarios/complete_request.html",
+      "http": 200,
+      "sha256": "02faad56b3f8cf9db03ad7b49ecf86ac4fb984bb3dc5516b5830aa939d40da4f",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/scenarios/configure.html",
+      "http": 200,
+      "sha256": "f73f55b739a71ae551007897be40eabe9d8b12a0e517076233e97ef9fcc4daa9",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/scenarios/index.html",
+      "http": 200,
+      "sha256": "8e75ceed8caff3ed0566eb8224103561fc922a01efa3347f63b5c72332dcb7bf",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/scenarios/manager_start.html",
+      "http": 200,
+      "sha256": "d10bcc21dd360f218733b410f776533d95f7684c9afaaec6ce34e114d8944d8b",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/scenarios/queue_request.html",
+      "http": 200,
+      "sha256": "ef9057a3c6855ca7398b534c9c5a99968ef0a3ff970e37416fb8f85043952219",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/team-overview.html",
+      "http": 200,
+      "sha256": "24b4672fc03508ee4b11495fd73a4c24e1799ffb288d197aeb87abe167350226",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/vendor-assurance.html",
+      "http": 200,
+      "sha256": "7daeb8c857c973cd8e837871ab19c8bb7c484ff8cacbad5023de18078747fbd2",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/vendor-integration.html",
+      "http": 200,
+      "sha256": "e2b3f6bfe3dca8c6c7667dacff67a0075a5ae82d8656887eaa64e8ca1124e8bb",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "en/vendor-overview.html",
+      "http": 200,
+      "sha256": "eafebf18269672e31c51092391303a6563482fd9c261eb133e81d5725157cfed",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "framebuffer-allocator.html",
+      "http": 200,
+      "sha256": "53860e0466f19eadb8ada01e9e80439402a54d59dbf8d2d4afd497dc13dae838",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "glossary.html",
+      "http": 200,
+      "sha256": "e0c61ab31026970ad9b36080118485e860bb49681a92c36854a59d9ea1268d20",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "index.html",
+      "http": 200,
+      "sha256": "aab5cab68d31c620bcab581535f158f3a610eeb9dd421dfdc134dafccd0500ed",
+      "guide_mentions_removed_control": true
+    },
+    {
+      "path": "ipa-algorithms.html",
+      "http": 200,
+      "sha256": "9fbf138e975f9065377897839361260ebd84c93089fee2358da709f6b218ddd3",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "ipa-module-validation.html",
+      "http": 200,
+      "sha256": "c72c6660ca7942014d33035f6a1f618255d8ff9ca425e74e0cc3c6af10bb5e08",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "ipa.html",
+      "http": 200,
+      "sha256": "57fe1eeab98cf391bcbedd2cc9953755d5601de988051b7e05d2dad3466531ab",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "ipu3-lsc-flow.html",
+      "http": 200,
+      "sha256": "9dce2d3d708bc153ebffa2048213b09064479f1b16fc9a2480773edd8092d58c",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "ipu3-lsc-prepare.html",
+      "http": 200,
+      "sha256": "5a0817cd1fce87546e2287ffa057914b20e77530236202adda7208b3da68e638",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "ipu3-lsc.html",
+      "http": 200,
+      "sha256": "d1fc9da745fa9fd9365b497be2e3dba3053bcdf132bcca6c73ab9c13e41c27eb",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "onboarding.html",
+      "http": 200,
+      "sha256": "8f3e31104ced0410a2b0b8dbc92178718e55b096a2c3032fe81d6b88ffe8967d",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "overview.html",
+      "http": 200,
+      "sha256": "ef9a1f11b7dc832cd81eb18dd48146fb2b5a62aca57625577ea8801277fa5a84",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "pipeline-handler.html",
+      "http": 200,
+      "sha256": "83122e7723cd2b86ab637ad57a717bdb5969dd7610ce3bdfe843f59f61b92234",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "pipeline-requests.html",
+      "http": 200,
+      "sha256": "063e3799a95cc7a8ccb00a71d287a801e1e988fc35bd24aa40c29328571c07db",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "request-diagnosis.html",
+      "http": 200,
+      "sha256": "dc687d190e505b7ae1d54c94d2b4589e8eeb389b38199282bc989b74da8607f6",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "request-lifecycle.html",
+      "http": 200,
+      "sha256": "902c6185861ba78acb592a999c6b1a580223d7d0abb015d5149b2ea2110d708a",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "rkisp1-dewarp.html",
+      "http": 200,
+      "sha256": "5cf67d029dd45498416cdc5b41c7899f0571e97aaf6618b28690c436de7e32b9",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "scenarios/camera_start.html",
+      "http": 200,
+      "sha256": "ce008e8328348c07d35f30c7866a2dc4e3a4af13f56bdb7a514b57ada8f1e31f",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "scenarios/camera_stop.html",
+      "http": 200,
+      "sha256": "c9e5c18cc2dbb2e81b124028190b303e5c5e3f04bfa0dcb4aae0182111212550",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "scenarios/complete_request.html",
+      "http": 200,
+      "sha256": "6bb316bb7cb547778c72e737b7f7b9f371df1ceed19f5a08539b068550797421",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "scenarios/configure.html",
+      "http": 200,
+      "sha256": "614c760db38bf0afddecc97d3bef34f4b27f37f3dc30ca9b83a38b25f4f83ad9",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "scenarios/index.html",
+      "http": 200,
+      "sha256": "74b332d98d2d64782b2b4c960632664c384f0ea4ed8ee5dc8fda041119655c73",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "scenarios/manager_start.html",
+      "http": 200,
+      "sha256": "9cde193c71f8761385cac9f3feba92b9966669e178b889c7e8c5df8cf4927ac4",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "scenarios/queue_request.html",
+      "http": 200,
+      "sha256": "0a0c0452e3477136d1e018516b6f0befd702dd6c3325963bd56782f3097173b6",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "team-overview.html",
+      "http": 200,
+      "sha256": "e1d401a772f2402261c476c535129bd6c75885bd44a5ec2f14ae0b61e7cd4dc8",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "vendor-assurance.html",
+      "http": 200,
+      "sha256": "c06ed2bf6ee7353d3bf15ad034e7dc7aaf52cc082451a9c15af42649501e5176",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "vendor-integration.html",
+      "http": 200,
+      "sha256": "a7a400e2db078e289f65f8dd2d5408a92eb19858bf069878b021ea88bb910cf4",
+      "guide_mentions_removed_control": false
+    },
+    {
+      "path": "vendor-overview.html",
+      "http": 200,
+      "sha256": "2374c383a58ec500b7feb14de3bb58e40473237c61f5f03373042e130986b631",
+      "guide_mentions_removed_control": false
+    }
+  ],
+  "stable_manifest": true,
+  "reader_guide_drift": [
+    "en/index.html",
+    "index.html"
+  ],
+  "new_narration_calls": 0,
+  "human_reader_test": "pending",
+  "internal_hal_validation": "not-run"
+}

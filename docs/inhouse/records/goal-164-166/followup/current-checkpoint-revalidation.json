@@ -1,0 +1,19 @@
+{
+  "scope": "One unchanged completed public CLI unit, current checks plus exact original grounding receipt; not a new model call or whole-batch result.",
+  "unit": "vendor-overview_value_what",
+  "source_commit": "212c689fcf2450bbfbaab25c7472895ac277b5d6",
+  "checkpoint": "C:\\Users\\baboe\\.codex\\worktrees\\d9d0\\camera-hal-sdd-generator\\build\\issues-162-163\\publication\\build\\cli-checkpoints\\45688ba738d234104057a2d995d008a8694ed389d9dd1a59b0f2854b4f06dfb0.json",
+  "checkpoint_sha256": "ca99eeab1d402d77ec1fd2a62dbf5fd74981a3a64c0c8497015c2b0066b59457",
+  "new_model_calls": 0,
+  "original_receipts_unchanged": {
+    "60b1bf48442840808eecd0e46851648e/001.receipt.json": "e1085a08376a1f9f2dad0687183bd6ff2261ecd84b0ab9d8b8fa9ea51b8cb30c",
+    "60b1bf48442840808eecd0e46851648e/002.receipt.json": "cf316bd24e5dfb0c7f25257801cf4e99b61d23c52228a41e231ef48f86dbb4e9"
+  },
+  "validation_policy_changed": true,
+  "changed_checks": [
+    "reader_scope"
+  ],
+  "current_validation": "passed",
+  "saved_statement_bytes_preserved": true,
+  "human_review": "pending"
+}

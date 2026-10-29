@@ -1,0 +1,39 @@
+"""Verify exact public presentation bytes; no document mutation or model call."""
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+import hashlib, json
+from pathlib import Path
+from urllib.request import urlopen
+
+root = Path('C:/Users/baboe/.codex/worktrees/ffec/camera-hal-sdd-generator/build/publication/libcamera-sdd/docs')
+base = 'https://ttolsun.github.io/libcamera-sdd/'
+manifest_bytes = urlopen(base+'site-manifest.json', timeout=30).read()
+assert manifest_bytes == (root/'site-manifest.json').read_bytes()
+manifest = json.loads(manifest_bytes)
+assert manifest['build_id'] == 'b409cfc4cbb03e6db8e9397b520089f3a2be84659a85ef33559680ce3b697c3d'
+selected = [name for name in manifest['outputs'] if name.endswith(('.html', '.css', '.js'))]
+def check(name):
+    with urlopen(base+name, timeout=30) as response:
+        raw, status = response.read(), response.status
+    sha = hashlib.sha256(raw).hexdigest()
+    assert status == 200 and sha == manifest['outputs'][name], name
+    if name.endswith('.html'):
+        assert b'evidence-paragraph' not in raw, name
+    return dict(path=name, http=status, sha256=sha,
+                guide_mentions_removed_control=('문단 근거의'.encode() in raw or b'in paragraph evidence' in raw))
+with ThreadPoolExecutor(max_workers=6) as pool:
+    rows = list(pool.map(check, selected))
+assert urlopen(base+'site-manifest.json', timeout=30).read() == manifest_bytes
+proof = dict(checked_at=datetime.now(timezone.utc).isoformat(), public_pr=57,
+    public_commit='4796de239971223fd664f5efc5821d4053c5042c',
+    pages_run=40928172429, generator_commit='f2ece74e68fe5db20e9c78c515ef47f80b39007b',
+    source_commit='e117198c015057761bb0bbaa85f963c41ce412d7',
+    build_id=manifest['build_id'], manifest_sha256=hashlib.sha256(manifest_bytes).hexdigest(),
+    scope='Every manifest HTML/CSS/JS presentation output, exact HTTP byte hashes. Other outputs are outside this independent check; full 255-output verification is separately archived by PR57.',
+    html_pages=sum(row['path'].endswith('.html') for row in rows),
+    paragraph_rows=0, outputs=rows, stable_manifest=True,
+    reader_guide_drift=[r['path'] for r in rows if r['guide_mentions_removed_control']],
+    new_narration_calls=0, human_reader_test='pending', internal_hal_validation='not-run')
+out=Path('build/goal-164-166/public166-http.json')
+out.write_text(json.dumps(proof, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+print(json.dumps({k:v for k,v in proof.items() if k!='outputs'}), flush=True)

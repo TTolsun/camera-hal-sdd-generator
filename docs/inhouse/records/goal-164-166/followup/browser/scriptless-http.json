@@ -1,0 +1,7 @@
+{
+  "url": "http://localhost:8768/en/vendor-overview.html",
+  "csp": "sandbox allow-same-origin allow-popups allow-top-navigation; script-src 'none'",
+  "html_bytes_unchanged": true,
+  "sha256": "eafebf18269672e31c51092391303a6563482fd9c261eb133e81d5725157cfed",
+  "method": "Actual browser document scripting disabled by response sandbox, not a changed Chrome global setting"
+}

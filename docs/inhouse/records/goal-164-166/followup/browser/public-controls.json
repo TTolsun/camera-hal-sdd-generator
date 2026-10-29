@@ -1,0 +1,24 @@
+{
+  "scope": "PR57 live public e117 rendering; not human reader assessment.",
+  "search": {
+    "query": "요청 완료",
+    "results": 7,
+    "target": {
+      "h1": "요청 완료 통지 (PipelineHandler::completeRequest)",
+      "url": "https://ttolsun.github.io/libcamera-sdd/scenarios/complete_request.html"
+    }
+  },
+  "diagram": {
+    "opened": true,
+    "nodeSearch": "커널",
+    "matched": 1,
+    "zoomIn": true,
+    "closed": true
+  },
+  "keyboard": {
+    "sectionEnterOpens": true,
+    "spaceCloses": true,
+    "focusOnSummary": true
+  },
+  "printPreview": "not-completed"
+}
