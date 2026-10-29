@@ -295,9 +295,10 @@ sections:
         - - 취소
         reject_patterns: []
     - id: completion
-      question: queueRequest 주석에서 정지 시 요청 추적에 붙인 조건과 completeBuffer 주석에서 마지막 버퍼 완료에
-        붙인 조건은 무엇이며, 각 조건에서 요청 완료의 주체와 명시적 호출 의무는 어떻게 구분됩니까? 두 조건의 보장 범위를 분리해 설명하고
-        자세한 함수 순서는 확장하지 마세요.
+      question: 요청 추적에 의해 stop 때 모든 요청이 완료되는 조건, completeBuffer를 CameraManager 스레드에서 호출해야
+        하는 의무와 버퍼 통지·내부 추적 역할, 마지막 버퍼만으로 요청이 자동 완료되지 않아 핸들러가 completeRequest를 별도로 명시 호출해야
+        하는 의무를 세 짧은 문장으로 구분하세요. 두 완료 조건의 범위를 보존하고 completeBuffer 역할과 completeRequest 호출
+        의무는 각각 한 번만 쓰세요.
       sources:
       - completion
       - last-buffer-contract
@@ -309,9 +310,13 @@ sections:
         - - 버퍼
         - - 파이프라인 핸들러
           - PipelineHandler
+        - - completeBuffer
+        - - CameraManager
+        - - 추적
         reject_patterns:
         - pattern: 자동.{0,10}완료.{0,10}(후|뒤).{0,30}(통지|알림)
           message: 자동 완료와 추가 통지 사이의 순서를 새로 만들지 말고 각 소스의 조건과 호출 의무를 대조하세요.
+      max_statements: 3
   reader_profile: vendor-overview
   routes:
   - to: vendor-integration.md
@@ -3972,25 +3977,16 @@ sections:
       start: The ``cam`` utility can be used for basic testing.
       end: LIBCAMERA_LOG_LEVELS=*:DEBUG cam -l
     parts:
-    - id: tool
-      question: cam 도구가 문서에서 어떤 목적의 도구로 소개되는지만 한 문장으로 설명하세요. 구체적인 실행 명령과 옵션은 다음 절차
-        질문에서 다루므로 여기서는 나열하지 마세요.
+    - id: steps
+      question: README가 cam의 기본 시험에 제시하는 카메라 목록 확인·첫 카메라의 10프레임 저장·문제 발생 시 디버그 로그의 세 절차를
+        원문 명령 그대로 한 문단으로 설명하세요. 기본 도구라는 별도 소개 문장을 앞에 반복하지 말고 명령 안내에 목적을 녹이세요. 문서에 있는 절차를
+        소개하는 것이며 실제 실행 결과나 장치 성공을 단정하지 마세요.
       sources:
       - cam
       answer_contract:
         basis: description
         required_terms:
         - - cam
-        reject_patterns:
-        - pattern: cam\s+-l|--capture|LIBCAMERA_LOG_LEVELS
-          message: 도구 소개와 실행 절차를 분리하세요. 이 답변에서는 목적만 설명하고 구체적인 명령은 절차 답변에 두세요.
-      max_statements: 1
-    - id: steps
-      question: 카메라 목록 확인, 프레임 캡처, 디버그 로그 켜기를 문서가 적은 명령 그대로 순서대로 한 문단으로 안내하세요. 출력
-        결과는 지어내지 마세요.
-      sources:
-      - cam
-      statement_kind: limitation
   - id: why
     title: 요청 접수와 완료를 나눈 이유
     covers:
