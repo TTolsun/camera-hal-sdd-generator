@@ -3032,8 +3032,8 @@ sections:
         - - interpolateComponents
         - - quantizedCt
     - id: lut-channels
-      question: LUT의 lut->sets 배열에 set의 r·gr·gb·b 채널을 어디로 대입하는지 설명하세요. 루프 한도나 저장 색온도는
-        이 질문의 범위가 아닙니다.
+      question: LUT의 lut->sets 배열에 set의 r·gr·gb·b 채널을 어디로 대입하는지 설명하세요. 각 채널의 입력식과
+        인덱스를 포함한 완전한 목적 필드 경로를 명시해 매핑을 바로 대조할 수 있게 쓰세요. 루프 한도나 저장 색온도는 이 질문의 범위가 아닙니다.
       sources:
       - lut-writes
       answer_contract:
@@ -3041,6 +3041,14 @@ sections:
         required_terms:
         - - lut
           - LUT
+        - - lut->sets[s].r_and_gr[c].r
+        - - lut->sets[s].r_and_gr[c].gr
+        - - lut->sets[s].gb_and_b[c].gb
+        - - lut->sets[s].gb_and_b[c].b
+        - - 'set.at("r")[i]'
+        - - 'set.at("gr")[i]'
+        - - 'set.at("gb")[i]'
+        - - 'set.at("b")[i]'
     - id: remember
       question: 이 대입문의 좌변 멤버와 우변 변수 이름만 설명하세요. 함수 인자나 함수 마지막 줄이라고 추정하지 마세요.
       sources:

@@ -344,9 +344,23 @@ def _indexed_channel_writes(text):
         r'`([^`]+)`(?:과|와)\s*`([^`]+)`(?:을|를|은|는)\s*각각\s*'
         r'`([^`]+)`(?:과|와)\s*`([^`]+)`에\s*대입합니다[.]?\s*',
         _CITATION.sub(' ', text))
-    if not match:
-        return None
-    owner, container, a, b, va, vb, da, db = match.groups()
+    if match:
+        owner, container, a, b, va, vb, da, db = match.groups()
+    else:
+        shorthand = re.fullmatch(
+            r'\s*(?:또한\s*)?(?:`([^`]+)`(?:는|은)\s*)?(?:LUT의\s*)?'
+            r'`([^`]+)`에서\s*`([^`]+)`(?:과|와)\s*`([^`]+)`에\s*각각\s*'
+            r'`([^`]+)`의\s*`([^`]+)`(?:과|와)\s*`([^`]+)`\s*채널의\s*'
+            r'`([^`]+)`번째\s*값을\s*대입합니다[.]?\s*', _CITATION.sub(' ', text))
+        if not shorthand:
+            return None
+        owner, base, a, b, container, read_a, read_b, index = shorthand.groups()
+        if (a, b) != (read_a, read_b):
+            return None
+        # Normalize a complete member/index description, not manuscript prose.
+        # The caller still proves these exact LHS/RHS instructions in source.
+        va, vb = (f'{container}.at("{channel}")[{index}]' for channel in (a, b))
+        da, db = (f'{base}.{channel}' for channel in (a, b))
     ident = r'[A-Za-z_][A-Za-z0-9_]*'
     if ((owner and not re.fullmatch(_NAME + r'(?:\(\))?', owner))
             or (container and not re.fullmatch(_NAME, container)) or a == b):
