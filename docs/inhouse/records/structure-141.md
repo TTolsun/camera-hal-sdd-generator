@@ -5,7 +5,7 @@
 ## 고정 기준과 진행 상황
 
 - 기준 생성기: `45609e46c6d76806003e9dd75702a8b7ddab9e5e`입니다. 착수와 공유 파일 변경 전 최신 main 및 열린 생성기·공개 SDD PR을 확인했으며, 당시 열린 PR은 없었습니다.
-- 전용 작업 트리의 구현 브랜치는 `codex/issue-141-structure`이며, 병합 후 공개 검증 기록은 `codex/issue-141-publication`에서 관리합니다. 다른 세션의 변경이나 미커밋 파일을 가져오지 않았습니다.
+- 전용 작업 트리의 구현 브랜치는 `codex/issue-141-structure`이며, 최종 공개 검증 기록은 `codex/issue141-publication-evidence`에서 관리합니다. 다른 세션의 변경이나 미커밋 파일을 가져오지 않았으며 실제 main 병합분만 통합했습니다.
 - Windows 로컬 검증은 uv 0.12.15, Python 3.14.7과 잠금 파일의 pytest 9.1.1·libclang 18.1.1을 사용합니다. 시스템 Python은 3.12.10입니다.
 - 기본 uv 캐시 권한·네트워크 실패는 작업 트리 전용 캐시와 의존성 설치로 해결했습니다. 샌드박스는 테스트용 로컬 bare clone을 거부하므로 전체 회귀는 실행별 제한 해제와 독립 임시 경로를 사용합니다. 원래 SHA는 Git archive로 고정하여 검증합니다. 소스 수정과 겹친 중간 기준 실행은 기준 결과로 계산하지 않습니다.
 - 착수 시 공식 libcamera HEAD는 `182307a772ebebf173ee84911906da707718485f`였으며, 재개 시 새 HEAD `e117198c015057761bb0bbaa85f963c41ce412d7`도 별도 추출했습니다. 공개 SDD `8f93666`의 입력 `2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f`와 고정 비교·새 upstream 검증을 구분합니다.
@@ -17,9 +17,9 @@
 | B. 요청·응답·재시도·재사용·조립 분리 | 구현했습니다. 명명된 요청·결과 계약을 사용하며 기존 함수 import와 tuple unpacking을 유지합니다. |
 | C. 비교·재생·과거 정책 경계 | 구현했습니다. 원래 해시 쌍과 캐시 키·후보 순서·영수증 검증을 유지합니다. |
 | 동작 보존·전체 회귀·4개 CI | 기준 전체 1,720개 통과·2개 제외, 변경 후 로컬 1,743개 통과·2개 제외와 최종 코드의 네 CI 조합 각각 1,761개 통과를 확인했습니다. |
-| 실제 CLI·공식 upstream·사이트 | 병합 프로필의 재추출과 두 고정 비교를 마쳤습니다. 새 원고 시험은 기존 검사에서 거절됐고 공개 사이트 갱신은 남아 있습니다. fixture와 재생 성공을 실제 호출로 계산하지 않습니다. |
+| 실제 CLI·공식 upstream·사이트 | 공식 `e117198c`의 전체 추출과 실제 Terra High 생성·번역·감사를 포함한 최종 공개본을 확인했습니다. 초기 Claude 원고 실패와 고정 입력 비교는 별도 기록으로 보존합니다. 아래 최종 공개 검증 절을 확인하세요. |
 | 생성기 리뷰·병합 | [PR #142](https://github.com/TTolsun/camera-hal-sdd-generator/pull/142)를 `dfdebfdf63819b4008b51f382fab38f7f777c954`로, 예제 입력 경계 [PR #144](https://github.com/TTolsun/camera-hal-sdd-generator/pull/144)를 `350a9d344e6170d37124774f5f290ec13bc04d0b`로 병합했습니다. |
-| 공개 SDD 반영·Pages·공개 확인 | [공개 초안 PR #50](https://github.com/TTolsun/libcamera-sdd/pull/50)에 검증 근거를 보존했습니다. 새 소스의 원고·사이트·배포는 미완료입니다. |
+| 공개 SDD 반영·Pages·공개 확인 | [공개 PR #52](https://github.com/TTolsun/libcamera-sdd/pull/52)를 `46235b02`로 병합·배포했습니다. 후속 증거 전용 [PR #53](https://github.com/TTolsun/libcamera-sdd/pull/53)은 사이트 바이트를 보존합니다. 한영 60쪽·산출물 254개와 실제 화면을 독립 확인했습니다. |
 
 ## 동작 보존 근거
 
@@ -125,7 +125,7 @@ Mermaid 로딩 실패도 [별도 로컬 시험 기록](https://github.com/TTolsu
 
 공개 `8f93666`의 `run.json`과 사이트 manifest는 build_id가 서로 다릅니다. [같은 커밋에서 읽은 관측값](https://github.com/TTolsun/libcamera-sdd/blob/7fe64399b8b4dc5285bb3fe3d7348f55c13152f2/publication/issue141/public-pr51-metadata.json)을 보존했으며, 최종 공유 배포에서는 메타데이터·manifest·실제 URL의 일치를 확인해야 합니다. 진행 중 후보의 실패로 단정하거나 이 기록에서 별도 게시물을 고치지 않았습니다.
 
-공통 Terra CLI 연동과 최종 `e117198c` 문서·번역·게시 작업은 기존 공개 생성 세션이 주도합니다. #141은 실제 병합 후 구조 제한·동작 보존·소스 범위와 공유 공개 결과를 확인합니다. 독립 Codex 시제품 `808eabc`와 실제 Terra High 연결 시험은 보존했고 중복 PR은 만들지 않았습니다. 시제품의 회귀 109개 통과·2개 제외와 짧은 실제 호출 성공은 공통 구현의 필수 CI나 libcamera 문서·Pages 완료가 아닙니다. 최종 공개 조건은 여전히 미완료입니다.
+공통 Terra CLI 연동과 최종 `e117198c` 문서·번역·게시 작업은 기존 공개 생성 세션이 주도했습니다. #141은 실제 병합 후 구조 제한·동작 보존·소스 범위와 공유 공개 결과를 확인합니다. 독립 Codex 시제품 `808eabc`와 실제 Terra High 연결 시험은 보존했고 중복 PR은 만들지 않았습니다. 시제품의 회귀 109개 통과·2개 제외와 짧은 실제 호출 성공은 공통 구현의 필수 CI나 libcamera 문서·Pages 완료가 아닙니다. 당시 미완료였던 최종 공개 조건은 아래의 실제 배포 검증으로 구분합니다.
 
 ## Terra 병합 후 실행 경계 검증
 
@@ -159,6 +159,28 @@ Mermaid 로딩 실패도 [별도 로컬 시험 기록](https://github.com/TTolsu
 | 환경 교체와 재사용 | 16 | 18 | 설정 객체와 명시적인 CLI·HTTP 비교·파일 교환·재생·과거 해시 경계를 사용합니다. 실제 사내 환경 교체 시험은 남습니다. |
 | 복잡도 관리와 변경 용이성 | 14 | 17 | 검토 옵션, 응답 규칙, 재사용 검사 변경의 대상 모듈을 분리했습니다. 단일 모델 호출 계약을 유지하며 새 상속·범용 플러그인 계층을 추가하지 않았습니다. 프로젝트별 설정 dict와 기존 공개 함수 facade는 남습니다. |
 | 합계 | 84 | 91 | 파일 수·줄 수·테스트 개수만으로 가산하지 않았습니다. |
+
+최종 문서·구조·의존 검사에서는 기본 pytest 임시 폴더를 만들 수 없어 400개 통과·setup 오류30개가 났습니다. 전용 임시 경로로 같은 검사를 재실행하여 430개가 통과했습니다. 첫 실행을 통과로 계산하지 않습니다. 최종 PR 헤드의 전체 네 환경 CI 결과는 PR #157의 검사와 완료 기록에서 확인합니다.
+
+## 최종 공개 반영과 독립 확인
+
+공동 게시 담당자가 병합 생성기 `a40341568df71c77d780a047f7d56cbcf07c8993`와 공식 upstream `e117198c015057761bb0bbaa85f963c41ce412d7`로 만든 전체 문서를 [공개 PR #52](https://github.com/TTolsun/libcamera-sdd/pull/52)의 `46235b026626db49ef98ba3a5e23d1359dbe3d0a`로 병합했습니다. 생성기는 #141 최종 경계 [PR #149](https://github.com/TTolsun/camera-hal-sdd-generator/pull/149)의 병합 `0ed2a6e1b16a7500c1afb33c653316eed67f8044`를 포함합니다. Codex 지원과 #138~#140·#150·#151의 후속 기능은 각 담당자의 결과이며 #141 점수에 더하지 않습니다.
+
+[Pages 실행 40790903462](https://github.com/TTolsun/libcamera-sdd/actions/runs/40790903462)의 build·report·deploy가 성공했습니다. 증거 전용 [PR #53](https://github.com/TTolsun/libcamera-sdd/pull/53)의 병합 `547fdf05c777f38766c30779d480e58d84d7b2ec` 뒤 [실행 40792236143](https://github.com/TTolsun/libcamera-sdd/actions/runs/40792236143)도 성공했습니다. 두 공개 커밋의 `docs/`, `run.json`, `generation-receipts.json`은 바이트가 같습니다. [공개 사이트](https://ttolsun.github.io/libcamera-sdd/)의 한영 60쪽을 포함한 manifest 소유 산출물 254개 모두 HTTP 200과 실제 Git 바이트 해시가 일치했습니다. 전후 manifest도 안정적이며 run과 manifest의 build_id는 `e1569641fe806423639aec719259b261f025ad17db1a0110fa8e6768680c1fbe`로 같습니다. [전수 URL 검증](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/final-public/public53-live-release.json)은 기록된 engine 해시도 고정 생성기 Git 바이트와 대조합니다.
+
+최종 facts는 TU 300개·클래스 1,412개·함수 569개·시나리오 6개·파싱 오류 0개입니다. [고정 Git 대조](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/final-public/public52-git-spans.json)에서 blob 538개에 대한 위치 8,601개, 발췌 290개와 문맥 121개의 범위·본문·해시가 맞았습니다. 기존 전체 공개 입력의 실제 소스 선언 이름과 플래그 9개를 유지하며, 빠진 클래스 101개·함수 20개는 이전 Git 미추적 생성 파일뿐입니다. 변경되지 않은 실제 선언 파일의 메서드 이름 중복도 2,402개도 유지됐습니다. 이는 시그니처·ABI·실기기 동작의 증명은 아닙니다. 실제 HTML의 소스 링크 5,324개(고유 URL 1,726개)는 모두 `e117198c`이며 파일·줄 범위와 사이트 링크 검사가 통과했습니다.
+
+사용자 최종 선택은 독립 Codex CLI, `gpt-6.1-terra`, `args: [-c, 'model_reasoning_effort="high"']`입니다. [원본 기록 검증](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/final-public/public52-native-verification.json)은 공개 ZIP에서 원래 경로 61,739개·505,159,417바이트의 개별 크기·SHA·개수를 복원한 뒤 현재 ledger의 완료 기록 1,127개를 운영 기록 로더와 native 영수증 검사로 읽었습니다. 요청·응답·원본 stdout·native/original schema·실제 인자와 모델 선택이 일치했습니다. 이 독립 검증의 새 모델 호출은 0개이며 보관 사본을 새 호출로 세지 않았습니다. CLI가 선택한 모델과 기록의 일치는 확인했지만 제공 서버의 canonical model을 별도로 증명한 것은 아닙니다. 초기 Claude 실패·재생 기록은 과거 값과 실패 상태로 남습니다.
+
+[입력·번역 검증](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/final-public/public52-input-verification.json)은 manifest 입력 36개, 원고 28개의 커밋, LLM 원고 19개·주제 69개의 본문·출처·순수 응답 계약, 카탈로그 30쪽·영문 1,733문구의 원본 해시·키·자리표시자·의무 문구를 확인했습니다. 결정적 원고는 9개입니다. 게시 담당자의 실제 최종 반복 절차는 생성기 SHA와 실행 파일 바이트를 검사하고 두 전체 manifest를 비교하며 사이트 검사 및 호출 기록 집합의 전후 동일성을 확인합니다. 최종 생성은 19개 문서·313개 항목 재사용, 감사는 88배치 재사용으로 모두 새 호출 0개였습니다. 이는 앞선 실제 신규 생성·번역·감사 기록을 이용한 재실행이며 신규 CLI 실행으로 바꿔 보고하지 않습니다. 게시 Python 3.12.10과 독립 검증 Python 3.14.7의 정책 지문 차이는 명시하며, 다른 런타임의 운영 재사용 관문을 새로 통과했다고 주장하지 않습니다.
+
+[최종 감사 독립 검증](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/final-public/public52-audit-verification.json)은 실제 28개 원고로 다섯 계약의 payload를 재구성하고 88개 배치의 요청·봉인된 체크포인트·native 기록을 대조했습니다. 운영 검증 함수가 만든 판정 386개는 저장 결과와 정확히 같으며 compatible 385개·모순 0개·근거 부족 1개입니다. 남은 1개는 요청 제출에서 완료 문서로 가는 이동 링크입니다. 실제 한영 링크의 목적지는 확인했지만 런타임 순서의 근거로 승격하지 않았습니다. 원래 90건의 판정 계보도 공개 원본에 보존됐습니다. 이는 모든 보조 주장 쌍에 대한 전수 의미 증명이나 사람 승인이 아닙니다.
+
+영향 분석의 범위를 구분합니다. 공개 묶음의 schema 1 `impact.json`은 `182307a7`→`e117198c`의 증분 범위이며 coverage finding 0개입니다. 별도 [실제 전체 범위 CLI 시험](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/final-public/full-range-impact/execution.json)은 이전 공개 입력 `2c4b67c0`→`e117198c`에서 변경 파일 44개·영향 섹션 17개, 미검토 coverage 항목 21개로 종료 코드 2를 냈습니다. 이 전체 범위 관문은 통과하지 않았으며 증분 결과로 대신하지 않습니다. LLM triage와 사람 승인 기록은 0개이고 `sdd accept`를 실행하지 않았습니다. 전체 원고의 검증·게시와 coverage 승인 대기를 구분하며 #141에서 타 이슈의 판정 정책을 바꾸지 않습니다. [21건 개별 대조](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/final-public/coverage21-scope.json)에서 이전182 시험과 finding 키가 모두 같고 해당 파일의 실제 Git 바이트도182→e117 사이에 같음을 확인했습니다. 센서 보정값·설치 구성·enum 이름·바인딩·가상 카메라 설정의 기존 실제 변경이므로 무해하다고 일괄 분류하지 않습니다. 새 upstream 변경은 Virtual의 C++ 파일3개이며 별도 증분 보고서와 최종 전체 입력을 확인했습니다. #141의 수용 조건은 영향 분석 실행과 수용·거부·승인 계약 보존이며, 이 미결21건의 자동 승인을 요구하거나 수행하지 않습니다. 각 파일의 원고 설명 충실성은 이 구조 정리의 완료 근거로 주장하지 않습니다.
+
+[실제 화면 기록](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/final-public/ui/report.json)은 검색·Ctrl+K·그림 확대 1.25배·요소 검색·Escape 초점 복원·메뉴 폭 보존·용어 팝업·근거 펼침·실제 고정 GitHub 원문과 한영 모바일 390×844를 확인합니다. 이전 이동 링크 12개를 실제 클릭했고 설정된 한영 앵커 32개도 검사했습니다. 모바일 색인 표는 설정 범위의 클래스 796개·함수 565개이며, 전체 facts와 달리 `include/linux`는 이 표의 선택 범위 밖입니다. 공개 원본 HTML을 바꾸지 않은 루프백 서버에서 Mermaid 요청만 503으로 만들어 한영 오류 안내·SVG 0개·정확한 원문 보존을 확인했습니다. 서버 종료 후 입력 해시가 같았습니다. 이는 대표 화면 시험이며 60쪽 모두의 상호작용 전수 시험은 아닙니다.
+
+최종 증거 브랜치의 [SHA 목록](https://github.com/TTolsun/libcamera-sdd/blob/6789711a1d1014d34d5cde65bc25dfb0e57520b2/publication/issue141/SHA256.json)은 Git에 저장한 458개 파일과 과거 완료 호출 86개를 확인합니다. 현재 공개 ledger의 1,127개와 이 과거 부분 묶음의 86개는 서로 다른 집계입니다. 증거 전용 PR #50을 사이트 배포로 병합하지 않습니다. 실제 병합된 main #161 뒤 이 PR의 자체 변경은 책임·재사용·이 기록의 세 문서뿐이며 실행 코드·스타일·템플릿·예제 설정은 공개 생성기 `a403415`와 같습니다. 따라서 최종 증빙 병합을 위한 추가 생성이나 빈 Pages 커밋은 필요하지 않습니다. 사람 검토는 pending이며 사내 HAL·기기·성능 검증은 남습니다.
 
 ## 위험과 복구
 
