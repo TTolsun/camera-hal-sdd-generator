@@ -1,0 +1,738 @@
+{
+  "schema": 1,
+  "generator_commit": "a40341568df71c77d780a047f7d56cbcf07c8993",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "build_id": "e1569641fe806423639aec719259b261f025ad17db1a0110fa8e6768680c1fbe",
+  "human_review": "pending",
+  "cold_reader": {
+    "before": {
+      "build_id": "aa41369279370d7413ace37baab3a11cffa5ea974c1772e91f4b18e21b4ecf7e",
+      "browser_input": "build\\goal\\browser-baseline\\result.json",
+      "human_review": "pending",
+      "assessment": "Automatic selected-CLI cold-reader assessment; no authoring history or human approval.",
+      "calls": 2,
+      "results": [
+        {
+          "seconds": 12.65600000001723,
+          "input_sha256": "2b33b8ed1124c6be41f4fb9081f6f8d6f59d4164c6aa2257d4e2389aed2d4263",
+          "result": {
+            "pages_read": [
+              "index.html",
+              "vendor-overview.html",
+              "vendor-assurance.html"
+            ],
+            "goals": [
+              {
+                "goal": 1,
+                "rating": "supported",
+                "reason": "제품의 대상 환경, 해결하려는 카메라 스택의 복잡성, 주요 계층과 인터페이스를 설명합니다.",
+                "evidence": [
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/2",
+                    "reason": "libcamera의 대상 환경과 해결하려는 문제를 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "libcamera는 Linux, Android, ChromeOS를 위한 오픈 소스 복잡한 카메라 지원 라이브러리입니다. 이 라이브러리는 Linux 커널 장치 드라이버와 연동하고, 개발자에게 직관적인 API를 제공하여 Linux 시스템에서 복잡한 카메라로 이미지를 캡처하는 과정의 복잡성을 단순화합니다. 커널 드라이버를 활용해 동작하는 카메라 스택을 구성하는 책임은 사용자 공간에 있으며, 이는 공통 아키텍처나 애플리케이션 개발자용 API 없이 벤더마다 따로 구현되는 경우가 일반적입니다. 특히 하드웨어 파이프라인의 차이와 커널 API에서 그 차이가 표현되는 방식을 고려하면, 맞춤형 처리가 자주 필요해져 작업의 복잡성이 크게 늘어납니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/13",
+                    "reason": "하드웨어 구성과 이미지 제어 알고리즘 설정의 추상화를 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "libcamera는 Linux 기반 시스템에 완전한 카메라 스택을 제공하며, 커널 API를 통해 카메라에서 원하는 결과를 얻는 데 필요한 하드웨어 구성과 이미지 제어 알고리즘의 설정을 추상화합니다. 이 작업들을 개발자에게 단순하고 일관된 방법으로 줄입니다. 카메라 스택의 가장 아래 계층에서 커널 드라이버는 카메라 하드웨어를 제어하며, Linux 커널의 V4L2 계열 API인 Media Controller API, V4L2 Video Device API, V4L2 Subdev API를 통해 낮은 수준의 인터페이스를 사용자 공간에 노출합니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/17",
+                    "reason": "어댑테이션과 상위 프레임워크의 위치를 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "libcamera 어댑테이션은 다른 프레임워크에서 libcamera와 연결되는 구성요소를 가리키는 포괄 용어입니다. 대표 예로 V4L2 호환성 계층, gstreamer libcamera 요소, libcamera 기반 Android 카메라 HAL 구현이 있습니다. 애플리케이션과 상위 프레임워크는 libcamera 프레임워크 또는 libcamera 어댑테이션을 기반으로 하며, libcamera 프로젝트의 범위 밖에 있습니다."
+                  }
+                ],
+                "limitation": "지원 플랫폼 목록이 특정 제품의 지원이나 성능을 보장하지는 않습니다."
+              },
+              {
+                "goal": 2,
+                "rating": "supported",
+                "reason": "공통 API와 요청 관리의 구체적인 기능을 설명하고, 장치 지원과 성능 측정의 한계를 밝힙니다.",
+                "evidence": [
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/15",
+                    "reason": "공통 카메라 제어와 C++ API를 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "그 위의 libcamera 프레임워크는 스택의 핵심 부분입니다. 핵심 구성요소인 libcamera에서 카메라 장치의 모든 제어를 처리하고, 상위 계층에 네이티브 C++ API를 제공합니다. 선택적 언어 바인딩을 사용하면 다른 프로그래밍 언어에서도 libcamera와 연동할 수 있습니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/33",
+                    "reason": "요청 대기, 전달 순서와 실패 시 취소를 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "PipelineHandler::queueRequest()는 전달받은 요청을 내부 대기 목록에 추가합니다. 이 목록은 순회되며, 파이프라인 핸들러로 넘길 수 있게 준비된 요청이 최대 maxQueuedRequestsDevice_개까지 이 함수를 호출한 순서대로 전달됩니다. 요청이 준비 단계에서 실패하거나, 파이프라인 핸들러가 요청을 하드웨어 큐에 등록하는 데 실패하면 그 Request는 취소됩니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/25",
+                    "reason": "장치 지원이 구현과 미디어 장치 확보에 달려 있음을 밝힙니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "장치 지원은 해당 PipelineHandler 구현과 필요한 미디어 장치 확보에 달려 있습니다. 지원 기종이나 성능을 보장하는 그림은 아닙니다."
+                  },
+                  {
+                    "unit_id": "vendor-assurance.html/paragraph/17",
+                    "reason": "벤치마크에 포함되는 처리 시간과 제외되는 캡처·출력 시간을 구분합니다.",
+                    "page": "vendor-assurance.html",
+                    "quote": "DebayerCpu의 내장 벤치마크는 통계 수집과 디베이어 처리에 소요되는 시간만을 측정하며, 프레임 캡처나 출력에 드는 시간은 포함하지 않습니다. Software ISP 파이프라인을 사용하는 cam 또는 qcam를 실행하면 내장 벤치마크가 반드시 실행되어 처리 시간(통계 수집 및 Debayer링)과 관련된 측정이 이루어집니다."
+                  }
+                ],
+                "limitation": "제공된 텍스트에는 제품 간 성능 비교나 대상 기기의 측정 결과가 없습니다."
+              },
+              {
+                "goal": 3,
+                "rating": "supported",
+                "reason": "처음 읽는 개발자가 시작할 문서와 코드 진입점, 이후 요청 흐름과 진단으로 이어지는 순서를 제시합니다.",
+                "evidence": [
+                  {
+                    "unit_id": "index.html/paragraph/5",
+                    "reason": "CameraManager 진입점부터 요청 흐름과 진단까지 학습 순서를 제시합니다.",
+                    "page": "index.html",
+                    "quote": "처음 읽는 개발자의 순서\n시스템 개요에서 src/libcamera/camera_manager.cpp의 CameraManager 진입점과 카메라 탐색을 확인합니다. 근거를 펼치면 읽을 파일과 함수가 나옵니다.\n요청 제출과 완료에서 요청이 어디로 이동하고 어떤 신호로 끝나는지 따라갑니다. 낯선 용어는 용어집에서 확인합니다.\n요청 처리와 문제 진단에서 증상에 맞는 코드로 이동합니다. 수정 전에는 상태와 자원, 동기화 책임을 확인합니다."
+                  },
+                  {
+                    "unit_id": "index.html/paragraph/6",
+                    "reason": "신입과 타팀 개발자에게 한 요청을 따라간 뒤 상세 문서로 이동하도록 안내합니다.",
+                    "page": "index.html",
+                    "quote": "For Developer는 신입·타팀 개발자를 위한 경로입니다. 클래스 전체를 먼저 외울 필요 없이, 한 요청을 따라간 뒤 작업에 필요한 상세 문서로 이동하세요."
+                  },
+                  {
+                    "unit_id": "index.html/paragraph/12",
+                    "reason": "낯선 약어를 확인할 위치를 안내합니다.",
+                    "page": "index.html",
+                    "quote": "약어가 낯설면 각 문서 첫머리의 용어 설명이나 용어집을 확인하세요."
+                  }
+                ],
+                "limitation": "실행 환경 설정이나 실제 실습의 상세 내용은 평가 대상 세 페이지에서 확인할 수 없습니다."
+              },
+              {
+                "goal": 4,
+                "rating": "partial",
+                "reason": "라이브러리와 상위 프레임워크의 경계 및 공통 인터페이스와 장치별 구현의 관계를 설명합니다.",
+                "evidence": [
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/17",
+                    "reason": "애플리케이션과 상위 프레임워크가 libcamera 프로젝트 범위 밖임을 밝힙니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "libcamera 어댑테이션은 다른 프레임워크에서 libcamera와 연결되는 구성요소를 가리키는 포괄 용어입니다. 대표 예로 V4L2 호환성 계층, gstreamer libcamera 요소, libcamera 기반 Android 카메라 HAL 구현이 있습니다. 애플리케이션과 상위 프레임워크는 libcamera 프레임워크 또는 libcamera 어댑테이션을 기반으로 하며, libcamera 프로젝트의 범위 밖에 있습니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/23",
+                    "reason": "공통 Camera 인터페이스와 파이프라인 핸들러의 책임을 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "Camera 클래스는 단일 이미지 소스에서 하나 이상의 이미지 스트림을 생성할 수 있는 카메라를 모델링합니다. 이 클래스는 장치를 구성하고 제어하며 이미지 스트림을 캡처하는 주요 인터페이스를 제공하고, libcamera가 노출하는 중심 객체입니다. 파이프라인 핸들러는 필요한 미디어 장치를 시스템에 존재하는 장치와 맞추는 책임을 지며, 필요한 장치를 모두 획득할 수 있게 되면 대응하는 Camera 인스턴스를 생성해야 합니다. libcamera가 지원하는 각 파이프라인은 파이프라인 핸들러 구현으로 뒷받침되어야 하고, PipelineHandler의 모든 하위 클래스는 REGISTER_PIPELINE_HANDLER() 매크로를 사용해 libcamera에 등록해야 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-assurance.html/paragraph/15",
+                    "reason": "구성 검증과 파이프라인 구현자의 책임을 구분합니다.",
+                    "page": "vendor-assurance.html",
+                    "quote": "CameraConfiguration::validate() 가 CameraConfiguration::Valid를 반환하면 원래 구성은 이미 유효했으며 어떤 파라미터도 조정되지 않았습니다. generateConfiguration은 요청된 역할 목록이 충족될 수 있으면 유효한 CameraConfiguration을 반환하고, 그렇지 않으면 null 을 반환합니다. PipelineHandler::configure() 에 입력된 구성에는 CameraConfiguration::validate() 로 검증되었음이 보장되며, 구현자는 추가 검증을 수행해서는 안 됩니다. PipelineHandler::configure() 함수는 성공 시 0 을, 실패 시 음수 오류 코드를 반환해야 하며, 입력 검증은 완료되어도 구성이 성공함을 보장하지 않습니다."
+                  }
+                ],
+                "limitation": "다른 팀과의 구체적인 협업 절차나 조직별 책임은 이 세 페이지에서 확인할 수 없으며, 연동 가이드의 내용은 평가하지 않았습니다."
+              },
+              {
+                "goal": 5,
+                "rating": "partial",
+                "reason": "독자와 작업별 시작점, 근거 확인 방법과 다음 문서를 제시하지만 일부 설명과 그림의 표현은 매끄럽지 않습니다.",
+                "evidence": [
+                  {
+                    "unit_id": "index.html/paragraph/2",
+                    "reason": "독자와 작업에 따른 메뉴 구조를 설명합니다.",
+                    "page": "index.html",
+                    "quote": "왼쪽 메뉴는 독자 → 수행할 작업 → 문서 순서입니다. For Vendor에서는 도입 판단·연동 구현·장치별 기능 구현을, For Developer에서는 구조 이해·동작 추적과 문제 진단·코드 탐색을 선택하세요."
+                  },
+                  {
+                    "unit_id": "index.html/paragraph/7",
+                    "reason": "수행할 일과 시작할 문서를 연결합니다.",
+                    "page": "index.html",
+                    "quote": "지금 필요한 문서\n하려는 일\t시작할 문서\n이 프로젝트가 무엇을 받아 무엇을 내놓는지 이해합니다.\t이 프로젝트가 하는 일\n하드웨어 지원의 구현 범위와 책임을 정합니다.\tlibcamera 제품 개요\n카메라를 직접 실행해 보고 설계 이유를 읽습니다.\t실행해 보고 설계 이유 읽기\n요청을 연동하거나 완료 지연을 진단합니다.\t요청 처리와 문제 진단\n구성 실패의 원인을 좁힙니다.\t구성 실패를 좁히는 순서\n파이프라인의 구성·완료·정지를 구현합니다.\tPipeline Handler\n모듈 선택과 알고리즘 인터페이스를 수정합니다.\tIPA 관리와 구현 진입점\n처음 구조를 배우고 수정할 코드를 찾습니다.\t시스템 개요\n객체 수명과 상태 전이를 확인합니다.\t카메라와 요청 모델"
+                  },
+                  {
+                    "unit_id": "index.html/paragraph/13",
+                    "reason": "근거 발췌와 전체 소스를 확인하는 방법을 안내합니다.",
+                    "page": "index.html",
+                    "quote": "문서를 읽는 방법\n페이지 첫 문장과 이동 안내에서 지금 확인할 항목을 고릅니다.\n문단 근거의 발췌를 누르면 이 문서 안의 원문이 펼쳐집니다. 전체 소스는 해당 커밋의 코드 저장소로 이동합니다.\n실행 확인 항목은 대상 기기의 검증 계획에 옮깁니다."
+                  },
+                  {
+                    "unit_id": "vendor-assurance.html/paragraph/7",
+                    "reason": "그림 텍스트에 단어 사이 공백이 빠진 부분이 있습니다.",
+                    "page": "vendor-assurance.html",
+                    "quote": "유효하지 않은 구성으로이어짐\n조정된 유효한 구성으로,파라미터/스트림 변경·삭제가능하므로 호출자가확인해야 함\n이미 유효한 구성, 조정불필요"
+                  }
+                ],
+                "limitation": "자동 평가는 읽는 즐거움을 입증할 수 없으며, 제공된 브라우저 텍스트만으로 링크 동작이나 시각적 배치를 확인할 수 없습니다."
+              }
+            ]
+          }
+        },
+        {
+          "seconds": 20.09399999998277,
+          "input_sha256": "636756007cd3861232ff8104e5888330237190d0e6794c56421641c2418bf5ed",
+          "result": {
+            "pages_read": [
+              "overview.html",
+              "vendor-integration.html",
+              "scenarios/queue_request.html"
+            ],
+            "goals": [
+              {
+                "goal": 1,
+                "rating": "partial",
+                "reason": "카메라 관리와 캡처 인터페이스, 벤더의 파이프라인 연동 책임을 통해 제품의 일부 목적을 파악할 수 있다. 다만 처음 접하는 벤더에게 libcamera가 무엇이며 어떤 문제를 해결하는지 종합적으로 설명하지는 않는다.",
+                "evidence": [
+                  {
+                    "unit_id": "overview.html/paragraph/2",
+                    "reason": "CameraManager가 카메라 소유, 장치 열거와 파이프라인 관리의 진입점임을 설명한다.",
+                    "page": "overview.html",
+                    "quote": "libcamera 와 상호작용하려면 애플리케이션에서 카메라 매니저 인스턴스를 생성하여 시작해야 합니다. 이 카메라 매니저는 시스템 내의 모든 카메라 객체를 소유하며, 장치 열거와 연결된 파이프라인 핸들러를 관리하는 진입점 역할을 합니다."
+                  },
+                  {
+                    "unit_id": "overview.html/paragraph/23",
+                    "reason": "Camera가 구성, 제어와 이미지 스트림 캡처를 위한 인터페이스임을 설명한다.",
+                    "page": "overview.html",
+                    "quote": "Camera 클래스는 단일 이미지 소스에서 하나 이상의 이미지 스트림을 생성할 수 있는 카메라를 모델링하며, 장치 구성과 제어 및 이미지 스트림 캡처에 대한 주요 인터페이스 역할을 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/18",
+                    "reason": "파이프라인 핸들러가 장치를 확보하고 카메라를 등록하는 책임을 보여 준다.",
+                    "page": "vendor-integration.html",
+                    "quote": "PipelineHandler::match 함수는 매개변수로 전달된 DeviceEnumerator 인스턴스에서 단일 파이프라인에 필요한 모든 미디어 장치를 확보해야 하며, 이를 기반으로 하나 이상의 Camera 인스턴스를 생성하고 카메라 매니저에 등록해야 합니다."
+                  }
+                ],
+                "limitation": "제공된 본문에는 제품의 전체 목적과 적용 맥락을 처음부터 연결하는 설명이 부족하다."
+              },
+              {
+                "goal": 2,
+                "rating": "partial",
+                "reason": "반복 시작과 재구성, 요청 반환 순서 같은 구체적인 기능과 제약은 이해할 수 있다. 그러나 벤더가 얻는 이점을 제품 수준에서 종합해 판단하기에는 설명이 부족하다.",
+                "evidence": [
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/14",
+                    "reason": "카메라를 해제하기 전 반복 시작·정지와 재구성이 가능하다고 설명한다.",
+                    "page": "vendor-integration.html",
+                    "quote": "해제하지 않은 카메라는 여러 번 반복하여 시작하고 정지를 수행할 수 있으며, 이 과정에서 카메라를 재구성하는 것도 가능합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/80",
+                    "reason": "요청이 제출 순서대로 반환된다는 보장과 완료 호출 순서의 제약을 구분한다.",
+                    "page": "vendor-integration.html",
+                    "quote": "PipelineHandler::completeRequest 함수는 요청을 애플리케이션에 제출한 순서대로 반환되도록 보장하지만, 이 함수가 호출될 때 반드시 특정 순서를 지켜야 하는 제약은 없습니다."
+                  },
+                  {
+                    "unit_id": "overview.html/paragraph/74",
+                    "reason": "장치 한도를 초과한 요청은 내부 대기열에 보관된다고 설명한다.",
+                    "page": "overview.html",
+                    "quote": "애플리케이션이 장치 한도보다 많은 요청을 제출하면, 초과된 요청은 내부 대기열에 보관되어 나중에 큐잉됩니다."
+                  },
+                  {
+                    "unit_id": "scenarios/queue_request.html/paragraph/15",
+                    "reason": "정적 호출 목록만으로 실행 스레드나 비동기 실행을 확정할 수 없다고 밝힌다.",
+                    "page": "scenarios/queue_request.html",
+                    "quote": "조건 분기, 반복 횟수와 실제 실행 스레드는 이 호출 목록만으로 확정할 수 없습니다. 가상 호출 후보는 실제 객체에 따라 선택됩니다. 예약 표시는 인자로 전달한 메서드 대상을 뜻하며, 비동기 실행을 보증하지 않습니다. 호출부의 연결 방식과 동기화 계약을 확인해야 합니다."
+                  }
+                ],
+                "limitation": "이 자료만으로 성능 향상이나 특정 하드웨어 지원을 주장할 수 없으며, 실제 실행 결과도 확인할 수 없다."
+              },
+              {
+                "goal": 3,
+                "rating": "partial",
+                "reason": "새 개발자는 첫 소스 파일과 요청 처리의 읽기 순서, 세션 상태 및 완료 조건을 바탕으로 코드 탐색을 시작할 수 있다. 실행 환경을 구축하고 직접 동작을 확인하는 절차는 제공된 본문에서 찾기 어렵다.",
+                "evidence": [
+                  {
+                    "unit_id": "overview.html/paragraph/0",
+                    "reason": "처음 읽을 파일과 진입점을 지정한다.",
+                    "page": "overview.html",
+                    "quote": "src/libcamera/camera_manager.cpp의 CameraManager에서 시작해 요청 제출과 완료를 따라가세요."
+                  },
+                  {
+                    "unit_id": "overview.html/paragraph/33",
+                    "reason": "요청 처리 전에 획득, 구성, 시작이 필요하다고 설명한다.",
+                    "page": "overview.html",
+                    "quote": "요청을 처리하기 위해 먼저 카메라를 획득한 뒤 구성을 완료하고, 마지막으로 시작해야 합니다."
+                  },
+                  {
+                    "unit_id": "overview.html/paragraph/41",
+                    "reason": "요청 접수와 완료 통지를 구분한다.",
+                    "page": "overview.html",
+                    "quote": "queueRequest()의 0 반환은 접수 결과입니다. 요청 완료는 별도의 requestCompleted 신호로 확인합니다."
+                  },
+                  {
+                    "unit_id": "overview.html/paragraph/103",
+                    "reason": "선택한 시나리오의 코드 읽기 순서와 확인할 경계를 제시한다.",
+                    "page": "overview.html",
+                    "quote": "선택한 시나리오의 코드 읽기 순서\n진입점 Camera::queueRequest(Request *)의 입력 검사와 반환 조건을 확인합니다.\n요청 제출 (Camera::queueRequest)에서 주요 호출과 추적 경계를 확인합니다.\n예약된 호출과 완료 통지를 구분하고, 실행 스레드는 연결 코드와 대조합니다.\n근거와 검토 정보"
+                  }
+                ],
+                "limitation": "제공된 페이지 본문에는 빌드·실행에 필요한 환경, 명령과 검증 예제가 보이지 않는다."
+              },
+              {
+                "goal": 4,
+                "rating": "partial",
+                "reason": "다른 팀은 애플리케이션과 파이프라인 구현자의 여러 책임, 스레드 및 요청 소유권 경계를 파악할 수 있다. 다만 IPA와 공통 계층의 역할은 세부 동작에 비해 전체 맥락이 충분히 설명되지 않는다.",
+                "evidence": [
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/18",
+                    "reason": "장치 매칭과 카메라 등록에 관한 파이프라인 핸들러의 책임을 제시한다.",
+                    "page": "vendor-integration.html",
+                    "quote": "PipelineHandler::match 함수는 매개변수로 전달된 DeviceEnumerator 인스턴스에서 단일 파이프라인에 필요한 모든 미디어 장치를 확보해야 하며, 이를 기반으로 하나 이상의 Camera 인스턴스를 생성하고 카메라 매니저에 등록해야 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/44",
+                    "reason": "요청의 버퍼와 파라미터를 장치에 전달하는 구현자의 역할을 설명한다.",
+                    "page": "vendor-integration.html",
+                    "quote": "queueRequestDevice 함수는 구현자가 요청에 포함된 버퍼 세트와 파라미터 세트를 장치로 전달해야 하며, 해당 파라미터가 요청의 버퍼에서 제공된 프레임에 적용되도록 장치를 프로그래밍해야 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/78",
+                    "reason": "요청 완료 후 파이프라인 구현자의 접근 금지 경계를 밝힌다.",
+                    "page": "vendor-integration.html",
+                    "quote": "PipelineHandler::completeRequest 함수가 반환되면 파이프라인 구현자는 해당 요청을 더 이상 접근해서는 안 되며, 이 함수 호출 이후 요청은 파이프라인 관리자가 더 이상 관리하지 않는 상태입니다."
+                  },
+                  {
+                    "unit_id": "overview.html/paragraph/60",
+                    "reason": "카메라 상태 변경의 동기화가 호출자 책임임을 설명한다.",
+                    "page": "overview.html",
+                    "quote": "카메라 상태를 변경하는 함수들은 Camera 클래스에 의해 서로 동기화되지 않으므로 호출자는 필요 시 스스로 동기화를 보장해야 합니다."
+                  }
+                ],
+                "limitation": "IPA의 목적과 구성 요소 간 전체 책임 분담을 이 세 페이지의 제공된 본문만으로 완전히 파악하기는 어렵다."
+              },
+              {
+                "goal": 5,
+                "rating": "partial",
+                "reason": "주제별 이동 안내, 코드 탐색 지점과 다음 단계가 있어 필요한 내용을 찾을 수 있다. 다만 일부 문장은 API 계약을 독립적으로 나열하고 탐색 안내가 절 이름을 반복해 처음 읽는 사람에게 연결된 설명으로는 다소 부족하다.",
+                "evidence": [
+                  {
+                    "unit_id": "overview.html/paragraph/1",
+                    "reason": "독자의 확인 목적에 맞춰 이동할 절을 안내한다.",
+                    "page": "overview.html",
+                    "quote": "이 문서의 용어: Pipeline Handler\n지금 확인할 내용\t이동할 절\n처음 읽을 파일과 진입점을 찾습니다.\t탐색과 파이프라인 선택\n요청과 결과가 지나는 경계를 확인합니다.\t요청 제출과 완료\n구성 실패의 원인을 좁힙니다.\t요청 처리와 문제 진단\n완료가 오지 않는 요청을 조사합니다.\t요청 처리와 문제 진단\n수정 전에 상태와 종료 순서를 확인합니다.\t캡처 세션의 상태와 자원\n전체 클래스와 패키지를 찾습니다.\t구성 요소 색인\n탐색과 파이프라인 선택"
+                  },
+                  {
+                    "unit_id": "scenarios/queue_request.html/paragraph/6",
+                    "reason": "확인할 내용, 호출 대상과 소스 위치를 표로 연결한다.",
+                    "page": "scenarios/queue_request.html",
+                    "quote": "확인할 내용\t호출 측과 대상\t구분\t근거\n요청 상태 확인\tCamera → Request::status()\t정적 호출 지점입니다.\tsrc/libcamera/camera.cpp:1344\n요청 제출 대상\tCamera → PipelineHandler::queueRequest()\t메서드 전달 대상이며 동기·비동기 여부는 호출부에서 확인해야 합니다.\tsrc/libcamera/camera.cpp:1376\n주요 호출 관계"
+                  },
+                  {
+                    "unit_id": "scenarios/queue_request.html/paragraph/1",
+                    "reason": "절별 이동 안내가 있지만 일부 항목은 절 이름을 반복한다.",
+                    "page": "scenarios/queue_request.html",
+                    "quote": "지금 확인할 내용\t이동할 절\n이 흐름에서 확인할 것 절을 확인합니다.\t이 흐름에서 확인할 것\n주요 확인 지점 절을 확인합니다.\t주요 확인 지점\n주요 호출 관계 절을 확인합니다.\t주요 호출 관계\n추적 범위와 경계 절을 확인합니다.\t추적 범위와 경계\n전체 추적 기록 절을 확인합니다.\t전체 추적 기록\n이 흐름에서 확인할 것"
+                  },
+                  {
+                    "unit_id": "scenarios/queue_request.html/paragraph/21",
+                    "reason": "요청 완료 통지에 관한 다음 단계를 제시한다.",
+                    "page": "scenarios/queue_request.html",
+                    "quote": "다음 단계: 요청 완료 통지 (PipelineHandler::completeRequest)"
+                  }
+                ],
+                "limitation": "제공된 브라우저 텍스트만으로 실제 링크 동작이나 화면 배치를 확인할 수 없다. 자동 평가로 독자의 즐거움이나 실제 사람의 승인을 확정할 수 없다."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "after": {
+      "build_id": "e1569641fe806423639aec719259b261f025ad17db1a0110fa8e6768680c1fbe",
+      "browser_input": "build\\goal\\browser-final\\result.json",
+      "human_review": "pending",
+      "assessment": "Automatic selected-CLI cold-reader assessment; no authoring history or human approval.",
+      "calls": 2,
+      "results": [
+        {
+          "seconds": 14.21799999999348,
+          "input_sha256": "0018e16e135746a8abb551a6353fc121407d26dd90f0ee0e7371283003790946",
+          "result": {
+            "pages_read": [
+              "index.html",
+              "vendor-overview.html",
+              "vendor-assurance.html"
+            ],
+            "goals": [
+              {
+                "goal": 1,
+                "rating": "supported",
+                "reason": "제품의 목적과 해결하려는 문제, 카메라 스택에서의 위치와 주요 인터페이스를 설명합니다.",
+                "evidence": [
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/2",
+                    "reason": "대상 플랫폼, 복합 카메라 캡처의 복잡성과 라이브러리의 목적을 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "libcamera는 Linux, Android, ChromeOS를 위한 오픈 소스 복합 카메라 지원 라이브러리입니다. Linux 커널 장치 드라이버와 연결하고 개발자에게 직관적인 API를 제공해 Linux 시스템에서 복합 카메라로 이미지를 캡처하는 복잡한 작업을 단순화합니다. 드라이버를 사용해 동작하는 카메라 스택을 제공하는 일은 사용자 공간의 책임이며, 벤더들이 보통 애플리케이션 개발자를 위한 공통 아키텍처나 API 없이 각자 구현해 왔습니다. 하드웨어 파이프라인과 커널 API에서 이를 표현하는 방식이 서로 달라 맞춤 처리가 필요한 경우가 많아 이 작업은 복잡합니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/13",
+                    "reason": "하드웨어 구성과 이미지 제어 알고리즘의 추상화 및 커널 드라이버의 역할을 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "libcamera는 Linux 기반 시스템을 위한 완전한 카메라 스택을 제공합니다. 커널의 API를 통해 카메라에서 원하는 결과를 얻는 데 필요한 하드웨어 구성과 이미지 제어 알고리즘을 추상화하여, 개발자가 이 작업을 간단하고 일관된 방법으로 다루게 합니다. 카메라 스택의 맨 아래 계층인 커널 드라이버는 카메라 하드웨어를 제어하고 Linux 커널의 V4L2 API 계열을 통해 사용자 공간에 저수준 인터페이스를 제공합니다. 이 API에는 Media Controller API, V4L2 Video Device API, V4L2 Subdev API가 있습니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/15",
+                    "reason": "장치 제어와 네이티브 C++ API를 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "그 위의 libcamera 프레임워크는 스택의 핵심 계층입니다. 핵심 구성 요소인 libcamera가 카메라 장치의 모든 제어를 처리하고 상위 계층에 네이티브 C++ API를 제공합니다. 선택적인 언어 바인딩을 사용하면 다른 프로그래밍 언어에서도 libcamera와 인터페이스할 수 있습니다."
+                  }
+                ],
+                "limitation": "공개 libcamera 예제에 관한 설명이며 특정 회사 제품의 기능이나 지원 범위를 나타내지 않습니다."
+              },
+              {
+                "goal": 2,
+                "rating": "supported",
+                "reason": "공통 계층이 제공하는 요청 처리 기능을 구체적으로 설명하고, 장치 지원과 성능 근거의 한계를 함께 제시합니다.",
+                "evidence": [
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/33",
+                    "reason": "공통 요청 대기와 준비, 실패 시 취소 동작을 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "공통 PipelineHandler::queueRequest는 캡처 요청을 처리하도록 먼저 내부 대기 요청 목록에 추가합니다. 이 요청은 파이프라인 핸들러에 큐잉할 준비가 되었는지 확인하는 준비 과정을 거칩니다. 이 함수는 대기 요청 큐를 순회하며 준비된 요청을 최대 maxQueuedRequestsDevice_개까지 이 함수에 큐잉된 순서대로 파이프라인 핸들러에 전달합니다. 요청이 준비 단계에서 실패하거나 파이프라인 핸들러가 요청을 하드웨어 큐에 등록하는 데 실패하면 해당 요청을 취소합니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/35",
+                    "reason": "정지 시 요청 완료와 구현자의 명시적 완료 통지 책임을 구분합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "대기열에 넣은 요청을 추적하면 파이프라인 핸들러를 stop()으로 정지할 때 모든 요청이 자동으로 완료되며, 파이프라인 핸들러는 completeRequest()로 요청 완료를 알려야 합니다. 반면 completeBuffer()에서 마지막 버퍼가 완료되어도 요청은 자동으로 완료되지 않으므로 파이프라인 핸들러가 completeRequest()를 명시적으로 호출해야 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/25",
+                    "reason": "장치 지원이 장치별 구현과 미디어 장치 확보에 달려 있음을 밝힙니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "장치 지원은 해당 PipelineHandler 구현과 필요한 미디어 장치 확보에 달려 있습니다. 지원 기종이나 성능을 보장하는 그림은 아닙니다."
+                  },
+                  {
+                    "unit_id": "vendor-assurance.html/paragraph/17",
+                    "reason": "벤치마크가 측정하는 처리 시간과 제외하는 캡처·출력 시간을 구분합니다.",
+                    "page": "vendor-assurance.html",
+                    "quote": "DebayerCpu의 내장 벤치마크는 통계 수집과 디베이어링에 걸린 처리 시간만 측정하며, 프레임 캡처와 출력에 걸린 시간은 포함하지 않습니다. 내장 벤치마크는 항상 실행되므로 Software ISP를 사용하는 파이프라인에서 cam 또는 qcam을 실행하여 사용할 수 있습니다."
+                  }
+                ],
+                "limitation": "제공된 본문에는 제품별 성능 수치나 비교 결과가 없으므로 성능상 우위를 판단할 수 없습니다."
+              },
+              {
+                "goal": 3,
+                "rating": "supported",
+                "reason": "처음 읽는 개발자가 진입점부터 요청 흐름과 진단 문서까지 따라갈 수 있는 순서를 제시합니다.",
+                "evidence": [
+                  {
+                    "unit_id": "index.html/paragraph/14",
+                    "reason": "CameraManager 진입점과 읽을 파일, 요청 추적 및 수정 전 확인 사항을 안내합니다.",
+                    "page": "index.html",
+                    "quote": "처음 읽는 개발자의 순서\n시스템 개요에서 src/libcamera/camera_manager.cpp의 CameraManager 진입점과 카메라 탐색을 확인합니다. 근거를 펼치면 읽을 파일과 함수가 나옵니다.\n요청 제출과 완료에서 요청이 어디로 이동하고 어떤 신호로 끝나는지 따라갑니다. 낯선 용어는 용어집에서 확인합니다.\n요청 처리와 문제 진단에서 증상에 맞는 코드로 이동합니다. 수정 전에는 상태와 자원, 동기화 책임을 확인합니다."
+                  },
+                  {
+                    "unit_id": "index.html/paragraph/15",
+                    "reason": "신입 개발자가 한 요청을 따라간 뒤 필요한 상세 문서로 이동하도록 안내합니다.",
+                    "page": "index.html",
+                    "quote": "For Developer는 신입·타팀 개발자를 위한 경로입니다. 클래스 전체를 먼저 외울 필요 없이, 한 요청을 따라간 뒤 작업에 필요한 상세 문서로 이동하세요."
+                  },
+                  {
+                    "unit_id": "index.html/paragraph/21",
+                    "reason": "낯선 약어를 확인할 용어 설명과 용어집을 안내합니다.",
+                    "page": "index.html",
+                    "quote": "약어가 낯설면 각 문서 첫머리의 용어 설명이나 용어집을 확인하세요."
+                  }
+                ],
+                "limitation": "실제 상세 문서와 실행 환경은 평가 대상 세 페이지에 포함되지 않아 안내된 후속 단계의 충분성은 확인할 수 없습니다."
+              },
+              {
+                "goal": 4,
+                "rating": "supported",
+                "reason": "다른 팀 개발자의 독서 경로와 카메라 스택의 계층별 역할, 공통 기능과 장치별 구현의 경계를 설명합니다.",
+                "evidence": [
+                  {
+                    "unit_id": "index.html/paragraph/15",
+                    "reason": "For Developer가 타팀 개발자를 위한 경로임을 밝힙니다.",
+                    "page": "index.html",
+                    "quote": "For Developer는 신입·타팀 개발자를 위한 경로입니다. 클래스 전체를 먼저 외울 필요 없이, 한 요청을 따라간 뒤 작업에 필요한 상세 문서로 이동하세요."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/17",
+                    "reason": "어댑테이션과 상위 애플리케이션 계층의 역할 및 프로젝트 범위를 구분합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "그 위의 libcamera adaptation은 다른 프레임워크에서 libcamera와 인터페이스하는 구성 요소를 통칭합니다. 예로는 V4L2 호환 계층, gstreamer libcamera 요소, libcamera 기반 Android 카메라 HAL 구현이 있습니다. 맨 위의 애플리케이션과 상위 프레임워크는 libcamera 프레임워크 또는 libcamera adaptation을 기반으로 합니다. 이 계층은 libcamera 프로젝트의 범위 밖에 있습니다."
+                  },
+                  {
+                    "unit_id": "vendor-overview.html/paragraph/23",
+                    "reason": "공통 Camera 인터페이스와 파이프라인 핸들러의 장치 매칭 및 생성 책임을 설명합니다.",
+                    "page": "vendor-overview.html",
+                    "quote": "Camera는 하나의 이미지 소스에서 하나 이상의 이미지 스트림을 생성할 수 있는 카메라를 모델링합니다. 장치를 구성하고 제어하며 이미지 스트림을 캡처하는 주요 인터페이스를 제공하는 libcamera의 중심 객체입니다. 파이프라인 핸들러는 필요한 미디어 장치를 시스템에 있는 장치와 일치시키고 필요한 장치를 모두 확보할 수 있게 되면 해당 Camera 인스턴스를 생성해야 하며, 모든 PipelineHandler 하위 클래스는 REGISTER_PIPELINE_HANDLER() 매크로를 사용해 libcamera에 등록해야 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-assurance.html/paragraph/15",
+                    "reason": "설정 검증과 파이프라인 핸들러 구현자의 책임을 구분합니다.",
+                    "page": "vendor-assurance.html",
+                    "quote": "CameraConfiguration::validate()가 CameraConfiguration::Valid를 반환하면 원래 구성이 이미 유효했으며 조정되지 않은 상태입니다. PipelineHandler::generateConfiguration()은 roles로 요청한 스트림 용도를 충족할 수 있으면 유효한 CameraConfiguration을 반환하고, 그렇지 않으면 null 포인터를 반환합니다. PipelineHandler::configure()에 전달되는 설정은 CameraConfiguration::validate()로 검증되었음이 보장되며, 파이프라인 핸들러 구현자는 추가 검증을 해서는 안 됩니다. PipelineHandler::configure()의 구현자는 구성이 성공하면 0을 반환하고, 실패하면 음수 오류 코드를 반환해야 합니다."
+                  }
+                ],
+                "limitation": "특정 조직이나 팀 간의 실제 소유권과 협업 절차는 제시되지 않습니다."
+              },
+              {
+                "goal": 5,
+                "rating": "partial",
+                "reason": "독자와 작업에 따른 이동 경로 및 근거 확인 방법은 유용하지만, 일부 기술 설명은 초심자에게 밀도가 높고 그림의 텍스트가 잘려 읽힙니다.",
+                "evidence": [
+                  {
+                    "unit_id": "index.html/paragraph/11",
+                    "reason": "독자와 수행할 작업에 따라 메뉴를 선택하도록 안내합니다.",
+                    "page": "index.html",
+                    "quote": "왼쪽 메뉴는 독자 → 수행할 작업 → 문서 순서입니다. For Vendor에서는 도입 판단·연동 구현·장치별 기능 구현을, For Developer에서는 구조 이해·동작 추적과 문제 진단·코드 탐색을 선택하세요."
+                  },
+                  {
+                    "unit_id": "index.html/paragraph/16",
+                    "reason": "하려는 일과 시작할 문서를 대응시킵니다.",
+                    "page": "index.html",
+                    "quote": "지금 필요한 문서\n하려는 일\t시작할 문서\n이 프로젝트가 무엇을 받아 무엇을 내놓는지 이해합니다.\t이 프로젝트가 하는 일\n하드웨어 지원의 구현 범위와 책임을 정합니다.\tlibcamera 제품 개요\n카메라를 직접 실행해 보고 설계 이유를 읽습니다.\t실행해 보고 설계 이유 읽기\n요청을 연동하거나 완료 지연을 진단합니다.\t요청 처리와 문제 진단\n구성 실패의 원인을 좁힙니다.\t구성 실패를 좁히는 순서\n파이프라인의 구성·완료·정지를 구현합니다.\tPipeline Handler\n모듈 선택과 알고리즘 인터페이스를 수정합니다.\tIPA 관리와 구현 진입점\n처음 구조를 배우고 수정할 코드를 찾습니다.\t시스템 개요\n객체 수명과 상태 전이를 확인합니다.\t카메라와 요청 모델"
+                  },
+                  {
+                    "unit_id": "index.html/paragraph/22",
+                    "reason": "문단 근거와 전체 소스를 확인하는 방법을 설명합니다.",
+                    "page": "index.html",
+                    "quote": "문서를 읽는 방법\n페이지 첫 문장과 이동 안내에서 지금 확인할 항목을 고릅니다.\n문단 근거의 발췌를 누르면 이 문서 안의 원문이 펼쳐집니다. 전체 소스는 해당 커밋의 코드 저장소로 이동합니다.\n실행 확인 항목은 대상 기기의 검증 계획에 옮깁니다."
+                  },
+                  {
+                    "unit_id": "vendor-assurance.html/paragraph/8",
+                    "reason": "그림에서 함수 이름이 줄 중간에 나뉘어 표시됩니다.",
+                    "page": "vendor-assurance.html",
+                    "quote": "CameraConfiguration::validat\ne()는 카메라 구성을 가장\n가까운 유효한 구성으로\n조정할 수 있으며 검증\n상태를 반환합니다."
+                  }
+                ],
+                "limitation": "자동 평가로 독자의 실제 즐거움이나 사용성을 확정할 수 없으며, 제공된 텍스트만으로 링크의 실제 동작과 전체 화면 배치를 확인할 수 없습니다."
+              }
+            ]
+          }
+        },
+        {
+          "seconds": 15.547000000020489,
+          "input_sha256": "df533c66ab76284d916fc5d2e018ce80392c3dc06d6edac78736f01cc8b824da",
+          "result": {
+            "pages_read": [
+              "overview.html",
+              "vendor-integration.html",
+              "scenarios/queue_request.html"
+            ],
+            "goals": [
+              {
+                "goal": 1,
+                "rating": "partial",
+                "reason": "카메라 접근과 캡처 인터페이스를 통해 libcamera의 목적을 일부 이해할 수 있지만, 벤더가 도입 판단을 시작할 수 있는 제품 수준의 설명은 충분하지 않습니다.",
+                "evidence": [
+                  {
+                    "unit_id": "overview.html/paragraph/2",
+                    "reason": "CameraManager가 장치를 열거하고 애플리케이션의 카메라 접근을 제공한다고 설명합니다.",
+                    "page": "overview.html",
+                    "quote": "CameraManager는 libcamera의 진입점으로, 장치를 열거하고 파이프라인과 연결하며 애플리케이션이 시스템의 카메라에 접근할 수 있게 합니다. CameraManager::Private::pipelineFactoryMatch는 팩토리로 PipelineHandler를 만들고 열거자를 사용해 일치를 시도합니다. 일치하면 로그를 남기고 다시 시도하며, 일치하지 않으면 반복을 끝냅니다."
+                  },
+                  {
+                    "unit_id": "overview.html/paragraph/17",
+                    "reason": "Camera가 설정, 제어와 이미지 스트림 캡처를 위한 중심 인터페이스라고 설명합니다.",
+                    "page": "overview.html",
+                    "quote": "Camera는 하나의 이미지 소스에서 하나 이상의 이미지 스트림을 생성할 수 있는 카메라를 나타내며, 장치 설정과 제어 및 이미지 스트림 캡처를 위한 주요 인터페이스를 제공합니다. Camera는 libcamera가 공개하는 중심 객체입니다. libcamera는 std::shared_ptr<>로 Camera 인스턴스의 수명을 관리하며, 인스턴스는 공유 포인터를 반환하는 create() 함수로 생성해야 합니다. Camera의 생성자와 소멸자는 수동 생성과 파괴를 막기 위해 비공개입니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/1",
+                    "reason": "제품 개요와 지원 범위를 안내하지만, 제공된 본문에는 그에 상응하는 독립적인 제품 설명이 충분히 나타나지 않습니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "이 문서의 용어: Pipeline Handler, IPA, 프록시\n지금 확인할 내용\t이동할 절\n제품이 무엇이고 어디까지 지원하는지, 공통 설계가 구현자에게 해 주는 일을 확인하고 도입할 범위를 판단하세요.\tlibcamera 제품 개요\n지원 조건과 구성 제약을 확인하고 제품 도입 전에 검증할 범위를 정하세요.\t지원 범위와 검증\n파이프라인 구현이 지켜야 하는 구성·요청·완료·종료 계약을 확인하세요.\tPipeline Handler\n연동 순서와 책임"
+                  }
+                ],
+                "limitation": "대상 환경과 지원 하드웨어의 구체적인 범위는 제공된 세 페이지의 본문만으로 판단하기 어렵습니다."
+              },
+              {
+                "goal": 2,
+                "rating": "partial",
+                "reason": "공통 계층이 제공하는 몇 가지 기능과 구현 계약은 확인할 수 있지만, 벤더 관점의 이점과 도입 시 검증해야 할 지원 한계는 충분히 종합되어 있지 않습니다.",
+                "evidence": [
+                  {
+                    "unit_id": "overview.html/paragraph/40",
+                    "reason": "공통 대기 큐와 장치 요청 한도의 동작을 설명합니다.",
+                    "page": "overview.html",
+                    "quote": "PipelineHandler 생성자 선언에서 maxQueuedRequestsDevice의 기본값은 32입니다. maxQueuedRequestsDevice_는 파이프라인 핸들러가 기반 하드웨어에 큐에 넣는 요청의 수를 제한합니다. 한도를 초과해 하드웨어에 아직 전달되지 않은 요청은 내부 대기 큐에 남으며, 이후 단계에서 하드웨어에 전달됩니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/36",
+                    "reason": "요청을 제출 순서대로 반환하는 동작과 호출 스레드 및 소유권 제한을 설명합니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "파이프라인 핸들러 구현자는 completeRequest가 반환된 뒤 해당 요청을 더 이상 관리하지 않으며 접근해서는 안 됩니다. 파이프라인 핸들러는 완료된 요청을 순서 제약 없이 completeRequest에 전달할 수 있으며, 이 함수는 요청을 제출 순서대로 애플리케이션에 반환합니다. 호출자는 completeRequest를 CameraManager 스레드에서 호출해야 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/28",
+                    "reason": "IPA 모듈을 찾지 못할 때의 실패 조건을 설명합니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "IPAManager::module은 modules_를 순회하며 이름과 최소·최대 버전에 match하는 첫 번째 모듈의 포인터를 반환합니다. 일치하는 모듈이 없으면 module은 nullptr을 반환합니다. createIPA는 이 검색 결과가 없으면 nullptr을 반환합니다. createIPA 내부 람다는 isSignatureValid(m)이 참이면 T::Threaded 프록시를 생성하고, 거짓이면 T::Isolated 프록시를 생성합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/1",
+                    "reason": "지원 조건과 구성 제약을 확인하도록 안내합니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "이 문서의 용어: Pipeline Handler, IPA, 프록시\n지금 확인할 내용\t이동할 절\n제품이 무엇이고 어디까지 지원하는지, 공통 설계가 구현자에게 해 주는 일을 확인하고 도입할 범위를 판단하세요.\tlibcamera 제품 개요\n지원 조건과 구성 제약을 확인하고 제품 도입 전에 검증할 범위를 정하세요.\t지원 범위와 검증\n파이프라인 구현이 지켜야 하는 구성·요청·완료·종료 계약을 확인하세요.\tPipeline Handler\n연동 순서와 책임"
+                  }
+                ],
+                "limitation": "이 기능들로부터 성능이나 비용상의 우위를 추론할 수 없으며, 제공된 본문만으로 지원 범위 전체를 확인할 수 없습니다."
+              },
+              {
+                "goal": 3,
+                "rating": "partial",
+                "reason": "새 개발자가 읽기 시작할 파일과 요청 흐름의 탐색 지점을 찾을 수 있지만, 개발 환경 준비부터 실행까지 이어지는 온보딩 절차는 제공된 본문에 없습니다.",
+                "evidence": [
+                  {
+                    "unit_id": "overview.html/paragraph/0",
+                    "reason": "처음 읽을 파일과 따라갈 흐름을 제시합니다.",
+                    "page": "overview.html",
+                    "quote": "src/libcamera/camera_manager.cpp의 CameraManager에서 시작해 요청 제출과 완료를 따라가세요."
+                  },
+                  {
+                    "unit_id": "overview.html/paragraph/72",
+                    "reason": "요청 제출 시나리오의 코드 읽기 순서와 확인할 경계를 제시합니다.",
+                    "page": "overview.html",
+                    "quote": "선택한 시나리오의 코드 읽기 순서\n진입점 Camera::queueRequest(Request *)의 입력 검사와 반환 조건을 확인합니다.\n요청 제출 (Camera::queueRequest)에서 주요 호출과 추적 경계를 확인합니다.\n예약된 호출과 완료 통지를 구분하고, 실행 스레드는 연결 코드와 대조합니다.\n근거와 검토 정보"
+                  },
+                  {
+                    "unit_id": "scenarios/queue_request.html/paragraph/6",
+                    "reason": "상태 확인과 요청 제출의 구체적인 소스 위치를 제시합니다.",
+                    "page": "scenarios/queue_request.html",
+                    "quote": "확인할 내용\t호출 측과 대상\t구분\t근거\n요청 상태 확인\tCamera → Request::status()\t정적 호출 지점입니다.\tsrc/libcamera/camera.cpp:1344\n요청 제출 대상\tCamera → PipelineHandler::queueRequest()\t메서드 전달 대상이며 동기·비동기 여부는 호출부에서 확인해야 합니다.\tsrc/libcamera/camera.cpp:1376\n주요 호출 관계"
+                  }
+                ],
+                "limitation": "제공된 페이지에서는 저장소 준비, 빌드, 실행 및 첫 검증을 위한 단계별 지침을 확인할 수 없습니다."
+              },
+              {
+                "goal": 4,
+                "rating": "supported",
+                "reason": "다른 팀이 애플리케이션과 파이프라인 구현자의 책임을 구분하고, 요청 완료와 정지 시 지켜야 할 경계를 이해할 수 있습니다.",
+                "evidence": [
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/2",
+                    "reason": "애플리케이션의 세션 책임과 PipelineHandler의 장치 등록 책임을 구분합니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "애플리케이션은 촬영을 준비하기 위해 카메라를 확보하고 구성한 뒤 시작하고, 카메라가 요청을 처리하다가 정지된 후 사용을 마치면 카메라를 해제해야 합니다. 애플리케이션은 카메라를 해제하지 않은 동안 여러 번 시작하고 정지할 수 있으며, 카메라를 재구성할 수도 있습니다. Camera 클래스는 카메라 상태에 영향을 주는 함수들을 일반적으로 서로 동기화하지 않으므로, 필요한 경우 호출자가 이 함수들을 동기화해야 합니다. PipelineHandler::match() 구현자는 단일 파이프라인에 필요한 미디어 장치를 모두 확보한 경우 하나 이상의 Camera 인스턴스를 생성하고 내부에 저장하며 카메라 관리자에 등록해야 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/22",
+                    "reason": "장치 요청 처리와 버퍼 완료에 대한 구현자의 책임을 설명합니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "queueRequestDevice 구현자는 스트림과 연결된 버퍼 집합과 파라미터 집합을 담은 요청을 처리할 때, 요청에서 제공한 버퍼에 캡처되는 프레임에 해당 파라미터가 적용되도록 장치를 설정해야 합니다. queueRequestDevice 구현자는 성공하면 0을 반환하고, 실패하면 음수 오류 코드를 반환해야 합니다. PipelineHandler::queueRequestDevice()는 CameraManager 스레드에서 호출됩니다. 파이프라인 핸들러는 요청의 버퍼 완료를 애플리케이션에 알리고 요청의 내부 버퍼 추적을 갱신하려면 CameraManager 스레드에서 completeBuffer()를 호출해야 합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/32",
+                    "reason": "공통 정지 처리와 장치 구현자의 취소 책임을 설명합니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "PipelineHandler::stop()은 먼저 waitingRequests.swap(data->waitingRequests_)를 실행한 다음 stopDevice(camera)를 호출합니다. PipelineHandler::stop()은 stopDevice() 내부에서 completeRequest()를 호출할 때 대기 요청이 다시 큐에 들어가지 않도록 모든 대기 요청을 따로 옮깁니다. stopDevice()의 장치 구현자는 실행 중인 모든 스트림의 캡처와 요청 처리를 즉시 중단하고, 장치에 남아 있는 모든 미완료 요청을 취소하여 즉시 오류 상태로 완료해야 합니다. 공통 stop()은 waitingRequests_를 따로 옮긴 뒤 stopDevice()를 호출하고, 그 후 옮겨 둔 대기 요청을 순서대로 취소하여 doQueueRequest()로 처리합니다."
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/36",
+                    "reason": "요청 완료 후 접근 금지와 스레드 경계를 설명합니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "파이프라인 핸들러 구현자는 completeRequest가 반환된 뒤 해당 요청을 더 이상 관리하지 않으며 접근해서는 안 됩니다. 파이프라인 핸들러는 완료된 요청을 순서 제약 없이 completeRequest에 전달할 수 있으며, 이 함수는 요청을 제출 순서대로 애플리케이션에 반환합니다. 호출자는 completeRequest를 CameraManager 스레드에서 호출해야 합니다."
+                  }
+                ],
+                "limitation": "이는 코드에 나타난 역할과 계약에 관한 이해이며, 실제 조직의 팀별 소유권이나 협업 절차를 입증하지는 않습니다."
+              },
+              {
+                "goal": 5,
+                "rating": "partial",
+                "reason": "목차, 다음 단계와 소스 위치가 탐색을 돕고 주요 흐름은 문장으로 설명되어 있습니다. 다만 일부 절은 반복과 저수준 구현 세부사항이 많아 처음 읽는 독자가 연결된 설명으로 따라가기 어렵습니다.",
+                "evidence": [
+                  {
+                    "unit_id": "overview.html/paragraph/1",
+                    "reason": "독자의 확인 목적에 따라 이동할 절을 안내합니다.",
+                    "page": "overview.html",
+                    "quote": "이 문서의 용어: IPA, Pipeline Handler\n지금 확인할 내용\t이동할 절\n처음 읽을 파일과 진입점을 찾습니다.\t탐색과 파이프라인 선택\n요청과 결과가 지나는 경계를 확인합니다.\t요청 제출과 완료\n구성 실패의 원인을 좁힙니다.\t구성과 요청 오류 조사\n요청의 제출 성공과 촬영 완료를 구분하고, 버퍼를 유지할 기간과 오류가 난 위치를 확인하세요.\t요청 처리와 문제 진단\n수정 전에 상태와 종료 순서를 확인합니다.\t캡처 세션의 상태와 자원\n빌드한 모든 파이프라인·IPA·앱의 클래스와 함수를 패키지별로 찾으세요. 표는 추출 사실에서 만들었고 동작은 설명하지 않습니다.\t구성 요소 색인\n탐색과 파이프라인 선택"
+                  },
+                  {
+                    "unit_id": "scenarios/queue_request.html/paragraph/1",
+                    "reason": "시나리오의 주요 절로 이동할 수 있는 안내를 제공합니다.",
+                    "page": "scenarios/queue_request.html",
+                    "quote": "지금 확인할 내용\t이동할 절\n이 흐름에서 확인할 것 절을 확인합니다.\t이 흐름에서 확인할 것\n주요 확인 지점 절을 확인합니다.\t주요 확인 지점\n주요 호출 관계 절을 확인합니다.\t주요 호출 관계\n추적 범위와 경계 절을 확인합니다.\t추적 범위와 경계\n전체 추적 기록 절을 확인합니다.\t전체 추적 기록\n이 흐름에서 확인할 것"
+                  },
+                  {
+                    "unit_id": "vendor-integration.html/paragraph/24",
+                    "reason": "요청을 명시적으로 완료해야 한다는 내용과 스레드 조건이 반복됩니다.",
+                    "page": "vendor-integration.html",
+                    "quote": "completeBuffer에서 마지막 버퍼가 완료되어도 요청은 자동으로 완료되지 않으며, 파이프라인 핸들러가 completeRequest()로 요청을 명시적으로 완료해야 합니다. 파이프라인 핸들러는 요청을 완료하려면 completeRequest()를 명시적으로 호출해야 합니다. 파이프라인 핸들러는 completeBuffer를 CameraManager 스레드에서 호출해야 합니다."
+                  },
+                  {
+                    "unit_id": "scenarios/queue_request.html/paragraph/15",
+                    "reason": "정적 추적의 한계를 문장으로 명확히 설명합니다.",
+                    "page": "scenarios/queue_request.html",
+                    "quote": "조건 분기, 반복 횟수와 실제 실행 스레드는 이 호출 목록만으로 확정할 수 없습니다. 가상 호출 후보는 실제 객체에 따라 선택됩니다. 예약 표시는 인자로 전달한 메서드 대상을 뜻하며, 비동기 실행을 보증하지 않습니다. 호출부의 연결 방식과 동기화 계약을 확인해야 합니다."
+                  }
+                ],
+                "limitation": "제공된 브라우저 텍스트만으로 실제 링크의 동작이나 화면 배치를 검증할 수 없으며, 자동 판독으로 독자의 즐거움을 판단할 수 없습니다."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "browser_scope": {
+    "pages": [
+      "index.html",
+      "vendor-overview.html",
+      "vendor-assurance.html",
+      "overview.html",
+      "vendor-integration.html",
+      "scenarios/queue_request.html"
+    ],
+    "mobile": [
+      {
+        "path": "index.html",
+        "screenshot": "mobile-index.png",
+        "overflow": false
+      },
+      {
+        "path": "vendor-overview.html",
+        "screenshot": "mobile-vendor-overview.png",
+        "overflow": false
+      },
+      {
+        "path": "overview.html",
+        "screenshot": "mobile-overview.png",
+        "overflow": false
+      }
+    ],
+    "legacy_anchor_clicks": 32,
+    "index_overview": [
+      {
+        "edition": "ko",
+        "diagram_search": "1개 일치",
+        "download_identical": true,
+        "proof_url": "http://127.0.0.1:8876/vendor-overview.html#source-e3b563f549a8c46d",
+        "proof_visible": true
+      },
+      {
+        "edition": "en/",
+        "diagram_search": "1 matches",
+        "download_identical": true,
+        "proof_url": "http://127.0.0.1:8876/en/vendor-overview.html#source-e3b563f549a8c46d",
+        "proof_visible": true
+      }
+    ],
+    "offline": {
+      "enabled": true,
+      "external_requests": []
+    },
+    "interactions": {
+      "search_results": 24,
+      "search_escape": true,
+      "evidence_toggle": true,
+      "diagram_search": "2개 일치",
+      "zoom": "125%",
+      "diagram_escape": true
+    }
+  },
+  "growth": {
+    "findings": 0,
+    "largest_ratio": 1.127946127946128,
+    "baseline_sha256": "f2d5831b009c2044bf3bb32ab0587e1d332849db3915b0957fce45173a3f5205"
+  },
+  "controlled_wall_observation": {
+    "before": 852.4920024871826,
+    "after": 981.5573179721832
+  },
+  "review_time_measured": false,
+  "inhouse_hal_verified": false
+}

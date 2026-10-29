@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "original_report": "reports/growth-policy-terra-e117.json",
+  "original_relative_path": "latest-candidate/build/document-baseline.json",
+  "published_relative_path": "inputs/pre-terra-document-baseline.json",
+  "sha256": "f2d5831b009c2044bf3bb32ab0587e1d332849db3915b0957fce45173a3f5205",
+  "bytes": 149723,
+  "note": "Exact original pre-Terra baseline, independently identified as missing from the initial public package. Neither the comparison result nor the baseline was rewritten. Site outputs and build_id are unchanged.",
+  "human_review": "pending"
+}

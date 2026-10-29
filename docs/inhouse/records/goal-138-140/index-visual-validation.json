@@ -1,0 +1,17 @@
+{
+  "translation": {
+    "pages": 30,
+    "strings": 1733,
+    "missing_translations": 0,
+    "human_review": "pending",
+    "replayed_http_calls": 0,
+    "translation_replays": []
+  },
+  "contract_batches_reused": 88,
+  "consistency_policy": "19eb352e6730b1eab46255a4a4b4384e9c097ff75ef601efbaacbf39d7718b2c",
+  "verification": {
+    "html_pages": 60,
+    "broken_links": 0,
+    "manifest_verified": true
+  }
+}

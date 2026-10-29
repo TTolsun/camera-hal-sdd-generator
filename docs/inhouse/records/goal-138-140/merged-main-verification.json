@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "generator_commit": "a40341568df71c77d780a047f7d56cbcf07c8993",
+  "source_commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+  "python": "Python 3.12.10",
+  "consistency_policy": "19eb352e6730b1eab46255a4a4b4384e9c097ff75ef601efbaacbf39d7718b2c",
+  "generation_record": "798c5b3813734c4d8876438c4246d03c.json",
+  "generation_calls": 0,
+  "generation_seconds": 33.375,
+  "documents": 19,
+  "unit_counts": {
+    "manuscript-reused": 313
+  },
+  "audit_fresh_batches": 0,
+  "audit_reused_batches": 88,
+  "unresolved": [
+    {
+      "contract": "request-completion",
+      "claim_id": "scenarios/queue_request.md/paragraph/28",
+      "peers": [
+        "request-diagnosis.md/diagnosis/7",
+        "request-lifecycle.md/journey/10",
+        "request-lifecycle.md/stopping/6"
+      ],
+      "status": "insufficient-evidence",
+      "condition": "The claim identifies a subsequent documentation step after queueing.",
+      "actor": "The linked step names PipelineHandler::completeRequest.",
+      "timing": "The link presents completion notification as a next step.",
+      "scope": "The supplied sources establish the function's contract but do not establish the linked document's existence or contents.",
+      "reason": "The named function is associated with request completion, consistent with the peers, but the supplied excerpts do not verify the link target or its presentation as the next documentation step.",
+      "sources": [
+        {
+          "source_id": "request-lifecycle/journey/request-notice",
+          "source_quote": "\\brief Signal request completion\n * \\param[in] request The request that has completed\n *\n * The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed. The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns.\n *\n * This function ensures that requests will be returned to the application in\n * submission order, the pipeline handler may call it on any complete request\n * without any ordering constraint.\n *\n * \\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)\n{\n\tCamera *camera = request->_d()->camera();\n\n\trequest->_d()->complete();\n\n\tCamera::Private *data = camera->_d();\n\n\twhile (!data->queuedRequests_.empty()) {\n\t\tRequest *req = data->queuedRequests_.front();\n\t\tif (req->status() == Request::RequestPending)\n\t\t\tbreak;\n\n\t\tASSERT(!req->hasPendingBuffers());\n\t\tdata->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);\n\t}\n\n\t/* Allow any waiting requests to be queued to the pipeline. */\n\tdoQueueRequests(camera);\n}\n\n/**\n * \\brief Cancel request and signal its completion"
+        }
+      ],
+      "claim_quote": "다음 단계: [요청 완료 통지 (PipelineHandler::completeRequest)](complete_request.md)\n"
+    }
+  ],
+  "translation": {
+    "pages": 30,
+    "strings": 1733,
+    "missing_translations": 0,
+    "human_review": "pending",
+    "replayed_http_calls": 0,
+    "translation_replays": []
+  },
+  "manifest_build_id": "e1569641fe806423639aec719259b261f025ad17db1a0110fa8e6768680c1fbe",
+  "manifest_files": 254,
+  "verification": {
+    "html_pages": 60,
+    "broken_links": 0,
+    "manifest_verified": true
+  },
+  "repeat_identical": true,
+  "review_export_seconds": 79.10999999998603,
+  "new_cli_receipts": 0,
+  "human_review": "pending",
+  "pipeline_wall_observation": {
+    "start_utc": "2026-10-28T23:08:58.542201+00:00",
+    "end_utc": "2026-10-28T23:11:46.259607+00:00",
+    "seconds": 167.7174060344696,
+    "scope": "Observed from creation of the final CLI stdout file to completion of the verification report. Includes full CLI health checks, catalog preparation, cached audit and two site exports; excludes git synchronization and later blind-reader/browser checks. generation_seconds is only the GenerationRun phase."
+  }
+}

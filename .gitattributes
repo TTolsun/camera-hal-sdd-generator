@@ -1,2 +1,4 @@
 * text=auto eol=lf
 *.sh text eol=lf
+# Preserve captured evidence inputs byte-for-byte, including original CRLF.
+docs/inhouse/records/goal-138-140/inputs/** -text whitespace=cr-at-eol
