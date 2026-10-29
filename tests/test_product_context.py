@@ -91,6 +91,20 @@ def test_actual_material_tampering_fails_even_without_source_commit_change(produ
     assert (cfg.root / 'products.yaml').read_bytes() == before
 
 
+def test_measurement_cannot_supply_offering_assurance_from_an_unknown_spec(products):
+    cfg, data, sections, save = products
+    data['evidence'][0]['availability'] = 'unknown'
+    measured = copy.deepcopy(data['evidence'][0])
+    measured.update(id='measured', type='measurement', availability='offered')
+    data['evidence'].append(measured)
+    feature = data['products'][0]['features'][0]
+    feature['evidence'].append('measured')
+    save()
+    ctx = context(bind(cfg, sections))
+    assert ctx['availability'] == 'unknown'
+    assert 'support' in ctx['unresolved_claims']
+
+
 def test_measurement_is_conditional_unsupported_is_explicit_and_missing_claims_stay_unknown(products):
     cfg, data, sections, save = products
     doc = data['evidence'][0]

@@ -137,8 +137,9 @@ def bind(cfg, sections):
             if len(states) > 1 or (states and feature['availability'] != 'unknown' and feature['availability'] not in states):
                 raise ValueError('Conflicting product availability evidence.')
             assurance_types = {'specification', 'release'} | ({'project-document'} if product['scope'] == 'project' else set())
-            assurance = [d for d in selected.values() if d['type'] in assurance_types]
-            availability = feature['availability'] if assurance and states else 'unknown'
+            assurance = [d for d in selected.values() if d['type'] in assurance_types
+                         and d['availability'] == feature['availability'] != 'unknown']
+            availability = feature['availability'] if assurance else 'unknown'
             allowed, unresolved = [], []
             for claim in feature['claims']:
                 kind = claim['kind']
@@ -146,7 +147,8 @@ def bind(cfg, sections):
                 supported = ((kind == 'structural' and bool(feature['implementation']))
                              or (kind == 'performance' and 'measurement' in kinds)
                              or (kind == 'comparison' and 'comparison' in kinds)
-                             or (kind == 'support' and availability != 'unknown' and bool(kinds & assurance_types)))
+                             or (kind == 'support' and availability != 'unknown' and any(
+                                 selected[eid] in assurance for eid in claim['evidence'])))
                 (allowed if supported else unresolved).append(kind)
             context = {'product': {k: v for k, v in product.items() if k != 'features'},
                        'feature': feature, 'availability': availability,
