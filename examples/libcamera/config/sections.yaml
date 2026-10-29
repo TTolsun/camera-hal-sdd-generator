@@ -1481,19 +1481,18 @@ sections:
     - id: search
       file: src/libcamera/pipeline/ipu3/imgu.cpp
       start: float bdsSF = static_cast<float>(in.width) / gdc.width;
-      end: /* Repeat search by scaling width first. */
+      end: if (pipeConfigs.size() == 0) {
       scope:
         start: ImgUDevice::PipeConfig ImgUDevice::calculatePipeConfig(Pipe *pipe)
         end: '
-
+    
           }
-
+    
           '
     parts:
     - id: bounds
-      question: 두 탐색에서 minIfWidth·minIfHeight 최솟값 공식은 각각 한 번만 설명하세요. 폭과 높이가 각각 최솟값 이상인
-        동안 반복하는 조건, 첫 탐색의 중첩 순서와 두 번째 탐색 전 alignUp에 의한 폭·높이 재초기화를 명시하세요. 높이 값 감김 주석의 조건, calculateBDSHeight
-        호출과 높이 자르기 및 kIFAlignHeight 감소 관계도 보존하되 같은 식은 반복하지 마세요.
+      question: minIfWidth와 minIfHeight의 std::max 최솟값 공식을 각각 한 번씩 두 문장 이내로 설명하세요. 반복 순서와
+        높이 자르기는 다음 질문에서 설명하므로 여기서는 다시 나열하지 마세요.
       sources:
       - search
       answer_contract:
@@ -1504,7 +1503,24 @@ sections:
         reject_patterns:
         - pattern: (?<![A-Za-z0-9_])IF(?![A-Za-z0-9_])
           message: 이 질문은 계산식과 분기를 묻습니다. 대상은 선언된 변수·함수 이름으로 명시하고 풀이 없는 IF 약어를 도입하지 마세요.
-      max_statements: 4
+      max_statements: 2
+    - id: search-order
+      question: 첫 탐색은 폭 바깥·높이 안쪽, 두 번째는 높이 바깥·폭 안쪽이라는 중첩 순서와 각 최소값 이상 반복 조건을 짧게 설명하세요.
+        두 번째 탐색 전 alignUp으로 두 값을 재초기화함을 구분하고, 안쪽 반복마다 바깥 반복 변수를 다시 초기화한다고 추정하지 마세요. calculateBDSHeight
+        주석의 최대 높이 자르기·최솟값 감김 조건과 kIFAlignWidth·kIFAlignHeight 감소도 보존하세요. 최소값 공식은 앞 문단에서
+        설명했으므로 반복하지 말고 완전한 문장으로 마치세요.
+      sources:
+      - search
+      max_statements: 3
+      answer_contract:
+        basis: description
+        required_terms:
+        - - alignUp
+        - - minIfWidth
+        - - minIfHeight
+        - - calculateBDSHeight
+        - - kIFAlignHeight
+        - - kIFAlignWidth
   design_requirements:
   - id: responsibility
     question: 핸들러는 어떤 객체와 장치를 만들고 관리합니까?
