@@ -1,0 +1,120 @@
+{
+  "decisions": [
+    {
+      "case": "missing",
+      "disposition": "required",
+      "reason": "The integration task requires input ownership, and the existing topic does not state that the caller owns the buffer until completion."
+    },
+    {
+      "case": "irrelevant",
+      "disposition": "optional-detail",
+      "reason": "The register address is supported by the source but is only relevant to hardware tuning, for which the declared registers detail is appropriate."
+    },
+    {
+      "case": "duplicate",
+      "disposition": "already-covered",
+      "reason": "The existing input-flow topic already states the caller's buffer ownership and its duration."
+    },
+    {
+      "case": "exception",
+      "disposition": "required",
+      "reason": "The source identifies a cancellation notification when stopped before completion, a necessary handling exception missing from the existing topic."
+    },
+    {
+      "case": "insufficient",
+      "disposition": "deferred",
+      "reason": "The source provides no performance measurements or comparison evidence to support the superiority claim."
+    }
+  ],
+  "fixed_input": {
+    "section": {
+      "id": "fixture-guide",
+      "reader_profile": "team",
+      "design_requirements": [
+        {
+          "id": "input",
+          "question": "누가 어떤 입력과 예외 처리를 맡습니까?"
+        }
+      ],
+      "design_topics": [
+        {
+          "id": "input-flow",
+          "covers": [
+            "input"
+          ],
+          "sources": [
+            {
+              "id": "source-window"
+            }
+          ]
+        }
+      ],
+      "reader_scope": {
+        "revision": 1,
+        "change_reason": "Fixed before model judgments.",
+        "tasks": [
+          {
+            "id": "integrate",
+            "goal": "Identify input ownership and necessary handling conditions.",
+            "completion": "Locate ownership and all necessary exceptions.",
+            "requirements": [
+              "input"
+            ]
+          }
+        ],
+        "optional": [
+          {
+            "id": "registers",
+            "location": "detail.md#registers",
+            "reason": "Only needed for hardware tuning."
+          }
+        ],
+        "excluded": [
+          {
+            "id": "performance-comparison",
+            "reason": "No verified measurement material."
+          }
+        ],
+        "removed_requirements": []
+      }
+    },
+    "cases": [
+      {
+        "id": "missing",
+        "source": "The caller supplies an image buffer and owns it until completion.",
+        "existing": "The entry receives an image buffer.",
+        "candidate": "Caller ownership is absent."
+      },
+      {
+        "id": "irrelevant",
+        "source": "The diagnostic register is located at address 0x500.",
+        "existing": "The caller supplies an image buffer and owns it until completion.",
+        "candidate": "Add the register address to the integration overview."
+      },
+      {
+        "id": "duplicate",
+        "source": "The caller supplies an image buffer and owns it until completion.",
+        "existing": "input-flow: The caller supplies an image buffer and owns it until completion.",
+        "candidate": "Add an extra overview topic repeating caller buffer ownership."
+      },
+      {
+        "id": "exception",
+        "source": "The caller supplies an image buffer and owns it until completion. If stopped before completion, the caller receives a cancellation notification.",
+        "existing": "input-flow: The caller supplies an image buffer and owns it until completion.",
+        "candidate": "Explain the stop cancellation exception."
+      },
+      {
+        "id": "insufficient",
+        "source": "void capture();",
+        "existing": "The entry receives an image buffer.",
+        "candidate": "Say that capture is faster than all competing implementations."
+      }
+    ]
+  },
+  "model": "gpt-6.1-terra",
+  "reasoning_effort": "high",
+  "cli_calls": 1,
+  "structural_validation": "passed",
+  "human_task_test": "pending",
+  "unreviewed_scope": "Other source windows and actual reader performance; scope-change invalidation is a separate regression."
+}

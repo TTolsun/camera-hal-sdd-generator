@@ -30,6 +30,10 @@ def _capture_cli(tmp_path, monkeypatch, agent):
     monkeypatch.setattr(Agent, '_get', lambda *a: pytest.fail('No direct API probe'))
     outputs = {
         'hermes': 'answer',
+        'codex': '\n'.join(json.dumps(e) for e in [
+            {'type': 'thread.started', 'thread_id': 'fixture'}, {'type': 'turn.started'},
+            {'type': 'item.completed', 'item': {'type': 'agent_message', 'text': 'answer'}},
+            {'type': 'turn.completed'}]),
         'claude': json.dumps({'subtype': 'success', 'result': 'answer'}),
         'opencode': '\n'.join(json.dumps(e) for e in [
             {'type': 'text', 'part': {'text': 'answer'}},
@@ -47,19 +51,20 @@ def _capture_cli(tmp_path, monkeypatch, agent):
     return json.loads(captured.read_text(encoding='utf-8'))
 
 
-def test_public_profile_reaches_hermes_cli(public_config, tmp_path, monkeypatch):
+def test_public_document_profile_reaches_user_selected_terra_high(public_config, tmp_path, monkeypatch):
     cfg = load(public_config)
-    assert (cfg.agent.kind, cfg.agent.runner) == ('cli', 'hermes')
+    assert (cfg.agent.kind, cfg.agent.runner, cfg.agent.model) == ('cli', 'codex', 'gpt-6.1-terra')
     assert not {'num_ctx', 'think', 'max_output_tokens'} & cfg.raw['agent'].keys()
     argv = _capture_cli(tmp_path, monkeypatch, cfg.agent)
-    assert argv == ['chat', '--ignore-rules', '--toolsets', 'todo', '--max-turns', '4',
-                    '-Q', '--query-file', '-', '--model', 'qwen3.5:9b-ctx64k',
-                    '--provider', 'custom', '--reasoning', 'high']
+    assert argv[:2] == ['exec', '--ignore-user-config']
+    assert argv[-4:] == ['--model', 'gpt-6.1-terra', '-c', 'model_reasoning_effort="high"']
+    assert not {'hermes', '--provider', '--reasoning', 'qwen3.5:9b-ctx64k'} & set(argv)
+
 
 
 @pytest.mark.parametrize('selection', ['local', 'explicit'])
 def test_internal_model_provider_and_effort_are_replaceable(public_config, tmp_path, monkeypatch, selection):
-    settings = {'model': 'internal-approved-model',
+    settings = {'runner': 'hermes', 'model': 'internal-approved-model',
                 'args': ['--provider', 'internal-provider', '--reasoning', 'medium']}
     if selection == 'local':
         public_config.with_name('sdd.local.yaml').write_text(

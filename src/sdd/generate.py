@@ -93,6 +93,9 @@ class Generator:
             from .contract_schema import configuration_errors
             if errors := configuration_errors(section):
                 raise ValueError('\n'.join(errors))
+            from .reader_scope import validate_change
+            existing = self.cfg.sdd_dir / section_output(section)
+            validate_change(existing.read_text(encoding='utf-8') if existing.exists() else None, section)
             generated_visuals.preflight(self.cfg, self.model, section)
         reports = {s['id']: audit_design(self.model, s) for s in selected
                    if (s.get('design_requirements') or s.get('reader_profile')) and not generated_design.enabled(s)}
@@ -227,7 +230,8 @@ class Generator:
                 else:
                     text, missing, current = self._ask(tag, topic_sec, topic["title"], evidence, "")
                 detail = sources.links(evidence_model, sec['id'], topic) if sec.get('show_evidence') and current.ok else ''
-                parts.append(f"## {topic['title']}\n\n{text}" + (f"\n\n{detail}" if detail else ''))
+                from .product_context import scope_notice
+                parts.append(f"## {topic['title']}\n\n" + scope_notice(topic) + text + (f"\n\n{detail}" if detail else ''))
                 blocks += evidence
                 omitted += missing
                 if not current.ok:
@@ -561,6 +565,14 @@ class Generator:
             artifact['body_sha256'] = generated_design.digest(split_frontmatter(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_visuals: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             from_manuscript(self.cfg, self.model, sec, page)
+        if sec.get('reader_scope') and generated_design.enabled(sec) and path.exists():
+            current = self.generated_designs[sec['id']][3]
+            if set(current['reused_topics']) == {t['id'] for t in sec['design_topics']}:
+                from .reader_scope import preserve_unchanged
+                previous = path.read_text(encoding='utf-8')
+                if preserve_unchanged(previous, page):
+                    generated_design.verify(self.model, sec, previous, cfg=self.cfg)
+                    return path
         return self._write(path, page)
 
     def _render(self, *args, **kwargs):

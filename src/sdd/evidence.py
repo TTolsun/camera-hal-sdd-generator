@@ -75,6 +75,10 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
                 try:
                     if not re.fullmatch(r"[0-9a-f]{40}", commit):
                         raise ValueError("facts에 불변 Git 커밋이 없습니다.")
+                    if source.get('kind') == 'product':
+                        from .product_context import record as product_record
+                        records[key] = product_record(source, commit)
+                        continue
                     if PurePosixPath(file).is_absolute() or ".." in PurePosixPath(file).parts or ":" in file or "\\" in file:
                         raise ValueError("소스 루트 상대 경로가 필요합니다.")
                     if file not in cache:

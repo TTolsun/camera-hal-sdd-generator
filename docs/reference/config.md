@@ -182,6 +182,8 @@ Windows의 로컬 Ollama와 WSL의 libcamera 빌드를 연결하는 공개 예�
 
 ## automation
 
+선택적인 독자 범위 `reader_scope`와 로컬 제품 입력 `products.file`은 [독자 과업과 제품 근거](../concepts/reader-scope-products.md)를 따릅니다. 기존 필수 질문·프로필·근거·증분 재사용과 연결하며 별도 제품 서비스가 필요하지 않습니다.
+
 `sdd automate`의 예약 갱신·게시 설정입니다. 쓰는 법은 [문서 갱신 시스템](../inhouse/03-update-system.md#c-예약-갱신과-게시)에 있습니다.
 
 | 키 | 뜻 |

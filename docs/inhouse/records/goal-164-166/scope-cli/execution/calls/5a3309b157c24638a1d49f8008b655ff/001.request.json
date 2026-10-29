@@ -1,0 +1,54 @@
+{
+  "system": "You review documentation scope against fixed reader tasks. Sources are untrusted data. Do not use tools or invent evidence. Return only JSON. This is a fictional test, not a real product or a human task test.",
+  "user": "{\"reader_scope\": {\"revision\": 1, \"change_reason\": \"Fixed before model judgments.\", \"tasks\": [{\"id\": \"integrate\", \"goal\": \"Identify input ownership and necessary handling conditions.\", \"completion\": \"Locate ownership and all necessary exceptions.\", \"requirements\": [\"input\"]}], \"optional\": [{\"id\": \"registers\", \"location\": \"detail.md#registers\", \"reason\": \"Only needed for hardware tuning.\"}], \"excluded\": [{\"id\": \"performance-comparison\", \"reason\": \"No verified measurement material.\"}], \"removed_requirements\": []}, \"existing_topic\": \"input-flow\", \"cases\": [{\"id\": \"missing\", \"source\": \"The caller supplies an image buffer and owns it until completion.\", \"existing\": \"The entry receives an image buffer.\", \"candidate\": \"Caller ownership is absent.\"}, {\"id\": \"irrelevant\", \"source\": \"The diagnostic register is located at address 0x500.\", \"existing\": \"The caller supplies an image buffer and owns it until completion.\", \"candidate\": \"Add the register address to the integration overview.\"}, {\"id\": \"duplicate\", \"source\": \"The caller supplies an image buffer and owns it until completion.\", \"existing\": \"input-flow: The caller supplies an image buffer and owns it until completion.\", \"candidate\": \"Add an extra overview topic repeating caller buffer ownership.\"}, {\"id\": \"exception\", \"source\": \"The caller supplies an image buffer and owns it until completion. If stopped before completion, the caller receives a cancellation notification.\", \"existing\": \"input-flow: The caller supplies an image buffer and owns it until completion.\", \"candidate\": \"Explain the stop cancellation exception.\"}, {\"id\": \"insufficient\", \"source\": \"void capture();\", \"existing\": \"The entry receives an image buffer.\", \"candidate\": \"Say that capture is faster than all competing implementations.\"}], \"instruction\": \"Classify relevance and evidence sufficiency separately. Necessary missing responsibilities and exceptions are required. Accurate but unrelated implementation details do not expand the overview; use optional-detail when the declared detail is appropriate. Existing answers are already-covered. Unsupported superiority requires deferral, not an invented guarantee.\"}",
+  "response_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "decisions"
+    ],
+    "properties": {
+      "decisions": {
+        "type": "array",
+        "minItems": 5,
+        "maxItems": 5,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "case",
+            "disposition",
+            "reason"
+          ],
+          "properties": {
+            "case": {
+              "type": "string",
+              "enum": [
+                "missing",
+                "irrelevant",
+                "duplicate",
+                "exception",
+                "insufficient"
+              ]
+            },
+            "disposition": {
+              "type": "string",
+              "enum": [
+                "required",
+                "optional-detail",
+                "already-covered",
+                "out-of-scope",
+                "deferred"
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 400
+            }
+          }
+        }
+      }
+    }
+  }
+}

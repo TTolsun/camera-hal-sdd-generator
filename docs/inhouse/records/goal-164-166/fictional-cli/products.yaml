@@ -1,0 +1,85 @@
+evidence:
+- availability: offered
+  conditions:
+  - sensor A
+  - build X
+  configuration: sensor-a-build-x
+  date: '2026-10-30'
+  feature: capture
+  file: fixture-a.txt
+  id: spec-a
+  product: fixture-a
+  release: r1
+  sha256: 2a36749e8e39a5c36938fa7f73223dd6c79b02fcccb81ab1a2ab8d62565a73a8
+  supplier: Fictional test author
+  type: specification
+  valid_until: '2026-12-31'
+  version: '1'
+- availability: unknown
+  conditions:
+  - sensor B
+  - build Y
+  configuration: sensor-b-build-y
+  date: '2026-10-30'
+  feature: capture
+  file: fixture-b.txt
+  id: spec-b
+  product: fixture-b
+  release: r1
+  sha256: 57cb005ce25ebd883da711a7e9cf4462bf93e9a6979923ed5fcaaa75d18df7c4
+  supplier: Fictional test author
+  type: specification
+  valid_until: '2026-12-31'
+  version: '1'
+products:
+- as_of: '2026-10-30'
+  configuration: sensor-a-build-x
+  features:
+  - availability: offered
+    claims:
+    - evidence: []
+      kind: structural
+    - evidence:
+      - spec-a
+      kind: support
+    conditions:
+    - sensor A
+    - build X
+    evidence:
+    - spec-a
+    exclusions: []
+    id: capture
+    implementation:
+    - code
+    need: Acquire an image
+    usage: Fictional capture integration exercise
+  id: fixture-a
+  release: r1
+  scope: product
+  simulation: true
+- as_of: '2026-10-30'
+  configuration: sensor-b-build-y
+  features:
+  - availability: unknown
+    claims:
+    - evidence: []
+      kind: structural
+    - evidence:
+      - spec-b
+      kind: support
+    conditions:
+    - sensor B
+    - build Y
+    evidence:
+    - spec-b
+    exclusions: []
+    id: capture
+    implementation:
+    - code
+    need: Acquire an image
+    usage: Fictional capture integration exercise
+  id: fixture-b
+  release: r1
+  scope: product
+  simulation: true
+schema: 1

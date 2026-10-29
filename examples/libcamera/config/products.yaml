@@ -1,0 +1,47 @@
+schema: 1
+products:
+- id: libcamera
+  scope: project
+  release: 212c689fcf2450bbfbaab25c7472895ac277b5d6
+  configuration: public-source-documentation
+  simulation: false
+  as_of: '2026-10-30'
+  features:
+  - id: camera-stack
+    need: Developers need to handle complex camera hardware and image control algorithms.
+    usage: Public project adoption and integration scope review.
+    availability: offered
+    conditions: &id001
+    - Linux-based systems
+    - Kernel drivers and the relevant pipeline implementation are required.
+    exclusions:
+    - Commercial device support and measured performance are unconfirmed.
+    implementation:
+    - what
+    - problem
+    - for
+    - stack
+    evidence:
+    - official-stack
+    claims:
+    - kind: structural
+      evidence:
+      - official-stack
+    - kind: support
+      evidence:
+      - official-stack
+evidence:
+- id: official-stack
+  type: project-document
+  supplier: libcamera official upstream; CC-BY-SA-4.0; URL in local material
+  version: 212c689fcf2450bbfbaab25c7472895ac277b5d6
+  date: '2026-10-30'
+  valid_until: '2026-10-30'
+  product: libcamera
+  release: 212c689fcf2450bbfbaab25c7472895ac277b5d6
+  configuration: public-source-documentation
+  feature: camera-stack
+  conditions: *id001
+  availability: offered
+  file: product-evidence/libcamera-stack.txt
+  sha256: fdd39a9c11328e6bb549203a2395b3f9331fa15d5e2da711b703643e299f8fc0
