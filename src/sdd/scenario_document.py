@@ -12,7 +12,7 @@ from .facts.model import Message, Scenario
 
 
 def fingerprint(sc: Scenario, settings: dict) -> str:
-    data = {"scenario": asdict(sc), "settings": settings, "presentation_version": 2}
+    data = {"scenario": asdict(sc), "settings": settings, "presentation_version": 3}
     return hashlib.sha256(json.dumps(data, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
@@ -113,7 +113,7 @@ def build(sc: Scenario, settings: dict, max_nodes: int = 16) -> ScenarioDocument
 
     boundaries = [m for m in sc.messages if m.note]
     detail = ["## 추적 범위와 경계", "",
-              f"facts에 기록된 호출은 {len(sc.messages)}개이며, 요약의 hide 규칙에 해당하는 호출은 {hidden}개입니다. "
+              f"요약의 hide 규칙에 해당하는 호출은 {hidden}개입니다. "
               "전체 추적 기록에는 해당 호출도 모두 보존합니다. 기록 번호는 정적 탐색의 식별자이며 실행 순번이 아닙니다.", "",
               "조건 분기, 반복 횟수와 실제 실행 스레드는 이 호출 목록만으로 확정할 수 없습니다. "
               "가상 호출 후보는 실제 객체에 따라 선택됩니다. 예약 표시는 인자로 전달한 메서드 대상을 뜻하며, "
