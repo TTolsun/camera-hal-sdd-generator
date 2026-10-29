@@ -130,3 +130,21 @@ def test_navigation_stops_at_h1_and_preserves_pipe_expressions_in_code():
     table = '| 내용 | 이동 |\n|---|---|\n' + '\n'.join(f'| {q} | [절]({target}) |' for q, target in routes)
     html = markdown.markdown(table, extensions=['tables'])
     assert '<code>a | b</code>' in html and html.count('<td>') == 4
+
+
+def test_module_selection_has_one_owner_and_keeps_both_function_returns():
+    cfg = load(Path(__file__).parents[1] / 'examples/libcamera/sdd.yaml')
+    sec = next(s for s in cfg.sections() if s['id'] == 'vendor-integration')
+    topic = next(t for t in sec['design_topics'] if t['id'] == 'algorithm')
+    parts = topic['parts']
+    assert not any(p['id'] == 'module-missing' for p in parts)
+    lookup = next(p for p in parts if p['id'] == 'module-lookup')
+    assert lookup['sources'] == ['module-lookup', 'module-missing']
+    assert lookup['max_statements'] == 2  # same total ceiling as the prior two questions
+    assert all([term] in lookup['answer_contract']['required_terms']
+               for term in ['module', 'match', '반환', 'createIPA', 'nullptr'])
+    assert ['첫', '처음'] in lookup['answer_contract']['required_terms']
+    call = next(p for p in parts if p['id'] == 'module')
+    assert call['sources'] == ['module-call']
+    assert all([term] in call['answer_contract']['required_terms']
+               for term in ['module', 'name', 'minVersion', 'maxVersion'])

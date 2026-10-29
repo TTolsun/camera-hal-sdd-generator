@@ -125,10 +125,27 @@ sections:
       sources:
       - problem
     - id: layers
-      question: 카메라 스택의 네 계층을 아래에서 위 순서로 설명하되 계층마다 맡는 일을 먼저 쉬운 말로 쓰고 해당 기술 이름을 연결하세요. 계층별로 문단을 나누고 구체적인 도구는 소스가 예로 든 것만 쓰세요. 제품 이름 libcamera와 코드 식별자는 원문 그대로 쓰세요.
+      question: 카메라 스택의 네 계층을 아래에서 위 순서로 설명하되 계층마다 맡는 일을 먼저 쉬운 말로 쓰고 해당 기술 이름을 연결하세요. 계층별로 문단을 나누고 구체적인 도구는 소스가 예로 든 것만 쓰세요. 커널 드라이버의 하드웨어 제어와 V4L2 인터페이스, 프레임워크의 장치 제어·네이티브 C++ API·선택적 언어 바인딩, adaptation의 연결 역할, 프로젝트 범위 밖인 애플리케이션을 구분하세요. 하드웨어 구성·이미지 제어 알고리즘의 추상화가 개발자 작업을 단순하고 일관되게 한다는 제품 이점은 앞의 정의 질문에서 설명하므로 여기서 반복하지 마세요. 제품 이름 libcamera와 코드 식별자는 원문 그대로 쓰세요.
       sources:
       - stack
       max_statements: 4
+      answer_contract:
+        basis: description
+        required_terms:
+        - - V4L2
+        - - C++ API
+        - - 언어 바인딩
+          - language bindings
+        - - adaptation
+        - - 애플리케이션
+          - applications
+        - - 프로젝트
+          - project
+        reject_patterns:
+        - pattern: '(?:단순|간단)하(?:고|며).{0,15}일관(?:된|적인).{0,15}(?:방법|방식)'
+          message: 개발자 작업을 단순하고 일관되게 하는 제품 이점은 앞의 정의 답변에서 설명합니다. 이 질문에서는 계층별 역할과 인터페이스를 설명하세요.
+        - pattern: '(?:하드웨어.{0,20}(?:알고리즘|이미지 제어)|(?:알고리즘|이미지 제어).{0,20}하드웨어).{0,20}추상화'
+          message: 하드웨어 구성과 이미지 제어 알고리즘의 추상화 이점은 앞의 정의 답변 범위입니다. 네 계층의 역할과 API·연결·프로젝트 경계를 유지하세요.
   - id: support
     title: 지원하는 하드웨어와 빌드 선택
     question: libcamera가 전용 파이프라인 핸들러로 지원하는 하드웨어 플랫폼과 범용으로 지원하는 대상, 빌드 때 파이프라인 핸들러를
@@ -1108,10 +1125,15 @@ sections:
         - pattern: 생성
           message: 이 질문은 호출식의 세 인자를 설명합니다. module 내부 동작은 별도 근거와 질문으로 다룹니다.
     - id: module-lookup
-      question: IPAManager::module의 반복문에서 match가 처음 참이 된 경우 무엇을 반환합니까? 그때 반복을 계속하는지도
-        반환문에 근거하여 한 문장으로 설명하세요.
+      question: IPA 모듈 선택을 성공과 실패 순서로 두 짧은 문단으로 설명하세요. 첫 문단은 IPAManager::module이
+        이름과 허용 버전 범위를 기준으로 순회할 때 첫 match에서 반환하며 검색을 끝내는 동작과, 끝까지 없으면
+        nullptr을 반환하는 동작을 함께 설명하세요. 둘째 문단은 createIPA가 그 결과를 m에 받고 !m일 때
+        반환하는 값만 설명하세요. 첫 일치 모듈을 찾는 과정을 둘째 문단에서 다시 풀어 쓰지 마세요.
+        호출 인자의 이름과 순서는 앞 질문에서 설명하므로 여기서는 선택 결과와 실패 처리의 연결에 집중하세요.
       sources:
       - module-lookup
+      - module-missing
+      max_statements: 2
       answer_contract:
         basis: implementation
         required_terms:
@@ -1120,15 +1142,6 @@ sections:
         - - 반환
         - - 첫
           - 처음
-    - id: module-missing
-      question: IPAManager::module의 검색 결과와 createIPA의 !m 분기를 함께 대조하고, 모듈을 찾지 못했을 때
-        두 함수가 각각 반환하는 값을 구분해 설명하세요.
-      sources:
-      - module-missing
-      - module-lookup
-      answer_contract:
-        basis: implementation
-        required_terms:
         - - createIPA
         - - nullptr
     - id: signature
