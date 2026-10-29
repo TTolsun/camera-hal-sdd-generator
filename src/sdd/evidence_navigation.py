@@ -139,7 +139,10 @@ def compact_evidence(document: str, valid: set[str]) -> str:
     for i in range(1, len(chunks), 2):
         protected.append(chunks[i])
         chunks[i] = f'\x00SDD_PRE_{len(protected) - 1}\x00'
-    parts = re.split(r'(<h[1-6]\b[^>]*>.*?</h[1-6]>)', ''.join(chunks), flags=re.S)
+    # Generated topics are H2 sections. H3–H6 remain inside their parent, so
+    # a first paragraph is not followed by a replacement evidence row just
+    # because a diagram/subheading comes next. Unsectioned prose is one group.
+    parts = re.split(r'(<h[12]\b[^>]*>.*?</h[12]>)', ''.join(chunks), flags=re.S)
     result = ''.join(part if i % 2 else section(part) for i, part in enumerate(parts))
     for i, block in enumerate(protected):
         result = result.replace(f'\x00SDD_PRE_{i}\x00', block)

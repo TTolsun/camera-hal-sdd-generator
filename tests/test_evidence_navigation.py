@@ -109,6 +109,31 @@ def test_each_heading_gets_only_its_own_evidence_and_duplicate_claims_do_not_gro
     assert second.count('title="b.cpp:2"') == 1 and 'a.cpp' not in second
 
 
+def test_nested_subheadings_do_not_replace_removed_paragraph_rows():
+    source = ('<h2>Purpose</h2><p>Opening claim. <code>a.cpp:1</code></p>'
+              '<h3>Diagram and layers</h3><p>Role. <code>b.cpp:2</code></p>'
+              '<h4>Condition</h4><p>Exception. <code>a.cpp:1</code></p>'
+              '<h2>Next topic</h2><p>Next claim. <code>c.cpp:3</code></p>')
+    result = compact_evidence(source, {'a.cpp:1', 'b.cpp:2', 'c.cpp:3'})
+    first, second = result.split('<h2>Next topic</h2>')
+    assert first.count('evidence-section') == 1
+    assert first.index('evidence-section') > first.index('Exception.')
+    assert 'evidence-section' not in first.split('<h3>Diagram')[0]
+    assert '<span>2</span>개' in first and 'c.cpp' not in first
+    assert second.count('evidence-section') == 1 and 'a.cpp' not in second
+    assert result.count('data-sdd-evidence=') == 4
+    assert '문단 근거' not in result and 'evidence-paragraph' not in result
+    assert compact_evidence(result, {'a.cpp:1', 'b.cpp:2', 'c.cpp:3'}) == result
+
+
+def test_prose_without_h2_sections_keeps_one_final_complete_evidence_group():
+    source = '<h3>First</h3><p>One. <code>a.cpp:1</code></p><h3>Second</h3><p>Two. <code>b.cpp:2</code></p>'
+    result = compact_evidence(source, {'a.cpp:1', 'b.cpp:2'})
+    assert result.count('evidence-section') == 1 and result.count('data-sdd-evidence=') == 2
+    assert result.index('evidence-section') > result.index('Two.')
+    assert 'a.cpp' in result and 'b.cpp' in result
+
+
 def test_source_collection_folds_without_changing_excerpts_or_adjacent_sections():
     from sdd.contract_render import SourceDetails
     sources = SourceDetails()
