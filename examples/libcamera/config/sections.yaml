@@ -5385,7 +5385,7 @@ sections:
       scope:
         start: void PipelineHandler::completeRequest(Request *request)
         end: '
-    
+
           }'
     covers:
     - review
