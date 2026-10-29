@@ -225,6 +225,212 @@ def _source_calls(source: str) -> set[str]:
     return names
 
 
+def _qualified_boolean_claim(text: str, source: str) -> str:
+    """Resolve a shortened inline field only when code has one unshadowed owner."""
+    code = _code(source)
+    fields = {}
+    for match in _MEMBER.finditer(code):
+        if code[match.end():].lstrip().startswith('('):
+            continue
+        name = re.sub(r'\([^()]*\)', '', match[0]).replace('->', '.')
+        fields.setdefault(name.rsplit('.', 1)[-1], set()).add(name)
+    replacements = []
+    for match in re.finditer(r'`([A-Za-z_][A-Za-z0-9_]*)`', text):
+        short = match[1]
+        owners = fields.get(short, set())
+        tail = text[match.end():].replace('`', '')
+        bound = _BOUND_VALUE.match(tail)
+        if (len(owners) != 1 or not bound or _value(bound[2]) not in ('true', 'false')
+                or not re.match(r'(?:이고|이며|이면|일\s*때|인\s*경우|입니다|이다)(?:\s|[,.;!?]|$)', tail[bound.end():])
+                or re.search(rf'(?<![\w.:])(?<!->){re.escape(short)}(?!\w)', code)):
+            continue
+        replacements.append((match.start(), match.end(), '`' + next(iter(owners)) + '`'))
+    for start, end, replacement in reversed(replacements):
+        text = text[:start] + replacement + text[end:]
+    return text
+
+
+def _function_span(source, owner):
+    # Preserve offsets while masking non-code braces and function-like text.
+    if re.search(r'\\\r?\n', source):
+        return None
+    code = _CODE_NOISE.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), source)
+    if '"' in code or "'" in code:
+        return None
+    if re.search(r'(?m)^\s*#', code) or any(token in code for token in ('<%', '%>', '%:', '??')):
+        return None
+    matches = list(re.finditer(rf'(?<![\w:]){re.escape(owner)}\s*\([^()]*\)\s*\{{', code))
+    if len(matches) != 1:
+        return None
+    start = matches[0].end()
+    end, depth = start, 1
+    while end < len(code) and depth:
+        depth += (code[end] == '{') - (code[end] == '}')
+        end += 1
+    return (start, end - 1) if depth == 0 else None
+
+
+def _different_bound_booleans(model, section_id, topic_id, later, earlier, *, earlier_topic=None):
+    """Compare complete, source-proven opposite branches; never mixed effects."""
+    rows = (earlier, later)
+    references = [row.get('evidence', []) for row in rows]
+    if any(not isinstance(refs, list) or len(refs) != 1 for refs in references):
+        return False
+    records = [model.evidence.get(f'{section_id}/{tid}/{refs[0]}')
+               for tid, refs in zip((earlier_topic or topic_id, topic_id), references)]
+    if not records[0] or records[0] != records[1]:
+        return False
+    sources = (_source_text(model, section_id, earlier_topic or topic_id, earlier),
+               _source_text(model, section_id, topic_id, later))
+    if not all(sources) or sources[0] != sources[1]:
+        return False
+    if re.search(r'\\\r?\n', sources[0]):
+        return False
+    texts = [_qualified_boolean_claim(row['text'], source) for row, source in zip(rows, sources)]
+    if all(text == row['text'] for text, row in zip(texts, rows)):
+        return False
+    field = rf'{_NAME}(?:\.[A-Za-z_][A-Za-z0-9_]*)+'
+    claims = [re.fullmatch(
+        rf'\s*`({_NAME})(?:\(\))?`(?:는|은)\s*`({field})`(?:가|이|은|는|도)\s*'
+        rf'`?false`?이고\s*`({field})`(?:가|이|은|는|도)\s*`?(true|false)`?이면\s*(.*?)\s*',
+        _CITATION.sub(' ', text), re.S) for text in texts]
+    if (not all(claims) or claims[0].groups()[:3] != claims[1].groups()[:3]
+            or {c[4] for c in claims} != {'true', 'false'}):
+        return False
+    negative = next(i for i, c in enumerate(claims) if c[4] == 'false')
+    positive = 1 - negative
+    if not re.fullmatch(r'반환합니다[.]?', claims[negative][5]):
+        return False
+    comparison = re.fullmatch(
+        r'먼저\s+(?:원래\s+[가-힣]+\s+)?`([^`]+)`와\s*`([^`]+)`의\s*절대\s*차이가\s*'
+        r'`([^`]+)`보다\s*작을\s*때\s*반환하고,\s*그\s*차이가\s*경계값\s*이상이면\s*'
+        r'`([^`]+)`가\s*`([^`]+)`와\s*같을\s*때\s*반환합니다[.]?', claims[positive][5])
+    if not comparison:
+        return False
+    x, y, limit, current, previous = comparison.groups()
+    if (not all(re.fullmatch(_NAME, name) for name in (x, y, current, previous))
+            or not re.fullmatch(rf'{_NAME}(?:\s*/\s*[1-9][0-9]*)?', limit)):
+        return False
+    code = _code(sources[0]).replace('->', '.')
+    owner, first, second = claims[0].groups()[:3]
+    span = _function_span(code, owner)
+    if first == second or not span:
+        return False
+    body = code[span[0]:span[1]]
+    branch = re.search(rf'if\s*\(\s*!\s*{re.escape(first)}\s*\)\s*\{{\s*'
+                       rf'if\s*\(\s*!\s*{re.escape(second)}\s*\)\s*return\s*;\s*([^{{}}]+)\}}', body)
+    if (not branch or body[:branch.start()].count('{') != body[:branch.start()].count('}')
+            or re.search(r'\b(?:if|switch|for|while|return|throw|goto|co_return|co_await|co_yield|asm|__asm__)\b',
+                         body[:branch.start()])):
+        return False
+    compact = lambda text: re.sub(r'\s+', '', text)
+    code_limit = compact(limit)
+    guard = re.fullmatch(rf'if\(({_NAME})\({re.escape(x)},{re.escape(y)}\)<{re.escape(code_limit)}\)return;'
+                         rf'if\({re.escape(current)}=={re.escape(previous)}\)return;', compact(branch[1]))
+    if not guard or guard[1].rsplit('::', 1)[-1] != 'abs_diff':
+        return False
+    false_quote = compact(_code(rows[negative]['quote']).replace('->', '.'))
+    true_quote = compact(_code(rows[positive]['quote']).replace('->', '.'))
+    prefix = f'if(!{first})' + '{' + f'if(!{second})return;'
+    return (false_quote == prefix and 'return;' in true_quote
+            and true_quote in compact(branch[1]))
+
+
+def _indexed_channel_writes(text):
+    """Recognize one complete pair of channel-to-indexed-field assignments."""
+    match = re.fullmatch(
+        r'\s*(?:`([^`]+)`(?:는|은)\s*)?(?:`([^`]+)`의\s*)?'
+        r'`([^`]+)`(?:과|와)\s*`([^`]+)`\s*채널\s*값\s*'
+        r'`([^`]+)`(?:과|와)\s*`([^`]+)`(?:을|를|은|는)\s*각각\s*'
+        r'`([^`]+)`(?:과|와)\s*`([^`]+)`에\s*대입합니다[.]?\s*',
+        _CITATION.sub(' ', text))
+    if not match:
+        return None
+    owner, container, a, b, va, vb, da, db = match.groups()
+    ident = r'[A-Za-z_][A-Za-z0-9_]*'
+    if ((owner and not re.fullmatch(_NAME + r'(?:\(\))?', owner))
+            or (container and not re.fullmatch(_NAME, container)) or a == b):
+        return None
+    reads = [re.fullmatch(rf'({_NAME})\.at\("({ident})"\)\[({ident})\]', v) for v in (va, vb)]
+    if (not all(reads) or reads[0][2] != a or reads[1][2] != b
+            or (reads[0][1], reads[0][3]) != (reads[1][1], reads[1][3])
+            or (container and container != reads[0][1])):
+        return None
+    path = rf'{_NAME}(?:(?:\.|->){ident}|\[{ident}\])+'
+    if any(not re.fullmatch(path, d) or not d.endswith('.' + ch) for d, ch in ((da, a), (db, b))):
+        return None
+    indices = [tuple(re.findall(rf'\[({ident})\]', d)) for d in (da, db)]
+    bases = [d[:d.find(']') + 1] for d in (da, db)]
+    if not indices[0] or indices[0] != indices[1] or bases[0] != bases[1]:
+        return None
+    return (bases[0], indices[0], reads[0][1], reads[0][3]), {a, b}, (da, db), (va, vb), (owner or '').removesuffix('()')
+
+
+def _owned_assignment_bodies(model, section_id, topic_id, row, source, owner):
+    bodies = set()
+    for ref in row.get('evidence', []) or []:
+        record = model.evidence.get(f'{section_id}/{topic_id}/{ref}', {})
+        context = record.get('context')
+        if not isinstance(context, dict):
+            continue
+        text = context.get('text')
+        if (record.get('status') != 'available' or record.get('text') != source
+                or hashlib.sha256(source.encode()).hexdigest() != record.get('sha256')
+                or not isinstance(text, str) or source not in text
+                or hashlib.sha256(text.encode()).hexdigest() != context.get('sha256')):
+            continue
+        span = _function_span(text, owner)
+        if not span or source not in text[span[0]:span[1]]:
+            continue
+        line, first, last = context.get('line'), record.get('line'), record.get('end_line')
+        if not all(isinstance(value, int) and not isinstance(value, bool) and value > 0
+                   for value in (line, first, last)):
+            continue
+        if line + text[:span[0]].count('\n') <= first <= last <= line + text[:span[1]].count('\n'):
+            for match in re.finditer(re.escape(source), text):
+                if (span[0] <= match.start() < match.end() <= span[1]
+                        and line + text[:match.start()].count('\n') == first
+                        and line + text[:match.end()].count('\n') == last):
+                    bodies.add((text[span[0]:span[1]], match.start() - span[0], match.end() - span[0]))
+    return bodies
+
+
+def _different_indexed_writes(model, section_id, topic_id, later, earlier, *, earlier_topic=None):
+    claims = [_indexed_channel_writes(row['text']) for row in (earlier, later)]
+    if (not all(claims) or claims[0][0] != claims[1][0]
+            or claims[0][1] & claims[1][1] or set(claims[0][2]) & set(claims[1][2])):
+        return False
+    sources = [_source_text(model, section_id, tid, row)
+               for row, tid in zip((earlier, later), (earlier_topic or topic_id, topic_id))]
+    if not all(sources) or sources[0] != sources[1]:
+        return False
+    owners = {claim[4] for claim in claims if claim[4]}
+    if len(owners) != 1:
+        return False
+    owner = next(iter(owners))
+    bodies = [_owned_assignment_bodies(model, section_id, tid, row, source, owner)
+              for row, tid, source in zip((earlier, later), (earlier_topic or topic_id, topic_id), sources)]
+    common = bodies[0] & bodies[1]
+    if not common:
+        return False
+    for body, first, last in common:
+        protected = [(m.start(), m.end()) for m in _CODE_NOISE.finditer(body)]
+        supported = set()
+        for claim in claims:
+            for dest, value in zip(claim[2], claim[3]):
+                for match in re.finditer(rf'(?m)^\s*(?P<dest>{re.escape(dest)})\s*=\s*(?P<value>{re.escape(value)})\s*;', body):
+                    if not first <= match.start('dest') < match.end() <= last:
+                        continue
+                    start = match.start('value')
+                    literal = (start + value.index('"'), start + value.rindex('"') + 1)
+                    overlaps = [span for span in protected if span[0] < match.end() and span[1] > match.start()]
+                    if overlaps == [literal]:
+                        supported.add((dest, value))
+        if len(supported) == 4:
+            return True
+    return False
+
+
 def _argument_claim(text: str) -> tuple[str, str, int, str] | None:
     """Recognize a whole, single-fact argument claim, without extra assertions."""
     member = r'[A-Za-z_][A-Za-z0-9_]*(?:(?:\.|->)[A-Za-z_][A-Za-z0-9_]*)+'
@@ -377,6 +583,10 @@ def _clip(text: str, limit: int = 70) -> str:
 def _repeats(model, section_id: str, topic_id: str, later: dict, earlier: dict,
              *, earlier_topic: str | None = None) -> bool:
     return (similar(later['text'], earlier['text']) and not _different_guards(later, earlier)
+            and not _different_bound_booleans(model, section_id, topic_id, later, earlier,
+                                             earlier_topic=earlier_topic)
+            and not _different_indexed_writes(model, section_id, topic_id, later, earlier,
+                                            earlier_topic=earlier_topic)
             and not _different_arguments(model, section_id, topic_id, later, earlier,
                                           earlier_topic=earlier_topic)
             and not _novel_features(model, section_id, topic_id, later, earlier,

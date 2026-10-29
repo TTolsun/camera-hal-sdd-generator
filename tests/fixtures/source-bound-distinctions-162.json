@@ -1,0 +1,77 @@
+{
+  "scope": "Actual native Codex CLI gpt-6.1-terra/high replies from current-main-v6; public e117 sources only; not synthetic manuscript.",
+  "records": [
+    {
+      "case": "indexed-channel-writes",
+      "round": 2,
+      "tag": "ipu3-lsc-prepare_prepare_lut-channels_0",
+      "receipt": "current-main-v6-trials/2/ipu3-lsc-prepare/build/prompts/calls/ed37f2af69384aa68cc0cfd554cd34b1/021.receipt.json",
+      "raw_response": "{\"statements\":[{\"text\":\"`Lsc::prepare`는 `set`의 `r`과 `gr` 채널 값 `set.at(\\\"r\\\")[i]`와 `set.at(\\\"gr\\\")[i]`를 각각 `lut->sets[s].r_and_gr[c].r`과 `lut->sets[s].r_and_gr[c].gr`에 대입합니다. `gb`와 `b` 채널 값 `set.at(\\\"gb\\\")[i]`와 `set.at(\\\"b\\\")[i]`는 각각 `lut->sets[s].gb_and_b[c].gb`와 `lut->sets[s].gb_and_b[c].b`에 대입합니다.\",\"quote_id\":\"lut-writes:0\",\"evidence\":[\"lut-writes\"],\"covers\":[\"prepare\"],\"kind\":\"behavior\"}]}",
+      "text": "`Lsc::prepare`는 `set`의 `r`과 `gr` 채널 값 `set.at(\"r\")[i]`와 `set.at(\"gr\")[i]`를 각각 `lut->sets[s].r_and_gr[c].r`과 `lut->sets[s].r_and_gr[c].gr`에 대입합니다. `gb`와 `b` 채널 값 `set.at(\"gb\")[i]`와 `set.at(\"b\")[i]`는 각각 `lut->sets[s].gb_and_b[c].gb`와 `lut->sets[s].gb_and_b[c].b`에 대입합니다.",
+      "source": {
+        "commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "selector": {
+          "id": "lut-writes",
+          "file": "src/ipa/ipu3/algorithms/lsc.cpp",
+          "start": "for (unsigned int s = 0; s < numSets; s++) {",
+          "end": "lastAppliedCt_ = ct;",
+          "scope": {
+            "start": "void Lsc::prepare(",
+            "end": "void Lsc::process("
+          }
+        },
+        "status": "available",
+        "file": "src/ipa/ipu3/algorithms/lsc.cpp",
+        "line": 263,
+        "end_line": 272,
+        "text": "for (unsigned int s = 0; s < numSets; s++) {\n\t\tfor (unsigned int c = 0; c < cellsPerSet && i < totalCells; c++, i++) {\n\t\t\tlut->sets[s].r_and_gr[c].r = set.at(\"r\")[i];\n\t\t\tlut->sets[s].r_and_gr[c].gr = set.at(\"gr\")[i];\n\t\t\tlut->sets[s].gb_and_b[c].gb = set.at(\"gb\")[i];\n\t\t\tlut->sets[s].gb_and_b[c].b = set.at(\"b\")[i];\n\t\t}\n\t}\n\n\tlastAppliedCt_ = ct;",
+        "sha256": "4b7da473a595e23e82e1e8118afae2c1a044c6e1a510c1ac5e7fd1fd562be119",
+        "whole_file": false,
+        "context": {
+          "text": "void Lsc::prepare([[maybe_unused]] IPAContext &context, [[maybe_unused]] const uint32_t frame,\n\t\t  IPAFrameContext &frameContext, ipu3_uapi_params *params)\n{\n\tuint32_t ct = frameContext.awb.colourTemperature;\n\tunsigned int quantizedCt = quantize(ct, kColourTemperatureQuantization);\n\n\tif (!frameContext.lsc.update) {\n\t\tif (!frameContext.lsc.enabled)\n\t\t\treturn;\n\n\t\t/*\n\t\t * Add a threshold so that oscillations around a quantization\n\t\t * step don't lead to constant changes.\n\t\t */\n\t\tif (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)\n\t\t\treturn;\n\n\t\tif (quantizedCt == lastAppliedQuantizedCt_)\n\t\t\treturn;\n\t}\n\n\t/*\n\t * This flag tells the kernel driver that it should read the LSC params\n\t * passed from userspace instead of using its cached copy.\n\t */\n\tparams->use.acc_shd = 1;\n\n\t/*\n\t * Pass the enabled flag. If we're not enabled, we can then just bail\n\t * out.\n\t */\n\tipu3_uapi_shd_config_static *config = &params->acc_param.shd.shd;\n\tconfig->general.shd_enable = frameContext.lsc.enabled;\n\n\tif (!frameContext.lsc.enabled)\n\t\treturn;\n\n\tconfig->grid.width = numHCells_;\n\tconfig->grid.height = numVCells_;\n\tconfig->grid.block_width_log2 = blockWidthLog2_;\n\tconfig->grid.block_height_log2 = blockHeightLog2_;\n\tconfig->grid.grid_height_per_slice = IPU3_UAPI_SHD_MAX_CELLS_PER_SET / numHCells_;\n\n\t/*\n\t * The IPU3's documentation describes the x_start and y_start members\n\t * as follows:\n\t *\n\t * \"[X/Y] value of top left corner of sensor relative to ROI\n\t * s13, [-4096, 0], default 0, only negative values.\"\n\t *\n\t * I interpret that as allowing us to configure the cropped rectangle\n\t * relative to the full grid. That's useful if we're running the tabular\n\t * algorithm, which would otherwise apply the full grid inappropriately.\n\t * If we're running the polynomial one though the calculated grid is\n\t * probably more appropriate than a coarse application of the full grid\n\t * so let's tell the hardware not to bother correcting in that case.\n\t */\n\tif (polynomial_) {\n\t\tconfig->grid.x_start = 0;\n\t\tconfig->grid.y_start = 0;\n\t} else {\n\t\tconfig->grid.x_start = (cropWidth_ - sensorWidth_) / 2;\n\t\tconfig->grid.y_start = (cropHeight_ - sensorHeight_) / 2;\n\t}\n\n\t/* No idea what this is, but the docs say it should be set as so */\n\tconfig->general.init_set_vrt_offst_ul =\n\t\tconfig->grid.y_start >> (config->grid.block_height_log2 %\n\t\t\t\t\t config->grid.grid_height_per_slice);\n\n\t/*\n\t * Values in the LUT cease taking effect at 4096, and a value of 0.0 is\n\t * \"no correction\" rather than black. The gain factor is described by\n\t * the documentation like so:\n\t *\n\t * \"Shift calculated anti shading value. Precision u2. 0x0 - gain factor\n\t * [1, 5], means no shift interpolated value. 0x1 - gain factor [1, 9],\n\t * means shift interpolated by 1. 0x2 - gain factor [1, 17], means shift\n\t * interpolated by 2.\"\n\t *\n\t * The simplest interpretation for those pieces of information is I\n\t * think that the LUT stores 12-bit Q numbers who's represented values\n\t * depend on the gain_factor setting like so:\n\t *\n\t * 0: UQ<2, 10> representing values in range [0, 4)\n\t * 1: UQ<3, 9> representing values in range [0, 8)\n\t * 2: UQ<4, 8> representing values in range [0, 16)\n\t *\n\t * And that a base gain of 1.0 is added to those configured values. As a\n\t * gain of more than 5.0 is fairly unlikely, let's fix gain_factor to 0\n\t * for now and revisit if needed.\n\t */\n\tconfig->general.gain_factor = 0;\n\n\t/*\n\t * Disable the black level settings here - we do that through another\n\t * parameters block.\n\t */\n\tconfig->black_level.bl_r = 0;\n\tconfig->black_level.bl_gr = 0;\n\tconfig->black_level.bl_gb = 0;\n\tconfig->black_level.bl_b = 0;\n\n\tipu3_uapi_shd_lut *lut = &params->acc_param.shd.shd_lut;\n\n\tconst auto &set = lscAlgo_.interpolateComponents(quantizedCt);\n\n\tunsigned int totalCells = numHCells_ * numVCells_;\n\tunsigned int cellsPerSet = numHCells_ * config->grid.grid_height_per_slice;\n\tunsigned int numSets = (numHCells_ + config->grid.grid_height_per_slice - 1) /\n\t\t\t       config->grid.grid_height_per_slice;\n\tunsigned int i = 0;\n\n\tfor (unsigned int s = 0; s < numSets; s++) {\n\t\tfor (unsigned int c = 0; c < cellsPerSet && i < totalCells; c++, i++) {\n\t\t\tlut->sets[s].r_and_gr[c].r = set.at(\"r\")[i];\n\t\t\tlut->sets[s].r_and_gr[c].gr = set.at(\"gr\")[i];\n\t\t\tlut->sets[s].gb_and_b[c].gb = set.at(\"gb\")[i];\n\t\t\tlut->sets[s].gb_and_b[c].b = set.at(\"b\")[i];\n\t\t}\n\t}\n\n\tlastAppliedCt_ = ct;\n\tlastAppliedQuantizedCt_ = quantizedCt;\n\tLOG(IPU3Lsc, Debug)\n\t\t<< \"ct is \" << ct << \", quantized to \"\n\t\t<< quantizedCt;\n}\n\n/**\n * \\copydoc libcamera::ipa::Algorithm::process\n */\nvoid Lsc::process(",
+          "sha256": "6c331a4e03e6b7bdb6da4c5902f8b3721d08c555c5c3bd7c58e115ec39278de1",
+          "line": 150,
+          "end_line": 282
+        }
+      },
+      "quote": "for (unsigned int s = 0; s < numSets; s++) {\n\t\tfor (unsigned int c = 0; c < cellsPerSet && i < totalCells; c++, i++) {\n\t\t\tlut->sets[s].r_and_gr[c].r = set.at(\"r\")[i];\n\t\t\tlut->sets[s].r_and_gr[c].gr = set.at(\"gr\")[i];\n\t\t\tlut->sets[s].gb_and_b[c].gb = set.at(\"gb\")[i];\n\t\t\tlut->sets[s].gb_and_b[c].b = set.at(\"b\")[i];\n\t\t}\n\t}\n\n\tlastAppliedCt_ = ct;"
+    },
+    {
+      "case": "unqualified-member-guard",
+      "round": 3,
+      "tag": "ipu3-lsc-prepare_prepare_ct-threshold_0",
+      "receipt": "current-main-v6-trials/3/ipu3-lsc-prepare/build/prompts/calls/1ec37f64c6474d2da704c862a980d1b5/003.receipt.json",
+      "raw_response": "{\"statements\":[{\"text\":\"`Lsc::prepare`는 `update`가 false이고 `enabled`가 true이면 먼저 원래 색온도 `ct`와 `lastAppliedCt_`의 절대 차이가 `kColourTemperatureQuantization / 2`보다 작을 때 반환하고, 그 차이가 경계값 이상이면 `quantizedCt`가 `lastAppliedQuantizedCt_`와 같을 때 반환합니다.\",\"quote_id\":\"prepare:3\",\"evidence\":[\"prepare\"],\"covers\":[\"prepare\"],\"kind\":\"behavior\"}]}",
+      "text": "`Lsc::prepare`는 `update`가 false이고 `enabled`가 true이면 먼저 원래 색온도 `ct`와 `lastAppliedCt_`의 절대 차이가 `kColourTemperatureQuantization / 2`보다 작을 때 반환하고, 그 차이가 경계값 이상이면 `quantizedCt`가 `lastAppliedQuantizedCt_`와 같을 때 반환합니다.",
+      "earlier": {
+        "text": "`Lsc::prepare`는 `frameContext.lsc.update`가 false이고 `frameContext.lsc.enabled`도 false이면 반환합니다.",
+        "evidence": [
+          "prepare"
+        ],
+        "covers": [
+          "prepare"
+        ],
+        "kind": "behavior",
+        "quote": "if (!frameContext.lsc.update) {\n\t\tif (!frameContext.lsc.enabled)\n\t\t\treturn;",
+        "part_id": "disabled-no-update"
+      },
+      "source": {
+        "commit": "e117198c015057761bb0bbaa85f963c41ce412d7",
+        "selector": {
+          "id": "prepare",
+          "file": "src/ipa/ipu3/algorithms/lsc.cpp",
+          "start": "static unsigned int quantize(",
+          "end": "void Lsc::process("
+        },
+        "status": "available",
+        "file": "src/ipa/ipu3/algorithms/lsc.cpp",
+        "line": 142,
+        "end_line": 282,
+        "text": "static unsigned int quantize(unsigned int value, unsigned int step)\n{\n\treturn std::lround(value / static_cast<double>(step)) * step;\n}\n\n/**\n * \\copydoc libcamera::ipa::Algorithm::prepare\n */\nvoid Lsc::prepare([[maybe_unused]] IPAContext &context, [[maybe_unused]] const uint32_t frame,\n\t\t  IPAFrameContext &frameContext, ipu3_uapi_params *params)\n{\n\tuint32_t ct = frameContext.awb.colourTemperature;\n\tunsigned int quantizedCt = quantize(ct, kColourTemperatureQuantization);\n\n\tif (!frameContext.lsc.update) {\n\t\tif (!frameContext.lsc.enabled)\n\t\t\treturn;\n\n\t\t/*\n\t\t * Add a threshold so that oscillations around a quantization\n\t\t * step don't lead to constant changes.\n\t\t */\n\t\tif (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)\n\t\t\treturn;\n\n\t\tif (quantizedCt == lastAppliedQuantizedCt_)\n\t\t\treturn;\n\t}\n\n\t/*\n\t * This flag tells the kernel driver that it should read the LSC params\n\t * passed from userspace instead of using its cached copy.\n\t */\n\tparams->use.acc_shd = 1;\n\n\t/*\n\t * Pass the enabled flag. If we're not enabled, we can then just bail\n\t * out.\n\t */\n\tipu3_uapi_shd_config_static *config = &params->acc_param.shd.shd;\n\tconfig->general.shd_enable = frameContext.lsc.enabled;\n\n\tif (!frameContext.lsc.enabled)\n\t\treturn;\n\n\tconfig->grid.width = numHCells_;\n\tconfig->grid.height = numVCells_;\n\tconfig->grid.block_width_log2 = blockWidthLog2_;\n\tconfig->grid.block_height_log2 = blockHeightLog2_;\n\tconfig->grid.grid_height_per_slice = IPU3_UAPI_SHD_MAX_CELLS_PER_SET / numHCells_;\n\n\t/*\n\t * The IPU3's documentation describes the x_start and y_start members\n\t * as follows:\n\t *\n\t * \"[X/Y] value of top left corner of sensor relative to ROI\n\t * s13, [-4096, 0], default 0, only negative values.\"\n\t *\n\t * I interpret that as allowing us to configure the cropped rectangle\n\t * relative to the full grid. That's useful if we're running the tabular\n\t * algorithm, which would otherwise apply the full grid inappropriately.\n\t * If we're running the polynomial one though the calculated grid is\n\t * probably more appropriate than a coarse application of the full grid\n\t * so let's tell the hardware not to bother correcting in that case.\n\t */\n\tif (polynomial_) {\n\t\tconfig->grid.x_start = 0;\n\t\tconfig->grid.y_start = 0;\n\t} else {\n\t\tconfig->grid.x_start = (cropWidth_ - sensorWidth_) / 2;\n\t\tconfig->grid.y_start = (cropHeight_ - sensorHeight_) / 2;\n\t}\n\n\t/* No idea what this is, but the docs say it should be set as so */\n\tconfig->general.init_set_vrt_offst_ul =\n\t\tconfig->grid.y_start >> (config->grid.block_height_log2 %\n\t\t\t\t\t config->grid.grid_height_per_slice);\n\n\t/*\n\t * Values in the LUT cease taking effect at 4096, and a value of 0.0 is\n\t * \"no correction\" rather than black. The gain factor is described by\n\t * the documentation like so:\n\t *\n\t * \"Shift calculated anti shading value. Precision u2. 0x0 - gain factor\n\t * [1, 5], means no shift interpolated value. 0x1 - gain factor [1, 9],\n\t * means shift interpolated by 1. 0x2 - gain factor [1, 17], means shift\n\t * interpolated by 2.\"\n\t *\n\t * The simplest interpretation for those pieces of information is I\n\t * think that the LUT stores 12-bit Q numbers who's represented values\n\t * depend on the gain_factor setting like so:\n\t *\n\t * 0: UQ<2, 10> representing values in range [0, 4)\n\t * 1: UQ<3, 9> representing values in range [0, 8)\n\t * 2: UQ<4, 8> representing values in range [0, 16)\n\t *\n\t * And that a base gain of 1.0 is added to those configured values. As a\n\t * gain of more than 5.0 is fairly unlikely, let's fix gain_factor to 0\n\t * for now and revisit if needed.\n\t */\n\tconfig->general.gain_factor = 0;\n\n\t/*\n\t * Disable the black level settings here - we do that through another\n\t * parameters block.\n\t */\n\tconfig->black_level.bl_r = 0;\n\tconfig->black_level.bl_gr = 0;\n\tconfig->black_level.bl_gb = 0;\n\tconfig->black_level.bl_b = 0;\n\n\tipu3_uapi_shd_lut *lut = &params->acc_param.shd.shd_lut;\n\n\tconst auto &set = lscAlgo_.interpolateComponents(quantizedCt);\n\n\tunsigned int totalCells = numHCells_ * numVCells_;\n\tunsigned int cellsPerSet = numHCells_ * config->grid.grid_height_per_slice;\n\tunsigned int numSets = (numHCells_ + config->grid.grid_height_per_slice - 1) /\n\t\t\t       config->grid.grid_height_per_slice;\n\tunsigned int i = 0;\n\n\tfor (unsigned int s = 0; s < numSets; s++) {\n\t\tfor (unsigned int c = 0; c < cellsPerSet && i < totalCells; c++, i++) {\n\t\t\tlut->sets[s].r_and_gr[c].r = set.at(\"r\")[i];\n\t\t\tlut->sets[s].r_and_gr[c].gr = set.at(\"gr\")[i];\n\t\t\tlut->sets[s].gb_and_b[c].gb = set.at(\"gb\")[i];\n\t\t\tlut->sets[s].gb_and_b[c].b = set.at(\"b\")[i];\n\t\t}\n\t}\n\n\tlastAppliedCt_ = ct;\n\tlastAppliedQuantizedCt_ = quantizedCt;\n\tLOG(IPU3Lsc, Debug)\n\t\t<< \"ct is \" << ct << \", quantized to \"\n\t\t<< quantizedCt;\n}\n\n/**\n * \\copydoc libcamera::ipa::Algorithm::process\n */\nvoid Lsc::process(",
+        "sha256": "1d11fc7397b377f682d4fab45d12dd20480e554176aae94ba2708a5f8f747268",
+        "whole_file": false
+      },
+      "quote": "\t\t/*\n\t\t * Add a threshold so that oscillations around a quantization\n\t\t * step don't lead to constant changes.\n\t\t */\n\t\tif (utils::abs_diff(ct, lastAppliedCt_) < kColourTemperatureQuantization / 2)\n\t\t\treturn;"
+    }
+  ]
+}
