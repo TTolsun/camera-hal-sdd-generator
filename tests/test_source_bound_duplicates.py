@@ -42,7 +42,7 @@ def findings(source, rows):
     return duplicates.statement_findings(model, 's', {'t': rows})
 
 
-@pytest.mark.parametrize('name', ['indexed-channel-writes', 'indexed-channel-member-shorthand', 'unqualified-member-guard'])
+@pytest.mark.parametrize('name', ['indexed-channel-writes', 'indexed-channel-member-shorthand', 'unqualified-member-guard', 'unqualified-member-guard-complement'])
 def test_actual_native_false_positive_is_distinct_with_original_bound_sources(name):
     source, rows = fixture(name)
     assert hashlib.sha256(source['text'].encode()).hexdigest() == source['sha256']
@@ -51,7 +51,7 @@ def test_actual_native_false_positive_is_distinct_with_original_bound_sources(na
     assert duplicates.SIMILARITY == .7 and duplicates.MINIMUM_SHARED == 6
 
 
-@pytest.mark.parametrize('name', ['indexed-channel-writes', 'indexed-channel-member-shorthand', 'unqualified-member-guard'])
+@pytest.mark.parametrize('name', ['indexed-channel-writes', 'indexed-channel-member-shorthand', 'unqualified-member-guard', 'unqualified-member-guard-complement'])
 @pytest.mark.parametrize('change', ['missing-quote', 'unknown-quote', 'bad-hash', 'unavailable'])
 def test_distinctions_need_authentic_bound_source(name, change):
     source, rows = fixture(name)
@@ -336,4 +336,16 @@ def test_member_index_shorthand_retains_full_mapping_proof(change):
     else:
         text = text.replace('또한', '커널을 활성화하고 또한')
     rows[0]['text'] = text
+    assert findings(source, rows)
+
+
+@pytest.mark.parametrize('change', ['same-first-condition', 'extra-effect', 'wrong-comparison'])
+def test_return_complement_is_bound_to_the_immediate_pure_source_comparison(change):
+    source, rows = fixture('unqualified-member-guard-complement')
+    if change == 'same-first-condition':
+        rows[-1]['text'] = rows[-1]['text'].replace('그렇지 않으면', '같은 조건이면')
+    elif change == 'extra-effect':
+        rows[-1]['text'] = rows[-1]['text'].replace('그렇지 않으면', '커널을 활성화하고 그렇지 않으면')
+    else:
+        rows[-1]['text'] = rows[-1]['text'].replace('보다 작을', '보다 클')
     assert findings(source, rows)

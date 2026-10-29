@@ -2950,8 +2950,9 @@ sections:
         - - 반환
           - return
     - id: ct-threshold
-      question: update가 false이며 enabled가 true인 경로에서 원래 색온도 차이와 양자화 색온도 비교는 어떤 순서로
-        조기 반환을 결정합니까? 두 검사와 각 경계 조건을 함께 한 문장으로 설명하고 공통 전제는 한 번만 쓰세요.
+      question: frameContext.lsc.update가 false이며 frameContext.lsc.enabled가 true인 경로에서 원래 색온도
+        차이와 양자화 색온도 비교는 어떤 순서로 조기 반환을 결정합니까? 조건의 소유 멤버 경로를 명시하고 두 검사와 각 경계 조건을 함께 한 문장으로 설명하세요.
+        공통 전제는 한 번만 쓰세요.
       sources:
       - prepare
       - constants
@@ -2962,6 +2963,8 @@ sections:
         - - kColourTemperatureQuantization
         - - quantizedCt
         - - lastAppliedQuantizedCt_
+        - - frameContext.lsc.update
+        - - frameContext.lsc.enabled
       max_statements: 1
     - id: upload
       question: 앞의 조기 반환을 통과한 경로에서 params->use.acc_shd에 기록하는 값과 그 플래그의 의미만 설명하세요.

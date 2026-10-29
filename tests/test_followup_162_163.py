@@ -167,3 +167,15 @@ def test_lut_mapping_question_requires_explicit_source_expressions_without_new_s
     record = json.loads((Path(__file__).parent / 'fixtures/source-bound-distinctions-162.json').read_text(encoding='utf-8'))['records'][0]
     assert len(record['text']) <= 600
     assert not check(part['answer_contract'], [{'text': record['text']}], 'mapping')
+
+
+def test_ct_threshold_conditions_name_the_source_owner_without_removing_comparisons():
+    cfg = load(Path(__file__).parents[1] / 'examples/libcamera/sdd.yaml')
+    sec = next(s for s in cfg.sections() if s['id'] == 'ipu3-lsc-prepare')
+    topic = next(t for t in sec['design_topics'] if t['id'] == 'prepare')
+    part = next(p for p in topic['parts'] if p['id'] == 'ct-threshold')
+    assert part['sources'] == ['prepare', 'constants']
+    assert part['max_statements'] == 1 and part['answer_contract']['basis'] == 'implementation'
+    for term in ['frameContext.lsc.update','frameContext.lsc.enabled','lastAppliedCt_',
+                 'kColourTemperatureQuantization','quantizedCt','lastAppliedQuantizedCt_']:
+        assert [term] in part['answer_contract']['required_terms']
