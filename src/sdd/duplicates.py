@@ -303,7 +303,7 @@ def _different_bound_booleans(model, section_id, topic_id, later, earlier, *, ea
         return False
     comparison = re.fullmatch(
         r'먼저\s+(?:원래\s+[가-힣]+\s+)?`([^`]+)`와\s*`([^`]+)`의\s*절대\s*차이가\s*'
-        r'`([^`]+)`보다\s*작을\s*때\s*반환하고,\s*그\s*차이가\s*경계값\s*이상이면\s*'
+        r'`([^`]+)`보다\s*작을\s*때\s*반환하고,\s*그\s*차이가\s*(?:경계값|해당\s*값)\s*이상이면\s*'
         r'`([^`]+)`가\s*`([^`]+)`와\s*같을\s*때\s*반환합니다[.]?', claims[positive][5])
     if not comparison:
         return False
