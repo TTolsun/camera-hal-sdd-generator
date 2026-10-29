@@ -7,8 +7,7 @@ from .llm import Agent, SCHEMA_KINDS
 from .site_localization import KOREAN
 
 _QUEUE_TERMINOLOGY = (
-    ' Translate 대기 요청 as waiting requests. Keep this waiting-queue scope distinct '
-    'from device-side pending requests; do not broaden it to every incomplete request.'
+    ' 대기 요청: waiting requests. Preserve its queue scope.'
 )
 
 
