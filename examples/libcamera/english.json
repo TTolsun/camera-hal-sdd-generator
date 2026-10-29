@@ -1894,6 +1894,10 @@
   "획득": "Acquire",
   "획득부터 해제까지의 연동 순서": "Integration sequence from acquisition to release",
   "후보 또는 예약 대상": "Candidate or dispatch target",
-  "후처리 뒤 구현자가 명시적으로 호출": "Handler explicitly completes after remaining work"
+  "후처리 뒤 구현자가 명시적으로 호출": "Handler explicitly completes after remaining work",
+  "문서·절·용어·코드 요소 검색": "Search documents, sections, terms and symbols",
+  "그림 요소·함수 이름": "Diagram element or function name",
+  "그림이 화면보다 크면 가로·세로로 밀어 보세요. 전체 모양은 화면에 맞춤으로 확인합니다.": "Scroll horizontally or vertically when the diagram is larger than the screen. Use Fit to see the whole diagram.",
+  "이전 링크의 목적지": "Destination of the previous link"
  }
 }
