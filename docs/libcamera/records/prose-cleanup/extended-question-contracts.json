@@ -1,0 +1,338 @@
+[
+  {
+    "section": "camera-requests",
+    "topic": "lifetime",
+    "combined": [
+      "reset-buffer-link",
+      "reset-pending"
+    ],
+    "sources": [
+      "reuse-link-call",
+      "reuse-buffers"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "ReuseBuffers"
+      ],
+      [
+        "setRequest"
+      ],
+      [
+        "pending_"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "resources",
+    "combined": [
+      "reset-buffer-link",
+      "reset-pending"
+    ],
+    "sources": [
+      "reuse-link-call",
+      "reuse-buffers"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "ReuseBuffers"
+      ],
+      [
+        "setRequest"
+      ],
+      [
+        "pending_"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "journey",
+    "combined": [
+      "waiting",
+      "waiting-prepared"
+    ],
+    "sources": [
+      "device-queue",
+      "waiting-prepared"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "waitingRequests_"
+      ],
+      [
+        "maxQueuedRequestsDevice_"
+      ],
+      [
+        "prepared_"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "journey",
+    "combined": [
+      "device-result",
+      "device-error"
+    ],
+    "sources": [
+      "device-contract"
+    ],
+    "basis": "description",
+    "required_terms": [
+      [
+        "queueRequestDevice"
+      ],
+      [
+        "0"
+      ],
+      [
+        "음수"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "journey",
+    "combined": [
+      "buffer-complete",
+      "request-duty"
+    ],
+    "sources": [
+      "buffer-notice",
+      "completion",
+      "request-duty"
+    ],
+    "basis": "contract",
+    "required_terms": [
+      [
+        "completeBuffer"
+      ],
+      [
+        "완료"
+      ],
+      [
+        "completeRequest"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "journey",
+    "combined": [
+      "request-complete",
+      "request-head"
+    ],
+    "sources": [
+      "request-notice",
+      "completed-head"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "completeRequest"
+      ],
+      [
+        "RequestPending"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "stopping",
+    "combined": [
+      "camera-entry",
+      "blocking",
+      "blocking-call"
+    ],
+    "sources": [
+      "stop",
+      "stopping-call"
+    ],
+    "basis": "investigation",
+    "required_terms": [
+      [
+        "stop"
+      ],
+      [
+        "0"
+      ],
+      [
+        "CameraStopping",
+        "Stopping"
+      ],
+      [
+        "ConnectionTypeBlocking"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "stopping",
+    "combined": [
+      "disconnect-todo",
+      "disconnect-todo-owner"
+    ],
+    "sources": [
+      "disconnect-todo",
+      "disconnect-todo-owner"
+    ],
+    "basis": "description",
+    "required_terms": [
+      [
+        "요청",
+        "Request",
+        "request"
+      ],
+      [
+        "disconnect"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "review",
+    "combined": [
+      "reuse-data-record",
+      "reuse-metadata-record"
+    ],
+    "sources": [
+      "record-controls",
+      "record-metadata"
+    ],
+    "basis": "investigation",
+    "required_terms": [
+      [
+        "controls_"
+      ],
+      [
+        "기록"
+      ],
+      [
+        "metadata_"
+      ]
+    ]
+  },
+  {
+    "section": "request-lifecycle",
+    "topic": "review",
+    "combined": [
+      "stop-queued-record",
+      "stop-waiting-record"
+    ],
+    "sources": [
+      "record-queued",
+      "record-waiting"
+    ],
+    "basis": "investigation",
+    "required_terms": [
+      [
+        "queuedRequests_"
+      ],
+      [
+        "기록"
+      ],
+      [
+        "waitingRequests_"
+      ]
+    ]
+  },
+  {
+    "section": "request-diagnosis",
+    "topic": "configuration-failure",
+    "combined": [
+      "access",
+      "access-state"
+    ],
+    "sources": [
+      "access",
+      "state-range"
+    ],
+    "basis": "investigation",
+    "required_terms": [
+      [
+        "disconnected_"
+      ],
+      [
+        "-ENODEV"
+      ],
+      [
+        "currentState"
+      ],
+      [
+        "low"
+      ],
+      [
+        "high"
+      ]
+    ]
+  },
+  {
+    "section": "request-diagnosis",
+    "topic": "diagnosis",
+    "combined": [
+      "cancelled",
+      "device-result"
+    ],
+    "sources": [
+      "cancelled-branch",
+      "device-result-branch"
+    ],
+    "basis": "investigation",
+    "required_terms": [
+      [
+        "doQueueRequest"
+      ],
+      [
+        "cancelled_"
+      ],
+      [
+        "completeRequest"
+      ],
+      [
+        "queueRequestDevice"
+      ],
+      [
+        "반환"
+      ],
+      [
+        "cancelRequest"
+      ]
+    ]
+  },
+  {
+    "section": "rkisp1-dewarp",
+    "topic": "application",
+    "combined": [
+      "unconfigured-controls",
+      "runtime"
+    ],
+    "sources": [
+      "controls-entry",
+      "controls"
+    ],
+    "basis": "implementation",
+    "required_terms": [
+      [
+        "isConfigured"
+      ],
+      [
+        "반환",
+        "return",
+        "종료"
+      ],
+      [
+        "update"
+      ],
+      [
+        "running_"
+      ],
+      [
+        "supportsRequests"
+      ]
+    ]
+  }
+]
