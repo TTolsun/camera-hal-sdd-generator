@@ -1,0 +1,34 @@
+[
+  {
+    "firstH3PreviousTag": "P",
+    "paragraphRows": 0,
+    "scrollWidth": 1425,
+    "sections": 5,
+    "url": "http://127.0.0.1:8769/vendor-overview.html",
+    "width": 1440
+  },
+  {
+    "firstH3PreviousTag": "P",
+    "paragraphRows": 0,
+    "scrollWidth": 1425,
+    "sections": 5,
+    "url": "http://127.0.0.1:8769/en/vendor-overview.html",
+    "width": 1440
+  },
+  {
+    "firstH3PreviousTag": "P",
+    "paragraphRows": 0,
+    "scrollWidth": 375,
+    "sections": 5,
+    "url": "http://127.0.0.1:8769/vendor-overview.html",
+    "width": 390
+  },
+  {
+    "firstH3PreviousTag": "P",
+    "paragraphRows": 0,
+    "scrollWidth": 375,
+    "sections": 5,
+    "url": "http://127.0.0.1:8769/en/vendor-overview.html",
+    "width": 390
+  }
+]

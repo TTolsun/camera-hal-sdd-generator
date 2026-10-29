@@ -1,0 +1,5 @@
+{
+  "first_attempt": "Failed after all output hashes were fetched: a strict lexical task-goal comparison found HAL -> libcamera in team-overview.",
+  "review": "Original preregistration remains unchanged. Completion text and required IDs must match exactly. The only accepted wording difference is the explicitly checked public target name in that one task; it is recorded in public-http-proof.json. No generation, product or source validation gate was changed.",
+  "subsequent": "Full public verification rerun passed; live manifest equals the public merge commit and stayed stable."
+}

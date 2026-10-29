@@ -1,0 +1,17 @@
+from pathlib import Path
+import re,json,html,argparse
+ap=argparse.ArgumentParser();ap.add_argument('site',type=Path);ap.add_argument('--output',type=Path,default=Path('build/goal-164-166/section-union-proof.json'));a=ap.parse_args();pages=[]
+for p in sorted(a.site.rglob('*.html')):
+ text=p.read_text(encoding='utf-8');mapped=0;destinations=0
+ for part in re.split(r'<h[12]\b[^>]*>.*?</h[12]>',text,flags=re.S):
+  panels=re.findall(r'<details class="evidence-links evidence-section">.*?</details>',part,re.S)
+  hrefs={html.unescape(x) for panel in panels for x in re.findall(r'href="([^"]+)"',panel)}
+  for raw in re.findall(r'data-sdd-evidence="([^"]+)"',part):
+   mapped+=1
+   for cite,element in json.loads(html.unescape(raw)):
+    target=re.search(r'href="([^"]+)"',element)
+    if target:
+     assert html.unescape(target[1]) in hrefs,(str(p),cite,target[1]);destinations+=1
+ pages.append(dict(page=p.relative_to(a.site).as_posix(),paragraph_mappings=mapped,verified_mapped_link_destinations=destinations))
+proof=dict(scope='Every mapped paragraph hyperlink must remain accessible in its parent H1/H2 section panel. Static HTML inspection, not human evaluation.',build_id=json.loads((a.site/'site-manifest.json').read_text())['build_id'],pages=pages,html_pages=len(pages),paragraph_mappings=sum(p['paragraph_mappings'] for p in pages),mapped_link_destinations=sum(p['verified_mapped_link_destinations'] for p in pages),all_preserved=True)
+a.output.write_text(json.dumps(proof,indent=2)+'\n',encoding='utf-8');print({k:v for k,v in proof.items() if k!='pages'})
