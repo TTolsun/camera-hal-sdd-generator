@@ -98,6 +98,11 @@ def candidate(section, data):
         covered = {rid for topic in section.get('design_topics', [])
                    if topic['id'] in assessment['existing_topics']
                    for rid in topic.get('covers', [])}
+        covered.update(rid for topic in section.get('design_topics', [])
+                       if topic['id'] in assessment['existing_topics']
+                       for statement in topic.get('statements', [])
+                       if statement.get('kind', 'behavior') != 'limitation'
+                       for rid in statement.get('covers', []))
         if not required & covered:
             raise ValueError('Existing answer location does not cover the selected task.')
     if data.get('kind') == 'no_gap' and assessment['disposition'] not in {'already-covered', 'out-of-scope'}:
