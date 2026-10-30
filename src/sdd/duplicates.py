@@ -607,12 +607,21 @@ def _repeats(model, section_id: str, topic_id: str, later: dict, earlier: dict,
                                     earlier_topic=earlier_topic))
 
 
+def summary_keys(section: dict) -> set[tuple[str, str]]:
+    """(주제 id, part id) of topic summaries, which later details may restate in full."""
+    return {(topic["id"], part["id"]) for topic in section.get("design_topics", [])
+            for part in topic.get("parts", []) if part.get("role") == "summary"}
+
+
 def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
-                       *, only_after: dict[str, int] | None = None) -> list[str]:
+                       *, only_after: dict[str, int] | None = None,
+                       summaries: set[tuple[str, str]] = frozenset()) -> list[str]:
     """설계 답변 문장 사이의 중복. 앞 문장과 뜻이 겹치는 뒤 문장을 반려 사유로 돌려준다.
 
     only_after 가 있으면 주제별로 그 개수 뒤에 온 문장만 뒤 문장으로 본다. 재요청 때 이미 통과한
     앞 문장끼리의 관계는 다시 지적하지 않고, 새로 추가한 문장만 검사하기 위해 쓴다.
+    summaries 의 주제 요약은 뒤 설명이 자세히 풀어 쓰는 문장이므로 앞 문장으로 비교하지 않는다.
+    요약 자신은 그보다 앞의 설명과 계속 비교한다.
     """
     def evidence_ids(topic_id: str, statement: dict) -> frozenset[str]:
         ids = set()
@@ -655,7 +664,8 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
                             f"설명과 같은 근거로 같은 내용을 되풀이합니다: \"{_clip(text)}\" ≈ \"{_clip(other_text)}\". "
                             "앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.")
                         break
-            seen.append((topic_id, index, statement, evidence))
+            if (topic_id, statement.get("part_id")) not in summaries:
+                seen.append((topic_id, index, statement, evidence))
     return findings
 
 
@@ -720,7 +730,7 @@ def repeated_topics(model, section: dict, answers: dict[str, list[dict]]) -> lis
             continue
         trial = {**kept, tid: answers[tid]}
         skip = {key: len(value) for key, value in kept.items()}
-        if statement_findings(model, section["id"], trial, only_after=skip):
+        if statement_findings(model, section["id"], trial, only_after=skip, summaries=summary_keys(section)):
             dropped.append(tid)
         else:
             kept[tid] = answers[tid]

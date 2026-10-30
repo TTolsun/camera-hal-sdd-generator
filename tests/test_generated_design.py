@@ -1486,3 +1486,63 @@ def test_게시_검증은_중복_문장을_경고로만_보고하고_생성은_�
         validate_answers(model, section, answers)
     _, _, report = validate_answers(model, section, answers, enforce_repeats=False)
     assert report['status'] == 'documented'
+
+
+def _summary_agent(base_agent, summary_text):
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            if len(self.calls) == 1:
+                statement['text'] = summary_text
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+    return Agent()
+
+
+SUMMARY_TEXT = '`stop()`은 종료 시 대기 중인 요청을 취소하는 함수를 호출합니다.'
+
+
+def test_주제_요약은_첫_문단으로_따로_쓰고_뒤_설명의_중복_비교_대상에서_빠진다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='core', role='summary', question='종료에서 먼저 알아야 할 결론은 무엇입니까?', sources=['stop']),
+                      dict(id='detail', question='종료 진입점은 무엇을 호출합니까?', sources=['stop'])]
+    save()
+    agent = _summary_agent(base_agent, SUMMARY_TEXT)
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert 'opening summary' in agent.calls[0]
+    assert 'opening summary' not in agent.calls[1]
+    body = path.read_text(encoding='utf-8').split('\n---\n', 1)[1]
+    detail = base_agent.statement['text']
+    # 요약은 상세 설명과 같은 문단에 합치지 않고 앞에 둔다.
+    assert f'{SUMMARY_TEXT} `device.cpp:10`\n\n{detail} `device.cpp:10`' in body
+    assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
+def test_요약_역할이_없으면_같은_내용의_뒤_설명은_중복으로_거절된다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='core', question='종료에서 먼저 알아야 할 결론은 무엇입니까?', sources=['stop']),
+                      dict(id='detail', question='종료 진입점은 무엇을 호출합니까?', sources=['stop'])]
+    save()
+    with pytest.raises(ValueError, match='의미 중복'):
+        Generator(tmp_cfg, model, _summary_agent(base_agent, SUMMARY_TEXT)).run()
+
+
+@pytest.mark.parametrize('parts', [
+    [dict(id='detail', question='무엇을 호출합니까?', sources=['stop']),
+     dict(id='core', role='summary', question='결론은 무엇입니까?', sources=['stop'])],
+    [dict(id='core', role='summary', question='결론은 무엇입니까?', sources=['stop'])],
+    [dict(id='core', role='intro', question='결론은 무엇입니까?', sources=['stop']),
+     dict(id='detail', question='무엇을 호출합니까?', sources=['stop'])],
+    [dict(id='core', role='summary', max_statements=3, question='결론은 무엇입니까?', sources=['stop']),
+     dict(id='detail', question='무엇을 호출합니까?', sources=['stop'])],
+])
+def test_요약_part는_상세_part_앞의_첫_part에만_둘_수_있다(tmp_cfg, generated, parts):
+    section, model, save, agent = generated
+    section['design_topics'][0]['parts'] = parts
+    save()
+    with pytest.raises(ValueError, match='role: summary'):
+        Generator(tmp_cfg, model, agent).run()
+    assert not agent.calls

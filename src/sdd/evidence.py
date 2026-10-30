@@ -170,6 +170,11 @@ def _paragraphs(entries: list[tuple[str, str, list[str]]], *, grouped: bool = Tr
     return paragraphs
 
 
+def summary_parts(topic: dict) -> set[str]:
+    """Part IDs whose answers open the topic as its summary paragraph."""
+    return {p['id'] for p in topic.get('parts', []) if isinstance(p, dict) and p.get('role') == 'summary'}
+
+
 def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: bool = True) -> tuple[str, list[str]]:
     """Render authored statements only while every linked excerpt matches its pin.
 
@@ -181,6 +186,7 @@ def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: 
         raise ValueError('grouped must be a boolean')
     entries, gaps = [], []
     sources = {s['id']: s for s in topic.get('sources', [])}
+    summaries = summary_parts(topic)
     for statement in topic.get('statements', []):
         if not isinstance(statement.get('text'), str) or not statement['text'].strip():
             gaps.append('비어 있는 설계 설명이 있습니다.')
@@ -199,7 +205,9 @@ def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: 
                 citations.append(f"`{record['file']}:{record['line']}`")
         if not statement.get('evidence'):
             gaps.append('근거가 연결되지 않은 설계 설명이 있습니다.')
-        entries.append((statement.get('kind', 'behavior'), str(statement.get('text', '')), citations))
+        # 요약은 뒤의 상세 설명과 한 문단으로 묶지 않는다. 표시 종류만 다르고 근거 검사는 같다.
+        kind = 'summary' if statement.get('part_id') in summaries else statement.get('kind', 'behavior')
+        entries.append((kind, str(statement.get('text', '')), citations))
     paragraphs = _paragraphs(entries, grouped=grouped)
     if not paragraphs:
         gaps.append('설계 설명이 없습니다.')

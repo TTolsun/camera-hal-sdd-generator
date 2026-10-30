@@ -189,7 +189,8 @@ def materialize(model, section, answers, enforce_repeats=True):
             record = model.evidence[key]
             source['sha256'] = record['sha256']
             pinned.evidence[key] = {**record, 'selector': copy.deepcopy(source)}
-    repeated = duplicates.statement_findings(model, section['id'], {t['id']: answers[t['id']] for t in section['design_topics']})
+    repeated = duplicates.statement_findings(model, section['id'], {t['id']: answers[t['id']] for t in section['design_topics']},
+                                             summaries=duplicates.summary_keys(section))
     if repeated and enforce_repeats:
         raise ValueError(' / '.join(repeated))
     pinned.repeated_findings = repeated

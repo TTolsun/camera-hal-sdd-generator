@@ -4912,26 +4912,31 @@ sections:
     covers:
     - journey
     parts:
-    - id: create
-      question: createRequest의 반환 타입과 반환되는 객체의 종류만 소개하세요. 소유권과 소멸 책임은 자원 수명 절에서 설명하므로
-        여기서는 반복하지 마세요.
+    - id: summary
+      role: summary
+      question: queueRequest가 성공을 반환해도 촬영이 끝난 것은 아니며, 요청 완료는 파이프라인 핸들러가 명시적으로 알린 뒤
+        제출 순서대로 애플리케이션에 돌아온다는 결론을 쉬운 말로 먼저 설명하세요.
       sources:
-      - create
-      max_statements: 1
+      - queue
+      - request-duty
+      - completed-head
+      max_statements: 2
       answer_contract:
         basis: description
         required_terms:
-        - - createRequest
-        - - unique_ptr
-        - - Request
+        - - queueRequest
+        - - 완료
     - id: buffer
-      question: 버퍼를 요청의 어느 스트림에 연결하는 API인지 설명하세요.
+      question: createRequest로 만든 요청에 addBuffer로 버퍼를 연결할 때 버퍼가 어느 스트림에 속하는지 지정한다는 점을 한
+        문장으로 설명하세요. 반환 타입과 소유권은 설명하지 마세요.
       sources:
+      - create
       - buffer
       max_statements: 1
       answer_contract:
         basis: description
         required_terms:
+        - - createRequest
         - - addBuffer
         - - 스트림
     - id: submission
@@ -5086,6 +5091,21 @@ sections:
     covers:
     - resources
     parts:
+    - id: summary
+      role: summary
+      question: 요청은 만든 호출자가 책임지고, 연결한 버퍼는 요청 완료 콜백까지 유효해야 하며, 파이프라인 핸들러는 요청을 완료한
+        뒤 그 요청에 접근하지 않는다는 결론을 쉬운 말로 먼저 설명하세요.
+      sources:
+      - create
+      - buffer-duty
+      - complete-access
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 호출자
+        - - 버퍼
+        - - 완료
     - id: request-owner
       question: createRequest가 반환한 요청의 삭제·재사용 책임이 누구에게 있는지만 설명하세요.
       sources:
@@ -5263,6 +5283,21 @@ sections:
     covers:
     - stopping
     parts:
+    - id: summary
+      role: summary
+      question: 정상 정지는 대기 중인 요청을 취소해 완료로 돌려보낸 뒤 끝나지만, 실행 중 연결 해제에서 남은 요청의 처리는 아직
+        TODO로 남아 있어 같은 보장이 없다는 차이를 쉬운 말로 먼저 설명하세요.
+      sources:
+      - device-stop
+      - disconnect-todo
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 정지
+        - - 연결 해제
+          - disconnect
+        - - TODO
     - id: camera-entry
       question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed
         음수 반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop
