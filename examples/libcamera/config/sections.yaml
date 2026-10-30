@@ -5006,6 +5006,21 @@ sections:
     covers:
     - journey
     parts:
+    - id: summary
+      role: summary
+      question: queueRequest가 성공을 반환해도 촬영이 끝난 것은 아니며, 요청 완료는 파이프라인 핸들러가 명시적으로 알린 뒤
+        제출 순서대로 애플리케이션에 돌아온다는 결론을 쉬운 말로 먼저 설명하세요.
+      sources:
+      - queue
+      - request-duty
+      - request-notice
+      - completed-head
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - queueRequest
+        - - 완료
     - id: create
       question: createRequest의 반환 타입과 반환되는 객체의 종류만 소개하세요. 소유권과 소멸 책임은 자원 수명 절에서 설명하므로
         여기서는 반복하지 마세요.
@@ -5019,7 +5034,9 @@ sections:
         - - unique_ptr
         - - Request
     - id: buffer
-      question: 버퍼를 요청의 어느 스트림에 연결하는 API인지 설명하세요.
+      question: 두 문장으로 답하세요. 첫 문장은 Request::addBuffer()가 FrameBuffer를 지정한 Stream과
+        연결해 요청에 추가하는 동작만 설명하세요. 둘째 문장은 버퍼가 유효한 Stream을 참조하지 않는 경우의 -EINVAL과 같은 Stream에
+        버퍼가 이미 추가된 경우의 -EEXIST를 조건과 결과로 함께 설명하세요.
       sources:
       - buffer
       max_statements: 1
@@ -5028,6 +5045,16 @@ sections:
         required_terms:
         - - addBuffer
         - - 스트림
+          - Stream
+          - stream
+        - - -EINVAL
+        - - -EEXIST
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
+          message: 입력 연결과 오류 조건을 두 문장 이내로 설명하고 같은 제약을 일반론과 오류 조건으로 반복하지 마세요.
+        - pattern: nullptr|스트림당.{0,12}(?:하나|한 개|1개)|(?:하나|한 개|1개).{0,12}버퍼만
+          message: 발췌의 유효한 Stream 조건을 쓰고 nullptr나 스트림당 하나 일반론을 별도로 도입하지 마세요. 오류 조건은
+            유지합니다.
     - id: submission
       question: Camera::queueRequest()가 ConnectionTypeQueued로 invokeMethod 호출을 지정한
         뒤 0을 반환하는 시점을 설명하세요. 0은 파이프라인 호출 예약을 넘긴 단계이며 waitingRequests_ 삽입 완료·장치 큐잉
@@ -5047,9 +5074,24 @@ sections:
         - pattern: 큐잉.{0,8}성공|큐에.{0,12}성공
           message: 0 반환은 queued invokeMethod 호출 뒤의 반환입니다. 장치 큐잉 성공으로 읽힐 표현 대신 해당 호출
             단계를 명시하세요.
+    - id: queue-context
+      question: API 주석에 명시된 PipelineHandler::queueRequest()와 PipelineHandler::queueRequestDevice()의
+        공통 호출 스레드 문맥을 한 문장으로 설명하세요. 문서상의 함수 호출 문맥을 실제 장치나 애플리케이션 콜백에서 관측한 결과로 확대하지
+        마세요.
+      sources:
+      - device-queue
+      - device-contract
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - PipelineHandler::queueRequest()
+        - - PipelineHandler::queueRequestDevice()
+        - - CameraManager
     - id: preparation
-      question: 준비 신호 연결과 요청 준비를 담당하는 함수를 구분하세요. registerRequest()는 요청이 준비됐을 때 doQueueRequests(request->_d()->camera())를
-        부르는 prepared 신호 연결을 설정합니다. queueRequest()가 waitingRequests_에 요청을 추가한 뒤 prepare(300ms)를
+      question: 준비 신호 연결과 요청 준비를 담당하는 함수를 구분하세요. PipelineHandler::registerRequest()는
+        요청이 준비됐을 때 doQueueRequests(request->_d()->camera())를 부르는 prepared 신호 연결을 설정합니다.
+        PipelineHandler::queueRequest()가 waitingRequests_에 요청을 추가한 뒤 prepare(300ms)를
         호출하는 순서를 설명하고, 준비 단계나 하드웨어 큐잉이 실패하면 요청이 취소된다는 주석의 조건도 포함하세요. 대기 큐의 선두·한도 조건은
         다음 질문에서 다루므로 반복하지 마세요. 세 문장 이내로 답하세요.
       sources:
@@ -5063,6 +5105,7 @@ sections:
         - - prepare(300ms)
         - - 취소
           - cancel
+        - - PipelineHandler::queueRequest()
         reject_patterns:
         - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){3}
           message: 3문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
@@ -5150,21 +5193,13 @@ sections:
           message: 2문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
     - id: callback-context-check
       question: completeRequest 호출 진입 지점과 애플리케이션 콜백 진입 지점에서 Thread::currentId()의 반환값을
-        각각 기록해 비교하는 관찰 계획을 제안하세요. 이 API가 현재 Linux 스레드 ID를 반환한다는 정의를 사용하세요. 콜백의 실제
-        스레드나 관측 결과를 단정하지 마세요. 앞 문단의 CameraManager 호출 의무와 미실행 주의문은 반복하지 마세요. 두 문장 이내로
-        답하세요.
+        각각 기록해 비교할 조사 계획을 두 문장 이내로 제안하세요. 이 API는 현재 Linux 스레드 ID를 반환합니다. 아직 실행하지 않은
+        계획이며 콜백의 실제 실행 스레드는 검증 전임을 명시하세요.
       sources:
       - completion
       - thread-id
-      answer_contract:
-        basis: investigation
-        required_terms:
-        - - completeRequest
-        - - 콜백
-        - - 관찰
-          - 기록
-        - - Thread::currentId()
       max_statements: 1
+      statement_kind: limitation
     answer_contract:
       basis: description
       reject_patterns:
@@ -5244,6 +5279,23 @@ sections:
     covers:
     - resources
     parts:
+    - id: summary
+      role: summary
+      question: 요청을 만든 호출자는 요청 삭제를 책임지고, 버퍼를 요청에 추가한 호출자는 버퍼를 요청 완료 콜백까지 유효하게 유지해야
+        하며, 파이프라인 핸들러는 completeRequest가 반환한 뒤 요청에 접근해서는 안 된다는 결론을 먼저 설명하세요. 두 호출자를
+        하나의 주체로 합치지 말고 버퍼 유지 의무의 기한을 정확히 유지하세요.
+      sources:
+      - create
+      - buffer-duty
+      - complete-access
+      - buffer
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 호출자
+        - - 버퍼
+        - - 완료
     - id: request-owner
       question: createRequest가 반환한 요청의 삭제 또는 재사용 책임이 호출자에게 있다는 사실만 한 문장으로 설명하세요. 재사용
         API의 동작과 버퍼 플래그·fence 조건은 다른 질문이 담당하므로 이 문단에는 포함하지 마세요.
@@ -5258,23 +5310,6 @@ sections:
         reject_patterns:
         - pattern: ReuseBuffers|setRequest|pending_|bufferMap_
           message: 이 문단은 요청의 삭제·재사용 책임 주체만 설명합니다. 플래그와 구현 상세는 다른 질문이 담당합니다.
-      max_statements: 1
-    - id: buffer-validity
-      question: 호출자가 버퍼를 언제까지 유효하게 유지해야 하는지 요청 완료 콜백을 명시해 한 문장으로 설명하세요. 주체·버퍼·유효 기간·콜백을
-        한 번씩만 연결하고 같은 유효 유지 의무를 다시 쓰지 마세요.
-      sources:
-      - buffer-duty
-      - buffer
-      answer_contract:
-        basis: contract
-        required_terms:
-        - - 호출자
-        - - 버퍼
-        - - 유효
-        - - 콜백
-        reject_patterns:
-        - pattern: (?:합니다|입니다|됩니다|있습니다|없습니다)\.\s+\S
-          message: 버퍼 유효 기간 의무를 한 문장으로 연결하고 같은 의무를 반복하지 마세요.
       max_statements: 1
     - id: fence-transfer
       question: Request::addBuffer() 성공 시 유효한 Fence의 소유권이 buffer로 이동하는 경로와 실패 시 전달한
@@ -5312,10 +5347,9 @@ sections:
         - - releaseFence
       max_statements: 1
     - id: reuse-fences
-      question: ReuseBuffers가 기존 버퍼를 유지해 재사용하지만 연결된 fence는 재사용하지 않는다는 범위를 첫 문장으로 설명하세요.
-        두 번째 문장은 펜스를 사용하는 경우의 원문 부정형 권고 should not be used를 한 번만 설명하세요. 같은 권고를 영문
-        인용·조건 풀이·따라서 결론으로 반복하지 마세요. 계약 설명으로 분류하고 조사 계획이나 실행 확인 항목으로 쓰지 마세요. must not으로
-        강화하지 말고 소유권·초기화 상세도 반복하지 마세요.
+      question: 두 문장으로 설명하세요. 첫 문장은 ReuseBuffers가 기존 버퍼를 유지하되 연결된 fence는 재사용하지 않는다는
+        범위입니다. 둘째 문장은 fence를 사용하는 경우 이 플래그를 사용하지 않아야 한다는 부정형 권고 should not be used입니다.
+        이 권고의 조건과 부정을 보존하고 must not 의무로 강화하지 마세요.
       sources:
       - reuse-flags
       - reuse-advice
@@ -5329,24 +5363,21 @@ sections:
           - Fence
         - - 유지
         - - 권고
-          - 권장
-          - 좋습니다
-          - 바람직
-          - 피하는
         - - 않
-          - 피
-          - 자제
         - - should not be used
         reject_patterns:
         - pattern: 해서는\s*안|사용하면\s*안|반드시
           message: 원문의 should not 권고를 must not 의무로 강화하지 마세요.
         - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
           message: 2문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+        - pattern: 피하|피하는|자제|좋습니다|바람직
+          message: 원문의 should not 부정형 지침을 사용하지 않아야 한다는 권고로 보존하세요. 자제·피하기 조언으로 우회하지
+            마세요.
       max_statements: 1
     - id: handler-access
-      question: completeRequest와 cancelRequest의 반환 후 요청 접근 의무를 두 함수의 근거로 함께 비교하세요.
-        취소 함수의 처리와 같은 규칙이 적용되는 주체·시점을 구분하고, 다른 호출자나 애플리케이션까지 의무를 확대하지 마세요. 같은 접근 의무를
-        두 문장으로 반복하지 마세요.
+      question: completeRequest와 cancelRequest의 반환 후에는 파이프라인 핸들러가 요청에 접근해서는 안 된다는
+        의무를 두 함수와 주체·시점을 포함해 한 문장으로 함께 설명하세요. completeRequest를 호출해야 한다는 앞 절의 완료 호출
+        의무는 반복하지 마세요. 다른 호출자나 애플리케이션까지 접근 금지를 확대하지 마세요.
       sources:
       - complete-access
       - completion
@@ -5358,6 +5389,12 @@ sections:
         - - cancelRequest
         - - 접근
         - - 파이프라인 핸들러
+        reject_patterns:
+        - pattern: 호출(?:해야|할\s*의무)
+          message: 이 문단은 파이프라인 핸들러의 반환 후 접근 의무만 설명합니다. 완료 호출 의무는 앞 절이 담당합니다.
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){1}
+          message: 두 함수 반환 후 접근 의무를 한 문장으로 비교하고 되풀이하지 마세요.
+      max_statements: 1
   - id: stopping
     title: 정지와 연결 해제를 구분하기
     question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과
@@ -5441,6 +5478,21 @@ sections:
     covers:
     - stopping
     parts:
+    - id: summary
+      role: summary
+      question: 정지 계약에서는 대기 중인 요청을 취소해 완료로 돌려보낸다는 점과 실행 중 연결 해제의 대기 요청 처리는 아직 TODO라는
+        차이를 쉬운 말로 먼저 설명하세요. 관측된 실행 결과나 TODO로부터 새로운 부정 보장을 만들지 말고 두 원문이 명시한 내용을 비교하세요.
+      sources:
+      - device-stop
+      - disconnect-todo
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 정지
+        - - 연결 해제
+          - disconnect
+        - - TODO
     - id: camera-entry
       question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed
         음수 반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop
@@ -5474,15 +5526,20 @@ sections:
         - - stopDevice
       max_statements: 2
     - id: pending
-      question: 정지 후단에서 doQueueRequest(request) 호출과 전달하는 request를 기존 실행의 관찰 기록 항목으로
-        제안하세요. 반환형을 추측하거나 선언이 없다고 쓰지 마세요. 전체 정지 함수와 미실행 주의문은 반복하지 마세요. 계획 분류는 생성기의
-        실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
+      question: PipelineHandler::stop()의 취소 반복문에서 doQueueRequest(request)에 전달되는 request
+        값을 기존 실행의 관찰 기록 항목으로 제안하는 한국어 한 문장만 쓰세요.
       sources:
       - pending-requeue
       answer_contract:
         basis: investigation
         required_terms:
         - - doQueueRequest
+        - - request
+        - - 기록
+        reject_patterns:
+        - pattern: queuedRequests_|시퀀스|sequence|(?:[가-힣]다\.\s+\S)
+          message: 이 문단은 전달할 request의 관찰 기록만 설명합니다. 장치 큐 삽입·시퀀스 설명은 앞 절이 담당합니다.
+      max_statements: 1
     - id: queue-assertions
       question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를
         해당 검사 지점에서 관찰하는 계획과 뒤의 requestSequence_ 0 초기화만 한 문장으로 설명하세요. 앞서 설명한 대기 큐 분리·장치
@@ -5497,50 +5554,33 @@ sections:
         - - waitingRequests_
         - - ASSERT
       max_statements: 1
-    - id: completion
-      question: 정지 중 completeRequest 진입·복귀와 애플리케이션 콜백 도착을 별도로 기록하는 조사 계획을 두 문장 이내로
-        제안하세요. 함수 복귀 기록과 콜백 도착 기록을 구분하고, 콜백의 실제 스레드는 앞 절의 Thread::currentId() 기록 방법으로
-        확인하도록 짧게 연결하세요. 앞 절의 CameraManager 호출 의무를 실제 실행 사실로 바꾸거나 다시 설명하지 마세요. 완료 루프의
-        상세 분기·소유권·제출 순서와 전체 스레드 기록 절차, 작성 과정 안내도 반복하지 마세요.
+    - id: callback-observation
+      question: 정지 중 completeRequest의 진입·복귀와 애플리케이션 콜백의 진입·복귀를 별도로 기록할 조사 계획을 두 문장
+        이내로 제안하세요. 콜백 스레드는 앞 절의 Thread::currentId() 기록 방법으로 확인하도록 짧게 연결하세요. 아직 실행하지
+        않은 계획이며 콜백 실행 결과는 검증 전임을 명시하세요.
       sources:
       - completion
       - thread-id
-      answer_contract:
-        basis: investigation
-        required_terms:
-        - - completeRequest
-        - - 콜백
-        - - 기록
-        - - Thread::currentId()
-        reject_patterns:
-        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
-          message: 2문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
-        - pattern: 실행한\s*측정|실행하지|미실행|제공된|원문|소스에
-          message: 생성기가 범위를 표시합니다. 이 문단은 제안할 관찰 기록만 설명하고 작성 과정·미실행 주의문을 덧붙이지 마세요.
       max_statements: 1
+      statement_kind: limitation
     - id: disconnect
-      question: Camera::disconnect()에서 내부 객체에 연결 해제를 전달하는 _d()->disconnect() 호출과 그
-        뒤 disconnected.emit()의 순서를 설명하세요. _d() 접근자와 내부 disconnect()를 이 함수가 호출하는 모든
-        함수의 완전한 목록이라고 단정하지 마세요. LOG와 id() 등 다른 호출의 존재를 부정하지 말고, 연결 해제 처리와 알림의 순서에
-        한정하세요. 신호의 의미와 TODO는 다음 질문에서 설명하므로 반복하지 마세요.
+      question: Camera::disconnect()가 내부 객체의 _d()->disconnect()를 호출한 뒤 disconnected.emit()으로
+        알림을 발행하는 순서를 두 문장 이내로 설명하세요. 이 두 호출을 함수 내 모든 호출의 완전한 목록이라고 단정하지 마세요. LOG·id()
+        등 다른 호출이나 작성 범위 안내를 나열하지 말고 연결 해제 처리와 알림 순서만 설명하세요. 신호의 의미와 TODO는 다음 질문에서
+        다룹니다.
       sources:
       - disconnect-internal
       - notification
-      answer_contract:
-        basis: description
-        required_terms:
-        - - disconnect
-    - id: disconnect-signal
-      question: 이 emit 호출이 발행하는 신호 이름만 설명하세요.
-      sources:
       - disconnect-signal
       answer_contract:
         basis: description
         required_terms:
-        - - disconnected
+        - - disconnect
         reject_patterns:
-        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){1}
-          message: 1문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
+          message: 내부 연결 해제와 알림의 순서를 두 문장 이내로 연결하세요.
+        - pattern: 이 답변|이 문단|범위에|한정합니다|LOG|id\(\)
+          message: 작성 과정 안내나 다른 호출 목록을 본문에 덧붙이지 마세요.
       max_statements: 1
     - id: disconnect-todo
       question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한

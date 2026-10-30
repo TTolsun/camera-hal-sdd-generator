@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -55,3 +56,34 @@ def test_public_preflight_requires_tracked_clean_source_and_valid_source_only_to
     assert report['source_only_sections'] == ['source-only']
     if defect == 'untracked':
         assert report['invalid_locations'] == ['build/generated.h:1']
+
+
+@pytest.mark.parametrize('defect', [None, 'unbound', 'selector', 'hash', 'file', 'line', 'material-record', 'structural-collision'])
+def test_material_proof_is_not_a_source_git_location_and_cannot_hide_structural_locations(defect):
+    script = Path(__file__).resolve().parents[1]/'examples/libcamera/verify_facts.py'
+    spec = importlib.util.spec_from_file_location('example_verify_facts_material', script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    from sdd.product_context import record as material_record
+    selector = dict(id='material', kind='product', file='product-evidence/spec.txt',
+                    text='Public material.\n', product_record={'id': 'spec', 'version': '1'})
+    record = material_record(json.loads(json.dumps(selector)), 'a'*40)
+    cfg = SimpleNamespace(sections=lambda: [dict(id='guide', design_topics=[dict(id='q', sources=[selector])])])
+    model = KnowledgeModel(meta={'source_commit': 'a'*40}, classes={'Api': ClassInfo('Api', loc=Location('api.h', 1))},
+                           evidence={'guide/q/material': record})
+    if defect == 'unbound':
+        model.evidence = {'other/q/material': record}
+    elif defect == 'selector':
+        record['selector']['text'] = 'Another material.'
+    elif defect == 'hash':
+        record['sha256'] = '0'*64
+    elif defect == 'file':
+        record['file'] = 'untracked.txt'
+    elif defect == 'line':
+        record['line'] = 999
+    elif defect == 'material-record':
+        record['product_record'] = {'version': 'forged'}
+    elif defect == 'structural-collision':
+        model.classes['Forged'] = ClassInfo('Forged', loc=Location(selector['file'], 1))
+    expected = {'api.h:1'} | ({record['file']+':'+str(record['line'])} if defect else set())
+    assert module.source_citations(cfg, model) == expected

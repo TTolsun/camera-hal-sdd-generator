@@ -98,7 +98,15 @@ def generated_errors(section):
                     errors.append(f"{topic['id']}: subquestions에는 중복 없는 짧은 질문 2~4개가 필요합니다.")
                 if 'statement_kind' in part and (part['statement_kind'] != 'limitation' or 'answer_contract' in part):
                     errors.append(f"{topic['id']}: statement_kind는 limitation만 쓸 수 있고 answer_contract와 함께 쓸 수 없습니다.")
-                if set(part) - {'id', 'question', 'sources', 'answer_contract', 'subquestions', 'max_statements', 'statement_kind'}:
+                if 'role' in part:
+                    # 요약은 주제의 첫 문단이다. 상세 답변보다 앞에 하나만 두고, 실행 확인 항목이나 세부 질문으로 나누지 않는다.
+                    if (part['role'] != 'summary' or part is not parts[0]
+                            or part.get('subquestions') or 'statement_kind' in part
+                            or part.get('max_statements', 1) not in (1, 2) or len(parts) < 2):
+                        errors.append(f"{topic['id']}: role: summary는 상세 part가 뒤에 있는 첫 part에만 쓰며 "
+                                      "max_statements는 1 또는 2, subquestions·statement_kind는 쓸 수 없습니다.")
+                if set(part) - {'id', 'question', 'sources', 'answer_contract', 'subquestions', 'max_statements',
+                                'statement_kind', 'role'}:
                     errors.append(f"{topic['id']}: 지원하지 않는 parts 필드입니다.")
             if all(part.get('statement_kind') == 'limitation' for part in parts if isinstance(part, dict)):
                 # 실행 확인 항목만으로는 필수 질문에 답한 것이 아니다. 모델을 부르기 전에 설정 오류로 막는다.

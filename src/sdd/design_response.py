@@ -189,7 +189,8 @@ def materialize(model, section, answers, enforce_repeats=True):
             record = model.evidence[key]
             source['sha256'] = record['sha256']
             pinned.evidence[key] = {**record, 'selector': copy.deepcopy(source)}
-    repeated = duplicates.statement_findings(model, section['id'], {t['id']: answers[t['id']] for t in section['design_topics']})
+    repeated = duplicates.statement_findings(model, section['id'], {t['id']: answers[t['id']] for t in section['design_topics']},
+                                             summaries=duplicates.summary_keys(section))
     if repeated and enforce_repeats:
         raise ValueError(' / '.join(repeated))
     pinned.repeated_findings = repeated
@@ -299,7 +300,7 @@ def decode_unit(model, section, topic, raw, sources, passages):
     subset.pop('reader_family', None)
     subset.pop('reader_scope', None)
     try:
-        validate_answers(model, subset, candidate, allow_limited=bool(topic.get('_statement_kind')))
+        validate_answers(model, subset, candidate, allow_limited=topic.get('_statement_kind') == 'limitation')
     except ValueError as exc:
         # Diagnose only an already-rejected answer. Inspect model text before
         # typography normalization and generated citations, without repairing it.
