@@ -68,6 +68,20 @@ def carry_forward(cfg: Config, model: KnowledgeModel,
         body = text[m.end():]
         invalid = sorted({c for c in extract_citations(body) if c not in allowed})
         sec = sections.get(meta.get("section", ""), {})
+        if sec.get('index_only'):
+            from .document_metadata import split_frontmatter
+            from .scenario_sections import verify_index
+            try:
+                verify_index(cfg, model, sec, split_frontmatter(text)[0], body)
+            except ValueError as exc:
+                invalid.append(str(exc))
+        if sec.get('scenario'):
+            from .document_metadata import split_frontmatter
+            from .scenario_sections import verify
+            try:
+                verify(cfg, model, sec, split_frontmatter(text)[0], body)
+            except (ValueError, RuntimeError) as exc:
+                invalid.append(str(exc))
         from .generated_visuals import from_manuscript
         try:
             from_manuscript(cfg, model, sec, text)

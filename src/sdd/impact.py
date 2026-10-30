@@ -102,8 +102,13 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
 
     for sc in model.scenarios_touching(fileset):
         report.scenarios.setdefault(sc.id, []).append("시나리오 경로에 포함된 파일이 변경됨")
+    for sec in sections:
+        if sec.get('scenario') in report.scenarios:
+            report.sections.setdefault(sec['id'], []).append('결합한 시나리오의 호출 근거 변경')
     if report.scenarios:
-        report.sections.setdefault("scenarios", []).append(f"영향 시나리오: {', '.join(sorted(report.scenarios))}")
+        for sec in sections:
+            if sec.get('kind') == 'per-scenario':
+                report.sections.setdefault(sec['id'], []).append(f"영향 시나리오: {', '.join(sorted(report.scenarios))}")
 
     # 3. 사람이 쓰는 문서: frontmatter 의 evidence_files 가 바뀌면 재검토 대상으로 올린다 (재생성은 하지 않는다).
     for sec in sections:
@@ -133,6 +138,16 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
     from .evidence import fingerprint
     changed: dict[str, list[str]] = {}
     for sec in cfg.sections():
+        if sec.get('index_only'):
+            from .scenario_sections import verify_index
+            path = cfg.sdd_dir / section_output(sec)
+            try:
+                text = path.read_text(encoding='utf-8')
+                metadata, body = split_frontmatter(text)
+                verify_index(cfg, model, sec, metadata, body)
+            except (OSError, ValueError) as exc:
+                changed[sec['id']] = [str(exc)]
+            continue
         if sec.get("kind") == "manual" or not (sec.get("design_topics") or sec.get("reader_profile")):
             continue
         path = cfg.sdd_dir / section_output(sec)
@@ -144,6 +159,14 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
         if recorded != fingerprint(model, sec):
             changed[sec["id"]] = ["설계 질문·근거 지정이 원고를 만든 입력과 다름" if recorded else "원고에 입력 지문이 없음"]
             continue
+        if sec.get('scenario'):
+            from .scenario_sections import verify
+            meta, body = split_frontmatter(text)
+            try:
+                verify(cfg, model, sec, meta, body)
+            except (ValueError, RuntimeError) as exc:
+                changed[sec['id']] = [str(exc)]
+                continue
         if sec.get("design_generation") == "llm":
             # 입력은 같아도 저장된 답변이 현재 검사(중복 문장, 문장 형태)나 표시 형식을 통과하지 못하면
             # 같은 답변으로 다시 만들거나 해당 주제만 다시 쓰게 한다.

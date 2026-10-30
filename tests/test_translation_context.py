@@ -20,6 +20,43 @@ def inputs():
     return document, model
 
 
+def test_page_excerpt_binding_wins_over_shorter_global_declaration():
+    from sdd.source_identity import anchor
+    document, model = inputs()
+    full = model.evidence['s/t/e']
+    declaration = {**full, 'text': 'void Engine::stop()'}
+    declaration['sha256'] = hashlib.sha256(declaration['text'].encode()).hexdigest()
+    model.evidence['another/topic/declaration'] = declaration
+    binding = json.dumps({'engine.cpp:10': ['#' + anchor(full)]})
+    document = document.replace('<p ', '<p data-sdd-excerpts=\'' + binding + '\' ')
+    # Nested units inherit the exact page source selection.
+    document = document.replace('<code>', '<span><code>').replace('</p>', '</span></p>')
+    contexts, pool = {}, {}
+    translation_context.collect(document, model, contexts, pool)
+    assert {r['text'] for r in pool.values()} == {full['text']}
+    assert 'waiting.swap' in next(iter(pool.values()))['text']
+    broken = document.replace(anchor(full), 'source-' + '0' * 16)
+    with pytest.raises(ValueError, match='excerpt binding cannot be resolved'):
+        translation_context.collect(broken, model, {}, {})
+    full['text'] += ' tampered'
+    with pytest.raises(ValueError, match='checksum mismatch'):
+        translation_context.collect(document, model, {}, {})
+
+
+def test_multiple_page_excerpts_are_all_preserved():
+    from sdd.source_identity import anchor
+    document, model = inputs()
+    full = model.evidence['s/t/e']
+    second = {**full, 'text': 'void Engine::stop()'}
+    second['sha256'] = hashlib.sha256(second['text'].encode()).hexdigest()
+    model.evidence['other/topic/source'] = second
+    binding = json.dumps({'engine.cpp:10': ['#' + anchor(r) for r in [full, second]]})
+    document = document.replace('<p ', '<p data-sdd-excerpts=\'' + binding + '\' ')
+    contexts, pool = {}, {}
+    translation_context.collect(document, model, contexts, pool)
+    assert {r['text'] for r in pool.values()} == {full['text'], second['text']}
+
+
 def test_inline_context_is_read_only_and_cited_source_is_authenticated():
     document, model = inputs()
     contexts, pool = {}, {}
@@ -78,13 +115,13 @@ def test_context_counts_towards_the_unchanged_input_budget(tmp_cfg):
     translation_context.collect(document, model, contexts, pool)
     key = next(iter(contexts))
     tmp_cfg.agent.kind = 'ollama'
-    tmp_cfg.agent.max_input_chars = 700
+    tmp_cfg.agent.max_input_chars = 1050
     tmp_cfg.raw['site'] = {'translation_batch_size': 2}
     class Agent:
         calls = 0
         def chat(self, system, user, **kwargs):
             self.calls += 1
-            assert len(system) + len(user) <= 700
+            assert len(system) + len(user) <= 1050
             return json.dumps({'translations': {'0': '{{0}} first moves the waiting requests.'}})
     agent = Agent()
     assert translate_missing(tmp_cfg, {'strings': {key: ''}}, agent)['strings'][key]

@@ -152,22 +152,23 @@ def request(cfg, model, group):
                     claims[key] = dict(all_statements[key])
                     for sid in refs:
                         sources[sid] = evidence_source(model, sid)
-        else:
-            # Scenarios have no design-answer artifact; preserve selected whole
-            # paragraphs and their existing source citations for the reviewer.
-            for index, paragraph in enumerate(body.split('\n\n')):
-                if re.search(group['match'], paragraph, re.I) and not paragraph.startswith(('#', '<', '```', '|')):
-                    analysis_refs = paragraph_refs(cfg, model, meta, paragraph)
-                    refs = citation_refs(model, paragraph) + analysis_refs
-                    key = f'{name}/paragraph/{index}'
-                    claims[key] = dict(document=name, topic=None, language='ko', text=paragraph, evidence=refs)
-                    if analysis_refs:
-                        claims[key]['evidence_domain'] = 'analysis-representation'
-                    all_statements[key] = dict(claims[key])
-                    if catalog:
-                        visible[key] = displayed(paragraph, name)
-                    for sid in refs:
-                        sources[sid] = evidence_source(model, sid)
+        # Source-question scenarios also retain the extractor's exact analysis
+        # notes. Audit those in their own domain without duplicating LLM prose.
+        for index, paragraph in enumerate(body.split('\n\n')):
+            if re.search(group['match'], paragraph, re.I) and not paragraph.startswith(('#', '<', '```', '|')):
+                analysis_refs = paragraph_refs(cfg, model, meta, paragraph)
+                if artifact.get('answers') and not analysis_refs:
+                    continue
+                refs = citation_refs(model, paragraph) + analysis_refs
+                key = f'{name}/paragraph/{index}'
+                claims[key] = dict(document=name, topic=None, language='ko', text=paragraph, evidence=refs)
+                if analysis_refs:
+                    claims[key]['evidence_domain'] = 'analysis-representation'
+                all_statements[key] = dict(claims[key])
+                if catalog:
+                    visible[key] = displayed(paragraph, name)
+                for sid in refs:
+                    sources[sid] = evidence_source(model, sid)
     if group.get('evidence'):
         for sid in group['evidence']:
             sources[sid] = evidence_source(model, sid)
@@ -414,6 +415,8 @@ def audit(cfg, model, agent):
 
 
 def enforce(cfg, model):
+    from .consistency_profile import resolve
+    cfg = resolve(cfg, model, groups, identity, request)
     configured = groups(cfg)
     if not configured:
         return

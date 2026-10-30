@@ -327,6 +327,8 @@ class Config:
         from .product_context import bind
         from .reader_scope import validate_locations
         sections = bind(self, list(data.get("sections", []) or []))
+        from .scenario_ownership import validate
+        validate(sections, self.scenarios(), section_output)
         return validate_locations(sections, {section_output(s) for s in sections})
 
     def scenarios(self) -> list[dict[str, Any]]:

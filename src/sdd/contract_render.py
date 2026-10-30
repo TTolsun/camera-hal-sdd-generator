@@ -1,6 +1,6 @@
 """Reader-facing contract views; validation never depends on this module."""
 import re
-import hashlib
+from .source_identity import anchor as source_anchor
 from .design_contracts import enforce
 from .facts.model import KnowledgeModel
 from .markdown_text import slugify
@@ -28,8 +28,7 @@ class SourceDetails:
             record = model.evidence.get(f"{section}/{topic['id']}/{source['id']}", {})
             if record.get('status') != 'available' or not record.get('text'):
                 continue
-            key = f"{record['file']}:{record['line']}:{record['sha256']}"
-            anchor = 'source-' + hashlib.sha256(key.encode()).hexdigest()[:16]
+            anchor = source_anchor(record)
             self.records.setdefault(anchor, (source, record))
             label = f"{record['file']}:{record['line']}"
             links.append(f'[{label}](#{anchor})')

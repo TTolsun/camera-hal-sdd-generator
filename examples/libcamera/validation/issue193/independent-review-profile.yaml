@@ -1,0 +1,10 @@
+# Separate process, config and raw receipts from generation/translation.
+# Passing this automatic review never grants human approval.
+agent:
+  kind: cli
+  runner: claude
+  model: claude-haiku-5-5
+  args: [--effort, high]
+  max_input_chars: 64000
+  timeout_sec: 600
+  full_style_guides: true

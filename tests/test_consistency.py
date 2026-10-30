@@ -202,6 +202,25 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
     report = audit(tmp_cfg, model, agent())
     assert report['status']=='passed' and report['human_review']=='pending'
     enforce(tmp_cfg, model)
+    # A publisher can retain historical visual-generation settings while
+    # validating separately executed review receipts against identical inputs.
+    publication = copy.deepcopy(tmp_cfg)
+    publication.agent.model = 'historical-generation-model'
+    publication.paths['consistency_review_config'] = tmp_cfg.root/'independent.yaml'
+    with monkeypatch.context() as profile:
+        profile.setattr('sdd.consistency_profile.load', lambda path: tmp_cfg)
+        enforce(publication, model)
+        publication.sdd_dir = tmp_cfg.root/'different-manuscripts'
+        publication.sdd_dir.mkdir()
+        (publication.sdd_dir/'primary.md').write_text(
+            path.read_text(encoding='utf-8')+' A changed request contract.', encoding='utf-8')
+        with pytest.raises(ValueError, match='changes publication inputs'):
+            enforce(publication, model)
+        publication.sdd_dir = tmp_cfg.sdd_dir
+        publication.paths['consistency_file'] = tmp_cfg.root/'absent-contracts.yaml'
+        with pytest.raises((ValueError, FileNotFoundError)):
+            enforce(publication, model)
+    assert len(calls) == 1
     with monkeypatch.context() as missing_cli:
         def unavailable(cfg):
             raise RuntimeError('Historical CLI binary was removed by an app update')

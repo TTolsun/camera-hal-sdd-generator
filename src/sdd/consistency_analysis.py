@@ -49,7 +49,11 @@ def evidence(model, sid):
 
 
 def paragraph_refs(cfg, model, meta, paragraph):
-    if meta.get('generation_method') != 'extracted-scenario':
+    if not meta.get('scenario_id'):
+        return []
+    bound = any(s.get('scenario') == meta.get('scenario_id') and s['id'] == meta.get('section')
+                for s in cfg.sections() if s.get('scenario'))
+    if meta.get('generation_method') != 'extracted-scenario' and not bound:
         return []
     scenario_id = meta.get('scenario_id')
     if scenario_id not in model.scenarios:

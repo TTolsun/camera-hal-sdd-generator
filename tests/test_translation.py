@@ -165,14 +165,15 @@ def test_bad_batch_preserves_original_catalog(tmp_cfg, bad):
 
 
 def test_batch_splits_on_budget_without_truncation(tmp_cfg):
+    from sdd.translation import _ACTOR_RULES
     tmp_cfg.agent.kind = 'ollama'
     tmp_cfg.raw['site'] = {'translation_batch_size': 4}
-    tmp_cfg.agent.max_input_chars = 700
+    tmp_cfg.agent.max_input_chars = 700 + len(_ACTOR_RULES)
     catalog = {'strings': {('설명' * 80) + str(i): '' for i in range(4)}}
     class Agent:
         sizes = []
         def chat(self, system, user, **kwargs):
-            assert len(system) + len(user) <= 700
+            assert len(system) + len(user) <= tmp_cfg.agent.max_input_chars
             texts = json.loads(user)['texts']
             self.sizes.append(len(texts))
             return json.dumps({'translations': {key: 'English ' + key for key in texts}})
