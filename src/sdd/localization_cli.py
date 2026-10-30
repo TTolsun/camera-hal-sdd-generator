@@ -62,9 +62,12 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
                    translation_contexts=contexts, source_contexts=source_contexts)
     # Legacy values keep their original status. Once context was recorded, a
     # changed binding/source cannot quietly reuse its previous translation.
-    for key, old_context in previous.get('translation_contexts', {}).items():
-        if key in catalog['strings'] and old_context != contexts.get(key):
-            catalog['strings'][key] = ''
+    if 'translation_contexts' in previous:
+        for key in catalog['strings']:
+            if previous['translation_contexts'].get(key, []) != contexts.get(key, []):
+                catalog['strings'][key] = ''
+    catalog['legacy_reuse_policy'] = ('Values imported without recorded context retain their prior review status; '
+        'they are not newly inferred or context-reviewed. New or changed recorded bindings require retranslation.')
     translation_agent = None
     if translate:
         from .translation import translate_missing

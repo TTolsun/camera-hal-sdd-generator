@@ -37,6 +37,12 @@ def _bounds(record):
             and end in {start + text.count('\n'), start + text.count('\n') - int(text.endswith('\n'))})
 
 
+def _contains_line(record, line):
+    text, start = record.get('text'), record.get('line')
+    return (isinstance(text, str) and bool(text) and type(start) is int
+            and start <= line <= start + text.count('\n') - int(text.endswith('\n')))
+
+
 def collect(document, model, contexts, pool, source_loader=None):
     from .site_localization import DisplayText
 
@@ -51,14 +57,14 @@ def collect(document, model, contexts, pool, source_loader=None):
                 raise ValueError('Malformed translation source location')
             candidates = [r for r in model.evidence.values()
                           if r.get('status') == 'available' and r.get('file') == file
-                          and r.get('line', 0) <= int(number) <= r.get('end_line', r.get('line', 0))]
+                          and _contains_line(r, int(number))]
             if not candidates:
                 if source_loader is None or ref[0] not in model.citations:
                     raise ValueError(f'Translation source reference cannot be resolved: {ref[0]}')
                 text = source_loader(file)
                 record = dict(file=file, line=1, end_line=1 + text.count('\n'),
                               text=text, sha256=_sha(text), commit=model.meta['source_commit'])
-                if not 1 <= int(number) <= record['end_line']:
+                if not _contains_line(record, int(number)):
                     raise ValueError('Translation source line is outside the pinned file')
             else:
                 record = min(candidates, key=lambda r: len(r['text']) if isinstance(r.get('text'), str) else 0)
@@ -85,6 +91,8 @@ def collect(document, model, contexts, pool, source_loader=None):
             pool[identity] = item
             ids.add(identity)
         item = dict(resolved_source=resolved, inline_tokens=tokens, source_ids=sorted(ids))
+        if attrs.get('translation-unit'):
+            item['unit_kind'] = attrs['translation-unit']
         if item not in contexts.setdefault(key, []):
             contexts[key].append(item)
 
@@ -105,7 +113,10 @@ def for_source(catalog, source):
                     or record['source_commit'] != catalog.get('source_commit')):
                 raise ValueError('Translation context identity or source commit mismatch')
             sources.append(record)
-        result.append(dict(resolved_source=context['resolved_source'], inline_tokens=context['inline_tokens'], sources=sources))
+        item = dict(resolved_source=context['resolved_source'], inline_tokens=context['inline_tokens'], sources=sources)
+        if 'unit_kind' in context:
+            item['unit_kind'] = context['unit_kind']
+        result.append(item)
     return result
 
 

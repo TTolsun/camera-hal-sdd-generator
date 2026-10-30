@@ -116,6 +116,12 @@ def test_catalog_reuses_unchanged_context_and_invalidates_changed_binding(tmp_cf
     catalog = json.loads(path.read_text(encoding='utf-8'))
     key = next(iter(catalog['strings']))
     catalog['strings'][key] = '{{0}} first moves the waiting requests.'
+    saved_context = catalog['translation_contexts']
+    catalog['translation_contexts'] = {}
+    path.write_text(json.dumps(catalog), encoding='utf-8')
+    prepare_catalog(tmp_cfg, path)
+    assert json.loads(path.read_text(encoding='utf-8'))['strings'][key] == ''
+    catalog['translation_contexts'] = saved_context
     path.write_text(json.dumps(catalog), encoding='utf-8')
     prepare_catalog(tmp_cfg, path)
     assert json.loads(path.read_text(encoding='utf-8'))['strings'][key] == catalog['strings'][key]
@@ -199,3 +205,25 @@ def test_archive_cannot_restore_a_translation_with_a_different_context(tmp_cfg):
     assert 'stale' not in translate_missing(tmp_cfg, catalog, agent)['strings'][key]
     assert agent.calls == 1 and agent.reused == 0
     assert translation_context.matches_archive(record, 'old', dict(catalog, translation_contexts=contexts), key) is False
+
+
+def test_trailing_newline_is_not_a_citable_extra_line():
+    document, model = inputs()
+    record = model.evidence['s/t/e']
+    record.update(text='foo\n', end_line=11, sha256=hashlib.sha256(b'foo\n').hexdigest())
+    document = document.replace('engine.cpp:10', 'engine.cpp:11')
+    with pytest.raises(ValueError, match='cannot be resolved'):
+        translation_context.collect(document, model, {}, {})
+    model.evidence = {}
+    model.citations = {'engine.cpp:11'}
+    with pytest.raises(ValueError, match='outside the pinned file'):
+        translation_context.collect(document, model, {}, {}, lambda file: '\n' * 9 + 'foo\n')
+
+
+def test_translated_attributes_receive_their_own_inherited_source_context():
+    document, model = inputs()
+    document = document.replace('<code>', '<span title="대기 요청 처리"><code>').replace('</code>', '</code></span>')
+    contexts, pool = {}, {}
+    translation_context.collect(document, model, contexts, pool)
+    attribute = contexts['대기 요청 처리'][0]
+    assert attribute['unit_kind'] == 'attribute:title' and attribute['source_ids']

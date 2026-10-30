@@ -59,6 +59,11 @@ class DisplayText(HTMLParser):
                 return raw + ''.join(render(c) for c in children) + node['end']
             for name, value in node['attrs']:
                 if name in ATTRIBUTES and value:
+                    if self.context_observer and KOREAN.search(value):
+                        attrs = dict(node['attrs'])
+                        attrs['data-sdd-evidence'] = json.dumps(node.get('context_evidence', []))
+                        attrs['translation-unit'] = 'attribute:' + name
+                        self.context_observer(value.strip(), value.strip(), {}, attrs)
                     translated = self.translate(value)
                     raw = re.sub(rf'((?<![\w-]){name}\s*=\s*)([\"\']).*?\2',
                                  lambda m: m[1] + '"' + html.escape(translated, quote=True) + '"', raw)
