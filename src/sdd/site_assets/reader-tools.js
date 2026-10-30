@@ -31,6 +31,14 @@
   let inertBefore = [];
   let menuOpen = false;
   let menuScroll = null;
+  function visibleMenuTarget(node) {
+    // A summary remains visible in its own closed details. Each outer closed
+    // ancestor replaces the target so we never focus a hidden descendant.
+    for (let parent = node.parentElement; parent && parent !== sidebar; parent = parent.parentElement) {
+      if (parent.matches('details:not([open])')) node = parent.querySelector(':scope > summary');
+    }
+    return node;
+  }
   function setMenu(open, restore = true) {
     open = open && mobile.matches;
     if (open === menuOpen) return;
@@ -48,7 +56,9 @@
       sidebar.setAttribute('role', 'dialog');
       sidebar.setAttribute('aria-modal', 'true');
       sidebar.setAttribute('aria-label', t('문서 메뉴', 'Documentation menu'));
-      const activeLink = sidebar.querySelector('a[aria-current="page"]') || closeMenu;
+      // The current link may be inside several user-closed disclosures. Focus
+      // the outermost closed ancestor's visible summary without reopening it.
+      const activeLink = visibleMenuTarget(sidebar.querySelector('a[aria-current="page"]') || closeMenu);
       activeLink.focus({preventScroll: true});
       const target = activeLink.getBoundingClientRect(), box = sidebar.getBoundingClientRect();
       if (target.top < box.top || target.bottom > box.bottom) {
@@ -79,7 +89,7 @@
       setMenu(false);
     } else if (event.key === 'Tab') {
       const focusable = [...sidebar.querySelectorAll('a[href],button,summary,[tabindex="0"]')]
-        .filter(node => node.getClientRects().length && !node.disabled);
+        .filter(node => node.getClientRects().length && !node.disabled && visibleMenuTarget(node) === node);
       const first = focusable[0], last = focusable.at(-1);
       if (!sidebar.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
         event.preventDefault();

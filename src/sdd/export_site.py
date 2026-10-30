@@ -400,27 +400,38 @@ def _write_assets(cfg, out, mermaid_dir, visual_sources, terms):
 
 
 def _navigation_html(entries, sections, rel, current):
+    def fold_id(kind, *parts):
+        # Use source configuration, never translated labels or page-relative URLs.
+        value = json.dumps(parts, ensure_ascii=False).encode('utf-8')
+        return f'{kind}-{hashlib.sha256(value).hexdigest()[:24]}'
+
     nav = []
     last_group = None
     last_section = None
+    group_open = False
     branch_open = False
+    last_branch = None
     for nav_group, nav_title, nav_rel in entries:
         nav_section = _nav_section(nav_rel, sections)
         section_changed = (nav_group, nav_section) != last_section
         child = _is_child(nav_rel)
-        if branch_open and (not child or section_changed):
+        if branch_open and (not child or section_changed or _branch_of(nav_rel) != last_branch):
             nav.append("</details>")
             branch_open = False
         if section_changed and last_section and last_section[1]:
-            nav.append("</section>")
+            nav.append("</details>")
         if nav_group != last_group:
+            if group_open:
+                nav.append("</details>")
             if nav_group:
-                nav.append(f'<p class="nav-group">{html.escape(nav_group)}</p>')
+                nav.append(f'<details class="nav-group" data-nav-id="{fold_id("group", nav_group)}" open>'
+                           f'<summary>{html.escape(nav_group)}</summary>')
+            group_open = bool(nav_group)
             last_group = nav_group
         if section_changed:
             if nav_section:
-                nav.append(f'<section class="nav-section" aria-label="{html.escape(nav_section, quote=True)}">'
-                           f'<h2>{html.escape(nav_section)}</h2>')
+                nav.append(f'<details class="nav-section" data-nav-id="{fold_id("task", nav_group, nav_section)}" open>'
+                           f'<summary>{html.escape(nav_section)}</summary>')
             last_section = (nav_group, nav_section)
         active = ' aria-current="page"' if nav_rel == rel else ""
         link = (f'<a{" class=" + chr(34) + "nav-sub" + chr(34) if child else ""}'
@@ -429,14 +440,17 @@ def _navigation_html(entries, sections, rel, current):
             # 하위 문서는 접었다 펼 수 있게 묶는다. 읽고 있는 가지만 펴 둔다.
             count = sum(1 for _, _, r in entries if _branch_of(r) == _branch_of(nav_rel) and _is_child(r))
             opened = " open" if _branch_of(rel) == _branch_of(nav_rel) else ""
-            nav.append(f'<details class="nav-branch"{opened}>'
+            last_branch = _branch_of(nav_rel)
+            nav.append(f'<details class="nav-branch" data-nav-id="{fold_id("branch", nav_group, nav_section, last_branch)}"{opened}>'
                        f'<summary>하위 문서 {count} 편</summary>')
             branch_open = True
         nav.append(link)
     if branch_open:
         nav.append("</details>")
     if last_section and last_section[1]:
-        nav.append("</section>")
+        nav.append("</details>")
+    if group_open:
+        nav.append("</details>")
     return nav
 
 

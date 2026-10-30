@@ -283,12 +283,52 @@ def _nav_items(doc: str) -> list[str]:
     import re
     nav = re.search(r'<nav aria-label="문서 메뉴">(.*?)</nav>', doc, re.S).group(1)
     items = []
-    for m in re.finditer(r'<p class="nav-group">(.*?)</p>|<a( class="nav-sub")?[^>]*>(.*?)</a>', nav):
+    for m in re.finditer(r'<details class="nav-group"[^>]*><summary>(.*?)</summary>|<a( class="nav-sub")?[^>]*>(.*?)</a>', nav):
         if m.group(1):
             items.append('[' + m.group(1) + ']')
         else:
             items.append(('  ' if m.group(2) else '') + m.group(3))
     return items
+
+
+def _nav_folds(doc, kind):
+    from html.parser import HTMLParser
+
+    class Folds(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.stack, self.found = [], []
+            self.summary = False
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == 'details' and 'data-nav-id' in attrs:
+                node = dict(attrs, summary='', links=[], children=[], open='open' in attrs)
+                for parent in self.stack:
+                    parent['children'].append(node)
+                self.stack.append(node)
+                self.found.append(node)
+            elif tag == 'a':
+                for parent in self.stack:
+                    parent['links'].append(attrs)
+            elif tag == 'summary':
+                self.summary = True
+
+        def handle_data(self, data):
+            if self.summary and self.stack:
+                self.stack[-1]['summary'] += data
+
+        def handle_endtag(self, tag):
+            if tag == 'summary':
+                self.summary = False
+            elif tag == 'details' and self.stack:
+                self.stack.pop()
+
+    parser = Folds()
+    # Only navigation contains these attributes, but isolate it from body details.
+    import re
+    parser.feed(re.search(r'<nav aria-label="문서 메뉴">(.*?)</nav>', doc, re.S)[1])
+    return [node for node in parser.found if node['class'] == kind]
 
 
 def test_메뉴는_설정한_그룹으로_나뉜다(tmp_cfg, sample_model):
@@ -337,16 +377,14 @@ def test_task_sections_group_pages_and_inherit_scenarios_without_changing_manusc
     out = export_site(tmp_cfg)
     doc = (out / 'scenarios/open.html').read_text(encoding='utf-8')
     nav = re.search(r'<nav aria-label="문서 메뉴">(.*?)</nav>', doc, re.S)[1]
-    tasks = re.findall(r'<section class="nav-section"[^>]*>(.*?)</section>', nav, re.S)
+    tasks = _nav_folds(doc, 'nav-section')
     assert len(tasks) == 2
-    assert '<h2>Understand &lt;structure&gt;</h2>' in tasks[0]
-    assert 'device.html' in tasks[0] and 'pipe.html' in tasks[0]
-    assert 'scenarios/' not in tasks[0]
-    assert '<h2>Trace &amp; diagnose</h2>' in tasks[1]
-    assert '<details class="nav-branch" open>' in tasks[1]
-    assert 'href="index.html"' in tasks[1] and 'href="open.html" aria-current="page"' in tasks[1]
-    assert tasks[1].endswith('</details>')
-    assert doc.count('<section class="nav-section"') == 2
+    assert tasks[0]['summary'] == 'Understand <structure>'
+    assert [link['href'] for link in tasks[0]['links']] == ['../device.html', '../pipe.html']
+    assert tasks[1]['summary'] == 'Trace & diagnose'
+    assert tasks[1]['children'][0]['class'] == 'nav-branch' and tasks[1]['children'][0]['open']
+    assert {'href': 'open.html', 'class': 'nav-sub', 'aria-current': 'page'} in tasks[1]['links']
+    assert all(task['open'] for task in tasks)
     assert before == {p: p.read_bytes() for p in tmp_cfg.sdd_dir.rglob('*.md')}
     first = (out / 'site-manifest.json').read_bytes()
     export_site(tmp_cfg)
@@ -362,12 +400,17 @@ def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
     child = (out / 'scenarios/open.html').read_text(encoding='utf-8')
     assert '<summary>하위 문서 2 편</summary>' in other
     # 읽고 있는 가지만 펴 둔다. 다른 문서에서는 접어서 목록을 짧게 유지한다.
-    assert '<details class="nav-branch" open>' in parent
-    assert '<details class="nav-branch" open>' in child
-    assert '<details class="nav-branch">' in other
+    assert _nav_folds(parent, 'nav-branch')[0]['open']
+    assert _nav_folds(child, 'nav-branch')[0]['open']
+    branch = _nav_folds(other, 'nav-branch')[0]
+    assert not branch['open']
     # 접기는 하위 문서만 감싼다. 같은 그룹의 다른 문서가 안으로 들어가면 안 된다.
-    branch = other.split('<details class="nav-branch">')[1].split('</details>')[0]
-    assert 'scenarios/open.html' in branch and 'pipe.html' not in branch
+    assert [link['href'] for link in branch['links']] == ['scenarios/open.html', 'scenarios/capture.html']
+    for kind in ['nav-group', 'nav-branch']:
+        ids = [[node['data-nav-id'] for node in _nav_folds(page, kind)] for page in [parent, child, other]]
+        assert ids[0] == ids[1] == ids[2]
+        assert len(ids[0]) == len(set(ids[0]))
+    assert all(node['open'] for node in _nav_folds(other, 'nav-group'))
 
 
 def test_task_sections_end_before_unclassified_pages_and_reader_groups(tmp_cfg, sample_model):
@@ -380,13 +423,46 @@ def test_task_sections_end_before_unclassified_pages_and_reader_groups(tmp_cfg, 
     out = export_site(tmp_cfg)
     doc = (out / 'device.html').read_text(encoding='utf-8')
     nav = re.search(r'<nav aria-label="문서 메뉴">(.*?)</nav>', doc, re.S)[1]
-    tasks = re.findall(r'<section class="nav-section"[^>]*>(.*?)</section>', nav, re.S)
+    tasks = _nav_folds(doc, 'nav-section')
     assert len(tasks) == 2
-    assert all('<h2>Shared task</h2>' in task for task in tasks)
-    assert 'device.html' in tasks[0] and 'pipe.html' not in tasks[0]
-    assert 'pipe.html' in tasks[1] and 'device.html' not in tasks[1]
-    assert all('nav-group' not in task and 'scenarios/' not in task for task in tasks)
-    assert 'scenarios/index.html' in nav and '<details class="nav-branch">' in nav
+    assert all(task['summary'] == 'Shared task' for task in tasks)
+    assert [link['href'] for link in tasks[0]['links']] == ['device.html']
+    assert [link['href'] for link in tasks[1]['links']] == ['pipe.html']
+    assert not any(task['children'] for task in tasks)
+    assert tasks[0]['data-nav-id'] != tasks[1]['data-nav-id']
+    assert 'scenarios/index.html' in nav and _nav_folds(doc, 'nav-branch')
+
+
+def test_fold_ids_survive_translation_page_changes_and_reordering():
+    import re
+    from sdd.export_site import _navigation_html
+    from sdd.site_localization import DisplayText
+
+    entries = [('독자 A', 'First', 'first.md'), ('독자 A', 'Flows', 'flows/index.md'),
+               ('독자 A', 'Child', 'flows/one.md'), ('독자 B', 'Other', 'other.md')]
+    sections = {'first.md': {'nav_section': '같은 작업'}, 'flows/index.md': {'nav_section': '같은 작업'},
+                'other.md': {'nav_section': '같은 작업'}}
+    original = ''.join(_navigation_html(entries, sections, 'first.md', 'first.html'))
+    alternate = ''.join(_navigation_html(entries[-1:] + entries[:-1], sections, 'flows/one.md', 'flows/one.html'))
+    translated = DisplayText(lambda text: 'English')
+    translated.feed(original)
+    translated = ''.join(translated.output)
+    ids = lambda text: re.findall(r'data-nav-id="([a-z]+-[a-f0-9]{24})"', text)
+    assert len(ids(original)) == len(set(ids(original))) == 5
+    assert ids(translated) == ids(original)
+    assert set(ids(alternate)) == set(ids(original))
+    assert '독자 A' not in translated and '같은 작업' not in translated
+
+
+def test_distinct_child_directories_form_separate_disclosures():
+    from sdd.export_site import _navigation_html
+    entries = [('Reader', 'One', 'one/child.md'), ('Reader', 'Two', 'two/child.md')]
+    nav = ''.join(_navigation_html(entries, {}, 'one/child.md', 'one/child.html'))
+    folds = _nav_folds('<nav aria-label="문서 메뉴">' + nav + '</nav>', 'nav-branch')
+    assert len(folds) == 2
+    assert [fold['open'] for fold in folds] == [True, False]
+    assert folds[0]['data-nav-id'] != folds[1]['data-nav-id']
+    assert all(len(fold['links']) == 1 for fold in folds)
 
 
 def test_소스_링크_형식은_호스트_설정을_따른다(tmp_cfg, sample_model):

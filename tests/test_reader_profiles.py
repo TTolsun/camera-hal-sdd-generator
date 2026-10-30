@@ -145,9 +145,10 @@ def test_non_libcamera_reader_profiles_generate_and_preserve_outputs_on_failure(
     from sdd.site_build import verify_site
     assert verify_site(site)['broken_links'] == 0
     page = (site / 'vendor-contract.html').read_text(encoding='utf-8')
-    assert '<section class="nav-section" aria-label="도입 판단">' in page
-    assert '<section class="nav-section" aria-label="연동 구현">' in page
-    assert '<section class="nav-section" aria-label="구조 이해">' in page
+    assert '<summary>도입 판단</summary>' in page
+    assert '<summary>연동 구현</summary>' in page
+    assert '<summary>구조 이해</summary>' in page
+    assert page.count('<details class="nav-section" data-nav-id=') == 3
     # Menu grouping reuses the public renderer with unrelated HAL contracts.
     assert page.index('vendor-assurance.html') < page.index('vendor-contract.html')
     manifest_before = (site / 'site-manifest.json').read_bytes()

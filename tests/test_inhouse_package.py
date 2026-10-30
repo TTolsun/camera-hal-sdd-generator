@@ -182,7 +182,8 @@ def test_real_import_runs_task_navigation(tmp_path):
         assert result.returncode == 0, (command, result.stdout, result.stderr)
     site = project / 'build/site'
     page = (site / 'vendor-contract.html').read_text(encoding='utf-8')
-    assert all(f'<h2>{task}</h2>' in page for task in ('도입 판단', '연동 구현', '구조 이해'))
+    assert all(f'<summary>{task}</summary>' in page for task in ('도입 판단', '연동 구현', '구조 이해'))
+    assert page.count('<details class="nav-section" data-nav-id=') == 3
     manifest = (site / 'site-manifest.json').read_bytes()
     result = subprocess.run([sys.executable, str(kit / 'tools/run_sdd.py'), '--config', str(config), 'export-site'],
                             cwd=project, capture_output=True)
