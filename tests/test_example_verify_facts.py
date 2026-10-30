@@ -58,7 +58,7 @@ def test_public_preflight_requires_tracked_clean_source_and_valid_source_only_to
         assert report['invalid_locations'] == ['build/generated.h:1']
 
 
-@pytest.mark.parametrize('defect', [None, 'unbound', 'selector', 'hash', 'structural-collision'])
+@pytest.mark.parametrize('defect', [None, 'unbound', 'selector', 'hash', 'file', 'line', 'material-record', 'structural-collision'])
 def test_material_proof_is_not_a_source_git_location_and_cannot_hide_structural_locations(defect):
     script = Path(__file__).resolve().parents[1]/'examples/libcamera/verify_facts.py'
     spec = importlib.util.spec_from_file_location('example_verify_facts_material', script)
@@ -66,7 +66,7 @@ def test_material_proof_is_not_a_source_git_location_and_cannot_hide_structural_
     spec.loader.exec_module(module)
     selector = dict(id='material', kind='product', file='product-evidence/spec.txt', text='Public material.')
     record = dict(selector=selector.copy(), origin='product-material', status='available', commit='a'*40,
-                  file=selector['file'], line=1, text=selector['text'],
+                  file=selector['file'], line=1, end_line=1, text=selector['text'],
                   sha256=hashlib.sha256(selector['text'].encode()).hexdigest())
     cfg = SimpleNamespace(sections=lambda: [dict(id='guide', design_topics=[dict(id='q', sources=[selector])])])
     model = KnowledgeModel(meta={'source_commit': 'a'*40}, classes={'Api': ClassInfo('Api', loc=Location('api.h', 1))},
@@ -77,7 +77,13 @@ def test_material_proof_is_not_a_source_git_location_and_cannot_hide_structural_
         record['selector']['text'] = 'Another material.'
     elif defect == 'hash':
         record['sha256'] = '0'*64
+    elif defect == 'file':
+        record['file'] = 'untracked.txt'
+    elif defect == 'line':
+        record['line'] = 999
+    elif defect == 'material-record':
+        record['product_record'] = {'version': 'forged'}
     elif defect == 'structural-collision':
         model.classes['Forged'] = ClassInfo('Forged', loc=Location(selector['file'], 1))
-    expected = {'api.h:1'} | ({selector['file']+':1'} if defect else set())
+    expected = {'api.h:1'} | ({record['file']+':'+str(record['line'])} if defect else set())
     assert module.source_citations(cfg, model) == expected

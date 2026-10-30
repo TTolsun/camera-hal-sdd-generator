@@ -31,6 +31,9 @@ def source_citations(cfg, model):
                     and record.get('origin') == 'product-material' and record.get('status') == 'available'
                     and record.get('commit') == model.meta.get('source_commit')
                     and isinstance(text, str) and text == selector.get('text')
+                    and record.get('file') == selector.get('file') and record.get('line') == 1
+                    and record.get('end_line') == max(1, len(text.splitlines()))
+                    and record.get('product_record') == selector.get('product_record')
                     and hashlib.sha256(text.encode()).hexdigest() == record.get('sha256'))
         if not verified:
             source.evidence[key] = record
