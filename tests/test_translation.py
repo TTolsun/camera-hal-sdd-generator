@@ -168,7 +168,7 @@ def test_batch_splits_on_budget_without_truncation(tmp_cfg):
     from sdd.translation import _ACTOR_RULES
     tmp_cfg.agent.kind = 'ollama'
     tmp_cfg.raw['site'] = {'translation_batch_size': 4}
-    tmp_cfg.agent.max_input_chars = 700 + len(_ACTOR_RULES)
+    tmp_cfg.agent.max_input_chars = 1100 + len(_ACTOR_RULES)
     catalog = {'strings': {('설명' * 80) + str(i): '' for i in range(4)}}
     class Agent:
         sizes = []

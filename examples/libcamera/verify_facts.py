@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import fnmatch
 import json
 from pathlib import Path
@@ -10,6 +11,27 @@ import subprocess
 
 from sdd.config import load
 from sdd.facts.model import KnowledgeModel
+
+
+def source_citations(cfg, model):
+    """Keep material proof in its validated domain; structural locations stay Git-owned."""
+    from sdd.product_context import record as material_record
+    materials = {}
+    for section in cfg.sections():
+        for topic in section.get('design_topics', []):
+            for selector in topic.get('sources', []):
+                if selector.get('kind') == 'product':
+                    materials[f"{section['id']}/{topic['id']}/{selector['id']}"] = selector
+    source = copy.copy(model)
+    source.evidence = {}
+    for key, record in model.evidence.items():
+        selector = materials.get(key)
+        verified = selector is not None and record == material_record(selector, model.meta.get('source_commit'))
+        if not verified:
+            source.evidence[key] = record
+    # A structural location with the same file:line must still pass the Git
+    # check. Subtracting material citation strings would hide that collision.
+    return source.citations()
 
 
 def main() -> int:
@@ -47,7 +69,8 @@ def main() -> int:
                 evidence_errors[section['id']] = str(exc)
     lengths: dict[str, int] = {}
     invalid = []
-    for citation in sorted(model.citations()):
+    citations = source_citations(cfg, model)
+    for citation in sorted(citations):
         file, line = citation.rsplit(":", 1)
         if file not in lengths:
             path = cfg.source_root / file
@@ -60,6 +83,7 @@ def main() -> int:
         "ok": ok, "source_commit": head, "classes": len(model.classes),
         "missing_required_classes": missing, "selected_classes": selected,
         "citations": len(model.citations()), "files": len(lengths),
+        "product_material_citations": sorted(model.citations() - citations),
         "invalid_locations": invalid,
         "tracked_tree_files": len(tracked), "tracked_source_changes": dirty,
         "source_evidence_errors": evidence_errors,
