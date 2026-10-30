@@ -62,6 +62,7 @@ class DisplayText(HTMLParser):
                     if self.context_observer and KOREAN.search(value):
                         attrs = dict(node['attrs'])
                         attrs['data-sdd-evidence'] = json.dumps(node.get('context_evidence', []))
+                        attrs['data-sdd-excerpts'] = json.dumps(node.get('context_excerpts', {}))
                         attrs['translation-unit'] = 'attribute:' + name
                         self.context_observer(value.strip(), value.strip(), {}, attrs)
                     translated = self.translate(value)
@@ -87,6 +88,7 @@ class DisplayText(HTMLParser):
                     if self.context_observer:
                         attrs = dict(node['attrs'])
                         attrs['data-sdd-evidence'] = json.dumps(node.get('context_evidence', []))
+                        attrs['data-sdd-excerpts'] = json.dumps(node.get('context_excerpts', {}))
                         self.context_observer(text.strip(), resolve(text, original_tokens), original_tokens, attrs)
                 body = html.escape(translated, quote=False)
                 body = re.sub(r'\{\{\d+\}\}', lambda m: tokens[m[0]], body)
@@ -110,6 +112,16 @@ class DisplayText(HTMLParser):
             for ref in refs:
                 if ref not in node['context_evidence']:
                     node['context_evidence'].append(ref)
+            declared = json.loads(values.get('data-sdd-excerpts', '{}'))
+            if (not isinstance(declared, dict) or any(not isinstance(k, str)
+                    or not isinstance(v, list) or not v or any(not isinstance(a, str)
+                    or not re.fullmatch(r'#source-[0-9a-f]{16}', a) for a in v)
+                    for k, v in declared.items())):
+                raise ValueError('Malformed translation excerpt bindings')
+            node['context_excerpts'] = {k: list(v) for k, v in self.stack[-1].get('context_excerpts', {}).items()}
+            for cite, anchors in declared.items():
+                node['context_excerpts'].setdefault(cite, []).extend(
+                    a for a in anchors if a not in node['context_excerpts'].get(cite, []))
         self.stack[-1]['children'].append(node)
         if tag not in VOID:
             self.stack.append(node)

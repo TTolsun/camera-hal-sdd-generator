@@ -114,6 +114,6 @@ tr[id^="symbol-"]:target{background:#edf5f1}tr[id^="symbol-"]{scroll-margin-top:
   .menu-backdrop{display:block;position:fixed;inset:var(--site-header-height,104px) 0 0;z-index:50;border:0;border-radius:0;background:#17201e70;padding:0}.menu-backdrop:hover{background:#17201e70}
   .sidebar-close{display:block;margin:0 0 18px auto;min-height:44px}
   .index-tools{grid-template-columns:1fr 1fr;padding:12px;gap:10px}.index-tools label:first-child{grid-column:1/-1}.index-tools :is(input,select,button){min-height:44px}
-  #diagram-dialog .dialog-head button,.diagram-tools button{min-width:44px;min-height:44px}.diagram-tools input{min-height:44px;flex:1;max-width:100%}.diagram-tools{gap:8px}.diagram-pan-hint{line-height:1.5}
+  #diagram-dialog .dialog-head button,.diagram-tools button{min-width:44px;min-height:44px}.diagram-tools input{min-height:44px;flex:1 0 100%;width:100%;min-width:0;max-width:100%}.diagram-tools{gap:8px}.diagram-pan-hint{line-height:1.5}
 }
 @media print{.menu-backdrop,.sidebar-close,.index-tools,.evidence-return{display:none!important}}

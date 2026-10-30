@@ -43,3 +43,36 @@ def test_analysis_proof_cannot_be_attached_to_arbitrary_product_claims_or_stale_
         paragraph_refs(tmp_cfg, model, meta, note)
     with pytest.raises(ValueError, match='Unknown scenario'):
         evidence(model, '@analysis/scenario/../../private')
+
+
+def test_source_question_scenario_preserves_only_exact_analysis_note_domain(tmp_cfg):
+    import yaml
+    model, meta, note = scenario_case(tmp_cfg)
+    section = dict(id='scenario-flow', scenario='flow', output='scenarios/flow.md',
+        show_evidence=True, design_topics=[{'id':'behavior'}], design_requirements=[{'id':'behavior'}])
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections':[section]}),encoding='utf-8')
+    meta.update(section='scenario-flow',generation_method='facts-and-llm')
+    assert paragraph_refs(tmp_cfg,model,meta,note)==['@analysis/scenario/flow']
+    assert paragraph_refs(tmp_cfg,model,meta,'The callback always runs on the manager thread.')==[]
+    meta['section']='unbound-page'
+    assert paragraph_refs(tmp_cfg,model,meta,note)==[]
+
+
+def test_contract_audit_keeps_analysis_notes_alongside_generated_answers(tmp_cfg):
+    import yaml
+    from sdd.consistency import request
+    model,meta,note=scenario_case(tmp_cfg)
+    section=dict(id='scenario-flow',scenario='flow',output='scenarios/flow.md',show_evidence=True,
+        design_topics=[{'id':'behavior'}],design_requirements=[{'id':'behavior'}])
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections':[section]}),encoding='utf-8')
+    meta.update(section='scenario-flow',generation_method='facts-and-llm',source_commit=model.meta['source_commit'],
+        generated_design={'answers':{'behavior':[{'text':'Worker processes data.','evidence':[]}]}})
+    page=tmp_cfg.sdd_dir/'scenarios/flow.md'
+    page.parent.mkdir(parents=True)
+    page.write_text('---\n'+yaml.safe_dump(meta)+'---\n\n'+note,encoding='utf-8')
+    payload=request(tmp_cfg,model,dict(id='analysis',primary='scenarios/flow.md',documents=['scenarios/flow.md'],
+        question='What does a deferred call establish?',match='예약'))
+    assert len(payload['claims'])==1
+    claim=next(iter(payload['claims'].values()))
+    assert claim['text'].strip()==note and claim['evidence_domain']=='analysis-representation'
+    assert next(iter(payload['sources'].values()))['kind']=='analysis-definition'
