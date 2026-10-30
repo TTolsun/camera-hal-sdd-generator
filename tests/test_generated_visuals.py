@@ -361,3 +361,31 @@ def test_cli_executable_relocation_keeps_identities_while_wrapper_arguments_chan
     tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\22cfb1d3\codex.exe', '--profile', 'other']
     changed = identities()
     assert all(new != old for new, old in zip(changed, before))
+
+
+@pytest.mark.parametrize('change', [None, 'source', 'args', 'pin'])
+def test_exact_legacy_cli_visual_proof_is_verified_without_rewriting_its_history(tmp_cfg, automatic, change):
+    from sdd.generated_visuals import generate, resolve
+    section, model, _, agent = automatic
+    tmp_cfg.agent.kind, tmp_cfg.agent.runner, tmp_cfg.agent.model = 'cli', 'codex', 'test-model'
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\0ab0e7a8\codex.EXE']
+    artifact = generate(tmp_cfg, model, section, agent)
+    # Frozen producer fingerprint from before executable identity normalization.
+    legacy = '23cef34a22077e7a7c1ef0e646d0d7232cd3c6bbda4591effbcbc923b58cebfb'
+    artifact['records']['stop-flow']['input_fingerprint'] = legacy
+    original = copy.deepcopy(artifact)
+    if change == 'source':
+        record = model.evidence['device/shutdown/stop']
+        record['text'] += '\n// changed source'
+        record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    elif change == 'args':
+        tmp_cfg.agent.args = ['--profile', 'other']
+    elif change == 'pin':
+        artifact['records']['stop-flow']['input_fingerprint'] = '0'*64
+    if change:
+        with pytest.raises(ValueError):
+            resolve(tmp_cfg, model, section, artifact)
+    else:
+        assert resolve(tmp_cfg, model, section, artifact)
+        assert artifact == original
+        assert len(agent.calls) == 1

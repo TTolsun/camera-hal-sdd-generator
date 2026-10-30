@@ -131,7 +131,7 @@ def expand_draft(plan, draft, limit):
     return draft
 
 
-def inputs(cfg, model, section, plan):
+def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
@@ -181,7 +181,7 @@ def inputs(cfg, model, section, plan):
         raise ValueError('Visual required_symbols exceed the node limit')
     pin = digest({'plan': plan, 'policy': system, 'limit': limit,
                   'agent': {'kind': cfg.agent.kind, 'model': cfg.agent.model, 'base_url': cfg.agent.base_url,
-                            **({'runner': cfg.agent.runner, 'command': cfg.agent.identity_command, 'args': cfg.agent.args}
+                            **({'runner': cfg.agent.runner, 'command': cfg.agent.command if _legacy_cli_command else cfg.agent.identity_command, 'args': cfg.agent.args}
                                if cfg.agent.kind == 'cli' else {})},
                   'sources': {k: {f: r[f] for f in ('file', 'line', 'sha256', 'selector')} for k, r in records.items()}})
     return pin, records, passages, system, {'question': plan['question'], 'kind': plan['kind'],
@@ -375,7 +375,12 @@ def resolve(cfg, model, section, artifact):
         if not isinstance(rec, dict) or not {'input_fingerprint', 'draft', 'graph', 'producer', 'generation_commit'} <= set(rec):
             raise ValueError('Incomplete generated visual record; run generate')
         if rec.get('input_fingerprint') != inputs(cfg, model, section, plan)[0]:
-            raise ValueError('Visual source or question changed; regenerate before publishing')
+            # Preserve an authenticated older record under its exact configured
+            # executable path. Every source, rule, model and wrapper argument
+            # must still match; this is verification, never new inference.
+            if cfg.agent.kind != 'cli' or rec.get('input_fingerprint') != inputs(
+                    cfg, model, section, plan, _legacy_cli_command=True)[0]:
+                raise ValueError('Visual source or question changed; regenerate before publishing')
         graph = materialize(cfg, model, section, plan, rec['draft'], rec['producer'])
         if graph != rec.get('graph'):
             raise ValueError('Saved visual differs from source-bound draft')
