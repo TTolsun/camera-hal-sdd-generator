@@ -128,6 +128,9 @@ class Generator:
                     if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)]
         from . import generated_visuals
         for section in selected:
+            if section.get('index_only'):
+                from .scenario_sections import index_fingerprint
+                index_fingerprint(self.cfg, self.model, section)
             if section.get('scenario'):
                 from .scenario_sections import appendix
                 appendix(self.cfg, self.model, section)
@@ -474,6 +477,9 @@ class Generator:
             index_body += "\n\n확인 필요: " + reason + ". 진입점과 추출 범위를 확인하세요."
         index_path = self.cfg.sdd_dir / sec.get("output", "scenarios/index.md")
         index_extra = {"section": sec["id"], "generation_method": "deterministic"}
+        if sec.get('index_only'):
+            from .scenario_sections import index_fingerprint
+            index_extra['scenario_index_fingerprint'] = index_fingerprint(self.cfg, self.model, sec)
         if requires_fingerprint(sec):
             index_extra["evidence_fingerprint"] = fingerprint(self.model, sec)
         index_page = self._render(
@@ -481,6 +487,11 @@ class Generator:
             evidence=self._evidence_lines([], [], index_verdict, []),
             next_link=_next_of(sec), status=_status(index_verdict), omitted=[],
             extra=index_extra, page_path=index_path)
+        if sec.get('index_only'):
+            import hashlib
+            from .document_metadata import split_frontmatter
+            digest = hashlib.sha256(split_frontmatter(index_page)[1].encode()).hexdigest()
+            index_page = index_page.replace('\n---\n', '\nscenario_index_body_sha256: ' + digest + '\n---\n', 1)
         out.append(self._write(index_path, index_page))
         return out
 

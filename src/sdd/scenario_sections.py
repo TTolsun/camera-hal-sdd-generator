@@ -1,6 +1,9 @@
 """Bind ordinary source-question pages to extracted scenario appendices."""
 from __future__ import annotations
 
+import hashlib
+import json
+
 from .scenario_document import build, fingerprint
 
 
@@ -22,3 +25,20 @@ def verify(cfg, model, section, metadata, body):
         raise ValueError('Scenario evidence changed; regenerate the source-question page.')
     if doc.overview not in body or doc.details not in body:
         raise ValueError('Scenario appendix differs from the complete extracted call record.')
+
+
+def index_fingerprint(cfg, model, section):
+    owners = {s['scenario']: s for s in cfg.sections() if s.get('scenario')}
+    ids = [s['id'] for s in cfg.scenarios()]
+    if model is None or set(model.scenarios) != set(ids):
+        raise ValueError('Scenario index requires exactly the configured extracted scenarios.')
+    rows = [dict(id=sid, title=model.scenarios[sid].title, entry=model.scenarios[sid].entry,
+                 lead=owners[sid].get('lead', '')) for sid in ids]
+    return hashlib.sha256(json.dumps(dict(section=section, rows=rows), sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def verify_index(cfg, model, section, metadata, body):
+    if metadata.get('scenario_index_fingerprint') != index_fingerprint(cfg, model, section):
+        raise ValueError('Scenario index inputs changed; regenerate the index.')
+    if metadata.get('scenario_index_body_sha256') != hashlib.sha256(body.encode()).hexdigest():
+        raise ValueError('Scenario index manuscript changed; regenerate the index.')

@@ -106,7 +106,9 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
         if sec.get('scenario') in report.scenarios:
             report.sections.setdefault(sec['id'], []).append('결합한 시나리오의 호출 근거 변경')
     if report.scenarios:
-        report.sections.setdefault("scenarios", []).append(f"영향 시나리오: {', '.join(sorted(report.scenarios))}")
+        for sec in sections:
+            if sec.get('kind') == 'per-scenario':
+                report.sections.setdefault(sec['id'], []).append(f"영향 시나리오: {', '.join(sorted(report.scenarios))}")
 
     # 3. 사람이 쓰는 문서: frontmatter 의 evidence_files 가 바뀌면 재검토 대상으로 올린다 (재생성은 하지 않는다).
     for sec in sections:
@@ -136,6 +138,16 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
     from .evidence import fingerprint
     changed: dict[str, list[str]] = {}
     for sec in cfg.sections():
+        if sec.get('index_only'):
+            from .scenario_sections import verify_index
+            path = cfg.sdd_dir / section_output(sec)
+            try:
+                text = path.read_text(encoding='utf-8')
+                metadata, body = split_frontmatter(text)
+                verify_index(cfg, model, sec, metadata, body)
+            except (OSError, ValueError) as exc:
+                changed[sec['id']] = [str(exc)]
+            continue
         if sec.get("kind") == "manual" or not (sec.get("design_topics") or sec.get("reader_profile")):
             continue
         path = cfg.sdd_dir / section_output(sec)

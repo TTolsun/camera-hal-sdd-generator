@@ -239,6 +239,9 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
 def _prepare_page_body(cfg, rel, texts, sections, terms, model):
     diagram_source = None
     meta, body = split_frontmatter(texts[rel])
+    if sections.get(rel, {}).get('index_only'):
+        from .scenario_sections import verify_index
+        verify_index(cfg, model, sections[rel], meta, body)
     if sections.get(rel, {}).get('scenario'):
         from .scenario_sections import verify
         verify(cfg, model, sections[rel], meta, body)

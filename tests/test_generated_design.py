@@ -554,9 +554,13 @@ def test_scenario_failures_preserve_all_manuscripts(scenario_prose, tmp_cfg, fai
         assert len(agent.calls) == calls
 
 
-def test_scenario_index_has_one_explicit_prose_owner(scenario_prose, tmp_cfg):
+@pytest.mark.parametrize('index_id', ['scenarios', 'flows'])
+def test_scenario_index_has_one_explicit_prose_owner(scenario_prose, tmp_cfg, index_id):
+    from sdd.document_metadata import split_frontmatter
+    from sdd.scenario_sections import verify_index
+    from sdd.impact import config_changes
     section, model, _, agent = scenario_prose
-    index = dict(id='scenarios', kind='per-scenario', title='시나리오', index_only=True,
+    index = dict(id=index_id, kind='per-scenario', title='시나리오', index_only=True,
                  next=dict(title='요청', link=section['output']))
     def save_sections():
         tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [index, section]}, allow_unicode=True), encoding='utf-8')
@@ -564,6 +568,24 @@ def test_scenario_index_has_one_explicit_prose_owner(scenario_prose, tmp_cfg):
     paths = Generator(tmp_cfg, model, agent).run()
     assert len(paths) == 2 and len(set(paths)) == 2 and len(agent.calls) == 1
     assert '확인할 동작과 조건' in paths[0].read_text(encoding='utf-8')
+    metadata, body = split_frontmatter(paths[0].read_text(encoding='utf-8'))
+    verify_index(tmp_cfg, model, index, metadata, body)
+    impact = compute(tmp_cfg, model, ['device/CameraDevice.cpp'], 'base', 'head', non_semantic={})
+    assert index_id in impact.sections
+    section['lead'] = '새로운 호출 전제와 완료 조건을 확인하세요.'
+    save_sections()
+    assert index_id in config_changes(tmp_cfg, model)
+    with pytest.raises(ValueError, match='index inputs changed'):
+        verify_index(tmp_cfg, model, index, metadata, body)
+    section.pop('lead')
+    save_sections()
+    with pytest.raises(ValueError, match='index manuscript changed'):
+        verify_index(tmp_cfg, model, index, metadata, body + 'tampered')
+    before_index = paths[0].read_bytes()
+    model.scenarios.clear()
+    with pytest.raises(ValueError, match='exactly the configured'):
+        Generator(tmp_cfg, model, agent).run([index_id])
+    assert paths[0].read_bytes() == before_index
     index['index_only'] = False
     save_sections()
     before = {p: p.read_bytes() for p in paths}
