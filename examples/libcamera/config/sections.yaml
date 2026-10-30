@@ -5063,6 +5063,9 @@ sections:
         - - prepare(300ms)
         - - 취소
           - cancel
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){3}
+          message: 3문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
       max_statements: 1
     - id: waiting
       question: waitingRequests_의 선두 요청 prepared_가 거짓이면 뒤 요청도 전달하지 않는 조건과, queuedRequests_
@@ -5071,13 +5074,16 @@ sections:
       sources:
       - device-queue
       - waiting-prepared
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: implementation
         required_terms:
         - - waitingRequests_
         - - maxQueuedRequestsDevice_
         - - prepared_
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
+          message: 2문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
     - id: dispatch
       question: 이 void 함수의 취소 여부 분기와 각 호출을 설명하세요. 반환값을 지어내지 마세요.
       sources:
@@ -5133,12 +5139,15 @@ sections:
       sources:
       - request-notice
       - completed-head
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: implementation
         required_terms:
         - - completeRequest
         - - RequestPending
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
+          message: 2문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
     - id: callback-context-check
       question: completeRequest 호출 진입 지점과 애플리케이션 콜백 진입 지점에서 Thread::currentId()의 반환값을
         각각 기록해 비교하는 관찰 계획을 제안하세요. 이 API가 현재 Linux 스레드 ID를 반환한다는 정의를 사용하세요. 콜백의 실제
@@ -5268,8 +5277,9 @@ sections:
           message: 버퍼 유효 기간 의무를 한 문장으로 연결하고 같은 의무를 반복하지 마세요.
       max_statements: 1
     - id: fence-transfer
-      question: addBuffer 성공 시 Fence 소유권이 이동하는 대상 객체만 한 문장으로 설명하세요. 실패 시 소유권과 수정 여부는
-        다음 질문이 담당하므로 이 문단에 포함하지 마세요.
+      question: Request::addBuffer() 성공 시 유효한 Fence의 소유권이 buffer로 이동하는 경로와 실패 시 전달한
+        fence가 수정되지 않고 소유권도 넘어가지 않는 경로를 한 문장으로 함께 비교하세요. 동일한 조건을 인용·풀이·결론으로 되풀이하지
+        마세요.
       sources:
       - fence-move
       answer_contract:
@@ -5280,21 +5290,15 @@ sections:
           - 펜스
         - - 버퍼
           - buffer
-        reject_patterns:
-        - pattern: 실패
-          message: 이 문단은 성공 시 소유권 이동만 설명합니다. 실패 경로는 fence-failure 질문에서 다룹니다.
-    - id: fence-failure
-      question: addBuffer 실패 시 전달받은 fence가 수정되지 않고 소유권도 넘어가지 않는 실패 경로만 한 문장으로 설명하세요.
-        성공 시 이동 대상은 앞 질문에서 설명했으므로 반복하지 마세요.
-      sources:
-      - fence-move
-      answer_contract:
-        basis: description
-        required_terms:
+        - - 성공
         - - 실패
-        - - 변경
-          - 유지
+        - - 수정
+          - 변경
           - 그대로
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){1}
+          message: 1문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+      max_statements: 1
     - id: fence-timeout
       question: 펜스가 신호되지 않아 요청이 타임아웃할 때 요청·버퍼·펜스의 상태와, 다른 요청에 버퍼를 재사용하기 전에 호출자가 수행할
         회수 동작을 한 문단으로 함께 설명하세요. 같은 조건을 두 번 반복하지 마세요.
@@ -5308,10 +5312,10 @@ sections:
         - - releaseFence
       max_statements: 1
     - id: reuse-fences
-      question: ReuseBuffers가 기존 버퍼를 유지하지만 연결된 fence는 재사용하지 않는다는 계약을 설명하세요. 원문의 if
-        fences are used 조건과 should not be used라는 부정형 지침을 그대로 보존하세요. 영문 표현 should not을
-        필요하면 그대로 병기하여 의무 강도를 분명히 하고, must not으로 강화하거나 긍정적인 사용 자제 조언으로 우회하지 마세요. 앞서
-        설명한 setRequest·pending_·bufferMap_ 구현은 반복하지 마세요.
+      question: ReuseBuffers가 기존 버퍼를 유지해 재사용하지만 연결된 fence는 재사용하지 않는다는 범위를 첫 문장으로 설명하세요.
+        두 번째 문장은 펜스를 사용하는 경우의 원문 부정형 권고 should not be used를 한 번만 설명하세요. 같은 권고를 영문
+        인용·조건 풀이·따라서 결론으로 반복하지 마세요. 계약 설명으로 분류하고 조사 계획이나 실행 확인 항목으로 쓰지 마세요. must not으로
+        강화하지 말고 소유권·초기화 상세도 반복하지 마세요.
       sources:
       - reuse-flags
       - reuse-advice
@@ -5332,10 +5336,13 @@ sections:
         - - 않
           - 피
           - 자제
+        - - should not be used
         reject_patterns:
         - pattern: 해서는\s*안|사용하면\s*안|반드시
           message: 원문의 should not 권고를 must not 의무로 강화하지 마세요.
-      max_statements: 2
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
+          message: 2문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+      max_statements: 1
     - id: handler-access
       question: completeRequest와 cancelRequest의 반환 후 요청 접근 의무를 두 함수의 근거로 함께 비교하세요.
         취소 함수의 처리와 같은 규칙이 적용되는 주체·시점을 구분하고, 다른 호출자나 애플리케이션까지 의무를 확대하지 마세요. 같은 접근 의무를
@@ -5505,6 +5512,11 @@ sections:
         - - 콜백
         - - 기록
         - - Thread::currentId()
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
+          message: 2문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+        - pattern: 실행한\s*측정|실행하지|미실행|제공된|원문|소스에
+          message: 생성기가 범위를 표시합니다. 이 문단은 제안할 관찰 기록만 설명하고 작성 과정·미실행 주의문을 덧붙이지 마세요.
       max_statements: 1
     - id: disconnect
       question: Camera::disconnect()에서 내부 객체에 연결 해제를 전달하는 _d()->disconnect() 호출과 그
@@ -5526,6 +5538,10 @@ sections:
         basis: description
         required_terms:
         - - disconnected
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){1}
+          message: 1문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+      max_statements: 1
     - id: disconnect-todo
       question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한
         문장으로 설명하세요. TODO의 소속 함수와 미완료 자원·조건을 한 번만 쓰세요.
@@ -5592,7 +5608,7 @@ sections:
         마세요. 관찰을 위해 함수를 새로 호출하는 절차를 제안하지 마세요.
       sources:
       - queue
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: investigation
         required_terms:
@@ -5602,6 +5618,11 @@ sections:
         reject_patterns:
         - pattern: 제공된|예시|코드.{0,5}(?:기반|바탕)
           message: 본문은 조사자가 관찰할 반환값만 설명합니다. 작성 과정과 예시 안내를 덧붙이지 마세요.
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){1}
+          message: 1문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+        - pattern: 성공|오류\s*코드|ENODEV|EACCES|EXDEV|EINVAL|ENOMEM|원문
+          message: 이 문단은 실제 기존 호출의 반환값을 기록하자는 계획만 제안합니다. 앞 절의 반환 계약과 오류 목록을 다시 쓰지
+            마세요.
     - id: reuse-state-record
       question: 기존 실행의 Request::reuse 전후 status_·controls_·metadata_와 RequestPending
         대입을 한 번씩 묶은 조사 기록 항목을 완전한 한국어 한 문장으로 제안하세요. 코드 대입식만으로 문장을 끝내지 말고, 같은 변수를 다른
