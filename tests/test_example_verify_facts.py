@@ -64,10 +64,10 @@ def test_material_proof_is_not_a_source_git_location_and_cannot_hide_structural_
     spec = importlib.util.spec_from_file_location('example_verify_facts_material', script)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    selector = dict(id='material', kind='product', file='product-evidence/spec.txt', text='Public material.')
-    record = dict(selector=selector.copy(), origin='product-material', status='available', commit='a'*40,
-                  file=selector['file'], line=1, end_line=1, text=selector['text'],
-                  sha256=hashlib.sha256(selector['text'].encode()).hexdigest())
+    from sdd.product_context import record as material_record
+    selector = dict(id='material', kind='product', file='product-evidence/spec.txt',
+                    text='Public material.\n', product_record={'id': 'spec', 'version': '1'})
+    record = material_record(json.loads(json.dumps(selector)), 'a'*40)
     cfg = SimpleNamespace(sections=lambda: [dict(id='guide', design_topics=[dict(id='q', sources=[selector])])])
     model = KnowledgeModel(meta={'source_commit': 'a'*40}, classes={'Api': ClassInfo('Api', loc=Location('api.h', 1))},
                            evidence={'guide/q/material': record})

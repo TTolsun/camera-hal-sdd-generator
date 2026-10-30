@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import copy
 import fnmatch
-import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -16,6 +15,7 @@ from sdd.facts.model import KnowledgeModel
 
 def source_citations(cfg, model):
     """Keep material proof in its validated domain; structural locations stay Git-owned."""
+    from sdd.product_context import record as material_record
     materials = {}
     for section in cfg.sections():
         for topic in section.get('design_topics', []):
@@ -26,15 +26,7 @@ def source_citations(cfg, model):
     source.evidence = {}
     for key, record in model.evidence.items():
         selector = materials.get(key)
-        text = record.get('text')
-        verified = (selector is not None and record.get('selector') == selector
-                    and record.get('origin') == 'product-material' and record.get('status') == 'available'
-                    and record.get('commit') == model.meta.get('source_commit')
-                    and isinstance(text, str) and text == selector.get('text')
-                    and record.get('file') == selector.get('file') and record.get('line') == 1
-                    and record.get('end_line') == max(1, len(text.splitlines()))
-                    and record.get('product_record') == selector.get('product_record')
-                    and hashlib.sha256(text.encode()).hexdigest() == record.get('sha256'))
+        verified = selector is not None and record == material_record(selector, model.meta.get('source_commit'))
         if not verified:
             source.evidence[key] = record
     # A structural location with the same file:line must still pass the Git
