@@ -3677,8 +3677,11 @@ sections:
       sources:
       - access
     - id: match
-      question: PipelineHandler::match() 구현자의 장치 획득과 Camera 생성·등록 책임을 두 문장 이내로 설명하세요.
-        실패와 반복 호출은 다루지 마세요.
+      question: PipelineHandler::match()가 필요한 장치를 모두 찾았을 때 MediaDevice::acquire()로
+        획득하고 Camera를 생성·내부 저장·등록한 뒤 true를 반환해야 한다는 구현자 계약을 설명하세요. 장치를 모두 찾지 못하면 어떤
+        장치도 획득하지 않거나 이미 획득한 장치를 MediaDevice::release()로 모두 해제하고 false를 반환해야 하는 분기도
+        포함하세요. 각 행동의 주체를 match() 구현자로 명시하고, 객체 생성 실패의 정리 경로나 다음 인스턴스 반복 호출은 추정하지 마세요.
+        세 문장 이내로 답하세요.
       sources:
       - match
       answer_contract:
@@ -3691,6 +3694,10 @@ sections:
           - 확보
           - acquire
         - - 등록
+        - - MediaDevice::release
+          - release()
+        - - 'true'
+        - - 'false'
         reject_patterns:
         - pattern: 생성.{0,12}실패
           message: 이 질문은 match의 장치 획득·카메라 생성·등록 의무만 다룹니다. 객체 생성 실패의 정리 경로를 추정하지 마세요.
@@ -3727,21 +3734,63 @@ sections:
 
         }'
     parts:
-    - id: state
-      question: Camera::createRequest()는 어느 카메라 상태에서 호출할 수 있습니까? 상태 이름을 모두 포함해 한 문장으로
-        답하세요.
+    - id: cookie
+      question: Camera::createRequest(cookie)의 cookie가 애플리케이션용 불투명 입력이라는 의미를 설명하세요.
+        값은 요청에 저장되고 Request::cookie()로 언제든 읽을 수 있으며 libcamera 관점에서 completely opaque라는
+        범위를 포함하세요. 불투명 값이라는 설명을 새로운 금지 의무(해석해서는 안 된다)나 실행 보장으로 강화하지 마세요. 입력 값의 자료형이나
+        내부 구현은 추정하지 마세요.
       sources:
       - create
+      answer_contract:
+        basis: description
+        required_terms:
+        - - cookie
+        - - Request::cookie()
+          - cookie()
+        - - libcamera
+      max_statements: 1
+    - id: state
+      question: Camera::createRequest()를 호출할 수 있는 상태가 Configured 또는 Running으로 제한된다는
+        호출 가능 조건과 오류 시 nullptr 반환만 한 문장으로 설명하세요. may only라는 가능 조건을 호출자의 새로운 해야 한다
+        의무로 강화하지 마세요. 같은 상태를 긍정과 부정으로 되풀이하거나 cookie·소유권·삭제 책임을 포함하지 마세요.
+      sources:
+      - create
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Configured
+        - - Running
+        - - nullptr
+        reject_patterns:
+        - pattern: 소유권|삭제.{0,12}책임
+          message: 소유권과 삭제 책임은 ownership 질문에서 설명합니다. 이 문단은 허용 상태와 nullptr 반환만 다룹니다.
+        - pattern: (?:합니다|입니다|됩니다|있습니다|없습니다)\.\s+\S
+          message: 이 질문은 허용 상태와 오류 반환을 한 문장으로 연결합니다. 상태 조건을 반복하거나 다른 계약을 덧붙이지 마세요.
+      max_statements: 1
     - id: ownership
-      question: Camera::createRequest()가 돌려주는 요청의 소유권과 삭제 책임은 누구에게 있습니까? 한 문장으로 답하세요.
+      question: Camera::createRequest()가 반환한 요청의 소유권과 삭제 책임이 호출자에게 있다는 사실만 한 문장으로
+        설명하세요. 앞 문단의 허용 상태·오류 반환과 cookie의 의미는 반복하지 마세요.
       sources:
       - create
     - id: reuse
-      question: 동일한 요청을 다시 큐에 넣기 전에 호출자가 Request::reuse()로 요청 상태와 연결된 컨트롤을 초기화해야 한다는 계약을
-        한 문장으로 설명하세요. 다시 제출하기 전과 큐에 넣기 전이라는 같은 시점을 되풀이하거나 세부 버퍼 플래그를 나열하지 마세요.
+      question: 새 요청을 만들지 않고 같은 요청을 다시 큐에 넣으려면 호출자가 Request::reuse()로 요청 상태와 연결된 컨트롤을
+        초기화해야 한다는 계약을 한 문장으로 설명하세요. 버퍼 플래그는 다음 질문에서 다루므로 반복하지 마세요.
       sources:
       - create
       - reuse
+      max_statements: 1
+    - id: buffers
+      question: Request::reuse(ReuseFlag)의 버퍼 분기를 한 문장으로 설명하세요. ReuseBuffers를 지정하면
+        addBuffer()로 추가한 기존 버퍼를 유지해 재사용하고, 지정하지 않으면 bufferMap_을 비운다는 차이만 설명하세요. 상태·컨트롤
+        초기화나 펜스 상세를 반복하지 마세요.
+      sources:
+      - reuse
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - ReuseBuffers
+        - - addBuffer
+        - - bufferMap_
       max_statements: 1
   - id: lifecycle
     title: 캡처 세션의 상태와 자원
@@ -3756,15 +3805,18 @@ sections:
       end: Functions that affect the camera state
     parts:
     - id: prepare
-      question: 캡처 준비를 위한 카메라 획득·구성·시작의 순서를 한 문장으로 설명하세요.
+      question: 캡처 준비를 위한 카메라 획득·구성·시작 API의 순서만 한 문장으로 설명하세요. 요청 처리 구간과 최종 정지·해제는
+        다음 질문에서 설명하므로 여기서 반복하지 마세요.
       sources:
       - state
     - id: finish
-      question: 요청 처리 종료와 애플리케이션의 사용 종료 시 카메라를 정지하고 해제하는 순서를 한 문장으로 설명하세요.
+      question: 시작 후 정지 전의 요청 처리 구간과 애플리케이션 사용을 완전히 끝낼 때 stop() 뒤 release()를 호출하는
+        순서를 한 번씩 설명하세요. 반복 캡처·재구성 가능성은 다음 질문에서 다루므로 덧붙이지 마세요.
       sources:
       - state
     - id: repeat
-      question: 카메라 해제 전에 시작·정지와 구성을 반복할 수 있는지 한 문장으로 설명하세요.
+      question: 최종 해제 전에는 시작·정지 사이클을 반복하거나 재구성으로 캡처 설정을 바꿀 수 있다는 계약만 한 문장으로 설명하세요.
+        앞서 설명한 요청 처리 구간과 최종 해제 순서를 다시 풀어 쓰지 마세요.
       sources:
       - state
   - id: request
@@ -3836,7 +3888,9 @@ sections:
   - id: boundary
     title: 스레드 경계와 동기화
     question: Camera 상태를 바꾸는 함수의 동기화 책임과 PipelineHandler::completeRequest()의 실행 스레드
-      계약을 구분하여 설명하세요. 이 계약을 모든 콜백에 확대하지 마세요.
+      계약을 구분하여 설명하세요. 이 계약을 모든 콜백에 확대하지 마세요. 상태 변경 API의 호출자에게 필요한 동기화 책임과 PipelineHandler::completeRequest()를
+      호출하는 pipeline handler의 책임을 명시적으로 구분하세요. 두 함수의 주체를 같은 호출자로 묶지 말고, 각 주체와 CameraManager
+      스레드 조건을 원문 범위에서 표현하세요.
     covers:
     - boundary
     sources:
@@ -3860,13 +3914,15 @@ sections:
         - - 동기화
     - id: complete
       question: PipelineHandler::completeRequest()의 실행 스레드 계약만 설명하세요. 다른 콜백이나 모든 메서드에
-        확대하지 마세요. 두 문단 이내로 필요한 계약만 설명하고 소스에 없는 결과나 보장은 덧붙이지 마세요.
+        확대하지 마세요. 두 문단 이내로 필요한 계약만 설명하고 소스에 없는 결과나 보장은 덧붙이지 마세요. completeRequest()의
+        호출 주체를 원문의 pipeline handler로 명시하세요. 상태 변경 API 호출자와 같은 주체라고 연결하지 마세요.
       sources:
       - completion
   - id: verification
     title: 정적 근거의 확인 범위
-    question: Camera::start()의 허용 상태와 호출자 동기화 계약을 behavior로 설명하고, 별도 limitation에서
-      Camera 클래스 주석의 시작 타이밍 문서화 TODO만 설명하세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.
+    question: Camera::start()의 허용 상태와 상태 검사 실패 시 음수 오류 반환을 behavior로 설명하고, 별도 limitation에서
+      Camera 클래스 주석의 시작 타이밍 문서화 TODO만 설명하세요. 호출자 동기화 의무는 boundary 절에서 한 번 설명하므로 여기서
+      되풀이하지 마세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.
     covers:
     - verification
     sources:
@@ -3883,32 +3939,25 @@ sections:
         end: '
 
           }'
-    - id: caller-synchronization
+    - id: start-api
       file: src/libcamera/camera.cpp
-      start: and shall be
-      end: state.
-      scope:
-        start: \brief Start capture from camera
-        end: int Camera::start
+      start: \brief Start capture from camera
+      end: '*/'
     parts:
     - id: contracts
-      question: Camera::start 구현이 isAccessAllowed에 전달하는 허용 상태 값만 설명하세요.
+      question: Camera::start()가 isAccessAllowed(Private::CameraConfigured)로 상태를 검사하고,
+        ret가 음수이면 그 값을 그대로 반환하는 동작을 설명하세요. API 주석의 시작 불가 상태 오류 -EACCES도 구분하세요. caller
+        동기화 의무는 boundary 절에 있으므로 반복하지 마세요.
       sources:
       - allowed-start-state
+      - start-api
       answer_contract:
         basis: implementation
         required_terms:
         - - CameraConfigured
           - Configured
-    - id: synchronization
-      question: Camera::start 호출자가 다른 상태 변경 함수와 지켜야 하는 동기화 의무만 설명하세요.
-      sources:
-      - caller-synchronization
-      answer_contract:
-        basis: contract
-        required_terms:
-        - - 호출자
-        - - 동기화
+        - - ret
+        - - -EACCES
     - id: timing
       question: 이 TODO 주석이 문서화를 요청한 대상은 무엇입니까? 대상만 한 문장으로 설명하세요.
       sources:
@@ -3953,7 +4002,9 @@ sections:
     aspects:
     - concurrency
   - id: verification
-    question: 시작 API의 명시된 계약과 아직 문서화되지 않은 타이밍은 무엇입니까?
+    question: Camera::start()의 허용 상태와 상태 검사 실패 시 음수 오류 반환을 behavior로 설명하고, 별도 limitation에서
+      Camera 클래스 주석의 시작 타이밍 문서화 TODO만 설명하세요. 호출자 동기화 의무는 boundary 절에서 한 번 설명하므로 여기서
+      되풀이하지 마세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.
     aspects:
     - verification
   show_evidence: true
@@ -4844,7 +4895,9 @@ sections:
     title: 제출에서 완료까지
     question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐
       한도, queueRequestDevice()의 책임, 버퍼 완료와 요청 완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션
-      콜백 스레드의 확인 범위를 구분하세요.
+      콜백 스레드의 확인 범위를 구분하세요. Camera::queueRequest()의 0 반환은 queued invokeMethod로 파이프라인에
+      전달한 시점으로 설명하고 waitingRequests_ 삽입 완료나 하드웨어 큐잉 성공·요청 완료로 단정하지 마세요. 각 함수의 호출·비동기
+      처리·완료 시점을 구분하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -4909,6 +4962,12 @@ sections:
         end: '
 
           }'
+    - id: thread-id
+      file: src/libcamera/base/thread.cpp
+      start: \brief Retrieve the ID of the current thread
+      end: '
+
+        }'
     covers:
     - journey
     parts:
@@ -4944,10 +5003,27 @@ sections:
         required_terms:
         - - queueRequest
         - - 완료
+    - id: preparation
+      question: 준비 신호 연결과 요청 준비를 담당하는 함수를 구분하세요. registerRequest()는 요청이 준비됐을 때 doQueueRequests(request->_d()->camera())를
+        부르는 prepared 신호 연결을 설정합니다. queueRequest()가 waitingRequests_에 요청을 추가한 뒤 prepare(300ms)를
+        호출하는 순서를 설명하고, 준비 단계나 하드웨어 큐잉이 실패하면 요청이 취소된다는 주석의 조건도 포함하세요. 대기 큐의 선두·한도 조건은
+        다음 질문에서 다루므로 반복하지 마세요. 세 문장 이내로 답하세요.
+      sources:
+      - device-queue
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - registerRequest
+        - - prepared
+        - - doQueueRequests
+        - - prepare(300ms)
+        - - 취소
+          - cancel
+      max_statements: 1
     - id: waiting
       question: waitingRequests_의 선두 요청 prepared_가 거짓이면 뒤 요청도 전달하지 않는 조건과, queuedRequests_
-        크기가 maxQueuedRequestsDevice_ 한도에 도달하면 전달을 중단하는 조건을 구분해 두 문장 이내로 설명하세요. 같은 선두 준비
-        조건을 되풀이하지 마세요.
+        크기가 maxQueuedRequestsDevice_ 한도에 도달하면 전달을 중단하는 조건을 구분해 두 문장 이내로 설명하세요. 같은
+        선두 준비 조건을 되풀이하지 마세요.
       sources:
       - device-queue
       - waiting-prepared
@@ -4971,20 +5047,29 @@ sections:
         - - completeRequest
         - - queueRequestDevice
     - id: device-result
-      question: queueRequestDevice 함수 이름과 성공 시 0, 오류 시 음수 오류 코드를 반환하는 계약을 한 문장으로 설명하세요.
+      question: queueRequestDevice() 구현자가 장치에 요청 파라미터를 프로그래밍하여 제공된 버퍼에 캡처되는 프레임에 적용해야
+        하는 책임을 설명하세요. 성공 시 0, 오류 시 음수 오류 코드 반환 계약을 함께 구분하세요. 실제 특정 장치에서 수행했다고 쓰거나
+        다른 큐의 준비·완료 경로를 반복하지 마세요.
       sources:
       - device-contract
       max_statements: 1
       answer_contract:
-        basis: description
+        basis: contract
         required_terms:
         - - queueRequestDevice
+        - - 파라미터
+          - parameter
+          - 컨트롤
+          - 매개변수
+        - - 버퍼
+          - buffer
         - - '0'
         - - 음수
+          - negative
     - id: buffer-complete
-      question: 파이프라인 핸들러가 버퍼 완료를 알릴 때 CameraManager 스레드에서 completeBuffer를 호출해야 한다는 의무와,
-        마지막 버퍼 완료만으로 요청이 자동 완료되지 않아 completeRequest를 별도로 명시 호출해야 한다는 의무를 두 짧은 문장 이내로 연결하세요.
-        마지막 버퍼 조건이나 요청 완료 의무를 되풀이하지 마세요.
+      question: 파이프라인 핸들러가 버퍼 완료를 알릴 때 CameraManager 스레드에서 completeBuffer를 호출해야 한다는
+        의무와, 마지막 버퍼 완료만으로 요청이 자동 완료되지 않아 completeRequest를 별도로 명시 호출해야 한다는 의무를 두 짧은
+        문장 이내로 연결하세요. 마지막 버퍼 조건이나 요청 완료 의무를 되풀이하지 마세요.
       sources:
       - buffer-notice
       - completion
@@ -4996,11 +5081,10 @@ sections:
         - - completeBuffer
         - - 완료
         - - completeRequest
-        - - 마지막 버퍼
     - id: request-complete
       question: completeRequest가 queuedRequests_의 앞부터 확인하며 RequestPending이면 반복을 중단하고,
-        그렇지 않으면 대기 버퍼가 없음을 확인해 제거하고 requestComplete로 애플리케이션에 제출 순서대로 반환하는 경로를 두 문장 이내로
-        설명하세요. 선두 Pending 조건을 마지막에 다시 쓰지 마세요.
+        그렇지 않으면 대기 버퍼가 없음을 확인해 제거하고 requestComplete로 애플리케이션에 제출 순서대로 반환하는 경로를 두 문장
+        이내로 설명하세요. 선두 Pending 조건을 마지막에 다시 쓰지 마세요.
       sources:
       - request-notice
       - completed-head
@@ -5010,6 +5094,23 @@ sections:
         required_terms:
         - - completeRequest
         - - RequestPending
+    - id: callback-context-check
+      question: CameraManager의 완료 함수 호출 지점과 애플리케이션 콜백 진입 지점에서 Thread::currentId()의
+        실제 반환값을 각각 기록해 비교하는 관찰 계획만 한 문장으로 제안하세요. 이 API가 현재 Linux 스레드 ID를 돌려준다는 근거를
+        사용하되, 가능한 ID 후보 목록이나 새로운 관측 필드를 만들지 마세요. 콜백이 반드시 같은 스레드 또는 별도 스레드에서 실행된다고
+        단정하지 마세요. 완료 의무와 미실행 주의문은 반복하지 마세요.
+      sources:
+      - completion
+      - thread-id
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - - CameraManager
+        - - 콜백
+        - - 관찰
+          - 기록
+        - - Thread::currentId()
+      max_statements: 1
     answer_contract:
       basis: description
       reject_patterns:
@@ -5018,9 +5119,10 @@ sections:
     design_prompt: focused
   - id: resources
     title: 요청·버퍼·fence의 수명
-    question: 요청 소유권과 삭제·재사용 책임, 버퍼 유효 기간, Fence 소유권 이동·실패·타임아웃 회수, ReuseBuffers의 펜스 권고와
-      완료 후 핸들러 접근 금지를 설명하세요. 재사용의 setRequest·pending_·bufferMap_ 및 필드 초기화 구현은 요청 API 문서가
-      담당하므로 여기서는 반복하지 마세요.
+    question: 요청 소유권과 삭제·재사용 책임, 버퍼 유효 기간, Fence 소유권 이동·실패·타임아웃 회수, ReuseBuffers의
+      펜스 권고와 완료 후 핸들러 접근 금지를 설명하세요. 재사용의 setRequest·pending_·bufferMap_ 및 필드 초기화 구현은
+      요청 API 문서가 담당하므로 여기서는 반복하지 마세요. Request::ReuseBuffers의 fence 사용 조건에서 should
+      not be used라는 부정형 지침을 보존하세요. must not으로 강화하거나 부정과 조건을 흐리는 사용 자제 조언으로 바꾸지 마세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -5047,7 +5149,8 @@ sections:
         end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
     - id: fence-expiry
       file: src/libcamera/request.cpp
-      start: If the \a fence associated with \a buffer isn't signalled, the request will
+      start: If the \a fence associated with \a buffer isn't signalled, the request
+        will
       end: be reused in another request.
       scope:
         start: \brief Add a FrameBuffer with its associated Stream to the Request
@@ -5109,8 +5212,8 @@ sections:
         - - 버퍼
         - - 콜백
     - id: fence-transfer
-      question: addBuffer 성공 시 Fence 소유권의 이동 대상 객체만 설명하세요. Fence를 가리키는 표현과 대상 이름을
-        함께 명시하세요.
+      question: addBuffer 성공 시 Fence 소유권이 이동하는 대상 객체만 한 문장으로 설명하세요. 실패 시 소유권과 수정 여부는
+        다음 질문이 담당하므로 이 문단에 포함하지 마세요.
       sources:
       - fence-move
       answer_contract:
@@ -5121,8 +5224,12 @@ sections:
           - 펜스
         - - 버퍼
           - buffer
+        reject_patterns:
+        - pattern: 실패
+          message: 이 문단은 성공 시 소유권 이동만 설명합니다. 실패 경로는 fence-failure 질문에서 다룹니다.
     - id: fence-failure
-      question: addBuffer가 실패하면 전달받은 fence의 상태를 어떻게 남깁니까? 실패 경로만 설명하세요.
+      question: addBuffer 실패 시 전달받은 fence가 수정되지 않고 소유권도 넘어가지 않는 실패 경로만 한 문장으로 설명하세요.
+        성공 시 이동 대상은 앞 질문에서 설명했으므로 반복하지 마세요.
       sources:
       - fence-move
       answer_contract:
@@ -5145,9 +5252,10 @@ sections:
         - - releaseFence
       max_statements: 1
     - id: reuse-fences
-      question: ReuseBuffers로 기존 버퍼를 유지해도 연결된 펜스는 재사용하지 않으며, 펜스를 사용할 때에는 이 플래그를 피하도록 권고한다는
-        두 사실을 한 문단으로 연결하세요. 원문의 should not 권고를 must not 금지로 강화하거나 앞서 설명한 setRequest·pending_·bufferMap_
-        구현을 다시 나열하지 마세요.
+      question: ReuseBuffers가 기존 버퍼를 유지하지만 연결된 fence는 재사용하지 않는다는 계약을 설명하세요. 원문의 if
+        fences are used 조건과 should not be used라는 부정형 지침을 그대로 보존하세요. 영문 표현 should not을
+        필요하면 그대로 병기하여 의무 강도를 분명히 하고, must not으로 강화하거나 긍정적인 사용 자제 조언으로 우회하지 마세요. 앞서
+        설명한 setRequest·pending_·bufferMap_ 구현은 반복하지 마세요.
       sources:
       - reuse-flags
       - reuse-advice
@@ -5261,14 +5369,21 @@ sections:
       file: src/libcamera/camera.cpp
       start: \brief Notify camera disconnection
       end: void Camera::disconnect()
+    - id: thread-id
+      file: src/libcamera/base/thread.cpp
+      start: \brief Retrieve the ID of the current thread
+      end: '
+
+        }'
     covers:
     - stopping
     parts:
     - id: camera-entry
       question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed
         음수 반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop
-        호출 진입·복귀를 관찰하세요. 호출 뒤의 pending 요청 ASSERT와 CameraConfigured 상태·0 반환도 포함하되 상태 설정과
-        블로킹 호출을 다른 문장으로 되풀이하지 마세요.
+        호출 진입·복귀를 관찰하세요. 호출 뒤의 pending 요청 ASSERT와 CameraConfigured 상태·0 반환도 포함하되 상태
+        설정과 블로킹 호출을 다른 문장으로 되풀이하지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는
+        문장과 상태 변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
       sources:
       - stop
       - stopping-call
@@ -5282,9 +5397,11 @@ sections:
         - - ConnectionTypeBlocking
       max_statements: 3
     - id: device-entry
-      question: PipelineHandler::stop이 waitingRequests_를 분리하는 지점과 stopDevice 진입·복귀를 관찰하여
-        장치 내부에서 멎은 경우와 반환한 경우를 구분하는 조사 계획만 두 문장 이내로 설명하세요. 반환 후 요청 취소·doQueueRequest 호출과
-        ASSERT는 다음 질문에서 다루므로 여기서는 열거하지 마세요.
+      question: PipelineHandler::stop의 waitingRequests_ 분리와 stopDevice 진입·복귀를 관찰하는
+        계획을 설명하세요. 진입 기록 뒤 복귀 기록이 없으면 stopDevice 내부 정체를 조사할 후보이고, 복귀했는데 큐가 남고 정지가
+        끝나지 않으면 그 뒤 취소·완료 경로를 조사할 후보임을 구분하세요. 실제 멎음을 관측했다고 단정하지 말고 두 경우를 나눌 기록 기준만
+        쓰세요. 후단 큐 ASSERT와 취소 호출은 다음 질문에서 다루므로 나열하지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다.
+        테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
       sources:
       - device-stop
       answer_contract:
@@ -5294,8 +5411,9 @@ sections:
         - - stopDevice
       max_statements: 2
     - id: pending
-      question: 발췌의 함수 호출 이름과 전달하는 요청 인자를 기록하는 조사 계획을 설명하세요. 정지 경로의 전체 함수를 열거하는 질문은
-        아닙니다.
+      question: 정지 후단에서 doQueueRequest(request) 호출과 전달하는 request를 기존 실행의 관찰 기록 항목으로
+        제안하세요. 반환형을 추측하거나 선언이 없다고 쓰지 마세요. 전체 정지 함수와 미실행 주의문은 반복하지 마세요. 계획 분류는 생성기의
+        실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
       sources:
       - pending-requeue
       answer_contract:
@@ -5303,9 +5421,10 @@ sections:
         required_terms:
         - - doQueueRequest
     - id: queue-assertions
-      question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를 해당 검사
-        지점에서 관찰하는 계획과 뒤의 requestSequence_ 0 초기화만 한 문장으로 설명하세요. 앞서 설명한 대기 큐 분리·장치 정지·요청
-        취소를 다시 나열하거나 ASSERT를 미래 실행 보장으로 쓰지 마세요.
+      question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를
+        해당 검사 지점에서 관찰하는 계획과 뒤의 requestSequence_ 0 초기화만 한 문장으로 설명하세요. 앞서 설명한 대기 큐 분리·장치
+        정지·요청 취소를 다시 나열하거나 ASSERT를 미래 실행 보장으로 쓰지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다.
+        테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
       sources:
       - stop-assertions
       answer_contract:
@@ -5316,29 +5435,25 @@ sections:
         - - ASSERT
       max_statements: 1
     - id: completion
-      question: completeRequest의 CameraManager 스레드 호출 의무, 제출 순서 반환과 함수 반환 뒤 핸들러의 요청 접근
-        금지 계약만 두 문장 이내로 설명하세요. 실제 애플리케이션 콜백 실행이나 조사 계획은 별도 실행 확인 항목에서 다룹니다.
-        일반 완료 경로의 RequestPending 반복 분기와 요청 제거 과정을 다시 설명하지 마세요.
+      question: 정지 중 CameraManager 문맥의 completeRequest 진입·복귀와 애플리케이션 콜백 도착을 별도로 기록하는
+        계획을 제안하세요. 핸들러 완료 호출이 복귀했지만 콜백 도착을 확인하지 못한 경우를 완료 처리 경로와 구분하고, 콜백의 실제 스레드는
+        앞 절의 Thread::currentId() 기록 방법으로 확인하도록 연결하세요. 스레드 구성을 미리 단정하거나 ID 후보 값을 지어내지
+        마세요. 앞 절의 완료 의무·소유권·제출 순서 계약과 전체 스레드 기록 절차는 다시 쓰지 마세요. 계획 분류는 생성기가 표시하므로 미실행·상태
+        변경 함수 재호출 주의문은 덧붙이지 마세요.
       sources:
       - completion
+      - thread-id
       answer_contract:
-        basis: contract
+        basis: investigation
         required_terms:
         - - completeRequest
         - - CameraManager
-        - - 제출 순서
-        - - 접근
-      max_statements: 1
-    - id: callback-observation
-      question: 실제 애플리케이션 콜백의 진입·복귀와 실행 스레드를 completeRequest 호출 문맥과 구분하여 기록할 조사
-        계획을 두 문장 이내로 제안하세요. 아직 실행하지 않은 계획이며 콜백 실행 결과는 검증 전임을 명시하세요.
-        completeRequest의 호출 스레드 의무를 콜백 실행 스레드나 시점의 관측 결과로 바꾸지 마세요.
-      sources:
-      - completion
-      statement_kind: limitation
-      max_statements: 1
+      max_statements: 2
     - id: disconnect
-      question: 이 disconnect 구현에서 호출하는 내부 처리 함수만 설명하세요.
+      question: Camera::disconnect()에서 내부 객체에 연결 해제를 전달하는 _d()->disconnect() 호출과 그
+        뒤 disconnected.emit()의 순서를 설명하세요. _d() 접근자와 내부 disconnect()를 이 함수가 호출하는 모든
+        함수의 완전한 목록이라고 단정하지 마세요. LOG와 id() 등 다른 호출의 존재를 부정하지 말고, 연결 해제 처리와 알림의 순서에
+        한정하세요. 신호의 의미와 TODO는 다음 질문에서 설명하므로 반복하지 마세요.
       sources:
       - disconnect-internal
       - notification
@@ -5355,8 +5470,8 @@ sections:
         required_terms:
         - - disconnected
     - id: disconnect-todo
-      question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한 문장으로
-        설명하세요. TODO의 소속 함수와 미완료 자원·조건을 한 번만 쓰세요.
+      question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한
+        문장으로 설명하세요. TODO의 소속 함수와 미완료 자원·조건을 한 번만 쓰세요.
       sources:
       - disconnect-todo
       - disconnect-todo-owner
@@ -5373,9 +5488,9 @@ sections:
       max_statements: 1
   - id: review
     title: 변경 검토와 실행 확인
-    question: queueRequest 반환값, Request::reuse 전후 상태·컨트롤·메타데이터와 선두 요청 상태를 조사 기록 항목으로 제안하세요.
-      정지의 stopDevice 진입·복귀와 두 큐의 ASSERT 관찰은 앞 정지 절에서 이미 제안하므로 다시 나열하지 마세요. 실제 시험 결과를 만들지
-      마세요.
+    question: queueRequest 반환값, Request::reuse 전후 상태·컨트롤·메타데이터와 선두 요청 상태를 조사 기록 항목으로
+      제안하세요. 정지의 stopDevice 진입·복귀와 두 큐의 ASSERT 관찰은 앞 정지 절에서 이미 제안하므로 다시 나열하지 마세요.
+      실제 시험 결과를 만들지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -5415,11 +5530,11 @@ sections:
     - review
     parts:
     - id: submission-record
-      question: Camera::queueRequest의 반환값을 그대로 기록하고 성공 0과 실패 음수 오류 코드를 구분할 조사 계획만
-        한 문장으로 제안하세요. 호출을 실행한 결과로 쓰거나 오류 코드·로그 메시지·분기 조사 과제를 추가하지 마세요.
+      question: 조사자가 기존 실행에서 남길 Camera::queueRequest() 반환값을 기록 항목으로 제안하세요. 이 제안은 실행
+        결과가 아니며, 관찰을 위해 상태 변경 함수를 다시 호출하지 않는다는 공통 주의는 여기에서만 한 번 설명하세요.
       sources:
       - queue
-      max_statements: 1
+      max_statements: 2
       answer_contract:
         basis: investigation
         required_terms:
@@ -5427,8 +5542,9 @@ sections:
         - - 반환
         - - 기록
     - id: reuse-state-record
-      question: 조사 기록 항목으로 Request::reuse 전후의 status_·controls_·metadata_ 값과 RequestPending
-        대입을 한 문장으로 제안하세요. 먼저 대입 대상 이름을 말한 뒤 같은 변수를 다시 기록하라고 되풀이하지 마세요.
+      question: 기존 실행의 Request::reuse 전후 status_·controls_·metadata_와 RequestPending
+        대입을 한 번씩 묶은 조사 기록 항목을 완전한 한국어 한 문장으로 제안하세요. 코드 대입식만으로 문장을 끝내지 말고, 같은 변수를 다른
+        말로 되풀이하지 마세요. 미실행·함수 재호출 주의문은 앞 질문에서 설명했으므로 반복하지 마세요.
       sources:
       - record-status
       - record-controls
@@ -5442,7 +5558,8 @@ sections:
         - - controls_
         - - metadata_
     - id: completion-record
-      question: 소스 기반 조사 기록에 넣을 선두 요청의 상태 조회식을 코드 그대로 명시하고 기록할 항목으로 제안하세요.
+      question: 소스의 선두 요청 상태 조회식을 코드 그대로 포함해 기존 실행에서 남길 조사 기록 항목을 완전한 한국어 문장으로 제안하세요.
+        미실행·함수 재호출 주의문은 앞 질문에서 설명했으므로 반복하지 마세요.
       sources:
       - record-head-status
       max_statements: 1
