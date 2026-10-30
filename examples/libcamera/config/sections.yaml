@@ -3794,15 +3794,16 @@ sections:
       max_statements: 1
   - id: lifecycle
     title: 캡처 세션의 상태와 자원
-    question: 캡처 준비 순서, 시작 이후 요청 처리, 정지와 최종 해제, 해제 전 반복 시작·정지와 재설정을 설명하세요. 최종 해제 단계를
-      빠뜨리지 마세요.
+    question: 캡처 준비 순서, 시작 이후 요청 처리, 실행 중인 카메라를 최종 정지·해제하는 상태 전이와 해제 전 반복 시작·정지 및
+      재구성을 설명하세요. 실행 중인 카메라의 정지 후 해제 경로를 상태 그림과 함께 확인하고, 이미 정지한 카메라까지 정지를 새로 해야 한다는
+      의무로 확대하지 마세요.
     covers:
     - lifecycle
     sources:
     - id: state
       file: src/libcamera/camera.cpp
       start: \section camera_operation
-      end: Functions that affect the camera state
+      end: \enddot
     parts:
     - id: prepare
       question: 캡처 준비를 위한 카메라 획득·구성·시작 API의 순서만 한 문장으로 설명하세요. 요청 처리 구간과 최종 정지·해제는
@@ -3810,19 +3811,21 @@ sections:
       sources:
       - state
     - id: finish
-      question: 시작 후 정지 전의 요청 처리 구간과 애플리케이션 사용을 완전히 끝낼 때 카메라를 정지한 뒤 해제하는 순서를 한 번씩
-        설명하세요. 선택한 상태 설명 원문의 동작 표현을 사용하고, 발췌에 명시되지 않은 함수 식별자는 추가하지 마세요. 반복 캡처·재구성
-        가능성은 다음 질문에서 다루므로 덧붙이지 마세요.
+      question: 시작한 카메라가 정지 전까지 요청을 처리한다는 범위를 먼저 설명하세요. 실행 중인 Running 카메라의 사용을 완전히
+        끝내는 경우에는 상태 그림의 정지 후 Configured 복귀와 이어지는 해제 순서를 명시하세요. 이 순서를 이미 정지한 카메라까지
+        정지를 새로 해야 한다는 의무로 확대하지 마세요. 요청 처리 구간과 최종 종료 경로만 두 문장 이내로 설명하고 반복 캡처·재구성은 다음
+        질문에서 다루세요.
       sources:
       - state
       answer_contract:
         basis: description
         required_terms:
+        - - Running
+        - - Configured
         - - 정지
         - - 해제
-        reject_patterns:
-        - pattern: \b(?:stop|release)\(\)
-          message: 이 발췌는 정지·해제 동작을 설명합니다. 발췌에 없는 함수 식별자를 덧붙이지 마세요.
+        - - 후
+          - 뒤
       max_statements: 1
     - id: repeat
       question: 최종 해제 전에는 시작·정지 사이클을 반복하거나 재구성으로 캡처 설정을 바꿀 수 있다는 계약만 한 문장으로 설명하세요.
