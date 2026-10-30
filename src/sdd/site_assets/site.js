@@ -115,6 +115,46 @@
   syncWidth();
 
   // Keep navigation context within this tab, including language switches and history.
+  const foldsKey = `sdd.sidebar.folds:${storageRoot.pathname}`;
+  const folds = [...sidebar.querySelectorAll('details[data-nav-id]')];
+  const defaults = new Map(folds.map(node => [node.dataset.navId, node.open]));
+  const observed = new Map(defaults);
+  const touched = new Set();
+  let foldStates = new Map();
+  function restoreSidebarFolds() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(foldsKey));
+      if (saved && saved.version === 1 && saved.states && typeof saved.states === 'object'
+          && !Array.isArray(saved.states)) {
+        foldStates = new Map(Object.entries(saved.states).filter(([, value]) => typeof value === 'boolean'));
+      }
+    } catch (_) { /* Native disclosures also work with blocked or damaged storage. */ }
+    for (const node of folds) {
+      const id = node.dataset.navId;
+      node.open = foldStates.has(id) ? foldStates.get(id) : defaults.get(id);
+      // Ignore toggle events queued by restoration, including BFCache pageshow.
+      observed.set(id, node.open);
+    }
+  }
+  function saveSidebarFolds() {
+    // Scan the DOM, not the asynchronous toggle event queue. A fast navigation
+    // can hide the page before toggle fires; nested states stay independent.
+    for (const node of folds) {
+      const id = node.dataset.navId;
+      if (node.open !== observed.get(id) || touched.has(id)) foldStates.set(id, node.open);
+      observed.set(id, node.open);
+    }
+    touched.clear();
+    try {
+      sessionStorage.setItem(foldsKey, JSON.stringify({version: 1, states: Object.fromEntries(foldStates)}));
+    } catch (_) { /* Preserve in-memory choices and the remaining reader controls. */ }
+  }
+  folds.forEach(node => {
+    // Native mouse and keyboard activation both click the summary. Remember
+    // intent even when two quick toggles coalesce back to the default value.
+    node.querySelector(':scope > summary').addEventListener('click', () => touched.add(node.dataset.navId));
+    node.addEventListener('toggle', saveSidebarFolds);
+  });
   const scrollKey = `sdd.sidebar.scroll:${storageRoot.pathname}`;
   function saveSidebarScroll() {
     if (!desktop.matches) return;
@@ -133,10 +173,18 @@
   }
   sidebar.addEventListener('click', saveSidebarScroll);
   sidebar.addEventListener('auxclick', saveSidebarScroll);
-  window.addEventListener('pagehide', saveSidebarScroll);
-  window.addEventListener('pageshow', restoreSidebarScroll);
+  window.addEventListener('pagehide', () => {
+    saveSidebarFolds();
+    saveSidebarScroll();
+  });
+  function restoreSidebarContext() {
+    // Menu height must be final before the browser clamps its saved offset.
+    restoreSidebarFolds();
+    restoreSidebarScroll();
+  }
+  window.addEventListener('pageshow', restoreSidebarContext);
   desktop.addEventListener('change', restoreSidebarScroll);
-  restoreSidebarScroll();
+  restoreSidebarContext();
   document.querySelectorAll('dialog [data-close]').forEach(button => {
     button.addEventListener('click', () => button.closest('dialog').close());
   });

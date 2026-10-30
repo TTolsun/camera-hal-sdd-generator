@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 import re
 
@@ -334,11 +335,26 @@ def review_store(cfg, payload):
     return UnitStore(cfg, identity_data), request_data
 
 
+def _review_config(cfg):
+    """Select only the review agent; retain original inputs and archive paths."""
+    profile = cfg.paths.get('consistency_profile')
+    if profile is None:
+        return cfg
+    from .config import load
+    return replace(cfg, agent=load(profile).agent)
+
+
 def audit(cfg, model, agent):
     from .generation_run import Execution
     configured = groups(cfg)
     if not configured:
         raise ValueError('No consistency contracts configured')
+    cfg = _review_config(cfg)
+    if cfg.paths.get('consistency_profile') is not None:
+        # The supplied Agent/Execution can belong to the generation profile.
+        # Never reuse that transport for an explicitly independent review.
+        from .llm import Agent
+        agent = Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts')
     agent = agent if isinstance(agent, Execution) else Execution(cfg, agent)
     report = dict(schema=1, source_commit=model.meta.get('source_commit'), contracts=[],
                   fresh_batches=0, reused_batches=0, human_review='pending',
@@ -389,6 +405,7 @@ def enforce(cfg, model):
     configured = groups(cfg)
     if not configured:
         return
+    cfg = _review_config(cfg)
     path = cfg.build_dir/'consistency-review.json'
     report = json.loads(path.read_text(encoding='utf-8'))
     if report.get('status') != 'passed' or report.get('source_commit') != model.meta.get('source_commit'):

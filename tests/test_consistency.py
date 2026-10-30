@@ -247,3 +247,102 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
     report_path.write_text(json.dumps(failed), encoding='utf-8')
     with pytest.raises(ValueError, match='contradiction'):
         enforce(tmp_cfg, model)
+
+
+def test_separate_review_profile_uses_independent_cli_and_original_inputs_and_archives(tmp_cfg, monkeypatch):
+    import hashlib
+    import subprocess
+    import yaml
+    from sdd.config import load
+    from sdd.consistency import audit, enforce
+    from sdd.facts.model import KnowledgeModel
+    from sdd.generation_run import Execution
+    from sdd.llm import AgentError
+
+    original = yaml.safe_load((tmp_cfg.root/'sdd.yaml').read_text(encoding='utf-8'))
+    original['agent'] = dict(kind='cli', runner='claude', model='generation-fixture', max_input_chars=1)
+    original['paths'] = dict(consistency_profile='profiles/review.yaml', consistency_file='contracts.yaml')
+    (tmp_cfg.root/'sdd.yaml').write_text(yaml.safe_dump(original), encoding='utf-8')
+    cfg = load(tmp_cfg.root/'sdd.yaml')
+    profile = cfg.paths['consistency_profile']
+    profile.parent.mkdir()
+    review = dict(kind='cli', runner='codex', model='gpt-6.1-terra',
+                  args=['-c', 'model_reasoning_effort="high"'], max_input_chars=40000)
+
+    def write_profile():
+        profile.write_text(yaml.safe_dump(dict(agent=review,
+            source=dict(root='unrelated-source'), output=dict(sdd_dir='unrelated-docs'),
+            paths=dict(consistency_file='unrelated-contracts.yaml'))), encoding='utf-8')
+
+    write_profile()
+    cfg.sdd_dir.mkdir(parents=True)
+    revision = 'a'*40
+    (cfg.sdd_dir/'primary.md').write_text(f'---\nsource_commit: {revision}\n---\n\nThe caller completes a request.', encoding='utf-8')
+    cfg.paths['consistency_file'].write_text(yaml.safe_dump(dict(contracts=[dict(id='completion',
+        question='Who completes it?', primary='primary.md', documents=['primary.md'],
+        match='request', evidence=['s/t/source'])])), encoding='utf-8')
+    source = 'The caller shall explicitly complete a request.'
+    model = KnowledgeModel(meta=dict(source_commit=revision), evidence={'s/t/source': dict(
+        status='available', text=source, sha256=hashlib.sha256(source.encode()).hexdigest(),
+        commit=revision, file='device.cpp', line=5)})
+    calls = []
+
+    def command(selected):
+        assert selected.runner == 'codex' and selected.model == review['model']
+        return ['review-fixture']
+
+    def run(argv, **kwargs):
+        calls.append(argv)
+        assert '--model' in argv and 'model_reasoning_effort="high"' in argv
+        assert kwargs['cwd'].is_relative_to(cfg.build_dir/'prompts')
+        payload = json.loads(kwargs['prompt'].split('<user>\n', 1)[1].split('\n</user>', 1)[0])
+        findings = [dict(claim_id=key, peers=[], status='compatible', condition='explicit completion',
+            actor='caller', timing='completion', scope='request', reason='Source supports claim.',
+            sources=[dict(source_id='s/t/source')]) for key in payload['claims']]
+        events = [dict(type='turn.started'), dict(type='item.completed',
+            item=dict(type='agent_message', text=json.dumps(dict(findings=findings)))), dict(type='turn.completed')]
+        return subprocess.CompletedProcess(argv, 0, '\n'.join(json.dumps(event) for event in events), '')
+
+    class GenerationAgent:
+        def chat(self, *args, **kwargs):
+            pytest.fail('The generation agent must never run the independent review')
+
+    monkeypatch.setattr('sdd.cli_agent.command', command)
+    monkeypatch.setattr('sdd.cli_agent.run', run)
+    supplied = Execution(cfg, GenerationAgent())
+    assert audit(cfg, model, supplied)['status'] == 'passed'
+    assert cfg.agent.runner == 'claude' and cfg.agent.max_input_chars == 1
+    receipts = list((cfg.build_dir/'prompts/calls').rglob('*.receipt.json'))
+    assert len(receipts) == 1
+    assert json.loads(receipts[0].read_text(encoding='utf-8'))['model'] == 'gpt-6.1-terra'
+    assert not (profile.parent/'build').exists()
+    enforce(cfg, model)
+    assert audit(cfg, model, supplied)['reused_batches'] == 1 and len(calls) == 1
+    # Generation profile changes cannot change this independent review identity.
+    cfg.agent.model = 'different-generation-model'
+    enforce(cfg, model)
+    # Review profile changes do change it, so publication requires a new review.
+    review['model'] = 'different-review-model'
+    write_profile()
+    with pytest.raises(ValueError, match='current source-bound CLI receipts'):
+        enforce(cfg, model)
+    def unavailable(_):
+        raise RuntimeError('Selected review CLI is unavailable')
+    monkeypatch.setattr('sdd.cli_agent.command', unavailable)
+    with pytest.raises(AgentError, match='Selected review CLI is unavailable'):
+        audit(cfg, model, supplied)
+    report = json.loads((cfg.build_dir/'consistency-review.json').read_text(encoding='utf-8'))
+    assert report['status'] == 'incomplete' and len(calls) == 1
+
+
+@pytest.mark.parametrize('agent', [dict(kind='cli', runner='unsupported'), dict(kind='cli', args='--bad')])
+def test_invalid_review_profile_uses_existing_config_validation(tmp_cfg, agent):
+    import yaml
+    from sdd.consistency import _review_config
+    profile = tmp_cfg.root/'invalid-review.yaml'
+    profile.write_text(yaml.safe_dump(dict(agent=agent)), encoding='utf-8')
+    tmp_cfg.paths['consistency_profile'] = profile
+    original = tmp_cfg.agent
+    with pytest.raises(ValueError):
+        _review_config(tmp_cfg)
+    assert tmp_cfg.agent is original
