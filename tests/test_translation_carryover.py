@@ -99,3 +99,15 @@ def test_catalog_refresh_records_carryover_and_preserves_output_on_bad_history(t
     with pytest.raises(ValueError, match='context identity'):
         prepare_catalog(tmp_cfg, path)
     assert path.read_bytes() == damaged
+    # An event attached to the wrong catalog commit cannot authenticate a
+    # source-free UI label during a later refresh.
+    document = '<p>동작 안내</p>'
+    key = '동작 안내'
+    claimed = {**lineage, 'source_string_sha256': [hashlib.sha256(key.encode()).hexdigest()],
+               'translation_sha256': {hashlib.sha256(key.encode()).hexdigest():
+                                      hashlib.sha256(b'Actions').hexdigest()}}
+    path.write_text(json.dumps(dict(source_commit='a'*40, strings={key: 'Actions'},
+        translation_contexts={key: [dict(resolved_source=key, inline_tokens={}, source_ids=[])]},
+        source_contexts={}, source_carryover=claimed)), encoding='utf-8')
+    prepare_catalog(tmp_cfg, path)
+    assert 'source_carryover' not in json.loads(path.read_bytes())

@@ -82,8 +82,8 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
                     if hashlib.sha256(key.encode()).hexdigest() in carried},
                 validation='Every literal source, location, enclosing scope and inline subject is unchanged; commit revalidated.',
                 assessment='Historical translations retained; not new inference or human approval.')
-        else:
-            event = retained_carryover({**previous, 'source_commit': catalog['source_commit']}, catalog['strings'])
+        elif previous.get('source_commit') == catalog['source_commit']:
+            event = retained_carryover(previous, catalog['strings'])
             if event:
                 catalog['source_carryover'] = event
     catalog['legacy_reuse_policy'] = ('Values imported without recorded context retain their prior review status; '
