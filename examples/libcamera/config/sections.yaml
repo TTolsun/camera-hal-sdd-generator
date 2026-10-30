@@ -6237,11 +6237,15 @@ sections:
       제출 순서를 보존하는 계약을 구분하세요. 각 문단은 한 가지 독자 과업을 설명하고, 같은 결과나 반환값을 다시 풀어 쓰지 마세요. 소스
       한 줄마다 문단을 만들지 마세요. 아래 절에서 설명하는 내부 구현을 미확인 한계로 반복하지 마세요.
   - id: delivery
-    question: request->_d()->complete() 이후 카메라 데이터의 queuedRequests_ 맨 앞이 RequestPending이면
-      break하고 뒤의 완료 요청 통지를 기다리는 흐름을 설명하세요. 완료 요청의 남은 버퍼 ASSERT, pop_front와 Camera::requestComplete의
-      requestCompleted.emit, 연결 해제 상태에서도 완료 가능한 경로, 마지막 doQueueRequests로 대기 요청 큐잉을
-      허용하는 흐름을 설명하세요. break를 취소나 모든 요청 완료로 바꾸지 마세요. 각 문단은 한 가지 독자 과업을 설명하고, 같은 결과나
-      반환값을 다시 풀어 쓰지 마세요. 소스 한 줄마다 문단을 만들지 마세요. 아래 절에서 설명하는 내부 구현을 미확인 한계로 반복하지 마세요.
+    question: Request::Private::complete()의 RequestPending·대기 버퍼 ASSERT와 cancelled_에
+      따른 RequestCancelled 또는 RequestComplete 갱신을 설명하세요. PipelineHandler::completeRequest에서
+      카메라 데이터의 queuedRequests_ 맨 앞이 RequestPending이면 break하고 pop하지 않는 제어 흐름을 설명하세요.
+      뒤 항목이 존재하거나 완료되었다고 단정하지 마세요. Pending이 아닌 맨 앞 요청의 대기 버퍼 ASSERT·pop_front·Camera::requestComplete
+      호출을 이어서 설명하세요. Camera::requestComplete의 CameraStopping부터 CameraRunning까지 상태
+      검사, allowDisconnected=true 및 requestCompleted.emit을 구분하세요. Fatal 로그는 허용 상태 밖인
+      오류 경로로 구분하고, Fatal 이후 실행 여부는 추정하지 마세요. while 종료 뒤 doQueueRequests로 대기 요청 큐잉을
+      허용하는 흐름도 설명하세요. break는 루프 종료이며 요청 취소·큐 안 모든 요청 완료로 바꾸지 마세요. 각 문단은 관련 조건과 결과를
+      함께 설명하며 최대 네 문단으로 작성하세요. 같은 결과나 함수 이름을 풀어 반복하지 마세요.
   design_topics:
   - id: responsibility
     title: 요청 완료를 알릴 책임과 접근 종료
@@ -6276,11 +6280,15 @@ sections:
       max_statements: 4
   - id: delivery
     title: 대기 요청을 확인하고 앱으로 알리는 경로
-    question: request->_d()->complete() 이후 카메라 데이터의 queuedRequests_ 맨 앞이 RequestPending이면
-      break하고 뒤의 완료 요청 통지를 기다리는 흐름을 설명하세요. 완료 요청의 남은 버퍼 ASSERT, pop_front와 Camera::requestComplete의
-      requestCompleted.emit, 연결 해제 상태에서도 완료 가능한 경로, 마지막 doQueueRequests로 대기 요청 큐잉을
-      허용하는 흐름을 설명하세요. break를 취소나 모든 요청 완료로 바꾸지 마세요. 각 문단은 한 가지 독자 과업을 설명하고, 같은 결과나
-      반환값을 다시 풀어 쓰지 마세요. 소스 한 줄마다 문단을 만들지 마세요. 아래 절에서 설명하는 내부 구현을 미확인 한계로 반복하지 마세요.
+    question: Request::Private::complete()의 RequestPending·대기 버퍼 ASSERT와 cancelled_에
+      따른 RequestCancelled 또는 RequestComplete 갱신을 설명하세요. PipelineHandler::completeRequest에서
+      카메라 데이터의 queuedRequests_ 맨 앞이 RequestPending이면 break하고 pop하지 않는 제어 흐름을 설명하세요.
+      뒤 항목이 존재하거나 완료되었다고 단정하지 마세요. Pending이 아닌 맨 앞 요청의 대기 버퍼 ASSERT·pop_front·Camera::requestComplete
+      호출을 이어서 설명하세요. Camera::requestComplete의 CameraStopping부터 CameraRunning까지 상태
+      검사, allowDisconnected=true 및 requestCompleted.emit을 구분하세요. Fatal 로그는 허용 상태 밖인
+      오류 경로로 구분하고, Fatal 이후 실행 여부는 추정하지 마세요. while 종료 뒤 doQueueRequests로 대기 요청 큐잉을
+      허용하는 흐름도 설명하세요. break는 루프 종료이며 요청 취소·큐 안 모든 요청 완료로 바꾸지 마세요. 각 문단은 관련 조건과 결과를
+      함께 설명하며 최대 네 문단으로 작성하세요. 같은 결과나 함수 이름을 풀어 반복하지 마세요.
     covers:
     - delivery
     sources:
@@ -6310,17 +6318,33 @@ sections:
         }'
     parts:
     - id: answer
-      question: request->_d()->complete() 이후 카메라 데이터의 queuedRequests_ 맨 앞이 RequestPending이면
-        break하고 뒤의 완료 요청 통지를 기다리는 흐름을 설명하세요. 완료 요청의 남은 버퍼 ASSERT, pop_front와 Camera::requestComplete의
-        requestCompleted.emit, 연결 해제 상태에서도 완료 가능한 경로, 마지막 doQueueRequests로 대기 요청 큐잉을
-        허용하는 흐름을 설명하세요. break를 취소나 모든 요청 완료로 바꾸지 마세요. 각 문단은 한 가지 독자 과업을 설명하고, 같은 결과나
-        반환값을 다시 풀어 쓰지 마세요. 소스 한 줄마다 문단을 만들지 마세요. 아래 절에서 설명하는 내부 구현을 미확인 한계로 반복하지 마세요.
+      question: Request::Private::complete()의 RequestPending·대기 버퍼 ASSERT와 cancelled_에
+        따른 RequestCancelled 또는 RequestComplete 갱신을 설명하세요. PipelineHandler::completeRequest에서
+        카메라 데이터의 queuedRequests_ 맨 앞이 RequestPending이면 break하고 pop하지 않는 제어 흐름을 설명하세요.
+        뒤 항목이 존재하거나 완료되었다고 단정하지 마세요. Pending이 아닌 맨 앞 요청의 대기 버퍼 ASSERT·pop_front·Camera::requestComplete
+        호출을 이어서 설명하세요. Camera::requestComplete의 CameraStopping부터 CameraRunning까지 상태
+        검사, allowDisconnected=true 및 requestCompleted.emit을 구분하세요. Fatal 로그는 허용 상태
+        밖인 오류 경로로 구분하고, Fatal 이후 실행 여부는 추정하지 마세요. while 종료 뒤 doQueueRequests로 대기 요청
+        큐잉을 허용하는 흐름도 설명하세요. break는 루프 종료이며 요청 취소·큐 안 모든 요청 완료로 바꾸지 마세요. 각 문단은 관련 조건과
+        결과를 함께 설명하며 최대 네 문단으로 작성하세요. 같은 결과나 함수 이름을 풀어 반복하지 마세요.
       sources:
       - complete
       - notification
       - state
       - request
       max_statements: 4
+    answer_contract:
+      basis: implementation
+      required_terms:
+      - - RequestPending
+      - - cancelled_
+      - - RequestCancelled
+      - - RequestComplete
+      - - CameraStopping
+      - - CameraRunning
+      - - allowDisconnected
+      - - requestCompleted
+      - - doQueueRequests
   routes:
   - q: 버퍼 완료와 요청 완료를 구분하고 제출 순서대로 돌아오는 알림과 접근 종료 책임을 확인하세요.
     to: '#요청-완료를-알릴-책임과-접근-종료'
