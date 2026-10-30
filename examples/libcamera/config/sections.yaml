@@ -5315,17 +5315,27 @@ sections:
         - - ASSERT
       max_statements: 1
     - id: completion
-      question: 정지 중 completeRequest 호출 조사에서 CameraManager 호출 문맥, 반환 뒤 핸들러의 요청 접근 금지와
-        제출 순서 반환 계약을 한 문장으로 짧게 연결하고 실제 애플리케이션 콜백 실행은 별도로 관찰한다는 계획을 덧붙이세요. 일반 완료 경로의 RequestPending
-        반복 분기와 요청 제거 과정을 다시 설명하지 마세요.
+      question: completeRequest의 CameraManager 스레드 호출 의무, 제출 순서 반환과 함수 반환 뒤 핸들러의 요청 접근
+        금지 계약만 두 문장 이내로 설명하세요. 실제 애플리케이션 콜백 실행이나 조사 계획은 별도 실행 확인 항목에서 다룹니다.
+        일반 완료 경로의 RequestPending 반복 분기와 요청 제거 과정을 다시 설명하지 마세요.
       sources:
       - completion
       answer_contract:
-        basis: investigation
+        basis: contract
         required_terms:
         - - completeRequest
         - - CameraManager
-      max_statements: 2
+        - - 제출 순서
+        - - 접근
+      max_statements: 1
+    - id: callback-observation
+      question: 실제 애플리케이션 콜백의 진입·복귀와 실행 스레드를 completeRequest 호출 문맥과 구분하여 기록할 조사
+        계획을 두 문장 이내로 제안하세요. 아직 실행하지 않은 계획이며 콜백 실행 결과는 검증 전임을 명시하세요.
+        completeRequest의 호출 스레드 의무를 콜백 실행 스레드나 시점의 관측 결과로 바꾸지 마세요.
+      sources:
+      - completion
+      statement_kind: limitation
+      max_statements: 1
     - id: disconnect
       question: 이 disconnect 구현에서 호출하는 내부 처리 함수만 설명하세요.
       sources:
