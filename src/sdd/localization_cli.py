@@ -38,11 +38,17 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
         # The public export path always checks the completed bilingual review.
         out = _render_site(cfg, Path(temporary), check_consistency=False)
         declared_labels = diagram_translations(out)
+        from .facts.model import KnowledgeModel
+        from .translation_context import collect, git_loader
+        model = KnowledgeModel.load(cfg.facts_path)
+        source_loader = git_loader(cfg.source_root, str(model.meta.get('source_commit', '')))
+        contexts, source_contexts = {}, {}
         pages, units = {}, set()
         for path in sorted(out.rglob('*.html')):
             document = path.read_text(encoding='utf-8')
             pages[path.relative_to(out).as_posix()] = source_hash(document)
             units.update(display_strings(document))
+            collect(document, model, contexts, source_contexts, source_loader)
         for entry in json.loads((out / 'assets/search.json').read_text(encoding='utf-8')):
             fields = ('page',) if entry.get('kind') == 'symbol' else ('title', 'page')
             units.update(entry[k].strip() for k in fields if KOREAN.search(entry[k]))
@@ -52,6 +58,16 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
                 units.update(v.strip() for v in [item['term'], item['definition'], *item['names']] if KOREAN.search(v))
     catalog = {'schema': 1, 'review_status': 'human-review-pending', 'pages': pages,
                'strings': {key: declared_labels.get(key, previous.get('strings', {}).get(key, '')) for key in sorted(units)}}
+    catalog.update(source_commit=model.meta['source_commit'],
+                   translation_contexts=contexts, source_contexts=source_contexts)
+    # Legacy values keep their original status. Once context was recorded, a
+    # changed binding/source cannot quietly reuse its previous translation.
+    if 'translation_contexts' in previous:
+        for key in catalog['strings']:
+            if previous['translation_contexts'].get(key, []) != contexts.get(key, []):
+                catalog['strings'][key] = ''
+    catalog['legacy_reuse_policy'] = ('Values imported without recorded context retain their prior review status; '
+        'they are not newly inferred or context-reviewed. New or changed recorded bindings require retranslation.')
     translation_agent = None
     if translate:
         from .translation import translate_missing
