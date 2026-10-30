@@ -59,7 +59,7 @@ def collect(document, model, contexts, pool, source_loader=None):
                           if r.get('status') == 'available' and r.get('file') == file
                           and _contains_line(r, int(number))]
             if not candidates:
-                if source_loader is None or ref[0] not in model.citations:
+                if source_loader is None or ref[0] not in model.citations():
                     raise ValueError(f'Translation source reference cannot be resolved: {ref[0]}')
                 text = source_loader(file)
                 record = dict(file=file, line=1, end_line=1 + text.count('\n'),
