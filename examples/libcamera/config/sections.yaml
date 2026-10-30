@@ -5079,24 +5079,39 @@ sections:
       end: '
 
         }'
+    - id: queued-connection
+      file: src/libcamera/base/bound_method.cpp
+      start: bool BoundMethodBase::activatePack(
+      end: '
+
+        }'
+      scope:
+        start: \enum ConnectionType
+        end: '
+
+          }'
     covers:
     - journey
     parts:
     - id: summary
       role: summary
-      question: queueRequest가 성공을 반환해도 촬영이 끝난 것은 아니며, 요청 완료는 파이프라인 핸들러가 명시적으로 알린 뒤
-        제출 순서대로 애플리케이션에 돌아온다는 결론을 쉬운 말로 먼저 설명하세요.
+      question: queueRequest의 0은 파이프라인 대상 queued 호출을 지정한 뒤의 반환값이며 요청 완료는 파이프라인 핸들러가
+        명시적으로 알린 뒤 제출 순서대로 애플리케이션에 돌아온다는 두 단계의 차이를 쉬운 말로 먼저 설명하세요. 두 문장 이내로 답하세요.
       sources:
       - queue
       - request-duty
       - request-notice
       - completed-head
+      - queued-connection
       max_statements: 2
       answer_contract:
         basis: description
         required_terms:
         - - queueRequest
         - - 완료
+        reject_patterns:
+        - pattern: 큐에.{0,8}들어|큐.{0,8}삽입.{0,8}성공
+          message: 0의 의미는 queued 호출 뒤 반환입니다. 대기 큐 삽입이나 장치 큐잉 완료로 요약하지 마세요.
     - id: create
       question: createRequest의 반환 타입과 반환되는 객체의 종류만 소개하세요. 소유권과 소멸 책임은 자원 수명 절에서 설명하므로
         여기서는 반복하지 마세요.
@@ -5138,6 +5153,7 @@ sections:
       sources:
       - queue
       - request-notice
+      - queued-connection
       max_statements: 1
       answer_contract:
         basis: implementation
@@ -5551,6 +5567,17 @@ sections:
       end: '
 
         }'
+    - id: queued-connection
+      file: src/libcamera/base/bound_method.cpp
+      start: bool BoundMethodBase::activatePack(
+      end: '
+
+        }'
+      scope:
+        start: \enum ConnectionType
+        end: '
+
+          }'
     covers:
     - stopping
     parts:
@@ -5631,12 +5658,16 @@ sections:
         - - ASSERT
       max_statements: 1
     - id: callback-observation
-      question: 정지 중 completeRequest의 진입·복귀와 애플리케이션 콜백의 진입·복귀를 별도로 기록할 조사 계획을 두 문장
-        이내로 제안하세요. 콜백 스레드는 앞 절의 Thread::currentId() 기록 방법으로 확인하도록 짧게 연결하세요. 아직 실행하지
-        않은 계획이며 콜백 실행 결과는 검증 전임을 명시하세요.
+      question: 아직 실행하지 않은 정지 조사 계획을 세 문장 이내로 제안하세요. completeRequest의 진입·복귀와 애플리케이션
+        콜백의 진입·복귀를 별도로 기록하고 스레드는 앞 절의 Thread::currentId() 방법으로 비교합니다. BoundMethodBase::activatePack의
+        type과 Thread::current() 대 object_->thread() 비교에서 별도 스레드의 ConnectionTypeQueued
+        전달임을 실제 기록으로 확인한 조건을 두세요. 그 조건에서 completeRequest가 복귀하고 파이프라인 큐가 비었지만 콜백 진입
+        기록이 없으면, stopDevice 내부 정체나 남은 요청과 구분해 수신 스레드 이벤트 루프의 콜백 미처리 후보를 조사하도록 제안하세요.
+        기록 없음만으로 실제 미처리를 단정하지 말고 콜백 실행 결과는 아직 검증 전임을 명시하세요.
       sources:
       - completion
       - thread-id
+      - queued-connection
       max_statements: 1
       statement_kind: limitation
     - id: disconnect
