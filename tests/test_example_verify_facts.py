@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -55,3 +56,28 @@ def test_public_preflight_requires_tracked_clean_source_and_valid_source_only_to
     assert report['source_only_sections'] == ['source-only']
     if defect == 'untracked':
         assert report['invalid_locations'] == ['build/generated.h:1']
+
+
+@pytest.mark.parametrize('defect', [None, 'unbound', 'selector', 'hash', 'structural-collision'])
+def test_material_proof_is_not_a_source_git_location_and_cannot_hide_structural_locations(defect):
+    script = Path(__file__).resolve().parents[1]/'examples/libcamera/verify_facts.py'
+    spec = importlib.util.spec_from_file_location('example_verify_facts_material', script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    selector = dict(id='material', kind='product', file='product-evidence/spec.txt', text='Public material.')
+    record = dict(selector=selector.copy(), origin='product-material', status='available', commit='a'*40,
+                  file=selector['file'], line=1, text=selector['text'],
+                  sha256=hashlib.sha256(selector['text'].encode()).hexdigest())
+    cfg = SimpleNamespace(sections=lambda: [dict(id='guide', design_topics=[dict(id='q', sources=[selector])])])
+    model = KnowledgeModel(meta={'source_commit': 'a'*40}, classes={'Api': ClassInfo('Api', loc=Location('api.h', 1))},
+                           evidence={'guide/q/material': record})
+    if defect == 'unbound':
+        model.evidence = {'other/q/material': record}
+    elif defect == 'selector':
+        record['selector']['text'] = 'Another material.'
+    elif defect == 'hash':
+        record['sha256'] = '0'*64
+    elif defect == 'structural-collision':
+        model.classes['Forged'] = ClassInfo('Forged', loc=Location(selector['file'], 1))
+    expected = {'api.h:1'} | ({selector['file']+':1'} if defect else set())
+    assert module.source_citations(cfg, model) == expected
