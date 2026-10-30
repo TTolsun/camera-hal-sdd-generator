@@ -17,7 +17,7 @@ from .document_metadata import split_frontmatter
 from .state_io import save
 from .trial_workspace import contained_path
 from .cli_checkpoint import Capture, UnitStore
-from .cli_agent import arguments, identity_command
+from .cli_agent import arguments
 from .consistency_sources import source as evidence_source, citation_refs, canonicalize, contains_statement
 from .consistency_analysis import paragraph_refs
 
@@ -330,7 +330,7 @@ def review_store(cfg, payload):
     identity_data = dict(purpose='cross-document-consistency', policy=policy_hash(),
                          source_commit=payload['source_commit'], request=request_data,
                          execution=dict(runner=cfg.agent.runner, model=cfg.agent.model,
-                                        command=identity_command(cfg.agent), arguments=arguments(cfg.agent, response_schema)))
+                                        command=cfg.agent.identity_command, arguments=arguments(cfg.agent, response_schema)))
     return UnitStore(cfg, identity_data), request_data
 
 

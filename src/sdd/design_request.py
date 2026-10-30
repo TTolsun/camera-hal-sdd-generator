@@ -48,13 +48,12 @@ def prepare_requests(cfg, model, section, previous):
             'Do not re-invoke state-changing functions to observe them.'
         )
     from .design_reuse import topic_inputs
-    from .cli_agent import identity_command
     execution_identity = ''
     if cfg.agent.kind == 'cli':
         # Default CLI model/provider settings can change outside this config.
         # Keep old provenance only when the caller explicitly selected a model.
         execution_identity = json.dumps({'runner': cfg.agent.runner, 'model': cfg.agent.model,
-                               'command': identity_command(cfg.agent), 'args': cfg.agent.args}, sort_keys=True)
+                               'command': cfg.agent.identity_command, 'args': cfg.agent.args}, sort_keys=True)
         if not cfg.agent.model:
             previous = None
     standard_system = system
