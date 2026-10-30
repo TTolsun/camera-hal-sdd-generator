@@ -4204,6 +4204,64 @@ sections:
       end: Request::Request(Camera *camera, uint64_t cookie)
     covers:
     - responsibility
+    parts:
+    - id: manager-role
+      question: CameraManager가 장치 열거와 카메라 접근·수명 관리를 제공하는 진입점 역할과 단일 인스턴스 제약을 두 문장
+        이내로 설명하세요. 기존 인스턴스를 삭제하기 전에 추가 인스턴스를 만들면 동작이 정의되지 않는다는 조건을 포함하세요.
+      sources:
+      - manager
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - CameraManager
+        - - 단일
+          - 하나
+          - 한 개
+        - - 정의되지
+          - 미정의
+    - id: camera-role
+      question: Camera가 한 이미지 소스에서 하나 이상의 이미지 스트림을 제공하는 설정·제어·캡처 인터페이스라는 역할과 std::shared_ptr
+        수명 관리, create() 생성 및 비공개 생성자·소멸자 계약을 세 문장 이내로 설명하세요.
+      sources:
+      - camera
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Camera
+        - - std::shared_ptr
+        - - create
+    - id: request-role
+      question: Request는 애플리케이션이 프레임마다 버퍼와 컨트롤을 연결하여 장치 처리용으로 큐에 넣을 수 있게 하는 객체라는 용도와
+        주체만 한 문장으로 설명하세요.
+      sources:
+      - request
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - Request
+        - - 애플리케이션
+        - - 버퍼
+        - - 컨트롤
+          - 제어
+        reject_patterns:
+        - pattern: 자동|연결하면.{0,60}큐
+          message: Request의 용도와 애플리케이션이 큐에 넣는 주체를 설명하세요. 버퍼 연결을 자동 큐잉 보장으로 바꾸지 마세요.
+    - id: cookie
+      question: Request 생성자에 전달한 cookie가 요청에 저장되는 애플리케이션용 불투명 값이며 cookie()로 읽을 수 있다는
+        의미만 한 문장으로 설명하세요.
+      sources:
+      - request
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - cookie
+        - - 불투명
+          - opaque
+        - - cookie()
   - id: state
     title: 상태와 허용 호출
     question: Available·Acquired·Configured·Running·Stopping 상태와 acquire/configure/start/stop/release
@@ -4244,6 +4302,12 @@ sections:
           }
 
           '
+    - id: configure-logging
+      file: src/libcamera/base/log.cpp
+      start: \def LOG(category, severity)
+      end: '
+
+        } /* namespace libcamera */'
     covers:
     - state
     parts:
@@ -4256,15 +4320,27 @@ sections:
         required_terms:
         - - Acquired
     - id: transition-configure
-      question: configure가 성공한 뒤의 상태는 무엇입니까? 상태도만으로 성공 조건을 추정하지 말고 configure 구현의 상태
-        설정과 반환값도 함께 대조하세요.
+      question: Camera::configure() 구현의 접근 검사와 configure 호출 반환값, 성공 시 Configured 상태
+        설정을 설명하세요. validate()가 CameraConfiguration::Valid가 아니면 -EINVAL을 반환하는 조건과,
+        구성 후 cfg.stream()이 null인 분기의 LOG Fatal 및 그 뒤 return -EINVAL 구문을 구분하세요. 로그
+        구현의 Fatal 처리에서는 프로세스를 종료하므로 뒤의 -EINVAL이 호출자에게 실제 반환된다고 설명하지 마세요. 빈 설정 여부와
+        각 Stream 포인터의 null 여부를 바꾸지 마세요. 세 문장 이내로 설명하세요.
       sources:
       - states
       - configure-state-result
+      - configure-logging
       answer_contract:
-        basis: description
+        basis: implementation
         required_terms:
+        - - configure
         - - Configured
+        - - Valid
+        - - -EINVAL
+        - - Fatal
+          - LogFatal
+        - - 종료
+          - abort
+      max_statements: 1
     - id: transition-start
       question: start가 성공한 뒤의 상태는 무엇입니까?
       sources:
@@ -4340,12 +4416,12 @@ sections:
         - - 동기화
   - id: shutdown
     title: 오류와 종료
-    question: queueRequest의 성공 0과 각 음수 오류 코드·조건을 설명하되 오류 목록을 먼저 풀어 쓴 다음 같은 조건을 구현 분기로
-      다시 설명하지 마세요. RequestPending·controls 정보 맵·활성 스트림 검사 등 각 조건과 반환을 한 번씩 연결하세요. 이어 stop의
-      미실행 시 실제 0 반환과 실행 중 상태 전환·ConnectionTypeBlocking 호출·동기 취소 완료를 구분하세요. 주석과 구현이 다르면
-      실제 분기를 우선하고 호출자 동기화 의무는 동시성 절에서 다루므로 반복하지 마세요. queueRequest의 실행 상태 isAccessAllowed
-      검사에서 음수이면 그 값을 그대로 반환하는 경로와, request controls 정보 맵을 &controls() 주소와 비교하는 정확한 검사
-      대상도 빠뜨리지 마세요.
+    question: queueRequest의 성공 0과 각 음수 오류 코드·조건을 설명하되 오류 목록을 먼저 풀어 쓴 다음 같은 조건을 구현
+      분기로 다시 설명하지 마세요. RequestPending·controls 정보 맵·활성 스트림 검사 등 각 조건과 반환을 한 번씩 연결하세요.
+      이어 stop의 미실행 시 실제 0 반환과 실행 중 상태 전환·ConnectionTypeBlocking 호출·동기 취소 완료를 구분하세요.
+      주석과 구현이 다르면 실제 분기를 우선하고 호출자 동기화 의무는 동시성 절에서 다루므로 반복하지 마세요. queueRequest의 실행
+      상태 isAccessAllowed 검사에서 음수이면 그 값을 그대로 반환하는 경로와, request controls 정보 맵을 &controls()
+      주소와 비교하는 정확한 검사 대상도 빠뜨리지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -4406,8 +4482,8 @@ sections:
         - - threadsafe
           - 스레드 안전
     - id: queue-thread
-      question: queueRequest 주석의 threadsafe 보장만 한 문장으로 설명하세요. Running을 포함한 호출 가능 상태는 앞의
-        상태 절에서 이미 설명하므로 여기서 되풀이하지 마세요. 버퍼·오류·완료 조건도 나열하지 마세요.
+      question: queueRequest 주석의 threadsafe 보장만 한 문장으로 설명하세요. Running을 포함한 호출 가능 상태는
+        앞의 상태 절에서 이미 설명하므로 여기서 되풀이하지 마세요. 버퍼·오류·완료 조건도 나열하지 마세요.
       sources:
       - queue
       max_statements: 1
@@ -5056,12 +5132,12 @@ sections:
           message: 발췌의 유효한 Stream 조건을 쓰고 nullptr나 스트림당 하나 일반론을 별도로 도입하지 마세요. 오류 조건은
             유지합니다.
     - id: submission
-      question: Camera::queueRequest()가 ConnectionTypeQueued로 invokeMethod 호출을 지정한
-        뒤 0을 반환하는 시점을 설명하세요. 0은 파이프라인 호출 예약을 넘긴 단계이며 waitingRequests_ 삽입 완료·장치 큐잉
-        성공·촬영 완료를 뜻하지 않는다는 범위를 유지하세요. 완료는 뒤의 requestCompleted 신호와 구분하세요. 포괄적인 큐잉 성공이라는
-        말은 쓰지 말고 어느 호출 단계인지 명시하세요.
+      question: Camera::queueRequest()가 ConnectionTypeQueued 방식을 지정한 invokeMethod
+        호출 뒤 0을 반환한다는 구현을 먼저 설명하세요. 요청 완료는 별도의 requestCompleted 신호로 통지된다는 API 설명을
+        한 문장으로 이어서 구분하세요. 두 문장 이내로 답하세요.
       sources:
       - queue
+      - request-notice
       max_statements: 1
       answer_contract:
         basis: implementation
