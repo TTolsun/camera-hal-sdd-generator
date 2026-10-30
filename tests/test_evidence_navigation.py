@@ -27,6 +27,28 @@ def test_empty_route_table_is_not_published():
     assert '<table' not in rendered and '지금 확인할 내용' not in rendered
 
 
+def test_formatted_generated_route_repeats_prose_without_restoring_the_table():
+    question = '`allocate()` 전에 **카메라를 구성**하고 *정지*해야 합니다.'
+    body = (question + '\n\n'
+            '| **지금 확인할 내용** | **이동할 절** |\n| :--- | ---: |\n'
+            '| <a id="old-allocation"></a>' + question + ' | [할당 조건](#조건) |\n\n'
+            '## 조건\n\n조건을 확인합니다.')
+    rendered, _, _ = _render(body, 'allocator.md', set(), None, '', '')
+    assert '<table' not in rendered and '지금 확인할 내용' not in rendered
+    assert rendered.count('<code>allocate()</code>') == 1
+    assert '<strong>카메라를 구성</strong>' in rendered and '<em>정지</em>' in rendered
+    assert 'id="old-allocation"' in rendered and 'href="#조건"' in rendered
+
+
+def test_code_example_is_not_proof_that_a_custom_route_repeats_prose():
+    body = ('```html\n<p><code>custom()</code> 조건을 확인합니다.</p>\n```\n\n'
+            '| 지금 확인할 내용 | 이동할 절 |\n|---|---|\n'
+            '| `custom()` 조건을 확인합니다. | [본문](#본문) |\n\n'
+            '## 본문\n\n별도 설명입니다.')
+    rendered, _, _ = _render(body, 'custom.md', set(), None, '', '')
+    assert '<table>' in rendered and '지금 확인할 내용' in rendered
+
+
 def test_custom_route_cell_content_and_fragments_are_not_discarded():
     for row in ('| [추가 안내](other.md) | [본문](#body) |',
                 '| `코드 예제` | [본문](#body) |',

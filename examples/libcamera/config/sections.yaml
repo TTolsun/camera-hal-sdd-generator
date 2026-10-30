@@ -4912,38 +4912,47 @@ sections:
     covers:
     - journey
     parts:
-    - id: create
-      question: createRequest의 반환 타입과 반환되는 객체의 종류만 소개하세요. 소유권과 소멸 책임은 자원 수명 절에서 설명하므로
-        여기서는 반복하지 마세요.
-      sources:
-      - create
-      max_statements: 1
-      answer_contract:
-        basis: description
-        required_terms:
-        - - createRequest
-        - - unique_ptr
-        - - Request
-    - id: buffer
-      question: 버퍼를 요청의 어느 스트림에 연결하는 API인지 설명하세요.
-      sources:
-      - buffer
-      max_statements: 1
-      answer_contract:
-        basis: description
-        required_terms:
-        - - addBuffer
-        - - 스트림
-    - id: submission
-      question: Camera::queueRequest의 성공 반환 의미와 이후 완료 신호를 구분하세요.
+    - id: summary
+      role: summary
+      question: queueRequest가 성공을 반환해도 촬영이 끝난 것은 아니며, 요청 완료는 파이프라인 핸들러가 명시적으로 알린 뒤
+        제출 순서대로 애플리케이션에 돌아온다는 결론을 쉬운 말로 먼저 설명하세요.
       sources:
       - queue
+      - request-duty
+      - request-notice
+      - completed-head
       max_statements: 2
       answer_contract:
         basis: description
         required_terms:
         - - queueRequest
         - - 완료
+    - id: buffer
+      question: createRequest가 std::unique_ptr<Request>로 빈 요청을 돌려주고, 그 요청에 addBuffer로 버퍼를 연결할 때 버퍼가
+        어느 스트림에 속하는지 지정한다는 점을 한 문장으로 설명하세요. 반환 타입은 문장 중간에 짧게 쓰고, 소유권은 설명하지 마세요.
+      sources:
+      - create
+      - buffer
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - createRequest
+        - - unique_ptr
+        - - addBuffer
+        - - 스트림
+    - id: submission
+      question: Camera::queueRequest가 0을 반환하는 조건이 요청을 큐에 넣는 데 성공한 것뿐이라는 점과, 완료를 알리는 신호의
+        이름만 설명하세요. 성공 반환이 촬영 완료가 아니라는 결론은 앞 요약에서 설명했으므로 반복하지 마세요.
+      sources:
+      - queue
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - queueRequest
+        - - '0'
+        - - requestCompleted
     - id: waiting
       question: waitingRequests_의 선두 요청 prepared_가 거짓이면 뒤 요청도 전달하지 않는 조건과, queuedRequests_
         크기가 maxQueuedRequestsDevice_ 한도에 도달하면 전달을 중단하는 조건을 구분해 두 문장 이내로 설명하세요. 같은 선두 준비
@@ -5087,27 +5096,48 @@ sections:
     covers:
     - resources
     parts:
+    - id: summary
+      role: summary
+      question: createRequest를 호출한 쪽이 요청을 삭제할 책임을 지고, addBuffer를 호출한 쪽이 버퍼를 요청 완료 콜백까지
+        유효하게 유지해야 하며, 파이프라인 핸들러는 요청을 완료한 뒤 그 요청에 접근하지 않는다는 결론을 쉬운 말로 먼저 설명하세요.
+        소스는 두 호출자가 같다고 말하지 않으므로 한 주체로 합치지 마세요. 이 절에서 버퍼 유지 의무를 설명하는 곳은 이 요약뿐이므로
+        요청 완료 콜백까지라는 기한과 해야 합니다 표현을 유지하세요.
+      sources:
+      - create
+      - buffer-duty
+      - complete-access
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 호출자
+        - - 버퍼
+        - - 완료
     - id: request-owner
-      question: createRequest가 반환한 요청의 삭제·재사용 책임이 누구에게 있는지만 설명하세요.
+      question: createRequest가 반환한 요청을 호출자가 완료 핸들러에서 삭제하거나 Request::reuse()로 상태를 초기화해 다시
+        쓰는 두 선택지만 한 문장으로 설명하세요. 요청 소유권이 호출자에게 있다는 결론은 앞 요약에서 설명했으므로 반복하지 마세요.
       sources:
       - create
       - reuse
+      max_statements: 1
       answer_contract:
         basis: description
         required_terms:
         - - createRequest
-        - - 호출자
+        - - reuse
+        - - 삭제
     - id: buffer-validity
-      question: 이 근거에 명시된 호출자의 버퍼 유효 기간 의무를 해야 합니다 표현으로 설명하세요. 언제까지 유효하게 유지해야 하는지
-        요청 완료 콜백을 명시하세요.
+      question: Request::addBuffer()가 요청에 버퍼 자체가 아니라 버퍼의 참조를 저장한다는 사실만 한 문장으로 설명하세요. 버퍼를
+        완료 콜백까지 유효하게 유지해야 한다는 의무는 앞 요약에서 설명했으므로 반복하지 마세요.
       sources:
       - buffer-duty
       - buffer
+      max_statements: 1
       answer_contract:
-        basis: contract
+        basis: description
         required_terms:
-        - - 버퍼
-        - - 콜백
+        - - addBuffer
+        - - 참조
     - id: fence-transfer
       question: addBuffer 성공 시 Fence 소유권의 이동 대상 객체만 설명하세요. Fence를 가리키는 표현과 대상 이름을
         함께 명시하세요.
@@ -5264,6 +5294,21 @@ sections:
     covers:
     - stopping
     parts:
+    - id: summary
+      role: summary
+      question: 정상 정지는 대기 중인 요청을 취소해 완료로 돌려보낸 뒤 끝나지만, 실행 중 연결 해제에서 남은 요청의 처리는 아직
+        TODO로 남아 있어 같은 보장이 없다는 차이를 쉬운 말로 먼저 설명하세요.
+      sources:
+      - device-stop
+      - disconnect-todo
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - 정지
+        - - 연결 해제
+          - disconnect
+        - - TODO
     - id: camera-entry
       question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed
         음수 반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop

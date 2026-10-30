@@ -16,7 +16,8 @@ def _validate_unit_response(cfg, model, agent, section, topic, raw, sources, pas
         prior = {tid: list(values) for tid, values in prior_answers.items()}
         repeated = duplicates.statement_findings(
             model, section['id'], {**prior, topic['id']: prior.get(topic['id'], []) + statements},
-            only_after={**{tid: len(v) for tid, v in prior.items()}, topic['id']: len(prior.get(topic['id'], []))})
+            only_after={**{tid: len(v) for tid, v in prior.items()}, topic['id']: len(prior.get(topic['id'], []))},
+            summaries=duplicates.summary_keys(section))
         if repeated:
             raise ValueError(' / '.join(repeated))
     if grounding:

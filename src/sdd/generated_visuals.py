@@ -181,7 +181,7 @@ def inputs(cfg, model, section, plan):
         raise ValueError('Visual required_symbols exceed the node limit')
     pin = digest({'plan': plan, 'policy': system, 'limit': limit,
                   'agent': {'kind': cfg.agent.kind, 'model': cfg.agent.model, 'base_url': cfg.agent.base_url,
-                            **({'runner': cfg.agent.runner, 'command': cfg.agent.command, 'args': cfg.agent.args}
+                            **({'runner': cfg.agent.runner, 'command': cfg.agent.identity_command, 'args': cfg.agent.args}
                                if cfg.agent.kind == 'cli' else {})},
                   'sources': {k: {f: r[f] for f in ('file', 'line', 'sha256', 'selector')} for k, r in records.items()}})
     return pin, records, passages, system, {'question': plan['question'], 'kind': plan['kind'],

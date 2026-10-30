@@ -218,6 +218,17 @@ class AgentConfig:
     api_key_env: str = "SDD_AGENT_API_KEY"
 
     @property
+    def identity_command(self):
+        """Configured wrapper arguments without the executable location.
+
+        CLI apps relocate their executable on update (for example a hashed bin
+        folder). Runner, model and arguments identify an invocation; receipt
+        verification already compares ``command[1:]``, so published figure and
+        contract-review identities follow the same boundary.
+        """
+        return list(self.command[1:])
+
+    @property
     def label(self):
         return (f'cli/{self.runner}/{self.model or "cli-default"}' if self.kind == 'cli'
                 else f'{self.kind}/{self.model}')
