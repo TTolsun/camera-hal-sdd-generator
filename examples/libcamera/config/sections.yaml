@@ -5236,7 +5236,8 @@ sections:
     - resources
     parts:
     - id: request-owner
-      question: createRequest가 반환한 요청의 삭제·재사용 책임이 누구에게 있는지만 설명하세요.
+      question: createRequest가 반환한 요청의 삭제 또는 재사용 책임이 호출자에게 있다는 사실만 한 문장으로 설명하세요. 재사용
+        API의 동작과 버퍼 플래그·fence 조건은 다른 질문이 담당하므로 이 문단에는 포함하지 마세요.
       sources:
       - create
       - reuse
@@ -5245,17 +5246,27 @@ sections:
         required_terms:
         - - createRequest
         - - 호출자
+        reject_patterns:
+        - pattern: ReuseBuffers|setRequest|pending_|bufferMap_
+          message: 이 문단은 요청의 삭제·재사용 책임 주체만 설명합니다. 플래그와 구현 상세는 다른 질문이 담당합니다.
+      max_statements: 1
     - id: buffer-validity
-      question: 이 근거에 명시된 호출자의 버퍼 유효 기간 의무를 해야 합니다 표현으로 설명하세요. 언제까지 유효하게 유지해야 하는지
-        요청 완료 콜백을 명시하세요.
+      question: 호출자가 버퍼를 언제까지 유효하게 유지해야 하는지 요청 완료 콜백을 명시해 한 문장으로 설명하세요. 주체·버퍼·유효 기간·콜백을
+        한 번씩만 연결하고 같은 유효 유지 의무를 다시 쓰지 마세요.
       sources:
       - buffer-duty
       - buffer
       answer_contract:
         basis: contract
         required_terms:
+        - - 호출자
         - - 버퍼
+        - - 유효
         - - 콜백
+        reject_patterns:
+        - pattern: (?:합니다|입니다|됩니다|있습니다|없습니다)\.\s+\S
+          message: 버퍼 유효 기간 의무를 한 문장으로 연결하고 같은 의무를 반복하지 마세요.
+      max_statements: 1
     - id: fence-transfer
       question: addBuffer 성공 시 Fence 소유권이 이동하는 대상 객체만 한 문장으로 설명하세요. 실패 시 소유권과 수정 여부는
         다음 질문이 담당하므로 이 문단에 포함하지 마세요.
@@ -5608,16 +5619,20 @@ sections:
         - - controls_
         - - metadata_
     - id: completion-record
-      question: 소스의 선두 요청 상태 조회식을 코드 그대로 포함해 기존 실행에서 남길 조사 기록 항목을 완전한 한국어 문장으로 제안하세요.
-        미실행·함수 재호출 주의문은 앞 질문에서 설명했으므로 반복하지 마세요.
+      question: 기존 실행의 선두 요청 상태 조회식 req->status() 값을 조사 기록 항목으로 남기자는 관찰 계획만 완전한 한국어
+        한 문장으로 제안하세요. RequestPending 또는 break 분기는 앞 제출에서 완료까지 절에서 이미 설명했으므로 다시 서술하지
+        마세요. 미실행·함수 재호출 주의문과 작성 과정 안내는 덧붙이지 마세요.
       sources:
       - record-head-status
       max_statements: 1
       answer_contract:
         basis: investigation
         required_terms:
-        - - status
+        - - req->status()
         - - 기록
+        reject_patterns:
+        - pattern: RequestPending|break
+          message: 이 항목은 관찰할 선두 요청 상태 조회 값만 제안합니다. 완료 반복문의 중단 분기는 앞 절에서 설명했습니다.
     design_prompt: focused
   design_requirements:
   - id: journey
