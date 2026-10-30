@@ -206,7 +206,10 @@ def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: 
         if not statement.get('evidence'):
             gaps.append('근거가 연결되지 않은 설계 설명이 있습니다.')
         # 요약은 뒤의 상세 설명과 한 문단으로 묶지 않는다. 표시 종류만 다르고 근거 검사는 같다.
-        kind = 'summary' if statement.get('part_id') in summaries else statement.get('kind', 'behavior')
+        # 실행 확인 항목은 요약이라도 표지를 유지한다(생성기는 요약을 behavior로 고정한다).
+        kind = statement.get('kind', 'behavior')
+        if statement.get('part_id') in summaries and kind == 'behavior':
+            kind = 'summary'
         entries.append((kind, str(statement.get('text', '')), citations))
     paragraphs = _paragraphs(entries, grouped=grouped)
     if not paragraphs:

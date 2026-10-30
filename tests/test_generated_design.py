@@ -1511,7 +1511,10 @@ def test_주제_요약은_첫_문단으로_따로_쓰고_뒤_설명의_중복_�
     save()
     agent = _summary_agent(base_agent, SUMMARY_TEXT)
     path = Generator(tmp_cfg, model, agent).run()[0]
-    assert 'opening summary' in agent.calls[0]
+    for instruction in ('opening summary', 'one or two short, plain Korean sentences',
+                        'conclusion or key distinction', 'Describe what happens before naming code',
+                        'Keep the conditions and may/must/negation', 'add nothing the sources do not state'):
+        assert instruction in agent.calls[0]
     assert 'opening summary' not in agent.calls[1]
     body = path.read_text(encoding='utf-8').split('\n---\n', 1)[1]
     detail = base_agent.statement['text']
@@ -1546,3 +1549,57 @@ def test_요약_part는_상세_part_앞의_첫_part에만_둘_수_있다(tmp_cfg
     with pytest.raises(ValueError, match='role: summary'):
         Generator(tmp_cfg, model, agent).run()
     assert not agent.calls
+
+
+def test_다른_주제가_앞_주제의_요약을_되풀이하면_중복으로_거절된다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    first = section['design_topics'][0]
+    first['parts'] = [dict(id='core', role='summary', question='종료에서 먼저 알아야 할 결론은 무엇입니까?', sources=['stop']),
+                      dict(id='detail', question='종료 진입점은 무엇을 호출합니까?', sources=['stop'])]
+    section['design_requirements'].append(dict(id='again', question='종료 진입점을 다시 설명합니까?'))
+    section['design_topics'].append(dict(id='again', title='다시 쓰는 종료', question='종료를 설명하세요.',
+                                         covers=['again'], sources=copy.deepcopy(first['sources'])))
+    model.evidence['device/again/stop'] = copy.deepcopy(model.evidence['device/stop/stop'])
+    save()
+
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            if len(self.calls) == 1:
+                statement['text'] = SUMMARY_TEXT
+            elif len(self.calls) == 2:
+                # 앞 주제의 상세 설명은 요약과 겹치지 않게 두어, 뒤 주제가 요약 자체와만 겹치게 한다.
+                statement['text'] = '구현자는 `cancelPending()`의 정의를 같은 파일에서 이어서 읽어야 합니다.'
+            else:
+                statement.update(text=SUMMARY_TEXT, covers=['again'])
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+
+    with pytest.raises(ValueError, match='의미 중복'):
+        Generator(tmp_cfg, model, Agent()).run()
+
+
+def test_요약_답변은_실행_확인_항목으로_표시되지_않고_사실_문단으로_고정된다(tmp_cfg, generated):
+    from sdd.generated_design import response_schema
+    from sdd.design_request import _design_units
+    section, model, save, base_agent = generated
+    section['design_topics'][0]['parts'] = [
+        dict(id='core', role='summary', question='종료에서 먼저 알아야 할 결론은 무엇입니까?', sources=['stop']),
+        dict(id='detail', question='종료 진입점은 무엇을 호출합니까?', sources=['stop'])]
+    save()
+    summary_unit = _design_units(section, {})[0]
+    assert response_schema(summary_unit)['properties']['statements']['items']['properties']['kind']['enum'] == ['behavior']
+
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            if len(self.calls) == 1:
+                statement.update(text=SUMMARY_TEXT, kind='limitation')  # 모델이 잘못 골라도 생성기가 고정한다
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+
+    body = Generator(tmp_cfg, model, Agent()).run()[0].read_text(encoding='utf-8').split('\n---\n', 1)[1]
+    assert f'{SUMMARY_TEXT} `device.cpp:10`\n\n' in body
+    assert '실행 확인 항목: ' + SUMMARY_TEXT not in body

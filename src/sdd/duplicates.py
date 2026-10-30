@@ -620,8 +620,8 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
 
     only_after 가 있으면 주제별로 그 개수 뒤에 온 문장만 뒤 문장으로 본다. 재요청 때 이미 통과한
     앞 문장끼리의 관계는 다시 지적하지 않고, 새로 추가한 문장만 검사하기 위해 쓴다.
-    summaries 의 주제 요약은 뒤 설명이 자세히 풀어 쓰는 문장이므로 앞 문장으로 비교하지 않는다.
-    요약 자신은 그보다 앞의 설명과 계속 비교한다.
+    summaries 의 주제 요약은 같은 주제의 뒤 설명이 자세히 풀어 쓰는 문장이므로 그 상세 설명과는 비교하지 않는다.
+    요약끼리, 그리고 다른 주제의 뒤 설명과는 계속 비교한다.
     """
     def evidence_ids(topic_id: str, statement: dict) -> frozenset[str]:
         ids = set()
@@ -630,7 +630,7 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
             ids.add(record.get("sha256") or f"{topic_id}/{ref}")
         return frozenset(ids)
 
-    seen: list[tuple[str, int, dict, frozenset[str]]] = []
+    seen: list[tuple[str, int, dict, frozenset[str], bool]] = []
     findings: list[str] = []
     for topic_id, statements in answers.items():
         start = (only_after or {}).get(topic_id, 0)
@@ -639,6 +639,7 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
             if not isinstance(text, str):
                 continue
             evidence = evidence_ids(topic_id, statement)
+            is_summary = (topic_id, statement.get("part_id")) in summaries
             if index >= start:
                 # Keep paragraph-to-paragraph comparisons intact. Only the
                 # paragraph's own sentences need this additional narrow check.
@@ -655,7 +656,9 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
                                     "같은 설명 안에서 새 조건·호출·동작을 추가하지 않는 문장 반복을 줄입니다.")
                                 break
                         sentences.append((number, current))
-                for other_topic, other_index, other, other_evidence in seen:
+                for other_topic, other_index, other, other_evidence, other_summary in seen:
+                    if other_summary and other_topic == topic_id and not is_summary:
+                        continue
                     other_text = other['text']
                     if evidence & other_evidence and _repeats(model, section_id, topic_id, statement, other,
                                                               earlier_topic=other_topic):
@@ -664,8 +667,7 @@ def statement_findings(model, section_id: str, answers: dict[str, list[dict]],
                             f"설명과 같은 근거로 같은 내용을 되풀이합니다: \"{_clip(text)}\" ≈ \"{_clip(other_text)}\". "
                             "앞 설명에 없는 조건·예외·호출 책임만 쓰고, 새로 쓸 내용이 없으면 이 질문의 범위를 좁혀 다시 답합니다.")
                         break
-            if (topic_id, statement.get("part_id")) not in summaries:
-                seen.append((topic_id, index, statement, evidence))
+            seen.append((topic_id, index, statement, evidence, is_summary))
     return findings
 
 

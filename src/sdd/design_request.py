@@ -118,6 +118,8 @@ def _design_units(section, retained):
             if part.get('role') == 'summary':
                 unit['_role'] = 'summary'
                 unit['_max_statements'] = part.get('max_statements', 1)
+                # 요약은 결론 문단이다. 실행 확인 항목이 요약 문단에 섞여 표지 없이 결론처럼 보이지 않게 한다.
+                unit['_statement_kind'] = 'behavior'
             if 'statement_kind' in part:
                 unit['_statement_kind'] = part['statement_kind']
             if 'answer_contract' in part:

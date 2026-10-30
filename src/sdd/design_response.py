@@ -300,7 +300,7 @@ def decode_unit(model, section, topic, raw, sources, passages):
     subset.pop('reader_family', None)
     subset.pop('reader_scope', None)
     try:
-        validate_answers(model, subset, candidate, allow_limited=bool(topic.get('_statement_kind')))
+        validate_answers(model, subset, candidate, allow_limited=topic.get('_statement_kind') == 'limitation')
     except ValueError as exc:
         # Diagnose only an already-rejected answer. Inspect model text before
         # typography normalization and generated citations, without repairing it.

@@ -4928,8 +4928,8 @@ sections:
         - - queueRequest
         - - 완료
     - id: buffer
-      question: createRequest로 만든 요청에 addBuffer로 버퍼를 연결할 때 버퍼가 어느 스트림에 속하는지 지정한다는 점을 한
-        문장으로 설명하세요. 반환 타입과 소유권은 설명하지 마세요.
+      question: createRequest가 std::unique_ptr<Request>로 빈 요청을 돌려주고, 그 요청에 addBuffer로 버퍼를 연결할 때 버퍼가
+        어느 스트림에 속하는지 지정한다는 점을 한 문장으로 설명하세요. 반환 타입은 문장 중간에 짧게 쓰고, 소유권은 설명하지 마세요.
       sources:
       - create
       - buffer
@@ -4938,18 +4938,21 @@ sections:
         basis: description
         required_terms:
         - - createRequest
+        - - unique_ptr
         - - addBuffer
         - - 스트림
     - id: submission
-      question: Camera::queueRequest의 성공 반환 의미와 이후 완료 신호를 구분하세요.
+      question: Camera::queueRequest가 0을 반환하는 조건이 요청을 큐에 넣는 데 성공한 것뿐이라는 점과, 완료를 알리는 신호의
+        이름만 설명하세요. 성공 반환이 촬영 완료가 아니라는 결론은 앞 요약에서 설명했으므로 반복하지 마세요.
       sources:
       - queue
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: description
         required_terms:
         - - queueRequest
-        - - 완료
+        - - '0'
+        - - requestCompleted
     - id: waiting
       question: waitingRequests_의 선두 요청 prepared_가 거짓이면 뒤 요청도 전달하지 않는 조건과, queuedRequests_
         크기가 maxQueuedRequestsDevice_ 한도에 도달하면 전달을 중단하는 조건을 구분해 두 문장 이내로 설명하세요. 같은 선두 준비
