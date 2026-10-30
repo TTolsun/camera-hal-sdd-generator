@@ -16,6 +16,9 @@ SOURCE_LINK_TEMPLATES = {
 
 def _remove_route_tables(document: str) -> str:
     """Drop redundant reading choices; keep old row fragments usable without JS."""
+    prose = re.sub(r'<(?:table|pre)\b[^>]*>.*?</(?:table|pre)>', '', document, flags=re.S)
+    prose = ' '.join(html.unescape(re.sub(r'<[^>]+>', '', prose)).split())
+
     def table(match):
         source = match[0]
         head = re.search(r'<thead>(.*?)</thead>', source, re.S)
@@ -36,7 +39,15 @@ def _remove_route_tables(document: str) -> str:
                 return source
             question = re.sub(r'<a id="[^"]+"></a>', '', cells[0])
             if re.search(r'<[^>]+>', question):
-                return source
+                # Generated questions can repeat a lead/answer containing code
+                # or emphasis. Recognize that duplicate without discarding
+                # unique custom content merely because it uses inline markup.
+                plain = re.sub(r'</?(?:code|strong|em)\b[^>]*>', '', question)
+                if re.search(r'<[^>]+>', plain):
+                    return source
+                plain = ' '.join(html.unescape(plain).split())
+                if not plain or plain not in prose:
+                    return source
             destinations = re.findall(r'<a\b[^>]*href="[^"]+"[^>]*>.*?</a>', cells[1], re.S)
             if not destinations:
                 return source
