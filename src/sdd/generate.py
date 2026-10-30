@@ -128,6 +128,9 @@ class Generator:
                     if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)]
         from . import generated_visuals
         for section in selected:
+            if section.get('scenario'):
+                from .scenario_sections import appendix
+                appendix(self.cfg, self.model, section)
             from .contract_schema import configuration_errors
             if errors := configuration_errors(section):
                 raise ValueError('\n'.join(errors))
@@ -294,6 +297,11 @@ class Generator:
             prose = f"## {sec.get('prose_heading', '구조 설명')}\n\n{text}"
         body = "\n\n".join([prose]
                            + ([diagram] if diagram else []) + tables)
+        if original.get('scenario'):
+            from .scenario_sections import appendix
+            doc, _ = appendix(self.cfg, self.model, original)
+            body += '\n\n' + doc.overview + '\n\n' + doc.details
+            tables.extend([doc.overview, doc.details])
         from .visuals import place
         from .generated_visuals import render as render_visuals
         body = place(body, render_visuals(self.cfg, self.model, original,
@@ -391,20 +399,29 @@ class Generator:
         ordered = self._ordered_scenarios()
         rows = ["| 시나리오 | 진입점 | 요약 대상 호출 | 요약에서 뺀 호출 | 예약된 호출 | 미해결 호출 |",
                 "|---|---|---|---|---|---|"]
+        owners = {s['scenario']: s for s in self.cfg.sections() if s.get('scenario')}
+        if sec.get('index_only'):
+            rows = ['| 시나리오 | 확인할 동작과 조건 | 진입점 |', '|---|---|---|']
         routes: list[tuple[str, str]] = []
         shown_by_id: dict[str, tuple[list[Any], int]] = {}
         policy = self.cfg.diagram_policy(sec)
         documents = {sid: scenario_document(sc, self.scenario_cfg.get(sid, {}), int(policy.get("max_nodes", 16)))
-                     for sid, sc in ordered if not impact or sid in impact.scenarios}
+                     for sid, sc in ordered if not sec.get('index_only') and (not impact or sid in impact.scenarios)}
         for sid, sc in ordered:
             shown, hidden = self._visible_messages(sc)
             shown_by_id[sid] = (shown, hidden)
             # index.md 와 같은 디렉터리에 있으므로 파일 이름만 쓴다.
-            rows.append(f"| [{sc.title}]({sid}.md) | `{sc.entry}` | {len(shown)} | {hidden} "
-                        f"| {sc.deferred} | {sc.unresolved} |")
+            if sec.get('index_only'):
+                from .scenario_document import cell
+                rows.append(f"| [{sc.title}]({sid}.md) | {cell(owners[sid].get('lead', ''))} | `{sc.entry}` |")
+            else:
+                rows.append(f"| [{sc.title}]({sid}.md) | `{sc.entry}` | {len(shown)} | {hidden} "
+                            f"| {sc.deferred} | {sc.unresolved} |")
             routes.append((f"{sc.title} 흐름을 추적합니다.", f"scenarios/{sid}.md"))
 
         for idx, (sid, sc) in enumerate(ordered):
+            if sec.get('index_only'):
+                continue
             if impact and sid not in impact.scenarios:
                 continue
             doc = documents[sid]
@@ -575,6 +592,10 @@ class Generator:
     def _write_section(self, sec: dict[str, Any], body: str, blocks: list[Block], tables: list[str],
                        verdict: Verdict, omitted: list[str], routes: list[tuple[str, str]] | None = None) -> Path:
         extra = {"section": sec["id"], "generation_method": generation_method(sec, self.cfg.agent.kind)}
+        if sec.get('scenario'):
+            from .scenario_sections import appendix
+            _, metadata = appendix(self.cfg, self.model, sec)
+            extra.update(metadata)
         if requires_fingerprint(sec):
             extra["evidence_fingerprint"] = fingerprint(self.model, sec)
             extra["semantic_review"] = "human-review-required"

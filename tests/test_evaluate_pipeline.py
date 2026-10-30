@@ -231,3 +231,31 @@ def test_repair_generates_all_scenario_children_when_prior_report_only_has_index
     assert all(s['status'] == 'passed' for s in repaired['stages'])
     assert (second / 'manuscripts/scenarios/process_capture_request.md').exists()
     assert len(next(r for r in repaired['results'] if r['section'] == 'flows')['manuscripts']) == 2
+
+
+def test_trial_index_does_not_claim_source_question_scenario_output(tmp_cfg, tmp_path, sample_model):
+    cfg = configure(tmp_cfg)
+    data = yaml.safe_load(cfg.sections_file.read_text(encoding='utf-8'))
+    owner = next(s for s in data['sections'] if s['id'] == 'vendor-contract')
+    sid = 'process_capture_request'
+    owner.update(scenario=sid, output=f'scenarios/{sid}.md')
+    for topic in owner['design_topics']:
+        for statement in topic.get('statements', []):
+            statement['text'] = statement['text'].replace('](architecture-contract.md', '](../architecture-contract.md')
+    # Preserve every existing mini-HAL navigation edge after moving the owner.
+    raw = yaml.safe_dump(data, allow_unicode=True).replace('vendor-contract.md', owner['output'])
+    data = yaml.safe_load(raw)
+    data['sections'].append(dict(id='flows', title='호출 흐름', kind='per-scenario', index_only=True,
+        output='scenarios/index.md', next={'title':'제품 개요','link':'vendor-overview.md'}))
+    cfg.sections_file.write_text(yaml.safe_dump(data,allow_unicode=True),encoding='utf-8')
+    cfg.scenarios_file.write_text(yaml.safe_dump({'scenarios':[dict(id=sid,title='요청',**{'from':sample_model.scenarios[sid].entry})]}),encoding='utf-8')
+    model = KnowledgeModel.load(cfg.facts_path)
+    model.scenarios = sample_model.scenarios
+    collect(cfg,model)
+    model.save(cfg.facts_path)
+    out=tmp_path/'scenario-trial'
+    report=evaluate(cfg,out)
+    assert all(s['status']=='passed' for s in report['stages']), report['stages']
+    assert len(next(r for r in report['results'] if r['section']=='flows')['manuscripts'])==1
+    page=out/'manuscripts'/owner['output']
+    assert '## 전체 추적 기록' in page.read_text(encoding='utf-8')

@@ -472,6 +472,106 @@ def generated(tmp_cfg):
     return section, model, save, Agent()
 
 
+@pytest.fixture
+def scenario_prose(generated, tmp_cfg, sample_model):
+    section, model, save, agent = generated
+    sid = 'process_capture_request'
+    section.update(scenario=sid, output=f'scenarios/{sid}.md')
+    section['next']['link'] = section['output']
+    model.scenarios[sid] = sample_model.scenarios[sid]
+    tmp_cfg.scenarios_file.write_text(yaml.safe_dump({'scenarios': [dict(id=sid, title='요청',
+        **{'from': model.scenarios[sid].entry})]}, allow_unicode=True), encoding='utf-8')
+    save()
+    return section, model, save, agent
+
+
+def test_scenario_prose_uses_common_answers_and_preserves_exact_trace(scenario_prose, tmp_cfg):
+    from sdd.scenario_sections import appendix
+    section, model, _, agent = scenario_prose
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    text = path.read_text(encoding='utf-8')
+    doc, _ = appendix(tmp_cfg, model, section)
+    assert text.index('## 종료 책임') < text.index('## 주요 확인 지점')
+    assert doc.overview in text and doc.details in text
+    assert verify(model, section, text)['human_review'] == 'pending'
+    site = export_site(tmp_cfg)
+    assert (site / 'scenarios/process_capture_request.html').exists()
+    manifest = (site / 'site-manifest.json').read_bytes()
+    path.write_text(text.replace('FrameFactory::createFrame()', 'FrameFactory::destroyFrame()'), encoding='utf-8')
+    with pytest.raises(ValueError, match='complete extracted call record'):
+        export_site(tmp_cfg)
+    assert (site / 'site-manifest.json').read_bytes() == manifest
+
+
+def test_scenario_call_and_display_changes_select_rebuild_and_reuse_prose(scenario_prose, tmp_cfg):
+    from sdd.impact import config_changes, ImpactReport
+    section, model, save, agent = scenario_prose
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    assert len(agent.calls) == 1
+    model.scenarios[section['scenario']].messages[0].name = 'updatedFrame'
+    save()
+    assert section['id'] in config_changes(tmp_cfg, model)
+    impact = compute(tmp_cfg, model, ['device/CameraDevice.cpp'], 'base', 'head', non_semantic={})
+    assert section['id'] in impact.sections
+    # Call-only changes rebuild the appendix but revalidate/reuse unchanged source answers.
+    Generator(tmp_cfg, model, agent).run(impact=ImpactReport('base', 'head', sections={'device': ['calls']}))
+    assert len(agent.calls) == 1 and 'updatedFrame()' in path.read_text(encoding='utf-8')
+    tmp_cfg.scenarios_file.write_text(tmp_cfg.scenarios_file.read_text(encoding='utf-8') + '\ndefaults:\n  hide:\n    names: [updatedFrame]\n', encoding='utf-8')
+    assert section['id'] in config_changes(tmp_cfg, model)
+    old = path.read_bytes()
+    model.meta['source_commit'] = 'b'*40
+    model.scenarios[section['scenario']].messages[0].name = 'otherFrame'
+    promoted, stale = carry_forward(tmp_cfg, model, [])
+    assert not promoted and any(p == path for p, _ in stale) and path.read_bytes() == old
+
+
+@pytest.mark.parametrize('failure', ['missing-call', 'nodes', 'missing-source', 'commit', 'cli'])
+def test_scenario_failures_preserve_all_manuscripts(scenario_prose, tmp_cfg, failure):
+    from sdd.facts.model import Message, Location
+    from sdd.llm import AgentError
+    section, model, save, agent = scenario_prose
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    before = path.read_bytes()
+    calls = len(agent.calls)
+    if failure == 'missing-call':
+        model.scenarios[section['scenario']].messages[0].loc = None
+    elif failure == 'nodes':
+        model.scenarios[section['scenario']].messages += [Message('A', str(i), 'call', Location('a.cpp', 1)) for i in range(8)]
+        section['diagram'] = {'max_nodes': 2}
+    elif failure == 'missing-source':
+        model.evidence.clear()
+    elif failure == 'commit':
+        model.evidence['device/stop/stop']['commit'] = 'b'*40
+    else:
+        def fail(*args, **kwargs):
+            raise AgentError('selected CLI failed; no fallback')
+        agent.chat = fail
+    save()
+    with pytest.raises((ValueError, RuntimeError, AgentError)):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == before
+    if failure in ('missing-call', 'nodes', 'missing-source', 'commit'):
+        assert len(agent.calls) == calls
+
+
+def test_scenario_index_has_one_explicit_prose_owner(scenario_prose, tmp_cfg):
+    section, model, _, agent = scenario_prose
+    index = dict(id='scenarios', kind='per-scenario', title='시나리오', index_only=True,
+                 next=dict(title='요청', link=section['output']))
+    def save_sections():
+        tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [index, section]}, allow_unicode=True), encoding='utf-8')
+    save_sections()
+    paths = Generator(tmp_cfg, model, agent).run()
+    assert len(paths) == 2 and len(set(paths)) == 2 and len(agent.calls) == 1
+    assert '확인할 동작과 조건' in paths[0].read_text(encoding='utf-8')
+    index['index_only'] = False
+    save_sections()
+    before = {p: p.read_bytes() for p in paths}
+    with pytest.raises(ValueError, match='conflicts'):
+        Generator(tmp_cfg, model, agent).run()
+    assert all(p.read_bytes() == text for p, text in before.items())
+
+
 @pytest.mark.parametrize('kind,structured,label', [
     ('cli', True, 'cli/hermes/test-model'),
     ('ollama', True, 'ollama/test-model'),
@@ -1151,9 +1251,9 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     from sdd.contract_schema import configuration_errors
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
-    assert len(designs) == 19
+    assert len(designs) == 25
     # #164 moves duplicate overview queue limits to the existing request detail.
-    assert sum(len(section['design_topics']) for section in designs) == 68
+    assert sum(len(section['design_topics']) for section in designs) == 80
     by_id = {section['id']: section for section in designs}
     for page in ('vendor-overview', 'overview'):
         assert 'queue-limit' not in {t['id'] for t in by_id[page]['design_topics']}

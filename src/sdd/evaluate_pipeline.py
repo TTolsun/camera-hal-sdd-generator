@@ -87,7 +87,7 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
     def configuration():
         sections = trial.sections()
         outputs = [section_output(section) for section in sections]
-        if any(section.get('kind') == 'per-scenario' for section in sections):
+        if any(section.get('kind') == 'per-scenario' and not section.get('index_only') for section in sections):
             outputs += [f"scenarios/{scenario['id']}.md" for scenario in trial.scenarios()]
         for output in outputs:
             page_path(trial, output)
@@ -173,7 +173,9 @@ def evaluate(cfg, out: Path, *, translate: bool = False, previous: Path | None =
             paths = Generator(trial, model, agent, replay_http=bool(previous), all_design_units=True).run(
                 [sid], **({'impact': impact} if impact else {}))
             if section.get('kind') == 'per-scenario':
-                expected = {section_output(section), *[f"scenarios/{s['id']}.md" for s in trial.scenarios()]}
+                expected = {section_output(section)}
+                if not section.get('index_only'):
+                    expected.update(f"scenarios/{s['id']}.md" for s in trial.scenarios())
                 actual = {p.relative_to(trial.sdd_dir).as_posix() for p in paths}
                 if not expected <= actual:
                     raise ValueError('전체 시험에서 호출 시나리오 원고가 누락됐습니다: ' + ', '.join(sorted(expected - actual)))

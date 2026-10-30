@@ -102,6 +102,9 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
 
     for sc in model.scenarios_touching(fileset):
         report.scenarios.setdefault(sc.id, []).append("시나리오 경로에 포함된 파일이 변경됨")
+    for sec in sections:
+        if sec.get('scenario') in report.scenarios:
+            report.sections.setdefault(sec['id'], []).append('결합한 시나리오의 호출 근거 변경')
     if report.scenarios:
         report.sections.setdefault("scenarios", []).append(f"영향 시나리오: {', '.join(sorted(report.scenarios))}")
 
@@ -144,6 +147,14 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
         if recorded != fingerprint(model, sec):
             changed[sec["id"]] = ["설계 질문·근거 지정이 원고를 만든 입력과 다름" if recorded else "원고에 입력 지문이 없음"]
             continue
+        if sec.get('scenario'):
+            from .scenario_sections import verify
+            meta, body = split_frontmatter(text)
+            try:
+                verify(cfg, model, sec, meta, body)
+            except (ValueError, RuntimeError) as exc:
+                changed[sec['id']] = [str(exc)]
+                continue
         if sec.get("design_generation") == "llm":
             # 입력은 같아도 저장된 답변이 현재 검사(중복 문장, 문장 형태)나 표시 형식을 통과하지 못하면
             # 같은 답변으로 다시 만들거나 해당 주제만 다시 쓰게 한다.

@@ -228,4 +228,6 @@ def fingerprint(model: KnowledgeModel, sec: dict) -> str:
         data["class_packages"] = {n: c.package for n, c in model.classes.items()}
     if facts.get("reading_order"):
         data["reading_order"] = serialized["scenarios"].get(str(facts["reading_order"]))
+    if sec.get('scenario'):
+        data['scenario'] = serialized['scenarios'].get(sec['scenario'])
     return hashlib.sha256(json.dumps(data, ensure_ascii=False, sort_keys=True).encode()).hexdigest()

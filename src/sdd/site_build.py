@@ -119,6 +119,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "site_localization.py", code_root / "site_markdown.py",
                                             code_root / "index_navigation.py", code_root / "reading_cleanup.py",
                                             code_root / "document_metadata.py", code_root / "scenario_document.py",
+                                            code_root / "scenario_sections.py", code_root / "scenario_ownership.py",
                                             code_root / "design_contracts.py", code_root / "evidence.py",
                                             code_root / "contract_schema.py", code_root / "reader_profiles.py",
                                             code_root / "reader_scope.py", code_root / "product_context.py",

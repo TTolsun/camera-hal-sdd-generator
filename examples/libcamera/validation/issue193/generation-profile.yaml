@@ -1,0 +1,15 @@
+# Issue #193 only: merge into a dedicated run config, with explicit source/output paths.
+# Does not replace examples/libcamera/sdd.yaml or any global CLI defaults.
+agent:
+  kind: cli
+  runner: claude
+  model: claude-haiku-5-5
+  args: [--effort, high]
+  max_input_chars: 64000
+  timeout_sec: 600
+  full_style_guides: true
+review:
+  design_grounding: true
+  cli_checkpoint: true
+site:
+  translation_batch_size: 12

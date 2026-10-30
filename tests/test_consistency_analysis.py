@@ -43,3 +43,16 @@ def test_analysis_proof_cannot_be_attached_to_arbitrary_product_claims_or_stale_
         paragraph_refs(tmp_cfg, model, meta, note)
     with pytest.raises(ValueError, match='Unknown scenario'):
         evidence(model, '@analysis/scenario/../../private')
+
+
+def test_source_question_scenario_preserves_only_exact_analysis_note_domain(tmp_cfg):
+    import yaml
+    model, meta, note = scenario_case(tmp_cfg)
+    section = dict(id='scenario-flow', scenario='flow', output='scenarios/flow.md',
+        show_evidence=True, design_topics=[{'id':'behavior'}], design_requirements=[{'id':'behavior'}])
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections':[section]}),encoding='utf-8')
+    meta.update(section='scenario-flow',generation_method='facts-and-llm')
+    assert paragraph_refs(tmp_cfg,model,meta,note)==['@analysis/scenario/flow']
+    assert paragraph_refs(tmp_cfg,model,meta,'The callback always runs on the manager thread.')==[]
+    meta['section']='unbound-page'
+    assert paragraph_refs(tmp_cfg,model,meta,note)==[]

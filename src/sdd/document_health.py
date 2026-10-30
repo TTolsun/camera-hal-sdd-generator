@@ -147,6 +147,10 @@ def audit(cfg, model=None):
         for scenario in cfg.scenarios():
             rel = f"scenarios/{scenario['id']}.md"
             page_path(cfg, rel)
+            if any(s.get('scenario') == scenario['id'] for s in sections):
+                if scenario['id'] not in model.scenarios:
+                    finding('missing-scenario', [rel], 'refresh', 'Configured scenario was not extracted.')
+                continue
             if rel in expected:
                 finding("duplicate-output", [rel], "merge", "Scenario and section output paths collide.")
             expected[rel] = {"kind": "scenario"}

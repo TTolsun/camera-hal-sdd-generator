@@ -239,6 +239,9 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
 def _prepare_page_body(cfg, rel, texts, sections, terms, model):
     diagram_source = None
     meta, body = split_frontmatter(texts[rel])
+    if sections.get(rel, {}).get('scenario'):
+        from .scenario_sections import verify
+        verify(cfg, model, sections[rel], meta, body)
     if meta.get("generation_method") and meta.get("generation_method") != "manual":
         if model is None or meta.get("source_commit") != model.meta.get("source_commit"):
             raise RuntimeError(f"Facts and page source commits differ: {rel}")
