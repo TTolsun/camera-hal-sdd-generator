@@ -344,7 +344,7 @@ def review_store(cfg, payload):
     identity_data = dict(purpose='cross-document-consistency', policy=policy_hash(),
                          source_commit=payload['source_commit'], request=request_data,
                          execution=dict(runner=cfg.agent.runner, model=cfg.agent.model,
-                                        command=cfg.agent.command, arguments=arguments(cfg.agent, response_schema)))
+                                        command=cfg.agent.identity_command, arguments=arguments(cfg.agent, response_schema)))
     return UnitStore(cfg, identity_data), request_data
 
 

@@ -341,3 +341,23 @@ def test_visual_source_selection_excludes_unrelated_prose_evidence(tmp_cfg, auto
         plan['sources'] = invalid
         with pytest.raises(ValueError, match='Visual sources'):
             inputs(tmp_cfg, model, section, plan)
+
+
+def test_cli_executable_relocation_keeps_identities_while_wrapper_arguments_change_them(tmp_cfg, automatic):
+    from sdd.generated_visuals import definitions, inputs
+    section, model, save, _ = automatic
+    tmp_cfg.agent.kind, tmp_cfg.agent.runner, tmp_cfg.agent.model = 'cli', 'codex', 'test-model'
+    plan = next(p for p in definitions(tmp_cfg, section) if p.get('generation') == 'llm')
+
+    def identities():
+        return (inputs(tmp_cfg, model, section, plan)[0],)
+
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\0ab0e7a8\codex.EXE']
+    before = identities()
+    # An app update moves the executable into another hashed folder.
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\22cfb1d3\codex.exe']
+    assert identities() == before
+    # Wrapper arguments still change what is executed.
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\22cfb1d3\codex.exe', '--profile', 'other']
+    changed = identities()
+    assert all(new != old for new, old in zip(changed, before))

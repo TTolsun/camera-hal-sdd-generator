@@ -53,7 +53,7 @@ def prepare_requests(cfg, model, section, previous):
         # Default CLI model/provider settings can change outside this config.
         # Keep old provenance only when the caller explicitly selected a model.
         execution_identity = json.dumps({'runner': cfg.agent.runner, 'model': cfg.agent.model,
-                               'command': cfg.agent.command, 'args': cfg.agent.args}, sort_keys=True)
+                               'command': cfg.agent.identity_command, 'args': cfg.agent.args}, sort_keys=True)
         if not cfg.agent.model:
             previous = None
     standard_system = system
@@ -115,6 +115,11 @@ def _design_units(section, retained):
                     '_max_statements': part.get('max_statements', 1 if part.get('answer_contract') else 2),
                     'sources': [next(s for s in topic['sources'] if s['id'] == ref) for ref in part['sources']]}
             unit.pop('answer_contract', None)
+            if part.get('role') == 'summary':
+                unit['_role'] = 'summary'
+                unit['_max_statements'] = part.get('max_statements', 1)
+                # 요약은 결론 문단이다. 실행 확인 항목이 요약 문단에 섞여 표지 없이 결론처럼 보이지 않게 한다.
+                unit['_statement_kind'] = 'behavior'
             if 'statement_kind' in part:
                 unit['_statement_kind'] = part['statement_kind']
             if 'answer_contract' in part:
@@ -185,6 +190,13 @@ def _unit_request(model, section, topic, focused_system):
     if focused_system is not None:
         base_user = focused_prompt.user_prompt(topic, annotated,
             request['requirements'] if '_part_id' not in topic else None)
+    if topic.get('_role') == 'summary':
+        base_user += (
+            '\nThis part is the opening summary of the topic; later parts give the details. '
+            'In one or two short, plain Korean sentences, state the conclusion or key distinction the reader must know first. '
+            'Describe what happens before naming code; name at most the main API, and leave member variables, '
+            'return types and step-by-step internals to the later parts. '
+            'Keep the conditions and may/must/negation of every claim, and add nothing the sources do not state.')
     if section.get('reader_scope'):
         base_user += '\nReader scope (answer these tasks only; keep necessary conditions and exceptions):\n' + json.dumps(
             section['reader_scope'], ensure_ascii=False)

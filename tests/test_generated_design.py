@@ -1608,3 +1608,132 @@ def test_게시_검증은_중복_문장을_경고로만_보고하고_생성은_�
         validate_answers(model, section, answers)
     _, _, report = validate_answers(model, section, answers, enforce_repeats=False)
     assert report['status'] == 'documented'
+
+
+def _summary_agent(base_agent, summary_text):
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            if len(self.calls) == 1:
+                statement['text'] = summary_text
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+    return Agent()
+
+
+SUMMARY_TEXT = '`stop()`은 종료 시 대기 중인 요청을 취소하는 함수를 호출합니다.'
+
+
+def test_주제_요약은_첫_문단으로_따로_쓰고_뒤_설명의_중복_비교_대상에서_빠진다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='core', role='summary', question='종료에서 먼저 알아야 할 결론은 무엇입니까?', sources=['stop']),
+                      dict(id='detail', question='종료 진입점은 무엇을 호출합니까?', sources=['stop'])]
+    save()
+    agent = _summary_agent(base_agent, SUMMARY_TEXT)
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    for instruction in ('opening summary', 'one or two short, plain Korean sentences',
+                        'conclusion or key distinction', 'Describe what happens before naming code',
+                        'Keep the conditions and may/must/negation', 'add nothing the sources do not state'):
+        assert instruction in agent.calls[0]
+    assert 'opening summary' not in agent.calls[1]
+    body = path.read_text(encoding='utf-8').split('\n---\n', 1)[1]
+    detail = base_agent.statement['text']
+    # 요약은 상세 설명과 같은 문단에 합치지 않고 앞에 둔다.
+    assert f'{SUMMARY_TEXT} `device.cpp:10`\n\n{detail} `device.cpp:10`' in body
+    assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
+def test_요약_역할이_없으면_같은_내용의_뒤_설명은_중복으로_거절된다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='core', question='종료에서 먼저 알아야 할 결론은 무엇입니까?', sources=['stop']),
+                      dict(id='detail', question='종료 진입점은 무엇을 호출합니까?', sources=['stop'])]
+    save()
+    with pytest.raises(ValueError, match='의미 중복'):
+        Generator(tmp_cfg, model, _summary_agent(base_agent, SUMMARY_TEXT)).run()
+
+
+@pytest.mark.parametrize('parts', [
+    [dict(id='detail', question='무엇을 호출합니까?', sources=['stop']),
+     dict(id='core', role='summary', question='결론은 무엇입니까?', sources=['stop'])],
+    [dict(id='core', role='summary', question='결론은 무엇입니까?', sources=['stop'])],
+    [dict(id='core', role='intro', question='결론은 무엇입니까?', sources=['stop']),
+     dict(id='detail', question='무엇을 호출합니까?', sources=['stop'])],
+    [dict(id='core', role='summary', max_statements=3, question='결론은 무엇입니까?', sources=['stop']),
+     dict(id='detail', question='무엇을 호출합니까?', sources=['stop'])],
+])
+def test_요약_part는_상세_part_앞의_첫_part에만_둘_수_있다(tmp_cfg, generated, parts):
+    section, model, save, agent = generated
+    section['design_topics'][0]['parts'] = parts
+    save()
+    with pytest.raises(ValueError, match='role: summary'):
+        Generator(tmp_cfg, model, agent).run()
+    assert not agent.calls
+
+
+def test_다른_주제가_앞_주제의_요약을_되풀이하면_중복으로_거절된다(tmp_cfg, generated):
+    section, model, save, base_agent = generated
+    first = section['design_topics'][0]
+    first['parts'] = [dict(id='core', role='summary', question='종료에서 먼저 알아야 할 결론은 무엇입니까?', sources=['stop']),
+                      dict(id='detail', question='종료 진입점은 무엇을 호출합니까?', sources=['stop'])]
+    section['design_requirements'].append(dict(id='again', question='종료 진입점을 다시 설명합니까?'))
+    section['design_topics'].append(dict(id='again', title='다시 쓰는 종료', question='종료를 설명하세요.',
+                                         covers=['again'], sources=copy.deepcopy(first['sources'])))
+    model.evidence['device/again/stop'] = copy.deepcopy(model.evidence['device/stop/stop'])
+    save()
+
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            if len(self.calls) == 1:
+                statement['text'] = SUMMARY_TEXT
+            elif len(self.calls) == 2:
+                # 앞 주제의 상세 설명은 요약과 겹치지 않게 두어, 뒤 주제가 요약 자체와만 겹치게 한다.
+                statement['text'] = '구현자는 `cancelPending()`의 정의를 같은 파일에서 이어서 읽어야 합니다.'
+            else:
+                statement.update(text=SUMMARY_TEXT, covers=['again'])
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+
+    with pytest.raises(ValueError, match='의미 중복'):
+        Generator(tmp_cfg, model, Agent()).run()
+
+
+def test_요약_답변은_실행_확인_항목으로_표시되지_않고_사실_문단으로_고정된다(tmp_cfg, generated):
+    from sdd.generated_design import response_schema
+    from sdd.design_request import _design_units
+    section, model, save, base_agent = generated
+    section['design_topics'][0]['parts'] = [
+        dict(id='core', role='summary', question='종료에서 먼저 알아야 할 결론은 무엇입니까?', sources=['stop']),
+        dict(id='detail', question='종료 진입점은 무엇을 호출합니까?', sources=['stop'])]
+    save()
+    summary_unit = _design_units(section, {})[0]
+    assert response_schema(summary_unit)['properties']['statements']['items']['properties']['kind']['enum'] == ['behavior']
+
+    class Agent:
+        calls = []
+        def chat(self, system, user, **kw):
+            self.calls.append(user)
+            statement = copy.deepcopy(base_agent.statement)
+            if len(self.calls) == 1:
+                statement.update(text=SUMMARY_TEXT, kind='limitation')  # 모델이 잘못 골라도 생성기가 고정한다
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
+
+    body = Generator(tmp_cfg, model, Agent()).run()[0].read_text(encoding='utf-8').split('\n---\n', 1)[1]
+    assert f'{SUMMARY_TEXT} `device.cpp:10`\n\n' in body
+    assert '실행 확인 항목: ' + SUMMARY_TEXT not in body
+
+
+def test_CLI_실행_파일_위치만_바뀌면_설계_재사용_신원이_유지된다(tmp_cfg, generated):
+    from sdd.design_request import prepare_requests
+    section, model, _, _ = generated
+    tmp_cfg.agent.kind, tmp_cfg.agent.runner, tmp_cfg.agent.model = 'cli', 'codex', 'test-model'
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\0ab0e7a8\codex.EXE']
+    before = prepare_requests(tmp_cfg, model, section, None).inputs
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\22cfb1d3\codex.exe']
+    assert prepare_requests(tmp_cfg, model, section, None).inputs == before
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\22cfb1d3\codex.exe', '--profile', 'other']
+    assert prepare_requests(tmp_cfg, model, section, None).inputs != before
