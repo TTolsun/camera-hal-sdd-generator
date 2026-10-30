@@ -3614,7 +3614,7 @@ sections:
     title: 탐색과 파이프라인 선택
     question: 처음 읽는 개발자에게 CameraManager의 단일 인스턴스와 진입점 역할, start() 성공 후 장치 접근 순서, cameras()와
       get()의 실행 상태 조건을 설명하세요. PipelineHandler::match()의 장치 확보·카메라 생성·등록 책임도 구분하세요.
-      네 개의 짧은 문단으로 설명하고 실제 소스의 API 이름과 조건을 유지하세요.
+      다섯 개의 짧은 문단으로 설명하고 실제 소스의 API 이름과 조건을 유지하세요.
     covers:
     - discovery
     sources:
@@ -3854,9 +3854,21 @@ sections:
       end: int Camera::queueRequest
     parts:
     - id: buffers
-      question: Camera::queueRequest()에 전달할 요청 객체에 연결되어 있어야 하는 버퍼 조건만 한 문장으로 설명하세요.
+      question: Camera::queueRequest()로 제출하기 전에 createRequest()가 반환한 요청 객체에 캡처 버퍼를
+        최소 한 개 연결해야 한다는 조건만 한 문장으로 설명하세요. 연결의 대상이 요청 객체임을 명시하세요. 버퍼 안에 픽셀 데이터를 채우는
+        동작으로 쓰지 마세요.
       sources:
       - queue
+      answer_contract:
+        basis: contract
+        required_terms:
+        - - queueRequest
+        - - 요청
+        - - 연결
+        - - 한 개
+          - 하나
+          - 1개
+      max_statements: 1
     - id: signal
       question: Camera::queueRequest()로 제출한 요청의 처리가 끝났을 때 애플리케이션이 받는 완료 신호 이름을 한 문장으로
         설명하세요. 제출 직후를 완료 시점으로 설명하지 마세요.
@@ -5096,12 +5108,12 @@ sections:
         - - 음수
           - negative
     - id: buffer-complete
-      question: 파이프라인 핸들러가 버퍼 완료를 알릴 때 CameraManager 스레드에서 completeBuffer를 호출해야 한다는
-        의무와, 마지막 버퍼 완료만으로 요청이 자동 완료되지 않아 completeRequest를 별도로 명시 호출해야 한다는 의무를 두 짧은
-        문장 이내로 연결하세요. 마지막 버퍼 조건이나 요청 완료 의무를 되풀이하지 마세요.
+      question: 파이프라인 핸들러가 completeBuffer와 completeRequest를 모두 CameraManager 스레드에서
+        호출해야 한다는 호출 측 의무를 먼저 한 문장으로 설명하세요. 이어 마지막 버퍼 완료만으로 요청이 자동 완료되지 않으므로 completeRequest를
+        별도로 명시 호출해야 한다는 의무를 한 번 설명하세요. 실제 장치에서 이미 해당 스레드로 호출됐다는 실행 결과로 바꾸지 마세요.
       sources:
       - buffer-notice
-      - completion
+      - request-notice
       - request-duty
       max_statements: 2
       answer_contract:
@@ -5110,6 +5122,7 @@ sections:
         - - completeBuffer
         - - 완료
         - - completeRequest
+        - - CameraManager
     - id: request-complete
       question: completeRequest가 queuedRequests_의 앞부터 확인하며 RequestPending이면 반복을 중단하고,
         그렇지 않으면 대기 버퍼가 없음을 확인해 제거하고 requestComplete로 애플리케이션에 제출 순서대로 반환하는 경로를 두 문장
@@ -5124,17 +5137,17 @@ sections:
         - - completeRequest
         - - RequestPending
     - id: callback-context-check
-      question: CameraManager의 완료 함수 호출 지점과 애플리케이션 콜백 진입 지점에서 Thread::currentId()의
-        실제 반환값을 각각 기록해 비교하는 관찰 계획만 한 문장으로 제안하세요. 이 API가 현재 Linux 스레드 ID를 돌려준다는 근거를
-        사용하되, 가능한 ID 후보 목록이나 새로운 관측 필드를 만들지 마세요. 콜백이 반드시 같은 스레드 또는 별도 스레드에서 실행된다고
-        단정하지 마세요. 완료 의무와 미실행 주의문은 반복하지 마세요.
+      question: completeRequest 호출 진입 지점과 애플리케이션 콜백 진입 지점에서 Thread::currentId()의 반환값을
+        각각 기록해 비교하는 관찰 계획을 제안하세요. 이 API가 현재 Linux 스레드 ID를 반환한다는 정의를 사용하세요. 콜백의 실제
+        스레드나 관측 결과를 단정하지 마세요. 앞 문단의 CameraManager 호출 의무와 미실행 주의문은 반복하지 마세요. 두 문장 이내로
+        답하세요.
       sources:
       - completion
       - thread-id
       answer_contract:
         basis: investigation
         required_terms:
-        - - CameraManager
+        - - completeRequest
         - - 콜백
         - - 관찰
           - 기록
@@ -5464,11 +5477,10 @@ sections:
         - - ASSERT
       max_statements: 1
     - id: completion
-      question: 정지 중 CameraManager 문맥의 completeRequest 진입·복귀와 애플리케이션 콜백 도착을 별도로 기록하는
-        계획을 제안하세요. 핸들러 완료 호출이 복귀했지만 콜백 도착을 확인하지 못한 경우를 완료 처리 경로와 구분하고, 콜백의 실제 스레드는
-        앞 절의 Thread::currentId() 기록 방법으로 확인하도록 연결하세요. 스레드 구성을 미리 단정하거나 ID 후보 값을 지어내지
-        마세요. 앞 절의 완료 의무·소유권·제출 순서 계약과 전체 스레드 기록 절차는 다시 쓰지 마세요. 계획 분류는 생성기가 표시하므로 미실행·상태
-        변경 함수 재호출 주의문은 덧붙이지 마세요.
+      question: 정지 중 completeRequest 진입·복귀와 애플리케이션 콜백 도착을 별도로 기록하는 조사 계획을 두 문장 이내로
+        제안하세요. 함수 복귀 기록과 콜백 도착 기록을 구분하고, 콜백의 실제 스레드는 앞 절의 Thread::currentId() 기록 방법으로
+        확인하도록 짧게 연결하세요. 앞 절의 CameraManager 호출 의무를 실제 실행 사실로 바꾸거나 다시 설명하지 마세요. 완료 루프의
+        상세 분기·소유권·제출 순서와 전체 스레드 기록 절차, 작성 과정 안내도 반복하지 마세요.
       sources:
       - completion
       - thread-id
@@ -5476,8 +5488,10 @@ sections:
         basis: investigation
         required_terms:
         - - completeRequest
-        - - CameraManager
-      max_statements: 2
+        - - 콜백
+        - - 기록
+        - - Thread::currentId()
+      max_statements: 1
     - id: disconnect
       question: Camera::disconnect()에서 내부 객체에 연결 해제를 전달하는 _d()->disconnect() 호출과 그
         뒤 disconnected.emit()의 순서를 설명하세요. _d() 접근자와 내부 disconnect()를 이 함수가 호출하는 모든
