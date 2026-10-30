@@ -36,18 +36,20 @@ const storage = {
 };
 function page({path='/site/', mobile=false, current=false}={}) {
   const order = [];
-  const folds = ['group', 'task', 'branch'].map((id, index) => {
+  const folds = ['group', 'task', 'branch'].map(id => {
     const fold = new Events();
     fold.dataset = {navId: id};
     fold.summary = new Events();
     fold.querySelector = () => fold.summary;
-    let open = index < 2 || current;
+    let open = false;
     Object.defineProperty(fold, 'open', {get: () => open, set: value => {
       order.push(id); open = value;
     }});
     return fold;
   });
   const sidebar = new Events();
+  const currentLink = current ? {parentElement:folds[2], closest:() => folds[2]} : null;
+  sidebar.querySelector = selector => selector === 'a[aria-current="page"]' ? currentLink : null;
   sidebar.querySelectorAll = () => folds;
   let scroll = 0;
   Object.defineProperty(sidebar, 'scrollTop', {get: () => scroll, set: value => {
@@ -61,31 +63,37 @@ function page({path='/site/', mobile=false, current=false}={}) {
   return {folds, sidebar, win, order};
 }
 const key = 'sdd.sidebar.folds:/site/';
-// Defaults are per-page until the user chooses. Queued initial toggles must not
-// freeze the unopened scenario's default on later pages.
+// Every menu starts closed. Initial events do not create user preferences.
 let a = page(); a.folds[0].fire('toggle');
+assert.deepEqual(a.folds.map(fold => fold.open), [false,false,false]);
 assert.deepEqual(JSON.parse(values.get(key)).states, {});
-let b = page({current:true}); assert.equal(b.folds[2].open, true);
+let b = page({current:true}); assert.equal(b.folds[2].open, false);
 // Two native activations may coalesce into one toggle at the starting value.
-// The explicit user choice still survives moving away from the current branch.
-b.folds[2].summary.fire('click'); b.folds[2].open = false;
+// Keep that explicit closed choice rather than dropping it as a default.
 b.folds[2].summary.fire('click'); b.folds[2].open = true;
+b.folds[2].summary.fire('click'); b.folds[2].open = false;
 b.folds[2].fire('toggle');
-assert.equal(page().folds[2].open, true);
+assert.deepEqual(JSON.parse(values.get(key)).states, {branch:false});
 // Full pagehide snapshot catches multiple fast changes before any toggle event.
-b.folds[0].open = false; b.folds[1].open = false; b.folds[2].open = true;
+b.folds[0].open = true; b.folds[1].open = true; b.folds[2].open = true;
 b.win.fire('pagehide');
-assert.deepEqual(JSON.parse(values.get(key)).states, {group:false, task:false, branch:true});
-a = page({current:true});
-assert.deepEqual(a.folds.map(fold => fold.open), [false,false,true]);
+assert.deepEqual(JSON.parse(values.get(key)).states, {group:true, task:true, branch:true});
+a = page();
+assert.deepEqual(a.folds.map(fold => fold.open), [true,true,true]);
+// Closing/reopening an ancestor never changes explicit nested open choices.
+a.folds[0].open = false; a.win.fire('pagehide');
+b = page();
+assert.deepEqual(b.folds.map(fold => fold.open), [false,true,true]);
+b.folds[0].open = true; b.folds[0].fire('toggle');
+assert.deepEqual(b.folds.map(fold => fold.open), [true,true,true]);
 // Closing a parent does not overwrite nested choices, including explicit false
 // on the current branch. Navigation, reload and another edition share these IDs.
-a.folds[0].open = true; a.folds[2].open = false; a.folds[2].fire('toggle');
-a.folds[0].open = false; a.win.fire('pagehide');
+b.folds[2].open = false; b.folds[2].fire('toggle');
+b.folds[0].open = false; b.win.fire('pagehide');
 b = page({current:true});
-assert.deepEqual(b.folds.map(fold => fold.open), [false,false,false]);
+assert.deepEqual(b.folds.map(fold => fold.open), [false,true,false]);
 b.folds[0].open = true; b.folds[0].fire('toggle');
-assert.deepEqual(b.folds.map(fold => fold.open), [true,false,false]);
+assert.deepEqual(b.folds.map(fold => fold.open), [true,true,false]);
 // Restore the latest choices onto an older BFCache document, before restoring
 // its scroll (the fake layout clamps at 100 unless every fold has opened).
 values.set(key, JSON.stringify({version:1, states:{group:true,task:true,branch:true}}));
@@ -97,7 +105,7 @@ a.folds[0].fire('toggle');
 assert.deepEqual(JSON.parse(values.get(key)).states, {group:true,task:true,branch:true});
 // Different deployments on this origin do not share choices. Mobile restores
 // folds without writing its panel offset into desktop scroll or scrolling body.
-assert.deepEqual(page({path:'/other/'}).folds.map(fold => fold.open), [true,true,false]);
+assert.deepEqual(page({path:'/other/'}).folds.map(fold => fold.open), [false,false,false]);
 const mobile = page({mobile:true}); mobile.sidebar.scrollTop = 80;
 mobile.folds[0].open = false; mobile.win.fire('pagehide');
 assert.equal(values.get('sdd.sidebar.scroll:/site/'), '350');
@@ -106,14 +114,14 @@ assert.equal(mobile.order.filter(value => value === 'scroll').length, 1);
 for (const bad of ['{', 'null', '[]', '{"version":2,"states":{"group":false}}',
                    '{"version":1,"states":[]}', '{"version":1,"states":{"group":"false"}}']) {
   values.set(key, bad);
-  const fresh = page({current:true});
-  assert.deepEqual(fresh.folds.map(fold => fold.open), [true,true,true]);
+  const fresh = page();
+  assert.deepEqual(fresh.folds.map(fold => fold.open), [false,false,false]);
 }
 blocked = true;
-const noStorage = page(); noStorage.folds[0].open = false;
+const noStorage = page(); noStorage.folds[0].open = true;
 noStorage.folds[0].fire('toggle'); noStorage.win.fire('pagehide');
 noStorage.win.fire('pageshow');
-assert.equal(noStorage.folds[0].open, false);
+assert.equal(noStorage.folds[0].open, true);
 // Closed details may contain a geometrically measurable descendant in some
 // engines. Focus selection and the tab trap must use disclosure ancestry too.
 const reader = fs.readFileSync('src/sdd/site_assets/reader-tools.js', 'utf8');

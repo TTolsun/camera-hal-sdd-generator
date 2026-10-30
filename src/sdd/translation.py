@@ -30,10 +30,28 @@ def _check_obligation(source, text):
                          'Preserve it with must/shall or must not; should weakens the contract.')
 
 
+def _is_response_wrapper(value):
+    """Recognize translation envelopes without rejecting arbitrary JSON examples."""
+    if isinstance(value, dict):
+        return bool(value) and set(value) <= {'text', 'texts', 'translation', 'translations'}
+    if isinstance(value, list):
+        return bool(value) and all(_is_response_wrapper(item) for item in value)
+    return False
+
+
 def _validate_text(source, text):
     """Validate one source/translation pair, independent of its JSON envelope."""
     if not isinstance(text, str) or not text.strip() or KOREAN.search(text):
         raise ValueError('Return a nonempty English text field only.')
+    # A CLI may encode its response envelope again inside the display string.
+    # Parse the whole string: a leading opaque {{0}} or JSON within prose/code
+    # is display content, not evidence of an accidentally nested envelope.
+    try:
+        nested = json.loads(text)
+    except ValueError:
+        nested = None
+    if _is_response_wrapper(nested):
+        raise ValueError('Return translated display text, not a JSON response wrapper inside the text field.')
     expected = Counter(re.findall(r'\{\{\d+\}\}', source))
     actual = Counter(re.findall(r'\{\{\d+\}\}', text))
     if expected != actual:

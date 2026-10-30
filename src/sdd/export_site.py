@@ -424,24 +424,23 @@ def _navigation_html(entries, sections, rel, current):
             if group_open:
                 nav.append("</details>")
             if nav_group:
-                nav.append(f'<details class="nav-group" data-nav-id="{fold_id("group", nav_group)}" open>'
+                nav.append(f'<details class="nav-group" data-nav-id="{fold_id("group", nav_group)}">'
                            f'<summary>{html.escape(nav_group)}</summary>')
             group_open = bool(nav_group)
             last_group = nav_group
         if section_changed:
             if nav_section:
-                nav.append(f'<details class="nav-section" data-nav-id="{fold_id("task", nav_group, nav_section)}" open>'
+                nav.append(f'<details class="nav-section" data-nav-id="{fold_id("task", nav_group, nav_section)}">'
                            f'<summary>{html.escape(nav_section)}</summary>')
             last_section = (nav_group, nav_section)
         active = ' aria-current="page"' if nav_rel == rel else ""
         link = (f'<a{" class=" + chr(34) + "nav-sub" + chr(34) if child else ""}'
                 f' href="{_href(_html_path(nav_rel), current)}"{active}>{html.escape(nav_title)}</a>')
         if child and not branch_open:
-            # 하위 문서는 접었다 펼 수 있게 묶는다. 읽고 있는 가지만 펴 둔다.
+            # 처음에는 현재 문서가 속한 가지도 접고, 저장된 사용자 선택만 복원한다.
             count = sum(1 for _, _, r in entries if _branch_of(r) == _branch_of(nav_rel) and _is_child(r))
-            opened = " open" if _branch_of(rel) == _branch_of(nav_rel) else ""
             last_branch = _branch_of(nav_rel)
-            nav.append(f'<details class="nav-branch" data-nav-id="{fold_id("branch", nav_group, nav_section, last_branch)}"{opened}>'
+            nav.append(f'<details class="nav-branch" data-nav-id="{fold_id("branch", nav_group, nav_section, last_branch)}">'
                        f'<summary>하위 문서 {count} 편</summary>')
             branch_open = True
         nav.append(link)
