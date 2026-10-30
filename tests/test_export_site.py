@@ -382,9 +382,9 @@ def test_task_sections_group_pages_and_inherit_scenarios_without_changing_manusc
     assert tasks[0]['summary'] == 'Understand <structure>'
     assert [link['href'] for link in tasks[0]['links']] == ['../device.html', '../pipe.html']
     assert tasks[1]['summary'] == 'Trace & diagnose'
-    assert tasks[1]['children'][0]['class'] == 'nav-branch' and tasks[1]['children'][0]['open']
+    assert tasks[1]['children'][0]['class'] == 'nav-branch' and not tasks[1]['children'][0]['open']
     assert {'href': 'open.html', 'class': 'nav-sub', 'aria-current': 'page'} in tasks[1]['links']
-    assert all(task['open'] for task in tasks)
+    assert not any(task['open'] for task in tasks)
     assert before == {p: p.read_bytes() for p in tmp_cfg.sdd_dir.rglob('*.md')}
     first = (out / 'site-manifest.json').read_bytes()
     export_site(tmp_cfg)
@@ -399,9 +399,10 @@ def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
     other = (out / 'device.html').read_text(encoding='utf-8')
     child = (out / 'scenarios/open.html').read_text(encoding='utf-8')
     assert '<summary>하위 문서 2 편</summary>' in other
-    # 읽고 있는 가지만 펴 둔다. 다른 문서에서는 접어서 목록을 짧게 유지한다.
-    assert _nav_folds(parent, 'nav-branch')[0]['open']
-    assert _nav_folds(child, 'nav-branch')[0]['open']
+    # 현재 문서와 목차 페이지에서도 저장된 선택이 없으면 모든 묶음을 접는다.
+    assert not _nav_folds(parent, 'nav-branch')[0]['open']
+    assert not _nav_folds(child, 'nav-branch')[0]['open']
+    assert any(link.get('aria-current') == 'page' for link in _nav_folds(child, 'nav-branch')[0]['links'])
     branch = _nav_folds(other, 'nav-branch')[0]
     assert not branch['open']
     # 접기는 하위 문서만 감싼다. 같은 그룹의 다른 문서가 안으로 들어가면 안 된다.
@@ -410,7 +411,8 @@ def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
         ids = [[node['data-nav-id'] for node in _nav_folds(page, kind)] for page in [parent, child, other]]
         assert ids[0] == ids[1] == ids[2]
         assert len(ids[0]) == len(set(ids[0]))
-    assert all(node['open'] for node in _nav_folds(other, 'nav-group'))
+    for page in [parent, child, other]:
+        assert not any(node['open'] for node in _nav_folds(page, 'nav-group'))
 
 
 def test_task_sections_end_before_unclassified_pages_and_reader_groups(tmp_cfg, sample_model):
@@ -460,7 +462,7 @@ def test_distinct_child_directories_form_separate_disclosures():
     nav = ''.join(_navigation_html(entries, {}, 'one/child.md', 'one/child.html'))
     folds = _nav_folds('<nav aria-label="문서 메뉴">' + nav + '</nav>', 'nav-branch')
     assert len(folds) == 2
-    assert [fold['open'] for fold in folds] == [True, False]
+    assert [fold['open'] for fold in folds] == [False, False]
     assert folds[0]['data-nav-id'] != folds[1]['data-nav-id']
     assert all(len(fold['links']) == 1 for fold in folds)
 
