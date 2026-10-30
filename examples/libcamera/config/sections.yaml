@@ -5415,10 +5415,11 @@ sections:
     - review
     parts:
     - id: submission-record
-      question: 조사자가 남길 기록 항목 중 이 함수의 반환값 항목을 제안하세요. 호출을 실행한 결과로 쓰지 마세요.
+      question: Camera::queueRequest의 반환값을 그대로 기록하고 성공 0과 실패 음수 오류 코드를 구분할 조사 계획만
+        한 문장으로 제안하세요. 호출을 실행한 결과로 쓰거나 오류 코드·로그 메시지·분기 조사 과제를 추가하지 마세요.
       sources:
       - queue
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: investigation
         required_terms:
