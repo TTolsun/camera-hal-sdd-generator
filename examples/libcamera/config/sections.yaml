@@ -5184,8 +5184,9 @@ sections:
       question: 준비 신호 연결과 요청 준비를 담당하는 함수를 구분하세요. PipelineHandler::registerRequest()는
         요청이 준비됐을 때 doQueueRequests(request->_d()->camera())를 부르는 prepared 신호 연결을 설정합니다.
         PipelineHandler::queueRequest()가 waitingRequests_에 요청을 추가한 뒤 prepare(300ms)를
-        호출하는 순서를 설명하고, 준비 단계나 하드웨어 큐잉이 실패하면 요청이 취소된다는 주석의 조건도 포함하세요. 대기 큐의 선두·한도 조건은
-        다음 질문에서 다루므로 반복하지 마세요. 세 문장 이내로 답하세요.
+        호출하는 순서를 설명하고, 준비 단계에서 실패하면 요청이 취소된다는 주석의 조건만 포함하세요. 하드웨어 큐잉 실패와 cancelRequest
+        분기는 dispatch 질문에서 설명하므로 여기서는 반복하지 마세요. 대기 큐의 선두·한도 조건은 다음 질문에서 다루므로 반복하지 마세요.
+        세 문장 이내로 답하세요.
       sources:
       - device-queue
       answer_contract:
@@ -5201,6 +5202,8 @@ sections:
         reject_patterns:
         - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){3}
           message: 3문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+        - pattern: 하드웨어.{0,35}(?:실패|못하|못하면)
+          message: 하드웨어 큐잉 실패의 취소 분기는 dispatch에서만 설명하세요. 여기서는 준비 실패만 다룹니다.
       max_statements: 1
     - id: waiting
       question: waitingRequests_의 선두 요청 prepared_가 거짓이면 뒤 요청도 전달하지 않는 조건과, queuedRequests_
@@ -5251,6 +5254,25 @@ sections:
         - - '0'
         - - 음수
           - negative
+    - id: buffer-notification
+      question: PipelineHandler::completeBuffer()가 bufferCompleted 신호로 애플리케이션에 버퍼
+        완료를 알리고 요청의 버퍼 추적을 갱신하는 역할과, 모든 버퍼가 완료되면 true를 반환하고 그렇지 않으면 false를 반환한다는 의미를
+        두 문장 이내로 설명하세요. 요청 전체의 명시 완료 의무는 다음 질문에서 다룹니다.
+      sources:
+      - buffer-notice
+      - completion
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - completeBuffer
+        - - bufferCompleted
+        - - 모든
+        - - 'true'
+        - - 'false'
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
+          message: 두 문장 이내에서 완료 알림·추적 갱신과 true/false 반환을 설명하세요.
     - id: buffer-complete
       question: 파이프라인 핸들러가 completeBuffer와 completeRequest를 모두 CameraManager 스레드에서
         호출해야 한다는 호출 측 의무를 먼저 한 문장으로 설명하세요. 이어 마지막 버퍼 완료만으로 요청이 자동 완료되지 않으므로 completeRequest를
