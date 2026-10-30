@@ -1,6 +1,7 @@
 """Catalog preparation composition root."""
 from pathlib import Path
 import json
+import hashlib
 import html
 import re
 from .site_localization import source_hash, display_strings, KOREAN
@@ -63,11 +64,31 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
     # Legacy values keep their original status. Once context was recorded, a
     # changed binding/source cannot quietly reuse its previous translation.
     if 'translation_contexts' in previous:
+        from .translation_context import unchanged_across_commits, retained_carryover
+        carried = set()
         for key in catalog['strings']:
             if previous['translation_contexts'].get(key, []) != contexts.get(key, []):
-                catalog['strings'][key] = ''
+                if catalog['strings'][key] and unchanged_across_commits(previous, catalog, key):
+                    carried.add(hashlib.sha256(key.encode()).hexdigest())
+                else:
+                    catalog['strings'][key] = ''
+        if carried:
+            catalog['source_carryover'] = dict(
+                from_catalog_sha256=hashlib.sha256(destination.read_bytes()).hexdigest(),
+                from_source_commit=previous['source_commit'], to_source_commit=catalog['source_commit'],
+                source_string_sha256=sorted(carried),
+                translation_sha256={hashlib.sha256(key.encode()).hexdigest():
+                    hashlib.sha256(value.encode()).hexdigest() for key, value in catalog['strings'].items()
+                    if hashlib.sha256(key.encode()).hexdigest() in carried},
+                validation='Every literal source, location, enclosing scope and inline subject is unchanged; commit revalidated.',
+                assessment='Historical translations retained; not new inference or human approval.')
+        elif previous.get('source_commit') == catalog['source_commit']:
+            event = retained_carryover(previous, catalog['strings'])
+            if event:
+                catalog['source_carryover'] = event
     catalog['legacy_reuse_policy'] = ('Values imported without recorded context retain their prior review status; '
-        'they are not newly inferred or context-reviewed. New or changed recorded bindings require retranslation.')
+        'they are not newly inferred or context-reviewed. Literal authenticated contexts at a new commit may '
+        'retain translations with recorded lineage; changed code, location, scope or subjects require retranslation.')
     translation_agent = None
     if translate:
         from .translation import translate_missing
