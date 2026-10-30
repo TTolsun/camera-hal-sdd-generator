@@ -387,6 +387,8 @@ def audit(cfg, model, agent):
 
 
 def enforce(cfg, model):
+    from .consistency_profile import resolve
+    cfg = resolve(cfg, model, groups, identity, request)
     configured = groups(cfg)
     if not configured:
         return

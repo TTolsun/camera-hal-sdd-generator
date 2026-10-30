@@ -105,7 +105,10 @@ def compact_evidence(document: str, valid: set[str]) -> str:
         # A non-interactive audit attribute retains the exact paragraph-to-link
         # mapping. It adds no focus target, accessible announcement or search text.
         mapping = html.escape(json.dumps(refs, ensure_ascii=False), quote=True)
-        return '<p data-sdd-evidence="' + mapping + '">' + body[:suffix.start()] + '</p>'
+        bindings = {cite: sorted(destinations[cite]) for cite, _ in refs if destinations[cite]}
+        excerpts = (' data-sdd-excerpts="' + html.escape(json.dumps(bindings), quote=True) + '"'
+                    if bindings else '')
+        return '<p data-sdd-evidence="' + mapping + '"' + excerpts + '>' + body[:suffix.start()] + '</p>'
 
     # Never interpret example HTML inside code blocks as document navigation.
     def section(body):
