@@ -15,6 +15,41 @@ def record(text, *, file='device.cpp', line=1):
                 text=text, sha256=hashlib.sha256(text.encode()).hexdigest())
 
 
+def test_source_contract_and_unexecuted_callback_plan_keep_distinct_kinds_in_both_languages(tmp_cfg):
+    from sdd.evidence import _paragraphs
+    from sdd.site_markdown import _render
+    from sdd.site_localization import display_strings
+    answers = [
+        dict(text='요청 완료 함수는 관리자 스레드에서 호출해야 합니다.', evidence=['proof'], kind='behavior'),
+        dict(text='요청 콜백 진입과 실행 스레드를 기록할 계획이며 아직 실행하지 않았습니다.',
+             evidence=['proof'], kind='limitation'),
+    ]
+    body = '\n\n'.join(_paragraphs([(a['kind'], a['text'], []) for a in answers]))
+    tmp_cfg.sdd_dir.mkdir(parents=True)
+    (tmp_cfg.sdd_dir/'primary.md').write_text('---\nsource_commit: '+'a'*40
+        +'\nsection: doc\ngenerated_design: '+json.dumps(dict(answers={'q': answers}), ensure_ascii=False)
+        +'\n---\n\n'+body, encoding='utf-8')
+    model = KnowledgeModel(meta={'source_commit': 'a'*40}, evidence={
+        'doc/q/proof': record('This function shall be called from the manager thread.')})
+    content, _, _ = _render(body, 'primary.md', {'primary.md'}, model, '', 'a'*40)
+    keys = display_strings(content)
+    assert len(keys) == 2  # The unexecuted plan is never merged into the source contract.
+    catalog = tmp_cfg.root/'english.json'
+    catalog.write_text(json.dumps({'strings': {key: 'Contract.' if '호출해야' in key else
+        'Execution check: Record callback entry and thread; this plan has not been executed.'
+        for key in keys}}), encoding='utf-8')
+    tmp_cfg.raw.setdefault('site', {})['english_catalog'] = str(catalog)
+    payload = request(tmp_cfg, model, dict(id='c', question='Who completes?', primary='primary.md',
+        documents=['primary.md'], match='요청'))
+    for index, expected in enumerate(('behavior', 'limitation')):
+        source = payload['claims'][f'primary.md/q/{index}']
+        assert source['statement_kinds'] == [expected]
+        displayed = [c for k,c in payload['claims'].items() if k.startswith('catalog/')
+                     and f'primary.md/q/{index}' in c['origin_claims']]
+        assert {c['language'] for c in displayed} == {'ko', 'en'}
+        assert all(c['statement_kinds'] == [expected] for c in displayed)
+
+
 def test_recovered_topic_mapping_order_preserves_exact_audit_requests(tmp_cfg):
     """A partial resume can append one answer topic after its unchanged peers."""
     from sdd.call_records import canonical_request_hash
