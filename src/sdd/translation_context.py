@@ -138,3 +138,44 @@ def matches_archive(record, key, catalog, source):
     except (KeyError, TypeError, ValueError):
         return False
     return old == for_source(catalog, source)
+
+
+def unchanged_across_commits(previous, current, source):
+    """Carry a translation only when every authenticated context stays literal."""
+    before, after = previous.get('source_commit', ''), current.get('source_commit', '')
+    if before == after or not all(isinstance(c, str) and re.fullmatch(r'[0-9a-f]{40}', c)
+                                  for c in (before, after)):
+        return False
+
+    def normalized(catalog):
+        contexts = for_source(catalog, source)
+        if not contexts or not any(c['sources'] for c in contexts):
+            return None
+        rows = []
+        for context in contexts:
+            # for_source has checked the complete record identity, text hash
+            # and its own catalog commit. Keep file, location, complete scope,
+            # inline subjects and unit kind; only the commit may differ.
+            sources = [{k: v for k, v in r.items() if k != 'source_commit'}
+                       for r in context['sources']]
+            row = {**context, 'sources': sorted(sources, key=lambda r: json.dumps(r, sort_keys=True))}
+            rows.append(json.dumps(row, ensure_ascii=False, sort_keys=True))
+        return sorted(rows)
+
+    old = normalized(previous)
+    return old is not None and old == normalized(current)
+
+
+def retained_carryover(catalog, strings):
+    """Keep lineage only for literal values that are still present."""
+    event = catalog.get('source_carryover')
+    if not isinstance(event, dict) or event.get('to_source_commit') != catalog.get('source_commit'):
+        return None
+    expected = event.get('translation_sha256', {})
+    actual = {_sha(key): _sha(value) for key, value in strings.items() if isinstance(value, str) and value}
+    kept = sorted(key for key in event.get('source_string_sha256', [])
+                  if key in actual and expected.get(key) == actual[key])
+    if not kept:
+        return None
+    return {**event, 'source_string_sha256': kept,
+            'translation_sha256': {key: actual[key] for key in kept}}

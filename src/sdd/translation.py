@@ -103,6 +103,11 @@ def translate_missing(cfg, catalog, agent=None):
                 value = ''  # Re-translate a legacy value under the current rules.
         validated[source] = value or fixed_translation(source) or value
     catalog = {**catalog, 'strings': validated}
+    from .translation_context import retained_carryover
+    event = retained_carryover(catalog, validated)
+    catalog.pop('source_carryover', None)
+    if event:
+        catalog['source_carryover'] = event
     if size > 1:
         return _batched(cfg, catalog, agent, size)
     terminology_rules = _translation_terminology(catalog['strings'])
