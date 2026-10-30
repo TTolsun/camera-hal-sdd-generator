@@ -4996,6 +4996,7 @@ sections:
         - - completeBuffer
         - - 완료
         - - completeRequest
+        - - 마지막 버퍼
     - id: request-complete
       question: completeRequest가 queuedRequests_의 앞부터 확인하며 RequestPending이면 반복을 중단하고,
         그렇지 않으면 대기 버퍼가 없음을 확인해 제거하고 requestComplete로 애플리케이션에 제출 순서대로 반환하는 경로를 두 문장 이내로
