@@ -1603,3 +1603,15 @@ def test_요약_답변은_실행_확인_항목으로_표시되지_않고_사실_
     body = Generator(tmp_cfg, model, Agent()).run()[0].read_text(encoding='utf-8').split('\n---\n', 1)[1]
     assert f'{SUMMARY_TEXT} `device.cpp:10`\n\n' in body
     assert '실행 확인 항목: ' + SUMMARY_TEXT not in body
+
+
+def test_CLI_실행_파일_위치만_바뀌면_설계_재사용_신원이_유지된다(tmp_cfg, generated):
+    from sdd.design_request import prepare_requests
+    section, model, _, _ = generated
+    tmp_cfg.agent.kind, tmp_cfg.agent.runner, tmp_cfg.agent.model = 'cli', 'codex', 'test-model'
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\0ab0e7a8\codex.EXE']
+    before = prepare_requests(tmp_cfg, model, section, None).inputs
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\22cfb1d3\codex.exe']
+    assert prepare_requests(tmp_cfg, model, section, None).inputs == before
+    tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\22cfb1d3\codex.exe', '--profile', 'other']
+    assert prepare_requests(tmp_cfg, model, section, None).inputs != before

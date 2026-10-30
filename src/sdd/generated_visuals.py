@@ -174,6 +174,7 @@ def inputs(cfg, model, section, plan):
             or len(set(required_symbols)) != len(required_symbols)):
         raise ValueError('Visual required_symbols must be unique source identifiers')
     from .prompting import style_rules
+    from .cli_agent import identity_command
     style = cfg.style_dir / 'README.md'
     system = POLICY + ('\n' + style_rules(style.read_text(encoding='utf-8')) if style.exists() else '')
     limit = node_limit(cfg, plan)
@@ -181,7 +182,7 @@ def inputs(cfg, model, section, plan):
         raise ValueError('Visual required_symbols exceed the node limit')
     pin = digest({'plan': plan, 'policy': system, 'limit': limit,
                   'agent': {'kind': cfg.agent.kind, 'model': cfg.agent.model, 'base_url': cfg.agent.base_url,
-                            **({'runner': cfg.agent.runner, 'command': cfg.agent.command, 'args': cfg.agent.args}
+                            **({'runner': cfg.agent.runner, 'command': identity_command(cfg.agent), 'args': cfg.agent.args}
                                if cfg.agent.kind == 'cli' else {})},
                   'sources': {k: {f: r[f] for f in ('file', 'line', 'sha256', 'selector')} for k, r in records.items()}})
     return pin, records, passages, system, {'question': plan['question'], 'kind': plan['kind'],

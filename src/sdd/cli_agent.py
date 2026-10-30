@@ -17,6 +17,16 @@ from .cli_schema import schema_bytes, schema_hash, validate_original
 RUNNERS = ('hermes', 'opencode', 'claude', 'codex')
 
 
+def identity_command(cfg):
+    """Configured wrapper arguments without the executable location.
+
+    CLI apps relocate their executable on update (for example a hashed bin
+    folder). Runner, model and arguments identify the invocation; receipts
+    already verify ``command[1:]``, so identities follow the same boundary.
+    """
+    return list(cfg.command[1:])
+
+
 def command(cfg):
     if cfg.runner not in RUNNERS:
         raise ValueError('agent.runner must be hermes, opencode, claude or codex')
