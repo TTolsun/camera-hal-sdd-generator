@@ -1,11 +1,11 @@
 import copy
 import hashlib
 import json
-from types import SimpleNamespace
 
 import pytest
 
 from sdd import translation_context
+from sdd.facts.model import ClassInfo, KnowledgeModel, Location
 from sdd.site_localization import DisplayText
 from sdd.translation import translate_missing
 
@@ -14,7 +14,7 @@ def inputs():
     source = 'void Engine::stop() { waiting.swap(queue); stopDevice(); }'
     record = dict(status='available', commit='revision-a', file='engine.cpp', line=10, end_line=10,
                   text=source, sha256=hashlib.sha256(source.encode()).hexdigest())
-    model = SimpleNamespace(meta={'source_commit': 'revision-a'}, evidence={'s/t/e': record})
+    model = KnowledgeModel(meta={'source_commit': 'revision-a'}, evidence={'s/t/e': record})
     refs = json.dumps([['engine.cpp:10', 'source']])
     document = '<p data-sdd-evidence=\'' + refs + '\'><code>Engine::stop()</code>은 먼저 대기 요청을 옮깁니다.</p>'
     return document, model
@@ -174,10 +174,20 @@ def test_structural_citation_uses_the_whole_pinned_file_without_truncation():
     document, model = inputs()
     text = '\n' * 9 + model.evidence['s/t/e']['text']
     model.evidence = {}
-    model.citations = {'engine.cpp:10'}
+    model.classes = {'Engine': ClassInfo('Engine', loc=Location('engine.cpp', 10))}
     contexts, pool = {}, {}
     translation_context.collect(document, model, contexts, pool, lambda file: text)
     assert next(iter(pool.values()))['text'] == text
+
+
+def test_unregistered_structural_citation_never_loads_source():
+    document, model = inputs()
+    model.evidence = {}
+    model.classes = {'Other': ClassInfo('Other', loc=Location('other.cpp', 10))}
+    def unexpected_load(file):
+        pytest.fail('Unregistered source must be rejected before loading')
+    with pytest.raises(ValueError, match='cannot be resolved'):
+        translation_context.collect(document, model, {}, {}, unexpected_load)
 
 
 def test_archive_cannot_restore_a_translation_with_a_different_context(tmp_cfg):
@@ -215,7 +225,7 @@ def test_trailing_newline_is_not_a_citable_extra_line():
     with pytest.raises(ValueError, match='cannot be resolved'):
         translation_context.collect(document, model, {}, {})
     model.evidence = {}
-    model.citations = {'engine.cpp:11'}
+    model.classes = {'Engine': ClassInfo('Engine', loc=Location('engine.cpp', 11))}
     with pytest.raises(ValueError, match='outside the pinned file'):
         translation_context.collect(document, model, {}, {}, lambda file: '\n' * 9 + 'foo\n')
 
