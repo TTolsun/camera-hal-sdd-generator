@@ -235,9 +235,17 @@ def place(body, rendered, section):
         end = re.search(r'\n\n|\n(?=## )', body[start:])
         if end is None or not body[start:start + end.start()].strip():
             raise ValueError(f'Visual target has no explanation: {heading}')
-        # An inserted heading splits an ordered list and resets its numbering.
-        # Keep procedures intact by putting their diagram before the first step.
-        position = start if re.match(r'(?:\d+\. |[-*+] )', body[start:]) else start + end.start()
+        # Keep a procedure together and explain it before its diagram. Preserve
+        # indented continuation paragraphs and stop at the next topic boundary.
+        position = start + end.start()
+        if re.match(r'(?:\d+\. |[-*+] )', body[start:]):
+            while gap := re.match(r'\n\n+', body[position:]):
+                following = position + gap.end()
+                boundary = re.search(r'\n\n|\n(?=## )', body[following:])
+                paragraph = body[following:following + boundary.start()] if boundary else body[following:]
+                if not re.match(r'(?:\d+\. |[-*+] |[ \t]+\S)', paragraph):
+                    break
+                position = following + (boundary.start() if boundary else len(paragraph))
         insertion = '\n\n'.join(blocks)
         if position == start:
             body = body[:position] + insertion + '\n\n' + body[position:]
