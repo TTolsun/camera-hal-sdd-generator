@@ -5231,8 +5231,7 @@ sections:
     parts:
     - id: summary
       role: summary
-      question: queueRequest의 0은 파이프라인 대상 queued 호출을 지정한 뒤의 반환값이며 요청 완료는 파이프라인 핸들러가 명시적으로 알린
-        뒤 제출 순서대로 애플리케이션에 돌아온다는 두 단계의 차이를 쉬운 말로 먼저 설명하세요. 두 문장 이내로 답하세요.
+      question: queueRequest의 0 반환은 파이프라인 대상 queued 호출을 예약한 성공을 뜻하고 요청 완료와 구분된다는 점을 설명하세요. completeRequest는 이미 완료된 요청을 카메라에 알리고 완료 요청을 제출 순서대로 애플리케이션에 반환한다는 계약을 요약하세요. 알림 함수가 반환한 뒤 완료가 발생한다고 추정하지 말고 두 문장 이내로 답하세요.
       sources:
       - queue
       - request-duty
@@ -5245,6 +5244,8 @@ sections:
         required_terms:
         - - queueRequest
         - - 완료
+        - - 완료된
+          - 이미 완료
         reject_patterns:
         - pattern: 큐에.{0,8}들어|큐.{0,8}삽입.{0,8}성공
           message: 0의 의미는 queued 호출 뒤 반환입니다. 대기 큐 삽입이나 장치 큐잉 완료로 요약하지 마세요.

@@ -361,6 +361,237 @@ sections:
       - source: stopping/stop
         sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
         quote: "ASSERT(!d->pipe_->hasPendingRequests(this));\n\n\td->setState(Private::CameraConfigured);"
+  - id: lifecycle-timeout-fence-recovery
+    topic: resources
+    kind: flow
+    title: 타임아웃 뒤 펜스 회수
+    question: 신호되지 않은 펜스로 타임아웃이 나면 다른 요청에 재사용하기 전에 무엇을 해야 합니까?
+    nodes:
+    - id: timeout
+      label: '펜스 미신호: 요청 타임아웃'
+      label_en: 'Unsignalled fence: request times out'
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: isn't signalled
+    - id: retained
+      label: 버퍼에 펜스가 남음
+      label_en: Buffer still contains its fence
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: The buffer will still contain the fence
+    - id: retrieve
+      label: 애플리케이션이 releaseFence()로 회수
+      label_en: Application retrieves with releaseFence()
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: applications must retrieve with FrameBuffer::releaseFence()
+    - id: reuse
+      label: 그 뒤 다른 요청에서 버퍼 재사용
+      label_en: Then reuse the buffer in another request
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: can be reused in another request.
+    edges:
+    - from: timeout
+      to: retained
+      label: 요청 실패 뒤에도 유지
+      label_en: Remains after request failure
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+    - from: retained
+      to: retrieve
+      label: 재사용 전 회수 의무
+      label_en: Must retrieve before reuse
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+    - from: retrieve
+      to: reuse
+      label: 회수 후 재사용 가능
+      label_en: Reuse after retrieval
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+  - id: lifecycle-reuse-buffer-fence-distinction
+    topic: resources
+    kind: flow
+    title: 버퍼 재사용과 펜스 권고
+    question: ReuseBuffers가 재사용하는 대상과 펜스 사용 시 권고는 무엇입니까?
+    nodes:
+    - id: flag
+      label: ReuseBuffers
+      label_en: ReuseBuffers
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: \var Request::ReuseBuffers
+    - id: buffers
+      label: 앞서 addBuffer로 넣은 버퍼 재사용
+      label_en: Reuse buffers previously added by addBuffer
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Reuse the buffers that were previously added by addBuffer()
+    - id: fences
+      label: 연결된 펜스는 재사용하지 않음
+      label_en: Associated fences are not reused
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Fences associated with the buffers are not reused.
+    - id: advice
+      label: 펜스를 쓰면 이 플래그를 피하도록 권고
+      label_en: Should not use this flag with fences
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: This flag should not be used if fences are used.
+    edges:
+    - from: flag
+      to: buffers
+      label: 플래그의 재사용 범위
+      label_en: Flag reuse scope
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: buffers
+      to: fences
+      label: 버퍼와 펜스의 범위 구분
+      label_en: Distinguish buffer and fence reuse
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: fences
+      to: advice
+      label: API의 should not 권고
+      label_en: API should-not recommendation
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+  - id: observed-stop-callback-timing
+    topic: observed-callbacks
+    kind: flow
+    title: 가상 CPU 프로브의 연결별 취소 콜백 표시
+    question: 이 공개 가상 CPU 프로브에서 취소 요청의 콜백 표시와 애플리케이션 stop 표시는 어떻게 배치됐습니까? 서로 다른 연결 사이의 순서나 실제 C++ 반환 완료는 측정하지 않았습니다.
+    nodes:
+    - id: autoqueued
+      label: 'Auto·Queued: receiver/main 스레드'
+      label_en: 'Auto/Queued: receiver/main thread'
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"auto\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"receiver/main thread\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": true,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": false\n    }"
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"queued\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"receiver/main thread\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": true,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": false\n    }"
+    - id: direct
+      label: 'Direct: receiver/main과 다른 스레드'
+      label_en: 'Direct: different from receiver/main thread'
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"direct\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"different thread from the receiver/main thread; no thread-name identification is claimed\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": false,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": true\n    }"
+    - id: after
+      label: '취소 요청 표시: stop-return 뒤'
+      label_en: 'Cancelled-request markers: after stop-return'
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"queued\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"receiver/main thread\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": true,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": false\n    }"
+    - id: between
+      label: '취소 요청 표시: stop-enter와 stop-return 사이'
+      label_en: 'Cancelled-request markers: between stop-enter and stop-return'
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"direct\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"different thread from the receiver/main thread; no thread-name identification is claimed\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": false,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": true\n    }"
+    edges:
+    - from: autoqueued
+      to: after
+      label: 이 프로브의 세 실행에서 관측
+      label_en: Observed in three runs of this probe
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"auto\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"receiver/main thread\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": true,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": false\n    }"
+    - from: direct
+      to: between
+      label: 이 프로브의 세 실행에서 관측
+      label_en: Observed in three runs of this probe
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"direct\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"different thread from the receiver/main thread; no thread-name identification is claimed\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": false,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": true\n    }"
+  - id: near-return-marker-boundary
+    topic: observed-callbacks
+    kind: flow
+    title: 반환 근처 표시로 알 수 있는 범위
+    question: callback-return 표시는 어떤 후속 작업보다 앞서며, 무엇의 완료를 추적하지 않습니까?
+    nodes:
+    - id: marker
+      label: callback-return 관측 표시
+      label_en: Observed callback-return marker
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: callback-return
+    - id: counter
+      label: 그 뒤 카운터 증가
+      label_en: Counter increment follows
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: returned.fetch_add(1);
+    - id: destruction
+      label: 표시 이후 로컬 객체 소멸
+      label_en: Local destruction follows the marker
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: local destruction
+    - id: limit
+      label: 실제 C++ 반환 완료는 미추적
+      label_en: Actual C++ return is not traced
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: does not trace the actual C++ return.
+    edges:
+    - from: marker
+      to: counter
+      label: 표시가 먼저 기록됨
+      label_en: Marker is recorded first
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: Near-return marker before the counter increment and local destruction; does not trace the actual C++ return.
+    - from: marker
+      to: destruction
+      label: 표시가 먼저 기록됨
+      label_en: Marker is recorded first
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: Near-return marker before the counter increment and local destruction; does not trace the actual C++ return.
+    - from: marker
+      to: limit
+      label: 관측의 한계
+      label_en: Observation limit
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: Near-return marker before the counter increment and local destruction; does not trace the actual C++ return.
   overview:
   - id: discovery-map
     topic: discovery
