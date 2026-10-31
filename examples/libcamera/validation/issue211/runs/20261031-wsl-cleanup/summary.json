@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "status": "supplemental-real-syscalls-and-timeout-cleanup",
+  "uid": 0,
+  "callback_observation": false,
+  "timeout_cleanup": true,
+  "artifacts": {
+    "official-cam.strace": "a79f44f02797f754fdc7bee6daf9dc11b94633c541c31ee95b61afbf856f6986",
+    "probe-timeout/record.json": "0f27c28e88d7cc3ad9bd306deb329917309b14ee06f840c94c673f1c28b70c25",
+    "probe-timeout/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "probe-timeout/stdout": "a7973e65614c6aa0ac9852bc168cc0a7dabf81cf4c969bb9c395556327cb2ff5",
+    "strace-cam/record.json": "3e2ab154ed52c2efd0da4009cf06775e6ed7323f934971a79e40ef9ee48f2edc",
+    "strace-cam/stderr": "6755f811e8ffa78589c8d9cb82699482a36224e0535de82b9b5b9cd9d72e6aa0",
+    "strace-cam/stdout": "353a2d2a1d48086b281e315d9521a003bd697c85e9994457c1460db79c522fec"
+  }
+}

@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\site_localization.py", line 290, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\localization_cli.py", line 119, in main
+    result = prepare_catalog(load(args.config), args.out, translate=args.translate)
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\localization_cli.py", line 40, in prepare_catalog
+    out = _render_site(cfg, Path(temporary), check_consistency=False)
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\export_site.py", line 582, in _render_site
+    texts, approval_states, ledger, terms, model = _prepare_site_pages(cfg, settings, sections, entries,
+                                                   ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                                   check_consistency=check_consistency)
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\export_site.py", line 224, in _prepare_site_pages
+    glossary.enforce(cfg, terms, {rel: text for rel, text in texts.items()
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                  if sections.get(rel, {}).get("kind") != "per-package"})
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\glossary.py", line 243, in enforce
+    raise RuntimeError(message)
+RuntimeError: 뜻을 적지 않은 약어가 1개 있습니다. glossary.yaml 의 terms 에 뜻을 적거나, 설명이 필요 없는 일반 약어면 common 에 추가하세요.
+  GNU: glossary.md

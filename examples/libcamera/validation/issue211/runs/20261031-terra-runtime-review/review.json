@@ -1,0 +1,94 @@
+{
+  "cam-1": {
+    "review": {
+      "verdict": "pass",
+      "findings": [
+        "Run 1 records three distinct requests with sequences 0, 1 and 2, each joined by request pointer and sequence from callback-entry to frame-processed. Both observations report status 1. Callback entries ran on OS thread 461 (CameraManager); processing ran on thread 458 (cam), with stacks consistent with the source's event-loop deferral.",
+        "No cancelled callback appears in the run 1 event records. The source separates cancellation by returning before scheduling processing; this run did not exercise that branch.",
+        "Four allocator-return observations show fds 12\u201315 with 180224-byte fdinfo entries naming udmabuf as exporter. The stacks place them in libcamera's allocFromUDmaBuf through the virtual pipeline, and the provider records and logs identify /dev/udmabuf. The initially pending allocator breakpoint subsequently resolved and produced these observations.",
+        "The recorded executable and loaded libcamera libraries originate in the build tree, and their reported hashes match the corresponding binary hashes in observation.json. The actual configured stream was 400x300 NV12/SMPTE170M on Virtual2. The inferior exited normally with code 0 and no reported observation failures.",
+        "No unsupported success claim was identified within the stated virtual-run scope."
+      ],
+      "scope": "Automatic review of the supplied run 1 records against the supplied source windows, limited to the WSL custom-kernel root virtual run.",
+      "limitations": [
+        "Cancellation handling is supported by the source but was not dynamically exercised; zero recorded cancelled callbacks does not establish behavior under cancellation.",
+        "The recorded hashes and clean-source assertion were compared as supplied; their contents, build provenance and source identity were not independently recomputed or verified. Raw loaded.maps was excluded.",
+        "The observations do not establish callback returns or timing, and do not qualify physical DMA, a physical camera, a production application or an internal HAL."
+      ]
+    },
+    "inputs": {
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-1\\allocations.jsonl": "9959aa705a269febdb55c4ca7e772acc6dd4c7ac5d2d6ba2abe62913a7421500",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-1\\events.jsonl": "8ae227540219a363b99f2018bd95e51d07a03e913d84a064ca1298785d6e3191",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-1\\inferior-exit.json": "1a9a9f091cd7f30ecca92e9a28455284a2b0f6a180b102927fcfbf9ce4183373",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-1\\loaded.json": "d8391f76bca63698c13a8114cd04d891945af96e7f66d09da2b9b8aee6dc4ce0",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-1\\record.json": "535b072470f5c4c6f4b2c5343dc37c1a0823d62d7bd9ef347281a3ee5db3a3f2",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-1\\stderr": "9f7a8c095bb7de7a50b8053270b4a125fcdffb43cb518d559af2eac305f2616b",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-1\\stdout": "964cc5c26a0d63e6e345e8b9ba5f774d4437c4301d5101b966b4828a588c887d",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\observation.json": "e6a0ec4e26932abeb7c038d9b51a1c15ed71c5e6c87f1623aa28076a77a72d4a",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\dma-probe\\stdout": "f838d484e2dfd604115fe9daca31d822f0432a7ca2b5d915b8271996917fe7df"
+    },
+    "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-terra-runtime-review\\cam-1\\calls\\2560197467a04466aa6167a79d32ed1d\\001.receipt.json"
+  },
+  "cam-2": {
+    "review": {
+      "verdict": "pass",
+      "findings": [
+        "Three distinct requests with sequences 0, 1 and 2 join callback-entry to frame-processed by request address, sequence and PID; all six observations report status 1. Callback entries ran on OS thread 476 and processing ran on OS thread 473, with event-loop call stacks supporting the handoff.",
+        "The normal-frame count is separate from cancellation: the run reports zero cancelled callbacks, and the supplied events contain none. The source returns early for cancelled requests.",
+        "Four successful allocator returns came through allocFromUDmaBuf in the virtual pipeline. The provider was /dev/udmabuf; returned descriptors 12\u201315 had distinct inode numbers, size 180224 and fdinfo exporter udmabuf. The initially pending allocator breakpoint subsequently resolved and recorded all four returns.",
+        "loaded.json identifies the build-tree cam executable and libcamera libraries. Their reported hashes match the corresponding binary hashes in observation.json; the cam-2 artifact hash entries also agree between the two records.",
+        "The actual configured stream was Virtual2 at 400x300 NV12/SMPTE170M. The inferior exited normally with exit code 0 and no reported observation failures.",
+        "No unsupported success claim was found within the stated WSL virtual-run scope."
+      ],
+      "scope": "Automatic review of actual run 2 against the supplied source windows and records; raw loaded.maps was excluded.",
+      "limitations": [
+        "No cancelled callback was observed, so the cancellation branch was not exercised.",
+        "The supplied hashes and source-clean claim were compared as recorded; they were not independently recomputed or verified against build inputs.",
+        "Callback returns and timing were not claimed or assessed. The results do not qualify physical DMA, a physical camera, a production application or an internal HAL."
+      ]
+    },
+    "inputs": {
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-2\\allocations.jsonl": "6f58922852ca9b7f3ac736470dcb355b66958df7eb9ad67538903ee8fa4453f8",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-2\\events.jsonl": "4b7a3683b3e303708964357fa9359aa9ef6304b29d4f4a76c136061ef174250e",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-2\\inferior-exit.json": "1a9a9f091cd7f30ecca92e9a28455284a2b0f6a180b102927fcfbf9ce4183373",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-2\\loaded.json": "91af5b89bf33e21a6a75d0013193ac1a3dbc9a24e4f7f8a908b92e2b6aaa85f4",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-2\\record.json": "15a3eee949346ecfc2e8b69ca84265e14fe797f0134299bf6bcf85909cef3f94",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-2\\stderr": "02e36b46f93df95477df38d1c4cf44d462e465d03a1fc714e32121c69685f3d8",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-2\\stdout": "20f2119829255c836496715a3e81af8e268150958df140e946d0ba534a9e10df",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\observation.json": "e6a0ec4e26932abeb7c038d9b51a1c15ed71c5e6c87f1623aa28076a77a72d4a",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\dma-probe\\stdout": "f838d484e2dfd604115fe9daca31d822f0432a7ca2b5d915b8271996917fe7df"
+    },
+    "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-terra-runtime-review\\cam-2\\calls\\5fba820365d349409d330b52e387c576\\001.receipt.json"
+  },
+  "cam-3": {
+    "review": {
+      "verdict": "pass",
+      "findings": [
+        "Three distinct requests, with sequences 0, 1 and 2, join callback-entry to frame-processed by request address and sequence; each observation records status=1. Callback entries ran on OS thread 491 (CameraManager), while processing ran on OS thread 488 (cam).",
+        "The source returns immediately for cancelled requests. No cancelled callback appears in the run-3 events, so the three observed frames are separate from cancellation; the cancellation path itself was not exercised.",
+        "Four successful allocations were observed in libcamera's allocFromUDmaBuf path. The provider was /dev/udmabuf, and each returned DMA-BUF had fdinfo identifying exp_name=udmabuf and size 180224. The virtual pipeline allocation stacks and the source's page-rounding behavior are consistent with the observations.",
+        "The recorded executable and loaded libcamera libraries originate in the run's build directory. Their reported hashes match the corresponding observation.json binary hashes. The configured stream was Virtual2, 400x300 NV12, as confirmed by the configuration log, and the inferior exited with code 0.",
+        "No unsupported success claim is identified within the stated virtual-run scope. This is an automatic review, not human approval."
+      ],
+      "scope": "Actual run 3 and the supplied source windows, records, reported hashes and loaded.json; raw loaded.maps is excluded.",
+      "limitations": [
+        "No cancelled request was observed, so cancellation handling was not dynamically verified.",
+        "The supplied hash values and clean-source assertion were compared as records; their contents were not independently rehashed, and they do not alone prove that the binaries were built from the displayed source.",
+        "The results concern a root WSL custom-kernel virtual run and do not qualify physical DMA, a physical camera, a production application or an internal HAL.",
+        "Callback returns and timing are outside the claimed scope."
+      ]
+    },
+    "inputs": {
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-3\\allocations.jsonl": "3f36ba29e33b153b2666d9523de85cff800aeb9f36bf5b02888ee099ef542712",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-3\\events.jsonl": "449d61fb5e3814e257485e32897c4047fbd7b7dda9e29a497ccc7a7ff8b26438",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-3\\inferior-exit.json": "1a9a9f091cd7f30ecca92e9a28455284a2b0f6a180b102927fcfbf9ce4183373",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-3\\loaded.json": "f8241813551979a53f96b9be21520888b8c6eb0574ee975cc8822610400bfe7f",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-3\\record.json": "cd9b5266a9aec8c004c8a659d8b2f88a2e97cb2f4d8456ba55a3cb4fcbbb56ea",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-3\\stderr": "46d520918e7ad9aa7ffdfa7b86308d85ea3639a5255971fb2f1ae3ad06730271",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\cam-3\\stdout": "c5194fbe62e716648e0f8380a205fcc690b9779b83790335580c6336c03e6087",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\observation.json": "e6a0ec4e26932abeb7c038d9b51a1c15ed71c5e6c87f1623aa28076a77a72d4a",
+      "examples\\libcamera\\validation\\issue211\\runs\\20261031-wsl-cam-2\\dma-probe\\stdout": "f838d484e2dfd604115fe9daca31d822f0432a7ca2b5d915b8271996917fe7df"
+    },
+    "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-terra-runtime-review\\cam-3\\calls\\0510a5c78f21441a922caa5e05189ea4\\001.receipt.json"
+  }
+}

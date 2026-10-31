@@ -1,0 +1,57 @@
+<!-- system -->
+Review glossary definitions for entailment, precision and reader comprehension. No tools. Return JSON.
+
+<!-- user -->
+Compare these actual selected-Claude Korean definitions with the primary-source excerpts/URLs. NV12 is a format identifier, not an invented expansion; UDMABUF is a driver, not physical DMA proof; generic VM definition must not imply independent kernels per WSL distribution. Report unsupported claims or misleading definitions. Passing is not human approval.
+SOURCES
+{
+  "GCC": {"url": "https://gcc.gnu.org/", "excerpt": "GCC, the GNU Compiler Collection. The GNU Compiler Collection includes front ends for C, C++"},
+  "GDB": {"url": "https://www.sourceware.org/gdb/", "excerpt": "GDB: The GNU Project Debugger. Make your program stop on specified conditions. Examine what has happened, when your program has stopped."},
+  "NV12": {"url": "https://docs.kernel.org/userspace-api/media/v4l/pixfmt-yuv-planar.html", "excerpt": "V4L2_PIX_FMT_NV12: 8 bits per component; 4:2:0; chroma order Cb, Cr; contiguous, linear. First plane luma; second interleaved chroma."},
+  "PR": {"url": "https://docs.github.com/en/pull-requests/reference/pull-requests", "excerpt": "Pull requests are proposals to merge code changes into a project."},
+  "UDMABUF": {"url": "https://github.com/microsoft/WSL2-Linux-Kernel/blob/c21a03b2943d147c280bdf32530d4fe6badfd6bd/drivers/dma-buf/Kconfig", "excerpt": "userspace dmabuf misc driver. A driver to let userspace turn memfd regions into dma-bufs."},
+  "VM": {"url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-a-virtual-machine", "excerpt": "A cloud virtual machine is a software-based computer running its own OS and apps on physical servers."},
+  "WSL": {"url": "https://learn.microsoft.com/en-us/windows/wsl/about", "excerpt": "Windows Subsystem for Linux (WSL) is a feature of Windows that allows you to run a Linux environment on your Windows machine"}
+}
+
+DEFINITIONS
+{
+  "terms": [
+    {
+      "term": "GCC",
+      "full": "GNU Compiler Collection",
+      "definition": "C, C++ 등의 언어 프론트엔드를 포함하는 GNU 컴파일러 모음입니다."
+    },
+    {
+      "term": "GDB",
+      "full": "GNU Project Debugger",
+      "definition": "프로그램을 지정한 조건에서 멈추게 하고, 멈춘 뒤 실행 상태를 살펴보게 하는 GNU 디버거입니다."
+    },
+    {
+      "term": "NV12",
+      "full": "V4L2_PIX_FMT_NV12",
+      "definition": "8비트, 4:2:0, Cb/Cr 순서의 연속 선형 픽셀 형식을 가리키는 식별자입니다. 첫 평면은 휘도, 두 번째 평면은 색차를 인터리브합니다."
+    },
+    {
+      "term": "PR",
+      "full": "Pull Request",
+      "definition": "코드 변경을 프로젝트에 병합해 달라고 제안하는 요청입니다."
+    },
+    {
+      "term": "UDMABUF",
+      "full": "userspace dmabuf misc driver",
+      "definition": "Linux 커널 드라이버 이름으로, 사용자 공간의 memfd 영역을 dma-buf로 바꾸는 기능을 제공합니다."
+    },
+    {
+      "term": "VM",
+      "full": "Virtual Machine",
+      "definition": "물리 서버 위에서 소프트웨어로 구현되어 자체 운영체제와 앱을 실행하는 컴퓨터입니다."
+    },
+    {
+      "term": "WSL",
+      "full": "Windows Subsystem for Linux",
+      "definition": "Windows 컴퓨터에서 Linux 환경을 실행할 수 있게 해 주는 Windows 기능입니다."
+    }
+  ]
+}
+

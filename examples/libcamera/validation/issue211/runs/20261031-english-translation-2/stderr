@@ -1,0 +1,27 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\site_localization.py", line 290, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\localization_cli.py", line 119, in main
+    result = prepare_catalog(load(args.config), args.out, translate=args.translate)
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\localization_cli.py", line 40, in prepare_catalog
+    out = _render_site(cfg, Path(temporary), check_consistency=False)
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\export_site.py", line 584, in _render_site
+    rendered_pages, search, diagram_sources, visual_sources = _render_pages(
+                                                              ~~~~~~~~~~~~~^
+        cfg, entries, sections, texts, terms, model, source_url, link_template)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\export_site.py", line 351, in _render_pages
+    page_title, meta, body, diagram, visuals = _prepare_page_body(cfg, rel, texts, sections, terms, model)
+                                               ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\export_site.py", line 305, in _prepare_page_body
+    artifact = from_manuscript(cfg, model, section, texts[rel]) if section else None
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\generated_visuals.py", line 399, in from_manuscript
+    resolve(cfg, model, section, artifact)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\baboe\.codex\worktrees\cb18\camera-hal-sdd-generator\src\sdd\generated_visuals.py", line 383, in resolve
+    raise ValueError('Visual source or question changed; regenerate before publishing')
+ValueError: Visual source or question changed; regenerate before publishing

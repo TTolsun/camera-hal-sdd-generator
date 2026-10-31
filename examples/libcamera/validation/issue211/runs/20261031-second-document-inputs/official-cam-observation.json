@@ -1,0 +1,350 @@
+{
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "kernel": "6.18.33.2-microsoft-standard-WSL2-issue211",
+  "results": [
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        434,
+        437
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 434,
+      "allocations": 4
+    },
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        449,
+        452
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 449,
+      "allocations": 4
+    },
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        464,
+        467
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 464,
+      "allocations": 4
+    }
+  ],
+  "uid": 0,
+  "gid": 0,
+  "binaries": {
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam": "1ceed18da065a383e2f573ba49e9caea77033abd6830a7ec051e3681dabc79d2",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so": "2423e936a6ffde0fa533c76a4738f748f77b4535c881c12a616dfeec50a940eb",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so": "441f04294e61632d080f4bb55fb38ce787bb8af173a4b6d55d7c05f0f04fd18c",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/dmabuf-probe-2": "531e499f094cca32f03e354afe2aa5a8d48b425916cbd7be2ad7e02306c58512"
+  },
+  "human_review": "pending",
+  "physical_dma": "not-validated",
+  "physical_camera": "not-run",
+  "production_application": "not-run",
+  "internal_hal": "not-run",
+  "status": "observed-wsl-virtual-only",
+  "schema": 1,
+  "camera": "Virtual2",
+  "applied_configuration": "(0) 400x300-NV12/SMPTE170M",
+  "official_source_tracked_clean": true,
+  "kernel_tag": "linux-msft-wsl-6.18.33.2",
+  "kernel_tag_commit": "c21a03b2943d147c280bdf32530d4fe6badfd6bd",
+  "kernel_sha256": "cf23bf492a00a5c7517e221b0d8f742ea3cffa9351823191a5ba5c476ba15460",
+  "compiler_config_diff": "GCC 13.2 to Ubuntu GCC 15.2 capability changes, binutils 2.41 to 2.46, pahole 1.25 to 1.31; full diff preserved",
+  "matching_modules_installed": false,
+  "docker_during_trial": "stopped",
+  "allocator": "udmabuf built-in, /dev/udmabuf root-only; permissions unchanged",
+  "unprivileged_run": {
+    "status": "failed",
+    "errno": 13
+  },
+  "dma_probe_events": [
+    {
+      "event": "provider-open",
+      "provider": "/dev/udmabuf",
+      "result": 3,
+      "errno": 0
+    },
+    {
+      "event": "allocate",
+      "result": 5,
+      "errno": 0,
+      "backing_fd": 4,
+      "dmabuf_fd": 5,
+      "size": 4096
+    },
+    {
+      "event": "mmap",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "sync-start",
+      "result": 0,
+      "errno": 0,
+      "flags": 3,
+      "retry": false
+    },
+    {
+      "event": "cpu-access",
+      "result": 0,
+      "errno": 0,
+      "bytes": 4096,
+      "checksum": 522240
+    },
+    {
+      "event": "sync-end",
+      "result": 0,
+      "errno": 0,
+      "flags": 7,
+      "retry": false
+    },
+    {
+      "event": "munmap",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-dmabuf",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-backing",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-provider",
+      "result": 0,
+      "errno": 0
+    }
+  ],
+  "run_threads": [
+    {
+      "pid": 434,
+      "callbacks": [
+        437
+      ],
+      "processed": [
+        434
+      ]
+    },
+    {
+      "pid": 449,
+      "callbacks": [
+        452
+      ],
+      "processed": [
+        449
+      ]
+    },
+    {
+      "pid": 464,
+      "callbacks": [
+        467
+      ],
+      "processed": [
+        464
+      ]
+    }
+  ],
+  "inferior_exit_codes": [
+    0,
+    0,
+    0
+  ],
+  "processed_sequences": [
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      0,
+      1,
+      2
+    ]
+  ],
+  "timeout_probe": {
+    "seconds": 0.5,
+    "timed_out": true,
+    "exit_code": 1,
+    "sync_end": 0,
+    "munmap": 0,
+    "closes": 0,
+    "process_group_absent": true
+  },
+  "negative_probes": {
+    "absent_provider_errno": 2,
+    "unsupported_ioctl_errno": 25,
+    "exit_codes": [
+      1,
+      1
+    ]
+  },
+  "supplemental_official_cam_strace": {
+    "exit_code": 0,
+    "callback_observation": false
+  },
+  "restored_kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "restored_wslconfig_exists": false,
+  "old_cpu_probe": {
+    "callbacks": 72,
+    "dma": "unvalidated-provider-and-sync-errors-retained",
+    "history_unchanged": true
+  },
+  "observation_limits": [
+    "GDB breakpoints affect timing",
+    "No callback-return instruction observation",
+    "Cancellation branch not dynamically exercised; observed count 0 is not forced"
+  ],
+  "reproduction_code": "https://github.com/TTolsun/camera-hal-sdd-generator/blob/main/examples/libcamera/runtime/run_cam.py",
+  "raw_evidence": "https://github.com/TTolsun/camera-hal-sdd-generator/tree/main/examples/libcamera/validation/issue211/runs/20261031-wsl-cam-3",
+  "buffer_metadata": [
+    [
+      {
+        "buffer_sequence": 0,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 434,
+        "point": "buffer-metadata",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 434
+      },
+      {
+        "buffer_sequence": 1,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 434,
+        "point": "buffer-metadata",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 434
+      },
+      {
+        "buffer_sequence": 2,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 434,
+        "point": "buffer-metadata",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 434
+      }
+    ],
+    [
+      {
+        "buffer_sequence": 0,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 449,
+        "point": "buffer-metadata",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 449
+      },
+      {
+        "buffer_sequence": 1,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 449,
+        "point": "buffer-metadata",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 449
+      },
+      {
+        "buffer_sequence": 2,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 449,
+        "point": "buffer-metadata",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 449
+      }
+    ],
+    [
+      {
+        "buffer_sequence": 0,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 464,
+        "point": "buffer-metadata",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 464
+      },
+      {
+        "buffer_sequence": 1,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 464,
+        "point": "buffer-metadata",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 464
+      },
+      {
+        "buffer_sequence": 2,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 464,
+        "point": "buffer-metadata",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 464
+      }
+    ]
+  ],
+  "pretrial_kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "pretrial_udmabuf": false,
+  "pretrial_dmabuf_heaps": false,
+  "pretrial_provider_devices_present": false,
+  "source_unmodified": true,
+  "kernel_trial_authorized_by_user": true
+}

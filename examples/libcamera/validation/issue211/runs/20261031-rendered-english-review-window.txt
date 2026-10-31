@@ -1,0 +1,928 @@
+
+Check the conditions and observation scope under which the official cam's virtual capture was confirmed with real DMA-BUF.
+
+Terms in this document: WSL, WSL2, UDMABUF, errno, and 9 others
+
+
+WSL (Windows Subsystem for Linux): A Windows feature that allows a Linux environment to run on a Windows computer.
+
+WSL2 (Windows Subsystem for Linux 2): an environment for running Linux on Windows. This site is built from libcamera compiled and extracted in WSL2.
+
+UDMABUF (userspace dmabuf misc driver): The name of a Linux kernel driver that converts a memfd region in user space into a dma-buf.
+
+errno: the standard error numbers Linux functions use to report why they failed. libcamera functions return them as negative values. For example, -ENODEV means no device, -EACCES access denied, -EINVAL an invalid argument, -ENOMEM out of memory and -EXDEV a resource that belongs to another object.
+
+GDB (GNU Project Debugger): A GNU debugger that stops a program under specified conditions and lets you examine its execution state after it stops.
+
+DMA (Direct Memory Access): DMA(Direct Memory Access) is a term that refers to a method by which an I/O device directly reads from or writes to system memory.
+
+HAL (Hardware Abstraction Layer): the layer that lets an operating system drive different vendors' hardware through one interface. This project ultimately targets an in-house Android Camera HAL.
+
+Pending: A request state that has not yet changed to complete or cancelled. It does not mean device processing has started; an earlier request in this state can delay later returns.
+
+TID (Linux thread ID): TID is the Linux thread ID returned by the gettid system call.
+
+NV12 (NV12): The format is 4:2:0 and uses 8 bits per component. The first plane is luminance (Y), and the second plane contains interleaved chroma data in which Cb and Cr values are stored alternately, one at a time, and the whole is placed in linearly contiguous memory.
+
+GCC (GNU Compiler Collection): A collection of GNU compilers that includes front ends for C, C++, and others.
+
+VM (Virtual Machine): A virtual machine is a computer implemented in software by virtualizing the resources of a physical computer, and it runs its own operating system and applications. This is not limited to cloud servers, and it can also be created on a personal physical computer.
+
+PR (Pull Request): A request proposing that code changes be merged into a project.
+
+
+Other terms are in the Glossary.
+
+
+
+Official cam and actual DMA-BUF verification results
+
+This is a virtual test configuration. It must not be used as a support or performance claim for an actual product.
+
+On the WSL2 test kernel 6.18.33.2-microsoft-standard-WSL2-issue211, with udmabuf built in, we ran the unmodified official cam, based on source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61, as a root child process. We applied the (0) 400x300-NV12/SMPTE170M setting to virtual camera Virtual2. Three independent processes each completed 3 frames and ended with exit code 0. Cancelled callbacks were 0 in all three processes, and the unprivileged run failed with errno 13.
+
+The DMA-BUF access records come from a separate probe, dmabuf-probe-2, not from the official cam. The probe recorded, at allocate, backing_fd 4, dmabuf_fd 5, and size 4096. After mmap, it logged sync-start (flags 3), cpu-access of 4096 bytes, sync-end (flags 7), munmap, close-dmabuf, close-backing, and close-provider, all with result 0. The records do not contain the names SYNC_START and SYNC_END; the event names are sync-start and sync-end.
+
+Execution check item: This configuration is a hypothetical trial configuration with simulation marked as true and is not an actual product. Observations were made under GDB, and it is recorded that GDB breakpoints affect timing. Physical DMA is not-validated; physical camera, production application, and internal HAL are not-run; human review is pending, and product availability is unknown. The cancellation branch was not dynamically executed, and it is recorded that the observed cancelled_callbacks of 0 is not a forced result.
+
+2 evidence items across the section
+product-evidence/libcamera-official-cam-trial/official-cam-run.txtL1
+product-evidence/libcamera-official-cam-trial/execution-contract.txtL1
+The three frames confirmed in the callback and subsequent processing
+
+This is a virtual test configuration. It must not be used as a support or performance claim for an actual product.
+
+CameraSession::requestComplete returns without doing anything if the request status is RequestCancelled. Any other completed request defers the processRequest call to the event loop via EventLoop::instance()->callLater so that the camera manager thread is not blocked. If the capture limit has been reached, processRequest returns immediately; otherwise, processRequest prints frame information and then increments captureCount_. The observation point is inside the processRequest function, immediately before captureCount_ is incremented.
+
+In the measurement data, for each of the three independent processes (pid 434, 449, 464), the callback-entry and frame-processed events are paired by the same request address and sequence (0, 1, 2), so three frames are counted once per process. The Request status enum is declared in the order RequestPending, RequestComplete, RequestCancelled, and no numeric values are specified, so the actual status 1 corresponds to the second item, RequestComplete. The TIDs of the callbacks threads are 437, 452, 467, and the TIDs of the main_tid and processed threads are 434, 449, 464. The buffer_sequence values 0, 1, 2 with successful buffer status (buffer_status 0) match the successful_buffer_sequences values 0, 1, 2.
+
+Execution check item: The 0 cancellations (cancelled_callbacks 0) are this observed value; since the cancellation branch was not dynamically executed, the observed count of 0 is not a forced result. Because the callback-return instruction was not observed, this measurement is not verification of the cancellation path, return instruction, or performance. There is an observation limitation that GDB breakpoints affect timing, and the result applies only to source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61, the WSL2 custom UDMABUF kernel, and the Virtual2 400x300 NV12 configuration; physical DMA, physical camera, other operating applications, and internal HAL are not verified. This configuration is a simulation-based virtual trial configuration and is not an actual product.
+
+4 evidence items across the section
+src/apps/cam/camera_session.cppL458 excerpt · Full source L458
+product-evidence/libcamera-official-cam-trial/official-cam-run.txtL1
+include/libcamera/request.hL34 excerpt · Full source L34
+product-evidence/libcamera-official-cam-trial/execution-contract.txtL1
+Reproduction Conditions and Validation Boundary
+
+This is a virtual test configuration. It must not be used as a support or performance claim for an actual product.
+
+During the pre-check, instead of the default WSL2 kernel, which lacked UDMABUF and a DMA-BUF heap, a test kernel with built-in UDMABUF from the exact Microsoft tag linux-msft-wsl-6.18.33.2 was temporarily applied after user approval. The compiler capability differences from GCC 13.2 to Ubuntu GCC 15.2, and the differences from binutils 2.41 to 2.46 and pahole 1.25 to 1.31, were preserved in the full diff. Because no modules for a new release were installed, Docker was left stopped during the trial. The UDMABUF device is root-only, so permissions were not changed and it was run as a root child process; the errno 13 failure from a normal user run was also preserved. This configuration is a simulated Virtual2 400x300 NV12 test setup, not an actual product, and is a simulation test configuration.
+
+Execution check item: After restoring the default WSL2 kernel, no UDMABUF allocator is available, so before running the reproduction commands, a separately approved supported kernel must be prepared and booted, and device access must be checked first. Approval for the past trial is not approval for future new host changes, and any change to the shared kernel, modules, or .wslconfig, or any termination of a WSL distribution or VM, must receive separate approval immediately before execution. Approval for the existing PR merge and Pages deployment is not extended to approval of these host changes, and this premise follows the execution contract basis.
+
+In the dedicated negative tests, the absent provider failed with errno 2 and the unsupported ioctl failed with errno 25, and exit code 1 was recorded in both cases. In the 0.5-second timeout test, the timed_out value was recorded as true, so the failure judgment was preserved.
+
+In the same 0.5-second timeout trial, three records were logged: SYNC_END return value 0, munmap return value 0, and fd close return value 0, and no process group was left behind. This means resource cleanup succeeded separately from the timeout failure verdict. A close return value of 0 means only that the close succeeded, and does not mean there were zero closes. An additional official cam strace exited normally with exit code 0, but the callback_observation value was recorded as false, so it is separate from callback observation. This configuration is a virtual test configuration, not an actual product.
+
+After removing the temporary .wslconfig and restoring the kernel, the kernel after the run is the same as the pretrial kernel, 6.18.33.2-microsoft-standard-WSL2, and the .wslconfig file does not exist. This result was obtained with the WSL2-tailored UDMABUF kernel, root child processes, and Virtual2 400x300 NV12 configuration based on source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61. This configuration is a simulated virtual test configuration and is not an actual product.
+
+Execution check item: Physical DMA, physical camera, other product applications, internal HAL, and human approval (human_review: pending) are unvalidated. GDB breakpoint observation affects timing, and the callback-return instruction was not observed.
+
+
+Design questions and validation scope
+
+Answers and their evidence links have been checked for each question. Meaning and runtime results still require human review.
+
+
+In which WSL environment did you confirm the official cam's capture and actual DMA-BUF access?
+Official cam and actual DMA-BUF verification results
+Runtime checks are separate
+
+How did you distinguish callback entry from subsequent processing to confirm the three frames and the execution threads?
+The three frames confirmed in the callback and subsequent processing
+Runtime checks are separate
+
+What permission and kernel conditions are required for reproduction, what are the timeout and recovery results, and what scope is not validated?
+Reproduction Conditions and Validation Boundary
+Runtime checks are separate
+Verification scope: Code evidence linked to explanation
+
+2 evidence items across the section
+product-evidence/libcamera-official-cam-trial/official-cam-run.txtL1
+product-evidence/libcamera-official-cam-trial/execution-contract.txtL1
+Source evidence
+4 source excerpts
+
+Each identical excerpt appears once. Expand the source you need and compare it with the explanation.
+
+
+
+Product material: product-evidence/libcamera-official-cam-trial/execution-contract.txt:1
+
+This material was provided separately from the source. Check the records below for the provider, version, and scope of applicability. Automated checks do not constitute human approval.
+
+This is an excerpt starting at product-evidence/libcamera-official-cam-trial/execution-contract.txt:1. The end line is 9, and the original text below can be compared against the description.
+
+SHA-256: fe1292511ffbf64b3e2aaee046d28048675c0283b82187cfa421e0431c834e0d
+
+{
+  "url": "https://github.com/TTolsun/camera-hal-sdd-generator/issues/211",
+  "updated_at": "2026-10-31T06:00:33Z",
+  "verbatim_contract_lines": [
+    "1. 선택한 커널의 Kconfig·의존성·실제 사용 가능한 모듈·할당기 후보를 조사하고 하나를 선택합니다. 기존 WSL에 새 배포판을 추가하는 것만으로 커널이 격리된다고 취급하지 않습니다.",
+    "2. 기존 WSL/Docker에 영향을 주지 않는 시험 환경을 우선합니다. 현재 호스트의 공유 커널·모듈·.wslconfig를 변경하거나 배포판/VM을 종료해야 하면 영향과 복구 절차를 먼저 구체화하고 실행 직전에 별도 승인을 받습니다. 기존 PR 병합·Pages 배포 승인을 이런 호스트 변경의 승인으로 확대하지 않습니다."
+  ]
+}
+
+
+{
+  "type": "project-document",
+  "supplier": "GitHub issue211 execution contract, verbatim selected lines",
+  "version": "2026-10-31T06:00:33Z",
+  "date": "2026-10-31",
+  "valid_until": "2026-10-31",
+  "product": "libcamera-official-cam-trial",
+  "release": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "configuration": "wsl2-virtual2-official-cam-udmabuf",
+  "feature": "wsl-virtual-capture",
+  "conditions": [
+    "Source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+    "WSL2 custom UDMABUF kernel, root child, Virtual2 400x300 NV12",
+    "GDB observation; no timing/return/physical/internal HAL qualification"
+  ],
+  "sha256": "fe1292511ffbf64b3e2aaee046d28048675c0283b82187cfa421e0431c834e0d"
+}
+
+
+
+
+
+Product material: product-evidence/libcamera-official-cam-trial/official-cam-run.txt:1
+
+This material was provided separately from the source. Check the records below for the provider, version, and scope of applicability. Automated checks do not constitute human approval.
+
+This is an excerpt starting at product-evidence/libcamera-official-cam-trial/official-cam-run.txt:1. The end line is 608, and the original text below can be compared against the description.
+
+SHA-256: 6724319768e46327e26f324d536ccaf22e9b71852e055a7b3c91318f0c11a7f1
+
+{
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "kernel": "6.18.33.2-microsoft-standard-WSL2-issue211",
+  "results": [
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        434,
+        437
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 434,
+      "allocations": 4
+    },
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        449,
+        452
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 449,
+      "allocations": 4
+    },
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        464,
+        467
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 464,
+      "allocations": 4
+    }
+  ],
+  "uid": 0,
+  "gid": 0,
+  "binaries": {
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam": "1ceed18da065a383e2f573ba49e9caea77033abd6830a7ec051e3681dabc79d2",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so": "2423e936a6ffde0fa533c76a4738f748f77b4535c881c12a616dfeec50a940eb",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so": "441f04294e61632d080f4bb55fb38ce787bb8af173a4b6d55d7c05f0f04fd18c",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/dmabuf-probe-2": "531e499f094cca32f03e354afe2aa5a8d48b425916cbd7be2ad7e02306c58512"
+  },
+  "human_review": "pending",
+  "physical_dma": "not-validated",
+  "physical_camera": "not-run",
+  "production_application": "not-run",
+  "internal_hal": "not-run",
+  "status": "observed-wsl-virtual-only",
+  "schema": 1,
+  "camera": "Virtual2",
+  "applied_configuration": "(0) 400x300-NV12/SMPTE170M",
+  "official_source_tracked_clean": true,
+  "kernel_tag": "linux-msft-wsl-6.18.33.2",
+  "kernel_tag_commit": "c21a03b2943d147c280bdf32530d4fe6badfd6bd",
+  "kernel_sha256": "cf23bf492a00a5c7517e221b0d8f742ea3cffa9351823191a5ba5c476ba15460",
+  "compiler_config_diff": "GCC 13.2 to Ubuntu GCC 15.2 capability changes, binutils 2.41 to 2.46, pahole 1.25 to 1.31; full diff preserved",
+  "matching_modules_installed": false,
+  "docker_during_trial": "stopped",
+  "allocator": "udmabuf built-in, /dev/udmabuf root-only; permissions unchanged",
+  "unprivileged_run": {
+    "status": "failed",
+    "errno": 13
+  },
+  "dma_probe_events": [
+    {
+      "event": "provider-open",
+      "provider": "/dev/udmabuf",
+      "result": 3,
+      "errno": 0
+    },
+    {
+      "event": "allocate",
+      "result": 5,
+      "errno": 0,
+      "backing_fd": 4,
+      "dmabuf_fd": 5,
+      "size": 4096
+    },
+    {
+      "event": "mmap",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "sync-start",
+      "result": 0,
+      "errno": 0,
+      "flags": 3,
+      "retry": false
+    },
+    {
+      "event": "cpu-access",
+      "result": 0,
+      "errno": 0,
+      "bytes": 4096,
+      "checksum": 522240
+    },
+    {
+      "event": "sync-end",
+      "result": 0,
+      "errno": 0,
+      "flags": 7,
+      "retry": false
+    },
+    {
+      "event": "munmap",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-dmabuf",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-backing",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-provider",
+      "result": 0,
+      "errno": 0
+    }
+  ],
+  "run_threads": [
+    {
+      "pid": 434,
+      "callbacks": [
+        437
+      ],
+      "processed": [
+        434
+      ]
+    },
+    {
+      "pid": 449,
+      "callbacks": [
+        452
+      ],
+      "processed": [
+        449
+      ]
+    },
+    {
+      "pid": 464,
+      "callbacks": [
+        467
+      ],
+      "processed": [
+        464
+      ]
+    }
+  ],
+  "inferior_exit_codes": [
+    0,
+    0,
+    0
+  ],
+  "processed_sequences": [
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      0,
+      1,
+      2
+    ]
+  ],
+  "timeout_probe": {
+    "seconds": 0.5,
+    "timed_out": true,
+    "exit_code": 1,
+    "sync_end_return_code": 0,
+    "munmap_return_code": 0,
+    "close_return_codes": [
+      0,
+      0,
+      0
+    ],
+    "process_group_absent": true
+  },
+  "negative_probes": {
+    "absent_provider_errno": 2,
+    "unsupported_ioctl_errno": 25,
+    "exit_codes": [
+      1,
+      1
+    ]
+  },
+  "supplemental_official_cam_strace": {
+    "exit_code": 0,
+    "callback_observation": false
+  },
+  "restored_kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "restored_wslconfig_exists": false,
+  "old_cpu_probe": {
+    "callbacks": 72,
+    "dma": "unvalidated-provider-and-sync-errors-retained",
+    "history_unchanged": true
+  },
+  "observation_limits": [
+    "GDB breakpoints affect timing",
+    "No callback-return instruction observation",
+    "Cancellation branch not dynamically exercised; observed count 0 is not forced"
+  ],
+  "reproduction_code": "https://github.com/TTolsun/camera-hal-sdd-generator/blob/main/examples/libcamera/runtime/run_cam.py",
+  "raw_evidence": "https://github.com/TTolsun/camera-hal-sdd-generator/tree/main/examples/libcamera/validation/issue211/runs/20261031-wsl-cam-3",
+  "buffer_metadata": [
+    [
+      {
+        "buffer_sequence": 0,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 434,
+        "point": "buffer-metadata",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 434
+      },
+      {
+        "buffer_sequence": 1,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 434,
+        "point": "buffer-metadata",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 434
+      },
+      {
+        "buffer_sequence": 2,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 434,
+        "point": "buffer-metadata",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 434
+      }
+    ],
+    [
+      {
+        "buffer_sequence": 0,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 449,
+        "point": "buffer-metadata",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 449
+      },
+      {
+        "buffer_sequence": 1,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 449,
+        "point": "buffer-metadata",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 449
+      },
+      {
+        "buffer_sequence": 2,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 449,
+        "point": "buffer-metadata",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 449
+      }
+    ],
+    [
+      {
+        "buffer_sequence": 0,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 464,
+        "point": "buffer-metadata",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 464
+      },
+      {
+        "buffer_sequence": 1,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 464,
+        "point": "buffer-metadata",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 464
+      },
+      {
+        "buffer_sequence": 2,
+        "buffer_status": 0,
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:503",
+        "pid": 464,
+        "point": "buffer-metadata",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 464
+      }
+    ]
+  ],
+  "pretrial_kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "pretrial_udmabuf": false,
+  "pretrial_dmabuf_heaps": false,
+  "pretrial_provider_devices_present": false,
+  "source_unmodified": true,
+  "kernel_trial_authorized_by_user": true,
+  "request_events": [
+    [
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 434,
+        "point": "callback-entry",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 437
+      },
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 434,
+        "point": "callback-entry",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 437
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 434,
+        "point": "frame-processed",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 434
+      },
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 434,
+        "point": "callback-entry",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 437
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 434,
+        "point": "frame-processed",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 434
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 434,
+        "point": "frame-processed",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 434
+      }
+    ],
+    [
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 449,
+        "point": "callback-entry",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 452
+      },
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 449,
+        "point": "callback-entry",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 452
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 449,
+        "point": "frame-processed",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 449
+      },
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 449,
+        "point": "callback-entry",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 452
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 449,
+        "point": "frame-processed",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 449
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 449,
+        "point": "frame-processed",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 449
+      }
+    ],
+    [
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 464,
+        "point": "callback-entry",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 467
+      },
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 464,
+        "point": "callback-entry",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 467
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 464,
+        "point": "frame-processed",
+        "request": "0x5555556794f0",
+        "sequence": 0,
+        "status": 1,
+        "tid": 464
+      },
+      {
+        "cookie": 0,
+        "location": "CameraSession::requestComplete",
+        "pid": 464,
+        "point": "callback-entry",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 467
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 464,
+        "point": "frame-processed",
+        "request": "0x5555556793b0",
+        "sequence": 1,
+        "status": 1,
+        "tid": 464
+      },
+      {
+        "cookie": 0,
+        "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535",
+        "pid": 464,
+        "point": "frame-processed",
+        "request": "0x555555679450",
+        "sequence": 2,
+        "status": 1,
+        "tid": 464
+      }
+    ]
+  ],
+  "main_tid": [
+    434,
+    449,
+    464
+  ],
+  "observation_points": {
+    "callback-entry": "CameraSession::requestComplete entry",
+    "frame-processed": "CameraSession::processRequest immediately before captureCount_++",
+    "buffer-metadata": "CameraSession::processRequest after reading FrameMetadata"
+  },
+  "timeout_cleanup_events": [
+    {
+      "event": "provider-open",
+      "provider": "/dev/udmabuf",
+      "result": 3,
+      "errno": 0
+    },
+    {
+      "event": "allocate",
+      "result": 5,
+      "errno": 0,
+      "backing_fd": 4,
+      "dmabuf_fd": 5,
+      "size": 4096
+    },
+    {
+      "event": "mmap",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "sync-start",
+      "result": 0,
+      "errno": 0,
+      "flags": 3,
+      "retry": false
+    },
+    {
+      "event": "sync-end",
+      "result": 0,
+      "errno": 0,
+      "flags": 7,
+      "retry": false
+    },
+    {
+      "event": "munmap",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-dmabuf",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-backing",
+      "result": 0,
+      "errno": 0
+    },
+    {
+      "event": "close-provider",
+      "result": 0,
+      "errno": 0
+    }
+  ]
+}
+
+
+{
+  "type": "measurement",
+  "supplier": "Source-pinned official cam trial; raw events, GDB, syscall and cleanup records",
+  "version": "051c8bd9f7c693a474384fa63c96dcfaa0e80cd83506b375e2f89193e6a25b91",
+  "date": "2026-10-31",
+  "valid_until": "2026-10-31",
+  "product": "libcamera-official-cam-trial",
+  "release": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "configuration": "wsl2-virtual2-official-cam-udmabuf",
+  "feature": "wsl-virtual-capture",
+  "conditions": [
+    "Source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+    "WSL2 custom UDMABUF kernel, root child, Virtual2 400x300 NV12",
+    "GDB observation; no timing/return/physical/internal HAL qualification"
+  ],
+  "sha256": "6724319768e46327e26f324d536ccaf22e9b71852e055a7b3c91318f0c11a7f1"
+}
+
+
+
+
+
+Source evidence: src/apps/cam/camera_session.cpp:458
+
+Excerpt starting at src/apps/cam/camera_session.cpp:458. The end line is 552, and the original text below can be compared with the explanation.
+
+SHA-256: 1cc65de3cbc313bb70f938f939d3d99420f17526290c216b538bbf117adbfd6d
+
+void CameraSession::requestComplete(Request *request)
+{
+    if (request->status() == Request::RequestCancelled)
+        return;
+
+    /*
+     * Defer processing of the completed request to the event loop, to avoid
+     * blocking the camera manager thread.
+     */
+    EventLoop::instance()->callLater([this, request]() { processRequest(request); });
+}
+
+void CameraSession::processRequest(Request *request)
+{
+    /*
+     * If we've reached the capture limit, we're done. This doesn't
+     * duplicate the check below that emits the captureDone signal, as this
+     * function will be called for each request still in flight after the
+     * capture limit is reached and we don't want to emit the signal every
+     * single time.
+     */
+    if (captureLimit_ && captureCount_ >= captureLimit_)
+        return;
+
+    const Request::BufferMap &buffers = request->buffers();
+
+    /*
+     * Compute the frame rate. The timestamp is arbitrarily retrieved from
+     * the first buffer, as all buffers should have matching timestamps.
+     */
+    uint64_t ts = buffers.begin()->second->metadata().timestamp;
+    double fps = ts - last_;
+    fps = last_ != 0 && fps ? 1000000000.0 / fps : 0.0;
+    last_ = ts;
+
+    bool requeue = true;
+
+    std::stringstream info;
+    info << ts / 1000000000 << "."
+         << std::setw(6) << std::setfill('0') << ts / 1000 % 1000000
+         << " (" << std::fixed << std::setprecision(2) << fps << " fps)";
+
+    for (const auto &[stream, buffer] : buffers) {
+        const FrameMetadata &metadata = buffer->metadata();
+
+        info << " " << streamNames_[stream]
+             << " seq: " << std::setw(6) << std::setfill('0') << metadata.sequence
+             << " bytesused: ";
+
+        unsigned int nplane = 0;
+        for (const FrameMetadata::Plane &plane : metadata.planes()) {
+            info << plane.bytesused;
+            if (++nplane < metadata.planes().size())
+                info << "/";
+        }
+    }
+
+    if (sink_) {
+        if (!sink_->processRequest(request))
+            requeue = false;
+    }
+
+    std::cout << info.str() << std::endl;
+
+    if (printMetadata_) {
+        const ControlList &requestMetadata = request->metadata();
+        for (const auto &[key, value] : requestMetadata) {
+            const ControlId *id = controls::controls.at(key);
+            std::cout << "\t" << id->name() << " = "
+                  << value.toString() << std::endl;
+        }
+    }
+
+    /*
+     * Notify the user that capture is complete if the limit has just been
+     * reached.
+     */
+    captureCount_++;
+    if (captureLimit_ && captureCount_ >= captureLimit_) {
+        captureDone.emit();
+        return;
+    }
+
+    /*
+     * If the frame sink holds on the request, we'll requeue it later in the
+     * complete handler.
+     */
+    if (!requeue)
+        return;
+
+    request->reuse(Request::ReuseBuffers);
+    queueRequest(request);
+}
+
+void CameraSession::sinkRelease(Request *request)
+
+
+
+
+
+Source evidence: include/libcamera/request.h:34
+
+Excerpt starting at include/libcamera/request.h:34. The end line is 38, and the original text below can be compared with the explanation.
+
+SHA-256: ef4aa440cefbe5629113672961902a8a7c541797d19f05fa7cad90fe97030a3d
+
+enum Status {
+        RequestPending,
+        RequestComplete,
+        RequestCancelled,
+    };
+
+
+
+
+Evidence and review information
+
+
+Generation method: extracted facts and LLM explanations
+
+Validation scope: tables and diagrams come from extracted facts; an LLM writes the explanations. Citation, prose and configured structural checks are applied.
+
+Evidence files: include/libcamera/request.h, product-evidence/libcamera-official-cam-trial/execution-contract.txt, product-evidence/libcamera-official-cam-trial/official-cam-run.txt, src/apps/cam/camera_session.cpp
+
+Evidence level: code verification (static analysis, simple_compdb configuration, commit 293d751a81)
+
+Automatic checks (citations, prose and configured structure checks): passed
+
+Review status recorded: 2026-10-31 · Before human review
+
+
+
+Next step: Official cam reproduction procedure

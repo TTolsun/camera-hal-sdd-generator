@@ -1,0 +1,6 @@
+WARNING: failed to clean up stale arg0 temp dirs: 액세스가 거부되었습니다. (os error 5)
+WARNING: proceeding, even though we could not create PATH aliases: 액세스가 거부되었습니다. (os error 5) at path "C:\\Users\\baboe\\.codex\\tmp\\arg0-windows\\codex-arg0HtFtwZ"
+2026-10-31T07:35:37.721469Z  WARN codex_state::runtime: failed to open state db at C:\Users\baboe\.codex\state_5.sqlite: failed to open state DB at C:\Users\baboe\.codex\state_5.sqlite: error returned from database: (code: 14) unable to open database file
+2026-10-31T07:35:37.721587Z  WARN codex_rollout::state_db: failed to initialize state runtime: failed to initialize state runtime at C:\Users\baboe\.codex: failed to open state DB at C:\Users\baboe\.codex\state_5.sqlite: error returned from database: (code: 14) unable to open database file: error returned from database: (code: 14) unable to open database file: (code: 14) unable to open database file
+Reading prompt from stdin...
+Error: failed to initialize in-process app-server client: 액세스가 거부되었습니다. (os error 5)

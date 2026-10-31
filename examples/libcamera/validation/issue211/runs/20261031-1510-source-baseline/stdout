@@ -1,0 +1,1156 @@
+293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+293d751a814e0d4c34e85ad457ccd9d5eefd1a61	HEAD
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+/*
+ * Copyright (C) 2019, Google Inc.
+ *
+ * Camera capture session
+ */
+
+#include "camera_session.h"
+
+#include <iomanip>
+#include <iostream>
+#include <limits.h>
+#include <optional>
+#include <sstream>
+
+#include <libcamera/control_ids.h>
+#include <libcamera/property_ids.h>
+
+#include "../common/event_loop.h"
+#include "../common/stream_options.h"
+
+#include "capture_script.h"
+#include "file_sink.h"
+#ifdef HAVE_KMS
+#include "kms_sink.h"
+#endif
+#include "main.h"
+#ifdef HAVE_SDL
+#include "sdl_sink.h"
+#endif
+
+using namespace libcamera;
+
+CameraSession::CameraSession(CameraManager *cm,
+			     const std::string &cameraId,
+			     unsigned int cameraIndex,
+			     const OptionsParser::Options &options)
+	: options_(options), cameraIndex_(cameraIndex), last_(0),
+	  queueCount_(0), captureCount_(0), captureLimit_(0),
+	  printMetadata_(false)
+{
+	char *endptr;
+	unsigned long index = strtoul(cameraId.c_str(), &endptr, 10);
+
+	if (*endptr == '\0' && index > 0) {
+		auto cameras = cm->cameras();
+		if (index <= cameras.size())
+			camera_ = cameras[index - 1];
+	}
+
+	if (!camera_)
+		camera_ = cm->get(cameraId);
+
+	if (!camera_) {
+		std::cerr << "Camera " << cameraId << " not found" << std::endl;
+		return;
+	}
+
+	if (camera_->acquire()) {
+		std::cerr << "Failed to acquire camera " << cameraId
+			  << std::endl;
+		return;
+	}
+
+	std::vector<StreamRole> roles =
+		StreamKeyValueParser::roles(options_[OptStream]);
+	std::vector<std::vector<StreamRole>> tryRoles;
+	if (!roles.empty()) {
+		/*
+		 * If the roles are explicitly specified then there's no need
+		 * to try other roles
+		 */
+		tryRoles.push_back(roles);
+	} else {
+		tryRoles.push_back({ StreamRole::Viewfinder });
+		tryRoles.push_back({ StreamRole::Raw });
+	}
+
+	std::unique_ptr<CameraConfiguration> config;
+	bool valid = false;
+	for (std::vector<StreamRole> &rolesIt : tryRoles) {
+		config = camera_->generateConfiguration(rolesIt);
+		if (config && config->size() == rolesIt.size()) {
+			roles = rolesIt;
+			valid = true;
+			break;
+		}
+	}
+
+	if (!valid) {
+		std::cerr << "Failed to get default stream configuration"
+			  << std::endl;
+		return;
+	}
+
+	if (options_.isSet(OptOrientation)) {
+		std::string orientOpt = options_[OptOrientation].toString();
+		static const std::map<std::string, libcamera::Orientation> orientations{
+			{ "rot0", libcamera::Orientation::Rotate0 },
+			{ "rot180", libcamera::Orientation::Rotate180 },
+			{ "mirror", libcamera::Orientation::Rotate0Mirror },
+			{ "flip", libcamera::Orientation::Rotate180Mirror },
+		};
+
+		auto orientation = orientations.find(orientOpt);
+		if (orientation == orientations.end()) {
+			std::cerr << "Invalid orientation " << orientOpt << std::endl;
+			return;
+		}
+
+		config->orientation = orientation->second;
+	}
+
+	/* Apply configuration if explicitly requested. */
+	if (StreamKeyValueParser::updateConfiguration(config.get(),
+						      options_[OptStream])) {
+		std::cerr << "Failed to update configuration" << std::endl;
+		return;
+	}
+
+	bool strictFormats = options_.isSet(OptStrictFormats);
+
+#ifdef HAVE_KMS
+	if (options_.isSet(OptDisplay)) {
+		if (options_.isSet(OptFile)) {
+			std::cerr << "--display and --file options are mutually exclusive"
+				  << std::endl;
+			return;
+		}
+
+		if (roles.size() != 1) {
+			std::cerr << "Display doesn't support multiple streams"
+				  << std::endl;
+			return;
+		}
+
+		if (roles[0] != StreamRole::Viewfinder) {
+			std::cerr << "Display requires a viewfinder stream"
+				  << std::endl;
+			return;
+		}
+	}
+#endif
+
+	if (options_.isSet(OptCaptureScript)) {
+		std::string scriptName = options_[OptCaptureScript].toString();
+		script_ = std::make_unique<CaptureScript>(camera_, scriptName);
+		if (!script_->valid()) {
+			std::cerr << "Invalid capture script '" << scriptName
+				  << "'" << std::endl;
+			return;
+		}
+	}
+
+	switch (config->validate()) {
+	case CameraConfiguration::Valid:
+		break;
+
+	case CameraConfiguration::Adjusted:
+		if (strictFormats) {
+			std::cout << "Adjusting camera configuration disallowed by --strict-formats argument"
+				  << std::endl;
+			return;
+		}
+		std::cout << "Camera configuration adjusted" << std::endl;
+		break;
+
+	case CameraConfiguration::Invalid:
+		std::cout << "Camera configuration invalid" << std::endl;
+		return;
+	}
+
+	config_ = std::move(config);
+}
+
+CameraSession::~CameraSession()
+{
+	if (camera_)
+		camera_->release();
+}
+
+void CameraSession::listControls() const
+{
+	for (const auto &[id, info] : camera_->controls()) {
+		std::stringstream io;
+		io << "["
+		   << (id->isInput() ? "in" : "  ")
+		   << (id->isOutput() ? "out" : "   ")
+		   << "] ";
+
+		if (info.values().empty()) {
+			std::cout << "Control: " << io.str()
+				  << id->vendor() << "::" << id->name() << ": "
+				  << info.toString() << std::endl;
+		} else {
+			std::cout << "Control: " << io.str()
+				  << id->vendor() << "::" << id->name() << ":"
+				  << std::endl;
+
+			std::optional<int32_t> def;
+			if (!info.def().isNone())
+				def = info.def().get<int32_t>();
+
+			for (const auto &value : info.values()) {
+				int32_t val = value.get<int32_t>();
+				const auto &it = id->enumerators().find(val);
+
+				std::cout << "  - ";
+				if (it == id->enumerators().end())
+					std::cout << "UNKNOWN";
+				else
+					std::cout << it->second;
+
+				std::cout << " (" << val << ")"
+					  << (val == def ? " [default]" : "")
+					  << std::endl;
+			}
+		}
+
+		if (id->isArray()) {
+			std::size_t size = id->size();
+
+			std::cout << "   Size: ";
+			if (size == std::numeric_limits<std::size_t>::max())
+				std::cout << "n";
+			else
+				std::cout << std::to_string(size);
+			std::cout << std::endl;
+		}
+	}
+}
+
+void CameraSession::listProperties() const
+{
+	for (const auto &[key, value] : camera_->properties()) {
+		const ControlId *id = properties::properties.at(key);
+
+		std::cout << "Property: " << id->name() << " = "
+			  << value.toString();
+
+		if (!id->enumerators().empty()) {
+			int32_t val = value.get<int32_t>();
+			const auto &iter = id->enumerators().find(val);
+
+			if (iter != id->enumerators().end())
+				std::cout << " (" << iter->second << ")";
+		}
+
+		std::cout << std::endl;
+	}
+}
+
+void CameraSession::infoConfiguration() const
+{
+	unsigned int index = 0;
+	for (const StreamConfiguration &cfg : *config_) {
+		std::cout << index << ": " << cfg.toString() << std::endl;
+
+		const StreamFormats &formats = cfg.formats();
+		for (PixelFormat pixelformat : formats.pixelformats()) {
+			std::cout << " * Pixelformat: "
+				  << pixelformat << " "
+				  << formats.range(pixelformat).toString()
+				  << std::endl;
+
+			for (const Size &size : formats.sizes(pixelformat))
+				std::cout << "  - " << size << std::endl;
+		}
+
+		index++;
+	}
+}
+
+int CameraSession::start()
+{
+	int ret;
+
+	queueCount_ = 0;
+	captureCount_ = 0;
+	captureLimit_ = options_[OptCapture].toInteger();
+	printMetadata_ = options_.isSet(OptMetadata);
+
+	ret = camera_->configure(config_.get());
+	if (ret < 0) {
+		std::cout << "Failed to configure camera" << std::endl;
+		return ret;
+	}
+
+	streamNames_.clear();
+	for (unsigned int index = 0; index < config_->size(); ++index) {
+		StreamConfiguration &cfg = config_->at(index);
+		streamNames_[cfg.stream()] = "cam" + std::to_string(cameraIndex_)
+					   + "-stream" + std::to_string(index);
+	}
+
+	camera_->requestCompleted.connect(this, &CameraSession::requestComplete);
+
+#ifdef HAVE_KMS
+	if (options_.isSet(OptDisplay))
+		sink_ = std::make_unique<KMSSink>(options_[OptDisplay].toString());
+#endif
+
+#ifdef HAVE_SDL
+	if (options_.isSet(OptSDL))
+		sink_ = std::make_unique<SDLSink>();
+#endif
+
+	if (options_.isSet(OptFile)) {
+		std::unique_ptr<FileSink> sink =
+			std::make_unique<FileSink>(camera_.get(), streamNames_);
+
+		if (!options_[OptFile].toString().empty()) {
+			ret = sink->setFilePattern(options_[OptFile]);
+			if (ret)
+				return ret;
+		}
+
+		sink_ = std::move(sink);
+	}
+
+	if (sink_) {
+		ret = sink_->configure(*config_);
+		if (ret < 0) {
+			std::cout << "Failed to configure frame sink"
+				  << std::endl;
+			return ret;
+		}
+
+		sink_->requestProcessed.connect(this, &CameraSession::sinkRelease);
+	}
+
+	allocator_ = std::make_unique<FrameBufferAllocator>(camera_);
+
+	return startCapture();
+}
+
+void CameraSession::stop()
+{
+	int ret = camera_->stop();
+	if (ret)
+		std::cout << "Failed to stop capture" << std::endl;
+
+	if (sink_) {
+		ret = sink_->stop();
+		if (ret)
+			std::cout << "Failed to stop frame sink" << std::endl;
+	}
+
+	sink_.reset();
+
+	requests_.clear();
+
+	allocator_.reset();
+}
+
+int CameraSession::startCapture()
+{
+	int ret;
+
+	/* Identify the stream with the least number of buffers. */
+	unsigned int nbuffers = UINT_MAX;
+	for (StreamConfiguration &cfg : *config_) {
+		ret = allocator_->allocate(cfg.stream());
+		if (ret < 0) {
+			std::cerr << "Can't allocate buffers" << std::endl;
+			return -ENOMEM;
+		}
+
+		unsigned int allocated = allocator_->buffers(cfg.stream()).size();
+		nbuffers = std::min(nbuffers, allocated);
+	}
+
+	/*
+	 * TODO: make cam tool smarter to support still capture by for
+	 * example pushing a button. For now run all streams all the time.
+	 */
+
+	for (unsigned int i = 0; i < nbuffers; i++) {
+		std::unique_ptr<Request> request = camera_->createRequest();
+		if (!request) {
+			std::cerr << "Can't create request" << std::endl;
+			return -ENOMEM;
+		}
+
+		for (StreamConfiguration &cfg : *config_) {
+			Stream *stream = cfg.stream();
+			const std::vector<std::unique_ptr<FrameBuffer>> &buffers =
+				allocator_->buffers(stream);
+			const std::unique_ptr<FrameBuffer> &buffer = buffers[i];
+
+			ret = request->addBuffer(stream, buffer.get());
+			if (ret < 0) {
+				std::cerr << "Can't set buffer for request"
+					  << std::endl;
+				return ret;
+			}
+
+			if (sink_)
+				sink_->mapBuffer(buffer.get());
+		}
+
+		requests_.push_back(std::move(request));
+	}
+
+	if (sink_) {
+		ret = sink_->start();
+		if (ret) {
+			std::cout << "Failed to start frame sink" << std::endl;
+			return ret;
+		}
+	}
+
+	ret = camera_->start();
+	if (ret) {
+		std::cout << "Failed to start capture" << std::endl;
+		if (sink_)
+			sink_->stop();
+		return ret;
+	}
+
+	for (std::unique_ptr<Request> &request : requests_) {
+		ret = queueRequest(request.get());
+		if (ret < 0) {
+			std::cerr << "Can't queue request" << std::endl;
+			camera_->stop();
+			if (sink_)
+				sink_->stop();
+			return ret;
+		}
+	}
+
+	if (captureLimit_)
+		std::cout << "cam" << cameraIndex_
+			  << ": Capture " << captureLimit_ << " frames"
+			  << std::endl;
+	else
+		std::cout << "cam" << cameraIndex_
+			  << ": Capture until user interrupts by SIGINT"
+			  << std::endl;
+
+	return 0;
+}
+
+int CameraSession::queueRequest(Request *request)
+{
+	if (captureLimit_ && queueCount_ >= captureLimit_)
+		return 0;
+
+	if (script_)
+		request->controls().merge(script_->frameControls(queueCount_),
+					  ControlList::MergePolicy::OverwriteExisting);
+
+	queueCount_++;
+
+	return camera_->queueRequest(request);
+}
+
+void CameraSession::requestComplete(Request *request)
+{
+	if (request->status() == Request::RequestCancelled)
+		return;
+
+	/*
+	 * Defer processing of the completed request to the event loop, to avoid
+	 * blocking the camera manager thread.
+	 */
+	EventLoop::instance()->callLater([this, request]() { processRequest(request); });
+}
+
+void CameraSession::processRequest(Request *request)
+{
+	/*
+	 * If we've reached the capture limit, we're done. This doesn't
+	 * duplicate the check below that emits the captureDone signal, as this
+	 * function will be called for each request still in flight after the
+	 * capture limit is reached and we don't want to emit the signal every
+	 * single time.
+	 */
+	if (captureLimit_ && captureCount_ >= captureLimit_)
+		return;
+
+	const Request::BufferMap &buffers = request->buffers();
+
+	/*
+	 * Compute the frame rate. The timestamp is arbitrarily retrieved from
+	 * the first buffer, as all buffers should have matching timestamps.
+	 */
+	uint64_t ts = buffers.begin()->second->metadata().timestamp;
+	double fps = ts - last_;
+	fps = last_ != 0 && fps ? 1000000000.0 / fps : 0.0;
+	last_ = ts;
+
+	bool requeue = true;
+
+	std::stringstream info;
+	info << ts / 1000000000 << "."
+	     << std::setw(6) << std::setfill('0') << ts / 1000 % 1000000
+	     << " (" << std::fixed << std::setprecision(2) << fps << " fps)";
+
+	for (const auto &[stream, buffer] : buffers) {
+		const FrameMetadata &metadata = buffer->metadata();
+
+		info << " " << streamNames_[stream]
+		     << " seq: " << std::setw(6) << std::setfill('0') << metadata.sequence
+		     << " bytesused: ";
+
+		unsigned int nplane = 0;
+		for (const FrameMetadata::Plane &plane : metadata.planes()) {
+			info << plane.bytesused;
+			if (++nplane < metadata.planes().size())
+				info << "/";
+		}
+	}
+
+	if (sink_) {
+		if (!sink_->processRequest(request))
+			requeue = false;
+	}
+
+	std::cout << info.str() << std::endl;
+
+	if (printMetadata_) {
+		const ControlList &requestMetadata = request->metadata();
+		for (const auto &[key, value] : requestMetadata) {
+			const ControlId *id = controls::controls.at(key);
+			std::cout << "\t" << id->name() << " = "
+				  << value.toString() << std::endl;
+		}
+	}
+
+	/*
+	 * Notify the user that capture is complete if the limit has just been
+	 * reached.
+	 */
+	captureCount_++;
+	if (captureLimit_ && captureCount_ >= captureLimit_) {
+		captureDone.emit();
+		return;
+	}
+
+	/*
+	 * If the frame sink holds on the request, we'll requeue it later in the
+	 * complete handler.
+	 */
+	if (!requeue)
+		return;
+
+	request->reuse(Request::ReuseBuffers);
+	queueRequest(request);
+}
+
+void CameraSession::sinkRelease(Request *request)
+{
+	request->reuse(Request::ReuseBuffers);
+	queueRequest(request);
+}
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
+/*
+ * Copyright (C) 2024, Red Hat Inc.
+ * Copyright (C) 2020, Raspberry Pi Ltd
+ *
+ * Helper class for dma-buf allocations.
+ */
+
+#include "libcamera/internal/dma_buf_allocator.h"
+
+#include <array>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <linux/dma-buf.h>
+#include <linux/dma-heap.h>
+#include <linux/udmabuf.h>
+
+#include <libcamera/base/log.h>
+#include <libcamera/base/memfd.h>
+#include <libcamera/base/shared_fd.h>
+
+#include <libcamera/framebuffer.h>
+
+/**
+ * \file dma_buf_allocator.cpp
+ * \brief dma-buf allocator
+ */
+
+namespace libcamera {
+
+#ifndef __DOXYGEN__
+struct DmaBufAllocatorInfo {
+	DmaBufAllocator::DmaBufAllocatorFlag type;
+	const char *deviceNodeName;
+};
+#endif
+
+static constexpr std::array<DmaBufAllocatorInfo, 4> providerInfos = { {
+	/*
+	 * /dev/dma_heap/linux,cma is the CMA dma-heap. When the cma heap size is
+	 * specified on the kernel command line, this gets renamed to "reserved".
+	 */
+	{ DmaBufAllocator::DmaBufAllocatorFlag::CmaHeap, "/dev/dma_heap/linux,cma" },
+	{ DmaBufAllocator::DmaBufAllocatorFlag::CmaHeap, "/dev/dma_heap/reserved" },
+	{ DmaBufAllocator::DmaBufAllocatorFlag::SystemHeap, "/dev/dma_heap/system" },
+	{ DmaBufAllocator::DmaBufAllocatorFlag::UDmaBuf, "/dev/udmabuf" },
+} };
+
+LOG_DEFINE_CATEGORY(DmaBufAllocator)
+
+/**
+ * \class DmaBufAllocator
+ * \brief Helper class for dma-buf allocations
+ *
+ * This class wraps a userspace dma-buf provider selected at construction time,
+ * and exposes functions to allocate dma-buffers from this provider.
+ *
+ * Different providers may provide dma-buffers with different properties for
+ * the underlying memory. Which providers are acceptable is specified through
+ * the type argument passed to the DmaBufAllocator() constructor.
+ */
+
+/**
+ * \enum DmaBufAllocator::DmaBufAllocatorFlag
+ * \brief Type of the dma-buf provider
+ * \var DmaBufAllocator::CmaHeap
+ * \brief Allocate from a CMA dma-heap, providing physically-contiguous memory
+ * \var DmaBufAllocator::SystemHeap
+ * \brief Allocate from the system dma-heap, using the page allocator
+ * \var DmaBufAllocator::UDmaBuf
+ * \brief Allocate using a memfd + /dev/udmabuf
+ */
+
+/**
+ * \typedef DmaBufAllocator::DmaBufAllocatorFlags
+ * \brief A bitwise combination of DmaBufAllocator::DmaBufAllocatorFlag values
+ */
+
+/**
+ * \brief Construct a DmaBufAllocator of a given type
+ * \param[in] type The type(s) of the dma-buf providers to allocate from
+ *
+ * The dma-buf provider type is selected with the \a type parameter, which
+ * defaults to the CMA heap. If no provider of the given type can be accessed,
+ * the constructed DmaBufAllocator instance is invalid as indicated by
+ * the isValid() function.
+ *
+ * Multiple types can be selected by combining type flags, in which case
+ * the constructed DmaBufAllocator will match one of the types. If multiple
+ * requested types can work on the system, which provider is used is undefined.
+ */
+DmaBufAllocator::DmaBufAllocator(DmaBufAllocatorFlags type)
+{
+	for (const auto &info : providerInfos) {
+		if (!(type & info.type))
+			continue;
+
+		int ret = ::open(info.deviceNodeName, O_RDONLY | O_CLOEXEC, 0);
+		if (ret < 0) {
+			ret = errno;
+			LOG(DmaBufAllocator, Debug)
+				<< "Failed to open " << info.deviceNodeName << ": "
+				<< strerror(ret);
+			continue;
+		}
+
+		LOG(DmaBufAllocator, Debug) << "Using " << info.deviceNodeName;
+		providerHandle_ = UniqueFD(ret);
+		type_ = info.type;
+		break;
+	}
+
+	if (!providerHandle_.isValid())
+		LOG(DmaBufAllocator, Error) << "Could not open any dma-buf provider";
+}
+
+/**
+ * \brief Destroy the DmaBufAllocator instance
+ */
+DmaBufAllocator::~DmaBufAllocator() = default;
+
+/**
+ * \fn DmaBufAllocator::isValid()
+ * \brief Check if the DmaBufAllocator instance is valid
+ * \return True if the DmaBufAllocator is valid, false otherwise
+ */
+UniqueFD DmaBufAllocator::allocFromUDmaBuf(const char *name, std::size_t size)
+{
+	/* Size must be a multiple of the page size. Round it up. */
+	std::size_t pageMask = sysconf(_SC_PAGESIZE) - 1;
+	size = (size + pageMask) & ~pageMask;
+
+	/* udmabuf dma-buffers *must* have the F_SEAL_SHRINK seal. */
+	UniqueFD memfd = MemFd::create(name, size, MemFd::Seal::Shrink);
+	if (!memfd.isValid())
+		return {};
+
+	struct udmabuf_create create;
+
+	create.memfd = memfd.get();
+	create.flags = UDMABUF_FLAGS_CLOEXEC;
+	create.offset = 0;
+	create.size = size;
+
+	int ret = ::ioctl(providerHandle_.get(), UDMABUF_CREATE, &create);
+	if (ret < 0) {
+		ret = errno;
+		LOG(DmaBufAllocator, Error)
+			<< "Failed to create dma buf for " << name
+			<< ": " << strerror(ret);
+		return {};
+	}
+
+	/* The underlying memfd is kept as as a reference in the kernel. */
+	return UniqueFD(ret);
+}
+
+UniqueFD DmaBufAllocator::allocFromHeap(const char *name, std::size_t size)
+{
+	struct dma_heap_allocation_data alloc = {};
+	int ret;
+
+	alloc.len = size;
+	alloc.fd_flags = O_CLOEXEC | O_RDWR;
+
+	ret = ::ioctl(providerHandle_.get(), DMA_HEAP_IOCTL_ALLOC, &alloc);
+	if (ret < 0) {
+		LOG(DmaBufAllocator, Error)
+			<< "dma-heap allocation failure for " << name;
+		return {};
+	}
+
+	UniqueFD allocFd(alloc.fd);
+	ret = ::ioctl(allocFd.get(), DMA_BUF_SET_NAME, name);
+	if (ret < 0) {
+		LOG(DmaBufAllocator, Error)
+			<< "dma-heap naming failure for " << name;
+		return {};
+	}
+
+	return allocFd;
+}
+
+/**
+ * \brief Allocate a dma-buf from the DmaBufAllocator
+ * \param [in] name The name to set for the allocated buffer
+ * \param [in] size The size of the buffer to allocate
+ *
+ * Allocates a dma-buf with read/write access.
+ *
+ * If the allocation fails, return an invalid UniqueFD.
+ *
+ * \return The UniqueFD of the allocated buffer
+ */
+UniqueFD DmaBufAllocator::alloc(const char *name, std::size_t size)
+{
+	if (!name)
+		return {};
+
+	if (type_ == DmaBufAllocator::DmaBufAllocatorFlag::UDmaBuf)
+		return allocFromUDmaBuf(name, size);
+	else
+		return allocFromHeap(name, size);
+}
+
+/**
+ * \brief Allocate and export buffers from the DmaBufAllocator
+ * \param[in] count The number of requested FrameBuffers
+ * \param[in] planeSizes The sizes of planes in each FrameBuffer
+ * \param[out] buffers Array of buffers successfully allocated
+ *
+ * Planes in a FrameBuffer are allocated with a single dma buf.
+ * \todo Add the option to allocate each plane with a dma buf respectively.
+ *
+ * \return The number of allocated buffers on success or a negative error code
+ * otherwise
+ */
+int DmaBufAllocator::exportBuffers(unsigned int count,
+				   const std::vector<unsigned int> &planeSizes,
+				   std::vector<std::unique_ptr<FrameBuffer>> *buffers)
+{
+	for (unsigned int i = 0; i < count; ++i) {
+		std::unique_ptr<FrameBuffer> buffer =
+			createBuffer("frame-" + std::to_string(i), planeSizes);
+		if (!buffer) {
+			LOG(DmaBufAllocator, Error) << "Unable to create buffer";
+
+			buffers->clear();
+			return -EINVAL;
+		}
+
+		buffers->push_back(std::move(buffer));
+	}
+
+	return count;
+}
+
+std::unique_ptr<FrameBuffer>
+DmaBufAllocator::createBuffer(std::string name,
+			      const std::vector<unsigned int> &planeSizes)
+{
+	std::vector<FrameBuffer::Plane> planes;
+
+	unsigned int frameSize = 0, offset = 0;
+	for (auto planeSize : planeSizes)
+		frameSize += planeSize;
+
+	SharedFD fd(alloc(name.c_str(), frameSize));
+	if (!fd.isValid())
+		return nullptr;
+
+	for (auto planeSize : planeSizes) {
+		planes.emplace_back(FrameBuffer::Plane{ fd, offset, planeSize });
+		offset += planeSize;
+	}
+
+	return std::make_unique<FrameBuffer>(planes);
+}
+
+/**
+ * \class DmaSyncer
+ * \brief Helper class for dma-buf's synchronization
+ *
+ * This class wraps a userspace dma-buf's synchronization process with an
+ * object's lifetime.
+ *
+ * It's used when the user needs to access a dma-buf with CPU, mostly mapped
+ * with MappedFrameBuffer, so that the buffer is synchronized between CPU and
+ * ISP.
+ */
+
+/**
+ * \enum DmaSyncer::SyncType
+ * \brief Read and/or write access via the CPU map
+ * \var DmaSyncer::Read
+ * \brief Indicates that the mapped dma-buf will be read by the client via the
+ * CPU map
+ * \var DmaSyncer::Write
+ * \brief Indicates that the mapped dm-buf will be written by the client via the
+ * CPU map
+ * \var DmaSyncer::ReadWrite
+ * \brief Indicates that the mapped dma-buf will be read and written by the
+ * client via the CPU map
+ */
+
+/**
+ * \brief Construct a DmaSyncer with a dma-buf's fd and the access type
+ * \param[in] fd The dma-buf's file descriptor to synchronize
+ * \param[in] type Read and/or write access via the CPU map
+ */
+DmaSyncer::DmaSyncer(SharedFD fd, SyncType type)
+	: fd_(fd)
+{
+	switch (type) {
+	case SyncType::Read:
+		flags_ = DMA_BUF_SYNC_READ;
+		break;
+	case SyncType::Write:
+		flags_ = DMA_BUF_SYNC_WRITE;
+		break;
+	case SyncType::ReadWrite:
+		flags_ = DMA_BUF_SYNC_RW;
+		break;
+	}
+
+	sync(DMA_BUF_SYNC_START);
+}
+
+/**
+ * \fn DmaSyncer::DmaSyncer(DmaSyncer &&other);
+ * \param[in] other The other instance
+ * \brief Enable move on class DmaSyncer
+ */
+
+/**
+ * \fn DmaSyncer::operator=(DmaSyncer &&other);
+ * \param[in] other The other instance
+ * \brief Enable move on class DmaSyncer
+ */
+
+DmaSyncer::~DmaSyncer()
+{
+	/*
+	 * DmaSyncer might be moved and left with an empty SharedFD.
+	 * Avoid syncing with an invalid file descriptor in this case.
+	 */
+	if (fd_.isValid())
+		sync(DMA_BUF_SYNC_END);
+}
+
+void DmaSyncer::sync(uint64_t step)
+{
+	struct dma_buf_sync sync = {
+		.flags = flags_ | step
+	};
+
+	int ret;
+	do {
+		ret = ioctl(fd_.get(), DMA_BUF_IOCTL_SYNC, &sync);
+	} while (ret && (errno == EINTR || errno == EAGAIN));
+
+	if (ret) {
+		ret = errno;
+		LOG(DmaBufAllocator, Error)
+			<< "Unable to sync dma fd: " << fd_.get()
+			<< ", err: " << strerror(ret)
+			<< ", flags: " << sync.flags;
+	}
+}
+
+} /* namespace libcamera */
+Core properties:
+  Source dir /home/baboess/.cache/camera-hal-sdd-issue193-293/source
+  Build dir  /home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup
+
+Global build options:
+  
+  Core options                   Current Value                    Possible Values                  Description                                                  
+  --------------                 -------------                    ---------------                  -----------                                                  
+  auto_features                  auto                             [enabled, disabled, auto]        Override value of all 'auto' features                        
+  backend                        ninja                            [ninja, vs, vs2010, vs2012,      Backend to use                                               
+                                                                   vs2013, vs2015, vs2017, vs2019,                                                              
+                                                                   vs2022, vs2026, xcode, none]                                                                 
+  genvslite                      vs2022                           [vs2022, vs2026]                 Setup multiple buildtype-suffixed ninja-backend build        
+                                                                                                   directories, and a [builddir]_vs containing a Visual Studio  
+                                                                                                   meta-backend with multiple configurations that calls into    
+                                                                                                   them                                                         
+  buildtype                      debug                            [plain, debug, debugoptimized,   Build type to use                                            
+                                                                   release, minsize, custom]                                                                    
+  debug                          true                             [True, False]                    Enable debug symbols and other information                   
+  default_library                shared                           [shared, static, both]           Default library type                                         
+  default_both_libraries         shared                           [shared, static, auto]           Default library type for both_libraries                      
+  install_umask                  0022                             [>= 0, <= 511]                   Default umask to apply on permissions of installed files     
+  layout                         mirror                           [mirror, flat]                   Build directory layout                                       
+  optimization                   0                                [plain, 0, g, 1, 2, 3, s]        Optimization level                                           
+  prefer_static                  false                            [True, False]                    Whether to try static linking before shared linking          
+  strip                          false                            [True, False]                    Strip targets on install                                     
+  unity                          off                              [on, off, subprojects]           Unity build                                                  
+  unity_size                     4                                [>= 2]                           Unity block size                                             
+  warning_level                  2                                [0, 1, 2, 3, everything]         Compiler warning level to use                                
+  werror                         true                             [True, False]                    Treat warnings as errors                                     
+  wrap_mode                      default                          [default, nofallback,            Wrap mode                                                    
+                                                                   nodownload, forcefallback,                                                                   
+                                                                   nopromote]                                                                                   
+  force_fallback_for             []                                                                Force fallback for those subprojects                         
+  vsenv                          false                            [True, False]                    Activate Visual Studio environment                           
+  os2_emxomf                     false                            [True, False]                    Use OMF format on OS/2                                       
+  pkg_config_path                []                                                                List of additional paths for pkg-config to search            
+  cmake_prefix_path              []                                                                List of additional prefixes for cmake to search              
+  
+  Backend options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  backend_max_links              0                                [>= 0]                           Maximum number of linker processes to run or 0 for no limit  
+  
+  Base options                   Current Value                    Possible Values                  Description                                                  
+  --------------                 -------------                    ---------------                  -----------                                                  
+  b_thinlto_cache                false                            [True, False]                    Use LLVM ThinLTO caching for faster incremental builds       
+  b_lto_threads                  0                                []                               Use multiple threads for Link Time Optimization              
+  b_thinlto_cache_dir                                                                              Directory to store ThinLTO cache objects                     
+  b_pie                          false                            [True, False]                    Build executables as position independent                    
+  b_coverage                     false                            [True, False]                    Enable coverage tracking.                                    
+  b_ndebug                       false                            [true, false, if-release]        Disable asserts                                              
+  b_lundef                       true                             [True, False]                    Use -Wl,--no-undefined when linking                          
+  b_colorout                     always                           [auto, always, never]            Use colored output                                           
+  b_staticpic                    true                             [True, False]                    Build static libraries as position independent               
+  b_lto_mode                     default                          [default, thin]                  Select between different LTO modes.                          
+  b_lto                          false                            [True, False]                    Use link time optimization                                   
+  b_asneeded                     true                             [True, False]                    Use -Wl,--as-needed when linking                             
+  b_pgo                          off                              [off, generate, use]             Use profile guided optimization                              
+  b_pch                          true                             [True, False]                    Use precompiled headers                                      
+  b_sanitize                     []                                                                Code sanitizer to use                                        
+  
+  Compiler options               Current Value                    Possible Values                  Description                                                  
+  ------------------             -------------                    ---------------                  -----------                                                  
+  c_args                         []                                                                Extra arguments passed to the c compiler                     
+  c_link_args                    []                                                                Extra arguments passed to the c linker                       
+  c_std                          none                             [none, c89, c99, c11, c17, c18,  c language standard to use                                   
+                                                                   c2x, c23, c2y, gnu89, gnu99,                                                                 
+                                                                   gnu11, gnu17, gnu18, gnu2x,                                                                  
+                                                                   gnu23, gnu2y]                                                                                
+  cpp_args                       []                                                                Extra arguments passed to the cpp compiler                   
+  cpp_link_args                  []                                                                Extra arguments passed to the cpp linker                     
+  cpp_std                        c++20                            [none, c++98, c++03, c++11,      cpp language standard to use                                 
+                                                                   c++14, c++17, c++1z, c++2a,                                                                  
+                                                                   c++20, c++23, c++26, gnu++98,                                                                
+                                                                   gnu++03, gnu++11, gnu++14,                                                                   
+                                                                   gnu++17, gnu++1z, gnu++2a,                                                                   
+                                                                   gnu++20, gnu++23, gnu++26]                                                                   
+  cpp_eh                         default                          [none, default, a, s, sc]        C++ exception handling type.                                 
+  cpp_rtti                       true                             [True, False]                    Enable RTTI                                                  
+  cpp_debugstl                   false                            [True, False]                    STL debug mode                                               
+  
+  pkgconfig module options       Current Value                    Possible Values                  Description                                                  
+  --------------------------     -------------                    ---------------                  -----------                                                  
+  pkgconfig.relocatable          false                            [True, False]                    Generate pkgconfig files as relocatable                      
+  
+  python module options          Current Value                    Possible Values                  Description                                                  
+  -----------------------        -------------                    ---------------                  -----------                                                  
+  python.bytecompile             0                                [>= -1, <= 2]                    Whether to compile bytecode                                  
+  python.install_env             prefix                           [auto, prefix, system, venv]     Which python environment to install to                       
+  python.platlibdir                                                                                Directory for site-specific, platform-specific files.        
+  python.purelibdir                                                                                Directory for site-specific, non-platform-specific files.    
+  python.allow_limited_api       true                             [True, False]                    Whether to allow use of the Python Limited API               
+  python.build_config                                                                              Config file containing the build details for the target      
+                                                                                                   Python installation.                                         
+  
+  Directories                    Current Value                    Possible Values                  Description                                                  
+  -------------                  -------------                    ---------------                  -----------                                                  
+  prefix                         /usr/local                                                        Installation prefix                                          
+  bindir                         bin                                                               Executable directory                                         
+  datadir                        share                                                             Data file directory                                          
+  includedir                     include                                                           Header file directory                                        
+  infodir                        share/info                                                        Info page directory                                          
+  libdir                         lib/x86_64-linux-gnu                                              Library directory                                            
+  licensedir                                                                                       Licenses directory                                           
+  libexecdir                     libexec                                                           Library executable directory                                 
+  localedir                      share/locale                                                      Locale data directory                                        
+  localstatedir                  /var/local                                                        Localstate data directory                                    
+  mandir                         share/man                                                         Manual page directory                                        
+  sbindir                        sbin                                                              System executable directory                                  
+  sharedstatedir                 /var/local/lib                                                    Architecture-independent data directory                      
+  sysconfdir                     etc                                                               Sysconf data directory                                       
+  
+  Testing options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  errorlogs                      true                             [True, False]                    Whether to print the logs from failing tests                 
+  stdsplit                       true                             [True, False]                    Split stdout and stderr in test logs                         
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  android                        disabled                         [enabled, disabled, auto]        Compile libcamera with Android Camera3 HAL interface         
+  android_platform               generic                          [cros, generic]                  Select the Android platform to compile for                   
+  apps-output-dng                auto                             [enabled, disabled, auto]        Enable DNG file creation support in the cam and qcam         
+                                                                                                   applications                                                 
+  cam                            enabled                          [enabled, disabled, auto]        Compile the cam test application                             
+  cam-jpeg                       auto                             [enabled, disabled, auto]        Enable JPEG support in the cam application                   
+  cam-output-kms                 auto                             [enabled, disabled, auto]        Enable KMS output in the cam application                     
+  cam-output-sdl2                auto                             [enabled, disabled, auto]        Enable SDL2 output in the cam application                    
+  doc_werror                     false                            [True, False]                    Treat documentation warnings as errors                       
+  documentation                  disabled                         [enabled, disabled, auto]        Generate the project documentation                           
+  gstreamer                      enabled                          [enabled, disabled, auto]        Compile libcamera GStreamer plugin                           
+  ipas                           [ipu3, mali-c55, rkisp1,         [ipu3, mali-c55, rkisp1,         Select which IPA modules to build                            
+                                  rpi/pisp, rpi/vc4, softisp,      rpi/pisp, rpi/vc4, softisp,                                                                  
+                                  vimc]                            vimc]                                                                                        
+  lc-compliance                  auto                             [enabled, disabled, auto]        Compile the lc-compliance test application                   
+  libdw                          auto                             [enabled, disabled, auto]        Enable libdw integration for backtrace symbolization         
+  libunwind                      auto                             [enabled, disabled, auto]        Enable libunwind integration for backtrace generation        
+  pipelines                      [all]                            [all, auto, imx8-isi, ipu3,      Select which pipeline handlers to build. If this is set to   
+                                                                   mali-c55, rkisp1, rpi/pisp,     "auto", all the pipelines applicable to the target           
+                                                                   rpi/vc4, simple, uvcvideo,      architecture will be built. If this is set to "all", all the 
+                                                                   vimc, virtual]                  pipelines will be built. If both are selected then "all" will
+                                                                                                   take precedence.                                             
+  pycamera                       auto                             [enabled, disabled, auto]        Enable libcamera Python bindings (experimental)              
+  qcam                           auto                             [enabled, disabled, auto]        Compile the qcam test application                            
+  rpi-awb-nn                     auto                             [enabled, disabled, auto]        Enable the Raspberry Pi Neural Network AWB algorithm         
+  softisp-gpu                    auto                             [enabled, disabled, auto]        Enable GPU accelerated processing in the software ISP        
+  test                           false                            [True, False]                    Compile and include the tests                                
+  tracing                        auto                             [enabled, disabled, auto]        Enable tracing (based on lttng)                              
+  udev                           auto                             [enabled, disabled, auto]        Enable udev support for hotplug                              
+  v4l2                           auto                             [enabled, disabled, auto]        Compile the V4L2 compatibility layer                         
+
+Subproject gtest:
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  android                        disabled                         [enabled, disabled, auto]        Compile libcamera with Android Camera3 HAL interface         
+  android_platform               generic                          [cros, generic]                  Select the Android platform to compile for                   
+  apps-output-dng                auto                             [enabled, disabled, auto]        Enable DNG file creation support in the cam and qcam         
+                                                                                                   applications                                                 
+  cam                            auto                             [enabled, disabled, auto]        Compile the cam test application                             
+  cam-jpeg                       auto                             [enabled, disabled, auto]        Enable JPEG support in the cam application                   
+  cam-output-kms                 auto                             [enabled, disabled, auto]        Enable KMS output in the cam application                     
+  cam-output-sdl2                auto                             [enabled, disabled, auto]        Enable SDL2 output in the cam application                    
+  doc_werror                     false                            [True, False]                    Treat documentation warnings as errors                       
+  documentation                  auto                             [enabled, disabled, auto]        Generate the project documentation                           
+  gstreamer                      auto                             [enabled, disabled, auto]        Compile libcamera GStreamer plugin                           
+  ipas                           [ipu3, mali-c55, rkisp1,         [ipu3, mali-c55, rkisp1,         Select which IPA modules to build                            
+                                  rpi/pisp, rpi/vc4, softisp,      rpi/pisp, rpi/vc4, softisp,                                                                  
+                                  vimc]                            vimc]                                                                                        
+  lc-compliance                  auto                             [enabled, disabled, auto]        Compile the lc-compliance test application                   
+  libdw                          auto                             [enabled, disabled, auto]        Enable libdw integration for backtrace symbolization         
+  libunwind                      auto                             [enabled, disabled, auto]        Enable libunwind integration for backtrace generation        
+  pipelines                      [auto]                           [all, auto, imx8-isi, ipu3,      Select which pipeline handlers to build. If this is set to   
+                                                                   mali-c55, rkisp1, rpi/pisp,     "auto", all the pipelines applicable to the target           
+                                                                   rpi/vc4, simple, uvcvideo,      architecture will be built. If this is set to "all", all the 
+                                                                   vimc, virtual]                  pipelines will be built. If both are selected then "all" will
+                                                                                                   take precedence.                                             
+  pycamera                       auto                             [enabled, disabled, auto]        Enable libcamera Python bindings (experimental)              
+  qcam                           auto                             [enabled, disabled, auto]        Compile the qcam test application                            
+  rpi-awb-nn                     auto                             [enabled, disabled, auto]        Enable the Raspberry Pi Neural Network AWB algorithm         
+  softisp-gpu                    auto                             [enabled, disabled, auto]        Enable GPU accelerated processing in the software ISP        
+  test                           false                            [True, False]                    Compile and include the tests                                
+  tracing                        auto                             [enabled, disabled, auto]        Enable tracing (based on lttng)                              
+  udev                           auto                             [enabled, disabled, auto]        Enable udev support for hotplug                              
+  v4l2                           auto                             [enabled, disabled, auto]        Compile the V4L2 compatibility layer                         
+
+Subproject libpisp:
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  examples                       false                            [True, False]                    examples                                                     
+  gstreamer                      disabled                         [enabled, disabled, auto]        Build GStreamer plugin                                       
+  logging                        auto                             [enabled, disabled, auto]        logging                                                      
+
+Subproject nlohmann_json:
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  android                        disabled                         [enabled, disabled, auto]        Compile libcamera with Android Camera3 HAL interface         
+  android_platform               generic                          [cros, generic]                  Select the Android platform to compile for                   
+  apps-output-dng                auto                             [enabled, disabled, auto]        Enable DNG file creation support in the cam and qcam         
+                                                                                                   applications                                                 
+  cam                            auto                             [enabled, disabled, auto]        Compile the cam test application                             
+  cam-jpeg                       auto                             [enabled, disabled, auto]        Enable JPEG support in the cam application                   
+  cam-output-kms                 auto                             [enabled, disabled, auto]        Enable KMS output in the cam application                     
+  cam-output-sdl2                auto                             [enabled, disabled, auto]        Enable SDL2 output in the cam application                    
+  doc_werror                     false                            [True, False]                    Treat documentation warnings as errors                       
+  documentation                  auto                             [enabled, disabled, auto]        Generate the project documentation                           
+  gstreamer                      auto                             [enabled, disabled, auto]        Compile libcamera GStreamer plugin                           
+  ipas                           [ipu3, mali-c55, rkisp1,         [ipu3, mali-c55, rkisp1,         Select which IPA modules to build                            
+                                  rpi/pisp, rpi/vc4, softisp,      rpi/pisp, rpi/vc4, softisp,                                                                  
+                                  vimc]                            vimc]                                                                                        
+  lc-compliance                  auto                             [enabled, disabled, auto]        Compile the lc-compliance test application                   
+  libdw                          auto                             [enabled, disabled, auto]        Enable libdw integration for backtrace symbolization         
+  libunwind                      auto                             [enabled, disabled, auto]        Enable libunwind integration for backtrace generation        
+  pipelines                      [auto]                           [all, auto, imx8-isi, ipu3,      Select which pipeline handlers to build. If this is set to   
+                                                                   mali-c55, rkisp1, rpi/pisp,     "auto", all the pipelines applicable to the target           
+                                                                   rpi/vc4, simple, uvcvideo,      architecture will be built. If this is set to "all", all the 
+                                                                   vimc, virtual]                  pipelines will be built. If both are selected then "all" will
+                                                                                                   take precedence.                                             
+  pycamera                       auto                             [enabled, disabled, auto]        Enable libcamera Python bindings (experimental)              
+  qcam                           auto                             [enabled, disabled, auto]        Compile the qcam test application                            
+  rpi-awb-nn                     auto                             [enabled, disabled, auto]        Enable the Raspberry Pi Neural Network AWB algorithm         
+  softisp-gpu                    auto                             [enabled, disabled, auto]        Enable GPU accelerated processing in the software ISP        
+  test                           false                            [True, False]                    Compile and include the tests                                
+  tracing                        auto                             [enabled, disabled, auto]        Enable tracing (based on lttng)                              
+  udev                           auto                             [enabled, disabled, auto]        Enable udev support for hotplug                              
+  v4l2                           auto                             [enabled, disabled, auto]        Compile the V4L2 compatibility layer                         
+
+Currently set option augments:
+libpisp:werror                1
+libpisp:warning_level2         
+libpisp:cpp_std      c++20     
+libpisp:buildtype    release   
+libpisp:debug                 0
+libpisp:optimization 3         
+306fd8278f92963201db42e40463a8f6e2411779901ce82656d6b86f79f849e7  /home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/apps/cam/cam
+a117d9f7ae879acd1d9a0237394588725fd5a1ec0dc0e592e99b972aa38f3721  /home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/libcamera/libcamera.so
+a117d9f7ae879acd1d9a0237394588725fd5a1ec0dc0e592e99b972aa38f3721  /home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/libcamera/libcamera.so.0.7
+a117d9f7ae879acd1d9a0237394588725fd5a1ec0dc0e592e99b972aa38f3721  /home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/libcamera/libcamera.so.0.7.2
+3612b58dc354a03e001e7b5ab64dc7fa21137d8b368b2bd0a223649b9b7b8893  /home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/libcamera/base/libcamera-base.so
+3612b58dc354a03e001e7b5ab64dc7fa21137d8b368b2bd0a223649b9b7b8893  /home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/libcamera/base/libcamera-base.so.0.7
+3612b58dc354a03e001e7b5ab64dc7fa21137d8b368b2bd0a223649b9b7b8893  /home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/libcamera/base/libcamera-base.so.0.7.2

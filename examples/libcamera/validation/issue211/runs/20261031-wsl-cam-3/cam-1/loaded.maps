@@ -1,0 +1,147 @@
+555555554000-555555583000 r--p 00000000 08:20 239462                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam
+555555583000-5555555f6000 r-xp 0002f000 08:20 239462                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam
+5555555f6000-555555630000 r--p 000a2000 08:20 239462                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam
+555555630000-555555632000 r--p 000db000 08:20 239462                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam
+555555632000-555555633000 rw-p 000dd000 08:20 239462                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam
+555555633000-555555696000 rw-p 00000000 00:00 0                          [heap]
+7ffff0000000-7ffff0021000 rw-p 00000000 00:00 0 
+7ffff0021000-7ffff4000000 ---p 00000000 00:00 0 
+7ffff60c5000-7ffff613b000 rw-p 00000000 00:00 0 
+7ffff613b000-7ffff693c000 rw-p 00000000 00:00 0 
+7ffff693c000-7ffff6946000 r--p 00000000 08:20 14296                      /usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0
+7ffff6946000-7ffff69ab000 r-xp 0000a000 08:20 14296                      /usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0
+7ffff69ab000-7ffff69c0000 r--p 0006f000 08:20 14296                      /usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0
+7ffff69c0000-7ffff69c1000 r--p 00083000 08:20 14296                      /usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0
+7ffff69c1000-7ffff69c2000 rw-p 00084000 08:20 14296                      /usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0
+7ffff69c2000-7ffff69ce000 r--p 00000000 08:20 14407                      /usr/lib/x86_64-linux-gnu/libnettle.so.8.11
+7ffff69ce000-7ffff69fe000 r-xp 0000c000 08:20 14407                      /usr/lib/x86_64-linux-gnu/libnettle.so.8.11
+7ffff69fe000-7ffff6a16000 r--p 0003c000 08:20 14407                      /usr/lib/x86_64-linux-gnu/libnettle.so.8.11
+7ffff6a16000-7ffff6a18000 r--p 00054000 08:20 14407                      /usr/lib/x86_64-linux-gnu/libnettle.so.8.11
+7ffff6a18000-7ffff6a19000 rw-p 00056000 08:20 14407                      /usr/lib/x86_64-linux-gnu/libnettle.so.8.11
+7ffff6a19000-7ffff6a2b000 r--p 00000000 08:20 14522                      /usr/lib/x86_64-linux-gnu/libunistring.so.5.2.0
+7ffff6a2b000-7ffff6a6f000 r-xp 00012000 08:20 14522                      /usr/lib/x86_64-linux-gnu/libunistring.so.5.2.0
+7ffff6a6f000-7ffff6bfb000 r--p 00056000 08:20 14522                      /usr/lib/x86_64-linux-gnu/libunistring.so.5.2.0
+7ffff6bfb000-7ffff6bff000 r--p 001e1000 08:20 14522                      /usr/lib/x86_64-linux-gnu/libunistring.so.5.2.0
+7ffff6bff000-7ffff6c00000 rw-p 001e5000 08:20 14522                      /usr/lib/x86_64-linux-gnu/libunistring.so.5.2.0
+7ffff6c00000-7ffff6c34000 r--p 00000000 08:20 16210                      /usr/lib/x86_64-linux-gnu/libgnutls.so.30.41.1
+7ffff6c34000-7ffff6d7f000 r-xp 00034000 08:20 16210                      /usr/lib/x86_64-linux-gnu/libgnutls.so.30.41.1
+7ffff6d7f000-7ffff6dfa000 r--p 0017f000 08:20 16210                      /usr/lib/x86_64-linux-gnu/libgnutls.so.30.41.1
+7ffff6dfa000-7ffff6e0b000 r--p 001f9000 08:20 16210                      /usr/lib/x86_64-linux-gnu/libgnutls.so.30.41.1
+7ffff6e0b000-7ffff6e0d000 rw-p 0020a000 08:20 16210                      /usr/lib/x86_64-linux-gnu/libgnutls.so.30.41.1
+7ffff6e0d000-7ffff6e11000 rw-p 00000000 00:00 0 
+7ffff6e25000-7ffff6e67000 r--p 00000000 08:20 14422                      /usr/lib/x86_64-linux-gnu/libp11-kit.so.0.4.8
+7ffff6e67000-7ffff6f4b000 r-xp 00042000 08:20 14422                      /usr/lib/x86_64-linux-gnu/libp11-kit.so.0.4.8
+7ffff6f4b000-7ffff6fde000 r--p 00126000 08:20 14422                      /usr/lib/x86_64-linux-gnu/libp11-kit.so.0.4.8
+7ffff6fde000-7ffff6ff0000 r--p 001b8000 08:20 14422                      /usr/lib/x86_64-linux-gnu/libp11-kit.so.0.4.8
+7ffff6ff0000-7ffff6fff000 rw-p 001ca000 08:20 14422                      /usr/lib/x86_64-linux-gnu/libp11-kit.so.0.4.8
+7ffff6fff000-7ffff7000000 rw-p 00000000 00:00 0 
+7ffff7000000-7ffff7028000 r--p 00000000 08:20 45161                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7028000-7ffff71c0000 r-xp 00028000 08:20 45161                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff71c0000-7ffff720e000 r--p 001c0000 08:20 45161                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff720e000-7ffff7212000 r--p 0020e000 08:20 45161                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7212000-7ffff7214000 rw-p 00212000 08:20 45161                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7214000-7ffff7221000 rw-p 00000000 00:00 0 
+7ffff7232000-7ffff7234000 r--p 00000000 08:20 14257                      /usr/lib/x86_64-linux-gnu/libffi.so.8.2.0
+7ffff7234000-7ffff723f000 r-xp 00002000 08:20 14257                      /usr/lib/x86_64-linux-gnu/libffi.so.8.2.0
+7ffff723f000-7ffff7241000 r--p 0000d000 08:20 14257                      /usr/lib/x86_64-linux-gnu/libffi.so.8.2.0
+7ffff7241000-7ffff7242000 r--p 0000e000 08:20 14257                      /usr/lib/x86_64-linux-gnu/libffi.so.8.2.0
+7ffff7242000-7ffff7243000 rw-p 0000f000 08:20 14257                      /usr/lib/x86_64-linux-gnu/libffi.so.8.2.0
+7ffff7243000-7ffff7247000 r--p 00000000 08:20 51162                      /usr/lib/x86_64-linux-gnu/libjpeg.so.8.2.2
+7ffff7247000-7ffff7298000 r-xp 00004000 08:20 51162                      /usr/lib/x86_64-linux-gnu/libjpeg.so.8.2.2
+7ffff7298000-7ffff72d8000 r--p 00055000 08:20 51162                      /usr/lib/x86_64-linux-gnu/libjpeg.so.8.2.2
+7ffff72d8000-7ffff72d9000 r--p 00095000 08:20 51162                      /usr/lib/x86_64-linux-gnu/libjpeg.so.8.2.2
+7ffff72d9000-7ffff72da000 rw-p 00096000 08:20 51162                      /usr/lib/x86_64-linux-gnu/libjpeg.so.8.2.2
+7ffff72da000-7ffff72ec000 r--p 00000000 08:20 45164                      /usr/lib/x86_64-linux-gnu/libm.so.6
+7ffff72ec000-7ffff738c000 r-xp 00012000 08:20 45164                      /usr/lib/x86_64-linux-gnu/libm.so.6
+7ffff738c000-7ffff73fe000 r--p 000b2000 08:20 45164                      /usr/lib/x86_64-linux-gnu/libm.so.6
+7ffff73fe000-7ffff73ff000 r--p 00123000 08:20 45164                      /usr/lib/x86_64-linux-gnu/libm.so.6
+7ffff73ff000-7ffff7400000 rw-p 00124000 08:20 45164                      /usr/lib/x86_64-linux-gnu/libm.so.6
+7ffff7400000-7ffff74a3000 r--p 00000000 08:20 14501                      /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35
+7ffff74a3000-7ffff75fe000 r-xp 000a3000 08:20 14501                      /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35
+7ffff75fe000-7ffff768a000 r--p 001fe000 08:20 14501                      /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35
+7ffff768a000-7ffff7699000 r--p 0028a000 08:20 14501                      /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35
+7ffff7699000-7ffff769c000 rw-p 00299000 08:20 14501                      /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35
+7ffff769c000-7ffff76a0000 rw-p 00000000 00:00 0 
+7ffff76a2000-7ffff76aa000 rw-p 00000000 00:00 0 
+7ffff76aa000-7ffff76b3000 r--p 00000000 08:20 14340                      /usr/lib/x86_64-linux-gnu/libhogweed.so.6.11
+7ffff76b3000-7ffff76c8000 r-xp 00009000 08:20 14340                      /usr/lib/x86_64-linux-gnu/libhogweed.so.6.11
+7ffff76c8000-7ffff76f2000 r--p 0001e000 08:20 14340                      /usr/lib/x86_64-linux-gnu/libhogweed.so.6.11
+7ffff76f2000-7ffff76f4000 r--p 00047000 08:20 14340                      /usr/lib/x86_64-linux-gnu/libhogweed.so.6.11
+7ffff76f4000-7ffff76f5000 rw-p 00049000 08:20 14340                      /usr/lib/x86_64-linux-gnu/libhogweed.so.6.11
+7ffff76f5000-7ffff76f8000 r--p 00000000 08:20 14507                      /usr/lib/x86_64-linux-gnu/libtasn1.so.6.6.5
+7ffff76f8000-7ffff7707000 r-xp 00003000 08:20 14507                      /usr/lib/x86_64-linux-gnu/libtasn1.so.6.6.5
+7ffff7707000-7ffff770a000 r--p 00012000 08:20 14507                      /usr/lib/x86_64-linux-gnu/libtasn1.so.6.6.5
+7ffff770a000-7ffff770b000 r--p 00015000 08:20 14507                      /usr/lib/x86_64-linux-gnu/libtasn1.so.6.6.5
+7ffff770b000-7ffff770c000 rw-p 00016000 08:20 14507                      /usr/lib/x86_64-linux-gnu/libtasn1.so.6.6.5
+7ffff770c000-7ffff770e000 r--p 00000000 08:20 14350                      /usr/lib/x86_64-linux-gnu/libidn2.so.0.4.0
+7ffff770e000-7ffff7712000 r-xp 00002000 08:20 14350                      /usr/lib/x86_64-linux-gnu/libidn2.so.0.4.0
+7ffff7712000-7ffff772c000 r--p 00006000 08:20 14350                      /usr/lib/x86_64-linux-gnu/libidn2.so.0.4.0
+7ffff772c000-7ffff772d000 r--p 0001f000 08:20 14350                      /usr/lib/x86_64-linux-gnu/libidn2.so.0.4.0
+7ffff772d000-7ffff772e000 rw-p 00020000 08:20 14350                      /usr/lib/x86_64-linux-gnu/libidn2.so.0.4.0
+7ffff772e000-7ffff7737000 r--p 00000000 08:20 52134                      /usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1
+7ffff7737000-7ffff7756000 r-xp 00009000 08:20 52134                      /usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1
+7ffff7756000-7ffff7761000 r--p 00028000 08:20 52134                      /usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1
+7ffff7761000-7ffff7762000 r--p 00033000 08:20 52134                      /usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1
+7ffff7762000-7ffff7763000 rw-p 00034000 08:20 52134                      /usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1
+7ffff7763000-7ffff7776000 r--p 00000000 08:20 65271                      /usr/lib/x86_64-linux-gnu/libyuv.so.0.0.1922
+7ffff7776000-7ffff77e9000 r-xp 00013000 08:20 65271                      /usr/lib/x86_64-linux-gnu/libyuv.so.0.0.1922
+7ffff77e9000-7ffff77fe000 r--p 00086000 08:20 65271                      /usr/lib/x86_64-linux-gnu/libyuv.so.0.0.1922
+7ffff77fe000-7ffff77ff000 r--p 0009b000 08:20 65271                      /usr/lib/x86_64-linux-gnu/libyuv.so.0.0.1922
+7ffff77ff000-7ffff7800000 rw-p 0009c000 08:20 65271                      /usr/lib/x86_64-linux-gnu/libyuv.so.0.0.1922
+7ffff7800000-7ffff7ae7000 r--p 00000000 08:20 239263                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so.0.7.2
+7ffff7ae7000-7ffff7d0d000 r-xp 002e7000 08:20 239263                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so.0.7.2
+7ffff7d0d000-7ffff7dd2000 r--p 0050d000 08:20 239263                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so.0.7.2
+7ffff7dd2000-7ffff7dd8000 r--p 005d1000 08:20 239263                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so.0.7.2
+7ffff7dd8000-7ffff7df5000 rw-p 005d7000 08:20 239263                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so.0.7.2
+7ffff7df5000-7ffff7dfa000 rw-p 00000000 00:00 0 
+7ffff7dfb000-7ffff7e03000 rw-p 00000000 00:00 0 
+7ffff7e03000-7ffff7e0b000 r--p 00000000 08:20 12913                      /usr/lib/x86_64-linux-gnu/libudev.so.1.7.12
+7ffff7e0b000-7ffff7e32000 r-xp 00008000 08:20 12913                      /usr/lib/x86_64-linux-gnu/libudev.so.1.7.12
+7ffff7e32000-7ffff7e44000 r--p 0002f000 08:20 12913                      /usr/lib/x86_64-linux-gnu/libudev.so.1.7.12
+7ffff7e44000-7ffff7e49000 r--p 00041000 08:20 12913                      /usr/lib/x86_64-linux-gnu/libudev.so.1.7.12
+7ffff7e49000-7ffff7e4a000 rw-p 00046000 08:20 12913                      /usr/lib/x86_64-linux-gnu/libudev.so.1.7.12
+7ffff7e4a000-7ffff7e4c000 rw-p 00000000 00:00 0 
+7ffff7e4c000-7ffff7e50000 r--p 00000000 08:20 14275                      /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffff7e50000-7ffff7e74000 r-xp 00004000 08:20 14275                      /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffff7e74000-7ffff7e78000 r--p 00028000 08:20 14275                      /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffff7e78000-7ffff7e79000 r--p 0002c000 08:20 14275                      /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffff7e79000-7ffff7e7a000 rw-p 0002d000 08:20 14275                      /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffff7e7a000-7ffff7e7f000 r--p 00000000 08:20 14223                      /usr/lib/x86_64-linux-gnu/libdrm.so.2.131.0
+7ffff7e7f000-7ffff7e8b000 r-xp 00005000 08:20 14223                      /usr/lib/x86_64-linux-gnu/libdrm.so.2.131.0
+7ffff7e8b000-7ffff7e8f000 r--p 00011000 08:20 14223                      /usr/lib/x86_64-linux-gnu/libdrm.so.2.131.0
+7ffff7e8f000-7ffff7e90000 r--p 00015000 08:20 14223                      /usr/lib/x86_64-linux-gnu/libdrm.so.2.131.0
+7ffff7e90000-7ffff7e91000 rw-p 00016000 08:20 14223                      /usr/lib/x86_64-linux-gnu/libdrm.so.2.131.0
+7ffff7e91000-7ffff7e93000 r--p 00000000 08:20 14573                      /usr/lib/x86_64-linux-gnu/libyaml-0.so.2.0.9
+7ffff7e93000-7ffff7ead000 r-xp 00002000 08:20 14573                      /usr/lib/x86_64-linux-gnu/libyaml-0.so.2.0.9
+7ffff7ead000-7ffff7eb1000 r--p 0001c000 08:20 14573                      /usr/lib/x86_64-linux-gnu/libyaml-0.so.2.0.9
+7ffff7eb1000-7ffff7eb2000 r--p 0001f000 08:20 14573                      /usr/lib/x86_64-linux-gnu/libyaml-0.so.2.0.9
+7ffff7eb2000-7ffff7eb3000 rw-p 00020000 08:20 14573                      /usr/lib/x86_64-linux-gnu/libyaml-0.so.2.0.9
+7ffff7eb3000-7ffff7eb5000 rw-p 00000000 00:00 0 
+7ffff7eb5000-7ffff7ec1000 r--p 00000000 08:20 9378                       /usr/lib/x86_64-linux-gnu/libevent-2.1.so.7.0.1
+7ffff7ec1000-7ffff7ef4000 r-xp 0000c000 08:20 9378                       /usr/lib/x86_64-linux-gnu/libevent-2.1.so.7.0.1
+7ffff7ef4000-7ffff7f05000 r--p 0003f000 08:20 9378                       /usr/lib/x86_64-linux-gnu/libevent-2.1.so.7.0.1
+7ffff7f05000-7ffff7f06000 r--p 00050000 08:20 9378                       /usr/lib/x86_64-linux-gnu/libevent-2.1.so.7.0.1
+7ffff7f06000-7ffff7f07000 rw-p 00051000 08:20 9378                       /usr/lib/x86_64-linux-gnu/libevent-2.1.so.7.0.1
+7ffff7f07000-7ffff7f08000 r--p 00000000 08:20 65127                      /usr/lib/x86_64-linux-gnu/libevent_pthreads-2.1.so.7.0.1
+7ffff7f08000-7ffff7f09000 r-xp 00001000 08:20 65127                      /usr/lib/x86_64-linux-gnu/libevent_pthreads-2.1.so.7.0.1
+7ffff7f09000-7ffff7f0a000 r--p 00002000 08:20 65127                      /usr/lib/x86_64-linux-gnu/libevent_pthreads-2.1.so.7.0.1
+7ffff7f0a000-7ffff7f0b000 r--p 00002000 08:20 65127                      /usr/lib/x86_64-linux-gnu/libevent_pthreads-2.1.so.7.0.1
+7ffff7f0b000-7ffff7f0c000 rw-p 00003000 08:20 65127                      /usr/lib/x86_64-linux-gnu/libevent_pthreads-2.1.so.7.0.1
+7ffff7f12000-7ffff7f13000 rw-p 00000000 00:00 0 
+7ffff7f13000-7ffff7f14000 rw-p 00000000 00:00 0 
+7ffff7f14000-7ffff7f62000 r--p 00000000 08:20 238854                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so.0.7.2
+7ffff7f62000-7ffff7f9b000 r-xp 0004e000 08:20 238854                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so.0.7.2
+7ffff7f9b000-7ffff7fb1000 r--p 00087000 08:20 238854                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so.0.7.2
+7ffff7fb1000-7ffff7fb2000 r--p 0009d000 08:20 238854                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so.0.7.2
+7ffff7fb2000-7ffff7fb6000 rw-p 0009e000 08:20 238854                     /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so.0.7.2
+7ffff7fb6000-7ffff7fb8000 rw-p 00000000 00:00 0 
+7ffff7fb8000-7ffff7fbc000 r--p 00000000 00:00 0                          [vvar]
+7ffff7fbc000-7ffff7fbe000 r--p 00000000 00:00 0                          [vvar_vclock]
+7ffff7fbe000-7ffff7fc0000 r-xp 00000000 00:00 0                          [vdso]
+7ffff7fc0000-7ffff7fc1000 r--p 00000000 08:20 45158                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7fc1000-7ffff7ff0000 r-xp 00001000 08:20 45158                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ff0000-7ffff7ffb000 r--p 00030000 08:20 45158                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ffb000-7ffff7ffd000 r--p 0003b000 08:20 45158                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ffd000-7ffff7ffe000 rw-p 0003d000 08:20 45158                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ffe000-7ffff7fff000 rw-p 00000000 00:00 0 
+7ffffffde000-7ffffffff000 rw-p 00000000 00:00 0                          [stack]

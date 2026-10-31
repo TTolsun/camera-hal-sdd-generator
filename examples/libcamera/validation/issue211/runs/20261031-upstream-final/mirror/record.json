@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "argv": [
+    "git",
+    "ls-remote",
+    "https://github.com/TTolsun/libcamera-sdd.git",
+    "refs/heads/upstream/master"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 90,
+  "started_at": "2026-10-31T07:46:57.273518+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "parent-reaped-windows",
+  "pid": 57108,
+  "elapsed_seconds": 1.3056585000013001,
+  "files": {
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "5fd9529035802490dcfe48157c754447d650572293de25aa12301a2c66f7224e"
+  }
+}

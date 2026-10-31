@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "argv": [
+    "git",
+    "ls-remote",
+    "https://github.com/microsoft/WSL2-Linux-Kernel.git",
+    "refs/tags/linux-msft-wsl-6.18.33.2*"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 60,
+  "started_at": "2026-10-31T06:21:02.074233+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "parent-reaped-windows",
+  "pid": 39320,
+  "elapsed_seconds": 2.527369200019166,
+  "files": {
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "a4afbc50da39cbe0dfe3896f4f401937e1d22c14c45743d1a88d5f3b78c95210"
+  }
+}

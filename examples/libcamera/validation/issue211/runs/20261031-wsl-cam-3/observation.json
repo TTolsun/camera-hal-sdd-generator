@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "source_tracked_clean": true,
+  "kernel": "6.18.33.2-microsoft-standard-WSL2-issue211",
+  "results": [
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        434,
+        437
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 434,
+      "allocations": 4
+    },
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        449,
+        452
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 449,
+      "allocations": 4
+    },
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        464,
+        467
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 464,
+      "allocations": 4
+    }
+  ],
+  "uid": 0,
+  "gid": 0,
+  "observer_inputs": {
+    "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/runtime/run_cam.py": "23f2207cf451fe3a9cef3c26bfc3c7e21de6a942bb0e1d0f26f8093fc05de4f6",
+    "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/runtime/observe_cam.gdb.py": "ba4417ab6f2a4a56618bb8d787b3221dc92ac6fef3dddc90409e1dd1839a9b9f"
+  },
+  "inherited_runtime_environment": {},
+  "binaries": {
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam": "1ceed18da065a383e2f573ba49e9caea77033abd6830a7ec051e3681dabc79d2",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so": "2423e936a6ffde0fa533c76a4738f748f77b4535c881c12a616dfeec50a940eb",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so": "441f04294e61632d080f4bb55fb38ce787bb8af173a4b6d55d7c05f0f04fd18c",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/dmabuf-probe-2": "531e499f094cca32f03e354afe2aa5a8d48b425916cbd7be2ad7e02306c58512"
+  },
+  "human_review": "pending",
+  "physical_dma": "not-validated",
+  "physical_camera": "not-run",
+  "production_application": "not-run",
+  "internal_hal": "not-run",
+  "status": "observed-wsl-virtual-only",
+  "artifacts": {
+    "cam-1/allocations.jsonl": "bfc0215112bb3a7e30cf66e2ce016dbcc3bd1ad7f7d3ba79d14c868d29417bd2",
+    "cam-1/buffers.jsonl": "df49e0508be1845e6719e6a0d0b4468fc8450130dde867e718837554a47b0ccd",
+    "cam-1/events.jsonl": "270bd318b268903437bbc9dcd042c966a8f7053bdb3c5e101d678291272ccf94",
+    "cam-1/inferior-exit.json": "1a9a9f091cd7f30ecca92e9a28455284a2b0f6a180b102927fcfbf9ce4183373",
+    "cam-1/loaded.json": "8ae81b983ad4000dc5e56d0f4c7669f983108b4f8787046a6b328ab395a44283",
+    "cam-1/loaded.maps": "1653a17b9bae9b55c7000be24075801e5ba4120f2b5d26530d0274c0b4111031",
+    "cam-1/record.json": "4e04b252fd5db261b194972f010fa60d1708368e8ac99ebdb36c385432ff40d6",
+    "cam-1/stderr": "4caf4435abe25ed656b463219fbb04e5eddaeae9010acbc4484b15cee01348f5",
+    "cam-1/stdout": "1e8c5687b9e9ceeb0747ee2a986b7b836e5958de0a241f0ff20de17c4e8f11a8",
+    "cam-2/allocations.jsonl": "0529146d43e1f826240fa9790545e81b69b274dca8173d9da598add516320727",
+    "cam-2/buffers.jsonl": "cc6a3b7af208d16104763e16ef44adb94cb71cff08cad87f8258bbe2d88d42e0",
+    "cam-2/events.jsonl": "f5737ae3c6ac20f6dc2b58bf6e2c368ed28cb2f824220b4835b194f10f00eda0",
+    "cam-2/inferior-exit.json": "1a9a9f091cd7f30ecca92e9a28455284a2b0f6a180b102927fcfbf9ce4183373",
+    "cam-2/loaded.json": "199ce73a2b26d093867e3926ee7baa0a12dbea0eb285a9faceb10f70789ff25d",
+    "cam-2/loaded.maps": "1653a17b9bae9b55c7000be24075801e5ba4120f2b5d26530d0274c0b4111031",
+    "cam-2/record.json": "939672fe872e010b599895b3b17daf4638a40335762f0a211c4ef37cb070ffee",
+    "cam-2/stderr": "fbc6520e258918a25ddad826543d47938e336e740460b91f424f9afbd29d07c7",
+    "cam-2/stdout": "42f481e5cce921aa881eace1ecea059167539cdf3b051251de4627e14bc98a9f",
+    "cam-3/allocations.jsonl": "38433db15aa2928b1e6fe0f54293fd3b4ee34eb1b9b9d5e5b10526c89605d46a",
+    "cam-3/buffers.jsonl": "7dc9a54be1ffcc167d12cfa9937264eca51a38acda813a883335333039c244be",
+    "cam-3/events.jsonl": "6ff46764f4ee3ecd157fc64f797d6916695caac23d9a0f1abff397b261bca54f",
+    "cam-3/inferior-exit.json": "1a9a9f091cd7f30ecca92e9a28455284a2b0f6a180b102927fcfbf9ce4183373",
+    "cam-3/loaded.json": "e494be8426333efe14b85229d588394cf20680ace7e88e66fb727dade4da674a",
+    "cam-3/loaded.maps": "1653a17b9bae9b55c7000be24075801e5ba4120f2b5d26530d0274c0b4111031",
+    "cam-3/record.json": "292d5fceea0148bb33a7c47a7cdc2554f2dc18bbd116064211f993ae15ebe0fd",
+    "cam-3/stderr": "6420955045de05da78c0cf77d746ffdd9b44d55d933833f80268b32723c5132e",
+    "cam-3/stdout": "8a62644ea7a0f1da188d6abc94193f9b2ae23c8ba06d675a84f98646d7b384c9",
+    "dma-probe/record.json": "0f0c8bd9abd77afcb461e23c27485aa301acbe9370f98879f1c5a91273e52649",
+    "dma-probe/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "dma-probe/stdout": "f838d484e2dfd604115fe9daca31d822f0432a7ca2b5d915b8271996917fe7df"
+  }
+}

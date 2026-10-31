@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "tag": "nv12-definition-revision",
+  "completed_at": "2026-10-31T07:21:30.075690+00:00",
+  "transport": "cli",
+  "model": "claude-haiku-5-5",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "ad83a9236e41865f18df5adadf2b8ef765f232a8f5c0b123623ac45f12286010",
+  "response_sha256": "c1d863e1bdd15db637ad84631dffaa8155ae1ea789bd663a2d2cd96f1a069e10",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "claude",
+    "executable": "claude.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "--print",
+      "--output-format",
+      "json",
+      "--tools",
+      "",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}",
+      "--no-session-persistence",
+      "--json-schema",
+      "{\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"term\", \"full\", \"definition\"], \"properties\": {\"term\": {\"const\": \"NV12\"}, \"full\": {\"type\": \"string\"}, \"definition\": {\"type\": \"string\", \"maxLength\": 180}}}",
+      "--model",
+      "claude-haiku-5-5",
+      "--effort",
+      "high",
+      "--setting-sources",
+      "project,local"
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "7ac1d6f53228de1e98fc0d89e9bb5f9c5dfb171e965fa863caf6cbb31488492a",
+    "prompt_sha256": "26bf0c8317d0b87840cdf15138d0a85c34284aa3d163c2024fef358f0f405ba7",
+    "provider": {
+      "session_id": "f845e75a-b9e5-47f3-9e19-0c047d17628e",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 15532,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 1337,
+        "output_tokens_details": {
+          "thinking_tokens": 1109
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 15532,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1337,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 15532,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 15532
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 1337,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 15532,
+          "webSearchRequests": 0,
+          "costUSD": 0.151004,
+          "contextWindow": 200000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 1109,
+          "canonicalModel": "claude-haiku-5-5",
+          "provider": "firstParty",
+          "costBasis": "unknown"
+        }
+      }
+    },
+    "stdout_path": "cli/call-pjmfq886.stdout.txt"
+  },
+  "human_review": "pending"
+}

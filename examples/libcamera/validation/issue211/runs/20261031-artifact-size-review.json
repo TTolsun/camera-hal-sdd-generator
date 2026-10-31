@@ -1,0 +1,6 @@
+{
+  "reason": "Full selected measurement JSON and native quote-bound answer metadata are preserved in the Markdown artifact; visible authored content precedes source evidence at character 6047. Default prose limits remain unchanged.",
+  "raw_markdown_chars": 293209,
+  "source_evidence_start": 6047,
+  "new_max_markdown_chars": 310000
+}

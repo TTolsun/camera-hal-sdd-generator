@@ -1,0 +1,25 @@
+No source file named /home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/libcamera/dma_buf_allocator.cpp.
+[0:07:17.237269486] [20955]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-293d751a
+[0:07:17.238928645] [20972] DEBUG Camera camera_manager.cpp:73 Starting camera manager
+[0:07:17.240224956] [20972]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/ipa' to the IPA search path
+[0:07:17.242300303] [20972]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:07:17.243611466] [20972] DEBUG Camera camera_manager.cpp:129 Found listed pipeline handler 'virtual'
+[0:07:17.244476628] [20972] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/linux,cma: No such file or directory
+[0:07:17.245328980] [20972] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/reserved: No such file or directory
+[0:07:17.246014469] [20972] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/system: No such file or directory
+[0:07:17.246639984] [20972] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/udmabuf: No such file or directory
+[0:07:17.247127806] [20972] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+[0:07:17.248047729] [20972]  INFO Pipeline pipeline_handler.cpp:657 libcamera is not installed. Loading platform configuration file from '/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/libcamera/pipeline/virtual/data/virtual.yaml'
+[0:07:17.251486786] [20972]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:07:17.252258140] [20972]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:07:17.253017005] [20972]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:07:17.253616666] [20972]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+[0:07:17.254395899] [20972] DEBUG Camera camera_manager.cpp:164 Pipeline handler "virtual" matched
+[0:07:17.255160716] [20972] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/linux,cma: No such file or directory
+[0:07:17.256297257] [20972] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/reserved: No such file or directory
+[0:07:17.256979754] [20972] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/system: No such file or directory
+[0:07:17.257697988] [20972] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/udmabuf: No such file or directory
+[0:07:17.258236285] [20972] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+[0:07:17.259846162] [20955] DEBUG Camera camera.cpp:1151 streams configuration: (0) 400x300-NV12/SMPTE170M
+[0:07:17.261225725] [20955]  INFO Camera camera.cpp:1216 configuring streams: (0) 400x300-NV12/SMPTE170M
+Can't allocate buffers

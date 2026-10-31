@@ -1,0 +1,41 @@
+# 공식 libcamera cam WSL 가상 카메라 실행 절차
+
+공식 `cam` 앱은 WSL에서 가상 카메라 `Virtual2`(400x300 NV12)로 실행되었고, 세 프로세스가 각각 3프레임을 완료했습니다. 상태는 `observed-wsl-virtual-only`이며, 물리 DMA, 실제 카메라, 제품 앱, 사내 HAL은 이번 결과에 포함되지 않습니다.
+
+## 실행 전 확인
+
+1. 소스를 `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`로 고정하고 수정되지 않은 상태인지 확인합니다. 빌드는 디버그 Meson 빌드를 사용합니다.
+2. WSL의 root 자식 컨텍스트에서 실행합니다. `/dev/udmabuf`는 root만 접근할 수 있으며 권한은 바꾸지 않았습니다. 일반 사용자로 실행하면 errno 13으로 실패합니다.
+3. `--tools`에는 `usr/bin/gdb`와 `usr/share/gdb`가 들어 있는 디렉터리를 지정합니다.
+4. probe는 `dmabuf_probe.c`를 `gcc -std=c11 -Wall -Wextra -Werror -O0 -g`로 컴파일해 준비합니다.
+
+## 실행
+
+5. 아래 명령의 꺾쇠 괄호 값을 실제 경로로 바꿉니다. `--out`에는 새 디렉터리를 지정합니다. 이전 출력 디렉터리는 덮어쓸 수 없습니다.
+
+```
+PYTHONPATH=<generator>/src python3 <generator>/examples/libcamera/runtime/run_cam.py --source <unmodified-source-at-293d751a> --build <its-debug-meson-build> --tools <private-extracted-tools-prefix> --probe <compiled-dmabuf-probe> --out <new-evidence-directory>
+```
+
+타임아웃이나 실패는 성공으로 바꾸지 않습니다. 종료 코드가 0이 아니면 실패로 기록합니다.
+
+## 결과 읽는 법
+
+세 프로세스의 관찰은 서로 독립적입니다. 각 프로세스(pid 434, 449, 464)는 콜백 스레드와 처리 스레드를 따로 기록합니다. 같은 프로세스 안에서 request, sequence, status, tid를 맞추면 sequence 0, 1, 2가 모두 요청 상태 1로 완료되었고, 버퍼 메타데이터에는 버퍼 상태 0이 기록되었습니다. request 값은 같은 프로세스 안에서만 비교합니다.
+
+DMA probe는 `/dev/udmabuf`에서 4096바이트 DMA-BUF를 export하고, mmap 후 CPU 읽기·쓰기 동기화를 수행한 뒤 모든 자원을 닫았습니다. 물리 DMA 검증은 아닙니다.
+
+## 커널 상태
+
+시험 커널에서는 udmabuf allocator를 사용할 수 있었습니다. 시험 중에는 모듈을 설치하지 않았고 Docker는 중지했습니다. 이후 패키지 커널 `6.18.33.2-microsoft-standard-WSL2`로 복원했으며, `.wslconfig`는 없고 allocator는 노출되지 않습니다. 이전 성공은 기본 커널이 이 기능을 지원한다는 뜻이 아닙니다.
+
+공유 커널, `.wslconfig`, 종료 작업은 호스트 관리자의 별도 승인이 필요합니다. 승인 요청에는 정확한 백업과 롤백 계획을 포함하고, Docker를 먼저 중지합니다. `kernel_trial.py`는 자동으로 실행하지 않습니다.
+
+## 검증되지 않은 범위
+
+- 물리 DMA: `not-validated`
+- 실제 카메라, 제품 앱, 사내 HAL: 실행하지 않았습니다.
+- 사람 검토 승인: `pending`이며 검증되지 않았습니다.
+- GDB: 중단점이 실행 시간을 바꾸므로 시간 증명이 아닙니다. 콜백 반환 명령은 관찰하지 않았고, 취소 분기는 실행되지 않았습니다. 취소 횟수 0은 강제로 맞춘 값이 아닙니다.
+
+과거 CPU 전용 probe 기록은 [README.md](README.md)에서 확인합니다. 원본 관찰 기록은 [observation.json](../validation/issue211/runs/20261031-wsl-cam-3/observation.json)에서 확인합니다.

@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "argv": [
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/bin/gdb",
+    "--data-directory=/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/share/gdb",
+    "--batch",
+    "--nx",
+    "--nh",
+    "-q",
+    "-iex",
+    "set auto-load off",
+    "-ex",
+    "set debuginfod enabled off",
+    "-ex",
+    "set pagination off",
+    "-ex",
+    "set startup-with-shell off",
+    "-x",
+    "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/runtime/observe_cam.gdb.py",
+    "--args",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam",
+    "--camera",
+    "Virtual2",
+    "--capture=3",
+    "--stream",
+    "role=video,width=400,height=300,pixelformat=NV12"
+  ],
+  "cwd": "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator",
+  "environment": {
+    "LIBCAMERA_PIPELINES_MATCH_LIST": "virtual",
+    "LIBCAMERA_LOG_LEVELS": "*:DEBUG",
+    "LD_LIBRARY_PATH": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu",
+    "ISSUE211_OUT": "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/validation/issue211/runs/20261031-wsl-cam-2/cam-3",
+    "ISSUE211_SOURCE": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source"
+  },
+  "timeout_seconds": 45,
+  "started_at": "2026-10-31T06:19:36.646790+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "process-group-empty",
+  "pid": 478,
+  "group_absent": true,
+  "elapsed_seconds": 0.6216553320000031,
+  "files": {
+    "allocations.jsonl": "3f36ba29e33b153b2666d9523de85cff800aeb9f36bf5b02888ee099ef542712",
+    "events.jsonl": "449d61fb5e3814e257485e32897c4047fbd7b7dda9e29a497ccc7a7ff8b26438",
+    "inferior-exit.json": "1a9a9f091cd7f30ecca92e9a28455284a2b0f6a180b102927fcfbf9ce4183373",
+    "loaded.json": "f8241813551979a53f96b9be21520888b8c6eb0574ee975cc8822610400bfe7f",
+    "loaded.maps": "1653a17b9bae9b55c7000be24075801e5ba4120f2b5d26530d0274c0b4111031",
+    "stderr": "46d520918e7ad9aa7ffdfa7b86308d85ea3639a5255971fb2f1ae3ad06730271",
+    "stdout": "c5194fbe62e716648e0f8380a205fcc690b9779b83790335580c6336c03e6087"
+  }
+}

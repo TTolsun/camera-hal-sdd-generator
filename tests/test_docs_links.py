@@ -22,6 +22,11 @@ def _docs():
             continue
         if rel.parts[0] == "sdd" or path.name == "site-intro.md":   # 생성 원고, 게시 사이트 기준 링크
             continue
+        # Immutable execution archives include rejected drafts and native CLI
+        # prompts. Their relative links target the intended output location,
+        # not the archive directory. Keep checking the actual runtime guide.
+        if rel.parts[:3] == ("examples", "libcamera", "validation") and "runs" in rel.parts[4:]:
+            continue
         yield path
 
 
@@ -61,6 +66,18 @@ def test_중복_제목은_이미_쓴_id_와_겹치지_않게_번호를_붙인다
     page = tmp_path / "p.md"
     page.write_text("## A\n\n## A\n\n## A 1\n\n## A\n", encoding="utf-8")
     assert _anchors(page) == {"a", "a-1", "a-1-1", "a-2"}
+
+
+def test_실행_원본만_제외하고_실제_안내서는_검사한다(tmp_path, monkeypatch):
+    monkeypatch.setitem(globals(), 'ROOT', tmp_path)
+    names = ['examples/libcamera/runtime/OFFICIAL_CAM.md',
+             'examples/libcamera/validation/issue211/README.md',
+             'examples/libcamera/validation/issue211/runs/rejected/OFFICIAL_CAM.md']
+    for name in names:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('[link](missing.md)', encoding='utf-8')
+    assert {p.relative_to(tmp_path).as_posix() for p in _docs()} == set(names[:2])
 
 
 @pytest.mark.parametrize("path,target", list(_links()), ids=lambda v: str(v)[-60:])

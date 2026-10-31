@@ -1,0 +1,10 @@
+{"event":"provider-open","provider":"/dev/udmabuf","result":3,"errno":0}
+{"event":"allocate","result":5,"errno":0,"backing_fd":4,"dmabuf_fd":5,"size":4096}
+{"event":"mmap","result":0,"errno":0}
+{"event":"sync-start","result":0,"errno":0,"flags":3,"retry":false}
+{"event":"cpu-access","result":0,"errno":0,"bytes":4096,"checksum":522240}
+{"event":"sync-end","result":0,"errno":0,"flags":7,"retry":false}
+{"event":"munmap","result":0,"errno":0}
+{"event":"close-dmabuf","result":0,"errno":0}
+{"event":"close-backing","result":0,"errno":0}
+{"event":"close-provider","result":0,"errno":0}

@@ -1,0 +1,5 @@
+<!-- system -->
+Return only the requested short text. Do not use tools.
+
+<!-- user -->
+Return exactly: issue211 CLI preflight

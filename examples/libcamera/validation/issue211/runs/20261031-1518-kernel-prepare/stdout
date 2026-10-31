@@ -1,0 +1,25 @@
+/home/baboess/.cache/issue211-kernel-52ZYBZZe
+Get:1 http://archive.ubuntu.com/ubuntu resolute/main amd64 flex amd64 2.6.4-8.2build2 [300 kB]
+Get:2 http://archive.ubuntu.com/ubuntu resolute/main amd64 gdb amd64 17.1-2ubuntu1 [4173 kB]
+Get:3 http://archive.ubuntu.com/ubuntu resolute/main amd64 libelf-dev amd64 0.194-4 [116 kB]
+Get:4 http://archive.ubuntu.com/ubuntu resolute/main amd64 libfl2 amd64 2.6.4-8.2build2 [9936 B]
+Get:5 http://archive.ubuntu.com/ubuntu resolute/main amd64 m4 amd64 1.4.21-1 [219 kB]
+Get:6 http://archive.ubuntu.com/ubuntu resolute/main amd64 strace amd64 6.19+ds-0ubuntu5 [678 kB]
+Get:7 http://archive.ubuntu.com/ubuntu resolute/universe amd64 pahole amd64 1.31-2ubuntu1 [111 kB]
+Get:8 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 bison amd64 2:3.8.2+dfsg-1ubuntu0.26.04.1 [748 kB]
+Get:9 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 libssl-dev amd64 3.5.5-1ubuntu3.7 [2937 kB]
+Fetched 9290 kB in 3s (2921 kB/s)
+21f28efed81a1c097d249917000eed9ca70e8f90bfeebc687ea9b559d5310906  kernel.tar.gz
+  HOSTCC  scripts/basic/fixdep
+  HOSTCC  scripts/kconfig/conf.o
+  HOSTCC  scripts/kconfig/confdata.o
+  HOSTCC  scripts/kconfig/expr.o
+  LEX     scripts/kconfig/lexer.lex.c
+  YACC    scripts/kconfig/parser.tab.[ch]
+  HOSTCC  scripts/kconfig/lexer.lex.o
+  HOSTCC  scripts/kconfig/menu.o
+  HOSTCC  scripts/kconfig/parser.tab.o
+  HOSTCC  scripts/kconfig/preprocess.o
+  HOSTCC  scripts/kconfig/symbol.o
+  HOSTCC  scripts/kconfig/util.o
+  HOSTLD  scripts/kconfig/conf

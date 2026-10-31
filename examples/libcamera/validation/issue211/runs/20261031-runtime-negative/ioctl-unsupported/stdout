@@ -1,0 +1,4 @@
+{"event":"provider-open","provider":"/dev/null","result":3,"errno":0}
+{"event":"allocate","result":-1,"errno":25,"backing_fd":4,"dmabuf_fd":-1,"size":4096}
+{"event":"close-backing","result":0,"errno":0}
+{"event":"close-provider","result":0,"errno":0}

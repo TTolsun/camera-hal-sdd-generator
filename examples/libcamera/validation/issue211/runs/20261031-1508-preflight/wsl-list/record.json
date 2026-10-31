@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "argv": [
+    "wsl",
+    "--list",
+    "--verbose"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 60,
+  "started_at": "2026-10-31T06:05:38.435090+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "parent-reaped-windows",
+  "pid": 3372,
+  "elapsed_seconds": 0.1313796000322327,
+  "files": {
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "1185fdb7a5353315d38c3f3b1ec55658ff9cf2de9a6c6c2b97a6977a94a6a9f8"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "argv": [
+    "wsl",
+    "-d",
+    "Ubuntu",
+    "--",
+    "bash",
+    "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/validation/issue211/prepare_runtime.sh"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 900,
+  "started_at": "2026-10-31T06:08:55.022511+00:00",
+  "timed_out": false,
+  "exit_code": 127,
+  "cleanup": "parent-reaped-windows",
+  "pid": 23140,
+  "elapsed_seconds": 3.3675064999843016,
+  "files": {
+    "stderr": "b947739a532cf2492259527d5676b1904304cd415b62041219ee9502b3c2a2ce",
+    "stdout": "3395ea9f8c7490ffe2824748eba2937738dc39833db49c11bec5da19548b9323"
+  }
+}

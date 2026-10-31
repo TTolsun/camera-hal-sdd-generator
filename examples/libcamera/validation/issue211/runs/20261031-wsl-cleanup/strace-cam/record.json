@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "argv": [
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/bin/strace",
+    "-f",
+    "-yy",
+    "-s",
+    "256",
+    "-e",
+    "trace=openat,ioctl,mmap,munmap,close,memfd_create,fcntl",
+    "-o",
+    "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/validation/issue211/runs/20261031-wsl-cleanup/official-cam.strace",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam",
+    "--camera",
+    "Virtual2",
+    "--capture=3",
+    "--stream",
+    "role=video,width=400,height=300,pixelformat=NV12"
+  ],
+  "cwd": "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator",
+  "environment": {
+    "LD_LIBRARY_PATH": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu",
+    "LIBCAMERA_PIPELINES_MATCH_LIST": "virtual",
+    "LIBCAMERA_LOG_LEVELS": "*:DEBUG"
+  },
+  "timeout_seconds": 20,
+  "started_at": "2026-10-31T06:20:26.238983+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "process-group-empty",
+  "pid": 420,
+  "group_absent": true,
+  "elapsed_seconds": 0.3747251970000036,
+  "files": {
+    "stderr": "6755f811e8ffa78589c8d9cb82699482a36224e0535de82b9b5b9cd9d72e6aa0",
+    "stdout": "353a2d2a1d48086b281e315d9521a003bd697c85e9994457c1460db79c522fec"
+  }
+}

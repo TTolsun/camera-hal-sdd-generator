@@ -1,0 +1,126 @@
+schema: 1
+products:
+- id: libcamera
+  scope: project
+  release: 212c689fcf2450bbfbaab25c7472895ac277b5d6
+  configuration: public-source-documentation
+  simulation: false
+  as_of: '2026-10-30'
+  features:
+  - id: camera-stack
+    need: Developers need to handle complex camera hardware and image control algorithms.
+    usage: Public project adoption and integration scope review.
+    availability: offered
+    conditions: &id001
+    - Linux-based systems
+    - Kernel drivers and the relevant pipeline implementation are required.
+    exclusions:
+    - Commercial device support and measured performance are unconfirmed.
+    implementation:
+    - what
+    - problem
+    - for
+    - stack
+    evidence:
+    - official-stack
+    claims:
+    - kind: structural
+      evidence:
+      - official-stack
+    - kind: support
+      evidence:
+      - official-stack
+- id: libcamera-callback-probe
+  scope: project
+  release: 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+  configuration: wsl2-virtual2-cpu-memfd
+  simulation: true
+  as_of: '2026-10-31'
+  features:
+  - id: callback-observation
+    need: Observe application callback entry/return markers, connection delivery thread
+      and stop cancellation.
+    usage: Public virtual CPU-only runtime probe; not product qualification.
+    availability: unknown
+    conditions: &id002
+    - libcamera source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+    - Ubuntu WSL2 Virtual2 with CPU memfd buffers and eventfd test fences
+    - DMA provider and sync errors retained; no physical/internal HAL validation
+    exclusions:
+    - DMA synchronisation was not validated; actual sync/provider ERROR lines are
+      retained.
+    - Physical camera/sensor/ISP capture was not validated.
+    - Other applications, other connection configurations, other devices and internal
+      Camera HAL were not validated.
+    - RequestComplete/FrameSuccess observations here do not certify DMA correctness
+      or real capture.
+    implementation: []
+    evidence:
+    - callback-run
+    claims: []
+- id: libcamera-official-cam-trial
+  scope: project
+  release: 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+  configuration: wsl2-virtual2-official-cam-udmabuf
+  simulation: true
+  as_of: '2026-10-31'
+  features:
+  - id: wsl-virtual-capture
+    need: Observe official virtual completion and CPU DMA-BUF access
+    usage: Source-pinned public virtual trial
+    availability: unknown
+    conditions: &id003
+    - Source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+    - WSL2 custom UDMABUF kernel, root child, Virtual2 400x300 NV12
+    - GDB observation; no timing/return/physical/internal HAL qualification
+    exclusions:
+    - Physical DMA/camera, other production applications and internal HAL not validated
+    implementation: []
+    evidence:
+    - official-cam-run
+    claims: []
+evidence:
+- id: official-stack
+  type: project-document
+  supplier: libcamera official upstream; CC-BY-SA-4.0; URL in local material
+  version: 212c689fcf2450bbfbaab25c7472895ac277b5d6
+  date: '2026-10-30'
+  valid_until: '2026-10-30'
+  product: libcamera
+  release: 212c689fcf2450bbfbaab25c7472895ac277b5d6
+  configuration: public-source-documentation
+  feature: camera-stack
+  conditions: *id001
+  availability: offered
+  file: product-evidence/libcamera-stack.txt
+  sha256: fdd39a9c11328e6bb549203a2395b3f9331fa15d5e2da711b703643e299f8fc0
+- id: callback-run
+  type: measurement
+  supplier: Public source-pinned libcamera callback probe; raw native events and errors
+    retained
+  version: 59b73503b14c9bdddeb2513982fae0a59af012dd26183e34c35fc34ff8c1c4ac
+  date: '2026-10-31'
+  valid_until: '2026-10-31'
+  product: libcamera-callback-probe
+  release: 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+  configuration: wsl2-virtual2-cpu-memfd
+  feature: callback-observation
+  conditions: *id002
+  availability: unknown
+  file: product-evidence/callback-observation.json
+  sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+- id: official-cam-run
+  type: measurement
+  supplier: Source-pinned official cam trial; raw events, GDB, syscall and cleanup
+    records
+  version: 051c8bd9f7c693a474384fa63c96dcfaa0e80cd83506b375e2f89193e6a25b91
+  date: '2026-10-31'
+  valid_until: '2026-10-31'
+  product: libcamera-official-cam-trial
+  release: 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+  configuration: wsl2-virtual2-official-cam-udmabuf
+  feature: wsl-virtual-capture
+  conditions: *id003
+  availability: unknown
+  file: product-evidence/official-cam-observation.json
+  sha256: 6724319768e46327e26f324d536ccaf22e9b71852e055a7b3c91318f0c11a7f1

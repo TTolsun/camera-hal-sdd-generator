@@ -1,0 +1,11 @@
+[0:00:09.197634261] [459]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-293d751a
+[0:00:09.198101773] [460]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '/home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/ipa' to the IPA search path
+[0:00:09.240200485] [460] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+[0:00:09.240519416] [460]  INFO Pipeline pipeline_handler.cpp:657 libcamera is not installed. Loading platform configuration file from '/home/baboess/.cache/camera-hal-sdd-issue193-293/source/src/libcamera/pipeline/virtual/data/virtual.yaml'
+[0:00:09.241476580] [460]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:00:09.241519389] [460]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:00:09.241527301] [460]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:00:09.241533563] [460]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+[0:00:09.241549136] [460] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+[0:00:09.242090492] [459]  INFO Camera camera.cpp:1216 configuring streams: (0) 400x300-NV12/SMPTE170M
+Can't allocate buffers

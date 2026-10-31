@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "tag": "official-cam-runbook",
+  "completed_at": "2026-10-31T07:08:49.822450+00:00",
+  "transport": "cli",
+  "model": "claude-haiku-5-5",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "876098fa0643cf611f3fd12bc6efcd60b93a0f9202670ea86fdd987bad477b48",
+  "response_sha256": "4af02d90e2d56739e9abb6acafe36e4df00461813afc3b209fe54d37c3221623",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "claude",
+    "executable": "claude.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "--print",
+      "--output-format",
+      "json",
+      "--tools",
+      "",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}",
+      "--no-session-persistence",
+      "--json-schema",
+      "{\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"markdown\"], \"properties\": {\"markdown\": {\"type\": \"string\", \"maxLength\": 3500}}}",
+      "--model",
+      "claude-haiku-5-5",
+      "--effort",
+      "high",
+      "--setting-sources",
+      "project,local"
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "d80b1530da3f40845ac973df9159087c7321c88527de07ef3c0609876e281965",
+    "prompt_sha256": "4d995f56fdae4e3e5cd574684774b85f90600bdd910cde9a5f1744d4070c8669",
+    "provider": {
+      "session_id": "934356ba-af27-4509-b6cb-089b1b972ea1",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 20664,
+        "cache_read_input_tokens": 8951,
+        "output_tokens": 12775,
+        "output_tokens_details": {
+          "thinking_tokens": 11155
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 20664,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 12775,
+            "cache_read_input_tokens": 8951,
+            "cache_creation_input_tokens": 20664,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 20664
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 12775,
+          "cacheReadInputTokens": 8951,
+          "cacheCreationInputTokens": 20664,
+          "webSearchRequests": 0,
+          "costUSD": 0.42261020000000005,
+          "contextWindow": 200000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 11155,
+          "canonicalModel": "claude-haiku-5-5",
+          "provider": "firstParty",
+          "costBasis": "unknown"
+        }
+      }
+    },
+    "stdout_path": "cli/call-4gtb1csj.stdout.txt"
+  },
+  "human_review": "pending"
+}

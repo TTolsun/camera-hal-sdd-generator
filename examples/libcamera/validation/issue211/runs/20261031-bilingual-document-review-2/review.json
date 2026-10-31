@@ -1,0 +1,18 @@
+{
+  "review": {
+    "verdict": "needs-revision",
+    "findings": [
+      "English: \u201cThis configuration is a hypothetical trial configuration\u201d misstates an observed virtual test as hypothetical. Describe it as the simulation-marked virtual test configuration that was actually run.",
+      "English: \u201cthree records were logged: SYNC_END return value 0, munmap return value 0, and fd close return value 0\u201d obscures the number of close operations. The timeout record contains three successful fd closes, in addition to successful sync-end and munmap operations. Preserve that count to match the Korean and runtime evidence.",
+      "Reproduction scope: \u201c\ubcc4\ub3c4\ub85c \uc2b9\uc778\ub41c \uc9c0\uc6d0 \ucee4\ub110\uc744 \uc900\ube44\ud558\uace0 \ubd80\ud305\ud55c \ub4a4 \uc7a5\uce58 \uc811\uadfc\uc744 \uba3c\uc800 \ud655\uc778\ud574\uc57c \ud569\ub2c8\ub2e4\u201d and its English equivalent omit contract prerequisites. Before preparation, include investigation and selection of the kernel Kconfig, dependencies, available modules, and allocator; prioritize an environment that does not affect existing WSL/Docker; and specify impacts and recovery procedures before separately approving any covered host changes. Do not imply that adding a WSL distribution isolates the kernel.",
+      "English: \u201cSource evidence\u201d is followed by no source excerpts or evidence links, while the Korean document provides them. Supply equivalent source and runtime evidence references so English readers can verify the same claims and limitations."
+    ],
+    "reviewed_scope": "Reviewed the Korean document and supplied English against the pinned source windows, public measurement material, execution contract, and product configuration. Checked factual entailment, frame joins, observation limits, cleanup results, reproduction prerequisites, and cross-language consistency. This is an automatic review, not human approval.",
+    "unreviewed": [
+      "The linked reproduction procedure and raw evidence beyond the supplied public windows were not available for review."
+    ]
+  },
+  "document_sha256": "1d9db50a8ddbd3ae4ad2955864211948951d1d5fa299b4ce25f803a143276d51",
+  "material_sha256": "6724319768e46327e26f324d536ccaf22e9b71852e055a7b3c91318f0c11a7f1",
+  "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-bilingual-document-review-2\\prompts\\calls\\65c06c36541742f29e5b47bb007ee2a8\\001.receipt.json"
+}

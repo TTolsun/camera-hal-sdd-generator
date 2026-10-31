@@ -1,0 +1,11 @@
+{
+  "review": {
+    "verdict": "pass",
+    "findings": [],
+    "scope": "Reviewed the Korean definitions and English catalogue pairs against the supplied source excerpts and summary for entailment, precision, comprehension, and translation equivalence. The definitions do not claim an expansion of NV12, physical DMA proof from UDMABUF, or independent kernels for WSL distributions. This pass is not human approval."
+  },
+  "sources_sha256": "d28716b2d9eef85d5c3cac77d92dd3cd917ac1a767e66de0409ac66732a949c2",
+  "definitions_sha256": "a203b29f4486519a113a1f26760e7094a469867ba97d09ee75b24790bc26f86e",
+  "english_sha256": "7cf35076e685cf6c46095e852065746dd3daee01144c1d075f7b091d81b0bed8",
+  "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-glossary-bilingual-review\\prompts\\calls\\373d89779f99462ca9ede668b21b8445\\001.receipt.json"
+}

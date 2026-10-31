@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "kernel": "6.18.33.2-microsoft-standard-WSL2-issue211",
+  "results": [],
+  "binaries": {
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam": "1ceed18da065a383e2f573ba49e9caea77033abd6830a7ec051e3681dabc79d2",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so": "2423e936a6ffde0fa533c76a4738f748f77b4535c881c12a616dfeec50a940eb",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so": "441f04294e61632d080f4bb55fb38ce787bb8af173a4b6d55d7c05f0f04fd18c",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/dmabuf-probe-2": "531e499f094cca32f03e354afe2aa5a8d48b425916cbd7be2ad7e02306c58512"
+  },
+  "human_review": "pending",
+  "physical_dma": "not-validated",
+  "physical_camera": "not-run",
+  "production_application": "not-run",
+  "internal_hal": "not-run",
+  "status": "incomplete",
+  "failure": "Runtime command failed or cleanup is incomplete",
+  "artifacts": {
+    "dma-probe/record.json": "d9998f6c20c86b9e13b64daf88fb346e37ba0d68eaa860cacf64be9083ab6f30",
+    "dma-probe/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "dma-probe/stdout": "17bdb70aaf407e17eb61c7ba9bd6f038ebfef2400381d266f0cf675ab61c102a"
+  }
+}

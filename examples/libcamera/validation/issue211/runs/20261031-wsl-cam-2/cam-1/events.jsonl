@@ -1,0 +1,6 @@
+{"cookie": 0, "location": "CameraSession::requestComplete", "pid": 458, "point": "callback-entry", "request": "0x5555556794f0", "sequence": 0, "status": 1, "tid": 461}
+{"cookie": 0, "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535", "pid": 458, "point": "frame-processed", "request": "0x5555556794f0", "sequence": 0, "status": 1, "tid": 458}
+{"cookie": 0, "location": "CameraSession::requestComplete", "pid": 458, "point": "callback-entry", "request": "0x5555556793b0", "sequence": 1, "status": 1, "tid": 461}
+{"cookie": 0, "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535", "pid": 458, "point": "frame-processed", "request": "0x5555556793b0", "sequence": 1, "status": 1, "tid": 458}
+{"cookie": 0, "location": "CameraSession::requestComplete", "pid": 458, "point": "callback-entry", "request": "0x555555679450", "sequence": 2, "status": 1, "tid": 461}
+{"cookie": 0, "location": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/apps/cam/camera_session.cpp:535", "pid": 458, "point": "frame-processed", "request": "0x555555679450", "sequence": 2, "status": 1, "tid": 458}

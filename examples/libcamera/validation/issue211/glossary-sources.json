@@ -1,0 +1,10 @@
+{
+  "GNU": {"url": "https://www.gnu.org/", "acronym_url": "https://www.gnu.org/gnu/pronunciation.html", "excerpt": "GNU is an operating system that is free software. GNU is a recursive acronym for GNU's Not Unix."},
+  "GCC": {"url": "https://gcc.gnu.org/", "excerpt": "GCC, the GNU Compiler Collection. The GNU Compiler Collection includes front ends for C, C++"},
+  "GDB": {"url": "https://www.sourceware.org/gdb/", "excerpt": "GDB: The GNU Project Debugger. Make your program stop on specified conditions. Examine what has happened, when your program has stopped."},
+  "NV12": {"url": "https://docs.kernel.org/userspace-api/media/v4l/pixfmt-yuv-planar.html", "excerpt": "V4L2_PIX_FMT_NV12: 8 bits per component; 4:2:0; chroma order Cb, Cr; contiguous, linear. First plane luma; second interleaved chroma."},
+  "PR": {"url": "https://docs.github.com/en/pull-requests/reference/pull-requests", "excerpt": "Pull requests are proposals to merge code changes into a project."},
+  "UDMABUF": {"url": "https://github.com/microsoft/WSL2-Linux-Kernel/blob/c21a03b2943d147c280bdf32530d4fe6badfd6bd/drivers/dma-buf/Kconfig", "excerpt": "userspace dmabuf misc driver. A driver to let userspace turn memfd regions into dma-bufs."},
+  "VM": {"url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-a-virtual-machine", "summary": "A VM is a software-based computer running its own OS and apps. Virtualized resources come from a physical host, which can be a personal device; the definition is not limited to cloud servers."},
+  "WSL": {"url": "https://learn.microsoft.com/en-us/windows/wsl/about", "excerpt": "Windows Subsystem for Linux (WSL) is a feature of Windows that allows you to run a Linux environment on your Windows machine"}
+}

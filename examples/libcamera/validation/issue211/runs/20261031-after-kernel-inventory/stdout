@@ -1,0 +1,73 @@
+2026-10-31T06:19:00+00:00
+Linux localhost 6.18.33.2-microsoft-standard-WSL2-issue211 #1 SMP PREEMPT_DYNAMIC Sat Oct 31 15:15:48 KST 2026 x86_64 GNU/Linux
+uid=1000(baboess) gid=1000(baboess) groups=1000(baboess),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),100(users)
+PRETTY_NAME="Ubuntu 26.04 LTS"
+NAME="Ubuntu"
+VERSION_ID="26.04"
+VERSION="26.04 LTS (Resolute Raccoon)"
+VERSION_CODENAME=resolute
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=resolute
+LOGO=ubuntu-logo
+Linux version 6.18.33.2-microsoft-standard-WSL2-issue211 (baboess@localhost) (gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, GNU ld (GNU Binutils for Ubuntu) 2.46) #1 SMP PREEMPT_DYNAMIC Sat Oct 31 15:15:48 KST 2026
+CONFIG_SHMEM=y
+CONFIG_MMU=y
+CONFIG_MMU_GATHER_TABLE_FREE=y
+CONFIG_MMU_GATHER_RCU_TABLE_FREE=y
+CONFIG_MMU_GATHER_MERGE_VMAS=y
+CONFIG_MMU_LAZY_TLB_REFCOUNT=y
+CONFIG_MODULES_USE_ELF_RELA=y
+CONFIG_MODULES=y
+CONFIG_MODVERSIONS=y
+# CONFIG_MODULE_SIG is not set
+CONFIG_MODULES_TREE_LOOKUP=y
+CONFIG_MMU_NOTIFIER=y
+# CONFIG_CMA is not set
+CONFIG_MEMFD_CREATE=y
+CONFIG_DMA_SHARED_BUFFER=y
+CONFIG_USB_VIDEO_CLASS=m
+CONFIG_USB_VIDEO_CLASS_INPUT_EVDEV=y
+CONFIG_USBIP_VHCI_HCD=m
+CONFIG_UDMABUF=y
+# CONFIG_DMABUF_HEAPS is not set
+CONFIG_DEBUG_INFO_BTF=y
+CONFIG_DEBUG_INFO_BTF_MODULES=y
+Module                  Size  Used by
+ls: cannot access '/dev/dma_heap': No such file or directory
+ls: cannot access '/dev/dma_heap/*': No such file or directory
+ls: cannot access '/dev/video*': No such file or directory
+ls: cannot access '/dev/media*': No such file or directory
+ls: cannot access '/lib/modules/6.18.33.2-microsoft-standard-WSL2-issue211': No such file or directory
+crw-rw---- 1 root kvm 10, 258 Oct 31 15:18 /dev/udmabuf
+/usr/bin/meson
+/usr/bin/ninja
+/usr/bin/g++
+/usr/bin/gcc
+/usr/bin/make
+/usr/bin/bc
+SOURCE:/home/baboess/work/libcamera
+2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f
+origin	https://gitlab.freedesktop.org/camera/libcamera.git (fetch)
+origin	https://gitlab.freedesktop.org/camera/libcamera.git (push)
+/home/baboess/work/libcamera/build-full/src/apps/cam/cam
+SOURCE:/home/baboess/work/camera-sdd-goal-20261027
+e117198c015057761bb0bbaa85f963c41ce412d7
+origin	https://gitlab.freedesktop.org/camera/libcamera.git (fetch)
+origin	https://gitlab.freedesktop.org/camera/libcamera.git (push)
+/home/baboess/work/camera-sdd-goal-20261027/build-goal-all/src/apps/cam/cam
+SOURCE:/home/baboess/.cache/camera-hal-sdd-issue193-293/source
+293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+origin	https://gitlab.freedesktop.org/camera/libcamera.git (fetch)
+origin	https://gitlab.freedesktop.org/camera/libcamera.git (push)
+/home/baboess/.cache/camera-hal-sdd-issue193-293/source/build-followup/src/apps/cam/cam
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs            16G     0   16G   0% /tmp
+16
+               total        used        free      shared  buff/cache   available
+Mem:           31753         883       29803           3        1379       30870
+Swap:           8192           0        8192

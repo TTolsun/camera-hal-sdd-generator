@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "argv": [
+    "git",
+    "ls-remote",
+    "https://gitlab.freedesktop.org/camera/libcamera.git",
+    "refs/heads/master"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 90,
+  "started_at": "2026-10-31T07:46:54.765719+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "parent-reaped-windows",
+  "pid": 55812,
+  "elapsed_seconds": 2.5016026999801397,
+  "files": {
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "1ff759bc9dcbafb38607efabba66ab8cc18a830aa87cda40682d23188e029747"
+  }
+}

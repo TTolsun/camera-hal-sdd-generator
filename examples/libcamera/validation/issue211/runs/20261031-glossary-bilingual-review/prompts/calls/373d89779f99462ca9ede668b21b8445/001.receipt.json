@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "tag": "glossary-grounding",
+  "completed_at": "2026-10-31T07:40:41.838869+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "4c804dd9ae7bb6d209343ac7a5a01df8979a742a39ac00b17eddb3895f4e4562",
+  "response_sha256": "421e27051e970041e02fe0738dff0f169c68ee54494a358ed38ca2d24936fdde",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "2f50ca282d81b9b6726f799d300cfd83e718bf5794981e77bc3381befaf2eb01",
+    "prompt_sha256": "99362c78aa9c285035d645d98ce78b3c669fd2d16a32ea49642360862d766007",
+    "provider": {
+      "thread_id": "01a190e7-4021-76e2-8b3c-abd585ad9e9e",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 14750,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 139,
+        "reasoning_output_tokens": 51
+      }
+    },
+    "stdout_path": "cli/call-rq6fufjc.stdout.txt",
+    "native_schema_sha256": "7fd5f48b45289b4f663cca2b9f1203ee5652b0770d5736ffc662fc5caa13a00f"
+  },
+  "human_review": "pending"
+}

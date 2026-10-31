@@ -1,0 +1,25 @@
+{
+  "system": "Write one precise Korean glossary definition from the primary excerpt. No tools. Return JSON.",
+  "user": "Revise NV12. State 성분당 8비트, 4:2:0, first plane Y luma and second plane Cb/Cr alternating interleaved chroma, linear contiguous memory. Do not merely say Cb/Cr order; explain alternating storage. One or two short complete Korean sentences, no hardware or performance claim. NV12 is an identifier, no invented expansion.\n{\"url\": \"https://docs.kernel.org/userspace-api/media/v4l/pixfmt-yuv-planar.html\", \"excerpt\": \"V4L2_PIX_FMT_NV12: 8 bits per component; 4:2:0; chroma order Cb, Cr; contiguous, linear. First plane luma; second interleaved chroma.\"}",
+  "response_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "term",
+      "full",
+      "definition"
+    ],
+    "properties": {
+      "term": {
+        "const": "NV12"
+      },
+      "full": {
+        "type": "string"
+      },
+      "definition": {
+        "type": "string",
+        "maxLength": 180
+      }
+    }
+  }
+}

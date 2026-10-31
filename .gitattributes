@@ -2,3 +2,5 @@
 *.sh text eol=lf
 # Preserve captured evidence inputs byte-for-byte, including original CRLF.
 docs/inhouse/records/goal-138-140/inputs/** -text whitespace=cr-at-eol
+# Raw issue211 stdout/stderr, receipts and archived inputs retain their hashes.
+examples/libcamera/validation/issue211/runs/** -text -whitespace

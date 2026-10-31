@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "terms"
+  ],
+  "properties": {
+    "terms": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "term",
+          "full",
+          "definition"
+        ],
+        "properties": {
+          "term": {
+            "enum": [
+              "GNU",
+              "GCC",
+              "GDB",
+              "NV12",
+              "PR",
+              "UDMABUF",
+              "VM",
+              "WSL"
+            ]
+          },
+          "full": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "string",
+            "maxLength": 180
+          }
+        }
+      }
+    }
+  }
+}

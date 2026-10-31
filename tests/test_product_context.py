@@ -146,6 +146,21 @@ def test_unsupported_performance_comparison_and_offering_guarantees_rejected(pro
     validate_text(topic, [{'text': '코드에 구현되어 있지만 제품 제공 여부는 확인되지 않았습니다.'}])
 
 
+def test_recorded_timeout_is_not_a_capture_performance_claim():
+    topic = {'_product_context': {'allowed_claims': [], 'availability': 'unknown'},
+             'sources': [{'kind': 'product', 'product_record': {'type': 'measurement'},
+                          'text': '{"timeout_probe":{"seconds":0.5,"timed_out":true}}'}]}
+    validate_text(topic, [{'text': '0.5초 시간 초과 시험은 실패로 기록되었습니다.'}])
+    validate_text(topic, [{'text': '시간 제한 500ms로 실행한 시험입니다.'}])
+    for text in ('9초 시간 초과 시험입니다.', '0.5초로 처리합니다.', '0.5fps 시간 초과 시험입니다.',
+                 '시간 제한 0.5초이며 30fps로 처리합니다.'):
+        with pytest.raises(ValueError, match='performance number'):
+            validate_text(topic, [{'text': text}])
+    topic['sources'][0]['product_record']['type'] = 'specification'
+    with pytest.raises(ValueError, match='performance number'):
+        validate_text(topic, [{'text': '0.5초 시간 초과 시험입니다.'}])
+
+
 def test_material_record_keeps_origin_and_does_not_link_to_source_git_host(products):
     cfg, _, sections, _ = products
     source = bind(cfg, sections)[0]['design_topics'][0]['sources'][1]

@@ -1,0 +1,2 @@
+오류: 설계 항목 검증 실패:
+official-cam-validation: official-cam-validation/boundary/prerequisites: LLM 답변 검증 실패: boundary: 답변 계약 검사: 이 분할 질문에 근거가 있는 동작 또는 계약 답변이 필요합니다.

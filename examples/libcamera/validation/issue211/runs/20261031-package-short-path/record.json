@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "argv": [
+    "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_inhouse_package.py::test_real_import_runs_task_navigation",
+    "-q",
+    "--basetemp",
+    "C:\\Users\\baboe\\AppData\\Local\\Temp\\i211-short-1"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 600,
+  "started_at": "2026-10-31T06:46:39.797647+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "parent-reaped-windows",
+  "pid": 30468,
+  "elapsed_seconds": 25.584697399986908,
+  "files": {
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "f28bd8d7d7881161a1753219ccf526cd7bf851bceff063c4512eb821b372175e"
+  }
+}

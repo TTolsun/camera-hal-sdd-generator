@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a190e7-4021-76e2-8b3c-abd585ad9e9e"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"verdict\":\"pass\",\"findings\":[],\"scope\":\"Reviewed the Korean definitions and English catalogue pairs against the supplied source excerpts and summary for entailment, precision, comprehension, and translation equivalence. The definitions do not claim an expansion of NV12, physical DMA proof from UDMABUF, or independent kernels for WSL distributions. This pass is not human approval.\"}"}}
+{"type":"turn.completed","usage":{"input_tokens":14750,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":139,"reasoning_output_tokens":51}}
