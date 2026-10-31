@@ -1756,69 +1756,96 @@ sections:
     topic: value
     kind: flow
     title: 카메라 스택의 네 계층
-    question: 애플리케이션에서 카메라 하드웨어까지 어떤 계층을 지납니까? 지원 기종이나 성능을 보장하는 그림은 아닙니다.
+    question: 애플리케이션부터 커널 드라이버까지 네 소프트웨어 계층은 각각 어떤 역할을 맡습니까? 카메라 하드웨어 자체, 지원 기종, 성능은 이 그림의 범위가 아닙니다.
     nodes:
     - id: apps
-      label: 애플리케이션·상위 프레임워크
-      label_en: Applications and upper-level frameworks
+      label: '애플리케이션·상위 프레임워크: 프로젝트 범위 밖, libcamera 프레임워크 또는 어댑테이션을 기반으로 사용'
+      label_en: 'Applications and upper-level frameworks: outside project scope, based on the libcamera framework or adaptation'
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: The applications and upper level frameworks are based on the
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: libcamera framework or libcamera adaptation
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: and are outside of
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - id: adaptation
-      label: 어댑테이션 (V4L2 호환·GStreamer·Android HAL)
-      label_en: Adaptation (V4L2 compatibility, GStreamer, Android HAL)
+      label: '어댑테이션 (V4L2 호환·GStreamer·Android HAL): libcamera를 다른 프레임워크에 연결'
+      label_en: 'Adaptation (V4L2 compatibility, GStreamer, Android HAL): connects libcamera to other frameworks'
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: The libcamera adaptation is an umbrella term designating the
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: components that interface to libcamera in other frameworks.
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: Notable examples are a V4L2 compatibility layer, a gstreamer
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - id: framework
-      label: libcamera 프레임워크
-      label_en: libcamera framework
+      label: 'libcamera 프레임워크: 카메라 장치 제어, 네이티브 C++ API 제공, 선택적 언어 바인딩'
+      label_en: 'libcamera framework: camera device control, native C++ API, optional language bindings'
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: The libcamera framework is the core part of the stack.
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: handles all control of the camera devices in its core component,
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: exposes a native C++ API to upper layers
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: language bindings allow interfacing to libcamera from other
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - id: kernel
-      label: 커널 드라이버 (V4L2 계열 API)
-      label_en: Kernel drivers (V4L2 family of APIs)
+      label: '커널 드라이버 (V4L2 계열 API): 카메라 하드웨어 제어, V4L2 계열 API로 사용자 공간에 노출'
+      label_en: 'Kernel drivers (V4L2 family of APIs): control camera hardware and expose it to userspace through V4L2 APIs'
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: The kernel drivers control the camera hardware and expose a
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: low-level interface to userspace through the Linux kernel V4L2
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     edges:
     - from: apps
       to: framework
-      label: C++ API로 직접 사용
-      label_en: Use the C++ API directly
+      label: 네이티브 C++ API 사용
+      label_en: Use the native C++ API
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: and exposes a native C++ API to upper layers
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - from: apps
       to: adaptation
-      label: 다른 프레임워크를 거쳐 사용
-      label_en: Use through another framework
+      label: libcamera adaptation 기반으로 사용
+      label_en: Use based on the libcamera adaptation
       evidence:
       - source: value/stack
+        quote: libcamera framework or libcamera adaptation
         sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
-        quote: components that interface to libcamera in other frameworks.
     - from: adaptation
       to: framework
-      label: libcamera에 연결
-      label_en: Connect to libcamera
+      label: libcamera 프레임워크에 연결
+      label_en: Connect to the libcamera framework
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: components that interface to libcamera in other frameworks.
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - from: framework
       to: kernel
-      label: V4L2 계열 API로 제어
-      label_en: Control through the V4L2 family of APIs
+      label: V4L2 계열 API 경유 카메라 장치 제어
+      label_en: Control camera devices via the V4L2 family of APIs
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: low-level interface to userspace through the Linux kernel V4L2
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: handles all control of the camera devices in its core component,
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
   - id: hardware-boundary
     topic: capabilities
     kind: flow
@@ -1869,101 +1896,192 @@ sections:
     title: 선두 요청을 전달하거나 반복을 멈추는 조건
     question: waitingRequests_ 순회에서 준비 상태와 queuedRequests_ 소프트웨어 큐 크기는 어떻게 전달을 제한합니까?
     nodes:
+    - id: queue
+      label: 'queueRequest: waitingRequests_에 요청 push'
+      label_en: 'queueRequest: push request to waitingRequests_'
+      evidence:
+      - source: benefits/queue-code
+        quote: data->waitingRequests_.push(request);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: prepare
+      label: prepare(300ms) 호출로 준비 시작
+      label_en: Start preparation by calling prepare(300ms)
+      evidence:
+      - source: benefits/queue-code
+        quote: request->_d()->prepare(300ms);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: reg
+      label: 'registerRequest: prepared 신호에 콜백 연결'
+      label_en: 'registerRequest: connect callback to prepared signal'
+      evidence:
+      - source: benefits/queue-code
+        quote: request->_d()->prepared.connect(this, [this, request]() {
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: benefits/queue-code
+        quote: This function is called when the request is created,
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: cb
+      label: prepared 콜백이 doQueueRequests(camera) 호출
+      label_en: Prepared callback invokes doQueueRequests(camera)
+      evidence:
+      - source: benefits/queue-code
+        quote: doQueueRequests(request->_d()->camera());
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
     - id: waiting
       label: waitingRequests_에 항목이 있는가?
       label_en: Does waitingRequests_ contain an item?
       evidence:
       - source: benefits/queue-code
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: while (!data->waitingRequests_.empty())
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
       shape: decision
     - id: limit
-      label: queuedRequests_ 크기가 maxQueuedRequestsDevice_인가?
-      label_en: Does queuedRequests_ size equal maxQueuedRequestsDevice_?
+      label: queuedRequests_ 크기가 maxQueuedRequestsDevice_와 같은가?
+      label_en: Is queuedRequests_ size equal to maxQueuedRequestsDevice_?
       evidence:
       - source: benefits/queue-code
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
       shape: decision
+    - id: front
+      label: waitingRequests_ 선두 요청 확인
+      label_en: Inspect the front request of waitingRequests_
+      evidence:
+      - source: benefits/queue-code
+        quote: Request *request = data->waitingRequests_.front();
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
     - id: ready
       label: 선두 요청의 prepared_가 참인가?
-      label_en: Is the front request prepared_?
+      label_en: Is the front request's prepared_ true?
       evidence:
       - source: benefits/queue-code
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: if (!request->_d()->prepared_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
       shape: decision
-    - id: forward
-      label: 먼저 pop(), 이어 doQueueRequest(request)
-      label_en: pop() first, then doQueueRequest(request)
+    - id: pop
+      label: waitingRequests_.pop() 먼저 수행
+      label_en: Pop waitingRequests_ first
       evidence:
       - source: benefits/queue-code
+        quote: data->waitingRequests_.pop();
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "data->waitingRequests_.pop();\n\t\tdoQueueRequest(request);"
+    - id: fwd
+      label: doQueueRequest(request) 호출
+      label_en: Call doQueueRequest(request)
+      evidence:
+      - source: benefits/queue-code
+        quote: doQueueRequest(request);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
     - id: end
       label: 이 호출의 전달 반복 종료
       label_en: End this invocation's forwarding loop
       evidence:
       - source: benefits/queue-code
+        quote: if (!request->_d()->prepared_)
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     edges:
+    - from: queue
+      to: prepare
+      label: push 후 준비 시작
+      label_en: Start preparation after push
+      evidence:
+      - source: benefits/queue-code
+        quote: data->waitingRequests_.push(request);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: benefits/queue-code
+        quote: request->_d()->prepare(300ms);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: reg
+      to: cb
+      label: prepared 신호 전달 시 콜백 실행 (조건부)
+      label_en: Callback runs when the prepared signal is delivered (conditional)
+      evidence:
+      - source: benefits/queue-code
+        quote: request->_d()->prepared.connect(this, [this, request]() {
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: benefits/queue-code
+        quote: when a request is ready to be processed.
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: cb
+      to: waiting
+      label: doQueueRequests 진입
+      label_en: Enter doQueueRequests
+      evidence:
+      - source: benefits/queue-code
+        quote: void PipelineHandler::doQueueRequests(Camera *camera)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
     - from: waiting
       to: limit
       label: 예
       label_en: 'Yes'
       evidence:
       - source: benefits/queue-code
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: while (!data->waitingRequests_.empty())
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
     - from: waiting
       to: end
       label: 아니요
       label_en: 'No'
       evidence:
       - source: benefits/queue-code
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: while (!data->waitingRequests_.empty())
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
     - from: limit
       to: end
       label: '예: break'
       label_en: 'Yes: break'
       evidence:
       - source: benefits/queue-code
+        quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)\n\t\t\tbreak;"
     - from: limit
-      to: ready
+      to: front
       label: '아니요: 선두 확인'
-      label_en: 'No: inspect front'
+      label_en: 'No: inspect the front request'
       evidence:
       - source: benefits/queue-code
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: Request *request = data->waitingRequests_.front();
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: front
+      to: ready
+      label: 선두 요청 검사
+      label_en: Check the front request
+      evidence:
+      - source: benefits/queue-code
+        quote: if (!request->_d()->prepared_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
     - from: ready
       to: end
       label: '아니요: break'
       label_en: 'No: break'
       evidence:
       - source: benefits/queue-code
+        quote: if (!request->_d()->prepared_)
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     - from: ready
-      to: forward
+      to: pop
       label: 예
       label_en: 'Yes'
       evidence:
       - source: benefits/queue-code
+        quote: data->waitingRequests_.pop();
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "data->waitingRequests_.pop();\n\t\tdoQueueRequest(request);"
-    - from: forward
-      to: waiting
-      label: 반복 조건 재검사
-      label_en: Recheck loop condition
+    - from: pop
+      to: fwd
+      label: 이어 doQueueRequest 호출
+      label_en: Then call doQueueRequest
       evidence:
       - source: benefits/queue-code
+        quote: doQueueRequest(request);
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "doQueueRequest(request);\n\t}"
+    - from: fwd
+      to: waiting
+      label: 반복 조건 재검사
+      label_en: Recheck the loop condition
+      evidence:
+      - source: benefits/queue-code
+        quote: while (!data->waitingRequests_.empty())
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
   - id: vendor-buffer-and-request-completion
     topic: benefits
     kind: flow
@@ -1971,74 +2089,117 @@ sections:
     question: 마지막 버퍼가 끝났을 때 completeBuffer의 반환과 핸들러의 요청 완료 의무는 어떻게 구분됩니까?
     nodes:
     - id: call
-      label: CameraManager 스레드에서 completeBuffer
-      label_en: completeBuffer in CameraManager thread
+      label: CameraManager 스레드에서 completeBuffer 호출 (호출자 의무)
+      label_en: Call completeBuffer on the CameraManager thread (caller obligation)
       evidence:
       - source: benefits/last-buffer-contract
-        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
         quote: This function shall be called from the CameraManager thread.
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
     - id: all
       label: 모든 버퍼가 완료됐는가?
       label_en: Have all buffers completed?
       evidence:
       - source: benefits/last-buffer-contract
+        quote: True if all buffers contained in the request have completed, false
         sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
-        quote: "True if all buffers contained in the request have completed, false\n * otherwise"
       shape: decision
     - id: 'false'
       label: 'false: 남은 버퍼가 있음'
       label_en: 'false: buffers remain'
       evidence:
       - source: benefits/last-buffer-contract
+        quote: True if all buffers contained in the request have completed, false
         sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
-        quote: "True if all buffers contained in the request have completed, false\n * otherwise"
     - id: 'true'
       label: 'true: 마지막 버퍼 완료, 요청 자동 완료 아님'
       label_en: 'true: last buffer completed, request not automatically completed'
       evidence:
       - source: benefits/last-buffer-contract
-        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
         quote: is not completed automatically when the last buffer completes
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
     - id: explicit
-      label: 핸들러가 completeRequest를 명시적으로 호출
-      label_en: Handler explicitly calls completeRequest
+      label: 핸들러가 completeRequest()를 명시적으로 호출
+      label_en: Handler explicitly calls completeRequest()
       evidence:
       - source: benefits/last-buffer-contract
-        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
         quote: They shall complete requests explicitly with completeRequest().
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - id: stop
+      label: pipeline handler가 stop()으로 중지됨
+      label_en: Pipeline handler is stopped with stop()
+      evidence:
+      - source: benefits/completion
+        quote: when the pipeline handler is stopped with stop().
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
+    - id: stop_track
+      label: 요청 추적에 따라 큐의 요청 자동 완료 (별도 계약, 버퍼 흐름과 순서 미지정)
+      label_en: Queued requests auto-completed by request tracking (separate contract, no order defined against buffer flow)
+      evidence:
+      - source: benefits/completion
+        quote: Keeping track of queued requests ensures automatic completion of all requests
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
+    - id: stop_signal
+      label: 완료 신호는 completeRequest()로 전달
+      label_en: Completion is signalled via completeRequest()
+      evidence:
+      - source: benefits/completion
+        quote: signalled by the pipeline handler using the completeRequest() function.
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
     edges:
     - from: call
       to: all
-      label: 버퍼 완료 통지·내부 추적 갱신
-      label_en: Notify buffer completion and update tracking
+      label: 버퍼 완료 통지와 내부 버퍼 추적 갱신 후
+      label_en: After notifying buffer completion and updating internal buffer tracking
       evidence:
       - source: benefits/last-buffer-contract
+        quote: It notifies applications of buffer
         sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
-        quote: "It notifies applications of buffer\n * completion and updates the request's internal buffer tracking."
+      - source: benefits/last-buffer-contract
+        quote: completion and updates the request's internal buffer tracking.
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
     - from: all
       to: 'false'
-      label: 아니요
-      label_en: 'No'
+      label: 아니요 (false)
+      label_en: No (false)
       evidence:
       - source: benefits/last-buffer-contract
+        quote: True if all buffers contained in the request have completed, false
         sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
-        quote: "false\n * otherwise"
     - from: all
       to: 'true'
-      label: 예
-      label_en: 'Yes'
+      label: 예 (true)
+      label_en: Yes (true)
       evidence:
       - source: benefits/last-buffer-contract
+        quote: True if all buffers contained in the request have completed, false
         sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
-        quote: True if all buffers contained in the request have completed
     - from: 'true'
       to: explicit
-      label: 필요한 작업이 있다면 그 작업 기회 후
-      label_en: After an opportunity for any remaining required work
+      label: 필요한 작업 기회 후 명시적 완료
+      label_en: After the chance for still-needed work, explicit completion
       evidence:
       - source: benefits/last-buffer-contract
+        quote: pipeline handlers a chance to perform any operation that may still be
         sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
-        quote: "The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest()."
+      - source: benefits/last-buffer-contract
+        quote: They shall complete requests explicitly with completeRequest().
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - from: stop
+      to: stop_track
+      label: stop() 시 추적 중인 요청에 적용
+      label_en: Applies to tracked requests when stop() is called
+      evidence:
+      - source: benefits/completion
+        quote: Keeping track of queued requests ensures automatic completion of all requests
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
+    - from: stop_track
+      to: stop_signal
+      label: 완료 신호 방식
+      label_en: Completion signalling method
+      evidence:
+      - source: benefits/completion
+        quote: signalled by the pipeline handler using the completeRequest() function.
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
   ipa:
   - id: proxy-selection
     topic: selection

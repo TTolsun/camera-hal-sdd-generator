@@ -173,7 +173,7 @@ sections:
         - - rpi/vc4
         reject_patterns: []
     - id: generic
-      question: 전용 핸들러 없이 범용으로 지원한다고 문서가 적은 대상을 모두 나열하세요.
+      question: 문서가 범용으로 지원한다고 적은 대상을 모두 나열하세요. 전용 핸들러가 없다는 별도 단정은 하지 마세요.
       sources:
       - platforms
       answer_contract:
@@ -183,6 +183,7 @@ sections:
         - - simple
         - - vimc
         reject_patterns: []
+      prompt: 범용 지원 목록만으로 전용 파이프라인 핸들러의 부재나 기능 동일성을 추론하지 마세요.
     - id: build
       question: 빌드할 때 pipelines 옵션으로 파이프라인 핸들러를 고르는 방법과 auto·all의 의미를 설명하세요. 어떤 값이 어떤 기기에 맞는지는 추정하지 마세요.
       sources:
@@ -305,7 +306,8 @@ sections:
         reject_patterns:
         - pattern: 자동.{0,10}완료.{0,10}(후|뒤).{0,30}(통지|알림)
           message: 자동 완료와 추가 통지 사이의 순서를 새로 만들지 말고 각 소스의 조건과 호출 의무를 대조하세요.
-      max_statements: 3
+      max_statements: 1
+      prompt: 정지 시 자동 완료 보장과 두 호출 의무를 하나의 계약 문단으로 설명하세요. statements 배열 한 항목의 text에 세 짧은 문장을 쓰고, completion과 last-buffer-contract 근거 및 모든 조건·호출 의무를 유지하세요.
   reader_profile: vendor-overview
   routes:
   - to: vendor-integration.md
