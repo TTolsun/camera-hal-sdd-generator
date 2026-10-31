@@ -103,11 +103,11 @@ class Capture:
 class UnitStore:
     _indexes = {}
 
-    def __init__(self, cfg, identity):
+    def __init__(self, cfg, identity, *, calls=None):
         self.cfg, self.identity = cfg, identity
         self.path = cfg.build_dir / 'cli-checkpoints' / (checksum(self.draft_identity(identity)) + '.json')
         self.canonical_path = self.path
-        self.calls = cfg.build_dir / 'prompts' / 'calls'
+        self.calls = calls if calls is not None else cfg.build_dir / 'prompts' / 'calls'
         inputs = current()
         indexes = inputs.values.setdefault(('checkpoint-indexes',), {}) if inputs is not None else {}
         if not self.path.exists() and self.path.parent.exists():

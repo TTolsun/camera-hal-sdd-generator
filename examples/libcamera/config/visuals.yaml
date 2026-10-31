@@ -1242,6 +1242,133 @@ sections:
       - source: lifetime/reuse
         sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
         quote: "This function shall be called\n * prior to queueing the request to the camera"
+  - id: add-buffer-rejections
+    topic: request
+    kind: decision
+    title: 버퍼 연결 실패를 구분하는 순서
+    question: 같은 -EEXIST라도 남은 fence와 중복 stream을 구분하고, 실패 검사 뒤의 요청 연결 경계를 확인합니다.
+    nodes:
+    - id: stream
+      label: stream이 비었나요?
+      label_en: Is stream null?
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (!stream)
+      shape: decision
+    - id: invalid
+      label: -EINVAL 반환
+      label_en: Return -EINVAL
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: return -EINVAL;
+    - id: fence
+      label: 버퍼에 fence가 남았나요?
+      label_en: Does the buffer retain a fence?
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (buffer->_d()->fence())
+      shape: decision
+    - id: retained
+      label: '-EEXIST: 남은 fence'
+      label_en: '-EEXIST: retained fence'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: Can't add buffer that still references a fence
+    - id: duplicate
+      label: stream이 이미 등록됐나요?
+      label_en: Is the stream already registered?
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (!inserted)
+      shape: decision
+    - id: existing
+      label: '-EEXIST: 중복 stream'
+      label_en: '-EEXIST: duplicate stream'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: FrameBuffer already set for stream
+    - id: attach
+      label: 요청 연결과 pending_ 추가
+      label_en: Attach request and add pending_
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "buffer->_d()->setRequest(this);\n\t_d()->pending_.insert(buffer);"
+    - id: success
+      label: 0 반환
+      label_en: Return 0
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: return 0;
+    edges:
+    - from: stream
+      to: invalid
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!stream) {\n\t\tLOG(Request, Error) << \"Invalid stream reference\"\
+          ;\n\t\treturn -EINVAL;\n\t}"
+    - from: stream
+      to: fence
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!stream) {\n\t\tLOG(Request, Error) << \"Invalid stream reference\"\
+          ;\n\t\treturn -EINVAL;\n\t}"
+    - from: fence
+      to: retained
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (buffer->_d()->fence()) {\n\t\tLOG(Request, Error) << \"Can't add\
+          \ buffer that still references a fence\";\n\t\treturn -EEXIST;\n\t}"
+    - from: fence
+      to: duplicate
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: auto [it, inserted] = bufferMap_.try_emplace(stream, buffer);
+    - from: duplicate
+      to: existing
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!inserted) {\n\t\tLOG(Request, Error) << \"FrameBuffer already set\
+          \ for stream\";\n\t\treturn -EEXIST;\n\t}"
+    - from: duplicate
+      to: attach
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "buffer->_d()->setRequest(this);\n\t_d()->pending_.insert(buffer);"
+    - from: attach
+      to: success
+      label: 유효한 fence가 있으면 이동한 뒤 반환
+      label_en: Move a valid supplied fence if present, then return
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (fence && fence->isValid())\n\t\tbuffer->_d()->setFence(std::move(fence));\n\
+          \n\treturn 0;"
   pipeline-requests:
   - id: queue-gates
     topic: queue

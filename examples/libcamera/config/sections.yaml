@@ -4710,6 +4710,10 @@ sections:
       file: src/libcamera/request.cpp
       start: \brief Add a FrameBuffer with its associated Stream to the Request
       end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: buffer-code
+      file: src/libcamera/request.cpp
+      start: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+      end: "return 0;\n}"
     - id: queue-code
       file: src/libcamera/camera.cpp
       start: int Camera::queueRequest(Request *request)
@@ -4778,6 +4782,22 @@ sections:
         - - 하나
           - 1개
           - 한 개
+    - id: buffer-rejection
+      question: Request::addBuffer() 구현에서 빈 stream, 버퍼에 남은 fence, 이미 등록한 stream을 검사하는 순서와 각 반환값을 설명하세요.
+        -EINVAL과 두 -EEXIST 조건을 각각 연결하고, 세 검사를 통과한 뒤의 setRequest(this)와 pending_.insert(buffer) 경계를 설명하세요.
+        전달받은 fence의 실패 시 소유권은 뒤의 별도 항목에서 설명하므로 반복하지 마세요.
+      sources: [buffer-code]
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - [addBuffer]
+        - [stream]
+        - [fence]
+        - [-EINVAL]
+        - [-EEXIST]
+        - [setRequest]
+        - [pending_]
     - id: queue-input
       question: queueRequest를 호출하기 전에 요청에 캡처 버퍼를 하나 이상 채워야 하는 최소 입력 조건만 한 문장으로 설명하세요.
         생성 카메라 검사와 오류 코드는 다음 질문에서 다루므로 반복하지 마세요.

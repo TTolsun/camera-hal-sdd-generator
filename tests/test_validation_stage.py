@@ -176,3 +176,25 @@ def test_input_change_during_copy_rolls_back_all_owned_site_bytes(tmp_cfg, tmp_p
         build_site(tmp_cfg, out, changed, None)
     after = {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()}
     assert after == before
+
+
+def test_translation_checks_inputs_before_replacing_existing_catalog(tmp_cfg, monkeypatch):
+    from sdd.facts.model import KnowledgeModel
+    from sdd.localization_cli import prepare_catalog
+    KnowledgeModel(meta={'source_commit': 'a'*40}).save(tmp_cfg.facts_path)
+    destination = tmp_cfg.root/'english.json'
+    original = b'{"strings": {"old": "original"}}'
+    destination.write_bytes(original)
+    def render(cfg, out, **kwargs):
+        (out/'index.html').write_text('<p>설명입니다.</p>', encoding='utf-8')
+        (out/'assets').mkdir()
+        (out/'assets/search.json').write_text('[]', encoding='utf-8')
+        return out
+    def translate(cfg, catalog, agent):
+        cfg.sections_file.write_text('sections: []', encoding='utf-8')
+        return catalog
+    monkeypatch.setattr('sdd.export_site._render_site', render)
+    monkeypatch.setattr('sdd.translation.translate_missing', translate)
+    with pytest.raises(InputChanged):
+        prepare_catalog(tmp_cfg, destination, translate=True)
+    assert destination.read_bytes() == original

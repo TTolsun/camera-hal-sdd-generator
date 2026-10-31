@@ -166,6 +166,9 @@ class Execution:
             row['status'] = 'passed'
         except BaseException as exc:
             row.update(status='failed', failure_kind=failure_kind(exc), error=str(exc))
+            for key, status in row['units'].items():
+                if status == 'running':
+                    row['units'][key] = 'failed'
             raise
         finally:
             row['seconds'] = self.clock()-self.started-row['started_seconds']
@@ -179,6 +182,10 @@ class Execution:
             if details:
                 self.current.setdefault('details', {})[key] = details
             self.persist()
+
+    def unit_if_pending(self, key, status):
+        if self.current is not None and self.current['units'].get(key) == 'not-started':
+            self.unit(key, status)
 
     def check_time(self):
         elapsed = self.clock()-self.started
@@ -201,15 +208,22 @@ class Execution:
             _observed.reset(token)
 
     def chat(self, system, user, **kwargs):
+        return self._dispatch(self.agent.chat, system, user, **kwargs)
+
+    def fresh_chat(self, system, user, **kwargs):
+        transport = getattr(self.agent, 'fresh_chat', self.agent.chat)
+        return self._dispatch(transport, system, user, **kwargs)
+
+    def _dispatch(self, transport, system, user, **kwargs):
         from .execution_lock import lease
         if self.operation:
             import hashlib
             key = hashlib.sha256(self.operation.encode()).hexdigest()
             with lease(self.cfg, 'operation-'+key):
-                return self._chat(system, user, **kwargs)
-        return self._chat(system, user, **kwargs)
+                return self._chat(transport, system, user, **kwargs)
+        return self._chat(transport, system, user, **kwargs)
 
-    def _chat(self, system, user, **kwargs):
+    def _chat(self, transport, system, user, **kwargs):
         now = self.clock()
         calls = self.report['calls']
         remaining = []
@@ -239,7 +253,7 @@ class Execution:
             self.cfg.agent.timeout_sec = min(timeout, *remaining)
         try:
             with self.heartbeat():
-                raw = self.agent.chat(system, user, **kwargs)
+                raw = transport(system, user, **kwargs)
             self.check_time()
             row['status'] = 'completed'
             return raw
