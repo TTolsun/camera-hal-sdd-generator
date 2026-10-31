@@ -6038,7 +6038,7 @@ sections:
           message: 상태 범위 비교를 배열 인덱스로 해석하지 마세요.
       max_statements: 2
     - id: validation-effects
-      question: Adjusted가 유효해지도록 조정된 구성이며 모든 스트림의 파라미터 변경이나 스트림 구성 삭제가 가능하다는 결과 범위만 한
+      question: Adjusted가 유효해지도록 조정된 구성이며 임의의 스트림에서 파라미터 변경이나 스트림 구성 삭제가 가능하다는 결과 범위만 한
         문장으로 설명하세요. 호출자의 확인 의무는 다음 질문에서 다루므로 반복하지 마세요. 조사 시 기존 validate 결과를 관찰하며 재호출하지
         마세요.
       sources:
@@ -6061,6 +6061,9 @@ sections:
         required_terms:
         - - 호출자
         - - 확인
+        reject_patterns:
+        - pattern: 따라서
+          message: 앞 질문의 조정 결과를 반복하지 말고 소스에 명시된 호출자의 확인 의무만 한 문장으로 설명하세요. 근거에 없는 인과 표현을 덧붙이지 마세요.
     - id: validation-result
       question: 이 validate 호출의 결과를 Valid와 비교하는 조건과, Valid가 아닐 때 반환하는 오류 코드를 함께 기록하는
         조사 항목을 한 문단으로 제안하세요. 같은 분기를 결과 확인과 오류 확인으로 되풀이하지 마세요.
@@ -6231,8 +6234,8 @@ sections:
         - - 반환
       max_statements: 1
     - id: buffer-error
-      question: addBuffer의 기존 호출 반환값을 관찰하고 -EEXIST가 같은 스트림의 버퍼 또는 남아 있는 펜스 중 어느 조건인지
-        좁히는 계획을 설명하세요.
+      question: addBuffer()의 기존 호출에서 -EEXIST가 반환됐을 때 같은 스트림의 기존 버퍼와 남은 펜스를 각각 어떻게 확인하며,
+        동일한 반환값으로 원인을 판별할 수 있는 범위는 무엇인가요?
       sources:
       - buffer
       answer_contract:
