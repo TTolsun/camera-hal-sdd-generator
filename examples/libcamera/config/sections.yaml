@@ -5956,9 +5956,10 @@ sections:
         - - '24'
         - - '72'
     - id: threads
-      question: 이 공개 가상 프로브에서 Object 수신 객체를 메인 스레드에 둔 Auto·Queued·Direct 연결의 실행 스레드와 정지 호출 구간
-        안 또는 반환 뒤에 기록한 콜백 진입·반환 근처 표식의 차이만 두 문장·350자 이내로 설명하세요. 다른 연결·장치·애플리케이션의 보장으로 확대하지 마세요.
-        반환 표식의 한계는 다음 파트에서 따로 설명하므로 이 파트에서 반복하지 마세요.
+      question: 이 공개 가상 프로브에서 Auto·Queued·Direct 연결의 실행 스레드 차이와, 정지 취소 요청에서 콜백 표식이 애플리케이션의 stop-enter·stop-return
+        표식 사이인지 stop-return 뒤인지 구분하세요. stop-enter·stop-return은 camera->stop() 호출 앞뒤에서 남긴 애플리케이션
+        표식이며 함수 내부의 정확한 명령 경계는 아니라는 범위를 지키세요. 정상 완료 요청의 표식이 stop 반환 뒤라고 일반화하거나 연결 간 고정 실행 순서를
+        만들지 마세요. 두 문장·350자 이내로 답하고 반환 표식 자체의 한계는 다음 파트에 맡기세요.
       sources: []
       max_statements: 1
       answer_contract:

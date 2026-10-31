@@ -23,8 +23,8 @@
       "callback_thread": "receiver/main thread",
       "all_runs_consistent": true,
       "callbacks_per_run": 8,
-      "stop_callback_entry_and_near_return_markers_during_stop_call": false,
-      "stop_callback_entry_and_near_return_markers_after_stop_return": true
+      "stop_callback_entry_and_near_return_markers_after_stop_return": true,
+      "stop_cancelled_markers_between_application_stop_enter_and_return_markers": false
     },
     {
       "connection": "direct",
@@ -32,8 +32,8 @@
       "callback_thread": "different thread from the receiver/main thread; no thread-name identification is claimed",
       "all_runs_consistent": true,
       "callbacks_per_run": 8,
-      "stop_callback_entry_and_near_return_markers_during_stop_call": true,
-      "stop_callback_entry_and_near_return_markers_after_stop_return": false
+      "stop_callback_entry_and_near_return_markers_after_stop_return": false,
+      "stop_cancelled_markers_between_application_stop_enter_and_return_markers": true
     },
     {
       "connection": "queued",
@@ -41,8 +41,8 @@
       "callback_thread": "receiver/main thread",
       "all_runs_consistent": true,
       "callbacks_per_run": 8,
-      "stop_callback_entry_and_near_return_markers_during_stop_call": false,
-      "stop_callback_entry_and_near_return_markers_after_stop_return": true
+      "stop_callback_entry_and_near_return_markers_after_stop_return": true,
+      "stop_cancelled_markers_between_application_stop_enter_and_return_markers": false
     }
   ],
   "callback_return_marker": "Near-return marker before the counter increment and local destruction; does not trace the actual C++ return.",
@@ -85,5 +85,11 @@
     "simulation": true,
     "scope": "Isolated public virtual-camera test harness, not a production product.",
     "definition": "The authored probe chooses Virtual2 and the runner restricts matching to the virtual pipeline; hardware capture inputs are simulated. Actual library and application callbacks execute."
-  }
+  },
+  "stop_instrumentation_in_source_order": [
+    "event(\"stop-enter\", \",\\\"phase\\\":\" + std::to_string(phase));",
+    "int ret = camera->stop();",
+    "event(\"stop-return\", \",\\\"phase\\\":\" + std::to_string(phase) + \",\\\"ret\\\":\" + std::to_string(ret));"
+  ],
+  "stop_interval_definition": "The application emits stop-enter immediately before camera->stop() and stop-return immediately after it. Observations describe ordering between these application boundary markers, not instruction-level function-entry/exit tracing. No fixed ordering between different connections is asserted."
 }
