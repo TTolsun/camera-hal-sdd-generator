@@ -12,12 +12,23 @@ root = Path(__file__).resolve().parents[4]
 parser = argparse.ArgumentParser()
 parser.add_argument('--document', type=Path, required=True)
 parser.add_argument('--english', type=Path)
+parser.add_argument('--narrative-only', action='store_true')
+parser.add_argument('--runbook', type=Path)
+parser.add_argument('--english-references', type=Path)
 parser.add_argument('--out', type=Path, required=True)
 args = parser.parse_args()
 args.out.mkdir(parents=True, exist_ok=False)
 work = root/'build/issue211-publication'
 material = work/'config/product-evidence/official-cam-observation.json'
 _, body = split_frontmatter(args.document.read_text(encoding='utf-8'))
+if args.narrative_only:
+    narrative, separator, references = body.partition('\n## 소스 근거')
+    if not separator:
+        raise ValueError('Expected generated source-reference section is missing')
+    footer = [line for line in references.splitlines() if line.startswith('다음 단계:')]
+    if len(footer) != 1:
+        raise ValueError('Expected exactly one generated next-step link')
+    body = narrative+'\n\n'+footer[0]+'\n'
 facts = json.loads((work/'run/facts/facts.json').read_text(encoding='utf-8'))
 sources = {key: row for key, row in facts['evidence'].items() if key.startswith('official-cam-validation/') and row.get('origin') != 'product-material'}
 cfg = load(work/'generation.yaml')
@@ -49,6 +60,10 @@ if args.document.name == 'OFFICIAL_CAM.md':
         user += '\nLINKED PUBLIC PREPARATION EXAMPLE '+name+'\n'+Path(__file__).with_name(name).read_text(encoding='utf-8')
 if args.english:
     user += '\nENGLISH\n'+args.english.read_text(encoding='utf-8')
+if args.runbook:
+    user += '\nLINKED REPRODUCTION PROCEDURE (prerequisite context)\n'+args.runbook.read_text(encoding='utf-8')
+if args.english_references:
+    user += '\nRENDERED ENGLISH EVIDENCE INVENTORY AND EXPLICIT REVIEW-WINDOW OMISSIONS\n'+args.english_references.read_text(encoding='utf-8')
 schema = {'type':'object','additionalProperties':False,'required':['verdict','findings','reviewed_scope','unreviewed'],
           'properties':{'verdict':{'enum':['pass','needs-revision']},
                         'findings':{'type':'array','items':{'type':'string'}},
@@ -58,5 +73,9 @@ result = json.loads(agent.chat('Independent source and document grounding review
                                'Passing is automatic review only, never human approval. Return JSON.',
                                user, tag='document-grounding', response_schema=schema))
 (args.out/'review.json').write_text(json.dumps(dict(review=result, document_sha256=sha256(args.document),
+                                                 narrative_only=args.narrative_only,
+                                                 english_sha256=sha256(args.english) if args.english else None,
+                                                 linked_runbook_sha256=sha256(args.runbook) if args.runbook else None,
+                                                 english_references_sha256=sha256(args.english_references) if args.english_references else None,
                                                  material_sha256=sha256(material), receipt=str(agent.last_receipt)), indent=2)+'\n', encoding='utf-8')
 print(result['verdict'])

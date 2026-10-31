@@ -1,0 +1,50 @@
+
+Check the conditions and observation scope under which the official cam's virtual capture was confirmed with real DMA-BUF.
+
+
+
+Official cam and actual DMA-BUF verification results
+
+This is a virtual test configuration. It must not be used as a support or performance claim for an actual product.
+
+On the WSL2 test kernel 6.18.33.2-microsoft-standard-WSL2-issue211, with udmabuf built in, we ran the unmodified official cam, based on source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61, as a root child process. We applied the (0) 400x300-NV12/SMPTE170M setting to virtual camera Virtual2. Three independent processes each completed 3 frames and ended with exit code 0. Cancelled callbacks were 0 in all three processes, and the unprivileged run failed with errno 13.
+
+The DMA-BUF access records come from a separate probe, dmabuf-probe-2, not from the official cam. The probe recorded, at allocate, backing_fd 4, dmabuf_fd 5, and size 4096. After mmap, it logged sync-start (flags 3), cpu-access of 4096 bytes, sync-end (flags 7), munmap, close-dmabuf, close-backing, and close-provider, all with result 0. The records do not contain the names SYNC_START and SYNC_END; the event names are sync-start and sync-end.
+
+Execution check item: This configuration is a hypothetical trial configuration with simulation marked as true and is not an actual product. Observations were made under GDB, and it is recorded that GDB breakpoints affect timing. Physical DMA is not-validated; physical camera, production application, and internal HAL are not-run; human review is pending, and product availability is unknown. The cancellation branch was not dynamically executed, and it is recorded that the observed cancelled_callbacks of 0 is not a forced result.
+
+
+The three frames confirmed in the callback and subsequent processing
+
+This is a virtual test configuration. It must not be used as a support or performance claim for an actual product.
+
+CameraSession::requestComplete returns without doing anything if the request status is RequestCancelled. Any other completed request defers the processRequest call to the event loop via EventLoop::instance()->callLater so that the camera manager thread is not blocked. If the capture limit has been reached, processRequest returns immediately; otherwise, processRequest prints frame information and then increments captureCount_. The observation point is inside the processRequest function, immediately before captureCount_ is incremented.
+
+In the measurement data, for each of the three independent processes (pid 434, 449, 464), the callback-entry and frame-processed events are paired by the same request address and sequence (0, 1, 2), so three frames are counted once per process. The Request status enum is declared in the order RequestPending, RequestComplete, RequestCancelled, and no numeric values are specified, so the actual status 1 corresponds to the second item, RequestComplete. The TIDs of the callbacks threads are 437, 452, 467, and the TIDs of the main_tid and processed threads are 434, 449, 464. The buffer_sequence values 0, 1, 2 with successful buffer status (buffer_status 0) match the successful_buffer_sequences values 0, 1, 2.
+
+Execution check item: The 0 cancellations (cancelled_callbacks 0) are this observed value; since the cancellation branch was not dynamically executed, the observed count of 0 is not a forced result. Because the callback-return instruction was not observed, this measurement is not verification of the cancellation path, return instruction, or performance. There is an observation limitation that GDB breakpoints affect timing, and the result applies only to source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61, the WSL2 custom UDMABUF kernel, and the Virtual2 400x300 NV12 configuration; physical DMA, physical camera, other operating applications, and internal HAL are not verified. This configuration is a simulation-based virtual trial configuration and is not an actual product.
+
+
+Reproduction Conditions and Validation Boundary
+
+This is a virtual test configuration. It must not be used as a support or performance claim for an actual product.
+
+During the pre-check, instead of the default WSL2 kernel, which lacked UDMABUF and a DMA-BUF heap, a test kernel with built-in UDMABUF from the exact Microsoft tag linux-msft-wsl-6.18.33.2 was temporarily applied after user approval. The compiler capability differences from GCC 13.2 to Ubuntu GCC 15.2, and the differences from binutils 2.41 to 2.46 and pahole 1.25 to 1.31, were preserved in the full diff. Because no modules for a new release were installed, Docker was left stopped during the trial. The UDMABUF device is root-only, so permissions were not changed and it was run as a root child process; the errno 13 failure from a normal user run was also preserved. This configuration is a simulated Virtual2 400x300 NV12 test setup, not an actual product, and is a simulation test configuration.
+
+Execution check item: After restoring the default WSL2 kernel, no UDMABUF allocator is available, so before running the reproduction commands, a separately approved supported kernel must be prepared and booted, and device access must be checked first. Approval for the past trial is not approval for future new host changes, and any change to the shared kernel, modules, or .wslconfig, or any termination of a WSL distribution or VM, must receive separate approval immediately before execution. Approval for the existing PR merge and Pages deployment is not extended to approval of these host changes, and this premise follows the execution contract basis.
+
+In the dedicated negative tests, the absent provider failed with errno 2 and the unsupported ioctl failed with errno 25, and exit code 1 was recorded in both cases. In the 0.5-second timeout test, the timed_out value was recorded as true, so the failure judgment was preserved.
+
+In the same 0.5-second timeout trial, three records were logged: SYNC_END return value 0, munmap return value 0, and fd close return value 0, and no process group was left behind. This means resource cleanup succeeded separately from the timeout failure verdict. A close return value of 0 means only that the close succeeded, and does not mean there were zero closes. An additional official cam strace exited normally with exit code 0, but the callback_observation value was recorded as false, so it is separate from callback observation. This configuration is a virtual test configuration, not an actual product.
+
+After removing the temporary .wslconfig and restoring the kernel, the kernel after the run is the same as the pretrial kernel, 6.18.33.2-microsoft-standard-WSL2, and the .wslconfig file does not exist. This result was obtained with the WSL2-tailored UDMABUF kernel, root child processes, and Virtual2 400x300 NV12 configuration based on source 293d751a814e0d4c34e85ad457ccd9d5eefd1a61. This configuration is a simulated virtual test configuration and is not an actual product.
+
+Execution check item: Physical DMA, physical camera, other product applications, internal HAL, and human approval (human_review: pending) are unvalidated. GDB breakpoint observation affects timing, and the callback-return instruction was not observed.
+
+
+
+Source evidence
+
+
+
+Next step: Official cam reproduction procedure
