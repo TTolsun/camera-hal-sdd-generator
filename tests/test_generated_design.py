@@ -47,6 +47,42 @@ def test_writer_guidance_invalidates_reuse_but_is_not_reader_prose(generated, tm
 
 
 @pytest.mark.parametrize('focused', [False, True])
+def test_part_writer_guidance_keeps_shared_instructions_and_reader_question(generated, tmp_cfg, focused):
+    from sdd.design_request import _design_units
+    from sdd.generated_design import _unit_request
+    from sdd.document_metadata import split_frontmatter
+    from sdd.config import section_output
+    section, model, save, agent = generated
+    topic = section['design_topics'][0]
+    topic['prompt'] = 'SHARED_WRITER_ONLY'
+    topic['parts'] = [dict(id='observation', question='기존 호출에서 무엇을 관찰하나요?',
+                           sources=['stop'], prompt='PART_WRITER_ONLY')]
+    unit = _design_units(section, {})[0]
+    request = _unit_request(model, section, unit, 'focused' if focused else None)
+    assert unit['question'] == topic['parts'][0]['question']
+    assert all(value in request.user for value in ('SHARED_WRITER_ONLY', 'PART_WRITER_ONLY', unit['question']))
+    save()
+    Generator(tmp_cfg, model, agent).run()
+    body = split_frontmatter((tmp_cfg.sdd_dir/section_output(section)).read_text(encoding='utf-8'))[1]
+    assert 'SHARED_WRITER_ONLY' not in body and 'PART_WRITER_ONLY' not in body
+
+
+@pytest.mark.parametrize('guidance', ['', None, 7])
+def test_invalid_part_guidance_keeps_previous_manuscript(generated, tmp_cfg, guidance):
+    from sdd.config import section_output
+    section, model, save, agent = generated
+    Generator(tmp_cfg, model, agent).run()
+    path = tmp_cfg.sdd_dir/section_output(section)
+    before, count = path.read_bytes(), len(agent.calls)
+    section['design_topics'][0]['parts'] = [
+        dict(id='observation', question='기존 호출의 관찰 대상은?', sources=['stop'], prompt=guidance)]
+    save()
+    with pytest.raises(ValueError, match='prompt'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == before and len(agent.calls) == count
+
+
+@pytest.mark.parametrize('focused', [False, True])
 @pytest.mark.parametrize('guidance', ['', None, 7])
 def test_invalid_writer_guidance_fails_before_inference(generated, focused, guidance):
     from sdd.generated_design import _unit_request

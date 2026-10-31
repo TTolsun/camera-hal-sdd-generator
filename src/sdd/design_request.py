@@ -125,6 +125,10 @@ def _design_units(section, retained):
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']
             unit.pop('parts')
+            if 'prompt' in part:
+                from .focused_prompt import writing_instructions
+                unit['prompt'] = '\n'.join(filter(None, (
+                    writing_instructions(topic), writing_instructions(part))))
             if part.get('subquestions'):
                 for index, question in enumerate(part['subquestions']):
                     child = copy.deepcopy(unit)

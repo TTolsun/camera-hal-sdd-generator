@@ -17,6 +17,8 @@ def configuration_errors(section: dict) -> list[str]:
         if any(not isinstance(v.get('id'), str) or not v['id'].strip() for v in values):
             return [f'{field}의 id는 비어 있지 않은 문자열이어야 합니다.']
     for topic in section.get('design_topics', []):
+        if 'prompt' in topic and (not isinstance(topic['prompt'], str) or not topic['prompt'].strip()):
+            errors.append(f"{topic['id']}: prompt는 비어 있지 않은 문자열이어야 합니다.")
         if topic.get('narration') == 'facts' and (section.get('design_requirements') or section.get('reader_profile')):
             errors.append('Source-question views cannot replace required design answers or reader profiles.')
         errors.extend(answer_contract_errors(topic))
@@ -74,6 +76,8 @@ def generated_errors(section):
             seen, used = set(), set()
             source_ids = {s['id'] for s in topic.get('sources', [])}
             for part in parts:
+                if 'prompt' in part and (not isinstance(part['prompt'], str) or not part['prompt'].strip()):
+                    errors.append(f"{topic['id']}: parts prompt는 비어 있지 않은 문자열이어야 합니다.")
                 errors.extend(answer_contract_errors(part))
                 pid = part.get('id')
                 if not isinstance(pid, str) or not pid or pid in seen:
@@ -106,7 +110,7 @@ def generated_errors(section):
                         errors.append(f"{topic['id']}: role: summary는 상세 part가 뒤에 있는 첫 part에만 쓰며 "
                                       "max_statements는 1 또는 2, subquestions·statement_kind는 쓸 수 없습니다.")
                 if set(part) - {'id', 'question', 'sources', 'answer_contract', 'subquestions', 'max_statements',
-                                'statement_kind', 'role'}:
+                                'statement_kind', 'role', 'prompt'}:
                     errors.append(f"{topic['id']}: 지원하지 않는 parts 필드입니다.")
             if all(part.get('statement_kind') == 'limitation' for part in parts if isinstance(part, dict)):
                 # 실행 확인 항목만으로는 필수 질문에 답한 것이 아니다. 모델을 부르기 전에 설정 오류로 막는다.
