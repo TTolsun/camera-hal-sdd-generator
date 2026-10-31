@@ -1441,8 +1441,10 @@ sections:
         - - doQueueRequest
         - - 취소
     - id: device-duty
-      question: stopDevice 구현자가 캡처·처리를 중단하고 이미 제출된 요청을 끝내기 위해 지켜야 할 의무를 설명하세요. 가상
-        함수 선언의 계약을 특정 장치의 검증된 구현으로 쓰지 마세요.
+      question: stopDevice 구현자가 실행 중인 모든 스트림의 캡처·요청 처리를 즉시 중단하고 이미 장치에 제출되어 미완료인 모든
+        pending 요청을 취소하여 오류 상태로 즉시 완료해야 한다는 API 주석 계약을 설명하세요. 공통 stop()이 먼저 로컬로 분리해
+        나중에 취소하는 waitingRequests_와 혼동하지 않도록 이 파트에서는 미완료(pending) 요청이라고 명시하세요. 가상 함수의
+        계약을 특정 장치에서 이미 검증된 실행 결과로 쓰거나 앞 파트의 대기 큐 분리·취소 순서를 반복하지 마세요.
       sources:
       - stop
       answer_contract:
@@ -1450,6 +1452,13 @@ sections:
         required_terms:
         - - stopDevice
         - - 요청
+        - - 미완료
+        - - pending
+        - - 제출
+        reject_patterns:
+        - pattern: 대기 중인 모든|대기중인 모든|waitingRequests_
+          message: stopDevice의 pending 계약을 공통 stop이 분리한 waitingRequests_로 바꾸지 마세요.
+            미완료(pending) 요청이라고 구분하세요.
     - id: assertions
       question: stop 마지막의 queuedRequests_·waitingRequests_ ASSERT와 요청 순번 초기화만 설명하세요.
         ASSERT를 미래 실행의 보장으로 확대하지 마세요.
@@ -1491,8 +1500,8 @@ sections:
           '
     parts:
     - id: bounds
-      question: minIfWidth와 minIfHeight의 std::max 최솟값 공식을 각각 한 번씩 두 문장 이내로 설명하세요. 반복 순서와
-        높이 자르기는 다음 질문에서 설명하므로 여기서는 다시 나열하지 마세요.
+      question: minIfWidth와 minIfHeight의 std::max 최솟값 공식을 각각 한 번씩 두 문장 이내로 설명하세요.
+        반복 순서와 높이 자르기는 다음 질문에서 설명하므로 여기서는 다시 나열하지 마세요.
       sources:
       - search
       answer_contract:
@@ -1502,13 +1511,15 @@ sections:
         - - minIfHeight
         reject_patterns:
         - pattern: (?<![A-Za-z0-9_])IF(?![A-Za-z0-9_])
-          message: 이 질문은 계산식과 분기를 묻습니다. 대상은 선언된 변수·함수 이름으로 명시하고 풀이 없는 IF 약어를 도입하지 마세요.
+          message: 이 질문은 계산식과 분기를 묻습니다. 대상은 선언된 변수·함수 이름으로 명시하고 풀이 없는 IF 약어를 도입하지
+            마세요.
       max_statements: 2
     - id: search-order
       question: 첫 탐색은 폭 바깥·높이 안쪽, 두 번째는 높이 바깥·폭 안쪽이라는 중첩 순서와 각 최소값 이상 반복 조건을 짧게 설명하세요.
-        두 번째 탐색 전 alignUp으로 두 값을 재초기화함을 구분하고, 안쪽 반복마다 바깥 반복 변수를 다시 초기화한다고 추정하지 마세요. calculateBDSHeight
-        주석의 최대 높이 자르기·최솟값 감김 조건과 kIFAlignWidth·kIFAlignHeight 감소도 보존하세요. 최소값 공식은 앞 문단에서
-        설명했으므로 반복하지 말고 완전한 문장으로 마치세요. 입력 포매터는 풀어 쓰고 뜻이 없는 IF 약어를 사용하지 마세요.
+        두 번째 탐색 전 alignUp으로 두 값을 재초기화함을 구분하고, 안쪽 반복마다 바깥 반복 변수를 다시 초기화한다고 추정하지 마세요.
+        calculateBDSHeight 주석의 최대 높이 자르기·최솟값 감김 조건과 kIFAlignWidth·kIFAlignHeight 감소도
+        보존하세요. 최소값 공식은 앞 문단에서 설명했으므로 반복하지 말고 완전한 문장으로 마치세요. 입력 포매터는 풀어 쓰고 뜻이 없는 IF
+        약어를 사용하지 마세요.
       sources:
       - search
       max_statements: 3
@@ -1523,7 +1534,8 @@ sections:
         - - kIFAlignWidth
         reject_patterns:
         - pattern: (?<![A-Za-z0-9_])IF(?![A-Za-z0-9_])
-          message: 이 질문은 계산식과 분기를 묻습니다. 대상은 선언된 변수·함수 이름으로 명시하고 풀이 없는 IF 약어를 도입하지 마세요.
+          message: 이 질문은 계산식과 분기를 묻습니다. 대상은 선언된 변수·함수 이름으로 명시하고 풀이 없는 IF 약어를 도입하지
+            마세요.
   design_requirements:
   - id: responsibility
     question: 핸들러는 어떤 객체와 장치를 만들고 관리합니까?
@@ -4520,8 +4532,9 @@ sections:
         - - completeRequest
         - - CameraManager
     - id: callback-signal
-      question: Camera::requestComplete가 요청 완료를 애플리케이션에 알리는 실제 신호 발행 동작만 설명하세요. 연결
-        대상의 실행 방식이나 스레드까지 추정하지 마세요.
+      question: Camera::requestComplete()가 요청 완료 신호를 알리는 경로에서 requestCompleted.emit(request)를
+        사용하는 책임만 한국어 한 문장으로 설명하세요. 이 파트가 요청하지 않은 if·isAccessAllowed 반환 검사·로그·수신 방식·스레드·확인
+        범위 안내를 덧붙이지 마세요. 무조건 실행된다는 보장이나 실제 관측 결과로 쓰지 마세요.
       sources:
       - callback-signal
       max_statements: 1
@@ -4531,6 +4544,9 @@ sections:
         - - requestComplete
         - - requestCompleted
         - - emit
+        reject_patterns:
+        - pattern: isAccessAllowed|Fatal|스레드|확인할|실행 방식|(?:[가-힣]다\.\s+\S)
+          message: 이 문단은 완료 알림의 책임 함수와 신호 발행 호출만 한 문장으로 설명합니다.
   - id: disconnection
     title: 연결 해제와 대기 요청
     question: Camera::disconnect()의 내부 상태 전환과 disconnected 신호, isAccessAllowed()의
