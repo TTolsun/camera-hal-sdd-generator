@@ -125,6 +125,10 @@ def _design_units(section, retained):
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']
             unit.pop('parts')
+            if 'prompt' in part:
+                from .focused_prompt import writing_instructions
+                unit['prompt'] = '\n'.join(filter(None, (
+                    writing_instructions(topic), writing_instructions(part))))
             if part.get('subquestions'):
                 for index, question in enumerate(part['subquestions']):
                     child = copy.deepcopy(unit)
@@ -166,6 +170,9 @@ def _unit_request(model, section, topic, focused_system):
                'topic': topic['question'],
                'requirements': {key: (topic['question'] if '_part_id' in topic else requirements[key])
                                 for key in topic['covers']}}
+    guidance = focused_prompt.writing_instructions(topic)
+    if guidance:
+        request['writing_instructions'] = guidance
     if 'answer_contract' in topic:
         request['answer_contract'] = topic['answer_contract']
     instruction = (

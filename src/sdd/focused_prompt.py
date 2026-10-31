@@ -25,6 +25,9 @@ def user_prompt(topic, sources, requirements=None):
     question = topic['question']
     if requirements:
         question += '\n함께 답할 항목:\n' + json.dumps(requirements, ensure_ascii=False)
+    guidance = writing_instructions(topic)
+    if guidance:
+        question += '\n집필 지시(제품 사실 아님):\n' + guidance
     constraints = {key: topic[key] for key in ('_statement_kind', '_max_statements') if key in topic}
     if 'answer_contract' in topic:
         constraints['answer_contract'] = {key: value for key, value in topic['answer_contract'].items()
@@ -40,6 +43,15 @@ def user_prompt(topic, sources, requirements=None):
             + '\n출력: '
             + json.dumps(example, ensure_ascii=False)
             + ' 형식의 JSON만 반환하세요.')
+
+
+def writing_instructions(topic):
+    if 'prompt' not in topic:
+        return ''
+    value = topic['prompt']
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError('design topic prompt must be a non-empty string')
+    return value.strip()
 
 
 def reuse_policy(cfg, system):

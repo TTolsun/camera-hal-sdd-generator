@@ -6081,9 +6081,9 @@ sections:
           message: 상태 범위의 두 경계를 동시에 만족하는 상태로 바꾸지 마세요.
     - id: access
       question: 기존 isAccessAllowed 호출의 조사 계획을 두 문장 이내로 설명하세요. allowDisconnected가 거짓이고
-        disconnected_가 참인 -ENODEV 선행 분기를 먼저 구분하고, 그 밖에는 currentState·low·high의 범위 비교와
-        범위 안 0 반환, 범위 밖 ASSERT·로그·-EACCES 코드 위치를 관찰하세요. 연결 해제 조건을 두 번 쓰거나 ASSERT 뒤의 실제
-        반환 실행을 보장하지 마세요.
+        disconnected_가 참인 -ENODEV 선행 분기를 먼저 구분하고, 그 밖에는 currentState·low·high의 범위
+        비교와 범위 안 0 반환, 범위 밖 ASSERT·로그·-EACCES 코드 위치를 관찰하세요. 연결 해제 조건을 두 번 쓰거나 ASSERT
+        뒤의 실제 반환 실행을 보장하지 마세요.
       sources:
       - access
       - state-range
@@ -6100,9 +6100,9 @@ sections:
           message: 상태 범위 비교를 배열 인덱스로 해석하지 마세요.
       max_statements: 2
     - id: validation-effects
-      question: Adjusted가 유효해지도록 조정된 구성이며 임의의 스트림에서 파라미터 변경이나 스트림 구성 삭제가 가능하다는 결과 범위만 한
-        문장으로 설명하세요. 호출자의 확인 의무는 다음 질문에서 다루므로 반복하지 마세요. 조사 시 기존 validate 결과를 관찰하며 재호출하지
-        마세요.
+      question: Adjusted가 유효해지도록 조정된 구성이며 임의의 스트림에서 파라미터 변경이나 스트림 구성 삭제가 가능하다는 결과
+        범위만 한 문장으로 설명하세요. 호출자의 확인 의무는 다음 질문에서 다루므로 반복하지 마세요. 조사 시 기존 validate 결과를
+        관찰하며 재호출하지 마세요.
       sources:
       - validation-changes
       - validate
@@ -6113,6 +6113,10 @@ sections:
         - - 가능
           - 수 있
           - 수있
+        reject_patterns:
+        - pattern: '[.!?]\s+\S'
+          message: 질문에 맞게 필요한 조건과 결과를 한 문장으로 설명하고 같은 분기를 확인·기록하거나 변경 가능성을 끝에서 되풀이하지
+            마세요.
       max_statements: 1
     - id: validation-caller
       question: Adjusted의 호출자가 지켜야 하는 확인 의무만 설명하세요.
@@ -6125,7 +6129,8 @@ sections:
         - - 확인
         reject_patterns:
         - pattern: 따라서
-          message: 앞 질문의 조정 결과를 반복하지 말고 소스에 명시된 호출자의 확인 의무만 한 문장으로 설명하세요. 근거에 없는 인과 표현을 덧붙이지 마세요.
+          message: 앞 질문의 조정 결과를 반복하지 말고 소스에 명시된 호출자의 확인 의무만 한 문장으로 설명하세요. 근거에 없는 인과
+            표현을 덧붙이지 마세요.
     - id: validation-result
       question: 이 validate 호출의 결과를 Valid와 비교하는 조건과, Valid가 아닐 때 반환하는 오류 코드를 함께 기록하는
         조사 항목을 한 문단으로 제안하세요. 같은 분기를 결과 확인과 오류 확인으로 되풀이하지 마세요.
@@ -6137,21 +6142,43 @@ sections:
         - - validate
         - - Valid
         - - -EINVAL
+        reject_patterns:
+        - pattern: '[.!?]\s+\S'
+          message: 질문에 맞게 필요한 조건과 결과를 한 문장으로 설명하고 같은 분기를 확인·기록하거나 변경 가능성을 끝에서 되풀이하지
+            마세요.
       max_statements: 1
     - id: device-configure
-      question: 앞선 상태·검증을 통과한 기존 pipe_->configure 호출의 반환값과 호출 스택의 구체 구현을 관찰하는 조사 계획만 두
-        문장 이내로 설명하세요. 비영 반환값의 전달은 포함하되 0 반환 이후 cfg.stream의 null 검사·Fatal 로그·activeStreams_
-        초기화·-EINVAL 경로는 다음 질문에서 다루므로 여기서는 반복하지 마세요.
+      question: 기존 config->validate() 호출 스택에서 config의 실제 동적 타입과 validate 구현을 어떻게 기록하며,
+        상태 확인과 검증을 통과한 pipe_->invokeMethod의 PipelineHandler::configure 호출에서 구체 구현과
+        비영 반환 전달을 어떻게 관찰하나요?
       sources:
       - configure-code
       - configure
+      - validation-check
       answer_contract:
         basis: investigation
         required_terms:
         - - pipe_
         - - configure
         - - 반환
-      max_statements: 2
+        - - config
+        - - 타입
+          - 자료형
+        - - validate
+        - - 호출 스택
+          - 호출스택
+          - 스택
+        - - invokeMethod
+        reject_patterns:
+        - pattern: 중단\s*상태|activeStreams_|setState|-EINVAL
+          message: 소스에 없는 실행 중단 기법을 추가하거나 앞뒤 질문의 검증 오류·스트림 갱신을 되풀이하지 마세요. 기존 호출 스택의
+            config 타입과 validate 구현, pipe configure의 반환값이라는 기록 항목만 제시하세요.
+        - pattern: '[.!?]\s+\S[\s\S]*[.!?]\s+\S'
+          message: 기존 config 관찰과 pipe 반환값 관찰을 두 문장 이내의 한 문단으로 설명하세요.
+      max_statements: 1
+      prompt: 두 문장 이내의 한 문단으로 config 관찰과 pipe 반환값 관찰만 설명하세요. 앞 질문의 validation 오류를
+        되풀이하지 말고 뒤 질문의 stream-null 결과를 미리 설명하지 마세요. 실제 invokeMethod 경유 호출을 직접 멤버 호출처럼
+        쓰지 마세요.
     - id: stream-link
       question: 이 cfg.stream() 결과와 null 검사, Fatal 로그 및 소스의 -EINVAL 경로를 관찰할 위치를 설명하세요.
         실제 복구나 반환이 검증됐다고 쓰지 마세요.
@@ -6229,6 +6256,10 @@ sections:
         end: '
 
           }'
+    prompt: 조사 계획인 답변은 관찰할 값·기록 항목·조건을 제안형 표현으로 설명하세요. 실행한 테스트가 아니다, 이 항목은 조사 계획이다
+      같은 원고 상태 설명을 답변마다 되풀이하지 마세요. 실제 실행·측정 결과나 새 중단·계측 기법을 주장하지 마세요. 재호출하지 않는다는 작성
+      제약을 본문에서 반복하지 말고 관찰 대상과 분기·반환값에 집중하세요. 질문에 정한 문장 수를 지키며 다른 질문의 결과·확인 절차를 다시
+      설명하지 마세요. description과 contract 부분은 그 역할대로 소스의 결과와 의무만 설명하세요.
   - id: diagnosis
     title: 실패 위치별 확인 순서
     question: 제출 실패와 완료 누락을 조사하는 개발자에게 순서가 있는 짧은 문단으로 설명하세요. 각 단계에 실제 파일·함수와 읽을 값,
@@ -6280,6 +6311,10 @@ sections:
         end: '
 
           }'
+    - id: buffer-code
+      file: src/libcamera/request.cpp
+      start: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+      end: "\treturn 0;\n}"
     covers:
     - diagnosis
     parts:
@@ -6294,18 +6329,28 @@ sections:
         required_terms:
         - - queueRequest
         - - 반환
+        reject_patterns:
+        - pattern: \x60[^\x60\n]*[가-힣][^\x60\n]*\x60
+          message: 이 소스의 코드 식별자는 ASCII입니다. 반환 같은 한국어 일반 단어를 코드로 감싸면 번역에서 보호되어 한국어가
+            남으므로 일반 문장으로 쓰세요.
       max_statements: 1
+      prompt: 백틱은 실제 C++ 코드 식별자·표현에만 쓰세요. 반환 같은 한국어 일반 단어는 코드가 아니므로 백틱 없이 쓰고, 관찰할
+        반환값과 완료 신호의 구분만 간결하게 설명하세요.
     - id: buffer-error
-      question: addBuffer()의 기존 호출에서 -EEXIST가 반환됐을 때 같은 스트림의 기존 버퍼와 남은 펜스를 각각 어떻게 확인하며,
-        동일한 반환값으로 원인을 판별할 수 있는 범위는 무엇인가요?
+      question: 기존 Request::addBuffer() 호출에서 buffer->_d()->fence() 검사와 try_emplace
+        뒤의 inserted를 어느 경로에서 관찰해야 두 -EEXIST 원인을 구분할 수 있나요? 펜스 분기가 먼저 반환하는 경우와 그 검사를
+        통과해 삽입 결과를 얻는 경우를 구분하고, 반환값만으로 원인을 단정할 수 있는 범위를 설명하세요.
       sources:
       - buffer
+      - buffer-code
       answer_contract:
         basis: investigation
         required_terms:
         - - addBuffer
         - - -EEXIST
         - - 펜스
+        - - fence()
+        - - inserted
     - id: capacity
       question: 제출 성공 후 doQueueRequests에서 queuedRequests_.size()와 maxQueuedRequestsDevice_를
         비교하고 한도에 도달한 분기를 관찰하는 계획을 설명하세요.
@@ -6333,9 +6378,9 @@ sections:
         - - break
       max_statements: 1
     - id: cancelled
-      question: doQueueRequest 조사에서 cancelled_가 참이면 completeRequest 호출 뒤 반환하는 경로와, 거짓이면
-        원래 queueRequestDevice 호출의 ret를 관찰하고 ret가 0이 아닐 때 cancelRequest로 가는 경로를 두 문장 이내로
-        대비하세요. 취소된 경우와 장치 제출 오류 분기를 각각 한 번만 쓰세요.
+      question: doQueueRequest 조사에서 cancelled_가 참이면 completeRequest 호출 뒤 반환하는 경로와,
+        거짓이면 원래 queueRequestDevice 호출의 ret를 관찰하고 ret가 0이 아닐 때 cancelRequest로 가는 경로를
+        두 문장 이내로 대비하세요. 취소된 경우와 장치 제출 오류 분기를 각각 한 번만 쓰세요.
       sources:
       - cancelled-branch
       - device-result-branch
@@ -6348,10 +6393,13 @@ sections:
         - - queueRequestDevice
         - - 반환
         - - cancelRequest
+        reject_patterns:
+        - pattern: '[.!?]\s+\S[\s\S]*[.!?]\s+\S'
+          message: 취소된 경로와 장치 제출 결과 경로를 각각 한 번씩 두 문장 이내로 설명하세요.
       max_statements: 2
     - id: buffer-completion
-      question: completeBuffer의 버퍼 추적 결과와 별도 completeRequest 호출 여부를 구분해 확인하는 계획을 설명하세요.
-        마지막 버퍼 완료를 자동 요청 완료로 바꾸지 마세요.
+      question: 기존 completeBuffer 호출의 버퍼 완료 통지와 true 반환 의미를 무엇으로 관찰하며, 마지막 버퍼 뒤 completeRequest
+        별도 호출 책임은 어떻게 구분하나요?
       sources:
       - completion
       answer_contract:
@@ -6359,6 +6407,9 @@ sections:
         required_terms:
         - - completeBuffer
         - - completeRequest
+      prompt: 이 답변은 completeBuffer의 버퍼 통지·반환과 마지막 버퍼 후 completeRequest 별도 호출 책임에 한정하세요.
+        completeRequest의 선두 RequestPending break와 큐 유지, ASSERT·pop·최종 doQueueRequests는
+        다음 pending-head 답변에서 다루므로 여기서 반복하지 마세요.
     - id: pending-head
       question: completeRequest의 선두 RequestPending 여부와 break, Pending이 아닌 경로의 ASSERT가
         검사하는 정확한 부정 조건과 다음 제거·통지 분기를 관찰하는 계획을 설명하세요. ASSERT 식을 코드 그대로 포함하고, 단언을 미래
@@ -6374,6 +6425,13 @@ sections:
           - 중단
         - - ASSERT
         - - '!req->hasPendingBuffers()'
+      prompt: completeRequest의 선두 RequestPending break가 선두 요청을 큐에 남기며, 제출 순서 때문에 뒤에서
+        이미 완료된 요청도 requestComplete로 반환하지 못한다는 결과를 반드시 설명하세요. 관찰할 분기와 ASSERT·pop_front·requestComplete의
+        순서는 간결한 완전한 문장으로 제안하고 실제 실행 결과로 쓰지 마세요.
+    prompt: 조사 계획인 답변은 관찰할 값·기록 항목·조건을 제안형 표현으로 설명하세요. 실행한 테스트가 아니다, 이 항목은 조사 계획이다
+      같은 원고 상태 설명을 답변마다 되풀이하지 마세요. 실제 실행·측정 결과나 새 중단·계측 기법을 주장하지 마세요. 재호출하지 않는다는 작성
+      제약을 본문에서 반복하지 말고 관찰 대상과 분기·반환값에 집중하세요. 질문에 정한 문장 수를 지키며 다른 질문의 결과·확인 절차를 다시
+      설명하지 마세요. description과 contract 부분은 그 역할대로 소스의 결과와 의무만 설명하세요.
   design_requirements:
   - id: diagnosis
     question: 제출 실패와 제출 후 완료 지연을 어떻게 구분합니까?
