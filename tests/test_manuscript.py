@@ -62,6 +62,15 @@ def test_bold_line_heading_is_rejected():
     assert lint("**중요:** 이 함수는 잠금을 잡지 않습니다.") == []
 
 
+def test_dma_device_interfaces_are_not_source_locations():
+    for device in ('/dev/udmabuf', '/dev/dma_heap/system', '/dev/dma_heap/linux,cma'):
+        assert lint(f"공급자는 `{device}` 장치입니다.") == []
+    for source in ('/dev/udmabuf/source.cpp', '/dev/dma_heap/../source.cpp', '/dev/source.cpp',
+                   '/tmp/source.cpp', '/dev/udmabuf#L12'):
+        assert any(f.rule == '절대 경로·줄 번호 링크' for f in lint(f"위치는 `{source}` 에 있습니다."))
+    assert any(f.rule == '절대 경로·줄 번호 링크' for f in lint("장치는 file:///dev/udmabuf 입니다."))
+
+
 def test_unwrap_removes_outer_fence_only():
     inner = "본문입니다.\n\n```mermaid\ngraph TD\n```\n\n끝입니다."
     assert unwrap(f"```markdown\n{inner}\n```") == inner

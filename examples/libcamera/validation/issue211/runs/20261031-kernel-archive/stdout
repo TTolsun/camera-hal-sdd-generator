@@ -1,0 +1,6 @@
+cf23bf492a00a5c7517e221b0d8f742ea3cffa9351823191a5ba5c476ba15460  /mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/build/issue211-kernel/bzImage
+3d29239adf3c1724dadaf143fc8da3a7851ea84b14bb0dea577e57189ac91778  /mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/build/issue211-kernel/dma-buf.Kconfig
+3930d0d08167868878a43e59d7220d1bba5f1988d836026a545b25cb0748b5a5  /mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/build/issue211-kernel/heaps.Kconfig
+11d9efe4a3a081ca548551f91091bd0b18c35ad391650b85eacc3d48230f94d9  /mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/build/issue211-kernel/running.config
+46f1dbbec4989b1b1ee8ba6077d4880be254c4f9b770077687106ff9c7247948  /mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/build/issue211-kernel/test.config
+12255b5b58a8da0d2d38718cc25d05a2239469678e3f4db6cd0282ab6c6c6da7  /mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/build/issue211-kernel/udmabuf.c

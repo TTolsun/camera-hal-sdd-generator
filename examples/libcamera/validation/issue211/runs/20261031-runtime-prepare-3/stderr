@@ -1,0 +1,36 @@
+Cloning into '/home/baboess/.cache/issue211-runtime-D6sfkcnF/source'...
+From https://gitlab.freedesktop.org/camera/libcamera
+ * [new branch]        djrscally/c55          -> origin/djrscally/c55
+ * [new branch]        djrscally/c55-fixes    -> origin/djrscally/c55-fixes
+ * [new branch]        djrscally/enumeration  -> origin/djrscally/enumeration
+ * [new branch]        djrscally/flicker      -> origin/djrscally/flicker
+ * [new branch]        djrscally/ipu3-libipa-rework -> origin/djrscally/ipu3-libipa-rework
+ * [new branch]        djrscally/v4l2-events  -> origin/djrscally/v4l2-events
+ * [new branch]        epaul/agc              -> origin/epaul/agc
+ * [new branch]        epaul/bug/285          -> origin/epaul/bug/285
+ * [new branch]        epaul/bug/290          -> origin/epaul/bug/290
+ * [new branch]        epaul/dev/layer        -> origin/epaul/dev/layer
+ * [new branch]        epaul/dev/layer-config -> origin/epaul/dev/layer-config
+ * [new branch]        epaul/dev/rkisp2/upstream -> origin/epaul/dev/rkisp2/upstream
+ * [new branch]        epaul/dev/sync         -> origin/epaul/dev/sync
+ * [new branch]        epaul/scalar-controlinfo -> origin/epaul/scalar-controlinfo
+ * [new tag]           v0.0.0                 -> v0.0.0
+ * [new tag]           v0.0.1                 -> v0.0.1
+ * [new tag]           v0.0.2                 -> v0.0.2
+ * [new tag]           v0.0.3                 -> v0.0.3
+ * [new tag]           v0.0.4                 -> v0.0.4
+ * [new tag]           v0.0.5                 -> v0.0.5
+ * [new tag]           v0.1.0                 -> v0.1.0
+ * [new tag]           v0.2.0                 -> v0.2.0
+ * [new tag]           v0.3.0                 -> v0.3.0
+ * [new tag]           v0.3.1                 -> v0.3.1
+ * [new tag]           v0.3.2                 -> v0.3.2
+ * [new tag]           v0.4.0                 -> v0.4.0
+ * [new tag]           v0.5.0                 -> v0.5.0
+ * [new tag]           v0.5.1                 -> v0.5.1
+ * [new tag]           v0.5.2                 -> v0.5.2
+ * [new tag]           v0.6.0                 -> v0.6.0
+ * [new tag]           v0.7.0                 -> v0.7.0
+ * [new tag]           v0.7.1                 -> v0.7.1
+ * [new tag]           v0.7.2                 -> v0.7.2
+HEAD is now at 293d751a qcam: viewfinder_gl: Set awb GL uniform for debayer shaders

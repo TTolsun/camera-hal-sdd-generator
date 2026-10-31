@@ -1,0 +1,9 @@
+# Independent review, never a nested invocation by the writer CLI.
+agent:
+  kind: cli
+  runner: codex
+  model: gpt-6.1-terra
+  args: [-c, 'model_reasoning_effort="high"']
+  max_input_chars: 64000
+  timeout_sec: 600
+  full_style_guides: true

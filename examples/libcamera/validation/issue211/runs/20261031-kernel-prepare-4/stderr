@@ -1,0 +1,111 @@
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libdefault-lib-seed_src_jitter.o): in function `ossl_prov_acquire_entropy_from_jitter':
+(.text+0xd8): undefined reference to `jent_entropy_collector_alloc'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xf0): undefined reference to `jent_read_entropy'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xfc): undefined reference to `jent_entropy_collector_free'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libdefault-lib-seed_src_jitter.o): in function `jitter_instantiate':
+(.text+0x4d8): undefined reference to `jent_entropy_init_ex'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `zlib_stateful_expand_block':
+(.text+0x86): undefined reference to `inflate'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `zlib_stateful_compress_block':
+(.text+0x15a): undefined reference to `deflate'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `zlib_stateful_finish':
+(.text+0x1d5): undefined reference to `inflateEnd'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x1de): undefined reference to `deflateEnd'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `zlib_stateful_init':
+(.text+0x2b7): undefined reference to `inflateInit_'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x330): undefined reference to `deflateInit_'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `bio_zlib_ctrl':
+(.text+0x544): undefined reference to `zError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x638): undefined reference to `deflate'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `bio_zlib_write':
+(.text+0x905): undefined reference to `deflate'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x984): undefined reference to `zError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xa23): undefined reference to `deflateInit_'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `bio_zlib_read':
+(.text+0xb29): undefined reference to `inflate'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xba4): undefined reference to `zError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xc12): undefined reference to `inflateInit_'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `zlib_oneshot_expand_block':
+(.text+0xca5): undefined reference to `uncompress'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `zlib_oneshot_compress_block':
+(.text+0xd25): undefined reference to `compress'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zlib.o): in function `bio_zlib_free':
+(.text+0xd7a): undefined reference to `inflateEnd'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xda7): undefined reference to `deflateEnd'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `zstd_stateful_expand_block':
+(.text+0x9c): undefined reference to `ZSTD_decompressStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xa7): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `zstd_stateful_compress_block':
+(.text+0x168): undefined reference to `ZSTD_compressStream2'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x170): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x1b0): undefined reference to `ZSTD_endStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x1b8): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x1e0): undefined reference to `ZSTD_flushStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x1e8): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `zstd_stateful_finish':
+(.text+0x21e): undefined reference to `ZSTD_freeCStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x227): undefined reference to `ZSTD_freeDStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `zstd_stateful_init':
+(.text+0x2ed): undefined reference to `ZSTD_createCStream_advanced'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x306): undefined reference to `ZSTD_initCStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x327): undefined reference to `ZSTD_createDStream_advanced'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x33c): undefined reference to `ZSTD_initDStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x364): undefined reference to `ZSTD_freeCStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x36d): undefined reference to `ZSTD_freeDStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `bio_zstd_new':
+(.text+0x41d): undefined reference to `ZSTD_createDStream_advanced'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x435): undefined reference to `ZSTD_initDStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x43a): undefined reference to `ZSTD_DStreamInSize'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x45f): undefined reference to `ZSTD_createCStream_advanced'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x479): undefined reference to `ZSTD_initCStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x47e): undefined reference to `ZSTD_CStreamInSize'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x4ec): undefined reference to `ZSTD_freeDStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x4f5): undefined reference to `ZSTD_freeCStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `bio_zstd_ctrl':
+(.text+0x6d4): undefined reference to `ZSTD_getErrorName'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x789): undefined reference to `ZSTD_flushStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x794): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `bio_zstd_write':
+(.text+0x9a3): undefined reference to `ZSTD_compressStream2'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0x9ae): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xa2c): undefined reference to `ZSTD_getErrorName'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `bio_zstd_read':
+(.text+0xbc4): undefined reference to `ZSTD_decompressStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xbcf): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xc0b): undefined reference to `ZSTD_getErrorName'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `zstd_oneshot_expand_block':
+(.text+0xd8b): undefined reference to `ZSTD_decompress'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xd97): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `zstd_oneshot_compress_block':
+(.text+0xe1e): undefined reference to `ZSTD_compress'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xe2a): undefined reference to `ZSTD_isError'
+/usr/bin/x86_64-linux-gnu-ld.bfd: /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/lib/x86_64-linux-gnu/libcrypto.a(libcrypto-lib-c_zstd.o): in function `bio_zstd_free':
+(.text+0xe98): undefined reference to `ZSTD_freeDStream'
+/usr/bin/x86_64-linux-gnu-ld.bfd: (.text+0xeb8): undefined reference to `ZSTD_freeCStream'
+collect2: error: ld returned 1 exit status
+make[3]: *** [scripts/Makefile.host:114: certs/extract-cert] Error 1
+make[2]: *** [scripts/Makefile.build:544: certs] Error 2
+make[2]: *** Waiting for unfinished jobs....
+fixdep: error opening file: arch/x86/kernel/.early_printk.o.d: No such file or directory
+make[4]: *** [scripts/Makefile.build:287: arch/x86/kernel/early_printk.o] Error 2
+make[4]: *** Deleting file 'arch/x86/kernel/early_printk.o'
+make[3]: *** [scripts/Makefile.build:544: arch/x86/kernel] Error 2
+make[2]: *** [scripts/Makefile.build:544: arch/x86] Error 2
+fixdep: error opening file: fs/udf/.unicode.o.d: No such file or directory
+make[4]: *** [scripts/Makefile.build:287: fs/udf/unicode.o] Error 2
+make[4]: *** Deleting file 'fs/udf/unicode.o'
+make[3]: *** [scripts/Makefile.build:544: fs/udf] Error 2
+make[3]: *** Waiting for unfinished jobs....
+make[2]: *** [scripts/Makefile.build:544: fs] Error 2
+fixdep: error opening file: kernel/bpf/.bpf_lru_list.o.d: No such file or directory
+make[4]: *** [scripts/Makefile.build:287: kernel/bpf/bpf_lru_list.o] Error 2
+make[4]: *** Deleting file 'kernel/bpf/bpf_lru_list.o'
+make[4]: *** Waiting for unfinished jobs....
+make[3]: *** [scripts/Makefile.build:544: kernel/bpf] Error 2
+make[3]: *** Waiting for unfinished jobs....
+ar: kernel/trace/trace_events_hist.o: No such file or directory
+make[4]: *** [scripts/Makefile.build:473: kernel/trace/built-in.a] Error 123
+make[3]: *** [scripts/Makefile.build:544: kernel/trace] Error 2
+make[2]: *** [scripts/Makefile.build:544: kernel] Error 2
+make[1]: *** [/home/baboess/.cache/issue211-kernel-52ZYBZZe/WSL2-Linux-Kernel-linux-msft-wsl-6.18.33.2/Makefile:2026: .] Error 2
+make: *** [Makefile:248: __sub-make] Error 2

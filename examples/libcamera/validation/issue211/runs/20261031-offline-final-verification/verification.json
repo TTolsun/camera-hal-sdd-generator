@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "status": "passed",
+  "scope": "Offline current-predicate revalidation of preserved native evidence; not a new capture or human approval",
+  "original_kernel": "6.18.33.2-microsoft-standard-WSL2-issue211",
+  "original_source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "results": [
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        434,
+        437
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 434,
+      "allocations": 4
+    },
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        449,
+        452
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 449,
+      "allocations": 4
+    },
+    {
+      "completed_frames": 3,
+      "cancelled_callbacks": 0,
+      "observed_tids": [
+        464,
+        467
+      ],
+      "successful_buffer_sequences": [
+        0,
+        1,
+        2
+      ],
+      "pid": 464,
+      "allocations": 4
+    }
+  ],
+  "record_sha256": "051c8bd9f7c693a474384fa63c96dcfaa0e80cd83506b375e2f89193e6a25b91"
+}

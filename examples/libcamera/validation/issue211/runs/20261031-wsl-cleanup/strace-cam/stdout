@@ -1,0 +1,5 @@
+Using camera Virtual2 as cam0
+cam0: Capture 3 frames
+111.511871 (0.00 fps) cam0-stream0 seq: 000000 bytesused: 120000/60000
+111.528537 (60.00 fps) cam0-stream0 seq: 000001 bytesused: 120000/60000
+111.545203 (60.00 fps) cam0-stream0 seq: 000002 bytesused: 120000/60000

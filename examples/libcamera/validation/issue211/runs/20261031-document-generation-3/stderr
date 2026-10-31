@@ -1,0 +1,2 @@
+오류: 설계 항목 검증 실패:
+official-cam-validation: official-cam-validation/completion: LLM 답변 검증 실패: 인용 위치는 생성기가 evidence에서 연결합니다. 본문에 직접 쓰지 마세요.

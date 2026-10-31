@@ -1,0 +1,5 @@
+/home/baboess/.cache/issue211-kernel-52ZYBZZe
+Get:1 http://archive.ubuntu.com/ubuntu resolute/main amd64 libbpf1 amd64 1:1.6.3-1ubuntu1 [185 kB]
+Get:2 http://archive.ubuntu.com/ubuntu resolute/universe amd64 libdwarves1 amd64 1.31-2ubuntu1 [93.2 kB]
+Fetched 278 kB in 2s (151 kB/s)
+21f28efed81a1c097d249917000eed9ca70e8f90bfeebc687ea9b559d5310906  kernel.tar.gz

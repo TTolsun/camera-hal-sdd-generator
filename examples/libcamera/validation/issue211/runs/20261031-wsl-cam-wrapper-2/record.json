@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "argv": [
+    "wsl",
+    "-d",
+    "Ubuntu",
+    "-u",
+    "root",
+    "--",
+    "env",
+    "PYTHONPATH=/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/src",
+    "python3",
+    "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/runtime/run_cam.py",
+    "--source",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source",
+    "--build",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build",
+    "--tools",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools",
+    "--probe",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/dmabuf-probe-2",
+    "--out",
+    "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/validation/issue211/runs/20261031-wsl-cam-2"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 180,
+  "started_at": "2026-10-31T06:19:30.879161+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "parent-reaped-windows",
+  "pid": 26520,
+  "elapsed_seconds": 7.176682199991774,
+  "files": {
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

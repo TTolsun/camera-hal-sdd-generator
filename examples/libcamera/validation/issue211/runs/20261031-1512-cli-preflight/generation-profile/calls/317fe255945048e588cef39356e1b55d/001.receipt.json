@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "tag": "availability",
+  "completed_at": "2026-10-31T06:06:48.538487+00:00",
+  "transport": "cli",
+  "model": "claude-haiku-5-5",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "26df9947e3efe1422f9a4208b5722ee1579adf41a8dc59fe0c5d8a069966d61b",
+  "response_sha256": "0887e9db9982dd0d72e88d81b96745d3991b6b171e8a85005039cc09c31ca588",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "claude",
+    "executable": "claude.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "--print",
+      "--output-format",
+      "json",
+      "--tools",
+      "",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}",
+      "--no-session-persistence",
+      "--model",
+      "claude-haiku-5-5",
+      "--effort",
+      "high",
+      "--setting-sources",
+      "project,local"
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "22f1ffd128e2c62f95616119dd366b3ccf7918c69676019194401e648d2c474a",
+    "prompt_sha256": "ed37016a5c05d25313ed7939d3ed29e394f8a6054fca2326eda26018e92b720a",
+    "provider": {
+      "session_id": "2f0d03a9-c509-4b04-aba7-14a3dfdd116e",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 10388,
+        "cache_read_input_tokens": 3387,
+        "output_tokens": 12,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 10388,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 12,
+            "cache_read_input_tokens": 3387,
+            "cache_creation_input_tokens": 10388,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 10388
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-haiku-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 12,
+          "cacheReadInputTokens": 3387,
+          "cacheCreationInputTokens": 10388,
+          "webSearchRequests": 0,
+          "costUSD": 0.0840294,
+          "contextWindow": 200000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 0,
+          "canonicalModel": "claude-haiku-5-5",
+          "provider": "firstParty",
+          "costBasis": "unknown"
+        }
+      }
+    },
+    "stdout_path": "cli/call-6yu0apkr.stdout.txt"
+  },
+  "human_review": "pending"
+}

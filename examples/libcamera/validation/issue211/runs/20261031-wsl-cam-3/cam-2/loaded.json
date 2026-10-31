@@ -1,0 +1,31 @@
+{
+  "pid": 449,
+  "executable": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam",
+  "files": {
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3",
+    "/usr/lib/x86_64-linux-gnu/libyuv.so.0.0.1922": "d71b97b26d8415269640bd94b88597fa1c33b6b72043d2cd4d117c2b28c2342f",
+    "/usr/lib/x86_64-linux-gnu/libudev.so.1.7.12": "17a934f550b880125c51294a261da6569ee7b8fae089730aeea6db8a8166f403",
+    "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+    "/usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1": "1d94e18b68cf996809b1132be5897f249b07ce59edf63feb6e61e73de8f0f4fe",
+    "/usr/lib/x86_64-linux-gnu/libnettle.so.8.11": "68c2f760d329a85ce1aa5cfc5e48ffece235258159005726798ad14e6f96a789",
+    "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+    "/usr/lib/x86_64-linux-gnu/libyaml-0.so.2.0.9": "5c0fd1dd2a241ed0ebb72f7f25760bab4181f00f9d0f6ae1d0c6d888dc88bffb",
+    "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+    "/usr/lib/x86_64-linux-gnu/libffi.so.8.2.0": "1a0dc86f787f73e025a6e521056360afcbe70f2a82cd808132fefc2b4ee95daa",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so.0.7.2": "441f04294e61632d080f4bb55fb38ce787bb8af173a4b6d55d7c05f0f04fd18c",
+    "/usr/lib/x86_64-linux-gnu/libgnutls.so.30.41.1": "ebcc6a4dfae904dc956feb61cef5c36917cf36c19c5718d3c2be7e377ac65d27",
+    "/usr/lib/x86_64-linux-gnu/libdrm.so.2.131.0": "c8be7d3863453898666977c12b0b392014a1c728d84215d885d574882d6e7b89",
+    "/usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0": "fda9699eef15deda5f1c626e9140377a7f5d88c41516a54278ac02429cb20fa5",
+    "/usr/lib/x86_64-linux-gnu/libp11-kit.so.0.4.8": "2611eeb039dbed48839d90afe3d9ad3e5bd9edca2989af05dc62a93c3ff41fed",
+    "/usr/lib/x86_64-linux-gnu/libunistring.so.5.2.0": "c762a289c02f716a12549d544a811715126067b9a6377057671d3fad9453a1fc",
+    "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+    "/usr/lib/x86_64-linux-gnu/libevent_pthreads-2.1.so.7.0.1": "9d73557d8ff348abf029e35ce2e53a579e4c111b975642ebf8ec24815477d7ba",
+    "/usr/lib/x86_64-linux-gnu/libevent-2.1.so.7.0.1": "e68643dfa8c860d2b2ea56fb339af2d79c3e11e7a78830d3ac08475d57c6a698",
+    "/usr/lib/x86_64-linux-gnu/libjpeg.so.8.2.2": "90a1eebead4d7c1abc46cf9c66c5392c60fc2c16f038af20fc7efbd0d8dd427f",
+    "/usr/lib/x86_64-linux-gnu/libidn2.so.0.4.0": "cdb48484c43a795c3722e286c31eb6238b4b7c3780043895dd9fa6b6041f78da",
+    "/usr/lib/x86_64-linux-gnu/libtasn1.so.6.6.5": "1255353abfae7b9f52aedb0264876cd4c852f13c2acf3e2203ebd2aab79bce02",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam": "1ceed18da065a383e2f573ba49e9caea77033abd6830a7ec051e3681dabc79d2",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so.0.7.2": "2423e936a6ffde0fa533c76a4738f748f77b4535c881c12a616dfeec50a940eb",
+    "/usr/lib/x86_64-linux-gnu/libhogweed.so.6.11": "67bdc12f1ffe643142d5e185a6a8f654fd38cd14e77bae68201cf9aa71b00b61"
+  }
+}

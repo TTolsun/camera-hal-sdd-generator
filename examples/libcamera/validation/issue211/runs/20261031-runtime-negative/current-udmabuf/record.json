@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "argv": [
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/dmabuf-probe-2",
+    "/dev/udmabuf"
+  ],
+  "cwd": "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 15,
+  "started_at": "2026-10-31T06:15:05.006742+00:00",
+  "timed_out": false,
+  "exit_code": 1,
+  "cleanup": "process-group-empty",
+  "pid": 20887,
+  "group_absent": true,
+  "elapsed_seconds": 0.016712584999993396,
+  "files": {
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "a93ea5e78e05d8bdce7378e4832ded002d529b83bc7d8b9b38b006d94c9ff091"
+  }
+}

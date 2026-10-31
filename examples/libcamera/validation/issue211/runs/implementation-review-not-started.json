@@ -1,0 +1,5 @@
+{
+  "status": "not-executed",
+  "reason": "Automatic approval review rejected whole implementation/test payload transmission as outside the specified document-grounding review scope. No bypass or alternate transmission used.",
+  "code_review_owner": "Sol; local review"
+}

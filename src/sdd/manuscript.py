@@ -82,6 +82,17 @@ def _json_residue(line: str) -> bool:
                 or "\\n" in _INLINE_CODE.sub(" ", line))
 
 
+_ABSOLUTE_PATH = re.compile(r"file://|(?:^|[\s(\[`])(?:[A-Za-z]:[\\/]|/[^\s`/][^\s`]*/|\\\\[^\s`\\][^\s`]*\\)|#L\d+")
+# Linux DMA-BUF device interfaces are not source-code locations. Only complete
+# inline-code spans are exempt; traversal, suffixes and arbitrary paths remain
+# subject to the source-location rule.
+_DMA_DEVICE = re.compile(r"`/dev/(?:udmabuf|dma_heap/[A-Za-z0-9_,+-]+)`")
+
+
+def _absolute_path(line: str) -> bool:
+    return bool(_ABSOLUTE_PATH.search(_DMA_DEVICE.sub('`device-node`', line)))
+
+
 _RULES = [
     _Rule("JSON 잔여물",
           '원고 본문에 JSON 포장의 흔적("}, 이스케이프된 \\n)이 남아 있습니다. Markdown 본문만 출력합니다.',
@@ -98,7 +109,7 @@ _RULES = [
           # 글자 종류는 제한하지 않아 "/~user", "/-tmp", "/日本語" 도 잡되, "3 / 4", "3 /4" 같은
           # 산술식과 "//" 주석 표기는 경로로 오인하지 않는다. 한 성분짜리 "/tmp" 와 맨 루트 "/" 는
           # 놓치는 대신 오탐을 막는 절충이다.
-          re.compile(r"file://|(?:^|[\s(\[`])(?:[A-Za-z]:[\\/]|/[^\s`/][^\s`]*/|\\\\[^\s`\\][^\s`]*\\)|#L\d+").search),
+          _absolute_path),
     _Rule("굵은 글씨 제목",
           "**굵은 글씨** 한 줄을 제목처럼 쓰지 않습니다. 제목은 파이프라인이 붙이므로 문단만 씁니다.",
           re.compile(r"^\s*\*\*[^*\n]+\*\*\s*:?\s*$").match),

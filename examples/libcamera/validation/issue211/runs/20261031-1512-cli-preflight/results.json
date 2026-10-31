@@ -1,0 +1,63 @@
+{
+  "generation-profile": {
+    "argv": [
+      "C:\\Users\\baboe\\.local\\bin\\claude.EXE",
+      "--print",
+      "--output-format",
+      "json",
+      "--tools",
+      "",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}",
+      "--no-session-persistence",
+      "--model",
+      "claude-haiku-5-5",
+      "--effort",
+      "high",
+      "--setting-sources",
+      "project,local"
+    ],
+    "status": "completed",
+    "response": "issue211 CLI preflight",
+    "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-1512-cli-preflight\\generation-profile\\calls\\317fe255945048e588cef39356e1b55d\\001.receipt.json"
+  },
+  "independent-review-profile": {
+    "argv": [
+      "C:\\Users\\baboe\\AppData\\Local\\OpenAI\\Codex\\bin\\22cfb1d302613eae\\codex.EXE",
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "status": "completed",
+    "response": "issue211 CLI preflight",
+    "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-1512-cli-preflight\\independent-review-profile\\calls\\bc09c66e55374d3ca5749c6a7ba400cc\\001.receipt.json"
+  }
+}

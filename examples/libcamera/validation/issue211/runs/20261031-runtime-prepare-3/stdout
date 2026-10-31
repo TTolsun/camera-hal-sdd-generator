@@ -1,0 +1,358 @@
+WORK:/home/baboess/.cache/issue211-runtime-D6sfkcnF
+Get:1 http://archive.ubuntu.com/ubuntu resolute/main amd64 libdw1t64 amd64 0.194-4 [285 kB]
+Get:2 http://archive.ubuntu.com/ubuntu resolute/main amd64 libelf1t64 amd64 0.194-4 [57.1 kB]
+Get:3 http://archive.ubuntu.com/ubuntu resolute/main amd64 libunwind8 amd64 1.8.3-0ubuntu1 [59.6 kB]
+Fetched 402 kB in 2s (204 kB/s)
+	linux-vdso.so.1 (0x00007608f3dea000)
+	libreadline.so.8 => /usr/lib/x86_64-linux-gnu/libreadline.so.8 (0x00007608f3d80000)
+	libz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x00007608f3d62000)
+	libzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x00007608f3c9f000)
+	libncursesw.so.6 => /usr/lib/x86_64-linux-gnu/libncursesw.so.6 (0x00007608f31c3000)
+	libtinfo.so.6 => /usr/lib/x86_64-linux-gnu/libtinfo.so.6 (0x00007608f318e000)
+	libpython3.14.so.1.0 => /usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0 (0x00007608f2800000)
+	libexpat.so.1 => /usr/lib/x86_64-linux-gnu/libexpat.so.1 (0x00007608f3160000)
+	liblzma.so.5 => /usr/lib/x86_64-linux-gnu/liblzma.so.5 (0x00007608f312b000)
+	libbabeltrace.so.1 => /home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu/libbabeltrace.so.1 (0x00007608f3c8e000)
+	libbabeltrace-ctf.so.1 => /home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu/libbabeltrace-ctf.so.1 (0x00007608f30de000)
+	libipt.so.2 => /home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu/libipt.so.2 (0x00007608f30c1000)
+	libmpfr.so.6 => /usr/lib/x86_64-linux-gnu/libmpfr.so.6 (0x00007608f273f000)
+	libgmp.so.10 => /usr/lib/x86_64-linux-gnu/libgmp.so.10 (0x00007608f26b9000)
+	libsource-highlight.so.4 => /home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu/libsource-highlight.so.4 (0x00007608f25f5000)
+	libxxhash.so.0 => /usr/lib/x86_64-linux-gnu/libxxhash.so.0 (0x00007608f30ae000)
+	libdebuginfod.so.1 => /home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu/libdebuginfod.so.1 (0x00007608f30a2000)
+	libstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007608f2200000)
+	libm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x00007608f24cf000)
+	libgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007608f3074000)
+	libc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007608f1e00000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007608f3dec000)
+	libglib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x00007608f20a8000)
+	libelf.so.1 => /home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu/libelf.so.1 (0x00007608f3053000)
+	libuuid.so.1 => /usr/lib/x86_64-linux-gnu/libuuid.so.1 (0x00007608f24c5000)
+	libcurl-gnutls.so.4 => /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4 (0x00007608f1d13000)
+	libjson-c.so.5 => /usr/lib/x86_64-linux-gnu/libjson-c.so.5 (0x00007608f24b0000)
+	libatomic.so.1 => /usr/lib/x86_64-linux-gnu/libatomic.so.1 (0x00007608f24a5000)
+	libpcre2-8.so.0 => /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x00007608f1c67000)
+	libnghttp2.so.14 => /usr/lib/x86_64-linux-gnu/libnghttp2.so.14 (0x00007608f207e000)
+	libidn2.so.0 => /usr/lib/x86_64-linux-gnu/libidn2.so.0 (0x00007608f205c000)
+	librtmp.so.1 => /usr/lib/x86_64-linux-gnu/librtmp.so.1 (0x00007608f203c000)
+	libldap.so.2 => /usr/lib/x86_64-linux-gnu/libldap.so.2 (0x00007608f1c04000)
+	liblber.so.2 => /usr/lib/x86_64-linux-gnu/liblber.so.2 (0x00007608f202b000)
+	libssh2.so.1 => /usr/lib/x86_64-linux-gnu/libssh2.so.1 (0x00007608f1bb7000)
+	libpsl.so.5 => /usr/lib/x86_64-linux-gnu/libpsl.so.5 (0x00007608f1ba2000)
+	libnettle.so.8 => /usr/lib/x86_64-linux-gnu/libnettle.so.8 (0x00007608f1b4b000)
+	libgnutls.so.30 => /usr/lib/x86_64-linux-gnu/libgnutls.so.30 (0x00007608f1800000)
+	libgssapi_krb5.so.2 => /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 (0x00007608f1af3000)
+	libbrotlidec.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1 (0x00007608f1ae4000)
+	libunistring.so.5 => /usr/lib/x86_64-linux-gnu/libunistring.so.5 (0x00007608f1619000)
+	libhogweed.so.6 => /usr/lib/x86_64-linux-gnu/libhogweed.so.6 (0x00007608f1a99000)
+	libsasl2.so.2 => /usr/lib/x86_64-linux-gnu/libsasl2.so.2 (0x00007608f1a7e000)
+	libssl.so.3 => /usr/lib/x86_64-linux-gnu/libssl.so.3 (0x00007608f1508000)
+	libcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007608f0e00000)
+	libp11-kit.so.0 => /usr/lib/x86_64-linux-gnu/libp11-kit.so.0 (0x00007608f0c25000)
+	libtasn1.so.6 => /usr/lib/x86_64-linux-gnu/libtasn1.so.6 (0x00007608f1a67000)
+	libkrb5.so.3 => /usr/lib/x86_64-linux-gnu/libkrb5.so.3 (0x00007608f143c000)
+	libk5crypto.so.3 => /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 (0x00007608f1a3b000)
+	libcom_err.so.2 => /usr/lib/x86_64-linux-gnu/libcom_err.so.2 (0x00007608f2023000)
+	libkrb5support.so.0 => /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 (0x00007608f1a2e000)
+	libbrotlicommon.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1 (0x00007608f0c02000)
+	libffi.so.8 => /usr/lib/x86_64-linux-gnu/libffi.so.8 (0x00007608f1a1d000)
+	libkeyutils.so.1 => /usr/lib/x86_64-linux-gnu/libkeyutils.so.1 (0x00007608f1a16000)
+	libresolv.so.2 => /usr/lib/x86_64-linux-gnu/libresolv.so.2 (0x00007608f1429000)
+GNU gdb (Ubuntu 17.1-2ubuntu1) 17.1
+Copyright (C) 2025 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+strace -- version 6.19
+Copyright (c) 1991-2026 The strace developers <https://strace.io>.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Optional features enabled: stack-trace=libunwind stack-demangle m32-mpers mx32-mpers
+293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+The Meson build system
+Version: 1.10.1
+Source dir: /home/baboess/.cache/issue211-runtime-D6sfkcnF/source
+Build dir: /home/baboess/.cache/issue211-runtime-D6sfkcnF/build
+Build type: native build
+Project name: libcamera
+Project version: 0.7.2
+C compiler for the host machine: cc (gcc 15.2.0 "cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0")
+C linker for the host machine: cc ld.bfd 2.46
+C++ compiler for the host machine: c++ (gcc 15.2.0 "c++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0")
+C++ linker for the host machine: c++ ld.bfd 2.46
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+../source/meson.build:38: WARNING: The sources and meson.build disagree about the version: 0.0.0 != 0.7.2
+Header "unistd.h" has symbol "close_range" : YES 
+Header "fcntl.h" has symbol "F_ADD_SEALS" : YES 
+Header "unistd.h" has symbol "issetugid" : NO 
+Header "locale.h" has symbol "locale_t" : YES 
+Header "sys/mman.h" has symbol "memfd_create" : YES 
+Header "stdlib.h" has symbol "secure_getenv" : YES 
+Header "version" has symbol "_LIBCPP_VERSION" : NO 
+Header "version" has symbol "__GLIBCXX__" : YES 
+Message: Detected C++ standard library: libstdc++
+Compiler for C supports arguments -Wno-c99-designator: NO 
+Found pkg-config: YES (/usr/bin/pkg-config) 2.5.1
+Did not find CMake 'cmake'
+Found CMake: NO
+Run-time dependency lttng-ust found: NO (tried pkgconfig and cmake)
+Program ./parser.py found: YES (/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/utils/codegen/ipc/./parser.py)
+Program ./generate.py found: YES (/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/utils/codegen/ipc/./generate.py)
+Program ./extract-docs.py found: YES (/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/utils/codegen/ipc/./extract-docs.py)
+Configuring version.h using configuration
+Program openssl found: YES (/usr/bin/openssl)
+Run-time dependency libyuv found: NO (tried pkgconfig and cmake)
+Has header "libyuv.h" : YES 
+Library yuv found: YES
+Library atomic found: YES
+Run-time dependency threads found: YES
+Run-time dependency libdw found: NO (tried pkgconfig and cmake)
+Run-time dependency libunwind found: NO (tried pkgconfig and cmake)
+Header "execinfo.h" has symbol "backtrace" : YES 
+Found pkg-config: YES (/usr/bin/pkg-config) 2.5.1
+Run-time dependency dl found: YES
+Run-time dependency libudev found: YES 259
+Run-time dependency yaml-0.1 found: YES 0.2.5
+Run-time dependency gnutls found: YES 3.8.12
+Header "uchar.h" has symbol "mbrtoc16" skipped: feature android disabled
+Run-time dependency libevent_pthreads found: YES 2.1.12-stable
+Run-time dependency libtiff-4 found: NO (tried pkgconfig and cmake)
+Dependency gtest skipped: feature lc-compliance disabled
+Run-time dependency libdrm found: YES 2.4.131
+sdl2-config found: NO
+Run-time dependency sdl2 found: NO (tried pkgconfig, config-tool and cmake)
+Run-time dependency libjpeg found: YES 2.1.5
+Dependency qt6(modules: Core, Gui, OpenGL, OpenGLWidgets, Widgets) skipped: feature qcam disabled
+Dependency glib-2.0 skipped: feature gstreamer disabled
+Dependency gstreamer-video-1.0 skipped: feature gstreamer disabled
+Dependency gstreamer-allocators-1.0 skipped: feature gstreamer disabled
+Program python3 found: NO (disabled by: pycamera )
+Dependency pybind11 skipped: feature pycamera disabled
+Program doxygen skipped: feature documentation disabled
+Program dot skipped: feature documentation disabled
+Program sphinx-build-3 sphinx-build skipped: feature documentation disabled
+Configuring config.h using configuration
+Build targets in project: 30
+
+libcamera 0.7.2
+
+  Versions
+    libcamera git version    : 0.0.0+1-293d751a
+    Source version match     : NO
+    Sources                  : 0.7.2+1-293d751a-nvm
+
+  Paths
+    LIBCAMERA_DATA_DIR       : "/usr/local/share/libcamera"
+    LIBCAMERA_SYSCONF_DIR    : "/usr/local/etc/libcamera"
+    IPA_PROXY_DIR            : "/usr/local/libexec/libcamera"
+    IPA_CONFIG_DIR           : "/usr/local/etc/libcamera/ipa:/usr/local/share/libcamera/ipa"
+    IPA_MODULE_DIR           : "/usr/local/lib/x86_64-linux-gnu/libcamera/ipa"
+
+  Configuration
+    SoftISP support          : NO
+    IPA modules signed with  : gnutls
+    Enabled pipelines        : virtual
+    Enabled IPA modules      :
+    Controls files           : control_ids_core.yaml
+                               control_ids_debug.yaml
+                               control_ids_draft.yaml
+    Properties files         : property_ids_draft.yaml
+                               property_ids_core.yaml
+    Hotplug support          : YES
+    Tracing support          : NO
+    Android support          : NO
+    GStreamer support        : NO
+    Python bindings          : NO
+    V4L2 emulation support   : NO
+    Unit tests               : NO
+
+  Applications
+    cam application          : YES
+    cam options              : output-kms
+    DNG output support       : NO
+    qcam application         : NO
+    lc-compliance application: NO
+
+  User defined options
+    buildtype                : debug
+    cam                      : enabled
+    documentation            : disabled
+    gstreamer                : disabled
+    ipas                     : []
+    lc-compliance            : disabled
+    pipelines                : virtual
+    pycamera                 : disabled
+    qcam                     : disabled
+    test                     : false
+    v4l2                     : disabled
+
+Found ninja-1.13.2 at /usr/bin/ninja
+ninja: Entering directory `/home/baboess/.cache/issue211-runtime-D6sfkcnF/build'
+[1/158] Generating src/ipa-priv-key with a custom command
+....+..+......+.+.....+.+.........+...+........+...+.........+.+..+....+++++++++++++++++++++++++++++++++++++++*.+..+....+.....+....+...+.....+....+.....+.+........+.+++++++++++++++++++++++++++++++++++++++*.........+...+..+.........+.........+.......+..+...+.........+...+................+.........+..+...................+.....+.......+.....+...............+.......+...+...+..+....+.....+.+........+.......+..+......+.......+...............+.....+..........+..+.+..+....+...........+.......+......+...............+.....+......+.+....................+....+..............++++++
+...+..+...+....+........+......+.+.....+.+..+..................+...+......+.+.....+...+......+..........+...+..+...+.+..+++++++++++++++++++++++++++++++++++++++*.......+......+....+.....+.+......+......+.........+........+......+..........+++++++++++++++++++++++++++++++++++++++*....+...+..+.+........+.+......+............+..+.............+..+...+..........+...+..+............+...+.......+........+......+......+......+....+.........+.........+..+....+..+.......+..+...+..........+...+.....+...+......+...............+.+.....+...+.........+..........+...+.....+...+...................+.....+.............+..+.+.........+......+...........+.+...+.....+......+...+..........+.................+....+.........+......+......+........+...+....++++++
+[2/158] Generating include/libcamera/formats_h with a custom command
+[3/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/flags.cpp.o
+[4/158] Generating include/libcamera/control_ids_rpi.yaml_h with a custom command (wrapped by meson to set env)
+[5/158] Generating utils/codegen/ipc/mojom_templates with a custom command (wrapped by meson to set env)
+[6/158] Generating include/libcamera/property_ids_core.yaml_h with a custom command (wrapped by meson to set env)
+[7/158] Generating include/libcamera/ipa/core_mojom_module with a custom command (wrapped by meson to set env)
+[8/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/class.cpp.o
+[9/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/signal.cpp.o
+[10/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/backtrace.cpp.o
+[11/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/object.cpp.o
+[12/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/unique_fd.cpp.o
+[13/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/bound_method.cpp.o
+[14/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/event_dispatcher.cpp.o
+[15/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/event_notifier.cpp.o
+[16/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/shared_fd.cpp.o
+[17/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/semaphore.cpp.o
+[18/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/memfd.cpp.o
+[19/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/mutex.cpp.o
+[20/158] Generating include/libcamera/internal/tp_header with a custom command
+[21/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/file.cpp.o
+[22/158] Generating include/libcamera/ipa/core_ipa_interface_h with a custom command (wrapped by meson to set env)
+[23/158] Generating include/libcamera/gen-header with a custom command
+[24/158] Generating src/libcamera/shaders/gen-shader-headers with a custom command
+[25/158] Generating include/libcamera/ipa/core_ipa_serializer_h with a custom command (wrapped by meson to set env)
+[26/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/event_dispatcher_poll.cpp.o
+[27/158] Generating src/libcamera/controls_ids_cpp with a custom command (wrapped by meson to set env)
+[28/158] Generating src/libcamera/ipa_pub_key_cpp with a custom command
+writing RSA key
+[29/158] Generating src/libcamera/properties_ids_cpp with a custom command (wrapped by meson to set env)
+[30/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/message.cpp.o
+[31/158] Generating src/libcamera/version.cpp with a custom command
+[32/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/log.cpp.o
+[33/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/timer.cpp.o
+[34/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._version.cpp.o
+[35/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._control_ids.cpp.o
+[36/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._property_ids.cpp.o
+[37/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/utils.cpp.o
+[38/158] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/thread.cpp.o
+[39/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/fence.cpp.o
+[40/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._ipa_pub_key.cpp.o
+[41/158] Linking target src/libcamera/base/libcamera-base.so.0.7.2
+[42/158] Generating symbol file src/libcamera/base/libcamera-base.so.0.7.2.p/libcamera-base.so.0.7.2.symbols
+[43/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/camera_manager.cpp.o
+[44/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/orientation.cpp.o
+[45/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/controls.cpp.o
+[46/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/geometry.cpp.o
+[47/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pixel_format.cpp.o
+[48/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/camera.cpp.o
+[49/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/transform.cpp.o
+[50/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/color_space.cpp.o
+[51/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/framebuffer.cpp.o
+[52/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/camera_controls.cpp.o
+[53/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/stream.cpp.o
+[54/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/framebuffer_allocator.cpp.o
+[55/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/byte_stream_buffer.cpp.o
+[56/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/control_validator.cpp.o
+[57/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/bayer_format.cpp.o
+[58/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/request.cpp.o
+[59/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/clock_recovery.cpp.o
+[60/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/camera_lens.cpp.o
+[61/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/debug_controls.cpp.o
+[62/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/delayed_controls.cpp.o
+[63/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_controls.cpp.o
+[64/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/control_serializer.cpp.o
+[65/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_interface.cpp.o
+[66/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/converter.cpp.o
+[67/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/device_enumerator_sysfs.cpp.o
+[68/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/dma_buf_allocator.cpp.o
+[69/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/formats.cpp.o
+[70/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/device_enumerator.cpp.o
+[71/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_proxy.cpp.o
+[72/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/global_configuration.cpp.o
+[73/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_data_serializer.cpp.o
+[74/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_module.cpp.o
+[75/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_manager.cpp.o
+[76/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/mapped_framebuffer.cpp.o
+[77/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipc_pipe.cpp.o
+[78/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/matrix.cpp.o
+[79/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipc_unixsocket.cpp.o
+[80/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pub_key.cpp.o
+[81/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipc_pipe_unixsocket.cpp.o
+[82/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/shared_mem_object.cpp.o
+[83/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/source_paths.cpp.o
+[84/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/media_object.cpp.o
+[85/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/media_device.cpp.o
+[86/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sysfs.cpp.o
+[87/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/media_pipeline.cpp.o
+[88/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_handler.cpp.o
+[89/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/process.cpp.o
+[90/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_pixelformat.cpp.o
+[91/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_request.cpp.o
+[92/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/vector.cpp.o
+[93/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/yaml_parser.cpp.o
+[94/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/converter_converter_dw100_vertexmap.cpp.o
+[95/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/value_node.cpp.o
+[96/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/converter_converter_dw100.cpp.o
+[97/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_device.cpp.o
+[98/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_videodevice.cpp.o
+[99/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/converter_converter_v4l2_m2m.cpp.o
+[100/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_subdevice.cpp.o
+[101/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_virtual_test_pattern_generator.cpp.o
+[102/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_virtual_image_frame_generator.cpp.o
+[103/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sensor_camera_sensor_properties.cpp.o
+[104/158] Compiling C++ object src/apps/common/libapps.a.p/image.cpp.o
+[105/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sensor_camera_sensor.cpp.o
+[106/158] Compiling C++ object src/apps/common/libapps.a.p/options.cpp.o
+[107/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_virtual_virtual.cpp.o
+[108/158] Compiling C object utils/ipu3/ipu3-pack.p/ipu3-pack.c.o
+[109/158] Compiling C object utils/ipu3/ipu3-unpack.p/ipu3-unpack.c.o
+[110/158] Compiling C++ object src/apps/common/libapps.a.p/ppm_writer.cpp.o
+[111/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_virtual_config_parser.cpp.o
+[112/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sensor_camera_sensor_legacy.cpp.o
+[113/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/device_enumerator_udev.cpp.o
+[114/158] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sensor_camera_sensor_raw.cpp.o
+[115/158] Compiling C++ object src/apps/common/libapps.a.p/event_loop.cpp.o
+[116/158] Compiling C++ object src/apps/common/libapps.a.p/stream_options.cpp.o
+[117/158] Compiling C++ object src/ipa/libipa/libipa.a.p/algorithm.cpp.o
+[118/158] Linking target src/libcamera/libcamera.so.0.7.2
+[119/158] Generating symbol file src/libcamera/libcamera.so.0.7.2.p/libcamera.so.0.7.2.symbols
+[120/158] Compiling C++ object src/ipa/libipa/libipa.a.p/agc.cpp.o
+[121/158] Compiling C++ object src/ipa/libipa/libipa.a.p/agc_msv.cpp.o
+[122/158] Compiling C++ object src/ipa/libipa/libipa.a.p/awb_grey.cpp.o
+[123/158] Compiling C++ object src/ipa/libipa/libipa.a.p/awb_bayes.cpp.o
+[124/158] Compiling C++ object src/ipa/libipa/libipa.a.p/fc_queue.cpp.o
+[125/158] Compiling C++ object src/ipa/libipa/libipa.a.p/agc_mean_luminance.cpp.o
+[126/158] Compiling C++ object src/ipa/libipa/libipa.a.p/ccm.cpp.o
+[127/158] Compiling C++ object src/ipa/libipa/libipa.a.p/colours.cpp.o
+[128/158] Compiling C++ object src/ipa/libipa/libipa.a.p/awb.cpp.o
+[129/158] Compiling C++ object src/ipa/libipa/libipa.a.p/exposure_mode_helper.cpp.o
+[130/158] Compiling C++ object src/ipa/libipa/libipa.a.p/gamma.cpp.o
+[131/158] Compiling C++ object src/ipa/libipa/libipa.a.p/camera_sensor_helper.cpp.o
+[132/158] Compiling C++ object src/ipa/libipa/libipa.a.p/fixedpoint.cpp.o
+[133/158] Compiling C++ object src/ipa/libipa/libipa.a.p/interpolator.cpp.o
+[134/158] Compiling C++ object src/ipa/libipa/libipa.a.p/histogram.cpp.o
+[135/158] Compiling C++ object src/ipa/libipa/libipa.a.p/lsc_base.cpp.o
+[136/158] Compiling C++ object src/ipa/libipa/libipa.a.p/lsc.cpp.o
+[137/158] Compiling C++ object src/ipa/libipa/libipa.a.p/module.cpp.o
+[138/158] Linking static target src/apps/common/libapps.a
+[139/158] Compiling C++ object src/ipa/libipa/libipa.a.p/quantized.cpp.o
+[140/158] Compiling C++ object src/ipa/libipa/libipa.a.p/lux.cpp.o
+[141/158] Compiling C++ object src/ipa/libipa/libipa.a.p/lsc_polynomial.cpp.o
+[142/158] Compiling C++ object src/ipa/libipa/libipa.a.p/v4l2_params.cpp.o
+[143/158] Compiling C++ object src/ipa/libipa/libipa.a.p/pwl.cpp.o
+[144/158] Compiling C++ object src/ipa/libipa/libipa.a.p/lsc_table.cpp.o
+[145/158] Compiling C++ object src/apps/cam/cam.p/frame_sink.cpp.o
+[146/158] Compiling C++ object src/ipa/libipa/libipa.a.p/v4l2_stats.cpp.o
+[147/158] Linking target utils/ipu3/ipu3-pack
+[148/158] Linking target utils/ipu3/ipu3-unpack
+[149/158] Linking static target src/ipa/libipa/libipa.a
+[150/158] Compiling C++ object src/apps/cam/cam.p/capture_script.cpp.o
+[151/158] Compiling C++ object src/apps/cam/cam.p/file_sink.cpp.o
+[152/158] Compiling C++ object src/apps/cam/cam.p/kms_sink.cpp.o
+[153/158] Compiling C++ object src/apps/cam/cam.p/camera_session.cpp.o
+[154/158] Compiling C++ object src/apps/ipa-verify/ipa_verify.p/main.cpp.o
+[155/158] Linking target src/apps/ipa-verify/ipa_verify
+[156/158] Compiling C++ object src/apps/cam/cam.p/main.cpp.o
+[157/158] Compiling C++ object src/apps/cam/cam.p/drm.cpp.o
+[158/158] Linking target src/apps/cam/cam
+40b4a52cc8e3dcc59a8efa6c6207bb3e5d76b841835cec4b3756bf8aaa01392b  /home/baboess/.cache/issue211-runtime-D6sfkcnF/dmabuf-probe
+1ceed18da065a383e2f573ba49e9caea77033abd6830a7ec051e3681dabc79d2  /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam
+2423e936a6ffde0fa533c76a4738f748f77b4535c881c12a616dfeec50a940eb  /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/libcamera.so
+441f04294e61632d080f4bb55fb38ce787bb8af173a4b6d55d7c05f0f04fd18c  /home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/libcamera/base/libcamera-base.so
+PREPARED_ONLY:/home/baboess/.cache/issue211-runtime-D6sfkcnF

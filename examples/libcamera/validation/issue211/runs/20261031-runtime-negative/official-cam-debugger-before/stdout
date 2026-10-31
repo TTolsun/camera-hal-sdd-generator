@@ -1,0 +1,10 @@
+Breakpoint 1 at 0x33b87: file ../source/src/apps/cam/camera_session.cpp, line 459.
+Breakpoint 2 at 0x343f8: file ../source/src/apps/cam/camera_session.cpp, line 535.
+Breakpoint 3 (/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/libcamera/dma_buf_allocator.cpp:151) pending.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7ffff693b6c0 (LWP 20972)]
+Using camera Virtual2 as cam0
+Failed to start camera session
+[Thread 0x7ffff693b6c0 (LWP 20972) exited]
+[Inferior 1 (process 20955) exited with code 01]

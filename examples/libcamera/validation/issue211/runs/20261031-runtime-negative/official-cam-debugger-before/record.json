@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "argv": [
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/bin/gdb",
+    "--data-directory=/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/share/gdb",
+    "--batch",
+    "--nx",
+    "--nh",
+    "-q",
+    "-iex",
+    "set auto-load off",
+    "-ex",
+    "set debuginfod enabled off",
+    "-ex",
+    "set pagination off",
+    "-ex",
+    "set startup-with-shell off",
+    "-x",
+    "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/runtime/observe_cam.gdb.py",
+    "--args",
+    "/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/apps/cam/cam",
+    "--camera",
+    "Virtual2",
+    "--capture=3",
+    "--stream",
+    "role=video,width=400,height=300,pixelformat=NV12"
+  ],
+  "cwd": "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator",
+  "environment": {
+    "ISSUE211_OUT": "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/validation/issue211/runs/20261031-runtime-negative/official-cam-debugger-before",
+    "ISSUE211_SOURCE": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/source",
+    "LIBCAMERA_PIPELINES_MATCH_LIST": "virtual",
+    "LIBCAMERA_LOG_LEVELS": "*:DEBUG",
+    "LD_LIBRARY_PATH": "/home/baboess/.cache/issue211-runtime-D6sfkcnF/tools/usr/lib/x86_64-linux-gnu"
+  },
+  "timeout_seconds": 45,
+  "started_at": "2026-10-31T06:15:05.044546+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "process-group-empty",
+  "pid": 20896,
+  "group_absent": true,
+  "elapsed_seconds": 0.7562004150000234,
+  "files": {
+    "allocations.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "events.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inferior-exit.json": "d46abca35977786ae3de745f6ff40c208e062e152ab6c8d32426c3ea53895781",
+    "stderr": "cdcfbb0f7b1d46f55b30b94e7a1de119dfcfb7ab937fbb18cda4be9397e8e32a",
+    "stdout": "2432d60d69ed6e496a45df1c3edac64e9296b1c77f5054a60aa9d40a75ae5bd1"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "argv": [
+    "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator\\.venv\\Scripts\\python.exe",
+    "-m",
+    "sdd.cli",
+    "--config",
+    "build/issue211-publication/generation.yaml",
+    "generate",
+    "--sections",
+    "official-cam-validation"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 1200,
+  "started_at": "2026-10-31T06:38:07.451551+00:00",
+  "timed_out": false,
+  "exit_code": 1,
+  "cleanup": "parent-reaped-windows",
+  "pid": 41732,
+  "elapsed_seconds": 411.0231050999719,
+  "files": {
+    "stderr": "617ba315474f59ab3b0da7b08cb1ee019663f22a0fbb38464b00566b2fe89bd1",
+    "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

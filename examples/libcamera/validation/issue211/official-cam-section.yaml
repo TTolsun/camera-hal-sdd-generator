@@ -1,0 +1,97 @@
+id: official-cam-validation
+group: For Developer
+nav_section: 동작 추적과 문제 진단
+title: WSL 공식 cam 가상 캡처 확인
+output: official-cam-validation.md
+kind: prose
+lead: 실제 DMA-BUF로 공식 cam의 가상 캡처를 확인한 조건과 관찰 범위를 확인하세요.
+reader: 공식 cam의 요청 완료와 DMA-BUF 준비 조건을 확인하는 개발자
+design_generation: llm
+design_grounding: false
+semantic_review: true
+show_evidence: true
+facts:
+  classes: []
+  class_table: false
+diagram:
+  enabled: false
+next:
+  title: 요청 진단 절차
+  link: request-diagnosis.md
+design_requirements:
+- id: outcome
+  question: 어떤 WSL 환경에서 공식 cam의 캡처와 실제 DMA-BUF 접근을 확인했습니까?
+- id: completion
+  question: 콜백 진입과 후속 처리를 어떻게 구분해 세 프레임과 실행 스레드를 확인했습니까?
+- id: boundary
+  question: 재현할 때 필요한 권한·커널 조건과 시간 초과·복구 결과, 검증하지 않은 범위는 무엇입니까?
+design_topics:
+- id: outcome
+  title: 공식 cam과 실제 DMA-BUF 확인 결과
+  question: 기준 소스 SHA, 수정하지 않은 공식 cam, WSL 시험 커널과 Virtual2 400×300 NV12 조건, 세 독립 프로세스의 각 3프레임 정상 종료를 설명하세요. 별도 프로브의 memfd와 드라이버 DMA-BUF fd 차이 및 mmap, RW SYNC_START, 실제 CPU 읽기·쓰기, SYNC_END와 정리 성공을 설명하세요. 과거 CPU memfd 프로브의 DMA 오류 기록은 당시 결과로 보존되며 이번 공식 cam 결과와 다르다고 설명하세요. 결과와 재현 조건부터 짧게 쓰고 성능·물리 DMA 검증으로 확장하지 마세요.
+  covers: [outcome]
+  product: {id: libcamera-official-cam-trial, feature: wsl-virtual-capture}
+  sources: []
+  max_statements: 4
+  answer_contract:
+    basis: measurement
+    required_terms: [[Virtual2], [NV12], [DMA-BUF], [SYNC_START], [SYNC_END]]
+- id: completion
+  title: 콜백과 후속 처리에서 확인한 세 프레임
+  design_prompt: focused
+  question: CameraSession::requestComplete의 진입과 processRequest의 captureCount_ 증가 직전 관찰점을 구분하세요. 요청 주소·sequence·RequestComplete 상태와 실제 OS 스레드를 연결해 같은 요청을 두 번 세지 않았다고 설명하세요. 세 실행의 실제 callback 스레드와 주 스레드를 제시하고, 취소 콜백 0은 이번 관찰값이며 취소 경로 시험이나 반환 명령·성능 측정이 아니라고 설명하세요. 코드가 취소 요청을 제외하고 이벤트 루프로 처리를 미루는 동작과 이번 실행 관찰을 구분하세요.
+  covers: [completion]
+  product: {id: libcamera-official-cam-trial, feature: wsl-virtual-capture}
+  sources:
+  - id: callback-and-processing
+    file: src/apps/cam/camera_session.cpp
+    start: void CameraSession::requestComplete(Request *request)
+    end: void CameraSession::sinkRelease(Request *request)
+  - id: request-status
+    file: include/libcamera/request.h
+    start: 'enum Status {'
+    end: "\n\t};"
+  parts:
+  - id: dispatch
+    question: requestComplete가 RequestCancelled이면 바로 돌아가고, 그 밖의 요청은 CameraManager 스레드를 막지 않도록 callLater로 processRequest 처리를 미루는 코드 동작을 한 문단으로 설명하세요. 관찰점은 함수명과 captureCount_ 증가 직전이라는 지점으로만 설명하고 파일명·줄번호를 본문에 쓰지 마세요.
+    sources: [callback-and-processing]
+    max_statements: 1
+    answer_contract:
+      basis: implementation
+      required_terms: [[requestComplete], [processRequest], [RequestCancelled]]
+  - id: observed
+    question: 측정 자료 request_events의 callback-entry와 frame-processed를 같은 request 주소와 sequence로 연결해 각 독립 프로세스의 세 프레임을 한 번씩 셌음을 설명하세요. Request 상태 enum과 실제 status 1을 대조해 RequestComplete임을 설명하고, callbacks 스레드와 main_tid/processed 스레드의 실제 TID를 모두 제시하세요. 취소 0건은 이번 관찰값이며 취소 경로·반환 명령·성능 검증이 아님을 유지하세요. 버퍼 성공 상태와 sequence의 일치도 보존하되 파일명·줄번호·본문 인용을 직접 쓰지 마세요. 두 문단 이내로 설명하세요.
+    sources: [request-status]
+    max_statements: 2
+    answer_contract:
+      basis: measurement
+      required_terms: [[sequence], [RequestComplete], [취소], [스레드]]
+- id: boundary
+  title: 재현 조건과 검증 경계
+  design_prompt: focused
+  question: 기존 기본 WSL 커널에는 할당기가 없었고 정확한 Microsoft 태그의 UDMABUF 내장 시험 커널을 승인 후 잠시 사용했음을 설명하세요. 커널 설정과 컴파일러 capability 차이 및 새 release용 모듈 미설치 때문에 Docker를 중지 상태로 두었다고 명시하세요. 장치가 root 전용이어서 권한을 바꾸지 않고 root 자식으로 시험했으며 일반 사용자 오류를 보존했다고 설명하세요. 독립 프로브의 잘못된 제공자·ioctl과 0.5초 시간 초과는 실패이고 SYNC_END·munmap·close와 자식 정리를 관찰했으며, 공식 cam 추가 strace는 콜백 관찰과 별도라고 설명하세요. 시험 후 .wslconfig 부재와 원래 커널 복구를 확인했고 물리 DMA·카메라·다른 제품 앱·사내 HAL·사람 승인은 미검증임을 유지하세요. 재현 코드는 생성기 examples/libcamera/runtime/run_cam.py에 연결하세요.
+  covers: [boundary]
+  product: {id: libcamera-official-cam-trial, feature: wsl-virtual-capture}
+  sources: []
+  parts:
+  - id: prerequisites
+    question: 기존 기본 WSL2 커널에서 DMA 할당기가 없어서 정확한 Microsoft 태그의 UDMABUF 내장 시험 커널을 승인 후 임시 적용했다는 조건을 설명하세요. compiler capability 차이와 새 release용 모듈을 설치하지 않아 시험 중 Docker를 중지 상태로 두었다는 조건도 유지하세요. root 전용 장치여서 권한을 바꾸지 않고 root 자식으로 실행했으며 일반 사용자 errno 13 실패도 보존했다고 두 문단 이내로 설명하세요. allocator 함수 내부의 실패 분기는 이 과업에 필요하지 않으므로 늘리지 마세요.
+    sources: []
+    max_statements: 2
+    answer_contract:
+      basis: measurement
+      required_terms: [[UDMABUF], [root], [WSL, WSL2], [Docker]]
+  - id: failures
+    question: 전용 프로브에서 부재 제공자와 미지원 ioctl은 각각 errno 2와 25, 종료 코드 1로 실패했고, 0.5초 시간 초과도 실패로 보존했음을 설명하세요. 이 시간 초과에서 SYNC_END·munmap·fd 닫기와 프로세스 그룹 정리가 성공했고 추가 공식 cam strace는 정상 종료했지만 콜백 관찰과 별도라는 결과만 두 문단 이내로 설명하세요.
+    sources: []
+    max_statements: 2
+    answer_contract:
+      basis: measurement
+      required_terms: [[시간], [SYNC_END], [strace]]
+  - id: restored-scope
+    question: 임시 .wslconfig를 제거하고 원래 커널로 원복한 결과를 설명하세요. 물리 DMA·카메라·다른 제품 앱·사내 HAL·사람 승인은 미검증 상태임을 두 문단 이내로 유지하세요. GDB는 타이밍에 영향을 주며 콜백 반환 명령은 관찰하지 않았다는 한계도 적으세요.
+    sources: []
+    max_statements: 2
+    answer_contract:
+      basis: measurement
+      required_terms: [[물리], [사내], [GDB], [원복, 복구]]

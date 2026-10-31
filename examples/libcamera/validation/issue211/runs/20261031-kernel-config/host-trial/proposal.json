@@ -1,0 +1,10 @@
+{
+  "config": "C:\\Users\\baboe\\.wslconfig",
+  "existed": false,
+  "original_kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "kernel": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator\\build\\issue211-kernel\\bzImage",
+  "kernel_sha256": "cf23bf492a00a5c7517e221b0d8f742ea3cffa9351823191a5ba5c476ba15460",
+  "proposed_sha256": "0cf307007a4b3900b72af265c6e53102ef1c0e4b87da4651253371f160b98d4f",
+  "approval": "required-before-apply",
+  "impact": "All WSL2 distributions share the test kernel. wsl --shutdown stops Ubuntu/Docker. No matching modules are installed for the new release; keep Docker stopped during the trial. The test kernel also reflects compiler capability changes captured in diffconfig. Restore removes only the exact trial config and reboots to the packaged kernel."
+}

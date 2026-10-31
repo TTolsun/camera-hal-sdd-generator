@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a19091-5ff2-7183-bf1b-338739c4aa36"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"issue211 CLI preflight"}}
+{"type":"turn.completed","usage":{"input_tokens":12071,"cached_input_tokens":8960,"cache_write_input_tokens":0,"output_tokens":9,"reasoning_output_tokens":0}}

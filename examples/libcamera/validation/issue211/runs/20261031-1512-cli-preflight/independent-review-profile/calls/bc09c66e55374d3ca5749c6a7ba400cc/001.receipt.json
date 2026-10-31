@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "tag": "availability",
+  "completed_at": "2026-10-31T06:06:52.208466+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "26df9947e3efe1422f9a4208b5722ee1579adf41a8dc59fe0c5d8a069966d61b",
+  "response_sha256": "0887e9db9982dd0d72e88d81b96745d3991b6b171e8a85005039cc09c31ca588",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "32d42b15061c4b16f28a231e3bf0c1b07e654bbac7565662eb9f6ccc27f25b64",
+    "prompt_sha256": "ed37016a5c05d25313ed7939d3ed29e394f8a6054fca2326eda26018e92b720a",
+    "provider": {
+      "thread_id": "01a19091-5ff2-7183-bf1b-338739c4aa36",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 12071,
+        "cached_input_tokens": 8960,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 9,
+        "reasoning_output_tokens": 0
+      }
+    },
+    "stdout_path": "cli/call-1di6i3zf.stdout.txt",
+    "native_schema_sha256": null
+  },
+  "human_review": "pending"
+}

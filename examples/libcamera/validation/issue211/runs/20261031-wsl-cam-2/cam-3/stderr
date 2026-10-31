@@ -1,0 +1,35 @@
+No source file named /home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/libcamera/dma_buf_allocator.cpp.
+[0:01:01.879110557] [488]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-293d751a
+[0:01:01.880172661] [491] DEBUG Camera camera_manager.cpp:73 Starting camera manager
+[0:01:01.880950735] [491]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '/home/baboess/.cache/issue211-runtime-D6sfkcnF/build/src/ipa' to the IPA search path
+[0:01:01.881702382] [491]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:01:01.882594367] [491] DEBUG Camera camera_manager.cpp:129 Found listed pipeline handler 'virtual'
+[0:01:01.883190308] [491] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/linux,cma: No such file or directory
+[0:01:01.889252478] [491] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/reserved: No such file or directory
+[0:01:01.890086206] [491] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/system: No such file or directory
+[0:01:01.890489369] [491] DEBUG DmaBufAllocator dma_buf_allocator.cpp:112 Using /dev/udmabuf
+[0:01:01.891154630] [491]  INFO Pipeline pipeline_handler.cpp:657 libcamera is not installed. Loading platform configuration file from '/home/baboess/.cache/issue211-runtime-D6sfkcnF/source/src/libcamera/pipeline/virtual/data/virtual.yaml'
+[0:01:01.892222034] [491]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:01:01.892735037] [491]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:01:01.893115232] [491]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:01:01.893456380] [491]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+[0:01:01.893782193] [491] DEBUG Camera camera_manager.cpp:164 Pipeline handler "virtual" matched
+[0:01:01.894093857] [491] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/linux,cma: No such file or directory
+[0:01:01.894398995] [491] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/reserved: No such file or directory
+[0:01:01.894697518] [491] DEBUG DmaBufAllocator dma_buf_allocator.cpp:106 Failed to open /dev/dma_heap/system: No such file or directory
+[0:01:01.895064281] [491] DEBUG DmaBufAllocator dma_buf_allocator.cpp:112 Using /dev/udmabuf
+[0:01:01.896052191] [488] DEBUG Camera camera.cpp:1151 streams configuration: (0) 400x300-NV12/SMPTE170M
+[0:01:01.897562572] [488]  INFO Camera camera.cpp:1216 configuring streams: (0) 400x300-NV12/SMPTE170M
+[0:01:02.100442354] [491] DEBUG Buffer framebuffer.cpp:352 Buffer is contiguous
+[0:01:02.110166108] [491] DEBUG Buffer framebuffer.cpp:352 Buffer is contiguous
+[0:01:02.117021104] [491] DEBUG Buffer framebuffer.cpp:352 Buffer is contiguous
+[0:01:02.122343542] [491] DEBUG Buffer framebuffer.cpp:352 Buffer is contiguous
+[0:01:02.123011667] [488] DEBUG Request request.cpp:367 Created request - cookie: 0
+[0:01:02.123528303] [488] DEBUG Request request.cpp:367 Created request - cookie: 0
+[0:01:02.123873682] [488] DEBUG Request request.cpp:367 Created request - cookie: 0
+[0:01:02.124185107] [488] DEBUG Request request.cpp:367 Created request - cookie: 0
+[0:01:02.124463472] [488] DEBUG Camera camera.cpp:1408 Starting capture
+[0:01:02.125522123] [491] DEBUG Request request.cpp:134 Request(0:C:0/1:0)
+[0:01:02.184171725] [491] DEBUG Request request.cpp:134 Request(1:C:0/1:0)
+[0:01:02.201698662] [491] DEBUG Request request.cpp:134 Request(2:C:0/1:0)
+[0:01:02.220028791] [488] DEBUG Camera camera.cpp:1460 Stopping capture

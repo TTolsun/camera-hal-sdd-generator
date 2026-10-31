@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/runtime/run_cam.py", line 103, in <module>
+    main()
+    ~~~~^^
+  File "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/examples/libcamera/runtime/run_cam.py", line 75, in main
+    require_success(out / 'dma-probe')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/baboe/.codex/worktrees/cb18/camera-hal-sdd-generator/src/sdd/runtime_evidence.py", line 95, in require_success
+    raise ValueError('Runtime command failed or cleanup is incomplete')
+ValueError: Runtime command failed or cleanup is incomplete

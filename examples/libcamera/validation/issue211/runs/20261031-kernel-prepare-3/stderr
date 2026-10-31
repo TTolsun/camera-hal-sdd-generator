@@ -1,0 +1,32 @@
+In file included from /home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/include/openssl/bio.h:20,
+                 from certs/extract-cert.c:21:
+/home/baboess/.cache/issue211-kernel-52ZYBZZe/toolchain/usr/include/openssl/macros.h:14:10: fatal error: openssl/opensslconf.h: No such file or directory
+   14 | #include <openssl/opensslconf.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+make[3]: *** [scripts/Makefile.host:114: certs/extract-cert] Error 1
+make[2]: *** [scripts/Makefile.build:544: certs] Error 2
+make[2]: *** Waiting for unfinished jobs....
+ar: arch/x86/kernel/early_printk.o: No such file or directory
+make[4]: *** [scripts/Makefile.build:473: arch/x86/kernel/built-in.a] Error 123
+make[3]: *** [scripts/Makefile.build:544: arch/x86/kernel] Error 2
+make[2]: *** [scripts/Makefile.build:544: arch/x86] Error 2
+ar: fs/udf/unicode.o: No such file or directory
+make[4]: *** [scripts/Makefile.build:473: fs/udf/built-in.a] Error 123
+make[3]: *** [scripts/Makefile.build:544: fs/udf] Error 2
+make[3]: *** Waiting for unfinished jobs....
+fixdep: error opening file: kernel/bpf/.hashtab.o.d: No such file or directory
+make[4]: *** [scripts/Makefile.build:287: kernel/bpf/hashtab.o] Error 2
+make[4]: *** Deleting file 'kernel/bpf/hashtab.o'
+make[4]: *** Waiting for unfinished jobs....
+make[3]: *** [scripts/Makefile.build:544: kernel/bpf] Error 2
+make[3]: *** Waiting for unfinished jobs....
+fixdep: error opening file: kernel/trace/.trace_events_hist.o.d: No such file or directory
+make[4]: *** [scripts/Makefile.build:287: kernel/trace/trace_events_hist.o] Error 2
+make[4]: *** Deleting file 'kernel/trace/trace_events_hist.o'
+make[4]: *** Waiting for unfinished jobs....
+make[3]: *** [scripts/Makefile.build:544: kernel/trace] Error 2
+make[2]: *** [scripts/Makefile.build:544: kernel] Error 2
+make[2]: *** [scripts/Makefile.build:544: fs] Error 2
+make[1]: *** [/home/baboess/.cache/issue211-kernel-52ZYBZZe/WSL2-Linux-Kernel-linux-msft-wsl-6.18.33.2/Makefile:2026: .] Error 2
+make: *** [Makefile:248: __sub-make] Error 2
