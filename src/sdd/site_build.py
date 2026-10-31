@@ -93,6 +93,8 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         verify_site(stage, manifest=False)
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
+        from .render_profiles import inputs as editorial_inputs
+        inputs.update({'editorial/'+key:value for key,value in editorial_inputs(cfg).items()})
         from .product_context import input_paths
         for index, path in enumerate(input_paths(cfg)):
             inputs[f'products/{index}'] = digest(path)
@@ -130,7 +132,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "reader_scope.py", code_root / "product_context.py",
                                             code_root / "contract_render.py", code_root / "markdown_text.py",
                                             code_root / "generated_design.py", code_root / "generated_visuals.py",
-                                            code_root / "config.py", code_root / "design_types.py",
+                                            code_root / "config.py", code_root / "render_profiles.py", code_root / "design_types.py",
                                             code_root / "validation_stage.py", code_root / "publication_plan.py",
                                             code_root / "validation_execution.py",
                                             code_root / "execution_lock.py", code_root / "generation_run.py",

@@ -237,7 +237,8 @@ def _build_unit_request(model, section, topic, focused_system):
               'Only allowed_claims may be asserted. Unresolved is unknown, never unsupported. '
               'Source implementation is not product offering; measured results apply only to listed conditions. '
               'Keep product/release/configuration scope explicit. Do not turn input claim types into marketing copy. '
-              'If simulation is true explicitly identify this as a fictional test configuration, not a real product. '
+              'If simulation is true identify a test configuration, not a shipped product. '
+              'The simulation flag alone does not say whether execution was real or hypothetical; use the selected measurement evidence. '
               'Product materials have a separate supplier/version/date/hash; never call them extracted source facts. '
               'For a split question answer only this part; connect the customer chain across the topic without repeating the entire summary in every part.')
     return UnitRequest(sources, source_files, context_records, scopes, passages, base_user)

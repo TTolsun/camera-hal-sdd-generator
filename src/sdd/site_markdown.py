@@ -121,8 +121,8 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
     rendered = compact_evidence(rendered, valid)
     rendered = fold_source_details(rendered)
     rendered = _remove_route_tables(rendered)
-    from .reading_cleanup import compact_tables
-    rendered = compact_tables(rendered)
+    from .reading_cleanup import compact_tables, fold_scope_notices
+    rendered = fold_scope_notices(compact_tables(rendered))
 
     def table_wrapper(match: re.Match) -> str:
         table = match[0]

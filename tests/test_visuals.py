@@ -33,6 +33,18 @@ from test_design_contracts import contract
 from test_generated_design import generated
 
 
+def test_visual_provenance_and_question_remain_in_collapsed_evidence(tmp_cfg, visual):
+    section, model, graph, write = visual
+    graph['producer']='cli/claude/test-model'
+    write()
+    block=render(tmp_cfg,model,section)[0][1]
+    visible,marker,proof=block.partition('??? note "그림 근거와 확인 범위"')
+    assert marker and graph['question'] in proof and 'cli/claude/test-model' in proof
+    assert '사람 검토 전' in proof and '소스 근거' in proof
+    assert graph['question'] not in visible and '작성 모델' not in visible
+    assert '```mermaid' in visible and 'Mermaid 원문' in visible
+
+
 def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_cfg, visual):
     import json
     section, model, graph, write = visual
@@ -221,7 +233,10 @@ def test_procedure_numbering_survives_nearby_visual(tmp_cfg, visual):
     section, model, _, _ = visual
     body = '## 종료 계약\n\n1. 첫 단계입니다.\n\n2. 다음 단계입니다.\n\n## 소스 근거\n'
     updated = place(body, render(tmp_cfg, model, section), section)
-    assert updated.index('### 종료의 분기') < updated.index('1. 첫 단계')
+    assert updated.index('2. 다음 단계') < updated.index('### 종료의 분기') < updated.index('## 소스 근거')
+    from sdd.site_markdown import _render
+    document=_render(updated,'trial.md',set(),None,'','abc')[0]
+    assert document.count('<ol>')==1 and document.index('</ol>') < document.index('종료의 분기</h3>')
     assert strip_blocks(updated) == body
 
 

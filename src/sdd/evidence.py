@@ -137,7 +137,7 @@ def _sentence_count(text: str) -> int:
     return max(1, len(re.findall(r"[.!?](?=" + chr(92) + "s|$)", re.sub(r"`[^`]*`", " ", text))))
 
 
-def _paragraphs(entries: list[tuple[str, str, list[str]]], *, grouped: bool = True) -> list[str]:
+def _paragraphs(entries: list[tuple[str, str, list[str]]], *, grouped: bool = True, preserve_lists: bool = True) -> list[str]:
     """설명 문장을 문단으로 묶는다. 같은 주제의 이어지는 설명 2~4문장이 한 문단이 되고 인용은 문단 끝에 모은다.
 
     문장마다 근거는 그대로 연결되어 있다(답변 기록의 evidence·quote). 여기서는 표시만 묶으며
@@ -159,6 +159,7 @@ def _paragraphs(entries: list[tuple[str, str, list[str]]], *, grouped: bool = Tr
     for entry_kind, text, citations in entries:
         count = _sentence_count(text)
         if group and (not grouped or entry_kind != kind or entry_kind == 'limitation'
+                      or (preserve_lists and (re.match(r'\d+\.\s', text) or re.match(r'\d+\.\s', group[0])))
                       or sentences + count > PARAGRAPH_SENTENCES
                       or sum(len(t) for t in group) + len(text) > PARAGRAPH_CHARS):
             flush()
@@ -175,7 +176,7 @@ def summary_parts(topic: dict) -> set[str]:
     return {p['id'] for p in topic.get('parts', []) if isinstance(p, dict) and p.get('role') == 'summary'}
 
 
-def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: bool = True) -> tuple[str, list[str]]:
+def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: bool = True, preserve_lists: bool = True) -> tuple[str, list[str]]:
     """Render authored statements only while every linked excerpt matches its pin.
 
     A pin verifies unchanged source, not the truth of the authored interpretation.
@@ -184,6 +185,8 @@ def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: 
     """
     if type(grouped) is not bool:
         raise ValueError('grouped must be a boolean')
+    if type(preserve_lists) is not bool:
+        raise ValueError('preserve_lists must be a boolean')
     entries, gaps = [], []
     sources = {s['id']: s for s in topic.get('sources', [])}
     summaries = summary_parts(topic)
@@ -211,7 +214,7 @@ def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: 
         if statement.get('part_id') in summaries and kind == 'behavior':
             kind = 'summary'
         entries.append((kind, str(statement.get('text', '')), citations))
-    paragraphs = _paragraphs(entries, grouped=grouped)
+    paragraphs = _paragraphs(entries, grouped=grouped, preserve_lists=preserve_lists)
     if not paragraphs:
         gaps.append('설계 설명이 없습니다.')
     return ('확인 필요: ' + ' / '.join(gaps) if gaps else '\n\n'.join(paragraphs)), gaps
