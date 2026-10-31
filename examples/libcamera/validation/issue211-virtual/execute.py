@@ -30,8 +30,11 @@ else:
     command = [str(reader/'review.py'), '--work', str(work), '--review-config', str(work/'new-document-review.yaml'),
                '--korean', str(window/'ko.txt'), '--english', str(window/'en.txt'), '--inventory', str(window/'inventory.json'),
                '--out', str(work/'reviews'/args.tag)]
-    if (work/'notes/documents.json').exists():
-        command += ['--notes', str(work/'notes/documents.json')]
+    notes = work/'notes-current/documents.json'
+    if not notes.exists():
+        notes = work/'notes/documents.json'
+    if notes.exists():
+        command += ['--notes', str(notes)]
 out = work/'executions'/(args.stage+'-'+args.tag)
 run_recorded(out, prefix+command, timeout=1800, cwd=root)
 require_success(out)
