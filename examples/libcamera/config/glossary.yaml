@@ -1,4 +1,9 @@
 terms:
+# https://docs.kernel.org/core-api/dma-api-howto.html ; native Haiku/high receipt retained.
+- term: DMA
+  full: Direct Memory Access
+  definition: DMA(Direct Memory Access)는 I/O 장치가 시스템 메모리를 직접 읽거나 쓰는 방식을 뜻하는 용어입니다.
+  aliases: []
 # Public source 2c4b67c0792f88f69bcdf9cbf73e81b3d8cf4b6f:
 # src/libcamera/request.cpp:422-428; src/libcamera/framebuffer.cpp:31-59,224-256.
 - term: 메타데이터

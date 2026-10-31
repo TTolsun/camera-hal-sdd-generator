@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "kind": "bounded runtime observation, not a product support or performance guarantee",
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "probe_sha256": "59b73503b14c9bdddeb2513982fae0a59af012dd26183e34c35fc34ff8c1c4ac",
+  "raw_observation_sha256": "6433a4dbc5bc7de72bfc9e734fb395be2d0a6d7cc77ca1080901b52fba999f34",
+  "pipeline": "upstream virtual",
+  "camera": "Virtual2",
+  "kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "application_callback": "Observer::complete",
+  "connection_site": "callback_probe.cpp requestCompleted.connect calls; source SHA pinned",
+  "runs": 3,
+  "per_run": {
+    "requests_reported_RequestComplete": 4,
+    "requests_reported_RequestCancelled": 4,
+    "callbacks": 24
+  },
+  "total_callbacks": 72,
+  "connections": [
+    {
+      "connection": "auto",
+      "receiver_affinity": "main application thread; Object never moved",
+      "callback_thread": "receiver/main thread",
+      "all_runs_consistent": true,
+      "callbacks_per_run": 8,
+      "stop_callback_entry_and_near_return_markers_during_stop_call": false,
+      "stop_callback_entry_and_near_return_markers_after_stop_return": true
+    },
+    {
+      "connection": "direct",
+      "receiver_affinity": "main application thread; Object never moved",
+      "callback_thread": "different thread from the receiver/main thread; no thread-name identification is claimed",
+      "all_runs_consistent": true,
+      "callbacks_per_run": 8,
+      "stop_callback_entry_and_near_return_markers_during_stop_call": true,
+      "stop_callback_entry_and_near_return_markers_after_stop_return": false
+    },
+    {
+      "connection": "queued",
+      "receiver_affinity": "main application thread; Object never moved",
+      "callback_thread": "receiver/main thread",
+      "all_runs_consistent": true,
+      "callbacks_per_run": 8,
+      "stop_callback_entry_and_near_return_markers_during_stop_call": false,
+      "stop_callback_entry_and_near_return_markers_after_stop_return": true
+    }
+  ],
+  "callback_return_marker": "Near-return marker before the counter increment and local destruction; does not trace the actual C++ return.",
+  "buffers": "application memfd; CPU-only; not DMA-BUF",
+  "stop_fences": "unsignalled eventfd test input; not kernel sync_file",
+  "retained_dma_sync_errors_per_run": [
+    8,
+    8,
+    8
+  ],
+  "retained_dma_provider_errors_per_run": [
+    2,
+    2,
+    2
+  ],
+  "validation_scope": "Actual callback dispatch/entry/return markers/status/order/thread in this controlled public virtual probe only.",
+  "exclusions": [
+    "DMA synchronisation was not validated; actual sync/provider ERROR lines are retained.",
+    "Physical camera/sensor/ISP capture was not validated.",
+    "Other applications, other connection configurations, other devices and internal Camera HAL were not validated.",
+    "RequestComplete/FrameSuccess observations here do not certify DMA correctness or real capture."
+  ],
+  "human_review": "pending",
+  "connection_code": [
+    "camera->requestCompleted.connect(&automatic, &Observer::complete, ConnectionTypeAuto);",
+    "camera->requestCompleted.connect(&direct, &Observer::complete, ConnectionTypeDirect);",
+    "camera->requestCompleted.connect(&queued, &Observer::complete, ConnectionTypeQueued);"
+  ]
+}
