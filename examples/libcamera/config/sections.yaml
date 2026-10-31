@@ -1786,6 +1786,9 @@ sections:
         - - queueRequestDevice
         - - 취소
         - - ret
+        reject_patterns:
+        - pattern: completeRequest|cancelRequest
+          message: 취소되지 않은 경우의 장치 제출과 ret 저장만 설명하세요. 취소 요청의 조기 반환과 실패 처리는 별도 답변에서 설명합니다.
     - id: device-failure
       question: doQueueRequest에서 ret가 0이 아닐 때 호출하는 함수와 그 조건만 한 문장으로 설명하세요.
         함수 내부는 다른 절에서 설명하므로 작성 과정의 확인 여부나 추가적인 미확인 주장을 덧붙이지 마세요.
