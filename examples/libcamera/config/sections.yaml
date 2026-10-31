@@ -4546,6 +4546,61 @@ sections:
       end: int Camera::exportFrameBuffers(Stream *stream,
     covers:
     - disconnection
+    parts:
+    - id: private-state
+      question: Camera::Private::disconnect()에서 CameraRunning일 때만 CameraConfigured로
+        상태를 저장하고 다른 상태에서는 그 저장을 생략하지만 disconnected_는 항상 true로 설정하는 분기를 구분하세요. 주석의
+        목적은 자원을 해제하는 것과 release()를 호출하는 것이 카메라 삭제 전에 가능하도록 하는 것입니다. 자원 해제와 release()
+        사이의 실행 순서는 주석에 없으므로 어느 쪽이 먼저라고 단정하지 마세요. 이 함수의 동작과 목적만 세 문장 이내로 설명하세요.
+      sources:
+      - access
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - Camera::Private::disconnect
+        - - CameraRunning
+        - - CameraConfigured
+        - - disconnected_
+        - - 'true'
+    - id: access-conditions
+      question: isAccessAllowed의 두 오버로드에서 !allowDisconnected와 disconnected_가 모두 참이면
+        상태 검사 전에 -ENODEV를 반환하는 조건을 설명하세요. 단일 상태 일치 또는 low..high 범위 포함이면 0이고 그 외에는
+        -EACCES인 조건도 비교하세요. 오류 로그의 from 인자는 호출 함수 이름이며 상태 이름은 currentState 및 state
+        또는 low/high에서 온다는 차이를 유지하세요. 동일한 조건을 두 오버로드마다 다시 풀어 쓰지 말고 네 문장 이내로 설명하세요.
+      sources:
+      - access
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - isAccessAllowed
+        - - allowDisconnected
+        - - disconnected_
+        - - -ENODEV
+        - - -EACCES
+        - - from
+    - id: notification-order
+      question: Camera::disconnect()의 _d()->disconnect() 호출 뒤 disconnected.emit()
+        호출 순서만 두 문장 이내로 설명하세요. 앞 파트의 조건부 Private 상태 저장을 무조건 실행되는 상태 전환으로 다시 서술하지 마세요.
+        로그를 포함한 모든 호출의 완전한 목록이라고 하지 말고 이 두 호출의 관계만 설명하세요.
+      sources:
+      - notification
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - Camera::disconnect
+        - - _d()->disconnect
+        - - disconnected.emit
+    - id: pending-scope
+      question: Camera::disconnect()의 TODO가 실행 중 연결 해제 시 대기 요청 처리를 남겨 두었다는 소스 범위의
+        한계를 설명하세요. 이 발췌의 disconnect 본문에는 개별 요청 취소·완료 코드가 없음을 구분하되, 이 사실을 stop()의 취소·완료
+        보장이나 실제 장치 결과로 확대하지 마세요.
+      sources:
+      - notification
+      max_statements: 1
+      statement_kind: limitation
   design_requirements:
   - id: responsibility
     question: CameraManager, Camera, Request의 책임과 객체 수명은 어떻게 나뉩니까?
@@ -5167,6 +5222,30 @@ sections:
         - pattern: 큐잉.{0,8}성공|큐에.{0,12}성공
           message: 0 반환은 queued invokeMethod 호출 뒤의 반환입니다. 장치 큐잉 성공으로 읽힐 표현 대신 해당 호출
             단계를 명시하세요.
+    - id: submission-errors
+      question: Camera::queueRequest()가 queued 호출 전에 동기적으로 거절하는 조건을 네 문장 이내로 설명하세요.
+        isAccessAllowed 검사의 음수 ret을 그대로 반환하는 경로, 다른 카메라가 만든 요청의 -EXDEV, RequestPending이
+        아님·controls().infoMap()이 &controls()와 다름·버퍼가 없음·비활성 Stream의 -EINVAL 조건을 연결하세요.
+        API 주석이 명시한 연결 해제 -ENODEV, 실행 상태 아님 -EACCES, 버퍼 메모리 부족 -ENOMEM도 포함하되, 특히 -ENOMEM을
+        제공된 함수 본문에 실제 있는 반환 분기라고 쓰지 말고 주석의 반환 계약과 보인 구현 분기를 구분하세요. 같은 조건을 주석과 구현 설명으로
+        두 번 반복하거나 실제 장치 결과로 쓰지 마세요.
+      sources:
+      - queue
+      max_statements: 2
+      answer_contract:
+        basis: description
+        required_terms:
+        - - -EXDEV
+        - - -EINVAL
+        - - -ENODEV
+        - - -EACCES
+        - - -ENOMEM
+        - - RequestPending
+        - - infoMap
+        - - controls
+        - - 버퍼
+        - - 스트림
+          - Stream
     - id: queue-context
       question: API 주석에 명시된 PipelineHandler::queueRequest()와 PipelineHandler::queueRequestDevice()의
         공통 호출 스레드 문맥을 한 문장으로 설명하세요. 문서상의 함수 호출 문맥을 실제 장치나 애플리케이션 콜백에서 관측한 결과로 확대하지
