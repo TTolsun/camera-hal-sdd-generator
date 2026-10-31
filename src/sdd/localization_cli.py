@@ -99,6 +99,13 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
         'retain translations with recorded lineage; changed code, location, scope or subjects require retranslation.')
     translation_agent = None
     if translate:
+        # Rendering can retain the original figure-generation profile while
+        # new translations use an independently selected CLI transport.
+        profile = config.paths.get('translation_profile')
+        if profile is not None:
+            from dataclasses import replace
+            from .config import load
+            cfg = replace(cfg, agent=load(profile).agent)
         from .translation import translate_missing
         if replay_http:
             from .llm import Agent

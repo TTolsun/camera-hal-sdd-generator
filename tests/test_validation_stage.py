@@ -198,3 +198,28 @@ def test_translation_checks_inputs_before_replacing_existing_catalog(tmp_cfg, mo
     with pytest.raises(InputChanged):
         prepare_catalog(tmp_cfg, destination, translate=True)
     assert destination.read_bytes() == original
+
+
+def test_translation_profile_selects_only_transport_after_rendering(tmp_cfg, monkeypatch):
+    from sdd.facts.model import KnowledgeModel
+    from sdd.localization_cli import prepare_catalog
+    KnowledgeModel(meta={'source_commit': 'a'*40}).save(tmp_cfg.facts_path)
+    profile = tmp_cfg.root/'translator.yaml'
+    profile.write_text('agent:\n  kind: cli\n  runner: claude\n  model: claude-haiku-5-5\n'
+                       '  args: [--effort, high, --setting-sources, "project,local"]\n', encoding='utf-8')
+    tmp_cfg.paths['translation_profile'] = profile
+    seen = []
+    def render(cfg, out, **kwargs):
+        seen.append(('render', cfg.agent.kind))
+        (out/'index.html').write_text('<p>설명입니다.</p>', encoding='utf-8')
+        (out/'assets').mkdir()
+        (out/'assets/search.json').write_text('[]', encoding='utf-8')
+        return out
+    def translate(cfg, catalog, agent):
+        seen.append(('translate', cfg.agent.runner, cfg.agent.model, cfg.root))
+        assert cfg.agent.args == ['--effort', 'high', '--setting-sources', 'project,local']
+        return catalog
+    monkeypatch.setattr('sdd.export_site._render_site', render)
+    monkeypatch.setattr('sdd.translation.translate_missing', translate)
+    prepare_catalog(tmp_cfg, tmp_cfg.root/'english.json', translate=True)
+    assert seen == [('render', 'dry-run'), ('translate', 'claude', 'claude-haiku-5-5', tmp_cfg.root)]
