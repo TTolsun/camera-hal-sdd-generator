@@ -4,7 +4,7 @@ kind: flow
 title: 패턴 생성에서 cam의 완료 알림까지
 generation: llm
 max_nodes: 9
-max_label_chars: 72
+max_label_chars: 44
 condition_display: evidence
 required_symbols:
 - exportFrameBuffers
@@ -34,7 +34,9 @@ prompt: 이 그림은 핵심 프레임 경로의 개념도이며 전체 제어 �
   호출의 종료를 나타내는 말단 노드입니다. 들어오는 false 간선만 허용하고 이 노드에서 나가는 간선은 절대로 만들지 마세요. 완료 신호 수신 핸들러에서 completeBuffer로 들어가는 흐름은 bufferCompleted
   신호 노드에서 직접 표시하세요. completeRequest 상자는 완료 표시 후 순서상 통지 가능한 요청만 알리고 후속 큐를 처리한다는 조건부 전체 역할을 30자 안팎으로 요약하세요. 모든 라벨에서 코드 식별자를
   꼭 노출할 필요는 없으며 한국어 25자·영어 48자 안팎을 우선하세요. 앞선 pending 요청이 있으면 통지가 보류됨은 마지막 간선에 짧게 유지하세요. 긴 해명·다시 호출될 가능성·스레드 대기 아님 등의 부연 설명은
-  라벨에 넣지 마세요.
+  라벨에 넣지 마세요. 라벨 길이는 한영 모두 최대 44자로 강제합니다. 함수 이름 접두사는 필수가 아니며 짧은 의미만 써도 됩니다. errno나 -ENOBUFS 같은 원시 오류 코드는 그림에 쓰지 마세요. 패턴 쓰기
+  결정 노드에 Virtual2와 NV12를 반드시 포함하고 소프트웨어 줄무늬를 CPU로 쓴다는 뜻을 유지하세요. completeRequest 상자는 현재 요청 완료 표시와 통지 가능한 요청만 순서대로 알리는 역할을 표현하되
+  긴 함수명 접두사를 생략해 44자 안에 쓰세요.
 sources:
 - virtual-buffer-allocation
 - virtual-queue
@@ -59,8 +61,20 @@ answer_contract:
   reject_patterns:
   - pattern: cancelRequest|취소
     message: 이 가상 queueRequestDevice는 0을 반환합니다. 일반 호출자의 오류 취소를 가상 경로 라벨에 섞지 마세요.
+  - pattern: ENOBUFS|errno|할당기 무효
+    message: 원시 할당 오류는 접힌 소스 근거에 두고 핵심 성공 경로를 짧게 표시하세요.
+  required_terms:
+  - - Virtual2
+  - - NV12
+  - - CPU
 answer_contract_en:
   basis: implementation
   reject_patterns:
   - pattern: (?i)cancelRequest|cancel on|return error
     message: Keep generic caller cancellation outside this accepted virtual request flow.
+  - pattern: (?i)ENOBUFS|errno|allocator invalid
+    message: Keep raw allocator error codes in evidence.
+  required_terms:
+  - - Virtual2
+  - - NV12
+  - - CPU
