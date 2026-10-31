@@ -5,7 +5,7 @@ from .config import load
 
 
 def paths(cfg):
-    values=(cfg.raw.get('site') or {}).get('manuscript_profiles',{})
+    values=cfg.site.manuscript_profiles
     if not isinstance(values,dict):
         raise ValueError('site.manuscript_profiles must map Markdown pages to verification profiles')
     for page,name in values.items():
@@ -19,10 +19,7 @@ def paths(cfg):
 def for_page(cfg,page):
     path=paths(cfg).get(page)
     if path is None:return cfg
-    profile=load(path)
-    if (set(profile.raw)-{'agent','paths'} or set(profile.raw.get('paths',{}))-{'style'}
-            or profile.agent.kind!='cli' or not profile.agent.model or 'style' not in profile.paths):
-        raise ValueError('A manuscript verification profile changes only explicit CLI identity and style')
+    profile=load(path,manuscript_profile=True)
     # Source, facts, section contracts, manuscripts and all validation gates
     # stay with the publication. These fields never authorize model execution.
     return replace(cfg,agent=profile.agent,paths={**cfg.paths,'style':profile.style_dir})

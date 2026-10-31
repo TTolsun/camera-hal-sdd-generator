@@ -385,7 +385,7 @@ def find_root(start: Path | None = None) -> Path:
     raise FileNotFoundError("sdd.yaml 을 찾지 못했습니다. 저장소 루트에서 실행하세요.")
 
 
-def load(path: Path | None = None) -> Config:
+def load(path: Path | None = None, *, manuscript_profile: bool = False) -> Config:
     root = path.parent.resolve() if path else find_root()
     # 지정한 파일을 그대로 읽는다. 이름을 버리고 sdd.yaml 만 읽으면, 한 디렉터리에 설정을 여럿 둔
     # 실행(두 커밋 비교 등)에서 지정하지 않은 설정이 조용히 돌고 그 사실이 로그에 드러나지 않는다.
@@ -404,6 +404,12 @@ def load(path: Path | None = None) -> Config:
     tools = raw.get("tools", {}) or {}
     agent_raw = raw.get("agent", {}) or {}
     review = raw.get("review", {}) or {}
+    if manuscript_profile:
+        editorial_paths = raw.get('paths', {})
+        if (set(raw)-{'agent', 'paths'} or not isinstance(editorial_paths, dict)
+                or set(editorial_paths)-{'style'} or 'style' not in editorial_paths
+                or agent_raw.get('kind', 'cli') != 'cli' or not agent_raw.get('model')):
+            raise ValueError('A manuscript verification profile changes only explicit CLI identity and style')
     for key in ('command', 'args'):
         value = agent_raw.get(key, [])
         if not isinstance(value, list) or any(not isinstance(a, str) or not a for a in value):
