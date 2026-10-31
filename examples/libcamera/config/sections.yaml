@@ -1787,14 +1787,17 @@ sections:
         - - 취소
         - - ret
     - id: device-failure
-      question: 이 코드에서 ret가 0이 아닐 때 호출하는 함수의 이름과 동작만 설명하세요. 장치 제출 호출 자체의 설명으로 대신하지
-        마세요.
+      question: doQueueRequest에서 ret가 0이 아닐 때 호출하는 함수와 그 조건만 한 문장으로 설명하세요.
+        함수 내부는 다른 절에서 설명하므로 작성 과정의 확인 여부나 추가적인 미확인 주장을 덧붙이지 마세요.
       sources:
       - submit-result
       answer_contract:
         basis: implementation
         required_terms:
         - - cancelRequest
+        reject_patterns:
+        - pattern: 본문|확인되지|확인할 수 없
+          message: 호출 조건과 대상만 설명하세요. 다른 절에 있는 함수 본문을 미확인 동작으로 단정하지 마세요.
     - id: device-contract
       question: queueRequestDevice 구현자가 요청의 매개변수를 제공된 버퍼의 프레임에 적용하기 위해 지켜야 할 의무만 설명하세요.
       sources:
