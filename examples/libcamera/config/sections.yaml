@@ -1566,6 +1566,7 @@ sections:
   diagram:
     max_nodes: 24
   kind: prose
+  design_prompt: focused
   lead: 요청 큐의 대기·장치 전달·완료 경계를 따라 구현자의 책임을 확인하세요.
   reader: 파이프라인 구현을 수정하는 개발자
   answers:
@@ -1702,7 +1703,8 @@ sections:
       max_statements: 1
     - id: fences
       question: Request::Private::prepare에서 획득 펜스 대기와 선택적 timeout 인자가 하는 일을 설명하세요.
-        호출 지점의 수치나 고정 처리 시간을 추정하지 마세요.
+        기다릴 펜스가 없을 때의 조기 반환과 타이머를 만드는 조건을 생략하지 말고, 호출 지점의 수치나
+        고정 처리 시간을 추정하지 마세요.
       sources:
       - prepare
       answer_contract:
