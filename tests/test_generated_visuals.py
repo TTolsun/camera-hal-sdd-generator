@@ -369,7 +369,7 @@ def test_exact_legacy_cli_visual_proof_is_verified_without_rewriting_its_history
     from sdd.generated_visuals import generate, resolve
     # Replay the exact historical policy; the current policy must invalidate it.
     current_style = (tmp_cfg.style_dir / 'README.md').read_bytes()
-    old_style = Path(__file__).parent / 'fixtures' / 'style-before-215.md'
+    old_style = Path(__file__).parent / 'fixtures' / 'style-before-215.txt'
     (tmp_cfg.style_dir / 'README.md').write_bytes(old_style.read_bytes())
     section, model, _, agent = automatic
     tmp_cfg.agent.kind, tmp_cfg.agent.runner, tmp_cfg.agent.model = 'cli', 'codex', 'test-model'
