@@ -47,7 +47,8 @@ summary.update(schema=1, camera='Virtual2', applied_configuration='(0) 400x300-N
                                 processed=sorted({e['tid'] for e in [json.loads(line) for line in (runtime / f'cam-{i}/events.jsonl').read_text().splitlines()] if e['point']=='frame-processed'}))
                             for i, r in enumerate(observed['results'], 1)],
                inferior_exit_codes=[0, 0, 0], processed_sequences=[[0, 1, 2]] * 3,
-               timeout_probe=dict(seconds=.5, timed_out=True, exit_code=1, sync_end=0, munmap=0, closes=0, process_group_absent=True),
+               timeout_probe=dict(seconds=.5, timed_out=True, exit_code=1, sync_end_return_code=0, munmap_return_code=0,
+                                  close_return_codes=[0, 0, 0], process_group_absent=True),
                negative_probes=dict(absent_provider_errno=2, unsupported_ioctl_errno=25, exit_codes=[1, 1]),
                supplemental_official_cam_strace=dict(exit_code=0, callback_observation=False),
                restored_kernel=(root / 'build/issue211-kernel-trial-2/restore-boot/stdout').read_text().strip(),

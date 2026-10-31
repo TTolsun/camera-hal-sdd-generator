@@ -31,7 +31,15 @@ text = agent.chat('Write the requested reusable technical Markdown from supplied
                  'Mention timeouts/failures stay failed and previous output directories cannot be overwritten. '
                  'Bound physical DMA/camera/other product apps/internal HAL and human approval as unvalidated; GDB is not timing/return proof. '
                  'End with a link to README.md for the historical CPU-only probe and a relative link ../validation/issue211/runs/20261031-wsl-cam-3/observation.json. '
-                 'Return Markdown only. Do not copy machine fields into long tables.\nCOMMAND\n'+command+'\nACTUAL EVIDENCE\n'+material,
-                 tag='official-cam-runbook')
+                 'TID is NOT an equality join key: join by PID/request/sequence, then compare status and record differing TIDs. '
+                 'Scope errno 13 only to the observed test-kernel run. Put supported allocator/kernel and separate host approval BEFORE the capture command. '
+                 'Do not include source line numbers, compiler-diff location claims, cleanup event counts or tables. '
+                 'Use at most five numbered preparation/execution steps and three short result/scope paragraphs. '
+                 'Return JSON with a markdown field containing the COMPLETE concise runbook, maximum 3500 characters.\nCOMMAND\n'+command+'\nACTUAL EVIDENCE\n'+material,
+                 tag='official-cam-runbook', response_schema={'type':'object','additionalProperties':False,
+                  'required':['markdown'],'properties':{'markdown':{'type':'string','maxLength':3500}}})
+text = json.loads(text)['markdown']
+if len(text) > 3500:
+    raise ValueError('Runbook exceeded the requested complete-document length')
 (args.out/'OFFICIAL_CAM.md').write_text(text+'\n', encoding='utf-8')
 print(agent.last_receipt)

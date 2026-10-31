@@ -77,6 +77,7 @@ design_topics:
   - id: prerequisites
     question: 기존 기본 WSL2 커널에서 DMA 할당기가 없어서 정확한 Microsoft 태그의 UDMABUF 내장 시험 커널을 승인 후 임시 적용했다는 조건을 설명하세요. compiler capability 차이와 새 release용 모듈을 설치하지 않아 시험 중 Docker를 중지 상태로 두었다는 조건도 유지하세요. root 전용 장치여서 권한을 바꾸지 않고 root 자식으로 실행했으며 일반 사용자 errno 13 실패도 보존했다고 두 문단 이내로 설명하세요. allocator 함수 내부의 실패 분기는 이 과업에 필요하지 않으므로 늘리지 마세요.
     sources: []
+    prompt: 실제 수행한 준비와 실행 조건은 관찰된 사실이므로 kind를 behavior로 기록하세요. 앞으로 할 조사 계획이나 제품의 부정 보장으로 쓰지 마세요.
     max_statements: 2
     answer_contract:
       basis: measurement
@@ -84,6 +85,7 @@ design_topics:
   - id: failures
     question: 전용 프로브에서 부재 제공자와 미지원 ioctl은 각각 errno 2와 25, 종료 코드 1로 실패했고, 0.5초 시간 초과도 실패로 보존했음을 설명하세요. 이 시간 초과에서 SYNC_END·munmap·fd 닫기와 프로세스 그룹 정리가 성공했고 추가 공식 cam strace는 정상 종료했지만 콜백 관찰과 별도라는 결과만 두 문단 이내로 설명하세요.
     sources: []
+    prompt: 실제 수행한 부정 시험과 정리의 결과는 kind를 behavior로 기록하세요. close 반환값 0은 성공이며 닫기 0건이라는 뜻이 아닙니다. 실패 판정과 자원 정리 성공을 구분하세요.
     max_statements: 2
     answer_contract:
       basis: measurement
@@ -91,6 +93,7 @@ design_topics:
   - id: restored-scope
     question: 임시 .wslconfig를 제거하고 원래 커널로 원복한 결과를 설명하세요. 물리 DMA·카메라·다른 제품 앱·사내 HAL·사람 승인은 미검증 상태임을 두 문단 이내로 유지하세요. GDB는 타이밍에 영향을 주며 콜백 반환 명령은 관찰하지 않았다는 한계도 적으세요.
     sources: []
+    prompt: 실제로 원래 커널로 복구한 결과는 kind behavior로, 미검증 범위는 필요한 만큼 kind limitation으로 기록하세요.
     max_statements: 2
     answer_contract:
       basis: measurement

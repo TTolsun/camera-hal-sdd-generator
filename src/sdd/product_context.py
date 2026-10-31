@@ -9,6 +9,7 @@ import copy
 import hashlib
 import json
 import re
+from decimal import Decimal
 from datetime import date
 from pathlib import PurePosixPath
 
@@ -179,6 +180,47 @@ def record(source, commit):
             'end_line': text.count('\n') + 1, 'text': text, 'sha256': digest(text.encode()), 'whole_file': True}
 
 
+_PERFORMANCE_NUMBER = re.compile(r'(\d+(?:\.\d+)?)\s*(fps|ms|초|%|배\b)', re.I)
+
+
+def _recorded_timeout(topic, text, match):
+    """A recorded test timeout is a parameter, not capture performance.
+
+    Exempt only time units immediately labelled as a timeout/limit, whose value
+    is explicitly present in a selected JSON measurement's timeout fields.
+    Unlabelled latency, fps and unsupported numbers retain the normal guard.
+    """
+    if match[2].lower() not in ('ms', '초'):
+        return False
+    before = text[:match.start()].replace('`', '')
+    after = text[match.end():].replace('`', '')
+    label = r'(?:시간\s*(?:제한|초과)|타임아웃|timeout)'
+    if not (re.search(label + r'(?:\s*(?:프로브|probe))?[\s(:은는이가]*$', before, re.I)
+            or re.match(r'[\s)\]:의]*' + label, after, re.I)):
+        return False
+    values = set()
+
+    def collect(item):
+        if isinstance(item, dict):
+            for key, value in item.items():
+                if (key in ('timeout_seconds', 'timeout_sec')
+                        or (key == 'seconds' and type(item.get('timed_out')) is bool)):
+                    if type(value) in (int, float) and value > 0:
+                        values.add(Decimal(str(value)))
+                collect(value)
+        elif isinstance(item, list):
+            for value in item:
+                collect(value)
+    for source in topic.get('sources', []):
+        if source.get('kind') == 'product' and source.get('product_record', {}).get('type') == 'measurement':
+            try:
+                collect(json.loads(source.get('text', '')))
+            except (ValueError, TypeError):
+                continue
+    seconds = Decimal(match[1]) / (1000 if match[2].lower() == 'ms' else 1)
+    return seconds in values
+
+
 def validate_text(topic, statements):
     context = topic.get('_product_context')
     if context is None:
@@ -186,7 +228,8 @@ def validate_text(topic, statements):
     allowed = set(context['allowed_claims'])
     for statement in statements:
         text = statement['text']
-        if 'performance' not in allowed and re.search(r'\d+(?:\.\d+)?\s*(?:fps|ms|초|%|배\b)', text, re.I):
+        if 'performance' not in allowed and any(not _recorded_timeout(topic, text, match)
+                                               for match in _PERFORMANCE_NUMBER.finditer(text)):
             raise ValueError('Product performance number lacks selected measurement evidence.')
         if 'comparison' not in allowed and re.search(r'경쟁.*(?:우위|우수)|더 빠|가장 빠|최고 성능|faster than|best performance', text, re.I):
             raise ValueError('Product comparison lacks selected comparison evidence.')
