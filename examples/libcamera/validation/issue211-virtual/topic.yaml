@@ -88,7 +88,7 @@ parts:
   role: summary
   question: 공식 libcamera의 virtual 파이프라인은 센서 영상 대신 소프트웨어 테스트 패턴이나 설정한 JPEG 이미지를 공급하는 기능임을 두 짧은 문장으로 설명하세요. 제공된 Virtual2 기본
     설정은 400x300의 lines(대각선 줄무늬) 패턴입니다. 커널과 원래 실행 결과는 뒤의 기존 절에서 설명하므로 여기서 반복하지 마세요. 엄밀히 두 짧은 문장 200자 이내로 쓰세요. 함수 내부 세부와 물리
-    하드웨어 미검증 경고는 다른 절에 있으므로 이 part에 덧붙이지 마세요.
+    하드웨어 미검증 경고는 다른 절에 있으므로 이 part에 덧붙이지 마세요. JPEG라는 약어는 쓰지 말고 .jpg 이미지 파일이라고 쓰세요. 그 파일 형식의 범위를 넓히지 마세요.
   sources:
   - virtual-purpose
   - virtual2-config
@@ -114,7 +114,8 @@ parts:
     실패는 FrameError로 표시되므로 완료 알림만으로 성공을 단정하지 않습니다. virtual은 completeBuffer가 모든 버퍼 완료를 반환한 경우에만 completeRequest를 호출하고, libcamera의
     requestCompleted에 연결된 cam의 requestComplete로 돌아옵니다. 그 뒤의 callLater·processRequest는 다음 절로 이어지므로 여기서 반복하지 마세요. 네 짧은 문장 이내입니다.
     수신 연결과 일반 파이프라인 큐 연결 소스도 함께 제공됩니다. 제어 목록·타임스탬프·FrameSuccess 기본값·가상 범위 경고는 이 요약에서 생략하고, 핵심 전달·실패 상태·모든 버퍼 완료 조건·앱 신호 연결만
-    네 짧은 문장 360자 이내로 쓰세요.
+    네 짧은 문장 360자 이내로 쓰세요. 첫 문장에서 가상 쪽 처리 함수는 VirtualCameraData::processRequest라고 반드시 클래스 이름을 명시하세요. cam의 CameraSession::processRequest와
+    다른 함수입니다. 완료 신호는 제출 순서로 전달하며 앞 요청이 RequestPending이면 신호 전달이 보류된다는 조건도 설명하세요. 네 짧은 문장 440자 이내로 쓰세요.
   sources:
   - virtual-queue
   - virtual-frame
