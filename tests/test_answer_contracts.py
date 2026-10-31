@@ -61,6 +61,22 @@ def test_observed_invalid_disjunction_is_rejected_by_project_rule():
     check(rule, [statement('Invalid는 구성이 유효하지 않고 조정할 수 없다는 뜻입니다. 빈 구성과 같은 극단적인 경우에만 발생할 수 있습니다.')], 'invalid')
 
 
+def test_queue_return_cannot_become_capture_queue_success():
+    config = Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml'
+    section = next(s for s in yaml.safe_load(config.read_text(encoding='utf-8'))['sections']
+                   if s['id'] == 'camera-requests')
+    topic = next(t for t in section['design_topics'] if t['id'] == 'request')
+    part = next(p for p in topic['parts'] if p['id'] == 'completion-signal')
+    rule = part['answer_contract']
+    prefix = '`Camera::queueRequest()`는 `ConnectionTypeQueued`를 지정한 `invokeMethod`를 호출합니다. '
+    suffix = ' 완료는 `requestCompleted` 신호로 알립니다.'
+    # Keep every required identifier: the wrong success condition must still fail.
+    for result in ('캡처 큐에 넣는 데 성공하면 0을 반환합니다.', '장치 큐잉 성공 시 0을 반환합니다.'):
+        with pytest.raises(ValueError, match='큐잉 성공'):
+            check(rule, [statement(prefix + result + suffix)], 'completion-signal')
+    check(rule, [statement(prefix + '그 호출 뒤 0을 반환합니다.' + suffix)], 'completion-signal')
+
+
 @pytest.mark.parametrize('rule', [None, {}, {'basis':'guaranteed'}, {'basis':'contract','answer':'fixed'},
     {'basis':'contract','required_terms':['WrongShape']},
     {'basis':'contract','reject_patterns':[{'pattern':'[','message':'bad regex'}]}])
