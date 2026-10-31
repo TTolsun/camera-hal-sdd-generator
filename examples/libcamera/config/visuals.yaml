@@ -1369,6 +1369,219 @@ sections:
         sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
         quote: "if (fence && fence->isValid())\n\t\tbuffer->_d()->setFence(std::move(fence));\n\
           \n\treturn 0;"
+  - id: queue-return-completion
+    topic: request
+    kind: flow
+    title: 접수 반환과 완료 알림
+    question: queueRequest의 0 반환과 requestCompleted 알림은 각각 무엇을 뜻합니까?
+    nodes:
+    - id: invoke
+      label: ConnectionTypeQueued 호출
+      label_en: Invoke with ConnectionTypeQueued
+      evidence:
+      - source: request/queue-code
+        sha256: b375a7828af46db11a4e6308cc634ebb265619e76e9f173907d16d9009fe2c51
+        quote: ConnectionTypeQueued, request);
+    - id: zero
+      label: 'queueRequest: 0 반환'
+      label_en: queueRequest returns 0
+      evidence:
+      - source: request/queue-code
+        sha256: b375a7828af46db11a4e6308cc634ebb265619e76e9f173907d16d9009fe2c51
+        quote: return 0;
+    - id: queued
+      label: 큐에 넣은 요청
+      label_en: Queued request
+      evidence:
+      - source: request/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: Once the request has been queued
+    - id: complete
+      label: 완료 시 requestCompleted 알림
+      label_en: Notify completion through requestCompleted
+      evidence:
+      - source: request/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: through the \ref requestCompleted signal.
+    edges:
+    - from: invoke
+      to: zero
+      label: 호출 뒤 반환
+      label_en: Return after invoking
+      evidence:
+      - source: request/queue-code
+        sha256: b375a7828af46db11a4e6308cc634ebb265619e76e9f173907d16d9009fe2c51
+        quote: "ConnectionTypeQueued, request);\n\n\treturn 0;"
+    - from: queued
+      to: complete
+      label: API의 완료 알림 계약
+      label_en: API completion-notification contract
+      evidence:
+      - source: request/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "Once the request has been queued, the camera will notify its completion\n * through the \\ref requestCompleted signal."
+  - id: timeout-fence-recovery
+    topic: lifetime
+    kind: flow
+    title: 타임아웃 뒤 펜스 회수
+    question: 신호되지 않은 펜스로 타임아웃이 나면 다른 요청에 재사용하기 전에 무엇을 해야 합니까?
+    nodes:
+    - id: timeout
+      label: '펜스 미신호: 요청 타임아웃'
+      label_en: 'Unsignalled fence: request times out'
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: isn't signalled
+    - id: retained
+      label: 버퍼에 펜스가 남음
+      label_en: Buffer still contains its fence
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: The buffer will still contain the fence
+    - id: retrieve
+      label: 애플리케이션이 releaseFence()로 회수
+      label_en: Application retrieves with releaseFence()
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: applications must retrieve with FrameBuffer::releaseFence()
+    - id: reuse
+      label: 그 뒤 다른 요청에서 버퍼 재사용
+      label_en: Then reuse the buffer in another request
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: can be reused in another request.
+    edges:
+    - from: timeout
+      to: retained
+      label: 요청 실패 뒤에도 유지
+      label_en: Remains after request failure
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+    - from: retained
+      to: retrieve
+      label: 재사용 전 회수 의무
+      label_en: Must retrieve before reuse
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+    - from: retrieve
+      to: reuse
+      label: 회수 후 재사용 가능
+      label_en: Reuse after retrieval
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+  - id: reuse-buffer-relink
+    topic: lifetime
+    kind: flow
+    title: 재사용 버퍼의 요청 연결
+    question: ReuseBuffers 경로에서 각 버퍼는 어떤 순서로 다시 요청에 연결됩니까?
+    nodes:
+    - id: retained
+      label: 'ReuseBuffers: 기존 bufferMap_ 순회'
+      label_en: 'ReuseBuffers: iterate existing bufferMap_'
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: 'for (const auto &[stream, buffer] : bufferMap_)'
+    - id: request
+      label: 각 버퍼의 setRequest(this)
+      label_en: setRequest(this) on each buffer
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: buffer->_d()->setRequest(this);
+    - id: pending
+      label: 각 버퍼를 pending_에 추가
+      label_en: Insert each buffer into pending_
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: _d()->pending_.insert(buffer);
+    edges:
+    - from: retained
+      to: request
+      label: 각 기존 버퍼의 연결 갱신
+      label_en: Update each retained buffer link
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: "if (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;"
+    - from: request
+      to: pending
+      label: 연결한 뒤 대기 집합에 추가
+      label_en: Insert into pending after relinking
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: "if (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;"
+  - id: reuse-buffer-fence-distinction
+    topic: lifetime
+    kind: flow
+    title: 버퍼 재사용과 펜스 권고
+    question: ReuseBuffers가 재사용하는 대상과 펜스 사용 시 권고는 무엇입니까?
+    nodes:
+    - id: flag
+      label: ReuseBuffers
+      label_en: ReuseBuffers
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: \var Request::ReuseBuffers
+    - id: buffers
+      label: 앞서 addBuffer로 넣은 버퍼 재사용
+      label_en: Reuse buffers previously added by addBuffer
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Reuse the buffers that were previously added by addBuffer()
+    - id: fences
+      label: 연결된 펜스는 재사용하지 않음
+      label_en: Associated fences are not reused
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Fences associated with the buffers are not reused.
+    - id: advice
+      label: 펜스를 쓰면 이 플래그를 피하도록 권고
+      label_en: Should not use this flag with fences
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: This flag should not be used if fences are used.
+    edges:
+    - from: flag
+      to: buffers
+      label: 플래그의 재사용 범위
+      label_en: Flag reuse scope
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: buffers
+      to: fences
+      label: 버퍼와 펜스의 범위 구분
+      label_en: Distinguish buffer and fence reuse
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: fences
+      to: advice
+      label: API의 should not 권고
+      label_en: API should-not recommendation
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
   pipeline-requests:
   - id: queue-gates
     topic: queue

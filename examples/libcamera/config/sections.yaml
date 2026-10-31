@@ -4782,6 +4782,8 @@ sections:
         - - 하나
           - 1개
           - 한 개
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: buffer-rejection
       question: Request::addBuffer() 구현에서 빈 stream, 버퍼에 남은 fence, 이미 등록한 stream을 검사하는 순서와 각 반환값을 설명하세요.
         -EINVAL과 두 -EEXIST 조건을 각각 연결하고, 세 검사를 통과한 뒤의 setRequest(this)와 pending_.insert(buffer) 경계를 설명하세요.
@@ -4810,8 +4812,7 @@ sections:
         - - 버퍼
       max_statements: 1
     - id: queue-owner
-      question: 이 if는 요청이 어느 카메라에서 생성됐는지 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을
-        한 문장으로 연결하세요.
+      question: 이 if는 요청이 어느 카메라에서 생성됐는지 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
       sources:
       - queue-owner-guard
       answer_contract:
@@ -4820,6 +4821,8 @@ sections:
         - - camera
           - 카메라
         - - -EXDEV
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-status
       question: Camera::queueRequest의 RequestPending 상태 비교와 일치하지 않을 때의 반환값만 설명하세요.
       sources:
@@ -4829,9 +4832,10 @@ sections:
         required_terms:
         - - RequestPending
         - - -EINVAL
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-controls
-      question: 이 if에서 Request::controls().infoMap()과 Camera::controls()의 주소를 어떻게
-        비교하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? infoMap 이름을 사용하고 조건과 반환값을 한 문장으로 연결하세요.
+      question: 이 if에서 Request::controls().infoMap()과 Camera::controls()의 주소를 어떻게 비교하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? infoMap 이름을 사용하고 조건과 반환값을 한 문장으로 연결하세요.
       sources:
       - queue-controls-guard
       answer_contract:
@@ -4839,9 +4843,10 @@ sections:
         required_terms:
         - - infoMap
         - - -EINVAL
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-buffers
-      question: 이 if는 buffers에 어떤 조건을 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로
-        연결하세요.
+      question: 이 if는 buffers에 어떤 조건을 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
       sources:
       - queue-buffers-guard
       answer_contract:
@@ -4849,9 +4854,10 @@ sections:
         required_terms:
         - - buffers
         - - -EINVAL
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-stream
-      question: 이 if는 activeStreams_의 스트림 포함 여부를 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까?
-        조건과 반환값을 한 문장으로 연결하세요.
+      question: 이 if는 activeStreams_의 스트림 포함 여부를 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
       sources:
       - queue-stream-guard
       answer_contract:
@@ -4859,6 +4865,8 @@ sections:
         required_terms:
         - - activeStreams_
         - - -EINVAL
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: completion-signal
       question: Camera::queueRequest()가 ConnectionTypeQueued를 지정한 invokeMethod 호출 뒤 0을
         반환한다는 구현과, requestCompleted 신호가 별도로 요청 완료를 알린다는 API 설명을 두 문장 이내로 구분하세요. 0을 장치
@@ -4978,6 +4986,8 @@ sections:
           - 펜스
         - - 버퍼
           - buffer
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: fence-failure
       question: addBuffer가 실패하면 전달받은 fence의 상태를 어떻게 남깁니까? 실패 경로만 설명하세요.
       sources:
@@ -4989,6 +4999,8 @@ sections:
         - - 변경
           - 유지
           - 그대로
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: fence-timeout
       question: 펜스가 신호되지 않아 요청이 타임아웃할 때 요청·버퍼·펜스의 상태와, 다른 요청에 버퍼를 재사용하기 전에 호출자가 수행할
         회수 동작을 한 문단으로 함께 설명하세요. 같은 조건을 두 번 반복하지 마세요.
@@ -5023,6 +5035,8 @@ sections:
         basis: implementation
         required_terms:
         - - bufferMap_
+      max_statements: 1
+      prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: reset
       question: Request::reuse가 status_를 RequestPending으로 설정하고 controls_와 metadata_를 clear하는
         세 초기화를 한 문장으로 설명하세요. 대입문의 대상 변수라는 풀이와 함수 이름을 세 번 되풀이하지 마세요.
