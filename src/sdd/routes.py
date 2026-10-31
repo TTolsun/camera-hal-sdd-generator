@@ -94,6 +94,12 @@ def from_heading_content(body: str) -> list[tuple[str, str]] | None:
         text = re.sub(r'\x02[^\x03]*\x03', '', text)
         if not text.strip():
             continue
+        # The generated virtual-configuration notice describes scope, not the
+        # topic's task. Splitting it at its first sentence also leaves an open
+        # bold marker in Markdown. Use the following actual prose instead.
+        from .product_context import SIMULATION_NOTICE
+        if text.strip() == SIMULATION_NOTICE:
+            continue
         # Sentence boundaries require whitespace after punctuation, so
         # dotted C++ members and source filenames stay whole.
         lead = re.split(r'(?<=[.!?。])\s+', ' '.join(text.split()), maxsplit=1)[0]

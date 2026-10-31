@@ -83,3 +83,11 @@ def test_null_question_uses_the_destination_lead():
     assert route.question == ''
     assert route.target == 'detail.md'
     assert from_config({'to': None}).target == '#'
+
+
+def test_simulation_notice_is_not_a_task_summary_or_broken_bold():
+    from sdd.product_context import SIMULATION_NOTICE
+    body = ('## 할당\n\n' + SIMULATION_NOTICE + '\n\nDMA-BUF 할당을 관찰했습니다.\n\n'
+            '## 완료\n\n' + SIMULATION_NOTICE + '\n\n세 요청의 완료를 관찰했습니다.')
+    assert routes.from_heading_content(body) == [
+        ('DMA-BUF 할당을 관찰했습니다.', '#할당'), ('세 요청의 완료를 관찰했습니다.', '#완료')]

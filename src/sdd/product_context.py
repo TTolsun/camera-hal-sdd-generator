@@ -237,10 +237,13 @@ def validate_text(topic, statements):
             raise ValueError('Implementation/unknown/unsupported cannot become a product offering guarantee.')
 
 
+SIMULATION_NOTICE = '**가상 시험 구성입니다. 실제 제품의 지원·성능 주장으로 사용하지 마세요.**'
+
+
 def scope_notice(topic):
     context = topic.get('_product_context')
     if not context or not context['product']['simulation']:
         return ''
     # A model omission cannot turn a fictional fixture into a real product
     # claim. This is deterministic provenance text, never generated marketing.
-    return '**가상 시험 구성입니다. 실제 제품의 지원·성능 주장으로 사용하지 마세요.**\n\n'
+    return SIMULATION_NOTICE + '\n\n'

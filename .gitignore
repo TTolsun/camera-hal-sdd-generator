@@ -12,3 +12,6 @@ approvals.lock
 
 # 로컬 전용 설정
 sdd.local.yaml
+# Isolated CLI working directories are temporary; completed schemas, raw output
+# and immutable call receipts are archived separately and remain tracked.
+examples/libcamera/validation/issue211/runs/**/prompts/cli/call-*/

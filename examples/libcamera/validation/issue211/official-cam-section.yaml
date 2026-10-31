@@ -16,8 +16,8 @@ facts:
 diagram:
   enabled: false
 next:
-  title: 요청 진단 절차
-  link: request-diagnosis.md
+  title: 공식 cam 재현 절차
+  link: https://github.com/TTolsun/camera-hal-sdd-generator/blob/main/examples/libcamera/runtime/OFFICIAL_CAM.md
 design_requirements:
 - id: outcome
   question: 어떤 WSL 환경에서 공식 cam의 캡처와 실제 DMA-BUF 접근을 확인했습니까?
@@ -77,7 +77,7 @@ design_topics:
   - id: prerequisites
     question: 기존 기본 WSL2 커널에서 DMA 할당기가 없어서 정확한 Microsoft 태그의 UDMABUF 내장 시험 커널을 승인 후 임시 적용했다는 조건을 설명하세요. compiler capability 차이와 새 release용 모듈을 설치하지 않아 시험 중 Docker를 중지 상태로 두었다는 조건도 유지하세요. root 전용 장치여서 권한을 바꾸지 않고 root 자식으로 실행했으며 일반 사용자 errno 13 실패도 보존했다고 두 문단 이내로 설명하세요. allocator 함수 내부의 실패 분기는 이 과업에 필요하지 않으므로 늘리지 마세요.
     sources: []
-    prompt: 실제 수행한 준비와 실행 조건은 관찰된 사실이므로 kind를 behavior로 기록하세요. 앞으로 할 조사 계획이나 제품의 부정 보장으로 쓰지 마세요.
+    prompt: 실제 수행한 준비와 실행 조건은 관찰된 사실이므로 kind를 behavior로 기록하세요. 원복된 기본 커널에는 할당기가 없으므로 재현 명령보다 먼저 별도로 승인된 지원 커널을 준비·부팅하고 장치 접근을 확인해야 한다는 전제를 명시하세요. 과거 시험 승인은 미래의 새 호스트 변경 승인이 아닙니다. 이 실행 계약은 product-execution-contract 근거에 따릅니다.
     max_statements: 2
     answer_contract:
       basis: measurement

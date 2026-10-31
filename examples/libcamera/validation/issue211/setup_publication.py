@@ -49,6 +49,7 @@ summary.update(schema=1, camera='Virtual2', applied_configuration='(0) 400x300-N
                inferior_exit_codes=[0, 0, 0], processed_sequences=[[0, 1, 2]] * 3,
                timeout_probe=dict(seconds=.5, timed_out=True, exit_code=1, sync_end_return_code=0, munmap_return_code=0,
                                   close_return_codes=[0, 0, 0], process_group_absent=True),
+               timeout_cleanup_events=[json.loads(line) for line in (root/'examples/libcamera/validation/issue211/runs/20261031-wsl-cleanup/probe-timeout/stdout').read_text().splitlines()],
                negative_probes=dict(absent_provider_errno=2, unsupported_ioctl_errno=25, exit_codes=[1, 1]),
                supplemental_official_cam_strace=dict(exit_code=0, callback_observation=False),
                restored_kernel=(root / 'build/issue211-kernel-trial-2/restore-boot/stdout').read_text().strip(),
@@ -76,12 +77,19 @@ products['products'].append(dict(id='libcamera-official-cam-trial', scope='proje
                                features=[dict(id='wsl-virtual-capture', need='Observe official virtual completion and CPU DMA-BUF access',
                                               usage='Source-pinned public virtual trial', availability='unknown', conditions=conditions,
                                               exclusions=['Physical DMA/camera, other production applications and internal HAL not validated'],
-                                              implementation=[], evidence=['official-cam-run'], claims=[])]))
+                                              implementation=[], evidence=['official-cam-run', 'execution-contract'], claims=[])]))
 products['evidence'].append(dict(id='official-cam-run', type='measurement', supplier='Source-pinned official cam trial; raw events, GDB, syscall and cleanup records',
                                 version=sha256(runtime / 'observation.json'), date='2026-10-31', valid_until='2026-10-31',
                                 product='libcamera-official-cam-trial', release=observed['source_commit'], configuration='wsl2-virtual2-official-cam-udmabuf',
                                 feature='wsl-virtual-capture', conditions=conditions, availability='unknown',
                                 file='product-evidence/official-cam-observation.json', sha256=sha256(material)))
+contract = workspace/'config/product-evidence/issue211-execution-contract.json'
+shutil.copyfile(Path(__file__).with_name('runs')/'20261031-issue-execution-contract.json', contract)
+products['evidence'].append(dict(id='execution-contract', type='project-document', supplier='GitHub issue211 execution contract, verbatim selected lines',
+                                version='2026-10-31T06:00:33Z', date='2026-10-31', valid_until='2026-10-31',
+                                product='libcamera-official-cam-trial', release=observed['source_commit'], configuration='wsl2-virtual2-official-cam-udmabuf',
+                                feature='wsl-virtual-capture', conditions=conditions, availability='unknown',
+                                file='product-evidence/issue211-execution-contract.json', sha256=sha256(contract)))
 products_path.write_text(yaml.safe_dump(products, allow_unicode=True, sort_keys=False), encoding='utf-8')
 sections_path = workspace / 'config/sections.yaml'
 sections = yaml.safe_load(sections_path.read_text(encoding='utf-8'))
@@ -100,6 +108,7 @@ config['paths']['templates'] = str(root / 'templates')
 config['paths']['style'] = str(root / 'style')
 config['products']['file'] = str(products_path)
 config['agent'] = yaml.safe_load(Path(__file__).with_name('generation-profile.yaml').read_text())['agent']
+config['documentation'].setdefault('pages', {})['official-cam-validation.md'] = {'max_markdown_chars': 310000}
 config['site'].update(enabled=False, intro=str(workspace / 'site-intro.md'),
                       mermaid_dir=str(root / 'build/libcamera-sdd-issue211/docs/assets/mermaid'))
 config['visuals']['file'] = str(workspace / 'config/visuals.yaml')

@@ -6,6 +6,8 @@ root = Path(__file__).resolve().parents[4]
 work = root/'build/issue211-publication'
 config = yaml.safe_load((work/'generation.yaml').read_text(encoding='utf-8'))
 config['site']['enabled'] = True
+# Preserve the original visual identity for model-free verification only.
+config['agent'] = yaml.safe_load((root/'build/libcamera-sdd-issue211/publication/issue193/profiles/publication.yaml').read_text(encoding='utf-8'))['agent']
 historical = dict(config)
 historical['agent'] = yaml.safe_load((root/'build/libcamera-sdd-issue211/publication/issue193/profiles/independent-review.yaml').read_text(encoding='utf-8'))['agent']
 historical['paths'] = dict(config['paths'])
