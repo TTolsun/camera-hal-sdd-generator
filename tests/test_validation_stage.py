@@ -58,6 +58,44 @@ def test_midstage_edit_cannot_hide_by_restoring_original_bytes(tmp_path):
             path.write_text('value: original', encoding='utf-8')
 
 
+def test_repeated_rapid_restore_is_detected_without_timestamp_delays(tmp_path):
+    path = tmp_path/'rapid.yaml'
+    path.write_text('value: original', encoding='utf-8')
+    for _ in range(100):
+        with pytest.raises(InputChanged):
+            with stage():
+                load_yaml(path)
+                path.write_text('value: changed', encoding='utf-8')
+                path.write_text('value: original', encoding='utf-8')
+
+
+def test_known_output_acknowledges_only_its_own_change(tmp_path):
+    from sdd.validation_stage import read_bytes
+    output, source = tmp_path/'output.json', tmp_path/'source.yaml'
+    output.write_bytes(b'old')
+    source.write_bytes(b'original')
+    with pytest.raises(InputChanged):
+        with stage() as inputs:
+            read_bytes(output)
+            read_bytes(source)
+            output.write_bytes(b'new')
+            source.write_bytes(b'changed')
+            source.write_bytes(b'original')
+            inputs.produced(output, b'new')
+
+
+def test_known_output_can_create_missing_parent_without_invalidating_inputs(tmp_path):
+    from sdd.validation_stage import read_bytes
+    source, output = tmp_path/'input.yaml', tmp_path/'new/catalog.json'
+    source.write_bytes(b'original')
+    with stage() as inputs:
+        read_bytes(source)
+        assert read_bytes(output, optional=True) is None
+        output.parent.mkdir()
+        output.write_bytes(b'new')
+        inputs.produced(output, b'new')
+
+
 def test_frontmatter_is_reused_without_sharing_mutations():
     from sdd.document_metadata import split_frontmatter
     text = '---\nsource_commit: fixed\n---\n\nBody'

@@ -5574,8 +5574,7 @@ sections:
         - pattern: 참조만|참조를?\s*만|only
           message: 버퍼 참조 저장에 원문에 없는 배타성을 추가하지 마세요.
     - id: request-owner
-      question: createRequest가 반환한 요청의 삭제 또는 재사용 책임이 호출자에게 있다는 사실만 한 문장으로 설명하세요. 재사용 API의 동작과
-        버퍼 플래그·fence 조건은 다른 질문이 담당하므로 이 문단에는 포함하지 마세요.
+      question: createRequest가 반환한 요청의 삭제 또는 재사용 책임이 호출자에게 있다는 사실만 한 문장으로 설명하세요. 재사용 API의 동작과 버퍼 플래그·fence 조건은 다른 질문이 담당하므로 이 문단에는 포함하지 마세요.
       sources:
       - create
       - reuse
@@ -5588,6 +5587,9 @@ sections:
         - pattern: ReuseBuffers|setRequest|pending_|bufferMap_
           message: 이 문단은 요청의 삭제·재사용 책임 주체만 설명합니다. 플래그와 구현 상세는 다른 질문이 담당합니다.
       max_statements: 1
+      prompt: '
+
+        독립 검토의 출판 차단 오류를 수정하세요. reuse()의 flags는 이전 버퍼의 유지 여부를 제어하며 Request 객체 자체의 재사용 여부를 정하지 않습니다. 이 항목은 createRequest 호출자의 소유권과 완료 뒤 삭제 또는 상태 초기화 후 재사용 선택만 설명하세요. flags 구현은 확장하지 마세요.'
     - id: fence-transfer
       question: Request::addBuffer() 성공 시 유효한 Fence의 소유권이 buffer로 이동하는 경로와 실패 시 전달한 fence가 수정되지
         않고 소유권도 넘어가지 않는 경로를 한 문장으로 함께 비교하세요. 동일한 조건을 인용·풀이·결론으로 되풀이하지 마세요.
@@ -5759,12 +5761,11 @@ sections:
     parts:
     - id: summary
       role: summary
-      question: 정지 계약에서는 대기 중인 요청을 취소해 완료로 돌려보낸다는 점과 실행 중 연결 해제의 대기 요청 처리는 아직 TODO라는 차이를 쉬운
-        말로 먼저 설명하세요. 관측된 실행 결과나 TODO로부터 새로운 부정 보장을 만들지 말고 두 원문이 명시한 내용을 비교하세요.
+      question: 정지 계약에서는 대기 중인 요청을 취소해 완료로 돌려보낸다는 점과 실행 중 연결 해제의 대기 요청 처리는 아직 TODO라는 차이를 쉬운 말로 먼저 설명하세요. 관측된 실행 결과나 TODO로부터 새로운 부정 보장을 만들지 말고 두 원문이 명시한 내용을 비교하세요.
       sources:
       - device-stop
       - disconnect-todo
-      max_statements: 2
+      max_statements: 1
       answer_contract:
         basis: description
         required_terms:
@@ -5772,6 +5773,11 @@ sections:
         - - 연결 해제
           - disconnect
         - - TODO
+        - - 동기
+          - synchronous
+      prompt: '
+
+        독립 검토가 빠진 필수 조건을 지적했습니다. Camera::stop의 동작 중 정지에서 모든 대기 요청을 취소하고 오류 상태로 동기 완료한다는 API 계약을 명시하세요. 연결 해제 중 대기 요청 처리가 TODO라는 차이와 함께 두 짧은 문장 이내로 요약하고 구현 순서 나열은 피하세요.'
     - id: camera-entry
       question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed 음수
         반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop
@@ -5945,9 +5951,7 @@ sections:
         - pattern: 성공|오류\s*코드|ENODEV|EACCES|EXDEV|EINVAL|ENOMEM|원문
           message: 이 문단은 실제 기존 호출의 반환값을 기록하자는 계획만 제안합니다. 앞 절의 반환 계약과 오류 목록을 다시 쓰지 마세요.
     - id: reuse-state-record
-      question: 기존 실행의 Request::reuse 전후 status_·controls_·metadata_와 RequestPending 대입을 한 번씩
-        묶은 조사 기록 항목을 완전한 한국어 한 문장으로 제안하세요. 코드 대입식만으로 문장을 끝내지 말고, 같은 변수를 다른 말로 되풀이하지 마세요. 미실행·함수
-        재호출 주의문은 앞 질문에서 설명했으므로 반복하지 마세요.
+      question: 기존 실행의 Request::reuse 전후 status_·controls_·metadata_와 RequestPending 대입을 한 번씩 묶은 조사 기록 항목을 완전한 한국어 한 문장으로 제안하세요. 코드 대입식만으로 문장을 끝내지 말고, 같은 변수를 다른 말로 되풀이하지 마세요. 미실행·함수 재호출 주의문은 앞 질문에서 설명했으므로 반복하지 마세요.
       sources:
       - record-status
       - record-controls
@@ -5960,6 +5964,10 @@ sections:
         - - 기록
         - - controls_
         - - metadata_
+        - - Request::reuse
+      prompt: '
+
+        독립 검토의 관찰 시점 오류를 수정하세요. 관찰 시점은 Request::reuse 호출 전과 호출 완료 후입니다. status_ 대입 행 앞뒤만 보면 그 뒤의 controls_와 metadata_ 초기화를 놓칠 수 있습니다. 실제로 실행한 결과가 아닌 관찰 계획으로, Request::reuse를 추가로 호출하라는 지시 없이 변수와 RequestPending을 한 문장에 연결하세요.'
     - id: completion-record
       question: 기존 실행의 선두 요청 상태 조회식 req->status() 값을 조사 기록 항목으로 남기자는 관찰 계획만 완전한 한국어 한 문장으로 제안하세요.
         RequestPending 또는 break 분기는 앞 제출에서 완료까지 절에서 이미 설명했으므로 다시 서술하지 마세요. 미실행·함수 재호출 주의문과 작성

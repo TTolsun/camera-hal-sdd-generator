@@ -9,6 +9,7 @@ import json
 from pathlib import Path, PurePosixPath
 
 import yaml
+from .input_watch import Changes
 
 _current = ContextVar('sdd_validation_stage', default=None)
 
@@ -23,13 +24,14 @@ class Inputs:
         self.objects, self.directories = {}, {}
         self.rollbacks = []
         self.stamps, self.aliases = {}, {}
+        self.changes = Changes()
 
     @staticmethod
     def stamp(path):
         if not path.exists():
             return None
         stat = path.stat()
-        return stat.st_mtime_ns, stat.st_size, stat.st_ino, stat.st_mode
+        return stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size, stat.st_ino, stat.st_mode
 
     def pin(self, cfg, model=None):
         for value in (cfg, model):
@@ -84,6 +86,10 @@ class Inputs:
         path = alias.resolve()
         self.aliases[alias] = path
         if path not in self.files:
+            try:
+                self.changes.watch(path)
+            except OSError as exc:
+                raise InputChanged(f'Cannot observe input changes for {path}: {exc}') from exc
             before = self.stamp(path)
             self.files[path] = path.read_bytes() if path.exists() else None
             self.stamps[path] = self.stamp(path)
@@ -106,6 +112,13 @@ class Inputs:
         return self.memo(key, lambda: parser(raw))
 
     def verify(self):
+        try:
+            self.changes.poll()
+        except OSError as exc:
+            raise InputChanged(f'Input change observation failed; previous output preserved: {exc}') from exc
+        for path in self.files:
+            if self.changes.touched(path):
+                raise InputChanged(f'Input changed during validation: {path}; previous output preserved')
         for alias, path in self.aliases.items():
             if alias.resolve() != path:
                 raise InputChanged(f'Input path changed during validation: {alias}')
@@ -130,6 +143,7 @@ class Inputs:
         if path.read_bytes() != expected:
             raise InputChanged(f'Generated checkpoint changed during save: {path}')
         if path in self.files:
+            self.changes.acknowledge(path)
             self.files[path] = expected
             self.stamps[path] = self.stamp(path)
 
@@ -184,6 +198,7 @@ def stage():
         raise
     finally:
         _current.reset(token)
+        inputs.changes.close()
 
 
 def staged(function):

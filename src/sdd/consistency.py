@@ -86,7 +86,7 @@ def policy_hash():
     root = Path(__file__).parent
     parts = {name: hashlib.sha256((root/name).read_bytes()).hexdigest()
              for name in ('consistency.py', 'consistency_sources.py', 'consistency_analysis.py', 'next_steps.py',
-                          'validation_stage.py', 'consistency_profile.py', 'document_metadata.py',
+                          'validation_stage.py', 'input_watch.py', 'consistency_profile.py', 'document_metadata.py',
                           'validation_execution.py',
                           'site_localization.py', 'config.py', 'cli_schema.py')}
     return canonical_request_hash(parts)
