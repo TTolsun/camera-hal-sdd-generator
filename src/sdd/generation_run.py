@@ -187,6 +187,13 @@ class Execution:
         if self.current is not None and self.current['units'].get(key) == 'not-started':
             self.unit(key, status)
 
+    def units(self, states):
+        """Persist a deterministic classification pass as one progress update."""
+        if self.current is not None:
+            with self._mutex:
+                self.current['units'].update(states)
+                self.persist()
+
     def check_time(self):
         elapsed = self.clock()-self.started
         if (self.operation_limits.get('max_seconds') and

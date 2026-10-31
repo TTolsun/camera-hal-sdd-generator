@@ -108,7 +108,7 @@ def _translate_missing(cfg, catalog, agent=None):
         raise ValueError('Translation requires an actual LLM response.')
     size = cfg.site.batch_size()
     agent = agent or Agent(cfg.agent, cfg.build_dir / 'translation-prompts')
-    validated = {}
+    validated, states = {}, {}
     for source, value in catalog['strings'].items():
         if value:
             try:
@@ -117,9 +117,8 @@ def _translate_missing(cfg, catalog, agent=None):
                 value = ''  # Re-translate a legacy value under the current rules.
         validated[source] = value or fixed_translation(source) or value
         if validated[source]:
-            update = getattr(agent, 'unit', None)
-            if update is not None:
-                update(source, 'manuscript-reused' if value else 'completed')
+            states[source] = 'manuscript-reused' if value else 'completed'
+    agent.units(states)
     catalog = {**catalog, 'strings': validated}
     from .translation_context import retained_carryover
     event = retained_carryover(catalog, validated)

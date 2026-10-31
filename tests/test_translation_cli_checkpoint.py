@@ -86,3 +86,17 @@ def test_batch_sizing_includes_actual_cli_wrapper_and_schema(tmp_cfg, monkeypatc
     result = translate_missing(tmp_cfg, dict(strings={('문장 '+str(i)+' ')*70: '' for i in range(4)}))
     assert sum(calls) == 4 and len(calls) > 1
     assert all(result['strings'].values())
+
+
+def test_unchanged_translation_classification_writes_bounded_progress(tmp_cfg, monkeypatch):
+    from sdd.generation_run import Execution
+    tmp_cfg.agent.kind = 'cli'
+    tmp_cfg.raw['site'] = dict(translation_batch_size=12)
+    writes = []
+    monkeypatch.setattr('sdd.generation_run.save', lambda path, report, **kwargs: writes.append(report['seconds']))
+    execution = Execution(tmp_cfg, object())
+    catalog = dict(strings={f'기존 번역 {i}': f'Existing translation {i}' for i in range(1000)})
+    assert translate_missing(tmp_cfg, catalog, execution)['strings'] == catalog['strings']
+    assert execution.report['counts']['reused'] == 1000
+    assert execution.report['cumulative']['calls'] == 0
+    assert len(writes) <= 12
