@@ -7,6 +7,44 @@ import re
 from urllib.parse import quote
 
 
+def fold_scope_notices(document: str) -> str:
+    """Retain generated virtual-test scope once, with links to every scoped H2.
+
+    Manuscripts and their verification stay intact. Code examples, custom
+    warnings and notices without an identifiable section keep their placement.
+    """
+    from .product_context import SIMULATION_NOTICE
+    if '<details class="note scope-notices">' in document:
+        return document
+    notice = '<p><strong>' + html.escape(SIMULATION_NOTICE.strip('*')) + '</strong></p>'
+    current = None
+    sections = {}
+
+    def move(match):
+        nonlocal current
+        if match[1] is not None:
+            current = (match[1], match[2])
+        elif match[0] == notice and current is not None:
+            sections[current[0]] = current[1]
+            return ''
+        return match[0]
+
+    pattern = (r'<pre\b[^>]*>.*?</pre>|<code\b[^>]*>.*?</code>|'
+               r'<h2 id="([^"]+)">(.*?)</h2>|' + re.escape(notice))
+    result = re.sub(pattern, move, document, flags=re.S)
+    if not sections:
+        return document
+    links = ''.join('<li><a href="#' + html.escape(anchor, quote=True) + '">'
+                    + html.escape(html.unescape(re.sub(r'<[^>]+>', '', title))) + '</a></li>'
+                    for anchor, title in sections.items())
+    details = ('<details class="note scope-notices"><summary>가상 시험의 검증 범위</summary>'
+               + notice + '<ul>' + links + '</ul></details>\n')
+    # Keep the generated next step last and place scope beside source evidence.
+    target = re.search(r'<h2 id="소스-근거(?:-\d+)?">|<p>다음 단계:', result)
+    position = target.start() if target else len(result)
+    return result[:position] + details + result[position:]
+
+
 def cells(row: str, tag: str = 'td') -> tuple[str, ...]:
     return tuple(cell.strip() for cell in re.findall(rf'<{tag}\b[^>]*>(.*?)</{tag}>', row, re.S))
 
