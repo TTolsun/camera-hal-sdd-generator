@@ -6234,8 +6234,8 @@ sections:
         - - 반환
       max_statements: 1
     - id: buffer-error
-      question: addBuffer의 기존 호출 반환값을 관찰하고 -EEXIST가 같은 스트림의 버퍼 또는 남아 있는 펜스 중 어느 조건인지
-        좁히는 계획을 설명하세요.
+      question: addBuffer()의 기존 호출에서 -EEXIST가 반환됐을 때 같은 스트림의 기존 버퍼와 남은 펜스를 각각 어떻게 확인하며,
+        동일한 반환값으로 원인을 판별할 수 있는 범위는 무엇인가요?
       sources:
       - buffer
       answer_contract:
