@@ -1566,6 +1566,7 @@ sections:
   diagram:
     max_nodes: 24
   kind: prose
+  design_prompt: focused
   lead: 요청 큐의 대기·장치 전달·완료 경계를 따라 구현자의 책임을 확인하세요.
   reader: 파이프라인 구현을 수정하는 개발자
   answers:
@@ -1702,7 +1703,8 @@ sections:
       max_statements: 1
     - id: fences
       question: Request::Private::prepare에서 획득 펜스 대기와 선택적 timeout 인자가 하는 일을 설명하세요.
-        호출 지점의 수치나 고정 처리 시간을 추정하지 마세요.
+        기다릴 펜스가 없을 때의 조기 반환과 타이머를 만드는 조건을 생략하지 말고, 호출 지점의 수치나
+        고정 처리 시간을 추정하지 마세요.
       sources:
       - prepare
       answer_contract:
@@ -1772,13 +1774,18 @@ sections:
         - - doQueueRequest
         - - completeRequest
     - id: device-submit
-      question: 이 코드가 장치 제출을 위해 호출하여 ret에 결과를 저장하는 함수 이름만 설명하세요.
+      question: doQueueRequest에서 요청이 이미 취소되지 않은 경우에만 queueRequestDevice를 호출하고 결과를
+        ret에 저장한다는 조건과 동작을 한 문장으로 연결하세요. 앞선 취소 분기의 조기 반환을 무시하여 모든 요청을
+        장치에 제출한다고 쓰지 마세요.
       sources:
+      - submit-code
       - submit-result
       answer_contract:
         basis: implementation
         required_terms:
         - - queueRequestDevice
+        - - 취소
+        - - ret
     - id: device-failure
       question: 이 코드에서 ret가 0이 아닐 때 호출하는 함수의 이름과 동작만 설명하세요. 장치 제출 호출 자체의 설명으로 대신하지
         마세요.
