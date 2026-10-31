@@ -227,7 +227,7 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
         missing_cli.setattr('sdd.cli_agent.command', unavailable)
         enforce(tmp_cfg, model)
         assert len(calls) == 1  # Archive validation never needs to launch a CLI.
-    for field in ('claims', 'sources', 'source_aliases'):
+    for field in ('claims', 'sources', 'source_aliases', 'excluded_navigation'):
         altered = copy.deepcopy(report)
         altered['contracts'][0][field] = {}
         (tmp_cfg.build_dir/'consistency-review.json').write_text(json.dumps(altered), encoding='utf-8')

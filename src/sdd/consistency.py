@@ -82,7 +82,7 @@ SYSTEM = (
 def policy_hash():
     root = Path(__file__).parent
     parts = {name: hashlib.sha256((root/name).read_bytes()).hexdigest()
-             for name in ('consistency.py', 'consistency_sources.py', 'consistency_analysis.py')}
+             for name in ('consistency.py', 'consistency_sources.py', 'consistency_analysis.py', 'next_steps.py')}
     return canonical_request_hash(parts)
 
 
@@ -108,6 +108,7 @@ def groups(cfg):
 
 def request(cfg, model, group):
     claims, sources, all_statements, visible = {}, {}, {}, {}
+    excluded_navigation = []
     display = []
     catalog = {}
     site = cfg.site
@@ -125,6 +126,10 @@ def request(cfg, model, group):
         meta, body = split_frontmatter(text)
         if meta.get('source_commit') != model.meta.get('source_commit'):
             raise ValueError(f'Consistency source commit mismatch: {name}')
+        from .next_steps import checked_footer
+        navigation = checked_footer(cfg, model, name, meta, body)
+        if navigation is not None:
+            excluded_navigation.append(navigation)
         if catalog:
             from .site_markdown import _render
             from .site_localization import display_pairs
@@ -155,6 +160,8 @@ def request(cfg, model, group):
         # Source-question scenarios also retain the extractor's exact analysis
         # notes. Audit those in their own domain without duplicating LLM prose.
         for index, paragraph in enumerate(body.split('\n\n')):
+            if navigation is not None and index == navigation['paragraph']:
+                continue
             if re.search(group['match'], paragraph, re.I) and not paragraph.startswith(('#', '<', '```', '|')):
                 analysis_refs = paragraph_refs(cfg, model, meta, paragraph)
                 if artifact.get('answers') and not analysis_refs:
@@ -212,7 +219,8 @@ def request(cfg, model, group):
         raise ValueError(f"No primary document contract claims found: {group['id']}")
     sources, shared, aliases = canonicalize(claims, sources, group.get('evidence', []))
     return dict(contract=group, source_commit=model.meta.get('source_commit'), claims=claims,
-                sources=sources, shared_sources=shared, source_aliases=aliases)
+                sources=sources, shared_sources=shared, source_aliases=aliases,
+                excluded_navigation=excluded_navigation)
 
 
 def schema(payload):
@@ -284,7 +292,7 @@ def wire_payload(payload):
     # claims. Keep them in the bound report; send every complete source text,
     # location, claim, direct-reference relation and primary peer to the model.
     result = {key: value for key, value in payload.items()
-              if key not in ('source_aliases', 'shared_sources')}
+              if key not in ('source_aliases', 'shared_sources', 'excluded_navigation')}
     result['contract'] = {key: value for key, value in payload['contract'].items()
                           if key in ('id', 'question', 'primary')}
     result['sources'] = {sid: {key: value for key, value in row.items() if key != 'sha256'}
@@ -401,7 +409,7 @@ def audit(cfg, model, agent):
                 findings += checked
             report['contracts'].append(dict(id=group['id'], input_sha256=identity(payload),
                 findings=findings, claims=payload['claims'], sources=payload['sources'],
-                source_aliases=payload['source_aliases']))
+                source_aliases=payload['source_aliases'], excluded_navigation=payload['excluded_navigation']))
             save(path, report, newline='\n')
     except BaseException as exc:
         report.update(status='incomplete', error=str(exc))
@@ -437,7 +445,7 @@ def enforce(cfg, model):
         row = recorded[group['id']]
         if row.get('input_sha256') != identity(payload):
             raise ValueError(f"Stale cross-document contract review: {group['id']}; run audit-consistency")
-        if any(row.get(key) != payload[key] for key in ('claims', 'sources', 'source_aliases')):
+        if any(row.get(key) != payload[key] for key in ('claims', 'sources', 'source_aliases', 'excluded_navigation')):
             raise ValueError('Consistency report source/claim metadata changed; run audit-consistency')
         validate(payload, json.dumps(dict(findings=row['findings']), ensure_ascii=False), assembled=True)
         checked = []
