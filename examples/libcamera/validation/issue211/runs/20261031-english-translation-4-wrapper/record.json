@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "argv": [
+    "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator\\.venv\\Scripts\\python.exe",
+    "examples/libcamera/validation/issue211/translate_site.py",
+    "--out",
+    "examples/libcamera/validation/issue211/runs/20261031-english-translation-4"
+  ],
+  "cwd": "C:\\Users\\baboe\\.codex\\worktrees\\cb18\\camera-hal-sdd-generator",
+  "environment": {},
+  "timeout_seconds": 1200,
+  "started_at": "2026-10-31T07:29:20.948274+00:00",
+  "timed_out": false,
+  "exit_code": 0,
+  "cleanup": "parent-reaped-windows",
+  "pid": 59900,
+  "elapsed_seconds": 118.77686740003992,
+  "files": {
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "a32c49331955476463644135fb73ad3956b7d2df8a98d34f2467a3d9747413f5"
+  }
+}

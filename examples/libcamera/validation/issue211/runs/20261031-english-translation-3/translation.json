@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "prepared": {
+    "pages": 31,
+    "strings": 1824,
+    "missing_translations": 58,
+    "human_review": "pending",
+    "replayed_http_calls": 0,
+    "translation_replays": []
+  },
+  "missing_after": 0,
+  "human_review": "pending",
+  "writer": "cli/claude/claude-haiku-5-5"
+}

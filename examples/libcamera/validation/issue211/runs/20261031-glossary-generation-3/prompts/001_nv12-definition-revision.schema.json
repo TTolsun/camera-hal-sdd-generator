@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "term",
+    "full",
+    "definition"
+  ],
+  "properties": {
+    "term": {
+      "const": "NV12"
+    },
+    "full": {
+      "type": "string"
+    },
+    "definition": {
+      "type": "string",
+      "maxLength": 180
+    }
+  }
+}

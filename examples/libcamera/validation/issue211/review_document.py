@@ -44,6 +44,9 @@ recorder = (root/'src/sdd/runtime_evidence.py').read_text(encoding='utf-8').spli
 user += '\nPUBLIC RECORDER OUTPUT-DIRECTORY CONTRACT WINDOW\n'+'\n'.join(recorder[17:34])
 kconfig = (root/'build/issue211-kernel/dma-buf.Kconfig').read_text(encoding='utf-8').splitlines()
 user += '\nEXACT TEST-KERNEL KCONFIG UDMABUF WINDOW\n'+'\n'.join(kconfig[28:38])
+if args.document.name == 'OFFICIAL_CAM.md':
+    for name in ('prepare_runtime.sh', 'prepare_kernel.sh'):
+        user += '\nLINKED PUBLIC PREPARATION EXAMPLE '+name+'\n'+Path(__file__).with_name(name).read_text(encoding='utf-8')
 if args.english:
     user += '\nENGLISH\n'+args.english.read_text(encoding='utf-8')
 schema = {'type':'object','additionalProperties':False,'required':['verdict','findings','reviewed_scope','unreviewed'],

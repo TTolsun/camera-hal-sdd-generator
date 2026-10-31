@@ -1,0 +1,10 @@
+{
+  "review": {
+    "verdict": "pass",
+    "findings": [],
+    "scope": "\uc81c\uacf5\ub41c \ucd9c\ucc98 \ubc1c\ucdcc\ubb38\uacfc \uc694\uc57d\uc744 \uae30\uc900\uc73c\ub85c 8\uac1c \uc815\uc758\uc758 \uadfc\uac70, \uc815\ud655\uc131 \ubc0f \uc774\ud574 \uac00\ub2a5\uc131\uc744 \uac80\ud1a0\ud588\uc2b5\ub2c8\ub2e4. \uc774 \ud310\uc815\uc740 \uc0ac\ub78c\uc758 \uc2b9\uc778\uc744 \uc758\ubbf8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+  },
+  "sources_sha256": "d28716b2d9eef85d5c3cac77d92dd3cd917ac1a767e66de0409ac66732a949c2",
+  "definitions_sha256": "a203b29f4486519a113a1f26760e7094a469867ba97d09ee75b24790bc26f86e",
+  "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-glossary-review-4\\prompts\\calls\\7f00b3d2e1d64273aaf65830a47852db\\001.receipt.json"
+}

@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a190e6-d79c-7e21-9757-5b07912c2a27"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"verdict\":\"pass\",\"findings\":[],\"reviewed_scope\":\"제공된 공개 소스 창, 실행 기록, 준비 스크립트와 실행 계약을 기준으로 사실 관계, 검증 범위 및 실행 전 준비 순서를 검토했습니다. 통과는 자동 검토 결과이며 사람의 승인을 뜻하지 않습니다.\",\"unreviewed\":[\"제공된 발췌 외의 링크 대상과 원본 저장소 전체\",\"영문 문서: 제공되지 않음\"]}"}}
+{"type":"turn.completed","usage":{"input_tokens":22070,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":287,"reasoning_output_tokens":173}}

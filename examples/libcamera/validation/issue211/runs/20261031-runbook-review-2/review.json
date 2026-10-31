@@ -1,0 +1,18 @@
+{
+  "review": {
+    "verdict": "needs-revision",
+    "findings": [
+      "\u201c\uac19\uc740 \ud504\ub85c\uc138\uc2a4 \uc548\uc5d0\uc11c request, sequence, status, tid\ub97c \ub9de\ucd94\uba74\u201d incorrectly makes TID an equality join key. Join observations by PID, request and sequence; treat status and TID as observed attributes. Callback TIDs are 437, 452 and 467, while processing TIDs are 434, 449 and 464, respectively.",
+      "\u201cWSL\uc758 root \uc790\uc2dd \ucee8\ud14d\uc2a4\ud2b8\uc5d0\uc11c \uc2e4\ud589\ud569\ub2c8\ub2e4\u201d and the subsequent capture command omit a necessary prerequisite: before capture, arrange separately authorized preparation of a supported kernel exposing the allocator. The restored default kernel lacks the allocator, so root access alone is insufficient. Place this prerequisite before the command.",
+      "\u201c\uc77c\ubc18 \uc0ac\uc6a9\uc790\ub85c \uc2e4\ud589\ud558\uba74 errno 13\uc73c\ub85c \uc2e4\ud328\ud569\ub2c8\ub2e4\u201d generalizes a trial-specific result. Limit EACCES=13 to the unprivileged run on the test kernel; the supplied evidence does not establish that errno on the restored kernel."
+    ],
+    "reviewed_scope": "Reviewed the Korean document\u2019s factual claims, stated validation boundaries, frame correlation and prerequisite order against the supplied public source windows and runtime material.",
+    "unreviewed": [
+      "The contents and behavior of run_cam.py, the probe source, the linked README and raw evidence files were not supplied as source windows and could not be independently checked.",
+      "No English document was supplied for comparison."
+    ]
+  },
+  "document_sha256": "0c06f944f3170d7c5ecff2c397e8a7bac379d12c0a991fc7ca781a7e76633ad1",
+  "material_sha256": "6724319768e46327e26f324d536ccaf22e9b71852e055a7b3c91318f0c11a7f1",
+  "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-runbook-review-2\\prompts\\calls\\ae18cc963cbf4d5091d3ba013e66b34d\\001.receipt.json"
+}

@@ -1,0 +1,12 @@
+{
+  "review": {
+    "verdict": "needs-revision",
+    "findings": [
+      "NV12: \u20188\ube44\ud2b8\u2019\ub9cc\uc73c\ub85c\ub294 \uc131\ubd84\ub2f9 \ube44\ud2b8 \uc218\uc778\uc9c0 \ud53d\uc140\ub2f9 \ube44\ud2b8 \uc218\uc778\uc9c0 \ubd88\uba85\ud655\ud569\ub2c8\ub2e4. \ucd9c\ucc98\uc5d0 \ub9de\uac8c \u2018\uc131\ubd84\ub2f9 8\ube44\ud2b8\u2019\ub85c \uba85\uc2dc\ud558\uba74 \uc815\ud655\ud569\ub2c8\ub2e4."
+    ],
+    "scope": "\uc81c\uacf5\ub41c \ubc1c\ucdcc\ubb38\uacfc \uc815\uc758\uc758 \ubd80\ud569\uc131, \uc815\ud655\uc131 \ubc0f \ub3c5\uc790 \uc774\ud574\ub3c4\ub97c \uac80\ud1a0\ud588\uc2b5\ub2c8\ub2e4. \ub2e4\ub978 \uc815\uc758\uc5d0\uc11c\ub294 \uc81c\uc2dc\ub41c \ucd9c\ucc98\uc5d0 \uc5b4\uae0b\ub098\ub294 \uc8fc\uc7a5\uc744 \ubc1c\uacac\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \uc774 \uacb0\uacfc\ub294 \uc0ac\ub78c\uc758 \uc2b9\uc778\uc744 \ub73b\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+  },
+  "sources_sha256": "0350e268c65b1788a90e54681c8ed2d7a5cc1472787cca15cb510e6227e49124",
+  "definitions_sha256": "5575e17657e294a9565e584421d70ec4f63b1e6cc2eee68051ceadbb073196dd",
+  "receipt": "examples\\libcamera\\validation\\issue211\\runs\\20261031-glossary-review\\prompts\\calls\\c7d0ba278c404a5792c2ea75b02731f2\\001.receipt.json"
+}

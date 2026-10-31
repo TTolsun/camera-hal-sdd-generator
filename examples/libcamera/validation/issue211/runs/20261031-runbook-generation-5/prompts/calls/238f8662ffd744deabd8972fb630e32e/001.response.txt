@@ -1,0 +1,134 @@
+# 공식 libcamera `cam`의 WSL DMA-BUF 실행 기록
+
+이 기록은 공식 libcamera `cam`을 WSL에서 실행한 결과입니다. 관찰은 가상 카메라 `Virtual2`(400x300 NV12/SMPTE170M)에서만 이루어졌습니다. 물리 DMA, 물리 카메라, 제품 앱, 사내 HAL은 검증되지 않았습니다. 재현하려면 아래 준비 조건을 모두 끝낸 뒤에 캡처 명령을 실행합니다.
+
+## 1. 캡처 전 준비 조건
+
+아래 1번부터 6번까지는 모두 7번 캡처 명령보다 먼저 끝나야 합니다. 이 문서는 승인을 대신하지 않습니다. 각 승인은 담당자가 받습니다.
+
+1. 호스트 승인을 받습니다. 요청에는 백업 대상과 정확한 롤백 절차를 포함합니다. 커널, `.wslconfig`, WSL 종료는 공유 설정이므로 이 승인이 있어야 바꿉니다. Docker는 시험 전에 먼저 중지합니다.
+2. 지원 커널과 allocator 준비를 별도로 승인받습니다. 대상은 udmabuf가 내장된 테스트 커널 `6.18.33.2-microsoft-standard-WSL2-issue211`입니다. 호스트 승인만으로는 이 커널이 준비되지 않습니다. 커널을 부팅하는 구체 명령은 이 문서에 없으며, 승인된 절차를 따릅니다.
+3. 실행 중인 커널이 위 테스트 커널인지 확인합니다. `/dev/udmabuf`가 있고 root만 접근할 수 있는지도 확인합니다. 권한은 바꾸지 않습니다. 이 확인이 실패하면 다음 단계로 넘어가지 않습니다.
+4. 소스를 `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`로 고정하고, 추적 파일이 깨끗한지 확인합니다. 소스를 수정하지 않은 상태에서 디버그 Meson 빌드를 만듭니다.
+5. 프로브를 컴파일합니다.
+
+```
+gcc -std=c11 -Wall -Wextra -Werror -O0 -g dmabuf_probe.c -o <compiled-dmabuf-probe>
+```
+
+6. 새 증거 디렉터리 경로를 정합니다. 기존 출력 디렉터리는 덮어쓸 수 없습니다.
+
+금지 사항은 다음과 같습니다. 모듈은 설치하지 않습니다. `kernel_trial.py`는 자동으로 실행하지 않습니다. `/dev/udmabuf`의 권한은 바꾸지 않습니다.
+
+참고로 기본 커널의 시험 전 상태는 udmabuf 없음, dmabuf heap 없음, `/dev/udmabuf` provider 장치 없음이었습니다. 이 상태는 지원 커널 준비 전의 기준입니다.
+
+## 2. 캡처 실행
+
+7. WSL에서 root 권한 자식 프로세스로 아래 명령을 실행합니다. `--tools`에는 `usr/bin/gdb`와 `usr/share/gdb`가 들어 있는 디렉터리를 지정합니다.
+
+```
+PYTHONPATH=<generator>/src python3 <generator>/examples/libcamera/runtime/run_cam.py --source <unmodified-source-at-293d751a> --build <its-debug-meson-build> --tools <private-extracted-tools-prefix> --probe <compiled-dmabuf-probe> --out <new-evidence-directory>
+```
+
+placeholder의 뜻은 다음과 같습니다.
+
+- `<generator>`: 생성기 저장소 경로
+- `<unmodified-source-at-293d751a>`: 커밋 `293d751a`에 고정하고 수정하지 않은 소스 경로
+- `<its-debug-meson-build>`: 그 소스의 디버그 Meson 빌드 경로
+- `<private-extracted-tools-prefix>`: `usr/bin/gdb`와 `usr/share/gdb`가 있는 추출 디렉터리
+- `<compiled-dmabuf-probe>`: 5번에서 만든 프로브 실행 파일
+- `<new-evidence-directory>`: 6번에서 정한 새 증거 디렉터리
+
+## 3. 관찰 결과
+
+### 3.1 프로세스별 요청 결과
+
+세 개의 독립 프로세스(PID 434, 449, 464)가 각각 요청 3개를 완료했고, 할당은 프로세스당 4회였습니다.
+
+| PID | 콜백 TID (callback-entry) | 처리 TID (frame-processed) | 완료 요청 | 할당 | 취소 콜백 | 성공 sequence | 종료 코드 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 434 | 437 | 434 | 3 | 4 | 0 | 0, 1, 2 | 0 |
+| 449 | 452 | 449 | 3 | 4 | 0 | 0, 1, 2 | 0 |
+| 464 | 467 | 464 | 3 | 4 | 0 | 0, 1, 2 | 0 |
+
+관찰 지점은 세 곳이며, 각각 다른 단계를 기록합니다.
+
+- `callback-entry`: `CameraSession::requestComplete`에 들어간 순간입니다. 콜백 스레드에서 기록됩니다.
+- `frame-processed`: `CameraSession::processRequest`에서 `captureCount_++`를 실행하기 직전입니다(`camera_session.cpp:535`). 처리 스레드에서 기록됩니다.
+- `buffer-metadata`: `CameraSession::processRequest`에서 `FrameMetadata`를 읽은 뒤입니다(`camera_session.cpp:503`).
+
+세 지점은 PID, request, sequence로 묶어 비교합니다. sequence 0, 1, 2의 request 값은 각각 `0x5555556794f0`, `0x5555556793b0`, `0x555555679450`입니다. 세 PID 모두 같은 request 값이 기록되었으므로, request 값만으로 프로세스를 구분하지 않습니다.
+
+비교 결과 세 지점의 status는 모두 1입니다. `buffer-metadata`의 `buffer_status`는 모두 0입니다.
+
+콜백 TID(437, 452, 467)와 처리 TID(PID와 같음)는 서로 다릅니다. TID는 조인 키가 아닙니다. 이 차이는 속성으로만 기록하고, 두 TID를 같은 스레드로 취급하지 않습니다.
+
+취소된 콜백은 0개로 기록되었습니다. 다만 취소 분기가 실행되어 얻은 값이 아니므로, 취소 처리를 검증한 결과로 보지 않습니다. 할당 4회도 기록된 값 그대로 보존하며, 이 기록만으로 원인을 설명하지 않습니다.
+
+### 3.2 DMA-BUF 프로브 이벤트
+
+프로브는 `/dev/udmabuf`를 열고, 4096바이트 DMA-BUF를 할당한 뒤, mmap, RW 동기화, CPU 접근, 정리를 수행했습니다. 모든 이벤트의 errno는 0이었습니다.
+
+1. 열기와 할당: provider 열기(`/dev/udmabuf`, result 3), 할당(4096바이트, backing_fd 4, dmabuf_fd 5, result 5), mmap(result 0)
+2. RW 동기화와 접근: RW START(`sync-start`, flags 3, retry false), CPU 접근(4096바이트 읽기와 쓰기, checksum 522240), RW END(`sync-end`, flags 7, retry false)
+3. 정리: munmap, dmabuf 닫기, backing 닫기, provider 닫기(모두 result 0)
+
+### 3.3 실패, 시간 제한, 정리
+
+- 시간 제한 시험: 0.5초 제한을 두었고 `timed_out`은 true, 종료 코드는 1입니다. 시간 초과는 성공으로 바꾸지 않습니다. 시간 초과 뒤 `sync-end`, munmap, close 반환 코드는 모두 0이었고, 프로세스 그룹은 남지 않았습니다.
+- 정리 반환 코드 0은 정리 호출이 성공했다는 뜻입니다. 정리 이벤트가 0개였다는 뜻이 아닙니다. 이 시험에서는 정리 이벤트 9개가 기록되었습니다.
+- 음수 시험: provider가 없을 때 errno 2, 지원되지 않는 ioctl에서 errno 25가 나왔습니다. 두 경우 모두 종료 코드는 1입니다.
+- 일반 사용자 실행: 이번 시험에서 관찰된 테스트 커널 실행에 한정해 errno 13으로 실패했습니다. 앞으로 모든 비특권 실행이 같은 결과를 낸다는 뜻이 아닙니다.
+- 보조 strace 실행: 종료 코드는 0이었지만 콜백은 관찰되지 않았습니다.
+
+### 3.4 이전 CPU 전용 기록
+
+이전 CPU 전용 프로브는 콜백 72회를 기록했습니다. DMA는 검증되지 않았고, provider와 sync 오류 기록은 그대로 보존합니다. 이 기록의 이력은 변경되지 않았습니다. 자세한 내용은 [README.md](README.md)를 참고합니다.
+
+## 4. 커널 복원과 공유 설정
+
+- 시험 후 커널은 `6.18.33.2-microsoft-standard-WSL2`로 복원되었습니다.
+- `.wslconfig`는 없습니다.
+- 복원된 기본 커널은 allocator를 노출하지 않습니다.
+- 이번 성공 기록은 기본 커널이 udmabuf를 지원한다는 뜻이 아닙니다.
+- 매칭 모듈은 설치하지 않았습니다.
+- 복원은 호스트 승인 요청에 포함된 롤백 절차를 따릅니다.
+
+## 5. 검증 경계와 관찰 한계
+
+검증 상태는 다음과 같습니다.
+
+- 물리 DMA: 검증되지 않음(`not-validated`)
+- 물리 카메라: 실행하지 않음(`not-run`)
+- 제품 앱: 실행하지 않음(`not-run`)
+- 사내 HAL: 실행하지 않음(`not-run`)
+- 사람 검토: 대기 중(`pending`)
+
+관찰 한계는 다음과 같습니다.
+
+- GDB 중단점은 타이밍을 바꿉니다. 따라서 이 기록은 타이밍이나 콜백 반환의 증거가 아닙니다.
+- 콜백 반환 명령은 관찰하지 않았습니다.
+- 취소 분기는 동적으로 실행되지 않았습니다. 취소 0개는 강제로 맞춘 값이 아닙니다.
+
+## 6. 식별 정보
+
+| 항목 | 값 |
+| --- | --- |
+| 소스 커밋 | `293d751a814e0d4c34e85ad457ccd9d5eefd1a61` |
+| 시험 커널 | `6.18.33.2-microsoft-standard-WSL2-issue211` |
+| 커널 태그 | `linux-msft-wsl-6.18.33.2`(커밋 `c21a03b2943d147c280bdf32530d4fe6badfd6bd`) |
+| 커널 sha256 | `cf23bf492a00a5c7517e221b0d8f742ea3cffa9351823191a5ba5c476ba15460` |
+| 컴파일러와 도구 차이 | GCC 13.2에서 Ubuntu GCC 15.2로, binutils 2.41에서 2.46으로, pahole 1.25에서 1.31로 변경. 전체 차이는 원본 기록에 보존됨 |
+| 실행 권한 | uid 0, gid 0 |
+| 카메라 | `Virtual2`, `(0) 400x300-NV12/SMPTE170M` |
+
+| 바이너리 | sha256 |
+| --- | --- |
+| `cam` | `1ceed18da065a383e2f573ba49e9caea77033abd6830a7ec051e3681dabc79d2` |
+| `libcamera.so` | `2423e936a6ffde0fa533c76a4738f748f77b4535c881c12a616dfeec50a940eb` |
+| `libcamera-base.so` | `441f04294e61632d080f4bb55fb38ce787bb8af173a4b6d55d7c05f0f04fd18c` |
+| `dmabuf-probe-2` | `531e499f094cca32f03e354afe2aa5a8d48b425916cbd7be2ad7e02306c58512` |
+
+바이너리의 전체 경로는 원본 관찰값에 있습니다.
+
+다음으로 원본 관찰값을 [observation.json](../validation/issue211/runs/20261031-wsl-cam-3/observation.json)에서 확인합니다.

@@ -1,0 +1,27 @@
+{
+  "rendering": {
+    "model_calls": false,
+    "agent": "cli/codex/gpt-6.1-terra",
+    "purpose": "Authenticate retained historical visuals only"
+  },
+  "translation": {
+    "agent": "cli/claude/claude-haiku-5-5",
+    "arguments": [
+      "--print",
+      "--output-format",
+      "json",
+      "--tools",
+      "",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}",
+      "--no-session-persistence",
+      "--model",
+      "claude-haiku-5-5",
+      "--effort",
+      "high",
+      "--setting-sources",
+      "project,local"
+    ]
+  }
+}

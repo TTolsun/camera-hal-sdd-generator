@@ -1,0 +1,99 @@
+# 공식 libcamera cam WSL 가상 카메라 실행 절차
+
+공식 `cam` 앱을 WSL에서 가상 카메라 `Virtual2`(400x300 NV12)로 실행합니다. 세 프로세스가 각각 3프레임을 완료했습니다. 상태는 `observed-wsl-virtual-only`입니다. 물리 DMA, 실제 카메라, 제품 앱, 사내 HAL은 이번 결과에 포함되지 않습니다.
+
+## 1. 실행 전 준비
+
+1. 소스를 `293d751a814e0d4c34e85ad457ccd9d5eefd1a61` 커밋으로 고정하고, 수정되지 않은 상태인지 확인합니다. 빌드는 디버그 Meson 빌드를 사용합니다.
+2. udmabuf allocator를 제공하는 지원 커널이 준비되어 있어야 합니다. 이 준비는 별도로 승인받은 작업입니다. 이 문서에는 커널 설치 명령과 승인 절차가 없습니다. 커널 상태는 6번 절에서 확인합니다.
+3. WSL의 root 자식 컨텍스트에서 실행합니다. `/dev/udmabuf`는 root만 접근할 수 있으며, 이 시험에서 권한은 바꾸지 않았습니다. root 권한만으로는 부족합니다. 복원된 기본 커널에는 allocator가 없기 때문입니다.
+4. `--tools`에는 `usr/bin/gdb`와 `usr/share/gdb`가 들어 있는 디렉터리를 지정합니다.
+5. `dmabuf_probe.c`를 `gcc -std=c11 -Wall -Wextra -Werror -O0 -g`로 컴파일해 probe를 준비합니다.
+
+## 2. 실행
+
+6. 아래 명령의 꺾쇠 괄호 값을 실제 경로로 바꿉니다. `--out`에는 새 디렉터리를 지정합니다. 이전 출력 디렉터리는 덮어쓸 수 없습니다.
+
+```
+PYTHONPATH=<generator>/src python3 <generator>/examples/libcamera/runtime/run_cam.py --source <unmodified-source-at-293d751a> --build <its-debug-meson-build> --tools <private-extracted-tools-prefix> --probe <compiled-dmabuf-probe> --out <new-evidence-directory>
+```
+
+7. 타임아웃이나 실패를 성공으로 바꾸지 않습니다. 종료 코드가 0이 아니면 실패로 기록합니다.
+
+## 3. 결과 읽는 법
+
+세 프로세스(pid 434, 449, 464)의 관찰은 서로 독립적입니다. 각 프로세스는 콜백 스레드와 처리 스레드를 따로 기록합니다.
+
+관찰을 맞추는 순서는 다음과 같습니다.
+
+1. PID로 먼저 나눕니다.
+2. 같은 PID 안에서 request와 sequence를 맞춥니다. 세 프로세스의 request 값이 같게 보여도, PID 없이 request만으로 맞추지 않습니다.
+3. 맞춘 뒤 status를 비교합니다. 세 프로세스 모두 sequence 0, 1, 2의 요청 상태가 1로 완료되었습니다.
+4. TID는 join 키로 쓰지 않습니다. 콜백 TID와 처리 TID는 속성으로만 기록합니다.
+
+| pid | 콜백 TID | 처리 TID | 완료 프레임 | 취소 콜백 | 성공 sequence | 할당 기록 | 종료 코드 |
+|---|---|---|---|---|---|---|---|
+| 434 | 437 | 434 | 3 | 0 | 0, 1, 2 | 4 | 0 |
+| 449 | 452 | 449 | 3 | 0 | 0, 1, 2 | 4 | 0 |
+| 464 | 467 | 464 | 3 | 0 | 0, 1, 2 | 4 | 0 |
+
+관찰 지점은 세 곳입니다.
+
+- `callback-entry`: `CameraSession::requestComplete`에 들어간 시점입니다.
+- `frame-processed`: `CameraSession::processRequest`에서 `captureCount_++`를 실행하기 직전입니다(camera_session.cpp:535).
+- `buffer-metadata`: `CameraSession::processRequest`에서 `FrameMetadata`를 읽은 뒤입니다(camera_session.cpp:503). 버퍼 상태는 모두 0으로 기록되었습니다.
+
+요청을 보냈다고 촬영이 끝난 것은 아닙니다. 콜백은 요청 완료를 알리고, 처리 스레드는 프레임을 처리한 뒤 버퍼 메타데이터를 기록합니다. 두 종류의 관찰은 따로 기록되므로 함께 맞춰서 읽습니다.
+
+## 4. DMA probe 결과
+
+DMA probe는 다음 순서로 실행되었고, 마지막에 모든 자원을 닫았습니다.
+
+1. `/dev/udmabuf` provider를 엽니다. 결과 fd는 3입니다.
+2. 4096바이트 DMA-BUF를 할당합니다. backing fd는 4, DMA-BUF fd는 5입니다.
+3. DMA-BUF를 mmap합니다.
+4. 읽기·쓰기 동기화를 시작합니다(sync-start, flags 3).
+5. CPU가 4096바이트에 접근합니다. checksum은 522240입니다.
+6. 읽기·쓰기 동기화를 종료합니다(sync-end, flags 7).
+7. munmap하고 DMA-BUF, backing, provider를 닫습니다. 모두 반환 코드 0입니다.
+
+이 probe는 물리 DMA 검증이 아닙니다. 물리 DMA 상태는 `not-validated`입니다.
+
+## 5. 실패, 타임아웃, 음성 probe
+
+- 일반 사용자로 실행한 시험은 실패했고, errno 13(EACCES)이 기록되었습니다. 이 결과는 시험 커널에서 일반 사용자로 실행한 시험에만 해당합니다. 복원된 커널이나 이후의 다른 실행에 대한 결론이 아닙니다.
+- 타임아웃 probe는 0.5초로 실행되었고 시간 초과가 발생했습니다. 종료 코드는 1입니다. 시간 초과 뒤에도 sync-end, munmap, close 세 자원의 반환 코드는 모두 0이었습니다. 프로세스 그룹은 남아 있지 않았습니다.
+- 없는 provider 음성 probe는 errno 2로 실패했습니다. 지원하지 않는 ioctl 음성 probe는 errno 25로 실패했습니다. 두 음성 probe의 종료 코드는 모두 1입니다.
+- 정리 반환 코드 0은 정리가 성공했다는 뜻입니다. 정리 이벤트가 0개였다는 뜻이 아닙니다. 시간 초과 시험에서는 정리 이벤트 9개가 기록되었습니다.
+
+## 6. 커널 상태
+
+1. 시험 커널은 `6.18.33.2-microsoft-standard-WSL2-issue211`이었고, udmabuf allocator가 built-in으로 포함되어 있었습니다.
+2. 시험 중에는 맞는 커널 모듈을 설치하지 않았고, Docker는 중지했습니다.
+3. 시험 전 기본 커널 `6.18.33.2-microsoft-standard-WSL2`에는 udmabuf가 없었습니다.
+4. 이후 기본 커널 `6.18.33.2-microsoft-standard-WSL2`로 복원했습니다. `.wslconfig`는 없고, allocator는 노출되지 않습니다.
+5. 이전 성공은 기본 커널이 이 기능을 지원한다는 뜻이 아닙니다.
+
+커널과 컴파일러 설정은 다음과 같습니다.
+
+- 커널 태그는 `linux-msft-wsl-6.18.33.2`이고, 커밋은 `c21a03b2943d147c280bdf32530d4fe6badfd6bd`입니다.
+- 컴파일러 설정은 GCC 13.2에서 Ubuntu GCC 15.2로 기능이 바뀌었습니다. binutils는 2.41에서 2.46으로, pahole은 1.25에서 1.31로 바뀌었습니다. 전체 차이는 observation.json에 보존되어 있습니다.
+
+공유 커널, `.wslconfig`, 종료 작업은 호스트 관리자의 별도 승인이 필요합니다. 승인 요청에는 정확한 백업과 롤백 계획을 포함합니다. Docker는 먼저 중지합니다. `kernel_trial.py`는 자동으로 실행하지 않습니다. 이 문서는 승인을 대신하지 않습니다.
+
+## 7. 관찰 한계와 검증되지 않은 범위
+
+- 물리 DMA: `not-validated`입니다.
+- 실제 카메라: 실행하지 않았습니다(`not-run`).
+- 제품 앱: 실행하지 않았습니다(`not-run`).
+- 사내 HAL: 실행하지 않았습니다(`not-run`).
+- 사람 검토 승인: `pending`이며 검증되지 않았습니다.
+- 공식 `cam` strace 보조 실행은 종료 코드 0으로 끝났지만, 콜백은 관찰되지 않았습니다.
+
+GDB 관찰에는 다음 한계가 있습니다.
+
+- 중단점은 실행 시간을 바꿉니다. 그러므로 이 결과는 시간 증명이 아닙니다.
+- 콜백 반환 명령은 관찰하지 않았습니다.
+- 취소 분기는 실행되지 않았습니다. 취소 횟수 0은 강제로 맞춘 값이 아닙니다.
+
+과거 CPU 전용 probe 기록은 [README.md](README.md)에서 확인합니다. 원본 관찰 기록은 [observation.json](../validation/issue211/runs/20261031-wsl-cam-3/observation.json)에서 확인합니다.
