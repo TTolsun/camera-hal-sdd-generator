@@ -252,6 +252,8 @@ def test_ordered_actions_keep_individual_citations_and_end_before_scope_note():
     assert document.count('<ol>')==1 and document.count('<li>')==2
     assert document.index('</ol>') < document.index('실행 확인 항목:')
     assert all(f'a.cpp:{i}' in document for i in [1,2,3])
+    historical=_paragraphs(entries,preserve_lists=False)
+    assert '1. 환경을 확인합니다. 2. 변경 승인을 받습니다.' in historical[0]
 
 
 def test_A6_이전_배치의_원고도_검증을_통과한다():

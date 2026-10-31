@@ -150,8 +150,11 @@ def verify(model, section, manuscript, *, cfg=None):
     for topic in resolved['design_topics']:
         text, _ = contract_text(pinned, section['id'], topic)
         legacy, _ = contract_text(pinned, section['id'], topic, grouped=False)
+        # Preserve exact, already hashed historical grouping; all answer/source
+        # validation above remains required. New output preserves ordered lists.
+        prior_grouping, _ = contract_text(pinned, section['id'], topic, preserve_lists=False)
         from .product_context import scope_notice
-        if all(f"## {topic['title']}\n\n{scope_notice(topic)}{candidate}" not in body for candidate in (text, legacy)):
+        if all(f"## {topic['title']}\n\n{scope_notice(topic)}{candidate}" not in body for candidate in (text, legacy, prior_grouping)):
             raise ValueError('LLM 설계 답변이 원고에 없습니다.')
     return report
 
