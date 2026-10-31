@@ -1,0 +1,131 @@
+id: virtual-principle
+title: 가상 파이프라인이 영상을 만들고 요청 완료를 알립니다
+question: 센서 없이 가상 캡처가 가능한 이유와, Virtual2의 줄무늬 영상이 실제 DMA-BUF·요청·완료 알림 경로를 거쳐 cam에 전달되는 원리는 무엇입니까?
+prompt: 기존 결론·콜백 후속 처리·재현 조건은 다른 절에 있으므로 반복하지 마세요. 소스에서 확인한 구현 원리를 새 실행 관찰로 표현하지 마세요. 먼저 쉬운 말로 설명하고 필요한 함수 이름만 backtick으로
+  연결하세요. PID·JSON·해시·40자리 SHA·중복 경고는 본문에 쓰지 마세요. 가상 영상과 실제 소프트웨어 요청 처리를 구분하며 물리 센서·ISP·하드웨어 DMA 검증을 주장하지 마세요.
+covers:
+- virtual-principle
+sources:
+- id: virtual-purpose
+  file: src/libcamera/pipeline/virtual/README.md
+  start: '# Virtual Pipeline Handler'
+  end: '### Implementation'
+- id: virtual2-config
+  file: src/libcamera/pipeline/virtual/data/virtual.yaml
+  start: '"Virtual2":'
+  end: '  test_pattern: "lines"'
+- id: virtual-buffer-allocation
+  file: src/libcamera/pipeline/virtual/virtual.cpp
+  start: int PipelineHandlerVirtual::exportFrameBuffers(
+  end: int PipelineHandlerVirtual::start(
+- id: virtual-queue
+  file: src/libcamera/pipeline/virtual/virtual.cpp
+  start: int PipelineHandlerVirtual::queueRequestDevice(
+  end: bool PipelineHandlerVirtual::match(
+- id: virtual-frame
+  file: src/libcamera/pipeline/virtual/virtual.cpp
+  start: void VirtualCameraData::processRequest(
+  end: void VirtualCameraData::processControls(
+- id: pattern-frame
+  file: src/libcamera/pipeline/virtual/test_pattern_generator.cpp
+  start: int TestPatternGenerator::generateFrame(
+  end: void ColorBarsGenerator::configure(
+- id: virtual-completion
+  file: src/libcamera/pipeline/virtual/virtual.cpp
+  start: void PipelineHandlerVirtual::bufferCompleted(
+  end: REGISTER_PIPELINE_HANDLER
+- id: pipeline-dispatch
+  file: src/libcamera/pipeline_handler.cpp
+  start: void PipelineHandler::queueRequest(
+  end: ' * \fn PipelineHandler::queueRequestDevice()'
+- id: pipeline-completion
+  file: src/libcamera/pipeline_handler.cpp
+  start: bool PipelineHandler::completeBuffer(
+  end: void PipelineHandler::cancelRequest(
+- id: camera-notification
+  file: src/libcamera/camera.cpp
+  start: void Camera::requestComplete(
+  end: '} /* namespace libcamera */'
+- id: cam-request-buffers
+  file: src/apps/cam/camera_session.cpp
+  start: int CameraSession::startCapture()
+  end: void CameraSession::requestComplete(
+- id: cam-signal-connection
+  file: src/apps/cam/camera_session.cpp
+  start: "\tcamera_->requestCompleted.connect(this, &CameraSession::requestComplete);"
+  end: '#ifdef HAVE_KMS'
+- id: allocator-to-camera
+  file: src/libcamera/framebuffer_allocator.cpp
+  start: int FrameBufferAllocator::allocate(
+  end: int FrameBufferAllocator::free(
+- id: camera-export
+  file: src/libcamera/camera.cpp
+  start: int Camera::exportFrameBuffers(
+  end: int Camera::acquire(
+- id: camera-queue
+  file: src/libcamera/camera.cpp
+  start: int Camera::queueRequest(
+  end: int Camera::start(
+- id: virtual-start
+  file: src/libcamera/pipeline/virtual/virtual.cpp
+  start: int PipelineHandlerVirtual::start(
+  end: void PipelineHandlerVirtual::stopDevice(
+- id: pipeline-register
+  file: src/libcamera/pipeline_handler.cpp
+  start: void PipelineHandler::registerRequest(
+  end: void PipelineHandler::queueRequest(
+design_prompt: focused
+answer_contract:
+  basis: implementation
+  required_terms:
+  - - virtual
+  - - Virtual2
+  - - NV12
+  - - DMA-BUF
+  - - requestCompleted
+parts:
+- id: purpose
+  role: summary
+  question: 공식 libcamera의 virtual 파이프라인은 센서 영상 대신 소프트웨어 테스트 패턴이나 설정한 JPEG 이미지를 공급하는 기능임을 두 짧은 문장으로 설명하세요. 제공된 Virtual2 기본
+    설정은 400x300의 lines(대각선 줄무늬) 패턴입니다. 커널과 원래 실행 결과는 뒤의 기존 절에서 설명하므로 여기서 반복하지 마세요. 엄밀히 두 짧은 문장 200자 이내로 쓰세요. 함수 내부 세부와 물리
+    하드웨어 미검증 경고는 다른 절에 있으므로 이 part에 덧붙이지 마세요.
+  sources:
+  - virtual-purpose
+  - virtual2-config
+  max_statements: 1
+  answer_contract:
+    basis: implementation
+- id: buffer
+  question: 가상 영상도 실제 버퍼가 필요함을 설명하세요. virtual의 exportFrameBuffers가 DMA-BUF를 할당하고 cam이 버퍼를 Request에 붙인다는 관계를 먼저 쓰세요. 선택한 NV12
+    경로에서 generateFrame이 쓰기 방향 DmaSyncer와 매핑을 사용하고 CPU에서 패턴을 NV12로 변환해 버퍼에 쓴다는 핵심을 설명하세요. 물리 장치의 DMA 전송이라는 뜻으로 쓰지 마세요. 세 짧은
+    문장 이내입니다. 제공된 FrameBufferAllocator::allocate → Camera::exportFrameBuffers → PipelineHandler::exportFrameBuffers 호출 연결을
+    근거로 사용하되 본문에는 모두 열거하지 마세요. 이 연결을 미확인이라고 쓰지 마세요. 명시된 연결 설명과 CPU 쓰기만 세 짧은 문장 280자 이내로 쓰고 별도 범위 경고를 덧붙이지 마세요.
+  sources:
+  - virtual-buffer-allocation
+  - cam-request-buffers
+  - pattern-frame
+  - allocator-to-camera
+  - camera-export
+  max_statements: 1
+  answer_contract:
+    basis: implementation
+- id: completion
+  question: 요청이 virtual의 queueRequestDevice에서 VirtualCameraData::processRequest로 비동기 전달되고 패턴 작성 뒤 버퍼 완료를 알리는 흐름을 설명하세요. 생성
+    실패는 FrameError로 표시되므로 완료 알림만으로 성공을 단정하지 않습니다. virtual은 completeBuffer가 모든 버퍼 완료를 반환한 경우에만 completeRequest를 호출하고, libcamera의
+    requestCompleted에 연결된 cam의 requestComplete로 돌아옵니다. 그 뒤의 callLater·processRequest는 다음 절로 이어지므로 여기서 반복하지 마세요. 네 짧은 문장 이내입니다.
+    수신 연결과 일반 파이프라인 큐 연결 소스도 함께 제공됩니다. 제어 목록·타임스탬프·FrameSuccess 기본값·가상 범위 경고는 이 요약에서 생략하고, 핵심 전달·실패 상태·모든 버퍼 완료 조건·앱 신호 연결만
+    네 짧은 문장 360자 이내로 쓰세요.
+  sources:
+  - virtual-queue
+  - virtual-frame
+  - virtual-completion
+  - pipeline-completion
+  - camera-notification
+  - cam-signal-connection
+  - pipeline-dispatch
+  - camera-queue
+  - virtual-start
+  - pipeline-register
+  max_statements: 1
+  answer_contract:
+    basis: implementation
