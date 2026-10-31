@@ -8,10 +8,12 @@ from sdd.localization_cli import prepare_catalog
 from sdd.translation import translate_missing
 from sdd.llm import Agent
 from sdd.cli_agent import arguments
+from sdd.translation_checks import required_phrases
 
 root = Path(__file__).resolve().parents[4]
 parser = argparse.ArgumentParser()
 parser.add_argument('--out', type=Path, required=True)
+parser.add_argument('--feedback', type=Path)
 args = parser.parse_args()
 args.out.mkdir(parents=True, exist_ok=False)
 work = root/'build/issue211-reader'
@@ -28,7 +30,26 @@ shutil.copyfile(work/'run/english.json',candidate)
 prepared = prepare_catalog(render_cfg,candidate,translate=False)
 catalog = json.loads(candidate.read_text(encoding='utf-8'))
 agent = Agent(writer_cfg.agent,work/'build/translation-prompts')
-translated = translate_missing(writer_cfg,catalog,agent)
+if args.feedback:
+    feedback=json.loads(args.feedback.read_text(encoding='utf-8'))
+    for source in feedback['reset_sources']:
+        if source in catalog['strings']:catalog['strings'][source]=''
+    class ReviewedTranslation:
+        def chat(self,system,user,**kwargs):
+            return agent.chat(system,user+'\nLIBCAMERA REVIEW CORRECTIONS\n'+feedback['instructions'],**kwargs)
+    selected=ReviewedTranslation()
+    shutil.copyfile(args.feedback,args.out/'feedback.json')
+else:selected=agent
+for attempt in range(writer_cfg.max_retries+1):
+    translated=translate_missing(writer_cfg,catalog,selected)
+    failures=required_phrases(translated['strings'],feedback.get('required_phrases',[])) if args.feedback else {}
+    if not failures:break
+    previous={source:translated['strings'][source] for source in failures}
+    (args.out/f'phrase-check-{attempt}.json').write_text(json.dumps(dict(failures=failures,previous=previous),ensure_ascii=False,indent=2),encoding='utf-8')
+    feedback['instructions']+='\nRepair only these rejected native translations against the current source; preserve unaffected correct clauses.\n'+json.dumps(dict(failures=failures,previous=previous),ensure_ascii=False)
+    catalog=translated
+    for source in failures:catalog['strings'][source]=''
+else:raise ValueError('Native translation did not preserve required scoped phrases')
 if any(not value for value in translated['strings'].values()):
     raise ValueError('English catalog still has missing values')
 complete = args.out/'english.complete.json'
