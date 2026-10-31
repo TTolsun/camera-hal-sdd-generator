@@ -12,6 +12,7 @@ from sdd.cli_agent import arguments
 root = Path(__file__).resolve().parents[4]
 parser = argparse.ArgumentParser()
 parser.add_argument('--out', type=Path, required=True)
+parser.add_argument('--feedback', type=Path)
 args = parser.parse_args()
 args.out.mkdir(parents=True, exist_ok=False)
 work = root/'build/issue211-reader'
@@ -28,7 +29,17 @@ shutil.copyfile(work/'run/english.json',candidate)
 prepared = prepare_catalog(render_cfg,candidate,translate=False)
 catalog = json.loads(candidate.read_text(encoding='utf-8'))
 agent = Agent(writer_cfg.agent,work/'build/translation-prompts')
-translated = translate_missing(writer_cfg,catalog,agent)
+if args.feedback:
+    feedback=json.loads(args.feedback.read_text(encoding='utf-8'))
+    for source in feedback['reset_sources']:
+        if source in catalog['strings']:catalog['strings'][source]=''
+    class ReviewedTranslation:
+        def chat(self,system,user,**kwargs):
+            return agent.chat(system,user+'\nLIBCAMERA REVIEW CORRECTIONS\n'+feedback['instructions'],**kwargs)
+    selected=ReviewedTranslation()
+    shutil.copyfile(args.feedback,args.out/'feedback.json')
+else:selected=agent
+translated = translate_missing(writer_cfg,catalog,selected)
 if any(not value for value in translated['strings'].values()):
     raise ValueError('English catalog still has missing values')
 complete = args.out/'english.complete.json'
