@@ -154,6 +154,9 @@ def export_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = 
 
 def _site_navigation(cfg, settings, retired):
     sections = {_path(section_output(s)): s for s in cfg.sections()}
+    from .render_profiles import paths as manuscript_profiles
+    if unknown := set(manuscript_profiles(cfg))-set(sections):
+        raise ValueError('Unknown manuscript verification profile pages: '+', '.join(sorted(unknown)))
     missing = [rel for rel, section in sections.items()
                if section.get("kind") != "manual" and not (cfg.sdd_dir / rel).is_file()]
     if missing:
@@ -237,6 +240,8 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
 
 
 def _prepare_page_body(cfg, rel, texts, sections, terms, model):
+    from .render_profiles import for_page
+    cfg = for_page(cfg,rel)
     diagram_source = None
     meta, body = split_frontmatter(texts[rel])
     if sections.get(rel, {}).get('index_only'):
@@ -590,9 +595,10 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     task_reports, product_reports = {}, {}
     for rel, section in sections.items():
         if section.get('reader_scope'):
+            from .render_profiles import for_page
             from . import generated_design
             from .design_contracts import enforce
-            checked = (generated_design.verify(model, section, texts[rel], cfg=cfg)
+            checked = (generated_design.verify(model, section, texts[rel], cfg=for_page(cfg,rel))
                        if generated_design.enabled(section) else enforce(model, section))
             task_reports[rel] = checked['reader_scope']
             from .site_build import Page

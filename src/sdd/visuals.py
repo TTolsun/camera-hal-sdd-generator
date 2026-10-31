@@ -121,8 +121,10 @@ def render_values(cfg, model, section, values):
         if ident in seen:
             raise ValueError('Duplicate visual ID')
         seen.add(ident)
-        if set(visual) - {'id', 'topic', 'kind', 'title', 'question', 'nodes', 'edges', 'producer'}:
+        if set(visual) - {'id', 'topic', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display'}:
             raise ValueError('Unknown visual setting')
+        if visual.get('condition_display','inline') not in ('inline','evidence'):
+            raise ValueError('Visual condition_display must be inline or evidence')
         if visual.get('kind') not in {'state', 'flow', 'ownership', 'decision'} or visual.get('topic') not in topics:
             raise ValueError('Visual kind or topic is invalid')
         if titles.count(topics[visual['topic']].get('title')) != 1:
@@ -138,8 +140,17 @@ def render_values(cfg, model, section, values):
         ids, translations, rows, proof = set(), {}, ['flowchart TB'], []
         stale = []
         def label(item):
-            ko = wrap_label(_text(item.get('label'), 'label'))
-            en = wrap_label(_text(item.get('label_en'), 'label_en'))
+            def display(value):
+                # Only a source-verified, generator-added guard suffix may be
+                # shortened. Full conditions remain in the evidence table.
+                match = re.fullmatch(r'(.*) · (.+) \[(true|false)\]',value)
+                quotes=''.join(''.join(e.get('quote','').split()) for e in item.get('evidence',[]))
+                if (visual.get('condition_display')=='evidence' and match
+                        and ''.join(match[2].split()) in quotes):
+                    return match[1]+' ['+match[3]+']'
+                return value
+            ko = wrap_label(display(_text(item.get('label'), 'label')))
+            en = wrap_label(display(_text(item.get('label_en'), 'label_en')))
             if ko in translations and translations[ko] != en:
                 raise ValueError('Conflicting visual label translations')
             translations[ko] = en
@@ -188,15 +199,14 @@ def render_values(cfg, model, section, values):
         rows.insert(1, '%% sdd:translations ' + json.dumps(translations, ensure_ascii=False, sort_keys=True))
         source = '\n'.join(rows)
         proof = ['| 요소·전이 | 소스 근거 |', '|---|---|'] + proof
-        note = '??? note "그림 근거와 확인 범위"\n' + '\n'.join('    ' + line for line in
-                ['소스에 연결한 설계 해석입니다. 자동 연결 검사는 의미 승인이나 기기 실행 검증이 아닙니다.', '', *proof])
-        download = PurePosixPath(section_output(section)).stem + '.' + ident + '.mmd'
-        block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n{question}\n\n'
-                 f'```mermaid\n{source}\n```\n\n[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
+        metadata = [question, '', '소스에 연결한 설계 해석입니다. 자동 연결 검사는 의미 승인이나 기기 실행 검증이 아닙니다.']
         if visual.get('producer'):
             producer = _text(visual['producer'], 'producer')
-            block = block.replace(question + '\n\n', question + '\n\nLLM 그림 초안 · 사람 검토 전\n\n작성 모델: `'
-                                  + html.escape(producer) + '`\n\n', 1)
+            metadata += ['', 'LLM 그림 초안 · 사람 검토 전', '', '작성 모델: `' + html.escape(producer) + '`']
+        note = '??? note "그림 근거와 확인 범위"\n' + '\n'.join('    ' + line for line in [*metadata, '', *proof])
+        download = PurePosixPath(section_output(section)).stem + '.' + ident + '.mmd'
+        block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n'
+                 f'```mermaid\n{source}\n```\n\n[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
         result.append((visual, block, source))
     return result
 
@@ -218,6 +228,10 @@ def place(body, rendered, section):
         if len(matches) != 1:
             raise ValueError(f'Visual target heading missing or ambiguous: {heading}')
         start = matches[0].end()
+        from .product_context import scope_notice
+        notice = scope_notice(topics[tid])
+        if notice and body.startswith(notice,start):
+            start += len(notice)
         end = re.search(r'\n\n|\n(?=## )', body[start:])
         if end is None or not body[start:start + end.start()].strip():
             raise ValueError(f'Visual target has no explanation: {heading}')

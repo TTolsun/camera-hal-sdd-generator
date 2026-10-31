@@ -1,0 +1,184 @@
+id: official-cam-validation
+group: For Developer
+nav_section: 동작 추적과 문제 진단
+title: WSL 공식 cam 가상 캡처 확인
+output: official-cam-validation.md
+kind: prose
+lead: 가상 캡처가 막힌 지점부터 확인하고, 완료 알림이 프레임 처리로 이어지는 경로를 따라가세요.
+reader: libcamera를 처음 맡아 가상 캡처의 준비 조건과 완료 경로를 이해하려는 개발자
+design_generation: llm
+design_grounding: false
+semantic_review: true
+show_evidence: true
+facts:
+  classes: []
+  class_table: false
+diagram:
+  enabled: false
+next:
+  title: 공식 cam 재현 절차
+  link: https://github.com/TTolsun/camera-hal-sdd-generator/blob/main/examples/libcamera/runtime/OFFICIAL_CAM.md
+design_requirements:
+- id: conclusion
+  question: 무엇이 캡처를 막았고, 어떤 조건에서 공식 cam 캡처가 성공했으며, 현재 바로 재실행할 수 있습니까?
+- id: flow
+  question: 완료 알림을 받은 함수가 왜 후속 처리를 이벤트 루프로 미루며, 정상 요청과 취소 요청은 어떻게 나뉩니까?
+- id: reproduce
+  question: 개발자는 캡처 전에 어떤 환경·권한·소스 조건을 확인하고, 어느 절차로 재현하며, 결과를 어디까지 적용할 수 있습니까?
+design_topics:
+- id: conclusion
+  title: 할당기를 준비하자 공식 cam 캡처가 완료됐습니다
+  question: 기본 WSL 커널에는 DMA-BUF 할당기가 없어 공식 cam이 버퍼를 만들지 못했다는 문제와, 승인된 UDMABUF 시험 커널에서 수정하지 않은 공식 cam으로 Virtual2
+    400×300 NV12를 세 독립 프로세스에서 각각 3프레임 정상 완료한 결론을 짧게 설명하세요. 별도 프로브의 CPU 접근 확인과 공식 cam 자체의 실제 udmabuf 할당 관찰을 구분하되
+    핵심 의미만 적으세요. 기본 커널로 원복했으므로 현재 그대로 재실행할 수 없다는 결론을 마지막에 분명히 하세요.
+  prompt: 개발자의 이해를 위한 두세 문장씩 두 문단 이내로 쓰세요. 실제 가상 카메라 시험이며 가짜 실행이 아닙니다. PID, TID 숫자, fd 번호, JSON 키, 해시, errno 값,
+    컴파일러 버전, 원시 이벤트 이름은 이미 연결된 근거에서 확인하므로 본문에 열거하지 마세요. 각 문장의 주체와 조건을 유지하고 측정값을 제품 성능으로 확장하지 마세요.
+  covers:
+  - conclusion
+  product:
+    id: libcamera-official-cam-trial
+    feature: wsl-virtual-capture
+  sources: []
+  answer_contract: &id001
+    basis: measurement
+    required_terms:
+    - - Virtual2
+    - - NV12
+    - - DMA-BUF
+    - - 원복
+      - 복구
+  design_prompt: focused
+  parts:
+  - id: explanation
+    question: 기본 WSL 커널에는 DMA-BUF 할당기가 없어 공식 cam이 버퍼를 만들지 못했다는 문제와, 승인된 UDMABUF 시험 커널에서 수정하지 않은 공식 cam으로 Virtual2
+      400×300 NV12를 세 독립 프로세스에서 각각 3프레임 정상 완료한 결론을 짧게 설명하세요. 별도 프로브의 CPU 접근 확인과 공식 cam 자체의 실제 udmabuf 할당 관찰을 구분하되
+      핵심 의미만 적으세요. 기본 커널로 원복했으므로 현재 그대로 재실행할 수 없다는 결론을 마지막에 분명히 하세요. 공식 cam을 독립 프로세스에서 세 번 실행한 것이며 cam 자체가 프로세스
+      세 개를 생성한 것으로 쓰지 마세요. 시험 후 커널을 원복한 사실의 주어를 분명히 하고, 원복 결과는 관측 사실이므로 behavior로 기록하세요. 결론에는 물리 장치·제품·HAL·GDB 한계를
+      반복하지 마세요. 마지막 범위 문단이 이를 설명합니다. 원복한 주체는 시험 담당자이며 원복된 것은 커널입니다.
+    sources: []
+    max_statements: 2
+    prompt: 개발자의 이해를 위한 두세 문장씩 두 문단 이내로 쓰세요. 실제 가상 카메라 시험이며 가짜 실행이 아닙니다. PID, TID 숫자, fd 번호, JSON 키, 해시, errno 값,
+      컴파일러 버전, 원시 이벤트 이름은 이미 연결된 근거에서 확인하므로 본문에 열거하지 마세요. 각 문장의 주체와 조건을 유지하고 측정값을 제품 성능으로 확장하지 마세요.
+    answer_contract: *id001
+- id: flow
+  title: 완료 알림을 받아 이벤트 루프에서 프레임을 처리합니다
+  question: 먼저 완료 알림과 프레임 후속 처리가 다른 단계라는 뜻을 쉬운 말로 설명하세요. requestComplete의 취소 요청 분기, 정상 완료 요청을 callLater로 processRequest에
+    미루는 순서, 카메라 매니저 스레드를 막지 않으려는 코드의 명시적 의도를 연결하세요. processRequest가 캡처 한도를 확인하고 프레임을 처리한 뒤 captureCount_를 늘리는 흐름을
+    설명하세요. 이번 실행에서 콜백 스레드와 처리 스레드가 달랐다는 관찰을 코드의 모든 실행에 대한 보장과 구분하세요.
+  prompt: 현재 part의 질문만 짧게 답하세요. 다른 part가 설명할 환경·범위·경고를 반복해서 덧붙이지 마세요. 실제 수행한 가상 카메라 시험이며 가짜 실행이 아닙니다. PID·TID 숫자,
+    JSON 키·해시와 내부 출력 필드를 본문에 열거하지 마세요. 함수와 변수 이름은 backtick으로 표시하세요. 제품 소개가 아닌 개발자용 동작 설명이며, 전체 페이지의 시험 범위를 매 문장에
+    되풀이하지 마세요.
+  covers:
+  - flow
+  product:
+    id: libcamera-official-cam-trial
+    feature: wsl-virtual-capture
+  sources:
+  - id: callback-and-processing
+    file: src/apps/cam/camera_session.cpp
+    start: void CameraSession::requestComplete(Request *request)
+    end: void CameraSession::sinkRelease(Request *request)
+  answer_contract:
+    basis: implementation
+    required_terms:
+    - - requestComplete
+    - - RequestCancelled
+    - - callLater
+    - - processRequest
+    - - 스레드
+  design_prompt: focused
+  parts:
+  - id: dispatch
+    question: 완료 알림은 프레임 후속 처리와 다른 단계임을 먼저 설명하고, requestComplete가 RequestCancelled이면 반환하며 그 밖에는 callLater로 processRequest를
+      이벤트 루프에 미루는 순서와 카메라 매니저 스레드를 막지 않으려는 명시된 의도를 연결하세요. 200자 이내로 답하세요.
+    sources:
+    - callback-and-processing
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른
+      절의 경고를 반복하지 마세요.
+    answer_contract:
+      basis: implementation
+    role: summary
+  - id: processing
+    question: processRequest의 진입 직후 검사에서는 캡처 한도가 설정되어 있고 완료 개수가 그 한도 이상이면 반환합니다. 이것이 함수 전체의 유일한 반환 조건이라고 쓰지 마세요.
+      이 진입 검사를 통과하면 프레임을 다룬 뒤 captureCount_를 늘린다는 핵심 역할을 두 문장으로 설명하고 출력·sink·재큐의 나머지 절차는 근거 코드에 남기세요.
+    sources:
+    - callback-and-processing
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른
+      절의 경고를 반복하지 마세요.
+    answer_contract:
+      basis: implementation
+  - id: observed
+    question: 이번 실제 실행에서 콜백 스레드와 후속 처리 스레드가 달랐다는 관찰을 설명하세요. 이것은 모든 실행의 스레드 배치 보장이 아니며, 취소 분기는 소스로 확인했을 뿐 이번 실행에서
+      동적으로 시험하지 않았다는 범위를 두 문장 180자 이내로 유지하세요.
+    sources:
+    - callback-and-processing
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른
+      절의 경고를 반복하지 마세요.
+    answer_contract:
+      basis: measurement
+- id: reproduce
+  title: 지원 커널과 장치 접근을 확인한 뒤 재현합니다
+  question: 재현 전 현재 커널의 Kconfig·의존 심볼·실제 모듈·DMA-BUF 할당기 후보와 장치 접근 권한부터 확인하는 순서를 설명하세요. 기존 WSL·Docker에 영향 없는 준비를
+    우선하고 공유 커널·모듈·.wslconfig 변경이나 배포판·VM 종료가 필요할 때는 영향·백업·복구 계획을 준비하여 실행 직전 별도 승인을 받는 전제를 유지하세요. 승인된 지원 커널을 부팅하고
+    장치 접근을 확인한 다음 기준 소스의 수정하지 않은 디버그 빌드와 전용 관찰 도구로 재현 절차를 따라간다고 설명하세요. root 전용 udmabuf 접근은 이번 시험의 조건이며 권한을 임의로 바꾸라는
+    일반 지침으로 쓰지 마세요. 마지막에 가상 캡처에서 확인한 범위와 물리 DMA·카메라·제품 앱·사내 HAL 및 성능의 미검증 범위를 한 번만 설명하세요.
+  prompt: 현재 part의 질문만 짧게 답하세요. 다른 part가 설명할 환경·범위·경고를 반복해서 덧붙이지 마세요. 실제 수행한 가상 카메라 시험이며 가짜 실행이 아닙니다. PID·TID 숫자,
+    JSON 키·해시와 내부 출력 필드를 본문에 열거하지 마세요. 함수와 변수 이름은 backtick으로 표시하세요. 제품 소개가 아닌 개발자용 동작 설명이며, 전체 페이지의 시험 범위를 매 문장에
+    되풀이하지 마세요.
+  covers:
+  - reproduce
+  product:
+    id: libcamera-official-cam-trial
+    feature: wsl-virtual-capture
+  sources: []
+  answer_contract:
+    basis: measurement
+    required_terms:
+    - - 커널
+    - - 권한
+    - - 승인
+    - - GDB
+    - - 사내
+  design_prompt: focused
+  parts:
+  - id: environment
+    question: 재현의 첫 단계로 현재 커널의 Kconfig·의존 심볼·실제 모듈·DMA-BUF 할당기 후보와 장치 접근 권한을 확인한다고 설명하세요. 기존 WSL/Docker에 영향 없는 준비를
+      우선하며, 추가 WSL 배포판은 독립 커널이 아니라는 조건을 간결하게 유지하세요. 180자 이내로 답하세요.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른
+      절의 경고를 반복하지 마세요.
+    answer_contract:
+      basis: measurement
+    role: summary
+  - id: approval
+    question: 공유 커널·모듈·.wslconfig 변경 또는 배포판·VM 종료가 필요하면 영향·백업·복구 계획을 준비하고 실행 직전 별도 승인을 받아야 함을 설명하세요. 승인된 계획이 Docker
+      중지를 요구하는 경우에만, 담당자가 승인 후 Docker를 중지한 다음 WSL 종료·재부팅을 수행한다고 조건부 미래 절차로 쓰세요. Docker 중지를 모든 환경에 요구하거나 마지막에 무조건적인
+      중지 문장을 덧붙이지 마세요. 세 짧은 문장 이내로 쓰세요.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른
+      절의 경고를 반복하지 마세요.
+    answer_contract:
+      basis: measurement
+  - id: execution
+    question: 앞으로 재현할 개발자가 먼저 승인된 지원 커널을 준비·부팅하고 장치 접근을 확인해야 한다고 미래의 실행 전제와 순서로 설명하세요. 그 뒤 수정하지 않은 기준 소스의 디버그 빌드·관찰
+      도구로 페이지 끝의 공식 cam 재현 절차를 따릅니다. 이 연결 절차는 기록된 특정 시험 커널과 장치 조건이 정확히 맞아야 실행하며 불일치하면 캡처하지 않는다고 명시하세요.
+      root 전용 접근은 과거 이번 시험의 조건이므로 권한 변경을 일반 지침으로 쓰지 마세요. 세 짧은 문장으로 과거 실행 완료와 미래 준비를 구분하세요.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른
+      절의 경고를 반복하지 마세요.
+    answer_contract:
+      basis: measurement
+  - id: scope
+    question: 가상 캡처의 적용 범위와 관찰 한계를 마지막에 한 번만 정리하세요. 물리 DMA·카메라·제품 앱·사내 HAL은 미검증이며 GDB는 타이밍에 영향을 주므로 콜백 반환 명령·성능을
+      검증하지 않았습니다. 두 문장 160자 이내로 쓰세요. 문서의 사람 검토 상태는 접힌 근거 메타데이터에 있으므로 본문에서 반복하지 마세요.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른
+      절의 경고를 반복하지 마세요.
+    statement_kind: limitation

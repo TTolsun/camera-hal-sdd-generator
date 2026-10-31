@@ -33,6 +33,18 @@ from test_design_contracts import contract
 from test_generated_design import generated
 
 
+def test_visual_provenance_and_question_remain_in_collapsed_evidence(tmp_cfg, visual):
+    section, model, graph, write = visual
+    graph['producer']='cli/claude/test-model'
+    write()
+    block=render(tmp_cfg,model,section)[0][1]
+    visible,marker,proof=block.partition('??? note "그림 근거와 확인 범위"')
+    assert marker and graph['question'] in proof and 'cli/claude/test-model' in proof
+    assert '사람 검토 전' in proof and '소스 근거' in proof
+    assert graph['question'] not in visible and '작성 모델' not in visible
+    assert '```mermaid' in visible and 'Mermaid 원문' in visible
+
+
 def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_cfg, visual):
     import json
     section, model, graph, write = visual
