@@ -344,6 +344,10 @@ def generate(cfg, model, section, agent, previous=None):
         if cfg.agent.kind == 'dry-run':
             raise ValueError('LLM visual generation requires an actual model, not dry-run')
         base = json.dumps(request, ensure_ascii=False)
+        if isinstance(old.get('draft'), dict):
+            base += ('\nPrevious native draft for revision only. Current sources and instructions are authoritative; '
+                     'preserve unaffected correct parts, repair changed requirements, and return a complete fresh draft.\n'
+                     + json.dumps(old['draft'], ensure_ascii=False))
         user, last = base, None
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:

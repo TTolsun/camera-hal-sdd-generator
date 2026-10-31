@@ -138,6 +138,8 @@ def test_changed_source_regenerates_and_tampered_draft_is_rejected(tmp_cfg, auto
     save()
     Generator(tmp_cfg,model,agent).run()
     assert len(agent.calls)==2
+    assert 'Previous native draft for revision only' in agent.calls[-1][1]
+    assert 'notifyStopped' in agent.calls[-1][1]  # Fresh source remains authoritative.
     text=path.read_text(encoding='utf-8')
     assert 'notifyStopped' in text
     meta,body=_split(text)
