@@ -24,7 +24,7 @@
     "optimized-historical-wall": {
       "status": "passed",
       "error": null,
-      "seconds": 18.65685949998442,
+      "seconds": 18.705557700013742,
       "profiled": false,
       "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
       "platform": "Windows-11-10.0.26300-SP0",
@@ -35,7 +35,7 @@
     "optimized-historical-profile": {
       "status": "passed",
       "error": null,
-      "seconds": 36.547506500035524,
+      "seconds": 35.09618390002288,
       "profiled": true,
       "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
       "platform": "Windows-11-10.0.26300-SP0",
@@ -111,64 +111,64 @@
         "function": "enforce",
         "calls": 1,
         "primitive_calls": 1,
-        "own_seconds": 0.008307400000000001,
-        "cumulative_seconds": 34.9929032
+        "own_seconds": 0.007629500000000001,
+        "cumulative_seconds": 33.373737500000004
       },
       {
         "file": "consistency.py",
         "function": "request",
         "calls": 15,
         "primitive_calls": 15,
-        "own_seconds": 0.0074425,
-        "cumulative_seconds": 25.149445200000002
+        "own_seconds": 0.0068693,
+        "cumulative_seconds": 24.2376611
       },
       {
         "file": "consistency.py",
         "function": "_request",
         "calls": 5,
         "primitive_calls": 5,
-        "own_seconds": 0.178764,
-        "cumulative_seconds": 22.2871208
+        "own_seconds": 0.17134000000000002,
+        "cumulative_seconds": 21.417684400000002
       },
       {
         "file": "config.py",
         "function": "sections",
         "calls": 35,
         "primitive_calls": 35,
-        "own_seconds": 0.0007123,
-        "cumulative_seconds": 3.1700581000000003
+        "own_seconds": 0.0005949,
+        "cumulative_seconds": 3.123034
       },
       {
         "file": "__init__.py",
         "function": "safe_load",
         "calls": 21,
         "primitive_calls": 21,
-        "own_seconds": 0.00035810000000000003,
-        "cumulative_seconds": 3.1346055
+        "own_seconds": 0.0001121,
+        "cumulative_seconds": 3.1178146
       },
       {
         "file": "config.py",
         "function": "_sections",
         "calls": 1,
         "primitive_calls": 1,
-        "own_seconds": 0.0001172,
-        "cumulative_seconds": 2.3186279
+        "own_seconds": 0.000126,
+        "cumulative_seconds": 2.3031516
       },
       {
         "file": "next_steps.py",
         "function": "checked_footer",
         "calls": 42,
         "primitive_calls": 42,
-        "own_seconds": 0.0059135,
-        "cumulative_seconds": 1.5389437000000001
+        "own_seconds": 0.0050359,
+        "cumulative_seconds": 1.4663890000000002
       },
       {
         "file": "next_steps.py",
         "function": "_next",
         "calls": 42,
         "primitive_calls": 42,
-        "own_seconds": 0.0005044,
-        "cumulative_seconds": 0.0928462
+        "own_seconds": 0.0005217,
+        "cumulative_seconds": 0.0893621
       }
     ]
   },

@@ -427,7 +427,7 @@ sections:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: 'data->requestSequence_ = 0;
-
+  
           }'
     - id: cameraassert
       label: Camera::stop의 ASSERT 소스 위치
@@ -496,7 +496,7 @@ sections:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: 'data->requestSequence_ = 0;
-
+  
           }'
     - from: handlerreturn
       to: cameraassert
@@ -1425,6 +1425,13 @@ sections:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: stopDevice(camera);
+    - id: implementation-return
+      label: '계획: 실제 stopDevice 구현 복귀 이벤트 관찰 (구현 미검토, 측정 결과 아님)'
+      label_en: 'Plan: observe the actual stopDevice implementation return event (implementation not reviewed, not a measured result)'
+      evidence: &id001
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: \fn PipelineHandler::stopDevice()
     edges:
     - from: detach
       to: before
@@ -1443,7 +1450,7 @@ sections:
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: stopDevice(camera);
     - from: call
-      to: after
+      to: implementation-return
       label: 진입 뒤 반환이 관찰된 경우
       label_en: If a return is observed after entry
       evidence:
@@ -1458,6 +1465,11 @@ sections:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: stopDevice(camera);
+    - from: implementation-return
+      to: after
+      label: 구현 복귀를 관찰한 뒤 호출 뒤 위치와 비교 (호출 직전 로그는 복귀의 증거가 아님)
+      label_en: Compare with the post-call position after an observed implementation return (a before-call log is not evidence of return)
+      evidence: *id001
   - id: stopping-completion-contract
     topic: stopping
     kind: flow
@@ -1473,7 +1485,7 @@ sections:
         quote: "This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)"
     - id: ordered
       label: 완료 요청을 제출 순서로 애플리케이션에 반환
-      label_en: Return completed requests to application in submission order
+      label_en: Return completed requests to the application in submission order
       evidence:
       - source: stopping/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9

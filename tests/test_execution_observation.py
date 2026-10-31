@@ -32,10 +32,13 @@ def test_heartbeat_updates_a_silent_stage_and_records_failure(tmp_cfg):
     execution = Execution(tmp_cfg, object())
     with pytest.raises(KeyboardInterrupt):
         with execution.heartbeat(interval=.02):
-            time.sleep(.08)
             first = json.loads(execution.path.read_bytes())
-            time.sleep(.06)
-            second = json.loads(execution.path.read_bytes())
+            deadline = time.monotonic() + 2
+            while True:
+                second = json.loads(execution.path.read_bytes())
+                if second['updated_at'] > first['updated_at'] or time.monotonic() >= deadline:
+                    break
+                time.sleep(.01)
             assert second['updated_at'] > first['updated_at']
             assert second['seconds'] > first['seconds']
             raise KeyboardInterrupt()
