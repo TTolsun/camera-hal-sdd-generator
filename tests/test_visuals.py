@@ -233,7 +233,10 @@ def test_procedure_numbering_survives_nearby_visual(tmp_cfg, visual):
     section, model, _, _ = visual
     body = '## 종료 계약\n\n1. 첫 단계입니다.\n\n2. 다음 단계입니다.\n\n## 소스 근거\n'
     updated = place(body, render(tmp_cfg, model, section), section)
-    assert updated.index('### 종료의 분기') < updated.index('1. 첫 단계')
+    assert updated.index('2. 다음 단계') < updated.index('### 종료의 분기') < updated.index('## 소스 근거')
+    from sdd.site_markdown import _render
+    document=_render(updated,'trial.md',set(),None,'','abc')[0]
+    assert document.count('<ol>')==1 and document.index('</ol>') < document.index('종료의 분기</h3>')
     assert strip_blocks(updated) == body
 
 

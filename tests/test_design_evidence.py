@@ -241,6 +241,19 @@ def test_A6_문단은_네_문장과_길이_상한을_넘지_않는다():
     assert len(_paragraphs(long)) == 2
 
 
+def test_ordered_actions_keep_individual_citations_and_end_before_scope_note():
+    from sdd.evidence import _paragraphs
+    from sdd.site_markdown import _render
+    entries=[('behavior','1. 환경을 확인합니다.',['`a.cpp:1`']),
+             ('behavior','2. 변경 승인을 받습니다.',['`a.cpp:2`']),
+             ('limitation','장치 실행은 별도로 확인합니다.',['`a.cpp:3`'])]
+    body='\n\n'.join(_paragraphs(entries))
+    document=_render(body,'trial.md',set(),None,'','abc')[0]
+    assert document.count('<ol>')==1 and document.count('<li>')==2
+    assert document.index('</ol>') < document.index('실행 확인 항목:')
+    assert all(f'a.cpp:{i}' in document for i in [1,2,3])
+
+
 def test_A6_이전_배치의_원고도_검증을_통과한다():
     from sdd.evidence import _paragraphs
     entries = [('behavior', '첫 설명입니다.', ['`a.cpp:1`']), ('behavior', '둘째 설명입니다.', ['`a.cpp:2`'])]

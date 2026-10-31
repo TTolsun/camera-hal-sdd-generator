@@ -159,6 +159,7 @@ def _paragraphs(entries: list[tuple[str, str, list[str]]], *, grouped: bool = Tr
     for entry_kind, text, citations in entries:
         count = _sentence_count(text)
         if group and (not grouped or entry_kind != kind or entry_kind == 'limitation'
+                      or re.match(r'\d+\.\s', text) or re.match(r'\d+\.\s', group[0])
                       or sentences + count > PARAGRAPH_SENTENCES
                       or sum(len(t) for t in group) + len(text) > PARAGRAPH_CHARS):
             flush()
