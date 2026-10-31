@@ -20,6 +20,9 @@ _QUEUE_TERMINOLOGY = (
 
 def _translation_terminology(strings):
     return _QUEUE_TERMINOLOGY + (
+        ' Translate the shared UI label 절 전체 근거 as section-wide evidence, never clause evidence. '
+        if any('절 전체 근거' in source for source in strings) else ''
+    ) + (
         ' 예약된 호출: scheduled calls, not observed dispatch.'
         if any('예약된 호출' in source for source in strings) else ''
     )
