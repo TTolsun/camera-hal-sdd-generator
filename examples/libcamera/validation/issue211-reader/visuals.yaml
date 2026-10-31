@@ -60,7 +60,7 @@ sections:
     condition_display: evidence
     answer_contract:
       basis: measurement
-      required_terms: [[Virtual2], [/dev/udmabuf], [root], [400], [300], [NV12], [기록]]
+      required_terms: [[Virtual2], [/dev/udmabuf], [root], ['400'], ['300'], [NV12], [기록]]
     answer_contract_en:
       basis: measurement
-      required_terms: [[Virtual2], [/dev/udmabuf], [root], [400], [300], [NV12], [recorded, Recorded]]
+      required_terms: [[Virtual2], [/dev/udmabuf], [root], ['400'], ['300'], [NV12], [recorded, Recorded]]
