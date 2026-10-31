@@ -77,6 +77,10 @@ def test_explicit_null_optional_objects_keep_existing_rejection(tmp_cfg, group):
 @pytest.mark.parametrize('kind', ['cli', 'ollama', 'openai-compatible', 'response-bundle'])
 @pytest.mark.parametrize('mode', ['standard', 'focused'])
 def test_frozen_generation_requests_results_and_origin(tmp_cfg, generated, kind, mode):
+    # Historical request hashes include the editorial policy used at capture time.
+    # New standing rules must not rewrite that historical fixture.
+    old_style = Path(__file__).parent / 'fixtures' / 'style-before-215.md'
+    (tmp_cfg.style_dir / 'README.md').write_bytes(old_style.read_bytes())
     section, model, _, draft = generated
     tmp_cfg.agent.kind = kind
     tmp_cfg.agent.model = 'test-model'
