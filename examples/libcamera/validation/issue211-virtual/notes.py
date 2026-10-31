@@ -24,6 +24,7 @@ user = '''Write concise English Markdown publication notes and repository root R
 agent = Agent(cfg.agent, out/'prompts')
 user += '\nThe existing sections are retained, but the cam processing name is now qualified as CameraSession::processRequest to distinguish it from VirtualCameraData::processRequest. Do not claim the existing sections have unchanged wording. The allocator outcome and original runtime evidence are unchanged.'
 user += '\nTarget repository: TTolsun/libcamera-sdd. Its root README must be titled # libcamera-sdd and describe public libcamera source-history and SDD output, not the generator repository. The separate generator repository is TTolsun/camera-hal-sdd-generator. Do not call this repository a Camera HAL source-to-document generator.'
+user += '\nThe reproduction conditions are retained but their numbered presentation has been split into separate investigation, prerequisite checking and observed-execution tasks. Do not claim there are four steps or unchanged step wording; do not state a fixed step count in these notes.'
 result = json.loads(agent.chat('Write public publication notes from supplied facts, not approval claims. No tools.', user,
                                tag='virtual-publication-notes', response_schema=schema))
 for name, text in result.items():

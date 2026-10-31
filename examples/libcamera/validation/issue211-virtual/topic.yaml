@@ -86,17 +86,25 @@ answer_contract:
 parts:
 - id: purpose
   role: summary
-  question: 공식 libcamera의 virtual 파이프라인은 센서 영상 대신 소프트웨어 테스트 패턴이나 설정한 JPEG 이미지를 공급하는 기능임을 두 짧은 문장으로 설명하세요. 제공된 Virtual2 기본
-    설정은 400x300의 lines(대각선 줄무늬) 패턴입니다. 커널과 원래 실행 결과는 뒤의 기존 절에서 설명하므로 여기서 반복하지 마세요. 엄밀히 두 짧은 문장 200자 이내로 쓰세요. 함수 내부 세부와 물리
-    하드웨어 미검증 경고는 다른 절에 있으므로 이 part에 덧붙이지 마세요. JPEG라는 약어는 쓰지 말고 .jpg 이미지 파일이라고 쓰세요. 그 파일 형식의 범위를 넓히지 마세요. 이번 절은 기준 소스 분석으로
-    확인한 구현 경로임을 첫 문장에 짧게 명시하세요. 다음 그림은 버퍼 준비와 정상 접수된 요청의 NV12 처리 경로이며 새 디버거 관측이 아니라는 구분을 짧게 남기세요. 이 지시가 앞의 두 문장 한도보다 우선하며
-    세 짧은 문장 280자 이내입니다.
+  question: 기준 소스에서 확인한 공식 libcamera의 virtual 기능과 제공된 Virtual2 설정만 두 짧은 문장으로 소개하세요. 소스 분석 결과임을 첫 문장에 밝히고, 센서 영상 대신 소프트웨어 테스트
+    패턴 또는 설정한 .jpg 이미지 파일을 공급한다고 설명하세요. 둘째 문장은 Virtual2의 400x300 lines(대각선 줄무늬) 설정을 설명합니다. 220자 이내입니다.
   sources:
   - virtual-purpose
   - virtual2-config
   max_statements: 1
   answer_contract:
     basis: implementation
+    required_terms:
+    - - 소스
+    reject_patterns:
+    - pattern: 그림.{0,12}없
+      message: 소개 단위에서 다른 단위의 근거나 그림 상태를 부정하지 말고 제공된 기능·설정만 설명하세요.
+    - pattern: 확인되지
+      message: 소개 단위에서 다른 단위의 근거나 그림 상태를 부정하지 말고 제공된 기능·설정만 설명하세요.
+    - pattern: 미확인
+      message: 소개 단위에서 다른 단위의 근거나 그림 상태를 부정하지 말고 제공된 기능·설정만 설명하세요.
+  prompt: 이 part의 제공 근거는 기능 소개와 Virtual2 설정입니다. 버퍼 준비·처리·완료 경로는 뒤의 다른 part가 별도 소스로 설명하므로 여기서 그 경로를 검증하거나 부정하지 마세요. 그림의 존재·생성
+    시점·미확인 상태를 추정하지 말고 소스에 적힌 기능만 설명하세요. JPEG 약어 대신 .jpg 이미지 파일이라고 쓰세요.
 - id: buffer
   question: 가상 영상도 실제 버퍼가 필요함을 설명하세요. virtual의 exportFrameBuffers가 DMA-BUF를 할당하고 cam이 버퍼를 Request에 붙인다는 관계를 먼저 쓰세요. 선택한 NV12
     경로에서 generateFrame이 쓰기 방향 DmaSyncer와 매핑을 사용하고 CPU에서 패턴을 NV12로 변환해 버퍼에 쓴다는 핵심을 설명하세요. 물리 장치의 DMA 전송이라는 뜻으로 쓰지 마세요. 세 짧은

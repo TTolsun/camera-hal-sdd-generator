@@ -19,7 +19,7 @@ required_symbols:
 - RequestPending
 - queuedRequests_
 question: 선택한 NV12 가상 캡처에서 실제 버퍼 준비와 요청 전달, CPU 패턴 쓰기, 버퍼·요청 완료 및 cam 콜백은 어떻게 연결됩니까?
-prompt: 이전 11노드 초안의 올바른 구조를 보존하고 다음 Terra 지적만 바로잡으세요. 이 그림은 버퍼 사전 준비와 정상 접수된 요청의 선택 NV12 경로입니다. virtual의 queueRequestDevice
+prompt: '이전 11노드 초안의 올바른 구조를 보존하고 다음 Terra 지적만 바로잡으세요. 이 그림은 버퍼 사전 준비와 정상 접수된 요청의 선택 NV12 경로입니다. virtual의 queueRequestDevice
   구현은 정상적으로 비동기 전달 후 0을 반환합니다. 이 노드에 일반 파이프라인의 실패·취소 설명을 섞지 마세요. queueRequest에서 queueRequestDevice로 가는 요약 화살표는 접수된 요청의 전달이며
   condition_ref는 always를 사용하세요. 직접 함수 호출이라고 하지 마세요. queueRequestDevice에서 generateFrame으로 이어지는 화살표는 VirtualCameraData::processRequest
   비동기 전달 후 CPU가 패턴을 쓰는 요약입니다. generateFrame 노드는 CPU가 Virtual2 lines 대각선 줄무늬 패턴을 NV12 버퍼에 쓴다고 한영 모두 명시하며 virtual2-config 구절도
@@ -28,7 +28,11 @@ prompt: 이전 11노드 초안의 올바른 구조를 보존하고 다음 Terra 
   갑니다. 그 뒤 앞 요청이 RequestPending인지 확인하는 결정 노드를 두고 true는 queuedRequests_에서 앞 요청 완료까지 신호 보류, false는 제출 순서로 requestCompleted 신호
   발신입니다. 마지막은 신호에 연결된 cam의 requestComplete 콜백입니다. 노드 11개를 유지하세요. 조건식은 근거와 condition_ref에만 두세요. 모든 한영 라벨에서 =, !, <, > 문자와 C++
   포인터 화살표를 금지합니다. 예를 들어 true=보류 같은 표기도 금지하며 결정 노드에는 앞 요청이 대기 중인가라는 질문만 쓰세요. 가지의 보류/전달은 간선에 표시하세요. 짧은 독자 설명을 쓰고 메타 작성 지시나 반복
-  경고를 그림에 넣지 마세요. 노드 한글 36자·영어 64자, 간선 한글 18자·영어 48자 이내로 씁니다. 버퍼 사전 준비는 요청마다 반복되는 것이 아닙니다.
+  경고를 그림에 넣지 마세요. 노드 한글 36자·영어 64자, 간선 한글 18자·영어 48자 이내로 씁니다. 버퍼 사전 준비는 요청마다 반복되는 것이 아닙니다. 최신 보완: 기존 generateFrame 노드를 결정
+  모양으로 바꾸고 한영 모두 CPU가 Virtual2 lines 패턴을 NV12에 쓰는 시도가 실패했는가라는 질문으로 표시하세요. 별도 노드를 추가하지 않으며 총 11개를 유지합니다. true는 생성 실패로 FrameError를
+  표시한 완료 알림, false는 FrameSuccess를 유지한 완료 알림입니다. 실패 경로에서도 쓰기가 성공했다고 읽히는 단정형 노드 라벨을 쓰지 마세요. 앞 요청 RequestPending 여부와 쓰기 실패 여부는
+  서로 다른 결정 노드입니다. exportFrameBuffers 준비 노드는 캡처를 시작하기 위한 버퍼 준비이고 각 요청마다 할당하지 않는다는 범위를 한영 모두 보존하세요. 영어 once 또는 only once는 금지합니다.
+  기존 올바른 핸들러 연결과 제출 순서 보류 분기를 유지하세요.'
 sources:
 - virtual-buffer-allocation
 - virtual-queue
