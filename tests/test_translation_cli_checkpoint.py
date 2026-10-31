@@ -67,3 +67,22 @@ def test_batched_fresh_calls_obey_budget_and_resume_without_completed_batch(tmp_
     result = translate_missing(tmp_cfg, catalog)
     assert calls == [['0', '1'], ['2', '3']]
     assert all(result['strings'].values())
+
+
+def test_batch_sizing_includes_actual_cli_wrapper_and_schema(tmp_cfg, monkeypatch):
+    tmp_cfg.agent.kind, tmp_cfg.agent.runner = 'cli', 'claude'
+    tmp_cfg.agent.max_input_chars = 2400
+    tmp_cfg.raw['site'] = dict(translation_batch_size=12)
+    monkeypatch.setattr('sdd.cli_agent.command', lambda cfg: ['fixture-cli'])
+    calls = []
+    def run(argv, **kwargs):
+        assert len(kwargs['prompt']) <= tmp_cfg.agent.max_input_chars
+        payload = json.loads(kwargs['prompt'].split('<user>\n', 1)[1].split('\n</user>', 1)[0])
+        calls.append(len(payload['texts']))
+        raw = json.dumps(dict(translations={key: 'Translated '+key for key in payload['texts']}))
+        return subprocess.CompletedProcess(argv, 0,
+            json.dumps(dict(subtype='success', is_error=False, result=raw)), '')
+    monkeypatch.setattr('sdd.cli_agent.run', run)
+    result = translate_missing(tmp_cfg, dict(strings={('문장 '+str(i)+' ')*70: '' for i in range(4)}))
+    assert sum(calls) == 4 and len(calls) > 1
+    assert all(result['strings'].values())
