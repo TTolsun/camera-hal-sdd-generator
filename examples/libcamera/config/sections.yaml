@@ -6019,9 +6019,9 @@ sections:
           message: 상태 범위의 두 경계를 동시에 만족하는 상태로 바꾸지 마세요.
     - id: access
       question: 기존 isAccessAllowed 호출의 조사 계획을 두 문장 이내로 설명하세요. allowDisconnected가 거짓이고
-        disconnected_가 참인 -ENODEV 선행 분기를 먼저 구분하고, 그 밖에는 currentState·low·high의 범위 비교와
-        범위 안 0 반환, 범위 밖 ASSERT·로그·-EACCES 코드 위치를 관찰하세요. 연결 해제 조건을 두 번 쓰거나 ASSERT 뒤의 실제
-        반환 실행을 보장하지 마세요.
+        disconnected_가 참인 -ENODEV 선행 분기를 먼저 구분하고, 그 밖에는 currentState·low·high의 범위
+        비교와 범위 안 0 반환, 범위 밖 ASSERT·로그·-EACCES 코드 위치를 관찰하세요. 연결 해제 조건을 두 번 쓰거나 ASSERT
+        뒤의 실제 반환 실행을 보장하지 마세요.
       sources:
       - access
       - state-range
@@ -6038,9 +6038,9 @@ sections:
           message: 상태 범위 비교를 배열 인덱스로 해석하지 마세요.
       max_statements: 2
     - id: validation-effects
-      question: Adjusted가 유효해지도록 조정된 구성이며 임의의 스트림에서 파라미터 변경이나 스트림 구성 삭제가 가능하다는 결과 범위만 한
-        문장으로 설명하세요. 호출자의 확인 의무는 다음 질문에서 다루므로 반복하지 마세요. 조사 시 기존 validate 결과를 관찰하며 재호출하지
-        마세요.
+      question: Adjusted가 유효해지도록 조정된 구성이며 임의의 스트림에서 파라미터 변경이나 스트림 구성 삭제가 가능하다는 결과
+        범위만 한 문장으로 설명하세요. 호출자의 확인 의무는 다음 질문에서 다루므로 반복하지 마세요. 조사 시 기존 validate 결과를
+        관찰하며 재호출하지 마세요.
       sources:
       - validation-changes
       - validate
@@ -6051,6 +6051,10 @@ sections:
         - - 가능
           - 수 있
           - 수있
+        reject_patterns:
+        - pattern: '[.!?]\s+\S'
+          message: 질문에 맞게 필요한 조건과 결과를 한 문장으로 설명하고 같은 분기를 확인·기록하거나 변경 가능성을 끝에서 되풀이하지
+            마세요.
       max_statements: 1
     - id: validation-caller
       question: Adjusted의 호출자가 지켜야 하는 확인 의무만 설명하세요.
@@ -6063,7 +6067,8 @@ sections:
         - - 확인
         reject_patterns:
         - pattern: 따라서
-          message: 앞 질문의 조정 결과를 반복하지 말고 소스에 명시된 호출자의 확인 의무만 한 문장으로 설명하세요. 근거에 없는 인과 표현을 덧붙이지 마세요.
+          message: 앞 질문의 조정 결과를 반복하지 말고 소스에 명시된 호출자의 확인 의무만 한 문장으로 설명하세요. 근거에 없는 인과
+            표현을 덧붙이지 마세요.
     - id: validation-result
       question: 이 validate 호출의 결과를 Valid와 비교하는 조건과, Valid가 아닐 때 반환하는 오류 코드를 함께 기록하는
         조사 항목을 한 문단으로 제안하세요. 같은 분기를 결과 확인과 오류 확인으로 되풀이하지 마세요.
@@ -6075,20 +6080,32 @@ sections:
         - - validate
         - - Valid
         - - -EINVAL
+        reject_patterns:
+        - pattern: '[.!?]\s+\S'
+          message: 질문에 맞게 필요한 조건과 결과를 한 문장으로 설명하고 같은 분기를 확인·기록하거나 변경 가능성을 끝에서 되풀이하지
+            마세요.
       max_statements: 1
     - id: device-configure
-      question: 앞선 상태·검증을 통과한 기존 pipe_->configure 호출의 반환값과 호출 스택의 구체 구현을 관찰하는 조사 계획만 두
-        문장 이내로 설명하세요. 비영 반환값의 전달은 포함하되 0 반환 이후 cfg.stream의 null 검사·Fatal 로그·activeStreams_
-        초기화·-EINVAL 경로는 다음 질문에서 다루므로 여기서는 반복하지 마세요.
+      question: 기존 config->validate() 호출의 스택에서 config의 실제 동적 타입과 도달한 validate 구현을
+        기록하는 조사 항목을 설명하세요. 상태 확인과 검증을 통과한 기존 pipe_->configure 호출에서는 구체 구현과 반환값을 관찰하고
+        비영 반환값이 그대로 전달되는 분기를 두 문장 이내로 함께 설명하세요. 뒤의 스트림 null 검사 결과는 다음 질문에서 다룹니다.
       sources:
       - configure-code
       - configure
+      - validation-check
       answer_contract:
         basis: investigation
         required_terms:
         - - pipe_
         - - configure
         - - 반환
+        - - config
+        - - 타입
+          - 자료형
+        - - validate
+        - - 호출 스택
+          - 호출스택
+          - 스택
       max_statements: 2
     - id: stream-link
       question: 이 cfg.stream() 결과와 null 검사, Fatal 로그 및 소스의 -EINVAL 경로를 관찰할 위치를 설명하세요.
@@ -6218,6 +6235,10 @@ sections:
         end: '
 
           }'
+    - id: buffer-code
+      file: src/libcamera/request.cpp
+      start: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+      end: "\treturn 0;\n}"
     covers:
     - diagnosis
     parts:
@@ -6234,16 +6255,20 @@ sections:
         - - 반환
       max_statements: 1
     - id: buffer-error
-      question: addBuffer()의 기존 호출에서 -EEXIST가 반환됐을 때 같은 스트림의 기존 버퍼와 남은 펜스를 각각 어떻게 확인하며,
-        동일한 반환값으로 원인을 판별할 수 있는 범위는 무엇인가요?
+      question: 기존 Request::addBuffer() 호출에서 buffer->_d()->fence() 검사와 try_emplace
+        뒤의 inserted를 어느 경로에서 관찰해야 두 -EEXIST 원인을 구분할 수 있나요? 펜스 분기가 먼저 반환하는 경우와 그 검사를
+        통과해 삽입 결과를 얻는 경우를 구분하고, 반환값만으로 원인을 단정할 수 있는 범위를 설명하세요.
       sources:
       - buffer
+      - buffer-code
       answer_contract:
         basis: investigation
         required_terms:
         - - addBuffer
         - - -EEXIST
         - - 펜스
+        - - fence()
+        - - inserted
     - id: capacity
       question: 제출 성공 후 doQueueRequests에서 queuedRequests_.size()와 maxQueuedRequestsDevice_를
         비교하고 한도에 도달한 분기를 관찰하는 계획을 설명하세요.
@@ -6271,9 +6296,9 @@ sections:
         - - break
       max_statements: 1
     - id: cancelled
-      question: doQueueRequest 조사에서 cancelled_가 참이면 completeRequest 호출 뒤 반환하는 경로와, 거짓이면
-        원래 queueRequestDevice 호출의 ret를 관찰하고 ret가 0이 아닐 때 cancelRequest로 가는 경로를 두 문장 이내로
-        대비하세요. 취소된 경우와 장치 제출 오류 분기를 각각 한 번만 쓰세요.
+      question: doQueueRequest 조사에서 cancelled_가 참이면 completeRequest 호출 뒤 반환하는 경로와,
+        거짓이면 원래 queueRequestDevice 호출의 ret를 관찰하고 ret가 0이 아닐 때 cancelRequest로 가는 경로를
+        두 문장 이내로 대비하세요. 취소된 경우와 장치 제출 오류 분기를 각각 한 번만 쓰세요.
       sources:
       - cancelled-branch
       - device-result-branch
@@ -6286,6 +6311,9 @@ sections:
         - - queueRequestDevice
         - - 반환
         - - cancelRequest
+        reject_patterns:
+        - pattern: '[.!?]\s+\S[\s\S]*[.!?]\s+\S'
+          message: 취소된 경로와 장치 제출 결과 경로를 각각 한 번씩 두 문장 이내로 설명하세요.
       max_statements: 2
     - id: buffer-completion
       question: completeBuffer의 버퍼 추적 결과와 별도 completeRequest 호출 여부를 구분해 확인하는 계획을 설명하세요.
