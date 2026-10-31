@@ -14,9 +14,10 @@ root = Path(__file__).resolve().parents[4]
 parser = argparse.ArgumentParser()
 parser.add_argument('--out', type=Path, required=True)
 parser.add_argument('--feedback', type=Path)
+parser.add_argument('--work', type=Path, help='Separate execution workspace; defaults to the original reader run')
 args = parser.parse_args()
 args.out.mkdir(parents=True, exist_ok=False)
-work = root/'build/issue211-reader'
+work = args.work.resolve() if args.work else root/'build/issue211-reader'
 render_cfg = load(work/'publication.yaml')
 writer_cfg = load(work/'generation.yaml')
 if (writer_cfg.agent.kind,writer_cfg.agent.runner,writer_cfg.agent.model,writer_cfg.agent.args) != (
