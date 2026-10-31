@@ -3,7 +3,7 @@ topic: virtual-principle
 kind: flow
 title: 패턴 생성에서 cam의 완료 알림까지
 generation: llm
-max_nodes: 12
+max_nodes: 9
 max_label_chars: 72
 condition_display: evidence
 required_symbols:
@@ -15,23 +15,22 @@ required_symbols:
 - completeBuffer
 - completeRequest
 - requestCompleted
-- RequestPending
-- queuedRequests_
 - PipelineHandlerVirtual::bufferCompleted
-- doQueueRequests
 question: 선택한 NV12 가상 캡처에서 실제 버퍼 준비와 요청 전달, CPU 패턴 쓰기, 버퍼·요청 완료 및 cam 콜백은 어떻게 연결됩니까?
-prompt: 12개 필수 심볼의 노드로 선택한 NV12 경로를 설명하세요. 새 조건 목록의 ID가 권위이며 이전 c 번호를 복사하지 마세요. 사전 캡처 버퍼 준비(exportFrameBuffers), cam 요청 제출(queueRequest),
-  가상 전달(queueRequestDevice), CPU가 Virtual2 대각선 패턴을 NV12에 쓰는 시도의 실패 여부(generateFrame), 버퍼 완료 신호와 연결 핸들러(bufferCompleted), 모든
-  버퍼 완료 검사(completeBuffer), 현재 요청 완료 표시(completeRequest), 앱 완료 신호와 cam 콜백 통지(requestCompleted), 앞 요청의 pending 검사(RequestPending),
-  큐에 항목이 남았는가(queuedRequests_), 이번 버퍼 핸들러의 요청 미완료 종료(PipelineHandlerVirtual::bufferCompleted), 알림 순회 종료 후 다음 처리(doQueueRequests)입니다.
-  requestCompleted 노드는 신호와 CameraSession::requestComplete의 연결을 한영 라벨로 함께 표현하세요. 버퍼 준비는 캡처 시작을 위한 것이며 요청마다 반복하지 않습니다. queueRequestDevice는
-  이 구현에서 비동기 전달 후 0을 반환하므로 일반 호출자의 오류 취소는 그 노드나 간선에 넣지 마세요. CPU 패턴 쓰기는 실패 여부 결정으로 그리고 true는 FrameError, false는 FrameSuccess를
-  유지한 버퍼 완료 알림으로 갑니다. 연결 핸들러가 completeBuffer를 확인하여 true면 completeRequest로, false면 이번 핸들러 종료로 갑니다. 이 종료는 다른 알림의 재호출 가능성을 부정하지
-  않습니다. completeRequest는 현재 요청 완료 표시만 하는 동작 노드이며 여기에 반복해서 돌아오지 마세요. 그 다음 queuedRequests_ 노드가 큐에 남은 항목 여부를 검사하는 while 결정입니다.
-  true는 앞 요청 RequestPending 결정으로, false는 알림 순회 종료 노드로 갑니다. 앞 요청이 pending이면 뒤 완료 신호를 보류하고 순회를 끝내며, 아니면 제출 순서대로 앱 신호·cam 콜백을
-  통지합니다. 통지 뒤에는 같은 함수 내부의 queuedRequests_ 검사만 반복하고 completeRequest 완료 표시를 다시 하지 마세요. 신호 보류는 실행 스레드가 기다리는 것이 아닙니다. 노드 한영 라벨은
-  코드 구조 설명보다 짧은 독자 행동·상태를 쓰고 변수·함수명을 전부 노출하지 마세요. 각 라벨 72자 이내이며 = ! < > 기호나 포인터 화살표는 쓰지 말고 조건은 condition_ref에 보존하세요. 실제 연결과
-  조건에 여러 소스 구절을 인용하고 12개 노드를 넘기지 마세요. 영어 once/only once는 쓰지 마세요.
+prompt: 이 그림은 핵심 프레임 경로의 개념도이며 전체 제어 흐름도를 만들지 않습니다. 9개 필수 심볼의 노드를 사용하고 큐 내부 순회는 completeRequest 처리 상자 하나에 요약합니다. 사전 DMA-BUF
+  준비(exportFrameBuffers), Request 부착·제출(queueRequest), 가상 비동기 전달(queueRequestDevice), CPU의 Virtual2 대각선 패턴 NV12 쓰기 시도(generateFrame),
+  버퍼 완료 신호와 연결 핸들러(bufferCompleted), 모든 버퍼 완료 검사(completeBuffer), 현재 요청 완료 표시와 제출 순서 통지 처리 전체(completeRequest), 통지 차례가 된 요청의
+  앱 신호와 cam 콜백(requestCompleted), 이번 버퍼 핸들러 종료(PipelineHandlerVirtual::bufferCompleted)입니다. 긴 함수명을 라벨에 나열하지 말고 짧은 행동·상태를 사용하세요.
+  코드 식별자 중간이 줄바꿈되지 않게 한영 라벨에서 각 영문 토큰은 28자 이내로 쓰세요. generateFrame 등 짧은 식별자는 써도 되지만 CameraSession::requestComplete와 PipelineHandlerVirtual::bufferCompleted는
+  긴 전체 이름 대신 cam 콜백·이번 핸들러 같은 의미를 쓰세요. 버퍼 준비→요청 제출은 성공한 캡처 준비의 개념적 전이이며 condition_ref always로 표시하고 true/false를 쓰지 않습니다. 요청
+  제출→가상 전달도 이번에 수락된 요청의 핵심 경로만 표시하고 condition_ref always를 쓰세요. 일반 호출자의 오류 취소나 doQueueRequests 재제출 루프는 그리지 않습니다. queueRequestDevice는
+  이 구현에서 비동기 전달 후 0을 반환합니다. CPU 패턴 쓰기는 실패 여부 결정으로 true는 FrameError, false는 FrameSuccess 유지 후 버퍼 완료 신호로 갑니다. 이 신호는 연결된 가상 핸들러로
+  전달되어 completeBuffer를 검사합니다. completeBuffer는 true면 completeRequest 전체 처리 상자로, false면 이번 핸들러 종료로 갑니다. 이는 이번 호출만 끝남을 뜻합니다.
+  completeRequest를 완료 표시만 하는 함수라고 쓰지 마세요. 완료 표시와 제출 순서 통지 및 후속 큐 처리를 포함한 함수입니다. completeRequest→requestCompleted 간선은 현재 요청이
+  반드시 즉시 통지되는 것처럼 그리지 말고, 통지할 차례의 완료 요청에 한해 신호를 보낸다는 짧은 설명을 condition_ref always와 함께 사용하세요. 앞 요청이 RequestPending이면 뒤 요청의 통지가
+  보류된다는 점은 completeRequest 상자 또는 마지막 간선의 짧은 라벨에 유지하세요. 내부 while/RequestPending/재제출의 별도 노드나 고리를 추가하지 마세요. 본문이 제출 순서와 보류 조건을
+  설명하고 있으므로 그림은 핵심 경로를 읽게 하는 데 집중합니다. 새 조건 ID를 사용하고 이전 번호를 복사하지 마세요. 노드·간선 모두 짧게 쓰고 노드 9개를 넘기지 마세요. 라벨에 = ! < > 기호를 넣지 말고
+  실제 두 결정의 조건은 condition_ref에 보존하세요. 영어 once/only once는 쓰지 마세요.
 sources:
 - virtual-buffer-allocation
 - virtual-queue
