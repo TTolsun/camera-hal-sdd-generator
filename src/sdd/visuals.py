@@ -15,6 +15,7 @@ from pathlib import PurePosixPath
 import yaml
 
 from .config import section_output
+from .validation_stage import load_yaml
 
 
 class StaleVisualEvidence(ValueError):
@@ -26,7 +27,7 @@ def definitions(cfg, section):
     if not settings.file:
         return []
     path = cfg.root / settings.file
-    data = yaml.safe_load(path.read_text(encoding='utf-8'))
+    data = load_yaml(path)
     if not isinstance(data, dict) or data.get('schema') != 1 or not isinstance(data.get('sections'), dict):
         raise ValueError('Invalid visuals schema')
     unknown = set(data['sections']) - {s['id'] for s in cfg.sections()}

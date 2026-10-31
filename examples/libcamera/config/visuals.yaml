@@ -128,25 +128,25 @@ sections:
     topic: resources
     kind: ownership
     title: 요청과 버퍼를 유지할 기간
-    question: 요청의 소유권은 호출자에게 있습니다. 버퍼 참조를 연결해도 호출자의 버퍼 유지 책임은 계속됩니다.
+    question: createRequest와 addBuffer 호출자의 책임 및 completeRequest·cancelRequest 반환 뒤 핸들러의 접근 경계는 어떻게 구분됩니까?
     nodes:
     - id: caller
-      label: 호출자가 Request를 소유
-      label_en: Caller owns Request
+      label: 'createRequest 호출자: Request 소유'
+      label_en: 'createRequest caller: owns Request'
       evidence:
       - source: resources/create
         sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
         quote: The ownership of the returned request is passed to the caller
     - id: buffer
-      label: Request가 버퍼를 참조
-      label_en: Request references buffer
+      label: 'addBuffer 호출자: 버퍼 유효성 책임'
+      label_en: 'addBuffer caller: buffer validity duty'
       evidence:
       - source: resources/buffer
         sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
         quote: A reference to the buffer is stored in the request.
     - id: callback
-      label: 요청 완료 콜백
-      label_en: Request completion callback
+      label: 애플리케이션 요청 완료 콜백 호출
+      label_en: Application request-completion callback is called
       evidence:
       - source: resources/buffer
         sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
@@ -159,25 +159,38 @@ sections:
         sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
         quote: "The request may be deleted in the completion\n * handler"
     - id: reuse
-      label: reuse() 후 다시 제출
-      label_en: Reset before requeue
+      label: 상태 초기화 후 Request 재사용
+      label_en: Reuse Request after resetting state
       evidence:
       - source: resources/reuse
         sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
         quote: be reused and requeued without destruction.
-    edges:
-    - from: caller
-      to: buffer
-      label: addBuffer()
-      label_en: addBuffer()
+    - id: complete
+      label: completeRequest 반환 경계
+      label_en: completeRequest return boundary
       evidence:
-      - source: resources/buffer
-        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
-        quote: A reference to the buffer is stored in the request.
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: void PipelineHandler::completeRequest(Request *request)
+    - id: cancel
+      label: cancelRequest 반환 경계
+      label_en: cancelRequest return boundary
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: void PipelineHandler::cancelRequest(Request *request)
+    - id: ban
+      label: 핸들러 관리 종료; 반환 후 요청 접근 금지
+      label_en: Handler management ends; must not access request after return
+      evidence:
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
+    edges:
     - from: buffer
       to: callback
-      label: 이 시점까지 버퍼를 유효하게 유지
-      label_en: Keep buffer valid until this point
+      label: 콜백이 호출될 때까지 버퍼 유효성 유지
+      label_en: Keep buffer valid until callback is called
       evidence:
       - source: resources/buffer
         sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
@@ -190,14 +203,41 @@ sections:
       - source: resources/create
         sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
         quote: "The request may be deleted in the completion\n * handler"
-    - from: callback
-      to: reuse
-      label: 재사용 전 상태 초기화
-      label_en: Reset state before reuse
+    - from: complete
+      to: ban
+      label: 반환 후 접근 금지
+      label_en: No access once it returns
       evidence:
-      - source: resources/reuse
-        sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
-        quote: "This function shall be called\n * prior to queueing the request to the camera"
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
+    - from: cancel
+      to: ban
+      label: 동일한 규칙 적용
+      label_en: Same rules apply
+      evidence:
+      - source: resources/cancel-rules
+        sha256: 048bc649f307f0f41b7702b59be24a5fba9f7a48ff6a266bfbe458df4a5bdc8d
+        quote: "This function cancels and completes the request. The same rules as for\n * completeRequest() apply."
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
+    - from: caller
+      to: reuse
+      label: 소유자가 상태 초기화 후 재사용을 선택
+      label_en: Owner may reuse after resetting state
+      evidence:
+      - source: resources/create
+        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+        quote: or reused after resetting its state with Request::reuse().
+    - from: caller
+      to: delete
+      label: 소유자가 삭제 책임을 짐
+      label_en: Owner is responsible for deletion
+      evidence:
+      - source: resources/create
+        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+        quote: responsible for deleting it.
   - id: request-stages
     topic: journey
     kind: flow
@@ -226,15 +266,16 @@ sections:
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: int ret = queueRequestDevice(camera, request);
     - id: buffer
-      label: completeBuffer()
-      label_en: completeBuffer()
+      label: 'completeBuffer(): 모든 버퍼 완료인가?'
+      label_en: 'completeBuffer(): have all buffers completed?'
       evidence:
-      - source: journey/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: bool PipelineHandler::completeBuffer(Request *request, FrameBuffer *buffer)
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: "True if all buffers contained in the request have completed, false\n * otherwise"
+      shape: decision
     - id: remaining
-      label: 버퍼 추적 상태 갱신
-      label_en: Update buffer completion tracking
+      label: 핸들러에 필요한 추가 작업 기회
+      label_en: Opportunity for any additional required work
       evidence:
       - source: journey/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
@@ -253,6 +294,13 @@ sections:
       - source: journey/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: "This function ensures that requests will be returned to the application in\n * submission order"
+    - id: pending
+      label: 'false: 아직 완료되지 않은 버퍼가 있음'
+      label_en: 'false: buffers have not all completed'
+      evidence:
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: "false\n * otherwise"
     edges:
     - from: queue
       to: waiting
@@ -264,32 +312,38 @@ sections:
         quote: ConnectionTypeQueued, request);
     - from: waiting
       to: device
-      label: 준비·큐 한도 통과, 취소되지 않은 요청
-      label_en: Prepared, within queue limit and not cancelled
+      label: 준비·큐 한도 만족·비취소; 유효 fence가 있으면 모두 신호된 뒤
+      label_en: Prepared, within queue limit, not cancelled; all valid fences signalled if present
       evidence:
       - source: journey/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera, request);"
+      - source: journey/buffer
+        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
+        quote: "When a valid Fence is provided to this function, \\a fence is moved to \\a\n * buffer and this Request will only be queued to the device once the\n * fences of all its buffers have been correctly signalled."
     - from: device
       to: buffer
-      label: 장치 구현자가 버퍼 완료 통지
-      label_en: Device handler signals buffer completion
+      label: '장치 제출 성공(0) 경로: 파이프라인 핸들러의 버퍼 완료 통지'
+      label_en: 'Device submission success (0): pipeline handler signals buffer completion'
       evidence:
-      - source: journey/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
         quote: This function shall be called by pipeline handlers to signal completion of
+      - source: journey/device-contract
+        sha256: 18f697dba5bc979e14125471abadb8a7ecccef4de79e75e1f385e2c6ee044df2
+        quote: 0 on success or a negative error code otherwise
     - from: buffer
       to: remaining
-      label: 버퍼 완료 알림
-      label_en: Notify buffer completion
+      label: 'true: 버퍼는 모두 완료, 요청은 자동 완료되지 않음'
+      label_en: 'true: all buffers completed; request is not automatically completed'
       evidence:
-      - source: journey/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: camera->bufferCompleted.emit(request, buffer);
+      - source: journey/request-duty
+        sha256: 957ec8f5090b25e8e97e61a6390c77c799eb5e696028a5674ca4717473b6d42d
+        quote: is not completed automatically when the last buffer completes
     - from: remaining
       to: request
-      label: 후처리 뒤 구현자가 명시적으로 호출
-      label_en: Handler explicitly completes after remaining work
+      label: 핸들러가 명시적으로 완료 호출
+      label_en: Handler explicitly calls completion
       evidence:
       - source: journey/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
@@ -302,6 +356,14 @@ sections:
       - source: journey/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+    - from: buffer
+      to: pending
+      label: 'false'
+      label_en: 'false'
+      evidence:
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: "false\n * otherwise"
   - id: stop-order
     topic: stopping
     kind: flow
@@ -323,8 +385,8 @@ sections:
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: stopDevice(camera);
     - id: cancel
-      label: 대기 요청 취소·완료
-      label_en: Cancel and complete waiting requests
+      label: 대기 항목 하나를 cancel 후 doQueueRequest
+      label_en: Cancel one waiting item, then doQueueRequest
       evidence:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
@@ -336,6 +398,44 @@ sections:
       - source: stopping/stop
         sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
         quote: d->setState(Private::CameraConfigured);
+    - id: waiting
+      label: waitingRequests에 항목이 남았는가?
+      label_en: Does waitingRequests contain an item?
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: while (!waitingRequests.empty())
+      shape: decision
+    - id: handlerchecks
+      label: 핸들러의 두 ASSERT 소스 위치
+      label_en: Source locations of the two handler ASSERTs
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "ASSERT(data->queuedRequests_.empty());\n\tASSERT(data->waitingRequests_.empty());"
+    - id: sequence
+      label: requestSequence_ = 0
+      label_en: requestSequence_ = 0
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: data->requestSequence_ = 0;
+    - id: handlerreturn
+      label: 핸들러의 정상 반환 경계
+      label_en: Handler normal-return boundary
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: 'data->requestSequence_ = 0;
+  
+          }'
+    - id: cameraassert
+      label: Camera::stop의 ASSERT 소스 위치
+      label_en: Source location of Camera::stop ASSERT
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: ASSERT(!d->pipe_->hasPendingRequests(this));
     edges:
     - from: detach
       to: stop
@@ -345,22 +445,1075 @@ sections:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: "waitingRequests.swap(data->waitingRequests_);\n\n\t/* Stop the pipeline handler and let the queued requests complete. */\n\tstopDevice(camera);"
-    - from: stop
-      to: cancel
-      label: 장치 요청 뒤 대기 요청 취소
-      label_en: Cancel waiting requests after device requests
+    - from: cancel
+      to: waiting
+      label: 다음 대기 항목 검사
+      label_en: Inspect next waiting item
       evidence:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
-        quote: after the device to keep them in order.
-    - from: cancel
-      to: configured
-      label: 핸들러 정지 호출이 반환한 뒤
-      label_en: After handler stop returns
+        quote: "request->_d()->cancel();\n\t\tdoQueueRequest(request);\n\t}"
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: while (!waitingRequests.empty())
+    - from: stop
+      to: waiting
+      label: 기기 정지 뒤 대기 큐 확인
+      label_en: Inspect waiting queue after device stop
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: while (!waitingRequests.empty())
+    - from: waiting
+      to: cancel
+      label: '예: 각 대기 요청'
+      label_en: 'Yes: each waiting request'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "request->_d()->cancel();\n\t\tdoQueueRequest(request);"
+    - from: waiting
+      to: handlerchecks
+      label: 비어 있으면 반복 종료
+      label_en: 'If empty: leave loop'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: while (!waitingRequests.empty())
+    - from: handlerchecks
+      to: sequence
+      label: 이어지는 소스 순서
+      label_en: Following source order
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: data->requestSequence_ = 0;
+    - from: sequence
+      to: handlerreturn
+      label: 이 정상 경로의 함수 끝
+      label_en: End of this normal function path
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: 'data->requestSequence_ = 0;
+  
+          }'
+    - from: handlerreturn
+      to: cameraassert
+      label: Blocking 호출이 반환한 뒤
+      label_en: After the blocking invocation returns
       evidence:
       - source: stopping/stop
         sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
-        quote: "ASSERT(!d->pipe_->hasPendingRequests(this));\n\n\td->setState(Private::CameraConfigured);"
+        quote: '&PipelineHandler::stop, ConnectionTypeBlocking,'
+    - from: cameraassert
+      to: configured
+      label: 이어지는 정상 소스 경로
+      label_en: Following normal source path
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: d->setState(Private::CameraConfigured);
+  - id: lifecycle-timeout-fence-recovery
+    topic: resources
+    kind: flow
+    title: 타임아웃 뒤 펜스 회수
+    question: 신호되지 않은 펜스로 타임아웃이 나면 다른 요청에 재사용하기 전에 무엇을 해야 합니까?
+    nodes:
+    - id: timeout
+      label: '펜스 미신호: 요청 타임아웃'
+      label_en: 'Unsignalled fence: request times out'
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: isn't signalled
+    - id: retained
+      label: 버퍼에 펜스가 남음
+      label_en: Buffer still contains its fence
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: The buffer will still contain the fence
+    - id: retrieve
+      label: 애플리케이션이 releaseFence()로 회수
+      label_en: Application retrieves with releaseFence()
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: applications must retrieve with FrameBuffer::releaseFence()
+    - id: reuse
+      label: 다른 요청의 재사용에 필요한 회수 조건
+      label_en: Required retrieval condition for reuse in another request
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: can be reused in another request.
+    edges:
+    - from: timeout
+      to: retained
+      label: 요청 실패 뒤에도 유지
+      label_en: Remains after request failure
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+    - from: retained
+      to: retrieve
+      label: 재사용 전 회수 의무
+      label_en: Must retrieve before reuse
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+    - from: retrieve
+      to: reuse
+      label: 회수는 필요한 선행 조건
+      label_en: Retrieval is a necessary precondition
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+  - id: lifecycle-reuse-buffer-fence-distinction
+    topic: resources
+    kind: flow
+    title: 버퍼 재사용과 펜스 권고
+    question: ReuseBuffers가 재사용하는 대상과 펜스 사용 시 권고는 무엇입니까?
+    nodes:
+    - id: flag
+      label: ReuseBuffers
+      label_en: ReuseBuffers
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: \var Request::ReuseBuffers
+    - id: buffers
+      label: 앞서 addBuffer로 넣은 버퍼 재사용
+      label_en: Reuse buffers previously added by addBuffer
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Reuse the buffers that were previously added by addBuffer()
+    - id: fences
+      label: 연결된 펜스는 재사용하지 않음
+      label_en: Associated fences are not reused
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Fences associated with the buffers are not reused.
+    - id: advice
+      label: 펜스를 쓰면 이 플래그를 피하도록 권고
+      label_en: Should not use this flag with fences
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: This flag should not be used if fences are used.
+    edges:
+    - from: flag
+      to: buffers
+      label: 플래그의 재사용 범위
+      label_en: Flag reuse scope
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: buffers
+      to: fences
+      label: 버퍼와 펜스의 범위 구분
+      label_en: Distinguish buffer and fence reuse
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: fences
+      to: advice
+      label: API의 should not 권고
+      label_en: API should-not recommendation
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+  - id: observed-stop-callback-timing
+    topic: observed-callbacks
+    kind: flow
+    title: 가상 CPU 프로브의 연결별 취소 콜백 표시
+    question: 이 공개 가상 CPU 프로브에서 취소 요청의 콜백 표시와 애플리케이션 stop 표시는 어떻게 배치됐습니까? 서로 다른 연결 사이의 순서나 실제 C++ 반환 완료는 측정하지 않았습니다.
+    nodes:
+    - id: autoqueued
+      label: 'Auto·Queued: receiver/main 스레드'
+      label_en: 'Auto/Queued: receiver/main thread'
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"auto\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"receiver/main thread\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": true,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": false\n    }"
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"queued\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"receiver/main thread\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": true,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": false\n    }"
+    - id: direct
+      label: 'Direct: receiver/main과 다른 스레드'
+      label_en: 'Direct: different from receiver/main thread'
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"direct\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"different thread from the receiver/main thread; no thread-name identification is claimed\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": false,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": true\n    }"
+    - id: after
+      label: '취소 콜백 표시: 애플리케이션 stop-return 뒤'
+      label_en: 'Cancelled callback markers: after application stop-return'
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"queued\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"receiver/main thread\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": true,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": false\n    }"
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: The application emits stop-enter immediately before camera->stop() and stop-return immediately after it.
+    - id: between
+      label: '취소 콜백 표시: stop 호출 앞뒤의 애플리케이션 표식 사이'
+      label_en: 'Cancelled callback markers: between application markers around stop()'
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"direct\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"different thread from the receiver/main thread; no thread-name identification is claimed\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": false,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": true\n    }"
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: The application emits stop-enter immediately before camera->stop() and stop-return immediately after it.
+    edges:
+    - from: autoqueued
+      to: after
+      label: 이 프로브의 세 실행에서 관측
+      label_en: Observed in three runs of this probe
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"auto\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"receiver/main thread\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": true,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": false\n    }"
+    - from: direct
+      to: between
+      label: 이 프로브의 세 실행에서 관측
+      label_en: Observed in three runs of this probe
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: "    {\n      \"connection\": \"direct\",\n      \"receiver_affinity\": \"main application thread; Object never moved\",\n      \"callback_thread\": \"different thread from the receiver/main thread; no thread-name identification is claimed\",\n      \"all_runs_consistent\": true,\n      \"callbacks_per_run\": 8,\n      \"stop_callback_entry_and_near_return_markers_after_stop_return\": false,\n      \"stop_cancelled_markers_between_application_stop_enter_and_return_markers\": true\n    }"
+  - id: near-return-marker-boundary
+    topic: observed-callbacks
+    kind: flow
+    title: 반환 근처 표시로 알 수 있는 범위
+    question: callback-return 표시는 어떤 후속 작업보다 앞서며, 무엇의 완료를 추적하지 않습니까?
+    nodes:
+    - id: marker
+      label: callback-return 관측 표시
+      label_en: Observed callback-return marker
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: callback-return
+    - id: counter
+      label: 그 뒤 카운터 증가
+      label_en: Counter increment follows
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: returned.fetch_add(1);
+    - id: destruction
+      label: 표시 이후 로컬 객체 소멸
+      label_en: Local destruction follows the marker
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: local destruction
+    - id: limit
+      label: 실제 C++ 반환 완료는 미추적
+      label_en: Actual C++ return is not traced
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: does not trace the actual C++ return.
+    edges:
+    - from: marker
+      to: counter
+      label: 표시가 먼저 기록됨
+      label_en: Marker is recorded first
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: Near-return marker before the counter increment and local destruction; does not trace the actual C++ return.
+    - from: marker
+      to: destruction
+      label: 표시가 먼저 기록됨
+      label_en: Marker is recorded first
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: Near-return marker before the counter increment and local destruction; does not trace the actual C++ return.
+    - from: marker
+      to: limit
+      label: 관측의 한계
+      label_en: Observation limit
+      evidence:
+      - source: observed-callbacks/product-callback-run
+        sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+        quote: Near-return marker before the counter increment and local destruction; does not trace the actual C++ return.
+  - id: lifecycle-queue-return-completion
+    topic: journey
+    kind: flow
+    title: 접수 반환과 완료 알림
+    question: queueRequest의 0 반환과 requestCompleted 알림은 각각 무엇을 뜻합니까?
+    nodes:
+    - id: invoke
+      label: ConnectionTypeQueued 호출
+      label_en: Invoke with ConnectionTypeQueued
+      evidence:
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: ConnectionTypeQueued, request);
+    - id: zero
+      label: 'queueRequest: 0 반환'
+      label_en: queueRequest returns 0
+      evidence:
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: return 0;
+    - id: queued
+      label: 큐에 넣은 요청
+      label_en: Queued request
+      evidence:
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: Once the request has been queued
+    - id: complete
+      label: 완료된 요청을 completeRequest로 통지
+      label_en: Notify the already-completed request through completeRequest
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: "The pipeline handler shall call this function to notify the \\a camera that\n * the request has completed."
+    - id: ordered
+      label: 완료 요청을 제출 순서로 애플리케이션에 반환
+      label_en: Return completed requests to the application in submission order
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+    - id: signal
+      label: Camera가 requestCompleted 신호로 완료 알림
+      label_en: Camera notifies completion through requestCompleted
+      evidence:
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: through the \ref requestCompleted signal.
+    edges:
+    - from: invoke
+      to: zero
+      label: 호출 뒤 반환
+      label_en: Return after invoking
+      evidence:
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "ConnectionTypeQueued, request);\n\n\treturn 0;"
+    - from: queued
+      to: complete
+      label: API 완료 통지 경로
+      label_en: API completion-notification path
+      evidence:
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "Once the request has been queued, the camera will notify its completion\n * through the \\ref requestCompleted signal."
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: The request that has completed
+    - from: complete
+      to: ordered
+      label: 제출 순서 보장 계약
+      label_en: Submission-order contract
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+    - from: queued
+      to: signal
+      label: 큐에 넣은 뒤의 API 완료 알림 계약
+      label_en: API completion-notification contract after queuing
+      evidence:
+      - source: journey/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "Once the request has been queued, the camera will notify its completion\n * through the \\ref requestCompleted signal."
+  - id: waiting-queue-conditions
+    topic: journey
+    kind: flow
+    title: 선두 요청을 전달하거나 반복을 멈추는 조건
+    question: waitingRequests_ 순회에서 준비 상태와 queuedRequests_ 소프트웨어 큐 크기는 어떻게 전달을 제한합니까?
+    nodes:
+    - id: waiting
+      label: waitingRequests_에 항목이 있는가?
+      label_en: Does waitingRequests_ contain an item?
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: while (!data->waitingRequests_.empty())
+      shape: decision
+    - id: limit
+      label: queuedRequests_ 크기가 maxQueuedRequestsDevice_인가?
+      label_en: Does queuedRequests_ size equal maxQueuedRequestsDevice_?
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
+      shape: decision
+    - id: ready
+      label: 선두 요청의 prepared_가 참인가?
+      label_en: Is the front request prepared_?
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: if (!request->_d()->prepared_)
+      shape: decision
+    - id: forward
+      label: 먼저 pop(), 이어 doQueueRequest(request)
+      label_en: pop() first, then doQueueRequest(request)
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "data->waitingRequests_.pop();\n\t\tdoQueueRequest(request);"
+    - id: end
+      label: 이 호출의 전달 반복 종료
+      label_en: End this invocation's forwarding loop
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
+    edges:
+    - from: waiting
+      to: limit
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: while (!data->waitingRequests_.empty())
+    - from: waiting
+      to: end
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: while (!data->waitingRequests_.empty())
+    - from: limit
+      to: end
+      label: '예: break'
+      label_en: 'Yes: break'
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)\n\t\t\tbreak;"
+    - from: limit
+      to: ready
+      label: '아니요: 선두 확인'
+      label_en: 'No: inspect front'
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: Request *request = data->waitingRequests_.front();
+    - from: ready
+      to: end
+      label: '아니요: break'
+      label_en: 'No: break'
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
+    - from: ready
+      to: forward
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "data->waitingRequests_.pop();\n\t\tdoQueueRequest(request);"
+    - from: forward
+      to: waiting
+      label: 반복 조건 재검사
+      label_en: Recheck loop condition
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "doQueueRequest(request);\n\t}"
+  - id: dispatch-cancel-or-device
+    topic: journey
+    kind: flow
+    title: void 전달 함수의 두 취소 경로
+    question: doQueueRequest는 이미 취소된 요청과 장치 전달 실패를 각각 어느 함수로 처리합니까?
+    nodes:
+    - id: cancelled
+      label: request->_d()->cancelled_인가?
+      label_en: Is request->_d()->cancelled_ true?
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: if (request->_d()->cancelled_)
+      shape: decision
+    - id: complete
+      label: completeRequest(request); return;
+      label_en: completeRequest(request); return;
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: "completeRequest(request);\n\t\treturn;"
+    - id: device
+      label: queueRequestDevice(camera, request)
+      label_en: queueRequestDevice(camera, request)
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: int ret = queueRequestDevice(camera, request);
+    - id: ret
+      label: ret가 0이 아닌가?
+      label_en: Is ret nonzero?
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: if (ret)
+      shape: decision
+    - id: cancel
+      label: cancelRequest(request)
+      label_en: cancelRequest(request)
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: cancelRequest(request);
+    - id: end
+      label: 'void 함수 끝: 정수 반환값 없음'
+      label_en: 'End of void function: no integer return'
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: void PipelineHandler::doQueueRequest(Request *request)
+    edges:
+    - from: cancelled
+      to: complete
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}"
+    - from: cancelled
+      to: device
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: int ret = queueRequestDevice(camera, request);
+    - from: device
+      to: ret
+      label: 장치 함수 결과 검사
+      label_en: Inspect device result
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: if (ret)
+    - from: ret
+      to: cancel
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: "if (ret)\n\t\tcancelRequest(request);"
+    - from: ret
+      to: end
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: journey/dispatch
+        sha256: fbd3ed6fe295b1cdd82d6ce420a30695986e43199347f92ac2545fe0e7831da8
+        quote: "if (ret)\n\t\tcancelRequest(request);"
+  - id: buffer-and-request-completion
+    topic: journey
+    kind: flow
+    title: 버퍼 완료와 명시적 요청 완료의 경계
+    question: 마지막 버퍼가 끝났을 때 completeBuffer의 반환과 핸들러의 요청 완료 의무는 어떻게 구분됩니까?
+    nodes:
+    - id: call
+      label: CameraManager 스레드에서 completeBuffer
+      label_en: completeBuffer in CameraManager thread
+      evidence:
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: This function shall be called from the CameraManager thread.
+    - id: all
+      label: 모든 버퍼가 완료됐는가?
+      label_en: Have all buffers completed?
+      evidence:
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: "True if all buffers contained in the request have completed, false\n * otherwise"
+      shape: decision
+    - id: 'false'
+      label: 'false: 남은 버퍼가 있음'
+      label_en: 'false: buffers remain'
+      evidence:
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: "True if all buffers contained in the request have completed, false\n * otherwise"
+    - id: 'true'
+      label: 'true: 마지막 버퍼 완료, 요청 자동 완료 아님'
+      label_en: 'true: last buffer completed, request not automatically completed'
+      evidence:
+      - source: journey/request-duty
+        sha256: 957ec8f5090b25e8e97e61a6390c77c799eb5e696028a5674ca4717473b6d42d
+        quote: is not completed automatically when the last buffer completes
+    - id: explicit
+      label: 핸들러가 completeRequest를 명시적으로 호출
+      label_en: Handler explicitly calls completeRequest
+      evidence:
+      - source: journey/request-duty
+        sha256: 957ec8f5090b25e8e97e61a6390c77c799eb5e696028a5674ca4717473b6d42d
+        quote: They shall complete requests explicitly with completeRequest().
+    edges:
+    - from: call
+      to: all
+      label: 버퍼 완료 통지·내부 추적 갱신
+      label_en: Notify buffer completion and update tracking
+      evidence:
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: "It notifies applications of buffer\n * completion and updates the request's internal buffer tracking."
+    - from: all
+      to: 'false'
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: "false\n * otherwise"
+    - from: all
+      to: 'true'
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: True if all buffers contained in the request have completed
+    - from: 'true'
+      to: explicit
+      label: 필요한 작업이 있다면 그 작업 기회 후
+      label_en: After an opportunity for any remaining required work
+      evidence:
+      - source: journey/request-duty
+        sha256: 957ec8f5090b25e8e97e61a6390c77c799eb5e696028a5674ca4717473b6d42d
+        quote: "The request\n * is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest()."
+  - id: submission-order-completion
+    topic: journey
+    kind: flow
+    title: 제출 큐의 선두 상태와 반환 순서
+    question: CameraManager 스레드의 completeRequest는 어느 조건에서 반환 반복을 멈추고 어느 요청을 애플리케이션에 알립니까?
+    nodes:
+    - id: entry
+      label: 'CameraManager 스레드: 현재 요청 complete()'
+      label_en: 'CameraManager thread: complete() current request'
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: request->_d()->complete();
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: This function shall be called from the CameraManager thread.
+    - id: queue
+      label: queuedRequests_가 비어 있지 않은가?
+      label_en: Is queuedRequests_ nonempty?
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: while (!data->queuedRequests_.empty())
+      shape: decision
+    - id: pending
+      label: 선두 req->status()가 RequestPending인가?
+      label_en: Is front req->status() RequestPending?
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: if (req->status() == Request::RequestPending)
+      shape: decision
+    - id: assertion
+      label: ASSERT(!req->hasPendingBuffers()) 소스 위치
+      label_en: Source location of ASSERT(!req->hasPendingBuffers())
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: ASSERT(!req->hasPendingBuffers());
+    - id: notify
+      label: pop_front() 뒤 camera->requestComplete(req)
+      label_en: pop_front() then camera->requestComplete(req)
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: "data->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);"
+    - id: end
+      label: 반환 반복 후 doQueueRequests(camera)
+      label_en: doQueueRequests(camera) after return loop
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: doQueueRequests(camera);
+    edges:
+    - from: entry
+      to: queue
+      label: 제출 큐를 확인
+      label_en: Inspect submission queue
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: while (!data->queuedRequests_.empty())
+    - from: queue
+      to: pending
+      label: '예: 선두 확인'
+      label_en: 'Yes: inspect front'
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: Request *req = data->queuedRequests_.front();
+    - from: queue
+      to: end
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: while (!data->queuedRequests_.empty())
+    - from: pending
+      to: end
+      label: '예: break'
+      label_en: 'Yes: break'
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+    - from: pending
+      to: assertion
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: ASSERT(!req->hasPendingBuffers());
+    - from: assertion
+      to: notify
+      label: 이어지는 소스 순서
+      label_en: Following source order
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: "data->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);"
+    - from: notify
+      to: queue
+      label: 다음 선두 검사
+      label_en: Inspect next front
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: while (!data->queuedRequests_.empty())
+  - id: stop-disconnect-contract
+    topic: stopping
+    kind: flow
+    title: 정지 API 계약과 연결 해제 TODO
+    question: PipelineHandler::stop과 Camera::disconnect의 선택된 두 원문은 대기 요청 처리를 어떻게 다르게 명시합니까?
+    nodes:
+    - id: stop
+      label: PipelineHandler::stop 계약
+      label_en: PipelineHandler::stop contract
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: void PipelineHandler::stop(Camera *camera)
+    - id: complete
+      label: '계약: 모든 대기 요청 취소·즉시 오류 완료'
+      label_en: 'Contract: cancel all pending requests; immediately complete in error'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "\\brief Stop capturing from all running streams and cancel pending requests\n * \\param[in] camera The camera to stop\n *\n * This function stops capturing and processing requests immediately. All\n * pending requests are cancelled and complete immediately in an error state.\n *\n * \\context This function is called from the CameraManager thread.\n */\n"
+    - id: disconnect
+      label: Camera::disconnect 알림
+      label_en: Camera::disconnect notification
+      evidence:
+      - source: stopping/disconnect-todo-owner
+        sha256: 768781b1763c3413e3780132c987fb0733d6fff2cdf1d128a6be5bbd1aa50d71
+        quote: void Camera::disconnect()
+    - id: todo
+      label: 'Running 중 연결 해제 시 대기 요청 처리: TODO'
+      label_en: 'Pending requests on disconnection while Running: TODO'
+      evidence:
+      - source: stopping/disconnect-todo-owner
+        sha256: 768781b1763c3413e3780132c987fb0733d6fff2cdf1d128a6be5bbd1aa50d71
+        quote: "Deal with pending requests if the camera is disconnected in a\n * running state."
+    edges:
+    - from: stop
+      to: complete
+      label: 선택된 핸들러 원문의 계약
+      label_en: Contract in the selected handler source
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "\\brief Stop capturing from all running streams and cancel pending requests\n * \\param[in] camera The camera to stop\n *\n * This function stops capturing and processing requests immediately. All\n * pending requests are cancelled and complete immediately in an error state.\n *\n * \\context This function is called from the CameraManager thread.\n */\n"
+    - from: disconnect
+      to: todo
+      label: 미완료 TODO를 구분
+      label_en: Distinguish unfinished TODO
+      evidence:
+      - source: stopping/disconnect-todo-owner
+        sha256: 768781b1763c3413e3780132c987fb0733d6fff2cdf1d128a6be5bbd1aa50d71
+        quote: "Deal with pending requests if the camera is disconnected in a\n * running state."
+  - id: camera-stop-branches
+    topic: stopping
+    kind: flow
+    title: Camera::stop의 미실행·오류·정상 경로
+    question: isRunning과 접근 검사 결과에 따라 Camera::stop은 어떤 경로로 반환합니까?
+    nodes:
+    - id: running
+      label: d->isRunning()인가?
+      label_en: Is d->isRunning() true?
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: if (!d->isRunning())
+      shape: decision
+    - id: noop
+      label: '미실행: 0 반환'
+      label_en: 'Not running: return 0'
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "if (!d->isRunning())\n\t\treturn 0;"
+    - id: access
+      label: isAccessAllowed 결과 ret < 0인가?
+      label_en: Is isAccessAllowed result ret < 0?
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: if (ret < 0)
+      shape: decision
+    - id: error
+      label: 그 ret를 반환
+      label_en: Return that ret
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "if (ret < 0)\n\t\treturn ret;"
+    - id: stopping
+      label: CameraStopping 설정
+      label_en: Set CameraStopping
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: d->setState(Private::CameraStopping);
+    - id: invoke
+      label: ConnectionTypeBlocking으로 PipelineHandler::stop 호출
+      label_en: Invoke PipelineHandler::stop with ConnectionTypeBlocking
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: '&PipelineHandler::stop, ConnectionTypeBlocking,'
+    - id: assertion
+      label: ASSERT(!hasPendingRequests(this)) 소스 위치
+      label_en: Source location of ASSERT(!hasPendingRequests(this))
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: ASSERT(!d->pipe_->hasPendingRequests(this));
+    - id: configured
+      label: CameraConfigured 설정 후 0 반환
+      label_en: Set CameraConfigured, then return 0
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "d->setState(Private::CameraConfigured);\n\n\treturn 0;"
+    edges:
+    - from: running
+      to: noop
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "if (!d->isRunning())\n\t\treturn 0;"
+    - from: running
+      to: access
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: int ret = d->isAccessAllowed(Private::CameraRunning);
+    - from: access
+      to: error
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "if (ret < 0)\n\t\treturn ret;"
+    - from: access
+      to: stopping
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: d->setState(Private::CameraStopping);
+    - from: stopping
+      to: invoke
+      label: 정지 호출
+      label_en: Invoke stop
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: '&PipelineHandler::stop, ConnectionTypeBlocking,'
+    - from: invoke
+      to: assertion
+      label: 호출이 반환한 뒤의 소스 위치
+      label_en: Source location after invocation returns
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: ASSERT(!d->pipe_->hasPendingRequests(this));
+    - from: assertion
+      to: configured
+      label: 이어지는 소스 순서
+      label_en: Following source order
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "d->setState(Private::CameraConfigured);\n\n\treturn 0;"
+  - id: stop-device-observation-plan
+    topic: stopping
+    kind: flow
+    title: stopDevice 호출 구간의 관찰 계획
+    question: 분리 직후, 호출 직전, 실제 구현 진입과 복귀를 각각 관찰하는 조사 계획입니다. 호출 직전 표시만으로 구현 진입이나 멎은 원인을 확정하지 않습니다.
+    nodes:
+    - id: detach
+      label: '계획: waitingRequests.swap 직후 분리 상태 관찰'
+      label_en: 'Plan: inspect separation immediately after waitingRequests.swap'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: waitingRequests.swap(data->waitingRequests_);
+    - id: before
+      label: '계획: 호출 직전 관찰(구현 진입과 별도)'
+      label_en: 'Plan: observe before call, separately from implementation entry'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: stopDevice(camera);
+    - id: call
+      label: '계획: 실제 stopDevice 구현 진입을 별도 관찰'
+      label_en: 'Plan: separately observe entry into the actual stopDevice implementation'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: \fn PipelineHandler::stopDevice()
+    - id: after
+      label: '계획: 호출에서 돌아온 뒤 위치'
+      label_en: 'Plan: source position after the call returns'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "stopDevice(camera);\n\n\t/* Cancel and signal as complete all waiting requests. */"
+    - id: unreturned
+      label: '계획: 관찰 창에서 복귀 미관찰 → 추가 조사(원인 미확정)'
+      label_en: 'Plan: no observed return in observation window → investigate; cause unresolved'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: stopDevice(camera);
+    - id: implementation-return
+      label: '계획: 실제 stopDevice 구현 복귀 이벤트 관찰 (구현 미검토, 측정 결과 아님)'
+      label_en: 'Plan: observe the actual stopDevice implementation return event (implementation not reviewed, not a measured result)'
+      evidence: &id001
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: \fn PipelineHandler::stopDevice()
+    edges:
+    - from: detach
+      to: before
+      label: 다음 stopDevice 호출 전 지점과 비교
+      label_en: Compare with the position before the following stopDevice call
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: waitingRequests.swap(data->waitingRequests_);
+    - from: before
+      to: call
+      label: 호출 지점과 실제 구현 진입을 구분
+      label_en: Distinguish call site from actual implementation entry
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: stopDevice(camera);
+    - from: call
+      to: implementation-return
+      label: 진입 뒤 반환이 관찰된 경우
+      label_en: If a return is observed after entry
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "stopDevice(camera);\n\n\t/* Cancel and signal as complete all waiting requests. */"
+    - from: call
+      to: unreturned
+      label: 진입은 관찰했으나 복귀 관찰이 없으면
+      label_en: If entry was observed but return was not
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: stopDevice(camera);
+    - from: implementation-return
+      to: after
+      label: 구현 복귀를 관찰한 뒤 호출 뒤 위치와 비교 (호출 직전 로그는 복귀의 증거가 아님)
+      label_en: Compare with the post-call position after an observed implementation return (a before-call log is not evidence of return)
+      evidence: *id001
+  - id: stopping-completion-contract
+    topic: stopping
+    kind: flow
+    title: 완료 통지의 호출자 의무와 반환 뒤 경계
+    question: completeRequest 호출 스레드, 제출 순서 반환과 핸들러의 접근 금지 경계는 어떻게 연결됩니까?
+    nodes:
+    - id: call
+      label: CameraManager 스레드에서 completeRequest 호출 의무
+      label_en: Caller must invoke completeRequest in CameraManager thread
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request *request)"
+    - id: ordered
+      label: 완료 요청을 제출 순서로 애플리케이션에 반환
+      label_en: Return completed requests to the application in submission order
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+    - id: after
+      label: 함수 반환 후 핸들러의 요청 접근 금지
+      label_en: Handler must not access request once the function returns
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
+    edges:
+    - from: call
+      to: ordered
+      label: 함수의 반환 순서 계약
+      label_en: Function submission-order contract
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+    - from: call
+      to: after
+      label: 이 함수가 반환한 뒤의 의무
+      label_en: Duty once this function returns
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
   overview:
   - id: discovery-map
     topic: discovery
@@ -603,69 +1756,96 @@ sections:
     topic: value
     kind: flow
     title: 카메라 스택의 네 계층
-    question: 애플리케이션에서 카메라 하드웨어까지 어떤 계층을 지납니까? 지원 기종이나 성능을 보장하는 그림은 아닙니다.
+    question: 애플리케이션부터 커널 드라이버까지 네 소프트웨어 계층은 각각 어떤 역할을 맡습니까? 카메라 하드웨어 자체, 지원 기종, 성능은 이 그림의 범위가 아닙니다.
     nodes:
     - id: apps
-      label: 애플리케이션·상위 프레임워크
-      label_en: Applications and upper-level frameworks
+      label: '애플리케이션·상위 프레임워크: 프로젝트 범위 밖, libcamera 프레임워크 또는 어댑테이션을 기반으로 사용'
+      label_en: 'Applications and upper-level frameworks: outside project scope, based on the libcamera framework or adaptation'
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: The applications and upper level frameworks are based on the
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: libcamera framework or libcamera adaptation
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: and are outside of
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - id: adaptation
-      label: 어댑테이션 (V4L2 호환·GStreamer·Android HAL)
-      label_en: Adaptation (V4L2 compatibility, GStreamer, Android HAL)
+      label: '어댑테이션 (V4L2 호환·GStreamer·Android HAL): libcamera를 다른 프레임워크에 연결'
+      label_en: 'Adaptation (V4L2 compatibility, GStreamer, Android HAL): connects libcamera to other frameworks'
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: The libcamera adaptation is an umbrella term designating the
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: components that interface to libcamera in other frameworks.
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: Notable examples are a V4L2 compatibility layer, a gstreamer
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - id: framework
-      label: libcamera 프레임워크
-      label_en: libcamera framework
+      label: 'libcamera 프레임워크: 카메라 장치 제어, 네이티브 C++ API 제공, 선택적 언어 바인딩'
+      label_en: 'libcamera framework: camera device control, native C++ API, optional language bindings'
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: The libcamera framework is the core part of the stack.
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: handles all control of the camera devices in its core component,
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: exposes a native C++ API to upper layers
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: language bindings allow interfacing to libcamera from other
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - id: kernel
-      label: 커널 드라이버 (V4L2 계열 API)
-      label_en: Kernel drivers (V4L2 family of APIs)
+      label: '커널 드라이버 (V4L2 계열 API): 카메라 하드웨어 제어, V4L2 계열 API로 사용자 공간에 노출'
+      label_en: 'Kernel drivers (V4L2 family of APIs): control camera hardware and expose it to userspace through V4L2 APIs'
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: The kernel drivers control the camera hardware and expose a
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: low-level interface to userspace through the Linux kernel V4L2
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     edges:
     - from: apps
       to: framework
-      label: C++ API로 직접 사용
-      label_en: Use the C++ API directly
+      label: 네이티브 C++ API 사용
+      label_en: Use the native C++ API
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: and exposes a native C++ API to upper layers
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - from: apps
       to: adaptation
-      label: 다른 프레임워크를 거쳐 사용
-      label_en: Use through another framework
+      label: libcamera adaptation 기반으로 사용
+      label_en: Use based on the libcamera adaptation
       evidence:
       - source: value/stack
+        quote: libcamera framework or libcamera adaptation
         sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
-        quote: components that interface to libcamera in other frameworks.
     - from: adaptation
       to: framework
-      label: libcamera에 연결
-      label_en: Connect to libcamera
+      label: libcamera 프레임워크에 연결
+      label_en: Connect to the libcamera framework
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: components that interface to libcamera in other frameworks.
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - from: framework
       to: kernel
-      label: V4L2 계열 API로 제어
-      label_en: Control through the V4L2 family of APIs
+      label: V4L2 계열 API 경유 카메라 장치 제어
+      label_en: Control camera devices via the V4L2 family of APIs
       evidence:
       - source: value/stack
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
         quote: low-level interface to userspace through the Linux kernel V4L2
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: handles all control of the camera devices in its core component,
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
   - id: hardware-boundary
     topic: capabilities
     kind: flow
@@ -710,6 +1890,316 @@ sections:
       - source: capabilities/handler
         sha256: 2ba321cd394e987c2851002e9db5df0634635d71c749580c066e5556df90a715
         quote: create corresponding Camera instances.
+  - id: vendor-waiting-queue-conditions
+    topic: benefits
+    kind: flow
+    title: 선두 요청을 전달하거나 반복을 멈추는 조건
+    question: waitingRequests_ 순회에서 준비 상태와 queuedRequests_ 소프트웨어 큐 크기는 어떻게 전달을 제한합니까?
+    nodes:
+    - id: queue
+      label: 'queueRequest: waitingRequests_에 요청 push'
+      label_en: 'queueRequest: push request to waitingRequests_'
+      evidence:
+      - source: benefits/queue-code
+        quote: data->waitingRequests_.push(request);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: prepare
+      label: prepare(300ms) 호출로 준비 시작
+      label_en: Start preparation by calling prepare(300ms)
+      evidence:
+      - source: benefits/queue-code
+        quote: request->_d()->prepare(300ms);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: reg
+      label: 'registerRequest: prepared 신호에 콜백 연결'
+      label_en: 'registerRequest: connect callback to prepared signal'
+      evidence:
+      - source: benefits/queue-code
+        quote: request->_d()->prepared.connect(this, [this, request]() {
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: benefits/queue-code
+        quote: This function is called when the request is created,
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: cb
+      label: prepared 콜백이 doQueueRequests(camera) 호출
+      label_en: Prepared callback invokes doQueueRequests(camera)
+      evidence:
+      - source: benefits/queue-code
+        quote: doQueueRequests(request->_d()->camera());
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: waiting
+      label: waitingRequests_에 항목이 있는가?
+      label_en: Does waitingRequests_ contain an item?
+      evidence:
+      - source: benefits/queue-code
+        quote: while (!data->waitingRequests_.empty())
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      shape: decision
+    - id: limit
+      label: queuedRequests_ 크기가 maxQueuedRequestsDevice_와 같은가?
+      label_en: Is queuedRequests_ size equal to maxQueuedRequestsDevice_?
+      evidence:
+      - source: benefits/queue-code
+        quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      shape: decision
+    - id: front
+      label: waitingRequests_ 선두 요청 확인
+      label_en: Inspect the front request of waitingRequests_
+      evidence:
+      - source: benefits/queue-code
+        quote: Request *request = data->waitingRequests_.front();
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: ready
+      label: 선두 요청의 prepared_가 참인가?
+      label_en: Is the front request's prepared_ true?
+      evidence:
+      - source: benefits/queue-code
+        quote: if (!request->_d()->prepared_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      shape: decision
+    - id: pop
+      label: waitingRequests_.pop() 먼저 수행
+      label_en: Pop waitingRequests_ first
+      evidence:
+      - source: benefits/queue-code
+        quote: data->waitingRequests_.pop();
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: fwd
+      label: doQueueRequest(request) 호출
+      label_en: Call doQueueRequest(request)
+      evidence:
+      - source: benefits/queue-code
+        quote: doQueueRequest(request);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - id: end
+      label: 이 호출의 전달 반복 종료
+      label_en: End this invocation's forwarding loop
+      evidence:
+      - source: benefits/queue-code
+        quote: if (!request->_d()->prepared_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    edges:
+    - from: queue
+      to: prepare
+      label: push 후 준비 시작
+      label_en: Start preparation after push
+      evidence:
+      - source: benefits/queue-code
+        quote: data->waitingRequests_.push(request);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: benefits/queue-code
+        quote: request->_d()->prepare(300ms);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: reg
+      to: cb
+      label: prepared 신호 전달 시 콜백 실행 (조건부)
+      label_en: Callback runs when the prepared signal is delivered (conditional)
+      evidence:
+      - source: benefits/queue-code
+        quote: request->_d()->prepared.connect(this, [this, request]() {
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: benefits/queue-code
+        quote: when a request is ready to be processed.
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: cb
+      to: waiting
+      label: doQueueRequests 진입
+      label_en: Enter doQueueRequests
+      evidence:
+      - source: benefits/queue-code
+        quote: void PipelineHandler::doQueueRequests(Camera *camera)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: waiting
+      to: limit
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: benefits/queue-code
+        quote: while (!data->waitingRequests_.empty())
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: waiting
+      to: end
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: benefits/queue-code
+        quote: while (!data->waitingRequests_.empty())
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: limit
+      to: end
+      label: '예: break'
+      label_en: 'Yes: break'
+      evidence:
+      - source: benefits/queue-code
+        quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: limit
+      to: front
+      label: '아니요: 선두 확인'
+      label_en: 'No: inspect the front request'
+      evidence:
+      - source: benefits/queue-code
+        quote: Request *request = data->waitingRequests_.front();
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: front
+      to: ready
+      label: 선두 요청 검사
+      label_en: Check the front request
+      evidence:
+      - source: benefits/queue-code
+        quote: if (!request->_d()->prepared_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: ready
+      to: end
+      label: '아니요: break'
+      label_en: 'No: break'
+      evidence:
+      - source: benefits/queue-code
+        quote: if (!request->_d()->prepared_)
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: ready
+      to: pop
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: benefits/queue-code
+        quote: data->waitingRequests_.pop();
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: pop
+      to: fwd
+      label: 이어 doQueueRequest 호출
+      label_en: Then call doQueueRequest
+      evidence:
+      - source: benefits/queue-code
+        quote: doQueueRequest(request);
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+    - from: fwd
+      to: waiting
+      label: 반복 조건 재검사
+      label_en: Recheck the loop condition
+      evidence:
+      - source: benefits/queue-code
+        quote: while (!data->waitingRequests_.empty())
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+  - id: vendor-buffer-and-request-completion
+    topic: benefits
+    kind: flow
+    title: 버퍼 완료와 명시적 요청 완료의 경계
+    question: 마지막 버퍼가 끝났을 때 completeBuffer의 반환과 핸들러의 요청 완료 의무는 어떻게 구분됩니까?
+    nodes:
+    - id: call
+      label: CameraManager 스레드에서 completeBuffer 호출 (호출자 의무)
+      label_en: Call completeBuffer on the CameraManager thread (caller obligation)
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: This function shall be called from the CameraManager thread.
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - id: all
+      label: 모든 버퍼가 완료됐는가?
+      label_en: Have all buffers completed?
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: True if all buffers contained in the request have completed, false
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+      shape: decision
+    - id: 'false'
+      label: 'false: 남은 버퍼가 있음'
+      label_en: 'false: buffers remain'
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: True if all buffers contained in the request have completed, false
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - id: 'true'
+      label: 'true: 마지막 버퍼 완료, 요청 자동 완료 아님'
+      label_en: 'true: last buffer completed, request not automatically completed'
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: is not completed automatically when the last buffer completes
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - id: explicit
+      label: 핸들러가 completeRequest()를 명시적으로 호출
+      label_en: Handler explicitly calls completeRequest()
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: They shall complete requests explicitly with completeRequest().
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - id: stop
+      label: pipeline handler가 stop()으로 중지됨
+      label_en: Pipeline handler is stopped with stop()
+      evidence:
+      - source: benefits/completion
+        quote: when the pipeline handler is stopped with stop().
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
+    - id: stop_track
+      label: 요청 추적에 따라 큐의 요청 자동 완료 (별도 계약, 버퍼 흐름과 순서 미지정)
+      label_en: Queued requests auto-completed by request tracking (separate contract, no order defined against buffer flow)
+      evidence:
+      - source: benefits/completion
+        quote: Keeping track of queued requests ensures automatic completion of all requests
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
+    - id: stop_signal
+      label: 완료 신호는 completeRequest()로 전달
+      label_en: Completion is signalled via completeRequest()
+      evidence:
+      - source: benefits/completion
+        quote: signalled by the pipeline handler using the completeRequest() function.
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
+    edges:
+    - from: call
+      to: all
+      label: 버퍼 완료 통지와 내부 버퍼 추적 갱신 후
+      label_en: After notifying buffer completion and updating internal buffer tracking
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: It notifies applications of buffer
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+      - source: benefits/last-buffer-contract
+        quote: completion and updates the request's internal buffer tracking.
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - from: all
+      to: 'false'
+      label: 아니요 (false)
+      label_en: No (false)
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: True if all buffers contained in the request have completed, false
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - from: all
+      to: 'true'
+      label: 예 (true)
+      label_en: Yes (true)
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: True if all buffers contained in the request have completed, false
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - from: 'true'
+      to: explicit
+      label: 필요한 작업 기회 후 명시적 완료
+      label_en: After the chance for still-needed work, explicit completion
+      evidence:
+      - source: benefits/last-buffer-contract
+        quote: pipeline handlers a chance to perform any operation that may still be
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+      - source: benefits/last-buffer-contract
+        quote: They shall complete requests explicitly with completeRequest().
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+    - from: stop
+      to: stop_track
+      label: stop() 시 추적 중인 요청에 적용
+      label_en: Applies to tracked requests when stop() is called
+      evidence:
+      - source: benefits/completion
+        quote: Keeping track of queued requests ensures automatic completion of all requests
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
+    - from: stop_track
+      to: stop_signal
+      label: 완료 신호 방식
+      label_en: Completion signalling method
+      evidence:
+      - source: benefits/completion
+        quote: signalled by the pipeline handler using the completeRequest() function.
+        sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
   ipa:
   - id: proxy-selection
     topic: selection
@@ -1242,6 +2732,346 @@ sections:
       - source: lifetime/reuse
         sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
         quote: "This function shall be called\n * prior to queueing the request to the camera"
+  - id: add-buffer-rejections
+    topic: request
+    kind: decision
+    title: 버퍼 연결 실패를 구분하는 순서
+    question: 같은 -EEXIST라도 남은 fence와 중복 stream을 구분하고, 실패 검사 뒤의 요청 연결 경계를 확인합니다.
+    nodes:
+    - id: stream
+      label: stream이 비었나요?
+      label_en: Is stream null?
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (!stream)
+      shape: decision
+    - id: invalid
+      label: -EINVAL 반환
+      label_en: Return -EINVAL
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: return -EINVAL;
+    - id: fence
+      label: 버퍼에 fence가 남았나요?
+      label_en: Does the buffer retain a fence?
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (buffer->_d()->fence())
+      shape: decision
+    - id: retained
+      label: '-EEXIST: 남은 fence'
+      label_en: '-EEXIST: retained fence'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: Can't add buffer that still references a fence
+    - id: duplicate
+      label: stream이 이미 등록됐나요?
+      label_en: Is the stream already registered?
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (!inserted)
+      shape: decision
+    - id: existing
+      label: '-EEXIST: 중복 stream'
+      label_en: '-EEXIST: duplicate stream'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: FrameBuffer already set for stream
+    - id: attach
+      label: 요청 연결과 pending_ 추가
+      label_en: Attach request and add pending_
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "buffer->_d()->setRequest(this);\n\t_d()->pending_.insert(buffer);"
+    - id: success
+      label: 0 반환
+      label_en: Return 0
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: return 0;
+    edges:
+    - from: stream
+      to: invalid
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!stream) {\n\t\tLOG(Request, Error) << \"Invalid stream reference\"\
+          ;\n\t\treturn -EINVAL;\n\t}"
+    - from: stream
+      to: fence
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!stream) {\n\t\tLOG(Request, Error) << \"Invalid stream reference\"\
+          ;\n\t\treturn -EINVAL;\n\t}"
+    - from: fence
+      to: retained
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (buffer->_d()->fence()) {\n\t\tLOG(Request, Error) << \"Can't add\
+          \ buffer that still references a fence\";\n\t\treturn -EEXIST;\n\t}"
+    - from: fence
+      to: duplicate
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: auto [it, inserted] = bufferMap_.try_emplace(stream, buffer);
+    - from: duplicate
+      to: existing
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!inserted) {\n\t\tLOG(Request, Error) << \"FrameBuffer already set\
+          \ for stream\";\n\t\treturn -EEXIST;\n\t}"
+    - from: duplicate
+      to: attach
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "buffer->_d()->setRequest(this);\n\t_d()->pending_.insert(buffer);"
+    - from: attach
+      to: success
+      label: 유효한 fence가 있으면 이동한 뒤 반환
+      label_en: Move a valid supplied fence if present, then return
+      evidence:
+      - source: request/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (fence && fence->isValid())\n\t\tbuffer->_d()->setFence(std::move(fence));\n\
+          \n\treturn 0;"
+  - id: queue-return-completion
+    topic: request
+    kind: flow
+    title: 접수 반환과 완료 알림
+    question: queueRequest의 0 반환과 requestCompleted 알림은 각각 무엇을 뜻합니까?
+    nodes:
+    - id: invoke
+      label: ConnectionTypeQueued 호출
+      label_en: Invoke with ConnectionTypeQueued
+      evidence:
+      - source: request/queue-code
+        sha256: b375a7828af46db11a4e6308cc634ebb265619e76e9f173907d16d9009fe2c51
+        quote: ConnectionTypeQueued, request);
+    - id: zero
+      label: 'queueRequest: 0 반환'
+      label_en: queueRequest returns 0
+      evidence:
+      - source: request/queue-code
+        sha256: b375a7828af46db11a4e6308cc634ebb265619e76e9f173907d16d9009fe2c51
+        quote: return 0;
+    - id: queued
+      label: 큐에 넣은 요청
+      label_en: Queued request
+      evidence:
+      - source: request/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: Once the request has been queued
+    - id: complete
+      label: 완료 시 requestCompleted 알림
+      label_en: Notify completion through requestCompleted
+      evidence:
+      - source: request/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: through the \ref requestCompleted signal.
+    edges:
+    - from: invoke
+      to: zero
+      label: 호출 뒤 반환
+      label_en: Return after invoking
+      evidence:
+      - source: request/queue-code
+        sha256: b375a7828af46db11a4e6308cc634ebb265619e76e9f173907d16d9009fe2c51
+        quote: "ConnectionTypeQueued, request);\n\n\treturn 0;"
+    - from: queued
+      to: complete
+      label: API의 완료 알림 계약
+      label_en: API completion-notification contract
+      evidence:
+      - source: request/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "Once the request has been queued, the camera will notify its completion\n * through the \\ref requestCompleted signal."
+  - id: timeout-fence-recovery
+    topic: lifetime
+    kind: flow
+    title: 타임아웃 뒤 펜스 회수
+    question: 신호되지 않은 펜스로 타임아웃이 나면 다른 요청에 재사용하기 전에 무엇을 해야 합니까?
+    nodes:
+    - id: timeout
+      label: '펜스 미신호: 요청 타임아웃'
+      label_en: 'Unsignalled fence: request times out'
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: isn't signalled
+    - id: retained
+      label: 버퍼에 펜스가 남음
+      label_en: Buffer still contains its fence
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: The buffer will still contain the fence
+    - id: retrieve
+      label: 애플리케이션이 releaseFence()로 회수
+      label_en: Application retrieves with releaseFence()
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: applications must retrieve with FrameBuffer::releaseFence()
+    - id: reuse
+      label: 그 뒤 다른 요청에서 버퍼 재사용
+      label_en: Then reuse the buffer in another request
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: can be reused in another request.
+    edges:
+    - from: timeout
+      to: retained
+      label: 요청 실패 뒤에도 유지
+      label_en: Remains after request failure
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+    - from: retained
+      to: retrieve
+      label: 재사용 전 회수 의무
+      label_en: Must retrieve before reuse
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+    - from: retrieve
+      to: reuse
+      label: 회수 후 재사용 가능
+      label_en: Reuse after retrieval
+      evidence:
+      - source: lifetime/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
+  - id: reuse-buffer-relink
+    topic: lifetime
+    kind: flow
+    title: 재사용 버퍼의 요청 연결
+    question: ReuseBuffers 경로에서 각 버퍼는 어떤 순서로 다시 요청에 연결됩니까?
+    nodes:
+    - id: retained
+      label: 'ReuseBuffers: 기존 bufferMap_ 순회'
+      label_en: 'ReuseBuffers: iterate existing bufferMap_'
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: 'for (const auto &[stream, buffer] : bufferMap_)'
+    - id: request
+      label: 각 버퍼의 setRequest(this)
+      label_en: setRequest(this) on each buffer
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: buffer->_d()->setRequest(this);
+    - id: pending
+      label: 각 버퍼를 pending_에 추가
+      label_en: Insert each buffer into pending_
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: _d()->pending_.insert(buffer);
+    edges:
+    - from: retained
+      to: request
+      label: 각 기존 버퍼의 연결 갱신
+      label_en: Update each retained buffer link
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: "if (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;"
+    - from: request
+      to: pending
+      label: 연결한 뒤 대기 집합에 추가
+      label_en: Insert into pending after relinking
+      evidence:
+      - source: lifetime/reuse-buffers
+        sha256: 2b47b341a1707d21d16d2589f40203968308f0b9b7c9b0ac59d62b3ed792e533
+        quote: "if (flags & ReuseBuffers) {\n\t\tfor (const auto &[stream, buffer] : bufferMap_) {\n\t\t\tbuffer->_d()->setRequest(this);\n\t\t\t_d()->pending_.insert(buffer);\n\t\t}\n\t} else {\n\t\tbufferMap_.clear();\n\t}\n\n\tstatus_ = RequestPending;"
+  - id: reuse-buffer-fence-distinction
+    topic: lifetime
+    kind: flow
+    title: 버퍼 재사용과 펜스 권고
+    question: ReuseBuffers가 재사용하는 대상과 펜스 사용 시 권고는 무엇입니까?
+    nodes:
+    - id: flag
+      label: ReuseBuffers
+      label_en: ReuseBuffers
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: \var Request::ReuseBuffers
+    - id: buffers
+      label: 앞서 addBuffer로 넣은 버퍼 재사용
+      label_en: Reuse buffers previously added by addBuffer
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Reuse the buffers that were previously added by addBuffer()
+    - id: fences
+      label: 연결된 펜스는 재사용하지 않음
+      label_en: Associated fences are not reused
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Fences associated with the buffers are not reused.
+    - id: advice
+      label: 펜스를 쓰면 이 플래그를 피하도록 권고
+      label_en: Should not use this flag with fences
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: This flag should not be used if fences are used.
+    edges:
+    - from: flag
+      to: buffers
+      label: 플래그의 재사용 범위
+      label_en: Flag reuse scope
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: buffers
+      to: fences
+      label: 버퍼와 펜스의 범위 구분
+      label_en: Distinguish buffer and fence reuse
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: fences
+      to: advice
+      label: API의 should not 권고
+      label_en: API should-not recommendation
+      evidence:
+      - source: lifetime/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
   pipeline-requests:
   - id: queue-gates
     topic: queue

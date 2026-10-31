@@ -4,7 +4,12 @@ import json
 import hashlib
 import html
 import re
+import os
 from .site_localization import source_hash, display_strings, KOREAN
+from .execution_lock import locked
+from .validation_execution import staged
+from .validation_stage import current, load_json, read_bytes
+from .state_io import save
 
 def diagram_translations(directory):
     """Keep visible labels consistent with the graph's declared English edition."""
@@ -24,6 +29,8 @@ def diagram_translations(directory):
                 values[source] = translated
     return values
 
+@locked('translation')
+@staged
 def prepare_catalog(config, destination: Path, *, translate: bool = False, replay_http: bool = False) -> dict:
     """Prepare through the same path in CLI runs and isolated pipeline trials."""
     import copy
@@ -31,7 +38,8 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
     from .export_site import _render_site
     cfg = copy.deepcopy(config)
     cfg.raw.setdefault('site', {}).pop('english_catalog', None)
-    previous = json.loads(destination.read_text(encoding='utf-8')) if destination.exists() else {}
+    original = read_bytes(destination, optional=True)
+    previous = load_json(destination) if original is not None else {}
     cfg.build_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.translation-', dir=cfg.build_dir) as temporary:
         # Private Korean rendering discovers strings for the not-yet-created
@@ -91,6 +99,13 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
         'retain translations with recorded lineage; changed code, location, scope or subjects require retranslation.')
     translation_agent = None
     if translate:
+        # Rendering can retain the original figure-generation profile while
+        # new translations use an independently selected CLI transport.
+        profile = config.paths.get('translation_profile')
+        if profile is not None:
+            from dataclasses import replace
+            from .config import load
+            cfg = replace(cfg, agent=load(profile).agent)
         from .translation import translate_missing
         if replay_http:
             from .llm import Agent
@@ -98,8 +113,17 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
             directory = cfg.build_dir / 'translation-prompts'
             translation_agent = Archive(directory / 'calls', cfg.agent).reviewer(Agent(cfg.agent, directory))
         catalog = translate_missing(cfg, catalog, translation_agent)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    inputs = current()
+    inputs.verify()
+    def rollback():
+        if original is None:
+            destination.unlink(missing_ok=True)
+        else:
+            destination.write_bytes(original)
+    inputs.rollbacks.append(rollback)
+    save(destination, catalog)
+    expected = (json.dumps(catalog, ensure_ascii=False, indent=2)+'\n').replace('\n', os.linesep).encode('utf-8')
+    inputs.produced(destination, expected)
     return {'pages': len(pages), 'strings': len(units),
             'missing_translations': sum(not value for value in catalog['strings'].values()),
             'human_review': 'pending',

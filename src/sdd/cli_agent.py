@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import re
 from contextlib import contextmanager
 from .trial_workspace import is_link
 from .cli_schema import schema_bytes, schema_hash, validate_original
@@ -35,9 +36,11 @@ def run(argv, *, cwd, prompt, timeout, env=None):
                             stderr=subprocess.PIPE, text=True, encoding='utf-8',
                             env=env, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
                             start_new_session=os.name != 'nt')
+    from .execution_lock import worker
+    worker(proc.pid)
     try:
         stdout, stderr = proc.communicate(prompt, timeout=timeout)
-    except subprocess.TimeoutExpired as exc:
+    except BaseException as exc:
         if os.name == 'nt':
             subprocess.run(['taskkill', '/PID', str(proc.pid), '/T', '/F'],
                            capture_output=True, check=False)
@@ -49,9 +52,13 @@ def run(argv, *, cwd, prompt, timeout, env=None):
                 pass  # The timed-out process can exit before group cleanup.
         proc.kill()
         try:
-            proc.communicate(timeout=5)
+            partial_out, partial_err = proc.communicate(timeout=5)
+            if not isinstance(exc, subprocess.TimeoutExpired):
+                exc.stdout, exc.stderr = partial_out, partial_err
         except subprocess.TimeoutExpired:
             pass
+        if not isinstance(exc, subprocess.TimeoutExpired):
+            raise
         failure = RuntimeError('CLI 실행 시간이 초과됐습니다. 다른 실행기로 대체하지 않습니다.')
         failure.stdout, failure.stderr = exc.stdout or b'', exc.stderr or b''
         raise failure from None
@@ -211,6 +218,16 @@ def chat(cfg, system, user, schema, dump_dir):
         parent.mkdir(parents=True, exist_ok=True)
     with call_workspace(parent) as (work, cleanup):
         env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1', 'NO_COLOR': '1'}
+        call_started = time.monotonic()
+        try:
+            if len(argv) == 1:
+                version = subprocess.run([*argv, '--version'], cwd=work, input='', capture_output=True,
+                                         text=True, encoding='utf-8', timeout=min(cfg.timeout_sec, 15), env=env)
+                cli_version = version.stdout.strip()[:1024] if not version.returncode else 'unavailable'
+            else:
+                cli_version = 'unavailable: custom command wrapper'
+        except (OSError, subprocess.TimeoutExpired):
+            cli_version = 'unavailable'
         if cfg.runner == 'codex' and schema is not None:
             (work / 'response-schema.json').write_bytes(schema_bytes(schema))
         argv += arguments(cfg, schema)
@@ -219,16 +236,22 @@ def chat(cfg, system, user, schema, dump_dir):
             env['OPENCODE_CONFIG_CONTENT'] = json.dumps({'permission': {'*': 'deny'},
                                                         'instructions': [], 'share': 'disabled'})
         try:
-            result = run(argv, cwd=work, prompt=prompt, timeout=cfg.timeout_sec, env=env)
-        except RuntimeError as exc:
+            remaining = cfg.timeout_sec-(time.monotonic()-call_started)
+            if remaining <= 0:
+                raise RuntimeError('CLI 실행 시간이 초과됐습니다. 버전 확인 이후 남은 실행 시간이 없습니다.')
+            result = run(argv, cwd=work, prompt=prompt, timeout=remaining, env=env)
+        except BaseException as exc:
             if dump_dir:
                 for suffix in ('stdout', 'stderr'):
                     value = getattr(exc, suffix, b'')
                     if isinstance(value, bytes):
                         value = value.decode('utf-8', errors='replace')
                     (parent / (work.name + '.' + suffix + '.txt')).write_text(value, encoding='utf-8')
+                failure_status = ('interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else
+                                  'timeout' if '초과' in str(exc) or isinstance(exc, subprocess.TimeoutExpired) else 'cli-failure')
                 (parent / (work.name + '.failure.json')).write_text(json.dumps({
-                    'runner': cfg.runner, 'status': 'timeout', 'error': str(exc)}), encoding='utf-8')
+                    'runner': cfg.runner, 'status': failure_status,
+                    'model': cfg.model, 'arguments': argv[1:], 'cli_version': cli_version, 'error': str(exc)}), encoding='utf-8')
             raise
         # Preserve raw output locally even when a CLI exits nonzero or emits bad JSON.
         if dump_dir:
@@ -236,7 +259,13 @@ def chat(cfg, system, user, schema, dump_dir):
             raw.write_text(result.stdout, encoding='utf-8', newline='\n')
             (parent / (work.name + '.stderr.txt')).write_text(result.stderr, encoding='utf-8', newline='\n')
         if result.returncode:
-            raise RuntimeError(f'{cfg.runner} CLI가 실패했습니다 (exit {result.returncode}). 로컬 실행 기록을 확인하세요. 다른 실행기로 대체하지 않습니다.')
+            limited = bool(re.search(r'usage.?limit|rate.?limit|quota|사용량', result.stdout+'\n'+result.stderr, re.I))
+            status = 'usage-limit' if limited else 'cli-failure'
+            if dump_dir:
+                (parent/(work.name+'.failure.json')).write_text(json.dumps(dict(
+                    runner=cfg.runner, model=cfg.model, arguments=argv[1:],
+                    cli_version=cli_version, status=status, exit_code=result.returncode)), encoding='utf-8')
+            raise RuntimeError(f'{cfg.runner} CLI가 실패했습니다 (exit {result.returncode}, {status}). 로컬 실행 기록을 확인하세요. 다른 실행기로 대체하지 않습니다.')
         try:
             response, provider = decode_response(cfg.runner, result.stdout)
             if cfg.runner == 'codex':
@@ -253,6 +282,7 @@ def chat(cfg, system, user, schema, dump_dir):
                     'stdout_sha256': hashlib.sha256(result.stdout.encode()).hexdigest(),
                     'prompt_sha256': hashlib.sha256(prompt.encode()).hexdigest(),
                     'provider': provider}
+        metadata['cli_version'] = cli_version
         if dump_dir:
             metadata['stdout_path'] = str(raw.relative_to(dump_dir).as_posix())
         if cfg.runner == 'codex':

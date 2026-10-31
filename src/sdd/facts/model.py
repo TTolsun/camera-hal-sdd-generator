@@ -113,6 +113,11 @@ class KnowledgeModel:
     # ---- 조회 ------------------------------------------------------------
 
     def citations(self) -> set[str]:
+        from ..validation_stage import current
+        inputs = current()
+        return inputs.memo(('citations', id(self)), self._citations) if inputs is not None else self._citations()
+
+    def _citations(self) -> set[str]:
         """LLM 출력이 인용해도 되는 file:line 집합."""
         out: set[str] = set()
         for record in self.evidence.values():
@@ -166,12 +171,15 @@ class KnowledgeModel:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8", newline="\n") as f:
             json.dump(self.to_dict(), f, ensure_ascii=False, indent=1)
+        self._loaded_input = (path.resolve(), path.read_bytes())
 
     @classmethod
     def load(cls, path: Path) -> "KnowledgeModel":
-        with path.open("r", encoding="utf-8") as f:
-            d = json.load(f)
-        return cls.from_dict(d)
+        from ..validation_stage import read_bytes, load_json
+        raw = read_bytes(path)
+        model = cls.from_dict(load_json(path))
+        model._loaded_input = (path.resolve(), raw)
+        return model
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "KnowledgeModel":

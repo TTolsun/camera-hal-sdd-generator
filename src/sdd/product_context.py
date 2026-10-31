@@ -17,6 +17,7 @@ import yaml
 from jsonschema import Draft202012Validator
 
 from .reader_scope import TEXT, obj
+from .validation_stage import load_yaml
 
 ID = {'type': 'string', 'pattern': '^[a-z][a-z0-9_-]{0,63}$'}
 STRINGS = {'type': 'array', 'uniqueItems': True, 'items': TEXT}
@@ -68,7 +69,7 @@ def input_paths(cfg):
     if not isinstance(options, dict) or not options.get('file'):
         return []
     path = cfg.paths.get('products_file') or _local(cfg.root, options['file'])
-    data = yaml.safe_load(path.read_text(encoding='utf-8'))
+    data = load_yaml(path)
     errors = list(Draft202012Validator(SCHEMA).iter_errors(data))
     if errors:
         raise ValueError('Product input: ' + errors[0].message)
@@ -88,7 +89,7 @@ def bind(cfg, sections):
     if not isinstance(options, dict) or set(options) != {'file'} or not isinstance(options['file'], str):
         raise ValueError('Product topics require products.file (local YAML).')
     path = cfg.paths.get('products_file') or _local(cfg.root, options['file'])
-    data = yaml.safe_load(path.read_text(encoding='utf-8'))
+    data = load_yaml(path)
     errors = list(Draft202012Validator(SCHEMA).iter_errors(data))
     if errors:
         raise ValueError('Product input: ' + errors[0].message)

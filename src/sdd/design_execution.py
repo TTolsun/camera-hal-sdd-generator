@@ -44,30 +44,16 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
     store = None
     if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
-        from .cli_checkpoint import (Capture, UnitStore, execution_identity, validation_policy,
-                                     validation_model, style_policy, checksum)
-        from .grounding import policy_hash
-        identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,
-                        request=dict(system=system, user=base_user, response_schema=schema),
-                        execution=execution_identity(cfg.agent, schema),
-                        prompt_policy=unit_policy, validation_policy=validation_policy(),
-                        validation_model=validation_model(model),
-                        validation_answers=checksum(answers),
-                        style_policy=style_policy(cfg),
-                        grounding_policy=policy_hash() if grounding else None,
-                        revision=cfg.review.design_revision)
-        store = UnitStore(cfg, identity)
+        from .cli_checkpoint import Capture
+        from .design_checkpoint import store_for
+        store, identity = store_for(cfg, model, section, topic, prompt, grounding, answers, schema=schema)
         agent.unit(tag, 'running', input_sha256=store.path.stem,
                    dependencies={key: value for key, value in identity.items() if key not in ('request', 'topic')})
         cached_unit = store.read()
         if cached_unit is not None:
             saved, reviewer = cached_unit
-            grounding_changed = saved['identity'].get('grounding_policy') != identity['grounding_policy']
-            validation_changed = saved['identity'].get('validation_policy') != identity['validation_policy']
-            validation_changed = validation_changed or saved['identity'].get('validation_model') != identity['validation_model']
-            validation_changed = validation_changed or saved['identity'].get('validation_answers') != identity['validation_answers']
-            validation_changed = validation_changed or (
-                saved['identity'].get('topic', {}).get('answer_contract') != topic.get('answer_contract'))
+            from .design_checkpoint import changes
+            grounding_changed, validation_changed = changes(saved['identity'], identity)
             review_agent = Capture(agent) if grounding_changed else reviewer
             try:
                 statements = _validate_unit_response(cfg, model, review_agent, section, topic,

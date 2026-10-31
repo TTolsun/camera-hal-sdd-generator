@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "model_calls": 0,
+  "contracts": [
+    {
+      "contract": "request-completion",
+      "sha256": "cd25c2a755032eedc31be48336690259e3404e8cc04a80e5f00bf1303f3e8e43",
+      "claims": 105,
+      "sources": 30,
+      "byte_identical": true
+    },
+    {
+      "contract": "stopping-cancellation",
+      "sha256": "dda2f220c4b5faf698f7219285e4f3a07d468475a66c9c1903b2aff1ba96c536",
+      "claims": 81,
+      "sources": 25,
+      "byte_identical": true
+    },
+    {
+      "contract": "ownership-reuse",
+      "sha256": "b5440b1446d7215bc67e45289193575931c21924361b38ca452e1da245c0b9b3",
+      "claims": 63,
+      "sources": 19,
+      "byte_identical": true
+    },
+    {
+      "contract": "callbacks-synchronization",
+      "sha256": "85c423756ae9eb85a1fb34311c453849e6599cf9fe7b75765a655264b21bb775",
+      "claims": 100,
+      "sources": 36,
+      "byte_identical": true
+    },
+    {
+      "contract": "scenario-analysis",
+      "sha256": "33e7f87d68b4fe2b492890b027aaee9a1ffd997d11508fbf244e3484c0a9415c",
+      "claims": 112,
+      "sources": 40,
+      "byte_identical": true
+    }
+  ],
+  "original_policy": "0efdef9e53f33196026eb8f1c3346467a0fda85a544493e43eee58bbf2c9a6f3",
+  "current_policy": "117d43b6ee3c25151c1e447979ae8399184bf1c32edd59099cf70f99387cd5c7",
+  "current_policy_requires_independent_review": true
+}

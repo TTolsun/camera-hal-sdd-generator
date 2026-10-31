@@ -10,6 +10,7 @@ from .config import AgentConfig
 from .cli_agent import RUNNERS, build_prompt as assemble_prompt, decode_response, arguments as invocation_arguments
 from .cli_schema import schema_hash, validate_original
 from .trial_workspace import is_link
+from .validation_stage import read_bytes
 
 PromptBuilder = Callable[[str, str, dict | None], str]
 StdoutDecoder = Callable[[str, str], tuple[str, dict]]
@@ -94,7 +95,7 @@ def verify_cli_receipt(request: dict, response: str, receipt: dict, calls: Path,
         raise ValueError('CLI prompt hash mismatch')
     path = _stdout_file(calls, metadata.get('stdout_path'))
     try:
-        stdout = path.read_bytes().decode('utf-8')
+        stdout = read_bytes(path).decode('utf-8')
     except (OSError, UnicodeError) as exc:
         raise ValueError('CLI stdout archive is missing or unreadable') from exc
     if metadata.get('stdout_sha256') != _digest(stdout):
