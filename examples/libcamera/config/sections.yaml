@@ -6061,6 +6061,9 @@ sections:
         required_terms:
         - - 호출자
         - - 확인
+        reject_patterns:
+        - pattern: 따라서
+          message: 앞 질문의 조정 결과를 반복하지 말고 소스에 명시된 호출자의 확인 의무만 한 문장으로 설명하세요. 근거에 없는 인과 표현을 덧붙이지 마세요.
     - id: validation-result
       question: 이 validate 호출의 결과를 Valid와 비교하는 조건과, Valid가 아닐 때 반환하는 오류 코드를 함께 기록하는
         조사 항목을 한 문단으로 제안하세요. 같은 분기를 결과 확인과 오류 확인으로 되풀이하지 마세요.
