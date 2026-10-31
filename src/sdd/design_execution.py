@@ -46,7 +46,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
         from .cli_checkpoint import Capture
         from .design_checkpoint import store_for
-        store, identity = store_for(cfg, model, section, topic, prompt, grounding, answers)
+        store, identity = store_for(cfg, model, section, topic, prompt, grounding, answers, schema=schema)
         agent.unit(tag, 'running', input_sha256=store.path.stem,
                    dependencies={key: value for key, value in identity.items() if key not in ('request', 'topic')})
         cached_unit = store.read()

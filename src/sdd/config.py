@@ -260,17 +260,20 @@ class Config:
 
     # Resolve on access: existing integrations edit raw when cloning a trial or
     # disabling localization. A cached second copy would silently become stale.
+    def _option(self, name, default=None):
+        return self.raw.get(name, default)
+
     @property
     def review(self) -> ReviewConfig:
-        return _settings(ReviewConfig, self.raw.get('review') or {})
+        return _settings(ReviewConfig, self._option('review') or {})
 
     @property
     def site(self) -> SiteConfig:
-        return _settings(SiteConfig, self.raw.get('site') or {})
+        return _settings(SiteConfig, self._option('site') or {})
 
     @property
     def update(self) -> UpdateConfig:
-        return _settings(UpdateConfig, self.raw.get('update') or {})
+        return _settings(UpdateConfig, self._option('update') or {})
 
     @property
     def visuals(self) -> VisualsConfig:
@@ -291,7 +294,15 @@ class Config:
 
     @property
     def documentation(self) -> DocumentationConfig:
-        return DocumentationConfig(self.raw.get('documentation', {}))
+        return DocumentationConfig(self._option('documentation', {}))
+
+    @property
+    def publication(self) -> dict:
+        options = self._option('publication') or {}
+        allowed = {'baseline_config', 'operation_id', 'budget', 'allowed_contract_changes', 'shared_labels', 'reports'}
+        if not isinstance(options, dict) or set(options) - allowed:
+            raise ValueError('Invalid publication settings; use baseline_config, operation_id, budget, allowed_contract_changes, shared_labels or reports')
+        return options
 
     def diagram_policy(self, section):
         # Section overrides and false/0 are retained verbatim. Graph validity
@@ -343,7 +354,7 @@ class Config:
 
     def _section_key(self):
         return ('sections', str(self.sections_file), str(self.scenarios_file),
-                str(self.root), str(self.paths.get('products_file')), repr(self.raw.get('products')))
+                str(self.root), str(self.paths.get('products_file')), repr(self._option('products')))
 
     def section(self, sid):
         from .validation_stage import current

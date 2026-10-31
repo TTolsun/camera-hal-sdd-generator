@@ -1,13 +1,12 @@
 """Stage-scoped input bytes and pure computations, never a verdict cache."""
 from contextlib import contextmanager
-from contextlib import nullcontext
 from contextvars import ContextVar
 from copy import deepcopy
 from functools import wraps
 from dataclasses import asdict
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import yaml
 
@@ -41,10 +40,15 @@ class Inputs:
             if self.read(path) != raw:
                 raise InputChanged(f'Facts changed since load: {path}; reload facts')
         if model is not None and cfg.source_root.exists():
-            from .trial_workspace import contained_path
             for record in model.evidence.values():
                 if record.get('file') and not record['file'].startswith('@') and record.get('kind') != 'product':
-                    self.read(contained_path(cfg.source_root, record['file']), optional=True)
+                    name = record['file']
+                    relative = PurePosixPath(name)
+                    target = (cfg.source_root/name).resolve()
+                    if (relative.is_absolute() or '..' in relative.parts or ':' in name or '\\' in name
+                            or not target.is_relative_to(cfg.source_root.resolve())):
+                        raise ValueError('Source inputs must stay inside the configured source root')
+                    self.read(target, optional=True)
         git = cfg.source_root/'.git'
         if git.exists():
             if git.is_file():
@@ -190,9 +194,7 @@ def staged(function):
             if configured:
                 model = args[1] if len(args) > 1 and hasattr(args[1], 'evidence') else None
                 inputs.pin(args[0], model)
-            from .generation_run import observe
-            with observe(args[0], function.__name__) if configured and function.__name__ != 'audit' else nullcontext():
-                return function(*args, **kwargs)
+            return function(*args, **kwargs)
     return wrapped
 
 

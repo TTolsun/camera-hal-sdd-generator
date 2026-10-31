@@ -2,13 +2,16 @@
 from .design_request import _unit_request
 from .design_response import response_schema
 
+_UNSET = object()
 
-def store_for(cfg, model, section, topic, prompt, grounding, answers):
+
+def store_for(cfg, model, section, topic, prompt, grounding, answers, *, schema=_UNSET):
     if not (cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint):
         return None, None
     focus, system, unit_policy = prompt
     request = _unit_request(model, section, topic, focus)
-    schema = response_schema(topic, request.passages)
+    if schema is _UNSET:
+        schema = response_schema(topic, request.passages)
     from . import cli_checkpoint as checkpoints
     from .grounding import policy_hash
     identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,

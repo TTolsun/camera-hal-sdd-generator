@@ -12,7 +12,8 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlsplit
 
 from .config import Config
-from .validation_stage import staged, verify as verify_inputs, current
+from .validation_stage import verify as verify_inputs, current
+from .validation_execution import staged
 
 MANIFEST = "site-manifest.json"
 
@@ -131,6 +132,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "generated_design.py", code_root / "generated_visuals.py",
                                             code_root / "config.py", code_root / "design_types.py",
                                             code_root / "validation_stage.py", code_root / "publication_plan.py",
+                                            code_root / "validation_execution.py",
                                             code_root / "execution_lock.py", code_root / "generation_run.py",
                                             code_root / "consistency.py", code_root / "consistency_sources.py",
                                             code_root / "consistency_analysis.py", code_root / "cli_schema.py",

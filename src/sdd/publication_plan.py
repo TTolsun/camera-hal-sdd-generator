@@ -6,7 +6,8 @@ import re
 
 from .config import load, section_output
 from .state_io import save
-from .validation_stage import staged, current, load_json, read_bytes, read_text
+from .validation_stage import current, load_json, read_bytes, read_text
+from .validation_execution import staged
 
 
 def _requirements(sections):
@@ -29,7 +30,7 @@ def _requirements(sections):
 
 
 def check_baseline(cfg):
-    options = cfg.raw.get('publication') or {}
+    options = cfg.publication
     if not options.get('baseline_config'):
         return None
     baseline = load(cfg.root/options['baseline_config'])
@@ -71,7 +72,7 @@ def check_catalog(cfg):
     # arbitrary runtime sentences or a hardcoded public project's vocabulary.
     rules = {key: dict(require=r'\bsection\b', reject=r'\bclause\b') for key in strings
              if key.startswith('절 전체 근거')}
-    rules.update((cfg.raw.get('publication') or {}).get('shared_labels', {}))
+    rules.update(cfg.publication.get('shared_labels', {}))
     for source, rule in rules.items():
         value = strings.get(source)
         if not isinstance(value, str) or re.search(rule['reject'], value, re.I):
@@ -83,7 +84,7 @@ def check_catalog(cfg):
 def check_reports(cfg, gate):
     """Require declared reports at their producing boundary, before copying."""
     checked = []
-    for row in (cfg.raw.get('publication') or {}).get('reports', []):
+    for row in cfg.publication.get('reports', []):
         if not all(row.get(key) for key in ('path', 'gate', 'producer', 'sha256', 'bindings')):
             raise ValueError('Publication reports need path/gate/producer/sha256/bindings')
         if row['gate'] != gate:

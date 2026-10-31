@@ -70,8 +70,8 @@ class Execution:
         self.path = cfg.build_dir / 'generation-runs' / (uuid.uuid4().hex + '.json')
         self.current = None
         self._mutex = threading.RLock()
-        self.operation = (cfg.raw.get('publication') or {}).get('operation_id')
-        self.operation_limits = (cfg.raw.get('publication') or {}).get('budget', {})
+        self.operation = cfg.publication.get('operation_id')
+        self.operation_limits = cfg.publication.get('budget', {})
         if (not isinstance(self.operation_limits, dict) or set(self.operation_limits) - {'max_calls', 'max_seconds'}
                 or any(type(v) is not int or v < 0 for v in self.operation_limits.values())):
             raise ValueError('publication.budget accepts explicit nonnegative max_calls/max_seconds')
