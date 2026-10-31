@@ -1274,8 +1274,11 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
     assert len(designs) == 25
-    # #164 moves duplicate overview queue limits to the existing request detail.
-    assert sum(len(section['design_topics']) for section in designs) == 80
+    # The bounded callback observation is a measurement topic, not a fixed answer.
+    assert sum(len(section['design_topics']) for section in designs) == 81
+    from sdd.config import load
+    profile = Path(__file__).parents[1] / 'examples/libcamera/sdd.yaml'
+    bound = {section['id']: section for section in load(profile).sections()}
     by_id = {section['id']: section for section in designs}
     for page in ('vendor-overview', 'overview'):
         assert 'queue-limit' not in {t['id'] for t in by_id[page]['design_topics']}
@@ -1284,7 +1287,9 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     assert 'queue-limit' in {t['id'] for t in by_id['pipeline-requests']['design_topics']}
     for section in designs:
         assert section['design_generation'] == 'llm'
-        assert not configuration_errors(section)
+        # Product-only measurement topics receive authenticated material IDs
+        # through the same binding step used by generation/publication.
+        assert not configuration_errors(bound[section['id']])
         assert all('statements' not in topic for topic in section['design_topics'])
         assert all('sha256' not in source for topic in section['design_topics'] for source in topic['sources'])
 
