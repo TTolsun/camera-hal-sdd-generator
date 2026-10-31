@@ -4840,16 +4840,25 @@ sections:
         - - activeStreams_
         - - -EINVAL
     - id: completion-signal
-      question: queueRequest의 성공 반환과 requestCompleted 완료 통지를 구분하세요. 이 함수가 큐에 넣자마자
-        완료 신호를 직접 발행한다고 쓰지 마세요.
+      question: Camera::queueRequest()가 ConnectionTypeQueued를 지정한 invokeMethod 호출 뒤 0을
+        반환한다는 구현과, requestCompleted 신호가 별도로 요청 완료를 알린다는 API 설명을 두 문장 이내로 구분하세요. 0을 장치
+        캡처 큐잉 성공을 확인한 결과로 설명하지 마세요.
       sources:
+      - queue-code
       - queue
       answer_contract:
-        basis: description
+        basis: implementation
         required_terms:
         - - queueRequest
+        - - ConnectionTypeQueued
+        - - invokeMethod
+        - - '0'
         - - requestCompleted
         - - 완료
+        reject_patterns:
+        - pattern: 큐잉.{0,8}성공|큐에.{0,12}성공
+          message: 0은 queued invokeMethod 호출 뒤의 반환입니다. 캡처 큐잉 성공이라는 조건으로 바꾸지 마세요.
+      max_statements: 1
   - id: lifetime
     title: 소유권과 재사용
     question: 요청 소유권, addBuffer()의 버퍼 참조 유효 기간, reuse()의 상태·controls·metadata 초기화와
