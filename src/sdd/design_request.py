@@ -166,6 +166,9 @@ def _unit_request(model, section, topic, focused_system):
                'topic': topic['question'],
                'requirements': {key: (topic['question'] if '_part_id' in topic else requirements[key])
                                 for key in topic['covers']}}
+    guidance = focused_prompt.writing_instructions(topic)
+    if guidance:
+        request['writing_instructions'] = guidance
     if 'answer_contract' in topic:
         request['answer_contract'] = topic['answer_contract']
     instruction = (

@@ -15,6 +15,51 @@ from sdd.impact import compute
 
 
 @pytest.mark.parametrize('focused', [False, True])
+def test_writer_guidance_reaches_model_without_replacing_reader_question(generated, focused):
+    from sdd.generated_design import _unit_request
+    section, model, _, _ = generated
+    topic = copy.deepcopy(section['design_topics'][0])
+    before = _unit_request(model, section, topic, 'focused' if focused else None)
+    topic['prompt'] = 'WRITER_ONLY: keep observation proposals concise.'
+    after = _unit_request(model, section, topic, 'focused' if focused else None)
+    assert topic['question'] in after.user
+    assert topic['prompt'] in after.user and topic['prompt'] not in before.user
+    assert after.sources == before.sources and after.passages == before.passages
+
+
+def test_writer_guidance_invalidates_reuse_but_is_not_reader_prose(generated, tmp_cfg):
+    from sdd.document_metadata import split_frontmatter
+    from sdd.config import section_output
+    section, model, save, agent = generated
+    Generator(tmp_cfg, model, agent).run()
+    path = tmp_cfg.sdd_dir/section_output(section)
+    old = path.read_text(encoding='utf-8')
+    count = len(agent.calls)
+    section['design_topics'][0]['prompt'] = 'WRITER_ONLY: avoid repetitive framing.'
+    save()
+    with pytest.raises(ValueError, match='재생성'):
+        verify(model, section, old, cfg=tmp_cfg)
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) > count
+    body = split_frontmatter(path.read_text(encoding='utf-8'))[1]
+    assert 'WRITER_ONLY' not in body
+    verify(model, section, path.read_text(encoding='utf-8'), cfg=tmp_cfg)
+
+
+@pytest.mark.parametrize('focused', [False, True])
+@pytest.mark.parametrize('guidance', ['', None, 7])
+def test_invalid_writer_guidance_fails_before_inference(generated, focused, guidance):
+    from sdd.generated_design import _unit_request
+    section, model, _, agent = generated
+    topic = copy.deepcopy(section['design_topics'][0])
+    topic['prompt'] = guidance
+    count = len(agent.calls)
+    with pytest.raises(ValueError, match='prompt'):
+        _unit_request(model, section, topic, 'focused' if focused else None)
+    assert len(agent.calls) == count
+
+
+@pytest.mark.parametrize('focused', [False, True])
 @pytest.mark.parametrize('excerpt', ['if (pending())\n    break;', 'data->queuedRequests_.push_back(request);'])
 def test_scoped_draft_receives_verified_enclosing_context(generated, focused, excerpt):
     from sdd.generated_design import _unit_request
