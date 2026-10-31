@@ -12,6 +12,7 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlsplit
 
 from .config import Config
+from .validation_stage import staged, verify as verify_inputs, current
 
 MANIFEST = "site-manifest.json"
 
@@ -75,6 +76,7 @@ def verify_site(root: Path, manifest: bool = True) -> dict:
     return {"html_pages": len(pages), "broken_links": 0, "manifest_verified": manifest}
 
 
+@staged
 def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
     out = out.resolve()
     source = cfg.sdd_dir.resolve()
@@ -128,7 +130,12 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "contract_render.py", code_root / "markdown_text.py",
                                             code_root / "generated_design.py", code_root / "generated_visuals.py",
                                             code_root / "config.py", code_root / "design_types.py",
+                                            code_root / "validation_stage.py", code_root / "publication_plan.py",
+                                            code_root / "execution_lock.py", code_root / "generation_run.py",
+                                            code_root / "consistency.py", code_root / "consistency_sources.py",
+                                            code_root / "consistency_analysis.py", code_root / "cli_schema.py",
                                             code_root / "design_request.py", code_root / "design_response.py",
+                                            code_root / "design_checkpoint.py",
                                             code_root / "design_execution.py", code_root / "design_trials.py",
                                             code_root / "design_compat.py",
                                             Path(__file__)]}
@@ -155,6 +162,20 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                     raise RuntimeError(f"Site output parent is not a directory: {parent}")
                 if parent == out:
                     break
+        verify_inputs()
+        # Keep original owned bytes until the outermost validation accepts its
+        # inputs. Even an edit during destination copying rolls back the site.
+        backups = {rel: owned_path(out, rel).read_bytes() if owned_path(out, rel).is_file() else None
+                   for rel in previous['outputs'].keys() | outputs.keys() | {MANIFEST}}
+        def rollback():
+            for rel, raw in backups.items():
+                target = owned_path(out, rel)
+                if raw is None:
+                    target.unlink(missing_ok=True)
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(raw)
+        current().rollbacks.append(rollback)
         out.mkdir(parents=True, exist_ok=True)
         for rel in outputs:
             target = owned_path(out, rel)

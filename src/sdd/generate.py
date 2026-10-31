@@ -34,6 +34,7 @@ from .llm import AgentError
 from . import generated_design, routes
 from .evidence import contract_text, fingerprint, requires_fingerprint, topic_blocks
 from .semantic import relation_facts, structural_text
+from .execution_lock import locked
 
 _FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
 
@@ -109,20 +110,21 @@ class Generator:
 
     # ---- 진입점 ------------------------------------------------------------
 
+    @locked('generation')
     def run(self, section_ids: list[str] | None = None, impact: ImpactReport | None = None) -> list[Path]:
         from .generation_run import Execution
         original = self.agent
         self.agent = Execution(self.cfg, original)
         self.narrator.agent = self.agent
         try:
-            return self._run(section_ids, impact)
+            with self.agent.track('generation'):
+                return self._run(section_ids, impact)
         finally:
             self.agent.persist()
             self.agent = original
             self.narrator.agent = original
 
-    def _run(self, section_ids, impact):
-        written: list[Path] = []
+    def _prepare(self, section_ids, impact):
         # Validate every selected contract before replacing any manuscript.
         selected = [s for s in self.cfg.sections()
                     if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)]
@@ -174,6 +176,16 @@ class Generator:
                 previous_path.read_text(encoding='utf-8') if previous_path.exists() else None)
             if artifact:
                 self.generated_visuals[sec['id']] = artifact
+        return selected
+
+    def _run(self, section_ids, impact):
+        from .validation_stage import stage
+        from .publication_plan import prepare
+        with stage() as inputs:
+            inputs.pin(self.cfg, self.model)
+            prepare(self.cfg, self.model, section_ids, impact)
+            self._prepare(section_ids, impact)
+        written: list[Path] = []
         for sec in self.cfg.sections():
             kind = sec.get("kind", "prose")
             if section_ids and sec["id"] not in section_ids:

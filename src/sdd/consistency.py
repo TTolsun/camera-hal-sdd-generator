@@ -21,6 +21,8 @@ from .cli_checkpoint import Capture, UnitStore
 from .cli_agent import arguments
 from .consistency_sources import source as evidence_source, citation_refs, canonicalize, contains_statement
 from .consistency_analysis import paragraph_refs
+from .validation_stage import staged, load_yaml, load_json, read_text, current
+from .execution_lock import locked
 
 STATUSES = ('compatible', 'contradiction', 'ambiguous', 'insufficient-evidence')
 ASSESSMENT = 'automatic model review; not human approval'
@@ -82,7 +84,9 @@ SYSTEM = (
 def policy_hash():
     root = Path(__file__).parent
     parts = {name: hashlib.sha256((root/name).read_bytes()).hexdigest()
-             for name in ('consistency.py', 'consistency_sources.py', 'consistency_analysis.py', 'next_steps.py')}
+             for name in ('consistency.py', 'consistency_sources.py', 'consistency_analysis.py', 'next_steps.py',
+                          'validation_stage.py', 'consistency_profile.py', 'document_metadata.py',
+                          'site_localization.py', 'config.py', 'cli_schema.py')}
     return canonical_request_hash(parts)
 
 
@@ -90,7 +94,7 @@ def groups(cfg):
     path = cfg.paths.get('consistency_file')
     if path is None:
         return []
-    data = yaml.safe_load(path.read_text(encoding='utf-8'))
+    data = load_yaml(path)
     rows = data.get('contracts') if isinstance(data, dict) else None
     if not isinstance(rows, list) or not rows:
         raise ValueError('consistency_file needs a nonempty contracts list')
@@ -107,13 +111,25 @@ def groups(cfg):
 
 
 def request(cfg, model, group):
+    inputs = current()
+    if inputs is None:
+        return _request(cfg, model, group)
+    # Execution identity is independently checked at the receipt boundary.
+    key = ('consistency-request', id(model), canonical_request_hash(dict(
+        group=group, sections=cfg.sections(), scenarios=cfg.scenarios(),
+        manuscripts=str(cfg.sdd_dir.resolve()), templates=str(cfg.templates_dir.resolve()),
+        catalog=str((cfg.root/cfg.site.english_catalog).resolve()) if cfg.site.english_catalog else None)))
+    return inputs.memo(key, lambda: _request(cfg, model, group))
+
+
+def _request(cfg, model, group):
     claims, sources, all_statements, visible = {}, {}, {}, {}
     excluded_navigation = []
     display = []
     catalog = {}
     site = cfg.site
     if site.english_catalog:
-        catalog = json.loads((cfg.root/site.english_catalog).read_text(encoding='utf-8'))
+        catalog = load_json(cfg.root/site.english_catalog)
         catalog = catalog.get('strings', {})
 
     def displayed(text, name):
@@ -122,7 +138,7 @@ def request(cfg, model, group):
         content, _, _ = _render(text, name, set(group['documents']), model, '', model.meta['source_commit'])
         return ' '.join(' '.join(pair['source'] for pair in display_pairs(content, {})).split())
     for name in group['documents']:
-        text = contained_path(cfg.sdd_dir, name).read_text(encoding='utf-8')
+        text = read_text(contained_path(cfg.sdd_dir, name))
         meta, body = split_frontmatter(text)
         if meta.get('source_commit') != model.meta.get('source_commit'):
             raise ValueError(f'Consistency source commit mismatch: {name}')
@@ -365,6 +381,8 @@ def _review_config(cfg):
     return replace(cfg, agent=load(profile).agent)
 
 
+@staged
+@locked('consistency')
 def audit(cfg, model, agent):
     from .generation_run import Execution
     configured = groups(cfg)
@@ -377,15 +395,31 @@ def audit(cfg, model, agent):
         from .llm import Agent
         agent = Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts')
     agent = agent if isinstance(agent, Execution) else Execution(cfg, agent)
+    with agent.track('contract-audit'):
+        return _audit(cfg, model, agent, configured)
+
+
+def _audit(cfg, model, agent, configured):
+    prepared = [(group, request(cfg, model, group)) for group in configured]
+    prepared = [(group, payload, list(batches(payload, max_input_chars=cfg.agent.max_input_chars)))
+                for group, payload in prepared]
+    keys = [f"consistency_{group['id']}_{index}" for group, _, items in prepared for index in range(len(items))]
+    with agent.document('consistency', keys):
+        return _audit_prepared(cfg, model, agent, prepared)
+
+
+def _audit_prepared(cfg, model, agent, prepared):
     report = dict(schema=1, source_commit=model.meta.get('source_commit'), contracts=[],
                   fresh_batches=0, reused_batches=0, human_review='pending',
                   assessment=ASSESSMENT, comparison_scope=COMPARISON_SCOPE)
     path = cfg.build_dir/'consistency-review.json'
+    current_key = None
     try:
-        for group in configured:
-            payload = request(cfg, model, group)
+        for group, payload, prepared_batches in prepared:
             findings = []
-            for index, batch in enumerate(batches(payload, max_input_chars=cfg.agent.max_input_chars)):
+            for index, batch in enumerate(prepared_batches):
+                current_key = f"consistency_{group['id']}_{index}"
+                agent.unit(current_key, 'running')
                 agent.check_time()
                 store, request_data = review_store(cfg, batch)
                 user = request_data['user']
@@ -398,6 +432,7 @@ def audit(cfg, model, agent):
                     checked = validate(batch, saved['raw'])
                     if checked != saved['statements']:
                         raise ValueError('Consistency checkpoint verdict mismatch')
+                    agent.unit(current_key, 'checkpoint-reused')
                 else:
                     report['fresh_batches'] += 1
                     capture = Capture(agent)
@@ -406,12 +441,15 @@ def audit(cfg, model, agent):
                     store.write(raw, checked, capture)
                     if not capture.receipts:
                         raise ValueError('Consistency review lacks completed CLI receipts')
+                    agent.unit(current_key, 'completed')
                 findings += checked
             report['contracts'].append(dict(id=group['id'], input_sha256=identity(payload),
                 findings=findings, claims=payload['claims'], sources=payload['sources'],
                 source_aliases=payload['source_aliases'], excluded_navigation=payload['excluded_navigation']))
             save(path, report, newline='\n')
     except BaseException as exc:
+        if current_key is not None:
+            agent.unit(current_key, 'failed', error=str(exc))
         report.update(status='incomplete', error=str(exc))
         save(path, report, newline='\n')
         raise
@@ -422,6 +460,7 @@ def audit(cfg, model, agent):
     return report
 
 
+@staged
 def enforce(cfg, model):
     from .consistency_profile import resolve
     cfg = resolve(cfg, model, groups, identity, request)
@@ -429,8 +468,15 @@ def enforce(cfg, model):
     if not configured:
         return
     cfg = _review_config(cfg)
+    from .generation_run import observed
+    execution = observed()
+    with execution.document('consistency-validation', [row['id'] for row in configured]):
+        return _enforce_configured(cfg, model, configured, execution)
+
+
+def _enforce_configured(cfg, model, configured, execution):
     path = cfg.build_dir/'consistency-review.json'
-    report = json.loads(path.read_text(encoding='utf-8'))
+    report = load_json(path)
     if report.get('status') != 'passed' or report.get('source_commit') != model.meta.get('source_commit'):
         raise ValueError('Cross-document contract review failed or is incomplete; run audit-consistency')
     if (report.get('human_review') != 'pending' or report.get('assessment') != ASSESSMENT
@@ -441,6 +487,7 @@ def enforce(cfg, model):
         raise ValueError('Consistency contract set changed; run audit-consistency')
     unresolved = []
     for group in configured:
+        execution.unit(group['id'], 'running')
         payload = request(cfg, model, group)
         row = recorded[group['id']]
         if row.get('input_sha256') != identity(payload):
@@ -462,5 +509,6 @@ def enforce(cfg, model):
             raise ValueError('Confirmed cross-document contract contradiction blocks publication')
         unresolved += [dict(contract=group['id'], **f) for f in checked
                        if f['status'] in ('ambiguous', 'insufficient-evidence')]
+        execution.unit(group['id'], 'checkpoint-revalidated')
     if report.get('unresolved') != unresolved:
         raise ValueError('Consistency unresolved findings changed; run audit-consistency')

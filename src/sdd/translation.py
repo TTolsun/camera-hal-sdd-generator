@@ -90,6 +90,17 @@ def _payload(catalog, sources, *, terms=None):
 
 
 def translate_missing(cfg, catalog, agent=None):
+    from .generation_run import Execution
+    execution = agent if isinstance(agent, Execution) else Execution(
+        cfg, agent or Agent(cfg.agent, cfg.build_dir/'translation-prompts'))
+    with execution.track('translation'), execution.document('translation', catalog['strings']):
+        result = _translate_missing(cfg, catalog, execution)
+        for source, value in result['strings'].items():
+            execution.unit(source, 'manuscript-reused' if value == catalog['strings'][source] else 'completed')
+        return result
+
+
+def _translate_missing(cfg, catalog, agent=None):
     if cfg.agent.kind == 'dry-run':
         raise ValueError('Translation requires an actual LLM response.')
     size = cfg.site.batch_size()

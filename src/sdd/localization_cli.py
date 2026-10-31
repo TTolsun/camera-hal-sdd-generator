@@ -5,6 +5,7 @@ import hashlib
 import html
 import re
 from .site_localization import source_hash, display_strings, KOREAN
+from .execution_lock import locked
 
 def diagram_translations(directory):
     """Keep visible labels consistent with the graph's declared English edition."""
@@ -24,6 +25,7 @@ def diagram_translations(directory):
                 values[source] = translated
     return values
 
+@locked('translation')
 def prepare_catalog(config, destination: Path, *, translate: bool = False, replay_http: bool = False) -> dict:
     """Prepare through the same path in CLI runs and isolated pipeline trials."""
     import copy

@@ -16,6 +16,7 @@ from .cli_provenance import verify_cli_receipt
 from .state_io import save
 from .trial_workspace import contained_path, reject_symlinks
 from .llm import AgentError
+from .validation_stage import current, load_json
 
 
 def checksum(value):
@@ -55,6 +56,13 @@ def validation_policy():
 
 def validation_model(model):
     """Bind validator inputs without redrafting source-identical answers."""
+    inputs = current()
+    if inputs is not None:
+        return inputs.memo(('validation-model', id(model)), lambda: _validation_model(model))
+    return _validation_model(model)
+
+
+def _validation_model(model):
     return checksum(dict(classes={name: item.bases for name, item in model.classes.items()},
                          functions=sorted(model.functions),
                          relations=sorted((r.source, r.target, r.type) for r in model.relations),
@@ -62,7 +70,8 @@ def validation_model(model):
 
 
 def style_policy(cfg):
-    return {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+    from .validation_stage import read_bytes
+    return {path.name: hashlib.sha256(read_bytes(path)).hexdigest()
             for path in sorted(cfg.style_dir.glob('*.md'))}
 
 
@@ -99,14 +108,16 @@ class UnitStore:
         self.path = cfg.build_dir / 'cli-checkpoints' / (checksum(self.draft_identity(identity)) + '.json')
         self.canonical_path = self.path
         self.calls = cfg.build_dir / 'prompts' / 'calls'
+        inputs = current()
+        indexes = inputs.values.setdefault(('checkpoint-indexes',), {}) if inputs is not None else {}
         if not self.path.exists() and self.path.parent.exists():
             directory = reject_symlinks(self.path.parent).resolve()
-            if directory not in self._indexes:
+            if directory not in indexes:
                 index = {}
                 for candidate in directory.glob('*.json'):
                     reject_symlinks(candidate)
                     try:
-                        data = json.loads(candidate.read_text(encoding='utf-8'))
+                        data = load_json(candidate)
                         payload = data['payload']
                         if data['sha256'] != checksum(payload):
                             raise ValueError('checkpoint checksum mismatch')
@@ -114,8 +125,8 @@ class UnitStore:
                         index.setdefault(key, candidate)
                     except (ValueError, KeyError, TypeError, OSError) as exc:
                         raise ValueError(f'CLI checkpoint is damaged: {candidate}: {exc}') from exc
-                self._indexes[directory] = index
-            compatible = self._indexes[directory].get(checksum(self.compatible_identity(identity)))
+                indexes[directory] = index
+            compatible = indexes[directory].get(checksum(self.compatible_identity(identity)))
             if compatible is not None:
                 self.path = compatible
 
@@ -160,7 +171,7 @@ class UnitStore:
             return None
         try:
             reject_symlinks(self.path)
-            data = json.loads(self.path.read_text(encoding='utf-8'))
+            data = load_json(self.path)
             payload = data['payload']
             if (data['sha256'] != checksum(payload)
                     or self.compatible_identity(payload['identity']) != self.compatible_identity(self.identity)
@@ -185,11 +196,17 @@ class UnitStore:
             paths = [path.resolve().relative_to(self.calls.resolve()).as_posix() for path in capture.receipts]
             self._records(paths)
             payload = dict(identity=self.identity, raw=raw, statements=statements, receipts=paths)
-            save(self.canonical_path, dict(schema=1, payload=payload, sha256=checksum(payload)), newline='\n')
+            data = dict(schema=1, payload=payload, sha256=checksum(payload))
+            if current() is not None:
+                current().verify()
+            save(self.canonical_path, data, newline='\n')
+            if current() is not None:
+                current().produced(self.canonical_path, (json.dumps(data, ensure_ascii=False, indent=2)+'\n').encode())
             self.path = self.canonical_path
             directory = self.path.parent.resolve()
-            if directory in self._indexes:
-                self._indexes[directory][checksum(self.compatible_identity(self.identity))] = self.path
+            indexes = current().values.get(('checkpoint-indexes',), {}) if current() is not None else {}
+            if directory in indexes:
+                indexes[directory][checksum(self.compatible_identity(self.identity))] = self.path
         except (ValueError, OSError) as exc:
             raise AgentError(f'CLI checkpoint persistence failed; previous output preserved: {exc}') from exc
 

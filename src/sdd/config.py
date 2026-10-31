@@ -11,6 +11,7 @@ from typing import Any
 
 import yaml
 import math
+from .validation_stage import load_yaml, staged
 
 
 @dataclass(frozen=True)
@@ -334,6 +335,28 @@ class Config:
         return self.paths.get("style", self.root / "style")
 
     def sections(self) -> list[dict[str, Any]]:
+        from .validation_stage import current
+        inputs = current()
+        if inputs is not None:
+            return inputs.memo(self._section_key(), self._sections)
+        return self._sections()
+
+    def _section_key(self):
+        return ('sections', str(self.sections_file), str(self.scenarios_file),
+                str(self.root), str(self.paths.get('products_file')), repr(self.raw.get('products')))
+
+    def section(self, sid):
+        from .validation_stage import current
+        from copy import deepcopy
+        inputs = current()
+        if inputs is None:
+            return next((s for s in self.sections() if s['id'] == sid), None)
+        key = ('section-index', self._section_key())
+        if key not in inputs.values:
+            inputs.values[key] = {s['id']: s for s in self.sections()}
+        return deepcopy(inputs.values[key].get(sid))
+
+    def _sections(self) -> list[dict[str, Any]]:
         data = _load_yaml(self.sections_file)
         from .product_context import bind
         from .reader_scope import validate_locations
@@ -349,10 +372,7 @@ class Config:
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    with path.open("r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+    return load_yaml(path, optional=True)
 
 
 def section_output(section: dict[str, Any]) -> str:
@@ -384,6 +404,7 @@ def find_root(start: Path | None = None) -> Path:
     raise FileNotFoundError("sdd.yaml 을 찾지 못했습니다. 저장소 루트에서 실행하세요.")
 
 
+@staged
 def load(path: Path | None = None) -> Config:
     root = path.parent.resolve() if path else find_root()
     # 지정한 파일을 그대로 읽는다. 이름을 버리고 sdd.yaml 만 읽으면, 한 디렉터리에 설정을 여럿 둔
@@ -441,7 +462,7 @@ def load(path: Path | None = None) -> Config:
         response_dir=str(rel(agent_raw['response_dir'], '.')) if agent_raw.get('response_dir') else '',
     )
 
-    return Config(
+    cfg = Config(
         root=root,
         source_root=rel(src.get("root"), "../hal-camera"),
         compile_commands=rel(src.get("compile_commands"), "../hal-camera/compile_commands.json"),
@@ -458,3 +479,6 @@ def load(path: Path | None = None) -> Config:
         raw=raw,
         paths={k: rel(str(v), ".") for k, v in (raw.get("paths", {}) or {}).items()},
     )
+    from .validation_stage import read_bytes
+    cfg._loaded_inputs = {p: read_bytes(p, optional=True) for p in (main, local)}
+    return cfg

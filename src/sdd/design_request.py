@@ -10,6 +10,18 @@ from .design_compat import generation_policy
 
 
 def prepare_requests(cfg, model, section, previous):
+    from .validation_stage import current
+    from dataclasses import asdict
+    inputs = current()
+    if inputs is None:
+        return _prepare_requests(cfg, model, section, previous)
+    key = ('design-request-plan', id(model), digest(json.dumps(dict(
+        section=section, previous=previous, agent=asdict(cfg.agent), review=asdict(cfg.review),
+        prompts=str(cfg.prompts_dir), style=str(cfg.style_dir)), sort_keys=True)))
+    return inputs.memo(key, lambda: _prepare_requests(cfg, model, section, previous))
+
+
+def _prepare_requests(cfg, model, section, previous):
     from . import focused_prompt
     focused_system = focused_prompt.system_prompt(cfg, section.get('design_prompt'))
     from .prompting import compose_system_prompt
@@ -144,6 +156,16 @@ def _design_units(section, retained):
 
 
 def _unit_request(model, section, topic, focused_system):
+    from .validation_stage import current
+    inputs = current()
+    if inputs is None:
+        return _build_unit_request(model, section, topic, focused_system)
+    key = ('design-unit-request', id(model), digest(json.dumps(dict(
+        section=section, topic=topic, focused_system=focused_system), sort_keys=True)))
+    return inputs.memo(key, lambda: _build_unit_request(model, section, topic, focused_system))
+
+
+def _build_unit_request(model, section, topic, focused_system):
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
     from . import focused_prompt
     sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
