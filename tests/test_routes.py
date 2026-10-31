@@ -91,3 +91,26 @@ def test_simulation_notice_is_not_a_task_summary_or_broken_bold():
             '## 완료\n\n' + SIMULATION_NOTICE + '\n\n세 요청의 완료를 관찰했습니다.')
     assert routes.from_heading_content(body) == [
         ('DMA-BUF 할당을 관찰했습니다.', '#할당'), ('세 요청의 완료를 관찰했습니다.', '#완료')]
+
+
+@pytest.mark.parametrize('list_body', [
+    '1. 커널과 장치 접근을 확인합니다. 조건이 다르면 중단합니다.\n2. 캡처합니다.',
+    '1. 커널과 장치 접근을 확인합니다. 조건이 다르면 중단합니다.\n\n2. 캡처합니다.',
+    '- 커널과 장치 접근을 확인합니다. 조건이 다르면 중단합니다.\n- 캡처합니다.',
+])
+def test_reproduction_routes_use_list_prose_instead_of_a_diagram_download(list_body):
+    body = ('## 완료\n\n완료 알림은 처리를 이벤트 루프로 넘깁니다.\n\n'
+            '## 재현\n\n' + list_body + '\n\n### 준비 흐름\n\n'
+            '```mermaid\nflowchart TB\na-->b\n```\n\n'
+            '[Mermaid 원문](reproduction.mmd)')
+    assert routes.from_heading_content(body) == [
+        ('완료 알림은 처리를 이벤트 루프로 넘깁니다.', '#완료'),
+        ('커널과 장치 접근을 확인합니다.', '#재현')]
+
+
+def test_download_only_paragraph_is_not_a_navigation_summary():
+    body = ('## 알림\n\n[Mermaid 원문](completion.mmd)\n\n'
+            '콜백이 후속 처리를 예약합니다.\n\n## 실행\n\n'
+            '[실행 기록](run.json)\n\n지원 커널을 확인합니다.')
+    assert routes.from_heading_content(body) == [
+        ('콜백이 후속 처리를 예약합니다.', '#알림'), ('지원 커널을 확인합니다.', '#실행')]
