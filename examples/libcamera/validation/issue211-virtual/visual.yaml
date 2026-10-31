@@ -30,7 +30,11 @@ prompt: 이 그림은 핵심 프레임 경로의 개념도이며 전체 제어 �
   반드시 즉시 통지되는 것처럼 그리지 말고, 통지할 차례의 완료 요청에 한해 신호를 보낸다는 짧은 설명을 condition_ref always와 함께 사용하세요. 앞 요청이 RequestPending이면 뒤 요청의 통지가
   보류된다는 점은 completeRequest 상자 또는 마지막 간선의 짧은 라벨에 유지하세요. 내부 while/RequestPending/재제출의 별도 노드나 고리를 추가하지 마세요. 본문이 제출 순서와 보류 조건을
   설명하고 있으므로 그림은 핵심 경로를 읽게 하는 데 집중합니다. 새 조건 ID를 사용하고 이전 번호를 복사하지 마세요. 노드·간선 모두 짧게 쓰고 노드 9개를 넘기지 마세요. 라벨에 = ! < > 기호를 넣지 말고
-  실제 두 결정의 조건은 condition_ref에 보존하세요. 영어 once/only once는 쓰지 마세요.
+  실제 두 결정의 조건은 condition_ref에 보존하세요. 영어 once/only once는 쓰지 마세요. 마지막 필수 심볼 PipelineHandlerVirtual::bufferCompleted 노드는 오직 이번
+  호출의 종료를 나타내는 말단 노드입니다. 들어오는 false 간선만 허용하고 이 노드에서 나가는 간선은 절대로 만들지 마세요. 완료 신호 수신 핸들러에서 completeBuffer로 들어가는 흐름은 bufferCompleted
+  신호 노드에서 직접 표시하세요. completeRequest 상자는 완료 표시 후 순서상 통지 가능한 요청만 알리고 후속 큐를 처리한다는 조건부 전체 역할을 30자 안팎으로 요약하세요. 모든 라벨에서 코드 식별자를
+  꼭 노출할 필요는 없으며 한국어 25자·영어 48자 안팎을 우선하세요. 앞선 pending 요청이 있으면 통지가 보류됨은 마지막 간선에 짧게 유지하세요. 긴 해명·다시 호출될 가능성·스레드 대기 아님 등의 부연 설명은
+  라벨에 넣지 마세요.
 sources:
 - virtual-buffer-allocation
 - virtual-queue

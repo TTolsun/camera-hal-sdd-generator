@@ -1,0 +1,80 @@
+- id: completion-flow
+  topic: flow
+  kind: decision
+  title: 완료 알림에서 후속 처리까지
+  generation: llm
+  max_nodes: 10
+  required_symbols:
+  - requestComplete
+  - RequestCancelled
+  - return
+  - callLater
+  - processRequest
+  - captureCount_
+  - captureLimit_
+  - captureDone
+  - requeue
+  - queueRequest
+  question: 취소 반환, 이벤트 루프 전달, 진입 한도 검사, 프레임 처리·증가 뒤 완료 신호 또는 재큐까지는 어떻게 이어집니까?
+  prompt: 열 노드의 기존 올바른 순서와 condition_ref를 유지하고 개발자용 라벨만 간결하게 다듬으세요. requestComplete, 취소 여부, 현재 함수 반환, callLater, processRequest
+    진입 한도, 프레임 처리와 개수 증가, 증가 후 한도, captureDone, sink 보유 여부, reuse와 queueRequest 순서입니다. 소스의 !requeue 결정은 sink가 요청을 보유하는가라는
+    긍정형 질문으로 한영 모두 표현하세요. !requeue true는 sink가 보유하므로 현재 함수에서 반환하고 이후 완료 처리에 맡깁니다. false는 재사용 후 queueRequest입니다. 분기 간선은 참/거짓을
+    반복하지 말고 취소/정상, 한도 도달/계속, 보유/반환 등 해당 상황을 한영으로 짧게 표현하되 실제 condition_ref의 의미를 정확히 보존하세요. 두 한도 조건은 설정 AND 도달이며 false는 미설정
+    또는 미도달을 포함합니다. 취소와 진입 한도 반환은 captureDone을 내지 않습니다. 정확한 조건식과 !requeue는 근거 표에 보존되므로 본 그림의 라벨에 나열하지 마세요. 기존 노드 수와 구조, 올바른
+    호출 이름을 유지하세요. 노드 한국어 30자 영어 60자, 간선 한국어 12자 영어 28자 이내입니다. 이번 수정은 올바른 기존 흐름·분기·조건을 보존하며 한영 라벨만 짧게 정리합니다. 라벨에 전체 문장·중복 해명·번호를
+    쓰지 말고 행동이나 판정만 씁니다. 한글 노드 24자·영문 48자 안팎, 간선은 더 짧게 쓰되 재현 조건 판정 노드에 필요한 기록된 시험 커널·root의 /dev/udmabuf 접근·Virtual2 400x300
+    NV12 조건은 한영 모두 유지합니다. 긴 식별자 중간 줄바꿈을 피하고 개별 영문 토큰은 28자 이내로 씁니다.
+  sources:
+  - callback-and-processing
+  max_label_chars: 72
+  condition_display: evidence
+- id: reproduction-flow
+  topic: reproduce
+  kind: flow
+  title: 환경 확인에서 재현 실행까지
+  generation: llm
+  max_nodes: 10
+  required_symbols:
+  - Kconfig
+  - WSL
+  - Docker
+  - udmabuf
+  - run_cam
+  question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam 재현 실행은 어떤 준비 순서로 이어집니까?
+  prompt: 이 그림은 기본 커널로 원복한 후 기록된 특정 시험 조건을 다시 준비하는 경로입니다. 조사·무영향 준비 → 호스트 변경 계획·별도 승인 → Docker 중지 필요 여부 결정 → 필요시 중지 → 승인된
+    시험 커널 설치·부팅 → 조건 일치 결정 → cam 실행 순서입니다. 이 기록된 재현 경로에서는 실제 호스트 변경인 커널 설치·부팅 전에 별도 호스트 승인이 필수입니다. 무영향 준비는 승인 전에도 합니다. Docker
+    중지 여부만 승인 계획에 따른 조건부 분기입니다. 조건 일치 결정은 기록된 커널·장치 접근·Virtual2 400x300 NV12 모두를 포함하며, 불일치하면 캡처 중단하는 별도 노드로 연결하세요. 접근 하나만
+    맞으면 실행하는 것으로 그리지 마세요. Docker 결정과 중지는 별도 노드이며 같은 Docker 식별자를 쓸 수 있습니다. 시험 커널 설치·부팅과 조건 확인은 중지 여부와 별개로 필요합니다. 노드 한국어 24자·영어
+    48자, 간선 한국어 12자·영어 28자 이내의 짧은 구절을 쓰세요. 전체 문장과 중복 조건을 쓰지 마세요. 이 시험의 root 접근 조건은 근거에 남기고 일반 권한 변경 지침을 쓰지 마세요. 이전 네이티브 초안이
+    있으면 나머지 올바른 부분을 보존하고 조건 일치 노드의 udmabuf를 root의 /dev/udmabuf 접근 가능으로 한영 모두 명확히 하세요. 커널과 Virtual2 400x300 NV12 일치 조건도 유지하세요.
+    이번 수정에서는 이전 초안의 나머지 구조를 보존하세요. 영향 없는 커널 준비는 조사와 함께 승인 전에 가능하며, 승인 후 커널 노드는 실제 호스트 변경인 설치·부팅으로 표시하세요. 승인 간선은 한영 모두 호스트
+    변경 실행 직전이라는 시점을 분명히 하며, cam 실행 직전이라는 의미의 run을 쓰지 마세요. 같은 한국어 레이블에는 같은 영어 레이블을 쓰세요. 조건 일치 결정 노드는 반드시 한영 모두 '기록된 시험 커널'이라는
+    대상과 root의 /dev/udmabuf 접근 가능, Virtual2 400x300 NV12를 함께 명시하세요. 이전 초안의 다른 올바른 구조는 보존하세요. 이번 수정은 올바른 기존 흐름·분기·조건을 보존하며 한영
+    라벨만 짧게 정리합니다. 라벨에 전체 문장·중복 해명·번호를 쓰지 말고 행동이나 판정만 씁니다. 한글 노드 24자·영문 48자 안팎, 간선은 더 짧게 쓰되 재현 조건 판정 노드에 필요한 기록된 시험 커널·root의
+    /dev/udmabuf 접근·Virtual2 400x300 NV12 조건은 한영 모두 유지합니다. 긴 식별자 중간 줄바꿈을 피하고 개별 영문 토큰은 28자 이내로 씁니다.
+  sources:
+  - product-execution-contract
+  - product-reproduction-procedure
+  max_label_chars: 72
+  condition_display: evidence
+  answer_contract:
+    basis: measurement
+    required_terms:
+    - - Virtual2
+    - - /dev/udmabuf
+    - - root
+    - - '400'
+    - - '300'
+    - - NV12
+    - - 기록
+  answer_contract_en:
+    basis: measurement
+    required_terms:
+    - - Virtual2
+    - - /dev/udmabuf
+    - - root
+    - - '400'
+    - - '300'
+    - - NV12
+    - - recorded
+      - Recorded

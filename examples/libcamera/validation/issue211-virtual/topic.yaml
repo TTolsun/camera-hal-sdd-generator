@@ -87,7 +87,8 @@ parts:
 - id: purpose
   role: summary
   question: 기준 소스에서 확인한 공식 libcamera의 virtual 기능과 제공된 Virtual2 설정만 두 짧은 문장으로 소개하세요. 소스 분석 결과임을 첫 문장에 밝히고, 센서 영상 대신 소프트웨어 테스트
-    패턴 또는 설정한 .jpg 이미지 파일을 공급한다고 설명하세요. 둘째 문장은 Virtual2의 400x300 lines(대각선 줄무늬) 설정을 설명합니다. 220자 이내입니다.
+    패턴 또는 설정한 .jpg 이미지 파일을 공급한다고 설명하세요. 둘째 문장은 Virtual2의 400x300 lines(대각선 줄무늬) 설정을 설명합니다. 220자 이내입니다. supported_formats 같은
+    설정 키를 본문에 나열하지 말고 해상도·대각선 줄무늬의 설정 의미만 쉬운 말로 쓰세요.
   sources:
   - virtual-purpose
   - virtual2-config
@@ -120,13 +121,11 @@ parts:
   answer_contract:
     basis: implementation
 - id: completion
-  question: 요청이 virtual의 queueRequestDevice에서 VirtualCameraData::processRequest로 비동기 전달되고 패턴 작성 뒤 버퍼 완료를 알리는 흐름을 설명하세요. 생성
-    실패는 FrameError로 표시되므로 완료 알림만으로 성공을 단정하지 않습니다. virtual은 completeBuffer가 모든 버퍼 완료를 반환한 경우에만 completeRequest를 호출하고, libcamera의
-    requestCompleted에 연결된 cam의 requestComplete로 돌아옵니다. 그 뒤의 callLater·processRequest는 다음 절로 이어지므로 여기서 반복하지 마세요. 네 짧은 문장 이내입니다.
-    수신 연결과 일반 파이프라인 큐 연결 소스도 함께 제공됩니다. 제어 목록·타임스탬프·FrameSuccess 기본값·가상 범위 경고는 이 요약에서 생략하고, 핵심 전달·실패 상태·모든 버퍼 완료 조건·앱 신호 연결만
-    네 짧은 문장 360자 이내로 쓰세요. 첫 문장에서 가상 쪽 처리 함수는 VirtualCameraData::processRequest라고 반드시 클래스 이름을 명시하세요. cam의 CameraSession::processRequest와
-    다른 함수입니다. 완료 신호는 제출 순서로 전달하며 앞 요청이 RequestPending이면 신호 전달이 보류된다는 조건도 설명하세요. 네 짧은 문장 440자 이내로 쓰세요. 목표 시각에 정확히 실행됨을 보장하지
-    마세요. 소스는 VirtualCameraData::processRequest가 목표 시각까지 sleep_until로 기다린 뒤 처리합니다. 첫 문장은 이 조건으로 한정하고 정확한 실행 시간·성능 보장을 쓰지 마세요.
+  question: 기준 소스에서 확인한 가상 요청 처리를 네 짧은 문장 400자 이내로 설명하세요. 가상 요청은 비동기 전달되고 VirtualCameraData::processRequest가 목표 시각까지 기다린 뒤
+    패턴 작성을 시도합니다. 생성 실패는 FrameError로 표시되며 버퍼 완료 신호만으로 성공을 단정하지 않습니다. completeBuffer가 모든 버퍼 완료를 반환할 때만 completeRequest로 이어지고,
+    통지할 순서가 된 완료 요청은 requestCompleted 신호에 연결된 cam 콜백으로 전달됩니다. 앞선 요청이 아직 미완료이면 뒤 요청의 통지는 보류됩니다. sleep_until·RequestPending·supported_formats
+    같은 내부 식별자와 cam 후속 처리의 반복 설명은 쓰지 마세요. VirtualCameraData::processRequest는 cam의 처리 함수와 구분할 수 있도록 클래스 이름을 유지하되 다른 긴 함수 이름은
+    나열하지 마세요. 정확한 실행 시각이나 성능을 보장하지 마세요.
   sources:
   - virtual-queue
   - virtual-frame

@@ -47,6 +47,7 @@ data['sections'] = [section if s['id']==section['id'] else s for s in data['sect
 p.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=120), encoding='utf-8')
 visual = yaml.safe_load((base/'visual.yaml').read_text(encoding='utf-8'))
 p=work/'config/visuals.yaml'; data=yaml.safe_load(p.read_text(encoding='utf-8'))
-data['sections'][section['id']].insert(0,visual)
+overrides = {v['id']: v for v in yaml.safe_load((base/'retained-visual-overrides.yaml').read_text(encoding='utf-8'))}
+data['sections'][section['id']] = [visual] + [overrides.get(v['id'], v) for v in data['sections'][section['id']]]
 p.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=120), encoding='utf-8')
 print(json.dumps(dict(work=str(work), topics=[t['id'] for t in section['design_topics']], retained_receipts=len(receipts))))
