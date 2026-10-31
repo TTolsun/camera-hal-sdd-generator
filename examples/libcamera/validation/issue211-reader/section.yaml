@@ -100,8 +100,8 @@ design_topics:
       basis: implementation
     role: summary
   - id: processing
-    question: processRequest의 진입 직후 검사에서는 캡처 한도가 설정되어 있고 완료 개수가 그 한도 이상이면 반환합니다. 이것이 함수 전체의 유일한 반환 조건이라고 쓰지 마세요.
-      이 진입 검사를 통과하면 프레임을 다룬 뒤 captureCount_를 늘린다는 핵심 역할을 두 문장으로 설명하고 출력·sink·재큐의 나머지 절차는 근거 코드에 남기세요.
+    question: processRequest는 진입 직후 한도 설정·개수 도달을 검사해 해당하면 반환합니다. 이 검사를 통과하면 버퍼 정보와 선택적 sink 처리·출력을 먼저 처리하고 captureCount_를 늘립니다.
+      증가 후에도 한도가 설정되어 있고 도달하면 captureDone 신호 후 반환합니다. 이 소스 순서를 짧은 세 문장으로 설명하세요. 출력·sink를 완료 검사 이후의 나머지 절차로 나열하지 마세요.
     sources:
     - callback-and-processing
     max_statements: 1
@@ -110,8 +110,8 @@ design_topics:
     answer_contract:
       basis: implementation
   - id: observed
-    question: 이번 실제 실행에서 콜백 스레드와 후속 처리 스레드가 달랐다는 관찰을 설명하세요. 이것은 모든 실행의 스레드 배치 보장이 아니며, 취소 분기는 소스로 확인했을 뿐 이번 실행에서
-      동적으로 시험하지 않았다는 범위를 두 문장 180자 이내로 유지하세요.
+    question: 이번 실행에서 콜백과 후속 처리 스레드가 달랐지만 모든 실행의 배치를 보장하지 않는다고 설명하세요. 취소 분기는 소스에 존재하지만 이번 실행에서 동적으로 시험하지 않았다고 명확히 하세요.
+      다른 동작은 소스로 확인하지 않았다는 의미로 읽힐 수 있는 '취소 분기만 확인' 또는 '취소 분기는 소스로 확인했을 뿐' 같은 표현은 피하고 짧은 두 문장으로 쓰세요.
     sources:
     - callback-and-processing
     max_statements: 1
