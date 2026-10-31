@@ -1,0 +1,54 @@
+schema: 1
+sections:
+  official-cam-validation:
+  - id: completion-flow
+    topic: flow
+    kind: decision
+    title: 완료 알림에서 후속 처리까지
+    generation: llm
+    max_nodes: 10
+    required_symbols:
+    - requestComplete
+    - RequestCancelled
+    - return
+    - callLater
+    - processRequest
+    - captureCount_
+    - captureLimit_
+    - captureDone
+    - requeue
+    - queueRequest
+    question: 취소 반환, 이벤트 루프 전달, 진입 한도 검사, 프레임 처리·증가 뒤 완료 신호 또는 재큐까지는 어떻게 이어집니까?
+    prompt: 열 노드로 실제 소스 순서를 요약하세요. requestComplete 진입, RequestCancelled 결정, 현재 함수 return, callLater 전달, processRequest 진입의 한도 설정 AND 개수 도달 결정,
+      프레임 처리·captureCount_ 증가 동작, 증가 후 captureLimit_ 설정 AND 도달 결정, captureDone 신호 후 반환, requeue 가능 여부 결정, request 재사용·queueRequest 동작입니다.
+      두 한도 검사는 각각 진입 직후와 증가 직후임을 구별하고 false는 미설정 또는 미도달을 포함합니다. 증가 후 true는 captureDone을 내고 반환하며 false는 requeue 분기로 진행합니다.
+      requeue가 false면 sink가 보유하므로 현재 함수에서 반환하고 이후 완료 처리에 맡깁니다. true면 reuse 후 queueRequest입니다. 취소 반환과 진입 한도 반환에는 captureDone 신호가 없습니다.
+      processRequest 함수 이름을 한영 레이블에 표시하세요. 참·거짓은 실제 condition_ref에 연결하세요. 노드 한국어 30자·영어 60자, 간선 한국어 12자·영어 28자 이내로 짧게 쓰세요.
+      정확한 조건식은 근거에 보존하므로 간선에는 예·아니오 등 짧은 구절만 쓰고 반복하지 마세요.
+    sources:
+    - callback-and-processing
+    max_label_chars: 72
+    condition_display: evidence
+  - id: reproduction-flow
+    topic: reproduce
+    kind: flow
+    title: 환경 확인에서 재현 실행까지
+    generation: llm
+    max_nodes: 10
+    required_symbols:
+    - Kconfig
+    - WSL
+    - Docker
+    - udmabuf
+    - run_cam
+    question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam 재현 실행은 어떤 준비 순서로 이어집니까?
+    prompt: 이 그림은 기본 커널로 원복한 후 기록된 특정 시험 조건을 다시 준비하는 경로입니다. 조사 → 호스트 변경 계획·별도 승인 → Docker 중지 필요 여부 결정 → 필요시 중지 → 승인된 시험 커널 준비·부팅 → 조건 일치 결정 → cam 실행 순서입니다.
+      이 기록된 재현 경로에서는 커널 준비·부팅 전에 별도 호스트 승인이 필수입니다. 계획·승인을 '필요 시'로 흐리거나 생략하지 마세요. Docker 중지 여부만 승인 계획에 따른 조건부 분기입니다.
+      조건 일치 결정은 기록된 커널·장치 접근·Virtual2 400x300 NV12 모두를 포함하며, 불일치하면 캡처 중단하는 별도 노드로 연결하세요. 접근 하나만 맞으면 실행하는 것으로 그리지 마세요.
+      Docker 결정과 중지는 별도 노드이며 같은 Docker 식별자를 쓸 수 있습니다. 지원 커널 준비·부팅과 조건 확인은 중지 여부와 별개로 필요합니다.
+      노드 한국어 24자·영어 48자, 간선 한국어 12자·영어 28자 이내의 짧은 구절을 쓰세요. 전체 문장과 중복 조건을 쓰지 마세요. 이 시험의 root 접근 조건은 근거에 남기고 일반 권한 변경 지침을 쓰지 마세요.
+    sources:
+    - product-execution-contract
+    - product-reproduction-procedure
+    max_label_chars: 72
+    condition_display: evidence

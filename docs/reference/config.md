@@ -196,3 +196,35 @@ Windows의 로컬 Ollama와 WSL의 libcamera 빌드를 연결하는 공개 예�
 | `idle_review.enabled`, `sections`, `files`, `source_chars`, `revision` | 새 커밋이 없는 날 기존 문서의 누락을 한 항목씩 보완합니다. `hermes.enabled`가 필요합니다. |
 
 다음 단계: 섹션 정의는 [sections.yaml 참조](sections.md)를 읽습니다.
+
+## site.manuscript_profiles
+
+`site.manuscript_profiles`는 선택 항목입니다. Markdown 출력 경로를 프로파일 파일 경로에 연결합니다. 키가 없거나 목록에 없는 페이지는 기본 설정을 사용합니다.
+
+키는 상대 `.md` 경로여야 하며, 절대 경로이거나 `..`, `:`, 백슬래시를 포함할 수 없습니다. 값은 설정 루트 기준 프로파일 경로입니다.
+
+```yaml
+site:
+  manuscript_profiles:
+    guide.md: profiles/guide.yaml
+```
+
+다음은 `profiles/guide.yaml`의 예시입니다. 이 파일은 해당 페이지의 `agent`와 `paths.style`만 바꿉니다.
+
+```yaml
+agent:
+  kind: cli
+  runner: claude
+  model: claude-haiku-5-5
+  args: ['--effort', 'high', '--setting-sources', 'project,local']
+paths:
+  style: ../style
+```
+
+### 규칙
+
+1. 프로파일의 최상위 키는 `agent`와 `paths`만 쓸 수 있고, `paths`에는 `style`만 쓸 수 있습니다. source, facts, sections, manuscripts, templates, approval, validation 설정은 프로파일로 대체할 수 없습니다.
+2. `agent.kind`는 `cli`로 해석되어야 합니다. `kind`를 생략하면 기본값이 `cli`입니다. `agent.model`은 비어 있지 않아야 하고, `paths.style`은 필수입니다. 조건을 어기면 `for_page`에서 프로파일을 불러 적용할 때 실패합니다. 기본 설정을 처음 불러오는 시점에 실패한다고 보장하지는 않습니다.
+3. 이 옵션은 산문 스타일 정책과 생성된 시각 자료(visuals)의 CLI 정체성과 style 디렉터리만 선택합니다. 산문 CLI의 model과 args 전체를 감사하는 기능은 없습니다.
+4. 시각 자료 렌더링은 모델 CLI를 실행하지 않습니다. 산문의 `style_policy` 검사는 생성 설계(generated_design)에 기록된 style_policy를 대상으로 하며, 모든 산문 원고를 대상으로 하지 않습니다. 생성 설계에 기록된 style_policy가 어긋나면 실패합니다. 생성 시각 자료(generated_visuals)의 fingerprint는 현재 fingerprint와 설정된 레거시 CLI 실행 파일 경로의 정확한 fingerprint가 모두 어긋날 때만 실패합니다. 레거시 호환 검사는 source, rule, model, argument 고정값을 모두 보존하며 모델을 실행하지 않습니다. 두 검사는 서로 다른 검사입니다. 시각 자료에 별도의 style pin이 있다고 가정하지 않습니다. 모든 프로파일 불일치가 실패하는 것은 아니며, 소스·섹션·본문 검사는 바뀌지 않습니다.
+5. 프로파일 파일과 style `.md` 파일의 SHA256이 사이트 manifest `inputs`에 기록됩니다.

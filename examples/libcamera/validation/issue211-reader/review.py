@@ -38,9 +38,14 @@ user=('Review exact factual entailment AND whether this reads as a developer SDD
       'Distinguish three cam processes from cam spawning three processes, and the independent CPU probe from actual cam allocations. '
       'No physical DMA/camera/product-app/internal-HAL validation, callback-return/performance proof or human approval is established. '
       'If English is supplied, compare every narrative claim and modality. Report actionable findings with exact clauses; do not supply prose. '
+      'For diagrams supplied in the inventory, review the topic-specific meaning, branch conditions and concise Korean/English labels. '
+      'The short allocator conclusion has an explicit omission reason: one obstacle/result/restored-state distinction is already explained briefly; '
+      'the callback and reproduction topics each require their own useful diagram. Do not treat historical-page authentication as current-policy review. '
       '\nKOREAN NARRATIVE\n'+narrative+'\nPINNED SOURCE WINDOWS\n'+json.dumps(sources,ensure_ascii=False)+
       '\nDERIVED MEASUREMENT (exact projected original fields plus actual baseline/allocator records)\n'+material.read_text(encoding='utf-8')+
       '\nLINKED REPRODUCTION RUNBOOK\n'+guide.read_text(encoding='utf-8'))
+user+='\nCURRENT WRITING AND PER-TOPIC VISUALIZATION POLICY\n'+(root/'style/README.md').read_text(encoding='utf-8')
+user+='\nVERBATIM EXECUTION CONTRACT\n'+(work/'config/product-evidence/issue211-execution-contract.json').read_text(encoding='utf-8')
 if args.english:user+='\nACTUAL RENDERED ENGLISH NARRATIVE\n'+args.english.read_text(encoding='utf-8')
 if args.notes:user+='\nNATIVE PUBLICATION NOTES\n'+args.notes.read_text(encoding='utf-8')
 if args.inventory:user+='\nACTUAL RENDERED LINKS AND COLLAPSED EVIDENCE INVENTORY\n'+args.inventory.read_text(encoding='utf-8')

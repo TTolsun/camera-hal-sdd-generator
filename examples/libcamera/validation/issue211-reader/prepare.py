@@ -47,13 +47,24 @@ p=work/'config/products.yaml';products=yaml.safe_load(p.read_text(encoding='utf-
 entry=copy.deepcopy(next(e for e in products['evidence'] if e['id']=='official-cam-run'))
 entry.update(id='official-cam-reader',file='product-evidence/official-cam-reader.json',sha256=sha256(material),version=sha256(original))
 products['evidence']=[e for e in products['evidence'] if e['id']!='official-cam-reader']+[entry]
+procedure=work/'config/product-evidence/official-cam-reproduction.md'
+source_procedure=root/'examples/libcamera/runtime/OFFICIAL_CAM.md'
+procedure.write_bytes(source_procedure.read_bytes())
+entry=copy.deepcopy(entry)
+entry.update(id='reproduction-procedure',type='project-document',file='product-evidence/official-cam-reproduction.md',
+             sha256=sha256(procedure),version='580df5156da7066a60e16ff9b656253b1c17f0c0')
+products['evidence']=[e for e in products['evidence'] if e['id']!='reproduction-procedure']+[entry]
 feature=next(p for p in products['products'] if p['id']=='libcamera-official-cam-trial')['features'][0]
-feature['evidence']=['official-cam-reader','execution-contract']
+feature['evidence']=['official-cam-reader','execution-contract','reproduction-procedure']
 p.write_text(yaml.safe_dump(products,allow_unicode=True,sort_keys=False),encoding='utf-8')
 p=work/'config/sections.yaml';sections=yaml.safe_load(p.read_text(encoding='utf-8'))
 replacement=yaml.safe_load((base/'section.yaml').read_text(encoding='utf-8'))
 sections['sections']=[replacement if s['id']==replacement['id'] else s for s in sections['sections']]
 p.write_text(yaml.safe_dump(sections,allow_unicode=True,sort_keys=False,width=130),encoding='utf-8')
+visual_file=work/'config/visuals.yaml'
+visuals=yaml.safe_load(visual_file.read_text(encoding='utf-8'))
+visuals['sections'].update(yaml.safe_load((base/'visuals.yaml').read_text(encoding='utf-8'))['sections'])
+visual_file.write_text(yaml.safe_dump(visuals,allow_unicode=True,sort_keys=False,width=110),encoding='utf-8')
 cfg=load(work/'generation.yaml');model=KnowledgeModel.load(cfg.facts_path)
 assert model.meta['source_commit']=='293d751a814e0d4c34e85ad457ccd9d5eefd1a61'
 collect(cfg,model);model.save(cfg.facts_path)

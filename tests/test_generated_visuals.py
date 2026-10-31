@@ -289,6 +289,40 @@ def test_exact_source_guard_labels_allowed_but_old_guard_rejected(tmp_cfg, autom
         Generator(tmp_cfg, model, agent).run()
 
 
+def test_compact_guard_display_preserves_exact_guard_and_proof(tmp_cfg, automatic):
+    from sdd.generated_visuals import materialize
+    from sdd.visuals import render_values
+    section,model,save,agent=automatic
+    record=model.evidence['device/shutdown/stop']
+    record['text']='void Device::stop() { if (ret == 0) { stop(); cancelPending(); } }'
+    record['sha256']=hashlib.sha256(record['text'].encode()).hexdigest()
+    section['design_topics'][0]['sources'][0]['sha256']=record['sha256']
+    record['selector']=copy.deepcopy(section['design_topics'][0]['sources'][0])
+    plan=yaml.safe_load((tmp_cfg.root/'visuals.yaml').read_text())['sections']['device'][0]
+    plan['condition_display']='evidence'
+    agent.draft['edges'][0].update(label='예',label_en='Yes',condition_ref='c0:true')
+    graph=materialize(tmp_cfg,model,section,plan,agent.draft,'cli/test/model')
+    block,source=render_values(tmp_cfg,model,section,[graph])[0][1:]
+    assert graph['edges'][0]['label'].endswith('ret == 0 [true]')
+    assert 'ret == 0' not in source and '[true]' in source
+    assert 'ret == 0' in block.partition('??? note')[2]
+    graph['edges'][0]['evidence'][0]['quote']='if (ret >= 0) { stop(); cancelPending(); }'
+    with pytest.raises(ValueError):render_values(tmp_cfg,model,section,[graph])
+
+
+def test_label_ceiling_is_enforced_in_schema_and_materialization(tmp_cfg, automatic):
+    from sdd.generated_visuals import materialize,schema,visual_passages
+    section,model,save,agent=automatic
+    plan=yaml.safe_load((tmp_cfg.root/'visuals.yaml').read_text())['sections']['device'][0]
+    plan['max_label_chars']=16
+    agent.draft['nodes'][0]['label_en']='x'*17
+    with pytest.raises(ValueError,match='max_label_chars'):
+        materialize(tmp_cfg,model,section,plan,agent.draft,'cli/test/model')
+    passages=visual_passages({'stop':model.evidence['device/shutdown/stop']['text']})[1]
+    shape=schema(passages,4,max_label_chars=16)
+    assert shape['properties']['nodes']['items']['properties']['label']['maxLength']==16
+
+
 def test_long_bilingual_labels_wrap_without_losing_text_or_escaping():
     import html
     from sdd.visuals import wrap_label

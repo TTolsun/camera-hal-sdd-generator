@@ -39,3 +39,11 @@ def test_normal_render_folds_display_without_rewriting_manuscript_or_raw_evidenc
     assert result.index('가상 캡처가 완료됐습니다.') < result.index('가상 시험의 검증 범위')
     assert '434' in result and 'status' in result
     assert original.count(SIMULATION_NOTICE) == 1
+
+
+def test_diagram_follows_explanation_after_scope_notice_is_folded():
+    from sdd.visuals import place
+    topic={'id':'result','title':'결과','_product_context':{'product':{'simulation':True}}}
+    text='## 결과\n\n'+SIMULATION_NOTICE+'\n\n핵심 설명입니다.\n\n조건 설명입니다.\n'
+    result=place(text,[({'topic':'result'},'### 질문별 그림\n\n그림 원문','graph')],{'design_topics':[topic]})
+    assert result.index('핵심 설명입니다.')<result.index('질문별 그림')<result.index('조건 설명입니다.')
