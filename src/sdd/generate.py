@@ -567,9 +567,8 @@ class Generator:
         호출이 일어나는 차례를 설정이 정한다. 설정에 없는 시나리오가 facts 에 있으면 이름 순으로
         뒤에 붙여서 목차와 페이지 연결에서 빠지지 않게 한다.
         """
-        known = [(sid, self.model.scenarios[sid]) for sid in self.scenario_order if sid in self.model.scenarios]
-        rest = sorted((sid, sc) for sid, sc in self.model.scenarios.items() if sid not in self.scenario_order)
-        return known + rest
+        from .next_steps import ordered_scenarios
+        return ordered_scenarios(self.cfg, self.model)
 
     def _visible_messages(self, sc: Any) -> tuple[list[Any], int]:
         """문서에 쓸 메시지와 표시에서 뺀 개수를 돌려준다."""
@@ -693,8 +692,8 @@ def _status(v: Verdict) -> str:
 
 
 def _next_of(sec: dict[str, Any]) -> tuple[str, str]:
-    nxt = sec.get("next") or {}
-    return (str(nxt.get("title", "시스템 개요")), str(nxt.get("link", "overview.md")))
+    from .next_steps import section_next
+    return section_next(sec)
 
 
 def _routes_from_config(sec: dict[str, Any]) -> list[routes.NavigationRoute] | None:
