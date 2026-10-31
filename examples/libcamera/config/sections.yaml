@@ -5761,7 +5761,7 @@ sections:
     parts:
     - id: summary
       role: summary
-      question: 정지 계약에서는 대기 중인 요청을 취소해 완료로 돌려보낸다는 점과 실행 중 연결 해제의 대기 요청 처리는 아직 TODO라는 차이를 쉬운 말로 먼저 설명하세요. 관측된 실행 결과나 TODO로부터 새로운 부정 보장을 만들지 말고 두 원문이 명시한 내용을 비교하세요.
+      question: PipelineHandler::stop 원문의 모든 대기 요청 취소·즉시 오류 완료 계약과 Camera::disconnect 원문의 Running 중 연결 해제 시 대기 요청 처리 TODO를 두 짧은 문장으로 비교하세요. 두 함수의 명시된 계약을 비교하고 다른 함수의 계약이나 원문에 없는 용어에 관한 설명을 추가하지 마세요.
       sources:
       - device-stop
       - disconnect-todo
@@ -5773,11 +5773,10 @@ sections:
         - - 연결 해제
           - disconnect
         - - TODO
-        - - 동기
-          - synchronous
-      prompt: '
-
-        독립 검토가 빠진 필수 조건을 지적했습니다. Camera::stop의 동작 중 정지에서 모든 대기 요청을 취소하고 오류 상태로 동기 완료한다는 API 계약을 명시하세요. 연결 해제 중 대기 요청 처리가 TODO라는 차이와 함께 두 짧은 문장 이내로 요약하고 구현 순서 나열은 피하세요.'
+        - - PipelineHandler::stop
+        - - 즉시
+          - immediately
+      prompt: 정지 API와 구현 보조 함수의 계약을 혼동하지 마세요. 이 요약에서 선택된 두 원문은 PipelineHandler::stop과 Camera::disconnect입니다. 앞 원문의 즉시 오류 완료와 뒤 원문의 대기 요청 TODO만 비교하고, 호출자가 검사할 순서나 원문에 특정 단어가 없다는 메타 설명은 다른 항목으로 확장하지 마세요.
     - id: camera-entry
       question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed 음수
         반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop
@@ -5797,12 +5796,7 @@ sections:
         - - ConnectionTypeBlocking
       max_statements: 3
     - id: device-entry
-      question: PipelineHandler::stop의 waitingRequests_ 분리와 stopDevice 진입·복귀를 관찰하는 계획을 설명하세요.
-        진입 기록 뒤 복귀 기록이 없으면 stopDevice 내부 정체를 조사할 후보이고, 복귀했는데 장치 큐 queuedRequests_가 비어 있지 않고
-        정지가 끝나지 않으면 그 뒤 취소·완료 경로를 조사할 후보임을 구분하세요. stopDevice 복귀 직후 지역 waitingRequests 목록에 요청이
-        남는 것은 뒤의 취소 반복문 이전이라 정상일 수 있으므로 이를 후단 정체의 판정 기준으로 사용하지 마세요. 실제 멎음을 관측했다고 단정하지 말고 두 경우를
-        나눌 기록 기준만 쓰세요. 후단 큐 ASSERT와 취소 호출은 다음 질문에서 다루므로 나열하지 마세요. 미실행 계획임을 유지하고 실제 실행 결과로 쓰지
-        마세요.
+      question: 조사 계획으로 PipelineHandler::stop의 waitingRequests_ 분리 지점, stopDevice 호출 직전과 실제 구현 진입·복귀를 각각 관찰하도록 설명하세요. 선택한 관찰 창의 복귀 미관찰은 원인 미확정으로 남기며 호출 직전 표시만으로 장치 내부 정지를 확정하지 마세요. 실행 결과가 아닌 계획을 두 짧은 문장 이내로 쓰고 반환 뒤 요청 처리나 ASSERT는 다음 항목에 맡기세요.
       sources:
       - device-stop
       answer_contract:
@@ -5810,8 +5804,13 @@ sections:
         required_terms:
         - - waitingRequests_
         - - stopDevice
-        - - queuedRequests_
-      max_statements: 2
+        - - 관찰 창
+          - 관찰창
+        - - 미확정
+          - 단정하지
+          - 확정하지
+      max_statements: 1
+      prompt: 관찰 지점의 비교 계획만 설명하세요. 실제 구현 진입은 호출 직전과 별도로 관찰하는 지점입니다. 관찰 창에서 복귀를 관찰하지 못하더라도 아직 실행 중인지, 관찰이 빠졌는지 또는 어떤 원인인지는 단정하지 않습니다. 추가 상태 변경 호출이나 새 측정 결과를 만들지 마세요.
     - id: pending
       question: PipelineHandler::stop()의 취소 반복문에서 doQueueRequest(request)에 전달되는 request 값을 기존
         실행의 관찰 기록 항목으로 제안하는 한국어 한 문장만 쓰세요.
