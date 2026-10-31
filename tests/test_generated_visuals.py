@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -363,9 +364,13 @@ def test_cli_executable_relocation_keeps_identities_while_wrapper_arguments_chan
     assert all(new != old for new, old in zip(changed, before))
 
 
-@pytest.mark.parametrize('change', [None, 'source', 'args', 'pin'])
+@pytest.mark.parametrize('change', [None, 'source', 'args', 'pin', 'style'])
 def test_exact_legacy_cli_visual_proof_is_verified_without_rewriting_its_history(tmp_cfg, automatic, change):
     from sdd.generated_visuals import generate, resolve
+    # Replay the exact historical policy; the current policy must invalidate it.
+    current_style = (tmp_cfg.style_dir / 'README.md').read_bytes()
+    old_style = Path(__file__).parent / 'fixtures' / 'style-before-215.txt'
+    (tmp_cfg.style_dir / 'README.md').write_bytes(old_style.read_bytes())
     section, model, _, agent = automatic
     tmp_cfg.agent.kind, tmp_cfg.agent.runner, tmp_cfg.agent.model = 'cli', 'codex', 'test-model'
     tmp_cfg.agent.command = [r'C:\Apps\Codex\bin\0ab0e7a8\codex.EXE']
@@ -382,6 +387,8 @@ def test_exact_legacy_cli_visual_proof_is_verified_without_rewriting_its_history
         tmp_cfg.agent.args = ['--profile', 'other']
     elif change == 'pin':
         artifact['records']['stop-flow']['input_fingerprint'] = '0'*64
+    elif change == 'style':
+        (tmp_cfg.style_dir / 'README.md').write_bytes(current_style)
     if change:
         with pytest.raises(ValueError):
             resolve(tmp_cfg, model, section, artifact)
