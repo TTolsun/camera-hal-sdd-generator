@@ -6038,9 +6038,9 @@ sections:
           message: 상태 범위 비교를 배열 인덱스로 해석하지 마세요.
       max_statements: 2
     - id: validation-effects
-      question: Adjusted가 유효해지도록 조정된 구성이며 모든 스트림의 파라미터 변경이나 스트림 구성 삭제가 가능하다는 결과 범위만 한
-        문장으로 설명하세요. 호출자의 확인 의무는 다음 질문에서 다루므로 반복하지 마세요. 조사 시 기존 validate 결과를 관찰하며 재호출하지
-        마세요.
+      question: Adjusted가 유효해지도록 조정된 구성이며, 임의의 스트림에서 파라미터가 변경되었을 수 있고 스트림 구성이 삭제되었을
+        수 있다는 결과 범위만 한 문장으로 설명하세요. any stream을 모든 스트림이 실제로 변경된다는 전체 변경 결과로 강화하지 마세요.
+        호출자의 확인 의무는 다음 질문에서 다루므로 반복하지 마세요. 조사 시 기존 validate 결과를 관찰하며 재호출하지 마세요.
       sources:
       - validation-changes
       - validate
@@ -6051,6 +6051,9 @@ sections:
         - - 가능
           - 수 있
           - 수있
+        reject_patterns:
+        - pattern: 모든\s*스트림
+          message: any stream의 변경 가능성을 모든 스트림의 전체 변경 범위로 바꾸지 마세요.
       max_statements: 1
     - id: validation-caller
       question: Adjusted의 호출자가 지켜야 하는 확인 의무만 설명하세요.
