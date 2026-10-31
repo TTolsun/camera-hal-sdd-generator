@@ -11,6 +11,9 @@ parser.add_argument('--previous', type=Path, required=True)
 parser.add_argument('--work', type=Path, required=True)
 args = parser.parse_args()
 previous, work = args.previous.resolve(), args.work.resolve()
+baseline = json.loads((previous/'run/facts/facts.json').read_text(encoding='utf-8'))['meta']['source_commit']
+if baseline != '293d751a814e0d4c34e85ad457ccd9d5eefd1a61':
+    raise ValueError('The virtual-principle addition requires the recorded issue211 baseline; commits must not be mixed')
 work.mkdir(parents=True, exist_ok=False)
 for name in ['config', 'run', 'build', 'historical-style']:
     shutil.copytree(previous/name, work/name)
