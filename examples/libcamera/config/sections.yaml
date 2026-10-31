@@ -5956,9 +5956,9 @@ sections:
         - - '24'
         - - '72'
     - id: threads
-      question: 이 실험에서 Object 수신 객체를 메인 스레드에 둔 Auto·Queued·Direct 연결의 실제 실행 스레드와 정지 호출 구간 안
-        또는 반환 뒤에 기록한 콜백 진입·반환 근처 표식의 차이를 두 문장 이내로 설명하세요. 반환 근처 표식 뒤에도 카운터 증가와 지역 객체 소멸이 남으므로
-        실제 C++ 반환 완료나 명령 수준 반환 추적을 증명하지 않는다고 명시하세요. 다른 연결·장치·애플리케이션의 보장으로 확대하지 마세요.
+      question: 이 공개 가상 프로브에서 Object 수신 객체를 메인 스레드에 둔 Auto·Queued·Direct 연결의 실행 스레드와 정지 호출 구간
+        안 또는 반환 뒤에 기록한 콜백 진입·반환 근처 표식의 차이만 두 문장·350자 이내로 설명하세요. 다른 연결·장치·애플리케이션의 보장으로 확대하지 마세요.
+        반환 표식의 한계는 다음 파트에서 따로 설명하므로 이 파트에서 반복하지 마세요.
       sources: []
       max_statements: 1
       answer_contract:
@@ -5970,6 +5970,17 @@ sections:
           - queued
         - - Direct
           - direct
+    - id: return-marker
+      question: 표식 기록, returned.fetch_add(1), 지역 객체 소멸, 실제 C++ 함수 반환의 순서에 근거해 반환 근처 표식이 실제 반환
+        완료나 명령 수준 반환 추적을 증명하지 않는다는 한계만 한 문장·200자 이내로 설명하세요. 표식은 카운터 증가와 지역 객체 소멸 전에 기록되므로 전후
+        관계를 뒤집지 마세요. 연결별 실행 스레드와 정지 조건은 반복하지 마세요.
+      sources: []
+      max_statements: 1
+      answer_contract:
+        basis: measurement
+        required_terms:
+        - - 표식
+        - - 반환
     - id: limits
       question: 이 실행이 memfd CPU 버퍼와 eventfd 시험 입력을 쓴 가상 프로브임을 명시하세요. 보존한 DMA 동기화·제공자 오류와 물리
         카메라·다른 애플리케이션·사내 HAL의 미검증 범위를 두 문장 이내로 설명하세요. 실제 콜백 관찰을 DMA 정상 동작이나 실기기 검증 성공으로 바꾸지
