@@ -4421,7 +4421,8 @@ sections:
       이어 stop의 미실행 시 실제 0 반환과 실행 중 상태 전환·ConnectionTypeBlocking 호출·동기 취소 완료를 구분하세요.
       주석과 구현이 다르면 실제 분기를 우선하고 호출자 동기화 의무는 동시성 절에서 다루므로 반복하지 마세요. queueRequest의 실행
       상태 isAccessAllowed 검사에서 음수이면 그 값을 그대로 반환하는 경로와, request controls 정보 맵을 &controls()
-      주소와 비교하는 정확한 검사 대상도 빠뜨리지 마세요.
+      주소와 비교하는 정확한 검사 대상도 빠뜨리지 마세요. 제공된 stop 계약은 src/libcamera/camera.cpp의 API 주석입니다.
+      헤더 문서라고 부르거나 발췌에 없는 파일 위치를 추정하지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -5207,11 +5208,13 @@ sections:
       max_statements: 1
     - id: waiting
       question: waitingRequests_의 선두 요청 prepared_가 거짓이면 뒤 요청도 전달하지 않는 조건과, queuedRequests_
-        크기가 maxQueuedRequestsDevice_ 한도에 도달하면 전달을 중단하는 조건을 구분해 두 문장 이내로 설명하세요. 같은
-        선두 준비 조건을 되풀이하지 마세요.
+        크기가 maxQueuedRequestsDevice_ 한도에 도달하면 전달을 중단하는 조건을 구분하세요. completeRequest()가
+        완료된 요청을 큐에서 제거한 뒤 끝에서 doQueueRequests(camera)를 호출하여 장치 큐 한도 여유가 생긴 대기 요청의
+        전달을 다시 시도하는 연결도 함께 세 문장 이내로 설명하세요. 같은 선두 준비 조건이나 완료 순서 상세를 되풀이하지 마세요.
       sources:
       - device-queue
       - waiting-prepared
+      - completion
       max_statements: 1
       answer_contract:
         basis: implementation
@@ -5219,9 +5222,11 @@ sections:
         - - waitingRequests_
         - - maxQueuedRequestsDevice_
         - - prepared_
+        - - completeRequest
+        - - doQueueRequests
         reject_patterns:
-        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
-          message: 2문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){3}
+          message: 전달 중단 조건과 완료 후 재시도 연결을 세 문장 이내로 설명하세요.
     - id: dispatch
       question: 이 void 함수의 취소 여부 분기와 각 호출을 설명하세요. 반환값을 지어내지 마세요.
       sources:
@@ -5397,7 +5402,8 @@ sections:
       role: summary
       question: 요청을 만든 호출자는 요청 삭제를 책임지고, 버퍼를 요청에 추가한 호출자는 버퍼를 요청 완료 콜백까지 유효하게 유지해야
         하며, 파이프라인 핸들러는 completeRequest가 반환한 뒤 요청에 접근해서는 안 된다는 결론을 먼저 설명하세요. 두 호출자를
-        하나의 주체로 합치지 말고 버퍼 유지 의무의 기한을 정확히 유지하세요.
+        하나의 주체로 합치지 말고 버퍼 유지 의무의 기한을 정확히 유지하세요. 원문은 버퍼 참조를 저장한다고만 설명하며 배타성을 명시하지 않으므로
+        참조만 저장한다는 배타적 주장을 추가하지 마세요.
       sources:
       - create
       - buffer-duty
@@ -5410,6 +5416,9 @@ sections:
         - - 호출자
         - - 버퍼
         - - 완료
+        reject_patterns:
+        - pattern: 참조만|참조를?\s*만|only
+          message: 버퍼 참조 저장에 원문에 없는 배타성을 추가하지 마세요.
     - id: request-owner
       question: createRequest가 반환한 요청의 삭제 또는 재사용 책임이 호출자에게 있다는 사실만 한 문장으로 설명하세요. 재사용
         API의 동작과 버퍼 플래그·fence 조건은 다른 질문이 담당하므로 이 문단에는 포함하지 마세요.
@@ -5632,10 +5641,11 @@ sections:
       max_statements: 3
     - id: device-entry
       question: PipelineHandler::stop의 waitingRequests_ 분리와 stopDevice 진입·복귀를 관찰하는
-        계획을 설명하세요. 진입 기록 뒤 복귀 기록이 없으면 stopDevice 내부 정체를 조사할 후보이고, 복귀했는데 큐가 남고 정지가
-        끝나지 않으면 그 뒤 취소·완료 경로를 조사할 후보임을 구분하세요. 실제 멎음을 관측했다고 단정하지 말고 두 경우를 나눌 기록 기준만
-        쓰세요. 후단 큐 ASSERT와 취소 호출은 다음 질문에서 다루므로 나열하지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다.
-        테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
+        계획을 설명하세요. 진입 기록 뒤 복귀 기록이 없으면 stopDevice 내부 정체를 조사할 후보이고, 복귀했는데 장치 큐 queuedRequests_가
+        비어 있지 않고 정지가 끝나지 않으면 그 뒤 취소·완료 경로를 조사할 후보임을 구분하세요. stopDevice 복귀 직후 지역 waitingRequests
+        목록에 요청이 남는 것은 뒤의 취소 반복문 이전이라 정상일 수 있으므로 이를 후단 정체의 판정 기준으로 사용하지 마세요. 실제 멎음을
+        관측했다고 단정하지 말고 두 경우를 나눌 기록 기준만 쓰세요. 후단 큐 ASSERT와 취소 호출은 다음 질문에서 다루므로 나열하지 마세요.
+        미실행 계획임을 유지하고 실제 실행 결과로 쓰지 마세요.
       sources:
       - device-stop
       answer_contract:
@@ -5643,6 +5653,7 @@ sections:
         required_terms:
         - - waitingRequests_
         - - stopDevice
+        - - queuedRequests_
       max_statements: 2
     - id: pending
       question: PipelineHandler::stop()의 취소 반복문에서 doQueueRequest(request)에 전달되는 request
