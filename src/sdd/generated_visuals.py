@@ -54,11 +54,12 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 
 
-def conditions(passages):
-    """Copy balanced if expressions; never invent a negation or evaluate C++."""
+def conditions(passages, *, include_while=False):
+    """Copy balanced guards; optional while support preserves older catalogs."""
     found = {''}
+    pattern = r'\b(?:if\s*(?:constexpr\s*)?|while\s*)\(' if include_while else r'\bif\s*(?:constexpr\s*)?\('
     for _, quote in passages.values():
-        for match in re.finditer(r'\bif\s*(?:constexpr\s*)?\(', quote):
+        for match in re.finditer(pattern, quote):
             start, depth = match.end(), 1
             tokens = re.finditer(r'"(?:\\.|[^"\\])*"|\x27(?:\\.|[^\x27\\])*\x27|//[^\n]*|/\*.*?\*/|[()]', quote[start:], re.S)
             for token in tokens:
@@ -69,8 +70,8 @@ def conditions(passages):
     return sorted(found)
 
 
-def condition_catalog(passages):
-    return {f'c{i}': text for i, text in enumerate(c for c in conditions(passages) if c)}
+def condition_catalog(passages, *, include_while=False):
+    return {f'c{i}': text for i, text in enumerate(c for c in conditions(passages, include_while=include_while) if c)}
 
 
 def source_symbols(passages):
@@ -135,7 +136,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'condition_display', 'prompt', 'sources'}:
+    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'condition_display', 'prompt', 'sources', 'while_conditions'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -149,6 +150,8 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
         raise ValueError('Visual max_label_chars must be an integer from 8 to 240')
     if plan.get('condition_display','inline') not in ('inline','evidence'):
         raise ValueError('Visual condition_display must be inline or evidence')
+    if type(plan.get('while_conditions', False)) is not bool:
+        raise ValueError('Visual while_conditions must be boolean')
     for key in ('title', 'question'):
         _text(plan[key], key)
     if 'prompt' in plan:
@@ -190,17 +193,17 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
                   'sources': {k: {f: r[f] for f in ('file', 'line', 'sha256', 'selector')} for k, r in records.items()}})
     return pin, records, passages, system, {'question': plan['question'], 'kind': plan['kind'],
                                          'instructions': plan.get('prompt', ''),
-                                         'max_nodes': limit, 'conditions': condition_catalog(passages),
+                                         'max_nodes': limit, 'conditions': condition_catalog(passages, include_while=plan.get('while_conditions', False)),
                                          'allowed_symbols': source_symbols(passages),
                                          'required_symbols': required_symbols,
                                          'node_bindings': bindings(required_symbols, limit),
                                          'answer_contract': plan.get('answer_contract'),
                                          'answer_contract_en': plan.get('answer_contract_en'),
-                                         'condition_choices': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages) for branch in ('true', 'false')],
+                                         'condition_choices': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages, include_while=plan.get('while_conditions', False)) for branch in ('true', 'false')],
                                          'sources': annotated}
 
 
-def schema(passages, limit, required_symbols=None, max_label_chars=None):
+def schema(passages, limit, required_symbols=None, max_label_chars=None, *, include_while=False):
     string = {'type': 'string', 'minLength': 1}
     refs = {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': list(passages)}}
     def obj(properties):
@@ -212,7 +215,7 @@ def schema(passages, limit, required_symbols=None, max_label_chars=None):
     node = obj({'id': {**string, 'pattern': '^[a-z][a-z0-9_-]*$'}, 'symbol': {**string, 'enum': required_symbols or source_symbols(passages)}, 'label': korean,
                 'label_en': english, 'shape': {'type': 'string', 'enum': ['box', 'process', 'decision']}, 'quote_ids': refs})
     edge = obj({'from': string, 'to': string, 'label': korean, 'label_en': english,
-                'condition_ref': {'type': 'string', 'enum': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages) for branch in ('true', 'false')]},
+                'condition_ref': {'type': 'string', 'enum': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages, include_while=include_while) for branch in ('true', 'false')]},
                 'quote_ids': refs})
     nodes = {'type': 'array', 'minItems': 2, 'maxItems': limit, 'items': node}
     if fixed := bindings(required_symbols, limit):
@@ -238,7 +241,7 @@ def materialize(cfg, model, section, plan, draft, producer):
     limit = node_limit(cfg, plan)
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'prompt', 'sources')} | {'nodes': [], 'edges': [], 'producer': producer}
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'prompt', 'sources', 'while_conditions')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):
@@ -257,7 +260,7 @@ def materialize(cfg, model, section, plan, draft, producer):
         quote = '\n'.join(quotes)
         for key in ('label', 'label_en'):
             remaining = ''.join(item[key].split())
-            for guard in sorted(conditions({'cited': ('cited', quote)}), key=len, reverse=True):
+            for guard in sorted(conditions({'cited': ('cited', quote)}, include_while=plan.get('while_conditions', False)), key=len, reverse=True):
                 if guard:
                     remaining = remaining.replace(''.join(guard.split()), '')
             if re.search(r'[<>=!]', remaining):
@@ -287,11 +290,11 @@ def materialize(cfg, model, section, plan, draft, producer):
             raise ValueError('Edge evidence must contain both endpoint symbols')
         choice = item['condition_ref']
         allowed = {'always': ('', 'always')} | {f'{key}:{branch}': (text, branch)
-                    for key, text in condition_catalog(passages).items() for branch in ('true', 'false')}
+                    for key, text in condition_catalog(passages, include_while=plan.get('while_conditions', False)).items() for branch in ('true', 'false')}
         if not isinstance(choice, str) or choice not in allowed:
             raise ValueError('Unknown source condition ID')
         condition, branch = allowed[choice]
-        if condition not in conditions({'edge': ('edge', quote)}):
+        if condition not in conditions({'edge': ('edge', quote)}, include_while=plan.get('while_conditions', False)):
             raise ValueError('Edge condition ID is absent from its cited source passages')
         edge = {k: item[k] for k in ('from', 'to', 'label', 'label_en')} | {'evidence': evidence}
         if condition:
@@ -355,7 +358,7 @@ def generate(cfg, model, section, agent, previous=None):
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Visual evidence input exceeds budget; evidence is not truncated')
-            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'),plan.get('max_label_chars'))} if cfg.agent.kind in SCHEMA_KINDS else {}
+            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'),plan.get('max_label_chars'), include_while=plan.get('while_conditions', False))} if cfg.agent.kind in SCHEMA_KINDS else {}
             raw = agent.chat(system, user, tag=f"visual_{section['id']}_{plan['id']}_{attempt}", **options)
             try:
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))

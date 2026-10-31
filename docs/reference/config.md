@@ -228,3 +228,30 @@ paths:
 3. 이 옵션은 산문 스타일 정책과 생성된 시각 자료(visuals)의 CLI 정체성과 style 디렉터리만 선택합니다. 산문 CLI의 model과 args 전체를 감사하는 기능은 없습니다.
 4. 시각 자료 렌더링은 모델 CLI를 실행하지 않습니다. 산문의 `style_policy` 검사는 생성 설계(generated_design)에 기록된 style_policy를 대상으로 하며, 모든 산문 원고를 대상으로 하지 않습니다. 생성 설계에 기록된 style_policy가 어긋나면 실패합니다. 생성 시각 자료(generated_visuals)의 fingerprint는 현재 fingerprint와 설정된 레거시 CLI 실행 파일 경로의 정확한 fingerprint가 모두 어긋날 때만 실패합니다. 레거시 호환 검사는 source, rule, model, argument 고정값을 모두 보존하며 모델을 실행하지 않습니다. 두 검사는 서로 다른 검사입니다. 시각 자료에 별도의 style pin이 있다고 가정하지 않습니다. 모든 프로파일 불일치가 실패하는 것은 아니며, 소스·섹션·본문 검사는 바뀌지 않습니다.
 5. 프로파일 파일과 style `.md` 파일의 SHA256이 사이트 manifest `inputs`에 기록됩니다.
+
+## `while_conditions` (LLM 시각화 계획 플래그)
+
+**결론:** 기본값은 `false`다. `true`일 때만 `while` 조건을 `if`/`if constexpr`과 함께 추출한다.
+
+1. **기본값:** 키가 없으면 `false`로 처리한다.
+2. **값 검사:** YAML boolean만 허용한다. `1`, `0`, `"true"`, `null`은 `Visual while_conditions must be boolean` 오류가 된다.
+3. **`true` 동작:** 조건 추출 패턴에 `while (`이 추가된다. 괄호 균형 추적과 공백 정규화 방식은 그대로다.
+4. **적용 범위:** 조건 카탈로그(`c0`, `c1`...), `condition_ref` 스키마, 라벨 가드 검사에 같은 값이 쓰인다.
+
+**주의:**
+- 괄호 균형과 공백 정규화는 어휘(lexical) 처리다. C++ 의미를 평가하지 않는다.
+- `do ... while (...);`의 `while`도 같은 패턴으로 잡힌다.
+- 조건 ID는 정렬된 텍스트 순서로 붙으므로 `true`로 바꾸면 기존 `cN` 번호가 달라질 수 있다.
+- 이 값은 입력 지문에 포함되므로 바꾸면 재생성이 필요하다.
+
+**다음 행동:** 아래 항목을 계획에 추가한 뒤 `generate`를 다시 실행한다.
+
+```yaml
+- id: example-flow
+  topic: example-topic
+  kind: flow
+  title: Example flow
+  question: Example question?
+  generation: llm
+  while_conditions: true
+```

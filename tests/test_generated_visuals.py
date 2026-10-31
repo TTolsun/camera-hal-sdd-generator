@@ -116,6 +116,42 @@ def test_label_retry_identifies_the_specific_field_without_relaxing_guard_valida
     assert agent.calls == 2 and paths[0].exists()
 
 
+def test_while_conditions_are_opt_in_and_copy_nested_expressions_verbatim():
+    from sdd.generated_visuals import condition_catalog, schema
+    passages = {'loop:0': ('loop', 'while (!queue.empty(check("("))) { drain(); } if (ready) { emit(); }')}
+    assert list(condition_catalog(passages).values()) == ['ready']
+    extended = condition_catalog(passages, include_while=True)
+    assert list(extended.values()) == ['!queue.empty(check("("))', 'ready']
+    assert 'queue.empty(check("("))' not in extended.values()
+    old = schema(passages, 2)['properties']['edges']['items']['properties']['condition_ref']['enum']
+    new = schema(passages, 2, include_while=True)['properties']['edges']['items']['properties']['condition_ref']['enum']
+    assert old == ['always','c0:true','c0:false']
+    assert len(new) == 5
+
+
+def test_while_edge_requires_opt_in_and_preserves_bound_loop_guard(tmp_cfg, automatic):
+    from sdd.generated_visuals import inputs, materialize, plans
+    section, model, save, agent = automatic
+    record = model.evidence['device/shutdown/stop']
+    record['text'] = 'void Device::stop() { while (pending()) { cancelPending(); } }'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    section['design_topics'][0]['sources'][0]['sha256'] = record['sha256']
+    record['selector'] = copy.deepcopy(section['design_topics'][0]['sources'][0])
+    save()
+    plan = plans(tmp_cfg, section)[0]
+    agent.draft['edges'][0]['condition_ref'] = 'c0:true'
+    with pytest.raises(ValueError, match='Unknown source condition ID'):
+        materialize(tmp_cfg, model, section, plan, agent.draft, tmp_cfg.agent.label)
+    plan['while_conditions'] = True
+    graph = materialize(tmp_cfg, model, section, plan, agent.draft, tmp_cfg.agent.label)
+    assert 'pending() [true]' in graph['edges'][0]['label']
+    assert 'while_conditions' not in graph
+    for invalid in ['true', 1, None]:
+        plan['while_conditions'] = invalid
+        with pytest.raises(ValueError, match='while_conditions must be boolean'):
+            inputs(tmp_cfg, model, section, plan)
+
+
 @pytest.mark.parametrize('mutation',['node-symbol','edge-symbol','quote-id','hash','empty','over-limit','condition','invented-hash'])
 def test_invalid_model_draft_preserves_existing_outputs(tmp_cfg, automatic, mutation):
     section, model, save, agent=automatic

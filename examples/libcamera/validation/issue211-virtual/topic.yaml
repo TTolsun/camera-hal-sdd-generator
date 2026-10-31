@@ -125,7 +125,8 @@ parts:
     requestCompleted에 연결된 cam의 requestComplete로 돌아옵니다. 그 뒤의 callLater·processRequest는 다음 절로 이어지므로 여기서 반복하지 마세요. 네 짧은 문장 이내입니다.
     수신 연결과 일반 파이프라인 큐 연결 소스도 함께 제공됩니다. 제어 목록·타임스탬프·FrameSuccess 기본값·가상 범위 경고는 이 요약에서 생략하고, 핵심 전달·실패 상태·모든 버퍼 완료 조건·앱 신호 연결만
     네 짧은 문장 360자 이내로 쓰세요. 첫 문장에서 가상 쪽 처리 함수는 VirtualCameraData::processRequest라고 반드시 클래스 이름을 명시하세요. cam의 CameraSession::processRequest와
-    다른 함수입니다. 완료 신호는 제출 순서로 전달하며 앞 요청이 RequestPending이면 신호 전달이 보류된다는 조건도 설명하세요. 네 짧은 문장 440자 이내로 쓰세요.
+    다른 함수입니다. 완료 신호는 제출 순서로 전달하며 앞 요청이 RequestPending이면 신호 전달이 보류된다는 조건도 설명하세요. 네 짧은 문장 440자 이내로 쓰세요. 목표 시각에 정확히 실행됨을 보장하지
+    마세요. 소스는 VirtualCameraData::processRequest가 목표 시각까지 sleep_until로 기다린 뒤 처리합니다. 첫 문장은 이 조건으로 한정하고 정확한 실행 시간·성능 보장을 쓰지 마세요.
   sources:
   - virtual-queue
   - virtual-frame
