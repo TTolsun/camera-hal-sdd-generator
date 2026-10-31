@@ -209,6 +209,8 @@ terms:
   aliases: []
 
 common:
+# Log severity word, not an acronym.
+- ERROR
 - API
 - CPU
 - GPU
