@@ -300,7 +300,7 @@ def test_compact_guard_display_preserves_exact_guard_and_proof(tmp_cfg, automati
     record['sha256']=hashlib.sha256(record['text'].encode()).hexdigest()
     section['design_topics'][0]['sources'][0]['sha256']=record['sha256']
     record['selector']=copy.deepcopy(section['design_topics'][0]['sources'][0])
-    plan=yaml.safe_load((tmp_cfg.root/'visuals.yaml').read_text())['sections']['device'][0]
+    plan=yaml.safe_load((tmp_cfg.root/'visuals.yaml').read_text(encoding='utf-8'))['sections']['device'][0]
     plan['condition_display']='evidence'
     agent.draft['edges'][0].update(label='예',label_en='Yes',condition_ref='c0:true')
     graph=materialize(tmp_cfg,model,section,plan,agent.draft,'cli/test/model')
@@ -315,7 +315,7 @@ def test_compact_guard_display_preserves_exact_guard_and_proof(tmp_cfg, automati
 def test_label_ceiling_is_enforced_in_schema_and_materialization(tmp_cfg, automatic):
     from sdd.generated_visuals import materialize,schema,visual_passages
     section,model,save,agent=automatic
-    plan=yaml.safe_load((tmp_cfg.root/'visuals.yaml').read_text())['sections']['device'][0]
+    plan=yaml.safe_load((tmp_cfg.root/'visuals.yaml').read_text(encoding='utf-8'))['sections']['device'][0]
     plan['max_label_chars']=16
     agent.draft['nodes'][0]['label_en']='x'*17
     with pytest.raises(ValueError,match='max_label_chars'):
