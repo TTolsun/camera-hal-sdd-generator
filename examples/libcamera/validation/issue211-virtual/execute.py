@@ -1,5 +1,6 @@
 """Record the selected native CLI and normal publication stages independently."""
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -30,7 +31,8 @@ else:
     command = [str(reader/'review.py'), '--work', str(work), '--review-config', str(work/'new-document-review.yaml'),
                '--korean', str(window/'ko.txt'), '--english', str(window/'en.txt'), '--inventory', str(window/'inventory.json'),
                '--out', str(work/'reviews'/args.tag)]
-    notes = work/'notes-current/documents.json'
+    selection = work/'notes-selection.json'
+    notes = work/json.loads(selection.read_text(encoding='utf-8'))['directory']/'documents.json' if selection.exists() else work/'notes-current/documents.json'
     if not notes.exists():
         notes = work/'notes/documents.json'
     if notes.exists():

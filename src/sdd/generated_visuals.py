@@ -261,7 +261,10 @@ def materialize(cfg, model, section, plan, draft, producer):
                 if guard:
                     remaining = remaining.replace(''.join(guard.split()), '')
             if re.search(r'[<>=!]', remaining):
-                raise ValueError('Label comparison differs from cited source guards; use condition_ref')
+                location = item.get('id') or f"{item.get('from')} to {item.get('to')}"
+                raise ValueError('Label comparison differs from cited source guards; '
+                                 f'{location}.{key}: {item[key]!r}. '
+                                 'Use condition_ref for guards and words instead of comparison signs in explanatory labels.')
         return evidence, quote
     for item in draft['nodes']:
         if not isinstance(item, dict) or set(item) != {'id', 'symbol', 'label', 'label_en', 'shape', 'quote_ids'}:

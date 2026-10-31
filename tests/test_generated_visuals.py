@@ -95,6 +95,27 @@ def test_visual_retry_supplies_rejected_draft_and_current_evidence(tmp_cfg, auto
     assert agent.calls == 2 and paths[0].exists()
 
 
+def test_label_retry_identifies_the_specific_field_without_relaxing_guard_validation(tmp_cfg, automatic):
+    _, model, _, original = automatic
+    good = json.dumps(original.draft, ensure_ascii=False)
+    bad = copy.deepcopy(original.draft)
+    bad['nodes'][1]['label'] = 'done=true'
+
+    class RepairingAgent:
+        def __init__(self): self.calls = 0
+        def chat(self, system, user, **kwargs):
+            self.calls += 1
+            if self.calls == 1:
+                return json.dumps(bad)
+            assert 'cancel.label' in user and 'done=true' in user
+            assert 'condition_ref' in user and 'Current source inputs:' in user
+            return good
+
+    agent = RepairingAgent()
+    paths = Generator(tmp_cfg, model, agent).run()
+    assert agent.calls == 2 and paths[0].exists()
+
+
 @pytest.mark.parametrize('mutation',['node-symbol','edge-symbol','quote-id','hash','empty','over-limit','condition','invented-hash'])
 def test_invalid_model_draft_preserves_existing_outputs(tmp_cfg, automatic, mutation):
     section, model, save, agent=automatic
