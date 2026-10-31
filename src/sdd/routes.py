@@ -85,15 +85,27 @@ def from_heading_content(body: str) -> list[tuple[str, str]] | None:
         if block.tag == 'h2':
             title, found = ''.join(block.itertext()).strip(), False
             continue
-        if (not title or found or block.tag != 'p'
+        if (not title or found or block.tag not in ('p', 'ol', 'ul')
                 or title in ('소스 근거', '클래스 관계', '관련 클래스')):
             continue
-        text = ''.join(block.itertext())
+        if block.tag in ('ol', 'ul'):
+            item = block.find('li')
+            if item is None:
+                continue
+            # Tight lists put prose in li.text; loose lists wrap it in p.
+            # Do not summarize nested code, diagrams or subsequent steps.
+            paragraph = item.find('p')
+            text = item.text if item.text and item.text.strip() else (
+                ''.join(paragraph.itertext()) if paragraph is not None else '')
+        else:
+            text = ''.join(block.itertext())
         # SuperFences may put its stash and immediately following prose into
         # one paragraph. Remove only parser placeholders, never their contents.
         text = re.sub(r'\x02[^\x03]*\x03', '', text)
         if not text.strip():
             continue
+        if re.fullmatch(r'\s*\[[^\]]+\]\([^)]+\)\s*', text):
+            continue  # A source/download link does not explain the topic.
         # The generated virtual-configuration notice describes scope, not the
         # topic's task. Splitting it at its first sentence also leaves an open
         # bold marker in Markdown. Use the following actual prose instead.
