@@ -70,5 +70,10 @@
     "camera->requestCompleted.connect(&automatic, &Observer::complete, ConnectionTypeAuto);",
     "camera->requestCompleted.connect(&direct, &Observer::complete, ConnectionTypeDirect);",
     "camera->requestCompleted.connect(&queued, &Observer::complete, ConnectionTypeQueued);"
+  ],
+  "callback_instrumentation_in_source_order": [
+    "event(\"callback-enter\", data);",
+    "event(\"callback-return\", data);",
+    "returned.fetch_add(1);"
   ]
 }
