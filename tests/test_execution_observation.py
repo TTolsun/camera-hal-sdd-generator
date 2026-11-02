@@ -30,12 +30,23 @@ def test_orphan_live_worker_blocks_duplicate_after_owner_exits(tmp_cfg):
 
 def test_heartbeat_updates_a_silent_stage_and_records_failure(tmp_cfg):
     execution = Execution(tmp_cfg, object())
+    def snapshot():
+        deadline = time.monotonic() + 2
+        while True:
+            try:
+                return json.loads(execution.path.read_bytes())
+            except PermissionError as exc:
+                # Windows can briefly deny a reader during atomic replacement.
+                if (os.name != 'nt' or getattr(exc, 'winerror', None) not in (5, 32, 33)
+                        or time.monotonic() >= deadline):
+                    raise
+                time.sleep(.01)
     with pytest.raises(KeyboardInterrupt):
         with execution.heartbeat(interval=.02):
-            first = json.loads(execution.path.read_bytes())
+            first = snapshot()
             deadline = time.monotonic() + 2
             while True:
-                second = json.loads(execution.path.read_bytes())
+                second = snapshot()
                 if second['updated_at'] > first['updated_at'] or time.monotonic() >= deadline:
                     break
                 time.sleep(.01)
