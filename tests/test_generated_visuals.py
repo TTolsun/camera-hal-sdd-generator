@@ -81,6 +81,45 @@ def test_automatic_graph_generation_reuse_export_and_carryover(tmp_cfg, automati
     assert _split(path.read_text(encoding='utf-8'))[0]['generated_visuals']['records']['stop-flow']['generation_commit']=='a'*40
 
 
+def test_edge_label_cap_preserves_long_nodes_and_prior_valid_manuscript(tmp_cfg, automatic):
+    from sdd.generated_visuals import materialize, plans, schema
+    section, model, _, agent = automatic
+    plan = plans(tmp_cfg, section)[0]
+    long_node = 'Stop the device before releasing its remaining resources'
+    draft = copy.deepcopy(agent.draft)
+    draft['nodes'][0]['label_en'] = long_node
+    assert materialize(tmp_cfg, model, section, plan, draft, 'test')['nodes'][0]['label_en'] == long_node
+    restricted = {**plan, 'max_label_chars': 72, 'max_edge_label_chars': 20}
+    with pytest.raises(ValueError, match=r'stop to cancel.label_en.*max_edge_label_chars'):
+        materialize(tmp_cfg, model, section, restricted, draft, 'test')
+    short = copy.deepcopy(draft)
+    short['edges'][0]['label_en'] = 'Cancel waiting'
+    result = materialize(tmp_cfg, model, section, restricted, short, 'test')
+    assert result['nodes'][0]['label_en'] == long_node
+    assert 'max_edge_label_chars' not in result
+    rules = schema({'s:0': ('s', 'stop(); cancelPending();')}, 2,
+                   ['stop', 'cancelPending'], 72, max_edge_label_chars=20)
+    assert rules['properties']['nodes']['properties']['n0']['properties']['label_en']['maxLength'] == 72
+    assert rules['properties']['edges']['items']['properties']['label_en']['maxLength'] == 20
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    original = path.read_bytes()
+    data = yaml.safe_load((tmp_cfg.root/'visuals.yaml').read_bytes())
+    data['sections']['device'][0]['max_edge_label_chars'] = 8
+    (tmp_cfg.root/'visuals.yaml').write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    with pytest.raises(ValueError, match='max_edge_label_chars'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+
+
+@pytest.mark.parametrize('value', [True, 7, 241, '20', None])
+def test_edge_label_cap_rejects_invalid_configuration(tmp_cfg, automatic, value):
+    from sdd.generated_visuals import inputs, plans
+    section, model, _, agent = automatic
+    with pytest.raises(ValueError, match='max_edge_label_chars'):
+        inputs(tmp_cfg, model, section, {**plans(tmp_cfg, section)[0], 'max_edge_label_chars': value})
+    assert not agent.calls
+
+
 def test_visual_retry_supplies_rejected_draft_and_current_evidence(tmp_cfg, automatic):
     _, model, _, original = automatic
     good = json.dumps(original.draft, ensure_ascii=False)

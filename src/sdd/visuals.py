@@ -52,7 +52,7 @@ def _id(value):
 
 
 def wrap_label(value, width=28):
-    """Keep every character, wrapping Korean/Latin labels before escaping HTML."""
+    """Wrap labels without splitting qualified code identifiers; escape HTML."""
     def size(text):
         return sum(2 if unicodedata.east_asian_width(c) in ('W', 'F') else 1 for c in text)
     lines, line = [], ''
@@ -60,6 +60,9 @@ def wrap_label(value, width=28):
         if line and size(line + word) > width:
             lines.append(line)
             line = ''
+        if re.search(r'[A-Za-z_]\w*(?:::\w+)+', word, re.ASCII):
+            line += word
+            continue
         for char in word:
             if line and size(line + char) > width:
                 lines.append(line)

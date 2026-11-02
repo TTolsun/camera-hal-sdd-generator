@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "historical_archive": "publication/issue211/cli-evidence.zip",
+  "archive_sha256": "df8a735a121fa601779647c3b244a6ae0e36018c798659df171c24c760224682",
+  "records": [
+    {
+      "archive_entry": "generator/issue211/runs/20261031-wsl-cam-3/cam-1/record.json",
+      "sha256": "4e04b252fd5db261b194972f010fa60d1708368e8ac99ebdb36c385432ff40d6",
+      "cam_arguments": [
+        "--camera",
+        "Virtual2",
+        "--capture=3",
+        "--stream",
+        "role=video,width=400,height=300,pixelformat=NV12"
+      ],
+      "exit_code": 0
+    },
+    {
+      "archive_entry": "generator/issue211/runs/20261031-wsl-cam-3/cam-2/record.json",
+      "sha256": "939672fe872e010b599895b3b17daf4638a40335762f0a211c4ef37cb070ffee",
+      "cam_arguments": [
+        "--camera",
+        "Virtual2",
+        "--capture=3",
+        "--stream",
+        "role=video,width=400,height=300,pixelformat=NV12"
+      ],
+      "exit_code": 0
+    },
+    {
+      "archive_entry": "generator/issue211/runs/20261031-wsl-cam-3/cam-3/record.json",
+      "sha256": "292d5fceea0148bb33a7c47a7cdc2554f2dc18bbd116064211f993ae15ebe0fd",
+      "cam_arguments": [
+        "--camera",
+        "Virtual2",
+        "--capture=3",
+        "--stream",
+        "role=video,width=400,height=300,pixelformat=NV12"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "output_sink_options_requested": false,
+  "scope": "Observed command options; source inspection of CameraSession::start selects output sinks only through display, SDL or file options. Not a new runtime observation of sink_.",
+  "new_runtime": false
+}

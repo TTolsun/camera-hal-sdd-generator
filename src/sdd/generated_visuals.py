@@ -136,7 +136,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'condition_display', 'prompt', 'sources', 'while_conditions', 'require_connected'}:
+    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'while_conditions', 'require_connected'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -148,6 +148,8 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
     _id(plan['id'])
     if 'max_label_chars' in plan and (type(plan['max_label_chars']) is not int or not 8<=plan['max_label_chars']<=240):
         raise ValueError('Visual max_label_chars must be an integer from 8 to 240')
+    if 'max_edge_label_chars' in plan and (type(plan['max_edge_label_chars']) is not int or not 8<=plan['max_edge_label_chars']<=240):
+        raise ValueError('Visual max_edge_label_chars must be an integer from 8 to 240')
     if plan.get('condition_display','inline') not in ('inline','evidence'):
         raise ValueError('Visual condition_display must be inline or evidence')
     if type(plan.get('while_conditions', False)) is not bool:
@@ -195,7 +197,8 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
                   'sources': {k: {f: r[f] for f in ('file', 'line', 'sha256', 'selector')} for k, r in records.items()}})
     return pin, records, passages, system, {'question': plan['question'], 'kind': plan['kind'],
                                          'instructions': plan.get('prompt', ''),
-                                         'max_nodes': limit, 'conditions': condition_catalog(passages, include_while=plan.get('while_conditions', False)),
+                                         'max_nodes': limit, **({'max_edge_label_chars': plan['max_edge_label_chars']} if 'max_edge_label_chars' in plan else {}),
+                                         'conditions': condition_catalog(passages, include_while=plan.get('while_conditions', False)),
                                          'allowed_symbols': source_symbols(passages),
                                          'required_symbols': required_symbols,
                                          'node_bindings': bindings(required_symbols, limit),
@@ -205,7 +208,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
                                          'sources': annotated}
 
 
-def schema(passages, limit, required_symbols=None, max_label_chars=None, *, include_while=False):
+def schema(passages, limit, required_symbols=None, max_label_chars=None, *, include_while=False, max_edge_label_chars=None):
     string = {'type': 'string', 'minLength': 1}
     refs = {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': list(passages)}}
     def obj(properties):
@@ -216,7 +219,11 @@ def schema(passages, limit, required_symbols=None, max_label_chars=None, *, incl
     english = {**label, 'description': 'Single-line English translation with the same conditions and obligations.'}
     node = obj({'id': {**string, 'pattern': '^[a-z][a-z0-9_-]*$'}, 'symbol': {**string, 'enum': required_symbols or source_symbols(passages)}, 'label': korean,
                 'label_en': english, 'shape': {'type': 'string', 'enum': ['box', 'process', 'decision']}, 'quote_ids': refs})
-    edge = obj({'from': string, 'to': string, 'label': korean, 'label_en': english,
+    edge_korean, edge_english = dict(korean), dict(english)
+    if max_edge_label_chars is not None:
+        cap = min(max_edge_label_chars, max_label_chars) if max_label_chars is not None else max_edge_label_chars
+        edge_korean['maxLength'] = edge_english['maxLength'] = cap
+    edge = obj({'from': string, 'to': string, 'label': edge_korean, 'label_en': edge_english,
                 'condition_ref': {'type': 'string', 'enum': ['always'] + [f'{c}:{branch}' for c in condition_catalog(passages, include_while=include_while) for branch in ('true', 'false')]},
                 'quote_ids': refs})
     nodes = {'type': 'array', 'minItems': 2, 'maxItems': limit, 'items': node}
@@ -243,13 +250,17 @@ def materialize(cfg, model, section, plan, draft, producer):
     limit = node_limit(cfg, plan)
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'prompt', 'sources', 'while_conditions', 'require_connected')} | {'nodes': [], 'edges': [], 'producer': producer}
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'sources', 'while_conditions', 'require_connected')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):
             raise ValueError('Visual labels must be strings')
         if any(len(item[k])>plan.get('max_label_chars',float('inf')) for k in ('label','label_en')):
             raise ValueError('Visual label exceeds configured max_label_chars')
+        if 'from' in item:
+            for key in ('label', 'label_en'):
+                if len(item[key]) > plan.get('max_edge_label_chars', float('inf')):
+                    raise ValueError(f"Visual edge {item['from']} to {item['to']}.{key} exceeds max_edge_label_chars; shorten the authored label")
         ids = item['quote_ids']
         if not isinstance(ids, list) or not ids or any(not isinstance(q, str) or q not in passages for q in ids):
             raise ValueError('Unknown or missing visual quote ID')
@@ -373,7 +384,7 @@ def generate(cfg, model, section, agent, previous=None):
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Visual evidence input exceeds budget; evidence is not truncated')
-            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'),plan.get('max_label_chars'), include_while=plan.get('while_conditions', False))} if cfg.agent.kind in SCHEMA_KINDS else {}
+            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'),plan.get('max_label_chars'), include_while=plan.get('while_conditions', False), max_edge_label_chars=plan.get('max_edge_label_chars'))} if cfg.agent.kind in SCHEMA_KINDS else {}
             raw = agent.chat(system, user, tag=f"visual_{section['id']}_{plan['id']}_{attempt}", **options)
             try:
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))

@@ -1,45 +1,133 @@
+- id: request-completion-order
+  topic: virtual-principle
+  kind: flow
+  title: 버퍼 완료와 요청 완료·순서 통지는 별개입니다
+  generation: llm
+  max_nodes: 8
+  max_label_chars: 72
+  max_edge_label_chars: 40
+  condition_display: evidence
+  while_conditions: true
+  require_connected: true
+  required_symbols:
+  - PipelineHandlerVirtual::bufferCompleted
+  - completeBuffer
+  - FrameBuffer
+  - completeRequest
+  - queuedRequests_
+  - RequestPending
+  - requestCompleted
+  - doQueueRequests
+  sources:
+  - virtual-completion
+  - pipeline-completion
+  - camera-notification
+  - cam-signal-connection
+  - virtual-start
+  question: 버퍼 완료 뒤 요청 완료와 제출 순서 통지는 어떻게 구분되며 Pending을 만나면 어떤 작업이 이어집니까?
+  prompt: '고정된 8개 노드를 사용합니다. n0은 가상 핸들러가 버퍼 완료 신호를 받는 단계, n1은 completeBuffer가 모든 요청
+    버퍼 완료인지 반환하는 결정입니다. 거짓은 n2 남은 버퍼 대기(요청 완료 표시 전)라는 별도 결과로 갑니다. 참은 n3 PipelineHandler가
+    현재 요청을 완료로 표시하는 단계로 갑니다. n3→n4는 제출 큐가 비어 있지 않은가라는 while 조건 검사입니다. n4 참이면 n5 제출
+    큐 맨 앞 요청이 아직 RequestPending인가를 검사합니다. n4 거짓이면 n7 후속 대기 요청 큐 처리(doQueueRequests)로
+    갑니다. n5 참이면 그 Pending 요청과 뒤 요청들의 통지를 보류하고 n7 후속 큐 처리로 갑니다. n5 거짓이면 n6 완료된 맨 앞
+    요청을 꺼내 Camera의 requestCompleted 신호로 cam에 통지한 뒤 n4로 돌아가 다음 맨 앞을 검사합니다. 이 반복은 제출
+    순서를 보장합니다. 큐 선두는 현재 완료 표시한 요청과 같을 수도 다를 수도 있습니다. 앞의 완료 요청들을 이미 통지한 뒤 Pending에서
+    멈출 수도 있으므로 Pending 분기를 이번 호출의 통지 0건으로 표현하지 않습니다. n2와 n7은 서로 다른 결과이며 합치지 않습니다.
+    n7은 함수 종료나 반환이 아니라 통지 반복 뒤에도 계속되는 doQueueRequests 작업입니다. 실제 while 및 Pending guard의
+    참/거짓과 completeBuffer 반환 조건을 source condition_ref로 인용합니다. 모든 간선에 양 끝 symbol과 해당
+    guard의 구절을 포함합니다. n6→n4는 반복 관계를 명시합니다. 함수 이름 목록 대신 짧은 동작·판정을 쓰되 PipelineHandler의
+    완료 표시, Camera/requestCompleted 통지 주체와 후속 큐 처리의 차이는 유지합니다. authored true/false를
+    시스템 표시와 중복하지 않습니다. 각 노드는 72자, authored 간선은 40자 이내이며 영어는 자연스러운 짧은 문장을 우선합니다. 최종
+    가독성 보완: 실제 큐 반복·세 결정·서로 다른 두 결과와 source 인용은 보존하고 n4의 queuedRequests_, n7의 doQueueRequests,
+    함수 종료 아님 같은 내부 이름·부정 주석은 한영 화면 라벨에서 빼세요. n4는 제출 큐에 요청이 남았는지, n5는 맨 앞 요청이 아직 미완료인지,
+    n6는 완료된 맨 앞을 꺼내 cam에 순서대로 알림, n7은 다음 대기 요청 처리라는 짧은 동작이면 됩니다. 근거의 함수·변수 식별자와 고정
+    symbol은 그대로 보존합니다. n2 남은 버퍼 대기와 n7 후속 요청 처리는 별도 노드로 유지합니다. 종료·반환을 새로 주장하지 마세요.'
+  answer_contract:
+    basis: implementation
+  answer_contract_en:
+    basis: implementation
 - id: completion-flow
   topic: flow
   kind: decision
-  title: 완료 알림에서 후속 처리까지
+  title: 기록된 출력 싱크 미요청 콜백 경로
   generation: llm
   max_nodes: 10
   required_symbols:
-  - requestComplete
+  - CameraSession::requestComplete
   - RequestCancelled
-  - return
+  - requestComplete
   - callLater
+  - CameraSession::processRequest
   - processRequest
   - captureCount_
   - captureLimit_
   - captureDone
-  - requeue
-  - queueRequest
-  question: 취소 반환, 이벤트 루프 전달, 진입 한도 검사, 프레임 처리·증가 뒤 완료 신호 또는 재큐까지는 어떻게 이어집니까?
-  prompt: '열 노드의 기존 올바른 순서와 condition_ref를 유지하고 개발자용 라벨만 간결하게 다듬으세요. requestComplete, 취소 여부, 현재 함수 반환, callLater, processRequest
-    진입 한도, 프레임 처리와 개수 증가, 증가 후 한도, captureDone, sink 보유 여부, reuse와 queueRequest 순서입니다. 소스의 !requeue 결정은 sink가 요청을 보유하는가라는
-    긍정형 질문으로 한영 모두 표현하세요. !requeue true는 sink가 보유하므로 현재 함수에서 반환하고 이후 완료 처리에 맡깁니다. false는 재사용 후 queueRequest입니다. 분기 간선은 참/거짓을
-    반복하지 말고 취소/정상, 한도 도달/계속, 보유/반환 등 해당 상황을 한영으로 짧게 표현하되 실제 condition_ref의 의미를 정확히 보존하세요. 두 한도 조건은 설정 AND 도달이며 false는 미설정
-    또는 미도달을 포함합니다. 취소와 진입 한도 반환은 captureDone을 내지 않습니다. 정확한 조건식과 !requeue는 근거 표에 보존되므로 본 그림의 라벨에 나열하지 마세요. 기존 노드 수와 구조, 올바른
-    호출 이름을 유지하세요. 노드 한국어 30자 영어 60자, 간선 한국어 12자 영어 28자 이내입니다. 이번 수정은 올바른 기존 흐름·분기·조건을 보존하며 한영 라벨만 짧게 정리합니다. 라벨에 전체 문장·중복 해명·번호를
-    쓰지 말고 행동이나 판정만 씁니다. 한글 노드 24자·영문 48자 안팎, 간선은 더 짧게 쓰되 재현 조건 판정 노드에 필요한 기록된 시험 커널·root의 /dev/udmabuf 접근·Virtual2 400x300
-    NV12 조건은 한영 모두 유지합니다. 긴 식별자 중간 줄바꿈을 피하고 개별 영문 토큰은 28자 이내로 씁니다. 최신 Terra 지적: processRequest의 진입 한도 검사 뒤 프레임 처리·개수 증가 노드에서
-    선택적인 sink 처리와 requeue 판단 저장이 먼저 이뤄짐을 명시하세요. 증가 후 한도 검사 뒤의 sink 보유 결정은 이미 저장된 requeue 값의 검사임을 한영 모두 분명히 하고 여기서 sink를 다시
-    호출하거나 처음 처리하는 것처럼 쓰지 마세요. 기존 올바른 조건·순서·나머지 노드는 보존하세요. 최신 검토 지적을 반영합니다. 마지막 재사용·queueRequest 노드와 그 진입 선은 무조건 재큐가 아니라 버퍼
-    유지 재사용 후 재제출 시도임을 한영 모두 표시하세요. 제출 횟수 한도에 이미 도달했으면 실제 큐잉이 생략되는 guard가 있음을 마지막 상자의 짧은 라벨로 나타내고 submission-limit 근거를 인용하세요.
-    새 소스가 추가돼 조건 ID가 달라질 수 있으므로 현재 목록의 ID로 기존 조건 의미를 보존하고 과거 cN 번호를 그대로 복사하지 마세요. 이전 두 processRequest 처리 한도 판정과 취소·싱크 보유 판정은
-    그대로 보존하며 새 제출 한도는 마지막 호출의 내부 조건임을 구분하세요. 최신 독립 지적: 마지막 재제출은 앞서 실패한 작업을 다시 시도한다는 뜻이 아닙니다. 영어는 resubmit 또는 attempt submission으로
-    쓰고 retry는 쓰지 마세요. 올바른 기존 조건·순서·한도 guard·다른 라벨은 보존하세요.'
+  - Request::ReuseBuffers
+  question: 기록된 출력 싱크 미요청 경로에서 완료 콜백은 어떤 처리와 종료로 이어집니까?
+  prompt: 기록된 출력 싱크 미요청 경로의 고정 10개 노드를 유지하세요. 기존 취소·진입 한도·증가 후 한도 분기와 출처를 보존하며 한영
+    라벨만 줄입니다. n0 CameraSession::requestComplete 진입, n1 RequestCancelled인가, n2 requestComplete
+    반환, n3 callLater로 이벤트 루프에 위임, n4 processRequest 진입에서 한도 설정 AND 처리 수 도달인가, n5 processRequest
+    반환(captureDone 재발행 없음), n6 프레임 정보 출력과 처리 수 증가, n7 증가 후 한도 설정 AND 도달인가, n8 captureDone
+    후 processRequest 반환, n9 버퍼 유지 재사용 후 제출 도우미 호출입니다. n0→n1, 취소면 n2, 아니면 n3→n4, 진입
+    한도면 n5, 그 밖에는 n6→n7, 증가 후 한도면 n8, 그 밖에는 n9입니다. 반환 주체는 각각 명시하고 서로 합치지 않습니다. 두 캡처
+    한도 검사와 신호의 차이는 유지하되 긴 함수 호출식·같은 스레드 이유·출력 범위·제출 도우미 내부를 각 노드에 반복하지 마세요. 제출 도우미는
+    다음 별도 그림이 설명합니다. 간선에는 짧은 조건만, 노드에는 짧은 행동만 씁니다. 한도 거짓은 미설정 OR 미도달입니다. source condition_ref와
+    모든 양 끝 symbol 인용을 보존합니다. authored true/false는 시스템 표시와 중복하지 않습니다. 노드·화살표에 같은 동작
+    전체를 반복하지 않습니다. 취소는 소스 분기이며 이번 실행에서 동적 시험한 것은 아닙니다.
   sources:
   - callback-and-processing
-  - submission-limit
+  - app-start
+  - session-state
   max_label_chars: 72
   condition_display: evidence
   answer_contract_en:
     basis: implementation
     reject_patterns:
-    - pattern: (?i)\bretry\b
-      message: This is resubmission, not retry after a previous failure.
+    - pattern: \bretry\b
+      message: Resubmission is not retry after failure.
+    - pattern: \btrue\b[^\n]*\btrue\b|\bfalse\b[^\n]*\bfalse\b
+      message: Avoid duplicate automatic branch markers.
+  require_connected: true
+  answer_contract:
+    basis: implementation
+  max_edge_label_chars: 40
+- id: submission-gate
+  topic: flow
+  kind: decision
+  title: 제출 도우미는 별도 카운터로 제출을 제한합니다
+  generation: llm
+  max_nodes: 3
+  required_symbols:
+  - queueCount_
+  - return
+  - camera_
+  question: 제출 도우미의 별도 카운터 한도에 따라 제출하지 않거나 제출을 시도하는 조건은 무엇입니까?
+  sources:
+  - submission-limit
+  max_label_chars: 72
+  condition_display: evidence
+  require_connected: true
+  prompt: 앞 그림이 이미 재사용과 도우미 호출을 설명하므로 이 그림은 도우미 내부의 세 노드만 사용합니다. n0은 한도가 설정되고 제출 카운터
+    queueCount_가 이미 도달했는가라는 결정입니다. 참이면 n1 제출 없이 도우미에서 반환, 거짓(한도 미설정 OR 미도달)이면 n2 카운터
+    증가 후 카메라 제출 시도입니다. 세 노드와 두 조건 간선만 연결합니다. 실제 조건의 두 branch를 source condition_ref로
+    인용하고 화살표는 설정·도달 또는 미설정·미도달만 짧게 표시합니다. 카운터는 실제 제출 시도 전에 증가하며 성공 접수를 세는 것이 아닙니다.
+    n2는 시도이며 제출 성공 보장이 아닙니다. 재사용 노드·도우미 호출 노드를 반복하지 마세요. true/false는 시스템 표시와 중복하지
+    않고 한영 동작·조건을 간결하게 씁니다. source guard와 양 끝 symbol 인용을 보존합니다.
+  answer_contract_en:
+    basis: implementation
+    reject_patterns:
+    - pattern: \bretry\b
+      message: Resubmission is not retry after a failure.
+    - pattern: requeue
+      message: This figure starts after reuse; do not move its earlier requeue guard
+        after reuse.
+  max_edge_label_chars: 40
+  answer_contract:
+    basis: implementation
+    reject_patterns:
+    - pattern: requeue
+      message: This figure starts after reuse; do not move its earlier requeue guard
+        after reuse.
 - id: reproduction-flow
   topic: reproduce
   kind: flow
@@ -52,22 +140,41 @@
   - Docker
   - udmabuf
   - run_cam
-  question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam 재현 실행은 어떤 준비 순서로 이어집니까?
-  prompt: 이 그림은 기본 커널로 원복한 후 기록된 특정 시험 조건을 다시 준비하는 경로입니다. 조사·무영향 준비 → 호스트 변경 계획·별도 승인 → Docker 중지 필요 여부 결정 → 필요시 중지 → 승인된
-    시험 커널 설치·부팅 → 조건 일치 결정 → cam 실행 순서입니다. 이 기록된 재현 경로에서는 실제 호스트 변경인 커널 설치·부팅 전에 별도 호스트 승인이 필수입니다. 무영향 준비는 승인 전에도 합니다. Docker
-    중지 여부만 승인 계획에 따른 조건부 분기입니다. 조건 일치 결정은 기록된 커널·장치 접근·Virtual2 400 x 300 NV12 모두를 포함하며, 불일치하면 캡처 중단하는 별도 노드로 연결하세요. 접근 하나만
-    맞으면 실행하는 것으로 그리지 마세요. Docker 결정과 중지는 별도 노드이며 같은 Docker 식별자를 쓸 수 있습니다. 시험 커널 설치·부팅과 조건 확인은 중지 여부와 별개로 필요합니다. 노드 한국어 24자·영어
-    48자, 간선 한국어 12자·영어 28자 이내의 짧은 구절을 쓰세요. 전체 문장과 중복 조건을 쓰지 마세요. 이 시험의 root 접근 조건은 근거에 남기고 일반 권한 변경 지침을 쓰지 마세요. 이전 네이티브 초안이
-    있으면 나머지 올바른 부분을 보존하고 조건 일치 노드의 udmabuf를 root의 /dev/udmabuf 접근 가능으로 한영 모두 명확히 하세요. 커널과 Virtual2 400 x 300 NV12 일치 조건도 유지하세요.
-    이번 수정에서는 이전 초안의 나머지 구조를 보존하세요. 영향 없는 커널 준비는 조사와 함께 승인 전에 가능하며, 승인 후 커널 노드는 실제 호스트 변경인 설치·부팅으로 표시하세요. 승인 간선은 한영 모두 호스트
-    변경 실행 직전이라는 시점을 분명히 하며, cam 실행 직전이라는 의미의 run을 쓰지 마세요. 같은 한국어 레이블에는 같은 영어 레이블을 쓰세요. 조건 일치 결정 노드는 반드시 한영 모두 '기록된 시험 커널'이라는
-    대상과 root의 /dev/udmabuf 접근 가능, Virtual2 400 x 300 NV12를 함께 명시하세요. 이전 초안의 다른 올바른 구조는 보존하세요. 이번 수정은 올바른 기존 흐름·분기·조건을 보존하며
-    한영 라벨만 짧게 정리합니다. 라벨에 전체 문장·중복 해명·번호를 쓰지 말고 행동이나 판정만 씁니다. 한글 노드 24자·영문 48자 안팎, 간선은 더 짧게 쓰되 재현 조건 판정 노드에 필요한 기록된 시험 커널·root의
-    /dev/udmabuf 접근·Virtual2 400 x 300 NV12 조건은 한영 모두 유지합니다. 긴 식별자 중간 줄바꿈을 피하고 개별 영문 토큰은 28자 이내로 씁니다. 해상도는 한영 모두 반드시 숫자를 공백으로
-    분리한 400 x 300으로 표기하세요. 400x300처럼 붙이면 기존 필수 용어 검사에서 400과 300의 개별 토큰이 없어 거부됩니다. 숫자 자체를 생략하지 마세요.
+  - completed_frames
+  question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam
+    재현 실행은 어떤 준비 순서로 이어집니까?
+  prompt: 이 그림은 기본 커널로 원복한 후 기록된 특정 시험 조건을 다시 준비하는 경로입니다. 조사·무영향 준비 → 호스트 변경 계획·별도
+    승인 → Docker 중지 필요 여부 결정 → 필요시 중지 → 승인된 시험 커널 설치·부팅 → 조건 일치 결정 → cam 실행 순서입니다.
+    이 기록된 재현 경로에서는 실제 호스트 변경인 커널 설치·부팅 전에 별도 호스트 승인이 필수입니다. 무영향 준비는 승인 전에도 합니다. Docker
+    중지 여부만 승인 계획에 따른 조건부 분기입니다. 조건 일치 결정은 기록된 커널·장치 접근·Virtual2 400 x 300 NV12 모두를
+    포함하며, 불일치하면 캡처 중단하는 별도 노드로 연결하세요. 접근 하나만 맞으면 실행하는 것으로 그리지 마세요. Docker 결정과 중지는
+    별도 노드이며 같은 Docker 식별자를 쓸 수 있습니다. 시험 커널 설치·부팅과 조건 확인은 중지 여부와 별개로 필요합니다. 노드 한국어
+    24자·영어 48자, 간선 한국어 12자·영어 28자 이내의 짧은 구절을 쓰세요. 전체 문장과 중복 조건을 쓰지 마세요. 이 시험의 root
+    접근 조건은 근거에 남기고 일반 권한 변경 지침을 쓰지 마세요. 이전 네이티브 초안이 있으면 나머지 올바른 부분을 보존하고 조건 일치 노드의
+    udmabuf를 root의 /dev/udmabuf 접근 가능으로 한영 모두 명확히 하세요. 커널과 Virtual2 400 x 300 NV12
+    일치 조건도 유지하세요. 이번 수정에서는 이전 초안의 나머지 구조를 보존하세요. 영향 없는 커널 준비는 조사와 함께 승인 전에 가능하며, 승인
+    후 커널 노드는 실제 호스트 변경인 설치·부팅으로 표시하세요. 승인 간선은 한영 모두 호스트 변경 실행 직전이라는 시점을 분명히 하며, cam
+    실행 직전이라는 의미의 run을 쓰지 마세요. 같은 한국어 레이블에는 같은 영어 레이블을 쓰세요. 조건 일치 결정 노드는 반드시 한영 모두
+    '기록된 시험 커널'이라는 대상과 root의 /dev/udmabuf 접근 가능, Virtual2 400 x 300 NV12를 함께 명시하세요.
+    이전 초안의 다른 올바른 구조는 보존하세요. 이번 수정은 올바른 기존 흐름·분기·조건을 보존하며 한영 라벨만 짧게 정리합니다. 라벨에 전체
+    문장·중복 해명·번호를 쓰지 말고 행동이나 판정만 씁니다. 한글 노드 24자·영문 48자 안팎, 간선은 더 짧게 쓰되 재현 조건 판정 노드에
+    필요한 기록된 시험 커널·root의 /dev/udmabuf 접근·Virtual2 400 x 300 NV12 조건은 한영 모두 유지합니다. 긴
+    식별자 중간 줄바꿈을 피하고 개별 영문 토큰은 28자 이내로 씁니다. 해상도는 한영 모두 반드시 숫자를 공백으로 분리한 400 x 300으로
+    표기하세요. 400x300처럼 붙이면 기존 필수 용어 검사에서 400과 300의 개별 토큰이 없어 거부됩니다. 숫자 자체를 생략하지 마세요.
+    공식 cam 실행 노드는 세 번의 독립 실행과 각 새 증거 생성을 뜻한다고 한영 라벨에 표시하세요. 기존 마지막 실행 노드 뒤에 새 증거의
+    카메라·적용 구성·3프레임·정상 종료를 확인하는 결과 검증 노드를 하나 추가하세요. 이 노드는 completed_frames 원문이 포함된
+    측정 근거와 재현 절차를 인용합니다. 현재 9개 노드를 10개로 늘리되 기존 max_nodes 10을 넘기지 않습니다. 결과 노드의 상세 필드명과
+    수치는 근거에서 확인하며 짧고 분명한 검증 동작만 표시하세요. 화살표는 짧은 조건·이벤트만 씁니다. 노드에 있는 동작을 문장으로 반복하지 말고
+    무조건 간선은 두세 단어의 짧은 연결어만 씁니다. 상세 조건은 본문과 근거에서 확인합니다. 조건 일치 결정에 Virtual2 YAML의 400x300
+    크기·lines 패턴과 cam 명령의 Virtual2 선택·400x300 NV12 요청을 구분해 포함합니다. root udmabuf 접근과
+    기록된 시험 커널 일치도 유지합니다. 조건 노드의 한영 라벨은 최대 72자를 쓰되 이 네 조건을 짧게 표시하고 상세 버전·필드명은 본문과 근거로
+    남깁니다. 나머지 기존 10개 노드와 연결·인용·승인 시점은 그대로 보존합니다.
   sources:
-  - product-execution-contract
-  - product-reproduction-procedure
+  - product-invocation-execution-contract
+  - product-invocation-reproduction-procedure
+  - product-invocation-official-cam-reader
+  - virtual2-config
+  - product-invocation-options
   max_label_chars: 72
   condition_display: evidence
   answer_contract:
@@ -80,6 +187,9 @@
     - - '300'
     - - NV12
     - - 기록
+    reject_patterns:
+    - pattern: completed_frames
+      message: Keep evidence field names in evidence; show normal frames to the reader.
   answer_contract_en:
     basis: measurement
     required_terms:
@@ -91,3 +201,7 @@
     - - NV12
     - - recorded
       - Recorded
+    reject_patterns:
+    - pattern: completed_frames
+      message: Keep evidence field names in evidence; show normal frames to the reader.
+  max_edge_label_chars: 40

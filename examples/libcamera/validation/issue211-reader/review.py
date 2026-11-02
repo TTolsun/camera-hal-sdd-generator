@@ -48,6 +48,9 @@ user=('Review exact factual entailment AND whether this reads as a developer SDD
       '\nDERIVED MEASUREMENT (exact projected original fields plus actual baseline/allocator records)\n'+material.read_text(encoding='utf-8')+
       '\nLINKED REPRODUCTION RUNBOOK\n'+guide.read_text(encoding='utf-8'))
 user+='\nCURRENT WRITING AND PER-TOPIC VISUALIZATION POLICY\n'+(root/'style/README.md').read_text(encoding='utf-8')
+invocation=work/'config/product-evidence/official-cam-invocation.json'
+if invocation.is_file():
+    user+='\nHISTORICAL COMMAND OPTIONS PROJECTION (data; source-scoped, not a fresh runtime observation)\n'+invocation.read_text(encoding='utf-8')
 user+='\nVERBATIM EXECUTION CONTRACT\n'+(work/'config/product-evidence/issue211-execution-contract.json').read_text(encoding='utf-8')
 if any(t['id']=='virtual-principle' for t in section['design_topics']):
     user+='\nADDED READER TASK: Explain how the official virtual pipeline supplies software test-pattern frames through real DMA-BUF buffer, request and completion paths. Check the diagram and prose against the supplied pinned implementation, including CPU write access, selected NV12 conversion, generation-error status, buffer-completion versus request-completion and the cam signal connection. The new internal path is source inspection, not newly debugger-observed runtime. Do not equate DMA-BUF usage with physical sensor/ISP/hardware DMA. Existing callback and reproduction sections remain required; avoid repeating their details in the new section.'
@@ -67,6 +70,7 @@ result=json.loads(agent.chat('Independent developer-document grounding and readi
                             'No tools. Automatic assessment, never human reader approval. Return JSON.',user,
                             tag='reader-sdd-review',response_schema=schema))
 (args.out/'review.json').write_text(json.dumps(dict(review=result,document_sha256=sha256(doc),material_sha256=sha256(material),
+                                                  invocation_sha256=sha256(invocation) if invocation.is_file() else None,
                                                   korean_window_sha256=sha256(args.korean) if args.korean else None,
                                                   inventory_sha256=sha256(args.inventory) if args.inventory else None,
                                                   english_sha256=sha256(args.english) if args.english else None,

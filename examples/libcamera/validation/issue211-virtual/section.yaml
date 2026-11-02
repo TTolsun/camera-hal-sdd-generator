@@ -1,0 +1,483 @@
+id: official-cam-validation
+group: For Developer
+nav_section: 동작 추적과 문제 진단
+title: WSL 공식 cam 가상 캡처 확인
+output: official-cam-validation.md
+kind: prose
+lead: 가상 캡처가 막힌 지점부터 확인하고, 완료 알림이 프레임 처리로 이어지는 경로를 따라가세요.
+reader: libcamera를 처음 맡아 가상 캡처의 준비 조건과 완료 경로를 이해하려는 개발자
+design_generation: llm
+design_grounding: false
+semantic_review: true
+show_evidence: true
+facts:
+  classes: []
+  class_table: false
+diagram:
+  enabled: false
+next:
+  title: 공식 cam 재현 절차
+  link: https://github.com/TTolsun/camera-hal-sdd-generator/blob/main/examples/libcamera/runtime/OFFICIAL_CAM.md
+design_requirements:
+- id: conclusion
+  question: 무엇이 캡처를 막았고, 어떤 조건에서 공식 cam 캡처가 성공했으며, 현재 바로 재실행할 수 있습니까?
+- id: flow
+  question: 완료 알림을 받은 함수가 왜 후속 처리를 이벤트 루프로 미루며, 정상 요청과 취소 요청은 어떻게 나뉩니까?
+- id: reproduce
+  question: 개발자는 캡처 전에 어떤 환경·권한·소스 조건을 확인하고, 어느 절차로 재현하며, 결과를 어디까지 적용할 수 있습니까?
+design_topics:
+- id: conclusion
+  title: 할당기를 준비하자 공식 cam 캡처가 완료됐습니다
+  question: 기본 WSL 커널에는 DMA-BUF 할당기가 없어 공식 cam이 버퍼를 만들지 못했다는 문제와, 승인된 UDMABUF 시험 커널에서
+    수정하지 않은 공식 cam으로 Virtual2 400×300 NV12를 세 독립 프로세스에서 각각 3프레임 정상 완료한 결론을 짧게 설명하세요.
+    별도 프로브의 CPU 접근 확인과 공식 cam 자체의 실제 udmabuf 할당 관찰을 구분하되 핵심 의미만 적으세요. 기본 커널로 원복했으므로
+    현재 그대로 재실행할 수 없다는 결론을 마지막에 분명히 하세요.
+  prompt: 개발자의 이해를 위한 두세 문장씩 두 문단 이내로 쓰세요. 실제 가상 카메라 시험이며 가짜 실행이 아닙니다. PID, TID 숫자,
+    fd 번호, JSON 키, 해시, errno 값, 컴파일러 버전, 원시 이벤트 이름은 이미 연결된 근거에서 확인하므로 본문에 열거하지 마세요.
+    각 문장의 주체와 조건을 유지하고 측정값을 제품 성능으로 확장하지 마세요.
+  covers:
+  - conclusion
+  product:
+    id: libcamera-official-cam-trial
+    feature: wsl-virtual-capture
+  sources: []
+  answer_contract:
+    basis: measurement
+    required_terms:
+    - - Virtual2
+    - - NV12
+    - - DMA-BUF
+    - - 원복
+      - 복구
+  design_prompt: focused
+  parts:
+  - id: problem
+    role: summary
+    question: 이번 기준 재현의 기본 WSL 커널에는 DMA-BUF 할당기가 노출되지 않아 공식 cam이 버퍼를 만들지 못했다는 실제 관측
+      문제를 한 짧은 문장으로 쓰세요. 이미 관측한 실패이며 실행 계획이나 미검증 항목이 아닙니다.
+    sources: []
+    max_statements: 1
+    prompt: 개발자의 이해를 위한 두세 문장씩 두 문단 이내로 쓰세요. 실제 가상 카메라 시험이며 가짜 실행이 아닙니다. PID, TID
+      숫자, fd 번호, JSON 키, 해시, errno 값, 컴파일러 버전, 원시 이벤트 이름은 이미 연결된 근거에서 확인하므로 본문에 열거하지
+      마세요. 각 문장의 주체와 조건을 유지하고 측정값을 제품 성능으로 확장하지 마세요.
+    answer_contract:
+      basis: measurement
+  - id: outcome
+    question: 승인된 UDMABUF 시험 커널에서 수정하지 않은 공식 cam이 Virtual2 400x300 NV12로 세 독립 프로세스에서
+      각각 실행되어, 각 실행의 3프레임 정상 완료와 udmabuf 할당 성공이 관측된 결과를 설명하세요. 별도 DMA-BUF 프로브의 CPU
+      접근 성공은 cam 할당 관찰과 구분하세요. 시험 후 기본 커널로 원복되어 현재 그대로 재실행할 수 없는 상태로 마치세요. 익명 담당자나
+      관찰자 역할을 도입하지 말고 실행된 대상과 관측된 결과 중심의 수동태로 세 짧은 문장을 쓰세요.
+    sources: []
+    max_statements: 1
+    prompt: 개발자의 이해를 위한 두세 문장씩 두 문단 이내로 쓰세요. 실제 가상 카메라 시험이며 가짜 실행이 아닙니다. PID, TID
+      숫자, fd 번호, JSON 키, 해시, errno 값, 컴파일러 버전, 원시 이벤트 이름은 이미 연결된 근거에서 확인하므로 본문에 열거하지
+      마세요. 각 문장의 주체와 조건을 유지하고 측정값을 제품 성능으로 확장하지 마세요.
+    answer_contract:
+      basis: measurement
+- id: flow
+  title: cam이 완료 알림을 받아 이벤트 루프에서 프레임을 처리합니다.
+  question: 기록된 출력 싱크 미요청 cam 명령의 콜백, 이벤트 루프 전달, 처리 한도와 제출 도우미를 설명하세요. 파일·화면 출력 옵션의
+    일반 경로는 이번 재현 설명의 범위 밖이며 소스 근거로 연결합니다.
+  prompt: 현재 part의 질문만 짧게 답하세요. 다른 part가 설명할 환경·범위·경고를 반복해서 덧붙이지 마세요. 실제 수행한 가상 카메라
+    시험이며 가짜 실행이 아닙니다. PID·TID 숫자, JSON 키·해시와 내부 출력 필드를 본문에 열거하지 마세요. 함수와 변수 이름은 backtick으로
+    표시하세요. 제품 소개가 아닌 개발자용 동작 설명이며, 전체 페이지의 시험 범위를 매 문장에 되풀이하지 마세요.
+  covers:
+  - flow
+  product:
+    id: libcamera-official-cam-trial
+    feature: recorded-no-output-sink
+  sources:
+  - id: callback-and-processing
+    file: src/apps/cam/camera_session.cpp
+    start: void CameraSession::requestComplete(Request *request)
+    end: void CameraSession::sinkRelease(Request *request)
+  - id: submission-limit
+    file: src/apps/cam/camera_session.cpp
+    start: int CameraSession::queueRequest(Request *request)
+    end: void CameraSession::requestComplete(Request *request)
+  - id: app-start
+    file: src/apps/cam/camera_session.cpp
+    start: int CameraSession::start()
+    end: void CameraSession::stop()
+  - id: session-state
+    file: src/apps/cam/camera_session.h
+    start: std::shared_ptr<libcamera::Camera> camera_;
+    end: unsigned int cameraIndex_;
+  - id: reuse-call
+    file: src/apps/cam/camera_session.cpp
+    scope:
+      start: void CameraSession::processRequest(Request *request)
+      end: void CameraSession::sinkRelease(Request *request)
+    start: request->reuse(Request::ReuseBuffers);
+    end: queueRequest(request);
+  answer_contract:
+    basis: implementation
+    required_terms:
+    - - requestComplete
+    - - RequestCancelled
+    - - callLater
+    - - processRequest
+    - - 스레드
+    - - captureDone
+    - - captureCount_
+    - - queueCount_
+  design_prompt: focused
+  parts:
+  - id: dispatch
+    question: CameraSession::requestComplete는 취소 상태 RequestCancelled면 반환하고 그 밖에는 callLater로
+      CameraSession::processRequest를 이벤트 루프에 미룬다고 먼저 설명하세요. 카메라 매니저 스레드를 막지 않으려는 소스의
+      이유를 이어서 두 짧은 문장으로 씁니다. 다른 처리 한도·범위 설명은 이 항목에 반복하지 않습니다.
+    sources:
+    - callback-and-processing
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력
+      싱크 미요청 전제는 invocation-scope에서 한 번만 설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지
+      마세요.
+    answer_contract:
+      basis: implementation
+    role: summary
+  - id: invocation-scope
+    question: 세 실제 실행 명령은 화면·파일 출력 옵션을 요청하지 않았다는 사실을 한 문장으로 쓰세요. 다른 출력 옵션을 선택한 동작은
+      이번 실행으로 검증하지 않았다고 한 문장만 덧붙이세요. 모든 출력 옵션이 요청을 비동기로 보유한다고 주장하거나 비동기 보유 경로를 일반화하지
+      마세요.
+    sources:
+    - app-start
+    - session-state
+    max_statements: 1
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: SDL|sink_|CameraSession::start
+        message: Keep this invocation boundary short; optional implementation details
+          remain in source evidence.
+    prompt: ' 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만 설명하므로
+      다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.'
+  - id: processing
+    question: processRequest 진입 시 captureLimit_가 설정되어 있고 captureCount_가 이미 도달하면 captureDone을
+      다시 내지 않고 반환한다는 조건과 동작만 한 짧은 문장으로 쓰세요. 첫 등장은 CameraSession::processRequest로 쓰고
+      다음 항목의 증가 동작은 반복하지 마세요.
+    sources:
+    - callback-and-processing
+    max_statements: 1
+    prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
+      함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
+      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.
+    answer_contract:
+      basis: implementation
+      reject_patterns:
+      - pattern: 증가|늘리|\+\+|처리할 때
+        message: 현재 항목이 설명하는 단계만 쓰고 다른 단계나 전체 호출식을 반복하지 마세요.
+      required_terms:
+      - - captureCount_
+      - - captureLimit_
+  - id: frame-work
+    question: 프레임 정보를 출력하고 captureCount_를 늘린 뒤, 설정된 한도에 도달하면 captureDone을 내고 processRequest를
+      반환한다는 동작만 한두 짧은 문장으로 쓰세요. 진입 검사는 반복하지 마세요.
+    sources:
+    - callback-and-processing
+    max_statements: 1
+    prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
+      함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
+      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.
+    answer_contract:
+      basis: implementation
+      reject_patterns:
+      - pattern: sink_->|request->|Request::ReuseBuffers|requeue|sinkRelease|requestProcessed
+        message: 현재 항목이 설명하는 단계만 쓰고 다른 단계나 전체 호출식을 반복하지 마세요.
+      - pattern: 진입|먼저.*확인
+        message: Start after the entry gate; it is already explained in the previous
+          item.
+      required_terms:
+      - - captureDone
+  - id: reuse-request
+    question: 기록된 명령의 출력 옵션 미선택 조건을 적용한 소스 분석이라고 먼저 밝히세요. 이 조건에서 캡처 한도가 미설정이거나 처리
+      수가 한도에 미도달하면 Request::ReuseBuffers로 버퍼를 유지해 재사용하고 CameraSession::queueRequest
+      도우미를 호출하며, 실제 제출은 도우미의 별도 한도 검사에 따른다는 관계를 두 짧은 문장으로 쓰세요. 미설정 OR 미도달을 둘 다 명시하고
+      한도가 설정된 경우만으로 축소하지 않습니다. 직접 관측했다고 주장하거나 이전 오역을 부정하는 대비 문장은 추가하지 않습니다.
+    sources:
+    - callback-and-processing
+    - reuse-call
+    max_statements: 1
+    prompt: 소스 분석이라는 주체와 출력 옵션 조건을 한 번 밝힌 뒤 재사용·도우미 호출·실제 제출의 조건을 간결하게 설명하세요. 기록된
+      실행에서 이 내부 호출을 직접 관측했다고 쓰지 않습니다. 이전 오역이나 다른 해석을 부정하는 대비 문장은 작성하지 않습니다.
+    answer_contract:
+      basis: implementation
+      reject_patterns:
+      - pattern: 확인되지\s*않|미확인
+        message: 선택된 출력 싱크 미요청 경로의 직접 재사용 동작을 설명하세요.
+      - pattern: 큐에|다시 제출|재제출|requeue|성공
+        message: The helper is called; actual submission is conditional and belongs
+          to the next item.
+      - pattern: 아니라|뜻이 아니|의미가 아니
+        message: State the actual source condition directly instead of repeating a
+          contrast with an earlier mistranslation.
+      required_terms:
+      - - 미설정
+        - 설정되지
+      - - 미도달
+        - 도달하지
+        - 아래
+        - 적으면
+  - id: submission-limit
+    question: CameraSession::queueRequest의 queueCount_는 카메라 제출 시도 직전에 늘리는 카운터라고 한
+      짧은 문장으로 설명하세요. 설정 한도에 이미 도달하면 제출 없이 반환하고 그 밖에는 카운터를 늘려 제출을 시도한다는 분기만 다음 짧은 문장으로
+      쓰세요. 성공적으로 접수된 개수라는 뜻으로 쓰지 말고 캡처 처리 한도·재사용·다른 옵션은 반복하지 않습니다.
+    sources:
+    - submission-limit
+    max_statements: 1
+    prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
+      함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
+      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.
+    answer_contract:
+      basis: implementation
+      reject_patterns:
+      - pattern: captureDone|requeue
+        message: 현재 항목이 설명하는 단계만 쓰고 다른 단계나 전체 호출식을 반복하지 마세요.
+      - pattern: 확인되지\s*않|미확인|확인할\s*수\s*없
+        message: 선택한 두 소스가 재사용과 한도 조건을 직접 보여 줍니다.
+      required_terms:
+      - - queueCount_
+  - id: observed
+    question: 이번 실행에서 콜백과 후속 처리 스레드가 달랐지만 모든 실행의 배치를 보장하지 않는다고 설명하세요. 취소 분기는 소스에 존재하지만
+      이번 실행에서 동적으로 시험하지 않았다고 명확히 하세요. 다른 동작은 소스로 확인하지 않았다는 의미로 읽힐 수 있는 '취소 분기만 확인'
+      또는 '취소 분기는 소스로 확인했을 뿐' 같은 표현은 피하고 짧은 두 문장으로 쓰세요.
+    sources:
+    - callback-and-processing
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력
+      싱크 미요청 전제는 invocation-scope에서 한 번만 설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지
+      마세요.
+    answer_contract:
+      basis: measurement
+- id: reproduce
+  title: 지원 커널과 장치 접근을 확인한 뒤 재현합니다
+  question: 재현 전 현재 커널의 Kconfig·의존 심볼·실제 모듈·DMA-BUF 할당기 후보와 장치 접근 권한부터 확인하는 순서를 설명하세요.
+    기존 WSL·Docker에 영향 없는 준비를 우선하고 공유 커널·모듈·.wslconfig 변경이나 배포판·VM 종료가 필요할 때는 영향·백업·복구
+    계획을 준비하여 실행 직전 별도 승인을 받는 전제를 유지하세요. 승인된 지원 커널을 부팅하고 장치 접근을 확인한 다음 기준 소스의 수정하지
+    않은 디버그 빌드와 전용 관찰 도구로 재현 절차를 따라간다고 설명하세요. root 전용 udmabuf 접근은 이번 시험의 조건이며 권한을 임의로
+    바꾸라는 일반 지침으로 쓰지 마세요. 마지막에 가상 캡처에서 확인한 범위와 물리 DMA·카메라·제품 앱·사내 HAL 및 성능의 미검증 범위를
+    한 번만 설명하세요.
+  prompt: 현재 part의 질문만 짧게 답하세요. 다른 part가 설명할 환경·범위·경고를 반복해서 덧붙이지 마세요. 실제 수행한 가상 카메라
+    시험이며 가짜 실행이 아닙니다. PID·TID 숫자, JSON 키·해시와 내부 출력 필드를 본문에 열거하지 마세요. 함수와 변수 이름은 backtick으로
+    표시하세요. 제품 소개가 아닌 개발자용 동작 설명이며, 전체 페이지의 시험 범위를 매 문장에 되풀이하지 마세요.
+  covers:
+  - reproduce
+  product:
+    id: libcamera-official-cam-trial
+    feature: recorded-no-output-sink
+  sources:
+  - id: virtual2-config
+    file: src/libcamera/pipeline/virtual/data/virtual.yaml
+    start: '"Virtual2":'
+    end: '  test_pattern: "lines"'
+  answer_contract:
+    basis: measurement
+    required_terms:
+    - - 커널
+    - - 권한
+    - - 승인
+    - - GDB
+    - - 사내
+    reject_patterns:
+    - pattern: 2단계\s*계획|두\s*단계\s*계획
+      message: 준비 2번에서 작성하는 계획은 두 단계로 된 계획이 아닙니다.
+  design_prompt: focused
+  parts:
+  - id: environment
+    question: statement.text를 '1. '로 시작하세요. 개발자를 주어로 선택한 커널의 Kconfig와 의존 심볼을 조사한다고
+      직접 서술하세요. 호스트 상태를 바꾸지 않고 기존 WSL/Docker에 영향 없는 조사를 우선한다는 조건을 유지하세요. '조사하는 작업입니다'
+      같은 문서 작성 지시는 본문에 쓰지 마세요. 두 짧은 문장입니다.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요. 문서 번호·그림 존재·소스가 제공되었는지에 대한 자체
+      검토 문장을 넣지 말고 독자의 행동만 직접 서술하세요.
+    answer_contract:
+      basis: measurement
+    role: summary
+  - id: modules
+    question: statement.text를 '2. '로 시작하세요. 개발자를 주어로 해당 커널에서 실제 사용할 수 있는 모듈을 조사한다고
+      직접 서술하세요. 배포판 추가만으로 공유 커널이 격리되지 않는다는 조건을 짧게 남기세요. '조사하는 것입니다' 같은 메타 문장을 쓰지 마세요.
+      Kconfig·의존성·할당기 후보는 다른 단위에서 이미 다루므로 이 문단에 반복하지 마세요. 개발자를 주어로 모듈 조사만 직접 서술하고
+      필요하면 UDMABUF는 해당 커널 설정에서 활성화된 경우 내장된다는 조건만 짧게 덧붙이세요. 모든 선택 커널에서 자동으로 활성화돼 있다고
+      쓰지 마세요.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요. 문서 번호·그림 존재·소스가 제공되었는지에 대한 자체
+      검토 문장을 넣지 말고 독자의 행동만 직접 서술하세요.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: Kconfig|의존|후보
+        message: 모듈 단위에는 다른 단위의 커널 설정·의존성·후보 조사를 반복하지 마세요.
+  - id: providers
+    question: statement.text를 '3. '로 시작하세요. 개발자가 커널 설정·의존성·모듈 조사 결과에 맞는 DMA-BUF 할당기를
+      선택한다고 한 문장으로 설명하고, 이 문서에 기록된 실행을 그대로 재현할 때는 udmabuf 조건을 충족해야 한다고 다음 짧은 문장으로
+      명시하세요. 다른 할당기를 선택한 시험은 이 기록된 절차의 동일 조건 재현과 구분됩니다. 다른 단계 번호나 새 명령은 쓰지 마세요.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요. 문서 번호·그림 존재·소스가 제공되었는지에 대한 자체
+      검토 문장을 넣지 말고 독자의 행동만 직접 서술하세요.
+    answer_contract:
+      basis: measurement
+  - id: approval
+    question: statement.text를 '4. '로 시작하세요. 공유 호스트 변경 계획에는 대상 부팅 커널·이미지 SHA-256·영향·백업·부팅·복구
+      절차가 포함되며, 변경 실행 직전에 그 계획에 별도 승인을 받는다고 설명하세요. PR·Pages 승인이 이를 대신하지 않고 Docker는
+      승인 계획이 요구할 때만 중지한다는 조건을 한 번만 간결히 남기세요. 이 문단은 계획·승인 과업 하나입니다. 설치나 장치 검사를 반복하지
+      말고 실제 해시 값이나 안내의 단계 번호를 쓰지 마세요.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요.
+    answer_contract:
+      basis: measurement
+  - id: kernel-boot
+    question: statement.text를 '5. '로 시작하세요. 승인된 계획에 따라 시험 커널을 설치하고 부팅하는 준비 과업만 짧게
+      설명하세요. 커널 버전 대조와 장치 접근은 6번의 별도 사전 검사입니다. 이미 부팅되었다는 실행 결과를 보고하지 마세요. Docker 중지는
+      앞 단계가 설명했으므로 반복하지 마세요. 커널 설치·부팅은 이 재현의 필수 준비이며 생략할 수 있다고 쓰지 마세요. 메타 설명 없이 설치하고
+      부팅하는 행동만 한 문장으로 쓰세요.
+    sources: []
+    max_statements: 1
+    prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
+      증거로 사용하지 마세요. 명령·버전·파일 경로는 질문이 필수로 요구한 경우에만 쓰세요.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 실행\s*뒤|적용\s*결과|6\.18|linux-msft|접근|권한|Virtual2|Docker|생략|과업|문단|것입니다|모듈|조사
+        message: 이 단계가 아닌 준비·검사나 과거 결과를 반복하지 말고 현재 과업만 설명하세요.
+  - id: kernel-check
+    question: statement.text를 '6. '로 시작하세요. 실행 중인 커널 버전을 기록된 6.18.33.2-microsoft-standard-WSL2-issue211과
+      대조하는 행동만 한 문장으로 씁니다. 다른 단계의 장치·입력·새 증거 설명은 반복하지 않습니다.
+    sources: []
+    max_statements: 1
+    prompt: 지정한 단계의 직접 확인 행동만 짧게 쓰고 다른 단계·과거 기록의 부족·실행 뒤 결과를 덧붙이지 않습니다.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 과업|문단|실행\s*후|실행\s*뒤
+        message: 직접 검사 행동만 쓰고 실행 후 결과나 메타 설명을 반복하지 마세요.
+      - pattern: 미확인|확인되지|포함되어 있지|자료가 없
+        message: Expected inputs are evidenced by the provided source and historical
+          command projection; describe the new preflight action directly.
+  - id: access-check
+    question: statement.text를 '7. '로 시작하세요. root 자식 컨텍스트가 /dev/udmabuf을 열 수 있는 접근
+      권한을 확인하는 행동만 한 문장으로 씁니다. 커널이나 설정·명령 검사는 반복하지 않습니다.
+    sources: []
+    max_statements: 1
+    prompt: 지정한 단계의 직접 확인 행동만 짧게 쓰고 다른 단계·과거 기록의 부족·실행 뒤 결과를 덧붙이지 않습니다.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 과업|문단|실행\s*후|실행\s*뒤
+        message: 직접 검사 행동만 쓰고 실행 후 결과나 메타 설명을 반복하지 마세요.
+      - pattern: 미확인|확인되지|포함되어 있지|자료가 없
+        message: Expected inputs are evidenced by the provided source and historical
+          command projection; describe the new preflight action directly.
+      required_terms:
+      - - 권한
+  - id: yaml-check
+    question: statement.text를 '8. '로 시작하세요. 사용할 Virtual2 YAML에서 지원 크기 400x300과 별도의
+      줄무늬 패턴 lines를 확인하는 행동만 한 짧은 문장으로 쓰세요.
+    sources:
+    - virtual2-config
+    max_statements: 1
+    prompt: 지정한 단계의 직접 확인 행동만 짧게 쓰고 다른 단계·과거 기록의 부족·실행 뒤 결과를 덧붙이지 않습니다.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 과업|문단|실행\s*후|실행\s*뒤
+        message: 직접 검사 행동만 쓰고 실행 후 결과나 메타 설명을 반복하지 마세요.
+      - pattern: supported_formats|test_pattern
+        message: State size and pattern as separate configuration checks without implying
+          nested YAML fields.
+      - pattern: 미확인|확인되지|포함되어 있지|자료가 없
+        message: Expected inputs are evidenced by the provided source and historical
+          command projection; describe the new preflight action directly.
+      required_terms:
+      - - Virtual2
+      - - lines
+  - id: camera-selection
+    question: statement.text를 '9. '로 시작하세요. 사용할 cam 명령의 카메라 선택 인자가 Virtual2인지 확인하는
+      행동만 한 짧은 문장으로 쓰세요. 제공된 과거 세 명령의 옵션 기록에 이 인자가 있으며, 여기서는 새로 사용할 명령을 확인하는 절차를 씁니다.
+    sources: []
+    max_statements: 1
+    prompt: 지정한 단계의 직접 확인 행동만 짧게 쓰고 다른 단계·과거 기록의 부족·실행 뒤 결과를 덧붙이지 않습니다.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 과업|문단|실행\s*후|실행\s*뒤
+        message: 직접 검사 행동만 쓰고 실행 후 결과나 메타 설명을 반복하지 마세요.
+      - pattern: supported_formats|test_pattern
+        message: State size and pattern as separate configuration checks without implying
+          nested YAML fields.
+      - pattern: 미확인|확인되지|포함되어 있지|자료가 없
+        message: Expected inputs are evidenced by the provided source and historical
+          command projection; describe the new preflight action directly.
+      required_terms:
+      - - Virtual2
+  - id: stream-request
+    question: statement.text를 '10. '로 시작하세요. 사용할 cam 명령의 스트림 인자가 400x300 NV12를 요청하는지
+      확인하는 행동만 쓰세요. 앞 단계까지 확인한 조건이 하나라도 다르면 캡처를 시작하지 않는 조건을 여기서 한 번만 남깁니다. 과거 인자 기록은
+      기대 조건의 근거이며 새 실행의 성공 증거가 아닙니다.
+    sources: []
+    max_statements: 1
+    prompt: 지정한 단계의 직접 확인 행동만 짧게 쓰고 다른 단계·과거 기록의 부족·실행 뒤 결과를 덧붙이지 않습니다.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 과업|문단|실행\s*후|실행\s*뒤
+        message: 직접 검사 행동만 쓰고 실행 후 결과나 메타 설명을 반복하지 마세요.
+      - pattern: supported_formats|test_pattern
+        message: State size and pattern as separate configuration checks without implying
+          nested YAML fields.
+      - pattern: 미확인|확인되지|포함되어 있지|자료가 없
+        message: Expected inputs are evidenced by the provided source and historical
+          command projection; describe the new preflight action directly.
+      required_terms:
+      - - NV12
+  - id: execution
+    question: statement.text를 '11. '로 시작하세요. 사전 조건을 통과하면 연결된 안내에 따라 디버거 관찰 아래 수정하지
+      않은 공식 cam을 세 번 독립 실행하고, 각 실행의 새 증거를 남기는 행동만 씁니다.
+    sources: []
+    max_statements: 1
+    prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
+      증거로 사용하지 마세요. 명령·버전·파일 경로는 질문이 필수로 요구한 경우에만 쓰세요.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 관찰 도구로|root|커널|SHA|디렉터리|경로|프로브|추출|권한|\d번\s*단계|관찰 도구가|방식으로|과업
+        message: 이 단계가 아닌 준비·검사나 과거 결과를 반복하지 말고 현재 과업만 설명하세요.
+      required_terms:
+      - - 세
+        - '3'
+      - - 독립
+  - id: results
+    question: statement.text를 '12. '로 시작하세요. 이번 새 실행이 생성한 증거 디렉터리의 결과로 카메라 선택 Virtual2,
+      실제 적용 스트림 400x300 NV12, 각 독립 실행의 정상 3프레임과 종료 코드 0을 확인하는 검증 과업만 짧게 쓰세요. 과거 링크는
+      형식과 절차의 참고이며 새 성공의 증거가 아닙니다. 사전 입력 검사나 커널·장치 접근을 반복하지 마세요.
+    sources: []
+    max_statements: 1
+    prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
+      증거로 사용하지 마세요. 명령·버전·파일 경로는 질문이 필수로 요구한 경우에만 쓰세요.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: root|커널|권한|장치|실행\s*전|사전|연결된\s*판정\s*기록|기록된\s*결과
+        message: 이 단계가 아닌 준비·검사나 과거 결과를 반복하지 말고 현재 과업만 설명하세요.
+      required_terms:
+      - - 새
+      - - 증거
+      - - NV12
+  - id: scope
+    question: 가상 캡처의 적용 범위와 관찰 한계를 마지막에 한 번만 정리하세요. 물리 DMA·카메라·제품 앱·사내 HAL은 미검증이며
+      GDB는 타이밍에 영향을 주므로 콜백 반환 명령·성능을 검증하지 않았습니다. 두 문장 160자 이내로 쓰세요. 문서의 사람 검토 상태는
+      접힌 근거 메타데이터에 있으므로 본문에서 반복하지 마세요.
+    sources: []
+    max_statements: 1
+    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요.
+    statement_kind: limitation
