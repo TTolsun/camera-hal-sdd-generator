@@ -191,18 +191,15 @@ design_topics:
       required_terms:
       - - captureDone
   - id: reuse-request
-    question: 기록된 명령의 화면·파일 출력 옵션 미선택 조건을 적용한 소스 분석임을 먼저 밝히세요. 그 조건에서 처리를 계속할 요청은
-      Request::ReuseBuffers로 버퍼를 유지해 재사용하고 CameraSession::queueRequest 도우미를 호출하며,
-      실제 제출 여부는 별도 한도 검사에 따른다는 관계만 두 짧은 문장 이내로 씁니다. 해당 내부 호출을 새 실행에서 직접 관측했다고 표현하지
-      마세요. 출력 싱크가 요청을 보유하지 않는다는 뜻이 아니라 출력 옵션 자체를 요청하지 않은 조건입니다.
+    question: 기록된 명령에서 화면·파일 출력 옵션을 요청하지 않은 조건을 적용한 소스 분석임을 문장 앞에서 밝히세요. 그 조건에서는 처리를
+      계속할 요청의 버퍼를 Request::ReuseBuffers로 유지해 재사용하고 CameraSession::queueRequest 도우미를
+      호출하며, 실제 제출은 별도 한도 검사에 따른다는 관계만 두 짧은 문장 이내로 설명합니다. 조건을 한 번만 쓰고 바로 동작을 설명하세요.
     sources:
     - callback-and-processing
     - reuse-call
     max_statements: 1
-    prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
-      함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
-      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요. 재사용 항목은 오해 방지를 위해 기록된 출력 싱크 미요청
-      경로라는 한정을 한 번 명시하는 예외입니다. 다른 옵션의 내부 동작이나 범위 경고 목록은 덧붙이지 않습니다.
+    prompt: 소스 분석이라는 주체와 출력 옵션 조건을 한 번 밝힌 뒤 재사용·도우미 호출·실제 제출의 조건을 간결하게 설명하세요. 기록된
+      실행에서 이 내부 호출을 직접 관측했다고 쓰지 않습니다. 이전 오역이나 다른 해석을 부정하는 대비 문장은 작성하지 않습니다.
     answer_contract:
       basis: implementation
       reject_patterns:
@@ -211,6 +208,9 @@ design_topics:
       - pattern: 큐에|다시 제출|재제출|requeue|성공
         message: The helper is called; actual submission is conditional and belongs
           to the next item.
+      - pattern: 아니라|뜻이 아니|의미가 아니
+        message: State the actual source condition directly instead of repeating a
+          contrast with an earlier mistranslation.
   - id: submission-limit
     question: CameraSession::queueRequest의 queueCount_는 카메라 제출 시도 직전에 늘리는 카운터라고 한
       짧은 문장으로 설명하세요. 설정 한도에 이미 도달하면 제출 없이 반환하고 그 밖에는 카운터를 늘려 제출을 시도한다는 분기만 다음 짧은 문장으로
