@@ -139,15 +139,18 @@ design_topics:
       basis: implementation
     role: summary
   - id: invocation-scope
-    question: 세 실제 실행 명령은 화면·파일 출력 싱크 옵션을 요청하지 않았다는 사실을 먼저 밝히세요. 이 항목과 그림은 그 명령의 소스
-      경로를 설명하며, 다른 출력 옵션의 비동기 보유 경로를 실행 검증한 결과가 아니라고 두 짧은 문장으로 범위를 정하세요. 옵션 전체 목록이나
-      원시 명령은 근거에 둡니다.
+    question: 세 실제 실행 명령은 화면·파일 출력 옵션을 요청하지 않았다는 사실과, 다른 출력 옵션의 비동기 보유 경로는 이번 실행 검증
+      범위가 아니라는 경계를 두 짧은 문장으로만 설명하세요. 옵션별 내부 구현은 접힌 소스 근거에 남깁니다.
     sources:
     - app-start
     - session-state
     max_statements: 1
     answer_contract:
       basis: measurement
+      reject_patterns:
+      - pattern: SDL|sink_|CameraSession::start
+        message: Keep this invocation boundary short; optional implementation details
+          remain in source evidence.
     prompt: ' 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만 설명하므로
       다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.'
   - id: processing
@@ -169,8 +172,9 @@ design_topics:
       - - captureCount_
       - - captureLimit_
   - id: frame-work
-    question: 진입 검사를 통과하면 프레임 정보를 출력하고 captureCount_를 늘립니다. 증가 후 설정 한도에 도달하면 captureDone을
-      내고 processRequest를 반환한다는 처리만 간결하게 설명하세요.
+    question: 이미 앞 항목의 진입 검사를 통과한 지점부터 설명하세요. 프레임 정보를 출력하고 captureCount_를 늘린 뒤, 한도가
+      설정되어 있고 증가한 처리 수가 도달하면 captureDone을 내고 processRequest에서 반환한다고 두 짧은 문장 이내로 쓰세요.
+      앞 항목의 진입 검사 자체를 반복하지 마세요.
     sources:
     - callback-and-processing
     max_statements: 1
@@ -182,11 +186,15 @@ design_topics:
       reject_patterns:
       - pattern: sink_->|request->|Request::ReuseBuffers|requeue|sinkRelease|requestProcessed
         message: 현재 항목이 설명하는 단계만 쓰고 다른 단계나 전체 호출식을 반복하지 마세요.
+      - pattern: 진입|먼저.*확인
+        message: Start after the entry gate; it is already explained in the previous
+          item.
       required_terms:
       - - captureDone
   - id: reuse-request
-    question: 처리를 계속할 요청은 Request::ReuseBuffers로 버퍼를 유지해 재사용하고 CameraSession::queueRequest
-      도우미를 호출한다는 동작만 한 문장으로 설명하세요.
+    question: 처리를 계속할 요청은 Request::ReuseBuffers로 버퍼를 유지해 재사용한 뒤 CameraSession::queueRequest
+      도우미를 호출한다고 한 문장으로만 쓰세요. 도우미 호출을 큐에 넣음·실제 제출·재제출 성공으로 단정하지 마세요. 도우미 내부 제출 한도는
+      다음 항목에서 설명합니다.
     sources:
     - callback-and-processing
     - reuse-call
@@ -199,6 +207,9 @@ design_topics:
       reject_patterns:
       - pattern: 확인되지\s*않|미확인
         message: 선택된 출력 싱크 미요청 경로의 직접 재사용 동작을 설명하세요.
+      - pattern: 큐에|다시 제출|재제출|requeue|성공
+        message: The helper is called; actual submission is conditional and belongs
+          to the next item.
   - id: submission-limit
     question: queueCount_는 카메라 제출을 시도하기 전에 증가하는 별도 카운터이며 성공한 접수 개수가 아님을 설명하세요. 한도가
       설정되고 이 카운터가 이미 도달하면 CameraSession::queueRequest가 실제 제출 없이 반환하고, 그 밖에는 카운터를 늘린
