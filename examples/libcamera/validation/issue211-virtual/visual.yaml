@@ -17,7 +17,7 @@ required_symbols:
 - requestCompleted
 - PipelineHandlerVirtual::bufferCompleted
 question: 선택한 NV12 가상 캡처에서 실제 버퍼 준비와 요청 전달, CPU 패턴 쓰기, 버퍼·요청 완료 및 cam 콜백은 어떻게 연결됩니까?
-prompt: 이 그림은 핵심 프레임 경로의 개념도이며 전체 제어 흐름도를 만들지 않습니다. 9개 필수 심볼의 노드를 사용하고 큐 내부 순회는 completeRequest 처리 상자 하나에 요약합니다. 사전 DMA-BUF
+prompt: '이 그림은 핵심 프레임 경로의 개념도이며 전체 제어 흐름도를 만들지 않습니다. 9개 필수 심볼의 노드를 사용하고 큐 내부 순회는 completeRequest 처리 상자 하나에 요약합니다. 사전 DMA-BUF
   준비(exportFrameBuffers), Request 부착·제출(queueRequest), 가상 비동기 전달(queueRequestDevice), CPU의 Virtual2 대각선 패턴 NV12 쓰기 시도(generateFrame),
   버퍼 완료 신호와 연결 핸들러(bufferCompleted), 모든 버퍼 완료 검사(completeBuffer), 현재 요청 완료 표시와 제출 순서 통지 처리 전체(completeRequest), 통지 차례가 된 요청의
   앱 신호와 cam 콜백(requestCompleted), 이번 버퍼 핸들러 종료(PipelineHandlerVirtual::bufferCompleted)입니다. 긴 함수명을 라벨에 나열하지 말고 짧은 행동·상태를 사용하세요.
@@ -39,7 +39,10 @@ prompt: 이 그림은 핵심 프레임 경로의 개념도이며 전체 제어 �
   긴 함수명 접두사를 생략해 44자 안에 쓰세요. 최신 Terra 지적만 정확히 고치세요. generateFrame 결정은 쓰기 성공의 서술이 아니라 CPU의 Virtual2 NV12 줄무늬 쓰기 시도와 그 반환값이
   0이 아닌가를 묻는 판정입니다. 한영 모두 attempt/시도와 0 아닌 반환의 판정을 분명히 하세요. true 실패 간선에서는 버퍼 메타데이터의 FrameError 설정을 명시하세요. FrameError는 Request
   상태가 아닙니다. queueRequestDevice에서 generateFrame으로 가는 간선은 스트림을 찾았다는 assert를 조건부 제어 흐름으로 그리지 않고 condition_ref always를 사용하세요.
-  스트림 일치 true/false 분기를 그리지 마세요. 나머지 올바른 의미·종료 노드·순서 통지 조건을 보존하세요.
+  스트림 일치 true/false 분기를 그리지 마세요. 나머지 올바른 의미·종료 노드·순서 통지 조건을 보존하세요. 최종 독자 가독성 수정: 본문과 접힌 근거가 함수명을 설명하므로 이 그림의 노드·간선 라벨에는 함수
+  식별자를 전혀 쓰지 마세요. 내부 symbol·quote_ids 근거 연결은 그대로 지키되 화면 라벨은 짧은 행동·판정만 사용하세요. 함수 접두사나 0 반환·큐 내부 처리 같은 무관한 상세를 반복하지 마세요. 버퍼
+  준비, 버퍼 붙은 요청 제출, 가상 처리 전달, Virtual2 NV12 CPU 쓰기 시도의 0 아닌 반환 판정, 버퍼 완료 신호, 모든 버퍼 완료 판정, 완료 표시와 순서상 가능한 통지, cam 콜백, 이번 호출
+  종료를 쉽게 읽게 하세요. FrameError는 버퍼 메타데이터이며 그 실패 분기, 모든 버퍼 완료 조건, 앞 요청이 아직 미완료이면 뒤 통지를 보류하는 조건은 유지하세요.'
 sources:
 - virtual-buffer-allocation
 - virtual-queue
@@ -66,6 +69,8 @@ answer_contract:
     message: 이 가상 queueRequestDevice는 0을 반환합니다. 일반 호출자의 오류 취소를 가상 경로 라벨에 섞지 마세요.
   - pattern: ENOBUFS|errno|할당기 무효
     message: 원시 할당 오류는 접힌 소스 근거에 두고 핵심 성공 경로를 짧게 표시하세요.
+  - pattern: (?m)^(?:exportFrameBuffers|queueRequest|queueRequestDevice|generateFrame|bufferCompleted|completeBuffer|completeRequest|requestCompleted)\s*[:：]
+    message: 화면 라벨은 짧은 행동·판정으로 쓰고 함수 식별자는 본문·근거에 남기세요. 내부 symbol·quote_ids는 보존하세요.
   required_terms:
   - - Virtual2
   - - NV12
@@ -77,6 +82,8 @@ answer_contract_en:
     message: Keep generic caller cancellation outside this accepted virtual request flow.
   - pattern: (?i)ENOBUFS|errno|allocator invalid
     message: Keep raw allocator error codes in evidence.
+  - pattern: (?m)^(?:exportFrameBuffers|queueRequest|queueRequestDevice|generateFrame|bufferCompleted|completeBuffer|completeRequest|requestCompleted)\s*[:：]
+    message: 화면 라벨은 짧은 행동·판정으로 쓰고 함수 식별자는 본문·근거에 남기세요. 내부 symbol·quote_ids는 보존하세요.
   required_terms:
   - - Virtual2
   - - NV12

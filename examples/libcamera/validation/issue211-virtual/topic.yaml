@@ -126,7 +126,8 @@ parts:
     통지할 순서가 된 완료 요청은 requestCompleted 신호에 연결된 cam 콜백으로 전달됩니다. 앞선 요청이 아직 미완료이면 뒤 요청의 통지는 보류됩니다. sleep_until·RequestPending·supported_formats
     같은 내부 식별자와 cam 후속 처리의 반복 설명은 쓰지 마세요. VirtualCameraData::processRequest는 cam의 처리 함수와 구분할 수 있도록 클래스 이름을 유지하되 다른 긴 함수 이름은
     나열하지 마세요. 정확한 실행 시각이나 성능을 보장하지 마세요. 생성 실패의 FrameError는 요청 상태가 아니라 버퍼의 프레임 메타데이터 상태에 기록됩니다. 반드시 버퍼 메타데이터를 주어로 명시하고 요청이
-    FrameError 상태가 된다고 쓰지 마세요.
+    FrameError 상태가 된다고 쓰지 마세요. completeBuffer의 반환값은 요청의 모든 버퍼가 완료됐는지를 나타내는 불리언입니다. 값이 true일 때만 completeRequest를 호출한다고 명시하고,
+    버퍼 완료들을 반환한다는 표현은 쓰지 마세요.
   sources:
   - virtual-queue
   - virtual-frame
