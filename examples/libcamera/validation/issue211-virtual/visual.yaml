@@ -1,9 +1,9 @@
 id: virtual-frame-path
 topic: virtual-principle
 kind: flow
-title: 패턴 생성에서 cam의 완료 알림까지
+title: 소프트웨어 패턴을 실제 버퍼에 씁니다
 generation: llm
-max_nodes: 12
+max_nodes: 7
 max_label_chars: 72
 condition_display: evidence
 required_symbols:
@@ -14,43 +14,19 @@ required_symbols:
 - ARGBToNV12
 - generateFrame
 - bufferCompleted
-- completeBuffer
-- completeRequest
-- requestCompleted
-- PipelineHandlerVirtual::bufferCompleted
-- RequestPending
-question: 선택한 NV12 가상 캡처에서 실제 버퍼 준비와 요청 전달, CPU 패턴 쓰기, 버퍼·요청 완료 및 cam 콜백은 어떻게 연결됩니까?
-prompt: 고정된 12개 symbol 바인딩을 유지하고 핵심 가상 NV12 경로를 짧은 한영 라벨로 설명하세요. n0은 cam이 virtual
-  파이프라인을 통해 DMA-BUF를 확보합니다. n1은 Camera가 버퍼가 붙은 요청을 확인하고 파이프라인에 제출합니다. n2는 VirtualCameraData::processRequest의
-  queued 호출을 예약합니다. queueRequestDevice 자체의 호출이 비동기라는 뜻이 아닙니다. 영어는 schedules 또는 queues라는
-  동사로 call 예약을 분명히 하고 reserves라는 모호한 동사는 쓰지 마세요. n3은 패턴 생성기가 CPU 쓰기 동기화 범위 안에서 버퍼를
-  쓰기용으로 매핑합니다. n2→n3은 패턴 생성기 호출 관계이며 processRequest 자체가 매핑한다고 쓰지 않습니다. n4는 CPU가 Virtual2
-  lines 패턴을 NV12로 변환해 매핑된 버퍼에 쓰기를 시도합니다. 영어에도 tries/attempts와 mapped buffer라는 쓰기 대상을
-  명시합니다. 성공 보장 경고를 반복하지 말고 시도 동사에 의미를 담습니다. n5는 NV12 변환 반환값이 0이 아닌가라는 판정입니다. CPU 오류
-  일반 주석은 필요 없습니다. 참이면 버퍼 프레임 메타데이터 FrameError, 거짓이면 FrameSuccess를 유지하며 모두 n6 버퍼 완료
-  신호로 이어집니다. n7은 연결된 핸들러가 모든 요청 버퍼 완료를 검사합니다. 참이면 n8 PipelineHandler가 현재 요청을 완료로 표시하고,
-  거짓이면 n10 이 경로에서 추가 cam 통지 없이 마침으로 갑니다. n8 다음 n11은 제출 큐 맨 앞 요청이 아직 Pending인가를 판단합니다.
-  큐 맨 앞 요청은 현재 완료 처리 중인 요청과 같을 수도 다를 수도 있습니다. 다르다고 단정하는 괄호나 설명을 넣지 마세요. n11 참이면 n10으로
-  통지를 보류합니다. 거짓이면 n9에서 큐 앞부터 연속으로 완료된 요청들만 제출 순서대로 requestCompleted 신호를 통해 cam에 통지합니다.
-  n9는 현재 요청이 반드시 이 호출에서 통지된다는 보장이 아닙니다. 앞의 완료 요청들을 통지하다가 현재 요청 앞의 Pending에서 멈출 수도
-  있으므로 ready/completed queue prefix만 처리한다는 의미를 유지합니다. 전체 반복을 별도 노드로 늘리지 않고 이 핵심 조건을
-  요약합니다. n10은 두 종료 경로가 공유하므로 요청 완료 표시가 없다고 단정하지 않고 이 경로가 추가 통지를 중단한다는 공통 결과만 설명하며,
-  같은 호출에서 앞의 완료 요청들을 이미 통지했을 가능성은 부정하지 않습니다. 모든 노드와 간선을 연결하고 세 결정의 두 결과를 실제 source-bound
-  condition_ref로 표시합니다. n0→n1→n2→n3→n4→n5와 n8→n11의 연결은 always인 핵심 경로 요약입니다. n8→n9
-  직접 간선은 없습니다. 노드는 짧은 행동·판정, 간선은 짧은 관계·결과만 쓰고 행동 전체를 반복하지 않습니다. n1의 Camera, n8의 PipelineHandler,
-  n2의 VirtualCameraData::processRequest, n9의 requestCompleted와 n4의 CPU·Virtual2·lines·NV12는
-  필요합니다. 그 밖의 함수명 괄호 주석이나 긴 코드 식별자 목록은 근거로 남깁니다. 특히 n5의 generateFrame, n6의 bufferCompleted,
-  n11의 RequestPending enum은 화면에서 쉬운 동작·상태로 설명하고 내부 symbol은 그대로 보존합니다. 인용은 양 끝 symbol과
-  실제 guard를 포함해야 합니다. n11→n10에는 Pending guard와 PipelineHandlerVirtual::bufferCompleted
-  선언 구절이 모두 필요합니다. 노드 72자, authored 간선 40자 한도 안에서 영어 25~55자의 자연스러운 표현을 우선합니다. authored
-  true/false는 시스템 표시와 중복하지 않습니다. 쓰기 동기화는 매핑·CPU 접근을 감싸며, 완료 통지는 submission/queue order입니다.
-  물리 장치·성능 경고, 일반 취소와 반환값의 상세는 이 그림에 넣지 않습니다. Pending을 만나 보류하는 요청은 그 Pending 요청과 뒤
-  요청들입니다. 그 앞의 완료 요청들은 같은 completeRequest 호출에서 이미 통지했을 수 있습니다. Pending 분기나 공통 종료 노드가
-  이번 호출 전체의 통지 건수를 0으로 단정하지 않게 하세요. 통지 보류는 함수 종료가 아닙니다. n10은 두 분기에서 직접 cam 통지로 진행하지
-  않는다는 통지 경계 상태로 표시하고 함수·핸들러의 ends/returns/finishes/종료/반환으로 쓰지 않습니다. Pending을 만나 통지
-  반복이 멈춰도 completeRequest의 doQueueRequests 같은 남은 작업은 계속되며, 같은 호출에서 앞의 완료 요청을 이미 통지했을
-  수 있습니다. 필요하면 n10 인용에 virtual-completion 선언·검사와 pipeline-completion의 Pending break를
-  함께 포함합니다.
+question: 가상 파이프라인은 실제 DMA-BUF 버퍼를 어떻게 확보하고 CPU 패턴을 기록해 버퍼 완료를 알립니까?
+prompt: 고정된 7개 symbol 바인딩만 사용하여 버퍼 완료 신호까지 설명합니다. n0 cam이 virtual 파이프라인을 통해 실제 DMA-BUF
+  확보, n1 Camera가 버퍼가 붙은 요청을 파이프라인에 제출, n2 VirtualCameraData::processRequest의 queued
+  호출 예약, n3 패턴 생성기가 CPU 쓰기 동기화 범위 안에서 버퍼 쓰기 매핑, n4 CPU가 Virtual2 lines 패턴을 NV12로 변환해
+  매핑된 버퍼에 쓰기를 시도, n5 NV12 변환 오류 여부, n6 가상 데이터의 버퍼 완료 알림입니다. n0→n1→n2→n3→n4→n5와 n5의
+  참/거짓→n6만 그립니다. n5 참이면 버퍼 메타데이터 FrameError, 거짓이면 FrameSuccess 유지입니다. 변환 결과와 무관하게
+  버퍼 완료 신호는 나가므로 성공 보장으로 쓰지 않습니다. n2 호출 예약이 비동기이고 queueRequestDevice 자체가 비동기 호출되는
+  뜻은 아닙니다. n3의 매핑 주체는 패턴 생성기입니다. source-bound 실제 변환 결과 조건을 인용하고 나머지는 always인 핵심 경로
+  요약입니다. 요청 완료·큐 순서 검사는 다음 별도 그림이 설명합니다. 노드와 간선은 짧은 행동·결과만 쓰고 함수명 괄호 주석과 긴 반환값 설명은
+  근거로 남깁니다. n2는 VirtualCameraData::processRequest, n4는 CPU·Virtual2·lines·NV12와 mapped
+  buffer에 쓰기 시도 의미를 유지합니다. requestCompleted나 후속 요청 완료 노드를 이 버퍼 그림에 넣지 않습니다. source
+  인용에는 양 끝 symbol과 실제 guard가 있어야 합니다. 동기화는 매핑과 CPU 접근을 감싸는 범위이며 sync then/동기화 후라고
+  쓰지 않습니다. 간선은 가상 전달임을 분명히 하고 변환 오류 판정 전체를 반복하지 않습니다.
 sources:
 - virtual-buffer-allocation
 - virtual-queue
@@ -88,9 +64,6 @@ answer_contract:
   - - NV12
   - - CPU
   - - lines
-  - - requestCompleted
-  - - Camera
-  - - PipelineHandler
 answer_contract_en:
   basis: implementation
   reject_patterns:
@@ -114,8 +87,8 @@ answer_contract_en:
   - - NV12
   - - CPU
   - - lines
-  - - requestCompleted
-  - - Camera
-  - - PipelineHandler
+  - - tries
+    - attempts
+  - - mapped
 require_connected: true
 max_edge_label_chars: 40

@@ -1,3 +1,47 @@
+- id: request-completion-order
+  topic: virtual-principle
+  kind: flow
+  title: 버퍼 완료와 요청 완료·순서 통지는 별개입니다
+  generation: llm
+  max_nodes: 8
+  max_label_chars: 72
+  max_edge_label_chars: 40
+  condition_display: evidence
+  while_conditions: true
+  require_connected: true
+  required_symbols:
+  - PipelineHandlerVirtual::bufferCompleted
+  - completeBuffer
+  - FrameBuffer
+  - completeRequest
+  - queuedRequests_
+  - RequestPending
+  - requestCompleted
+  - doQueueRequests
+  sources:
+  - virtual-completion
+  - pipeline-completion
+  - camera-notification
+  - cam-signal-connection
+  - virtual-start
+  question: 버퍼 완료 뒤 요청 완료와 제출 순서 통지는 어떻게 구분되며 Pending을 만나면 어떤 작업이 이어집니까?
+  prompt: 고정된 8개 노드를 사용합니다. n0은 가상 핸들러가 버퍼 완료 신호를 받는 단계, n1은 completeBuffer가 모든 요청
+    버퍼 완료인지 반환하는 결정입니다. 거짓은 n2 남은 버퍼 대기(요청 완료 표시 전)라는 별도 결과로 갑니다. 참은 n3 PipelineHandler가
+    현재 요청을 완료로 표시하는 단계로 갑니다. n3→n4는 제출 큐가 비어 있지 않은가라는 while 조건 검사입니다. n4 참이면 n5 제출
+    큐 맨 앞 요청이 아직 RequestPending인가를 검사합니다. n4 거짓이면 n7 후속 대기 요청 큐 처리(doQueueRequests)로
+    갑니다. n5 참이면 그 Pending 요청과 뒤 요청들의 통지를 보류하고 n7 후속 큐 처리로 갑니다. n5 거짓이면 n6 완료된 맨 앞
+    요청을 꺼내 Camera의 requestCompleted 신호로 cam에 통지한 뒤 n4로 돌아가 다음 맨 앞을 검사합니다. 이 반복은 제출
+    순서를 보장합니다. 큐 선두는 현재 완료 표시한 요청과 같을 수도 다를 수도 있습니다. 앞의 완료 요청들을 이미 통지한 뒤 Pending에서
+    멈출 수도 있으므로 Pending 분기를 이번 호출의 통지 0건으로 표현하지 않습니다. n2와 n7은 서로 다른 결과이며 합치지 않습니다.
+    n7은 함수 종료나 반환이 아니라 통지 반복 뒤에도 계속되는 doQueueRequests 작업입니다. 실제 while 및 Pending guard의
+    참/거짓과 completeBuffer 반환 조건을 source condition_ref로 인용합니다. 모든 간선에 양 끝 symbol과 해당
+    guard의 구절을 포함합니다. n6→n4는 반복 관계를 명시합니다. 함수 이름 목록 대신 짧은 동작·판정을 쓰되 PipelineHandler의
+    완료 표시, Camera/requestCompleted 통지 주체와 후속 큐 처리의 차이는 유지합니다. authored true/false를
+    시스템 표시와 중복하지 않습니다. 각 노드는 72자, authored 간선은 40자 이내이며 영어는 자연스러운 짧은 문장을 우선합니다.
+  answer_contract:
+    basis: implementation
+  answer_contract_en:
+    basis: implementation
 - id: completion-flow
   topic: flow
   kind: decision
@@ -117,11 +161,15 @@
     카메라·적용 구성·3프레임·정상 종료를 확인하는 결과 검증 노드를 하나 추가하세요. 이 노드는 completed_frames 원문이 포함된
     측정 근거와 재현 절차를 인용합니다. 현재 9개 노드를 10개로 늘리되 기존 max_nodes 10을 넘기지 않습니다. 결과 노드의 상세 필드명과
     수치는 근거에서 확인하며 짧고 분명한 검증 동작만 표시하세요. 화살표는 짧은 조건·이벤트만 씁니다. 노드에 있는 동작을 문장으로 반복하지 말고
-    무조건 간선은 두세 단어의 짧은 연결어만 씁니다. 상세 조건은 본문과 근거에서 확인합니다.
+    무조건 간선은 두세 단어의 짧은 연결어만 씁니다. 상세 조건은 본문과 근거에서 확인합니다. 조건 일치 결정에 Virtual2 YAML의 400x300
+    크기·lines 패턴과 cam 명령의 Virtual2 선택·400x300 NV12 요청을 구분해 포함합니다. root udmabuf 접근과
+    기록된 시험 커널 일치도 유지합니다. 조건 노드의 한영 라벨은 최대 72자를 쓰되 이 네 조건을 짧게 표시하고 상세 버전·필드명은 본문과 근거로
+    남깁니다. 나머지 기존 10개 노드와 연결·인용·승인 시점은 그대로 보존합니다.
   sources:
   - product-execution-contract
   - product-reproduction-procedure
   - product-official-cam-reader
+  - virtual2-config
   max_label_chars: 72
   condition_display: evidence
   answer_contract:
