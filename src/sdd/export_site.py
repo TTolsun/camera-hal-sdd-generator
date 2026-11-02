@@ -506,13 +506,17 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
             if following.startswith('<a class="next"'):
                 content, previous_next[i] = merge_next_step(content, following)
         info = []
+        current_records = {}
         method_label, method_scope = generation_info(str(meta.get("generation_method", "")))
         if meta:
             info.append(f'<dt>생성 방식</dt><dd>{html.escape(method_label)}</dd>')
             info.append(f'<dt>검증 범위</dt><dd>{html.escape(method_scope)}</dd>')
             check_name, check_result, check_scope = _check(meta)
+            current_records = {"생성 방식": method_label, "검증 범위": method_scope, check_name: check_result}
             info.append(f'<dt>{check_name}</dt><dd>{check_result} (<code>{html.escape(str(meta.get("status", "unrecorded")))}</code>). '
                         f'{html.escape(check_scope)}</dd>')
+            info.append('<dt>사람 검토</dt><dd>' + html.escape(_approval_label(
+                approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))) + '</dd>')
         for key, label in [("source_commit", "분석 기준 커밋"), ("generated_at", "문서 생성 시각"), ("agent", "문장 생성 모델")]:
             if meta.get(key):
                 info.append(f'<dt>{label}</dt><dd><code>{html.escape(str(meta[key]))}</code></dd>')
@@ -535,7 +539,10 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
             mmd = str(PurePosixPath(rel).with_suffix(".mmd"))
             (out / mmd).write_text(diagram_sources[rel] + "\n", encoding="utf-8", newline="\n")
             downloads += f' <a href="{_href(mmd, current)}">Mermaid 원문 ↗</a>'
-        evidence = f'<section class="evidence"><h2 id="page-evidence">생성 근거</h2><dl>{"".join(info)}</dl>{downloads}</section>' if info else ""
+        from .reading_cleanup import collect_manuscript_records
+        content, historical_records = collect_manuscript_records(content, current_records)
+        evidence = (f'<section class="evidence"><h2 id="page-evidence">문서 생성·검토 정보</h2>'
+                    f'<dl>{"".join(info)}</dl>{historical_records}{downloads}</section>') if info or historical_records else ""
         status = (_status(meta, approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))
                   if meta else '<span class="review-state">검토용 문서</span>')
         if meta:

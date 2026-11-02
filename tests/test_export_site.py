@@ -72,10 +72,27 @@ def test_class_diagram_precedes_source_evidence_without_changing_manuscript(tmp_
     assert page.index('<h2 id="클래스-관계">') < page.index('<h2 id="소스-근거">')
     assert page.count('<h2 id="클래스-관계">') == 1
     assert 'OLD DIAGRAM' not in page
+    assert page.count('id="page-evidence"') == 1
+    assert '<h2 id="page-evidence">문서 생성·검토 정보</h2>' in page
     assert path.read_text(encoding='utf-8') == text
     first = (site / 'site-manifest.json').read_bytes()
     export_site(tmp_cfg)
     assert (site / 'site-manifest.json').read_bytes() == first
+
+
+def test_site_combines_review_records_without_rewriting_original_or_approval(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    path = tmp_cfg.sdd_dir / 'device.md'
+    text = path.read_text(encoding='utf-8') + ('\n??? note "근거와 검토 정보"\n'
+        '    - 근거 수준: commit `old-source`\n    - 검토 상태 기록일: 과거 날짜 · 사람 검토 전\n')
+    path.write_text(text, encoding='utf-8')
+    page = (export_site(tmp_cfg) / 'device.html').read_text(encoding='utf-8')
+    assert '<summary>근거와 검토 정보</summary>' not in page
+    assert page.count('id="page-evidence"') == 1
+    assert page.index('id="page-evidence"') < page.index('원고 작성 당시 기록')
+    assert 'old-source' in page and '과거 날짜' in page
+    assert '<dt>사람 검토</dt><dd>사람 검토 전</dd>' in page
+    assert path.read_text(encoding='utf-8') == text
 
 
 def test_stale_facts_abort_before_publication(tmp_cfg, sample_model):

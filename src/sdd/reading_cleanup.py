@@ -187,6 +187,38 @@ def link_related_classes(document: str, page: str, targets: dict[tuple[str, ...]
                   related, document, flags=re.S)
 
 
+def collect_manuscript_records(document: str, current: dict[str, str]) -> tuple[str, str]:
+    """Move generated review lists into the page's unified evidence section.
+
+    Only byte-equivalent plain rows with the same page-wide scope are redundant.
+    Historical differences, links, package-specific records and custom notes
+    remain inspectable. Manuscripts and approval ledgers are never edited.
+    """
+    records = []
+    pattern = (r'<pre\b[^>]*>.*?</pre>|<code\b[^>]*>.*?</code>|'
+               r'(<details class="note">\s*<summary>근거와 검토 정보(?P<scope>: [^<>]+)?</summary>'
+               r'\s*<ul>(?P<rows>.*?)</ul>\s*</details>)')
+
+    def collect(match):
+        if not match[1]:
+            return match[0]
+        rows = match['rows']
+        items = re.findall(r'<li>.*?</li>', rows, re.S)
+        if not items or re.sub(r'<li>.*?</li>', '', rows, flags=re.S).strip() or '<ul' in rows:
+            return match[0]
+        if not match['scope']:
+            duplicates = {f'<li>{html.escape(key)}: {html.escape(value)}</li>' for key, value in current.items()}
+            items = [item for item in items if item not in duplicates]
+        if items:
+            records.append('<details class="note manuscript-record"><summary>원고 작성 당시 기록'
+                           + (match['scope'] or '') + '</summary>'
+                           + '<p>원고에 저장된 당시 기록입니다. 현재 문서의 기준과 다를 수 있습니다.</p>'
+                           + '<ul>' + ''.join(items) + '</ul></details>')
+        return ''
+
+    return re.sub(pattern, collect, document, flags=re.S), ''.join(records)
+
+
 def merge_next_step(document: str, following: str) -> tuple[str, str]:
     """Merge the exact generated tail only; retain different destinations/hints."""
     tail = re.search(r'<p>다음 단계: <a href="([^"]+)">([^<>]+)</a></p>\s*$', document)

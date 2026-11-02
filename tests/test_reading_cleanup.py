@@ -59,6 +59,25 @@ def test_question_guide_without_lead_precedes_body_but_examples_and_custom_notes
         assert promote_coverage(source) == source
 
 
+def test_manuscript_review_records_deduplicate_exact_values_but_keep_history():
+    from sdd.reading_cleanup import collect_manuscript_records
+    note = ('<details class="note"><summary>근거와 검토 정보</summary><ul>'
+            '<li>생성 방식: 추출 사실과 LLM 설명</li><li>검증 범위: 과거 범위</li>'
+            '<li>근거 수준: commit <code>old</code></li><li>검토 상태 기록일: 과거 날짜</li>'
+            '<li><a href="record.json">기록</a></li></ul></details>')
+    current = {'생성 방식': '추출 사실과 LLM 설명', '검증 범위': '현재 범위'}
+    content, record = collect_manuscript_records('<p>본문</p>' + note, current)
+    assert content == '<p>본문</p>'
+    assert '생성 방식:' not in record
+    for value in ('과거 범위', '<code>old</code>', '과거 날짜', 'href="record.json"'):
+        assert value in record
+    assert '원고 작성 당시 기록' in record
+    assert collect_manuscript_records(content, current) == (content, '')
+    assert collect_manuscript_records('<pre>' + note + '</pre>', current) == ('<pre>' + note + '</pre>', '')
+    scoped = note.replace('근거와 검토 정보</summary>', '근거와 검토 정보: package</summary>')
+    assert '생성 방식:' in collect_manuscript_records(scoped, current)[1]
+
+
 def test_single_call_becomes_labeled_record_without_losing_boundary_or_citations():
     headers = ['호출 지점', '후보 또는 예약 대상', '확인할 경계', '근거']
     row = ['Camera', '<code>Pipe::queue()</code>', '메서드 전달이며 비동기 보장이 아닙니다.', '<a href="code#L9">src/a.cpp:9</a>']
