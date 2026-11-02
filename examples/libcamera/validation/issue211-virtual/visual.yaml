@@ -36,7 +36,10 @@ prompt: 이 그림은 핵심 프레임 경로의 개념도이며 전체 제어 �
   꼭 노출할 필요는 없으며 한국어 25자·영어 48자 안팎을 우선하세요. 앞선 pending 요청이 있으면 통지가 보류됨은 마지막 간선에 짧게 유지하세요. 긴 해명·다시 호출될 가능성·스레드 대기 아님 등의 부연 설명은
   라벨에 넣지 마세요. 라벨 길이는 한영 모두 최대 44자로 강제합니다. 함수 이름 접두사는 필수가 아니며 짧은 의미만 써도 됩니다. errno나 -ENOBUFS 같은 원시 오류 코드는 그림에 쓰지 마세요. 패턴 쓰기
   결정 노드에 Virtual2와 NV12를 반드시 포함하고 소프트웨어 줄무늬를 CPU로 쓴다는 뜻을 유지하세요. completeRequest 상자는 현재 요청 완료 표시와 통지 가능한 요청만 순서대로 알리는 역할을 표현하되
-  긴 함수명 접두사를 생략해 44자 안에 쓰세요.
+  긴 함수명 접두사를 생략해 44자 안에 쓰세요. 최신 Terra 지적만 정확히 고치세요. generateFrame 결정은 쓰기 성공의 서술이 아니라 CPU의 Virtual2 NV12 줄무늬 쓰기 시도와 그 반환값이
+  0이 아닌가를 묻는 판정입니다. 한영 모두 attempt/시도와 0 아닌 반환의 판정을 분명히 하세요. true 실패 간선에서는 버퍼 메타데이터의 FrameError 설정을 명시하세요. FrameError는 Request
+  상태가 아닙니다. queueRequestDevice에서 generateFrame으로 가는 간선은 스트림을 찾았다는 assert를 조건부 제어 흐름으로 그리지 않고 condition_ref always를 사용하세요.
+  스트림 일치 true/false 분기를 그리지 마세요. 나머지 올바른 의미·종료 노드·순서 통지 조건을 보존하세요.
 sources:
 - virtual-buffer-allocation
 - virtual-queue
