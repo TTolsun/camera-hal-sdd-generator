@@ -16,16 +16,16 @@ required_symbols:
 - bufferCompleted
 - startCapture
 question: 가상 파이프라인은 실제 DMA-BUF 버퍼를 어떻게 확보하고 CPU 패턴을 기록해 버퍼 완료를 알립니까?
-prompt: 마지막 그림 검토의 세부 수정입니다. n1→n2, n2→n3, n3→n4, n4→n5는 선택된 가상 경로의 주요 호출 관계를 요약하는 always 간선입니다. 네 간선의
-  condition_ref를 always로 설정하고 prepared request 전달·패턴 생성 호출·쓰기 동기화 범위·변환 결과 확인 같은 짧은 관계만 표시하세요. 불리언 true/false나
-  특정 stream 일치 분기를 이 process 노드들에 붙이지 않습니다. 판정 노드는 n0 할당 실패 여부와 n5 변환 오류 여부이며, 각각의 두 결과와 정확한 실제 소스 조건을
-  그대로 보존합니다. n6는 프레임 상태와 무관한 버퍼 완료 신호이며 다음 요청 완료 그림의 핸들러로 이어짐을 한영 라벨에 짧게 표시합니다. n0→n7 실패 반환과 n0→n1 성공
-  경로, n2 VirtualCameraData::processRequest, 나머지 올바른 라벨·인용·구조는 유지합니다. 간선 authored 라벨은 한영 20자 이내로 짧게 쓰고
-  필수 실제 source guards는 보존합니다. 처음부터 생성할 때 n0는 startCapture의 allocator_->allocate 다음 ret < 0에 따른 할당 실패 판정이고
-  n7은 그 실패로 startCapture가 요청 제출 전에 오류를 반환하는 경로입니다. n1은 Camera의 버퍼 검증과 유효 요청 비동기 전달, n2는 VirtualCameraData::processRequest
-  queued 호출 예약, n3는 패턴 생성기의 CPU 쓰기 동기화 범위 안 쓰기용 매핑 시도, n4는 CPU의 Virtual2 lines NV12 변환·매핑 버퍼 쓰기 시도, n5는
-  변환 오류 판정, n6는 FrameError/FrameSuccess와 무관한 버퍼 완료 신호입니다. n0→n7 할당 실패 반환 및 n0→n1 할당 성공 분기 외에는 n1→n2→n3→n4→n5,
-  n5의 실제 변환 오류 true/false→n6 경로입니다.
+prompt: n0 할당 실패 판정의 false→n1 간선과 n1 라벨만 수정합니다. 할당 성공 뒤 요청 생성·버퍼 추가·카메라 시작·제출도 실패할 수 있습니다. 이 그림이 그 나머지
+  준비·시작의 성공 경로를 요약한다는 조건을 간선에 짧게 표시하고, 제출 성공을 보장하는 표현을 피하세요. 간선 라벨에 submit/요청 제출이라는 확정 동작을 쓰지 말고 후속 준비
+  성공 경로라는 뜻을 씁니다. n1은 Camera의 버퍼 없는 요청 거부를 유지하면서, 나머지 cam 준비·시작이 성공한 경로에서 비동기 전달을 시도함을 한영 모두 표시합니다. 실제
+  디바이스 제출 성공 보장이 아닙니다. n0의 실패 true→n7과 실제 할당 조건, n2의 VirtualCameraData::processRequest, 매핑·변환 시도, 완료 신호와
+  다음 그림 연결 등 다른 올바른 구조·라벨·인용은 그대로 보존합니다. 간선 authored 라벨은 한영 20자 이내이며 실제 분기 조건·인용은 보존합니다. 처음부터 생성할 때 n0는
+  startCapture의 allocator_->allocate 다음 ret < 0에 따른 할당 실패 판정이고 n7은 그 실패로 startCapture가 요청 제출 전에 오류를 반환하는
+  경로입니다. n1은 Camera의 버퍼 검증과 유효 요청 비동기 전달, n2는 VirtualCameraData::processRequest queued 호출 예약, n3는 패턴 생성기의
+  CPU 쓰기 동기화 범위 안 쓰기용 매핑 시도, n4는 CPU의 Virtual2 lines NV12 변환·매핑 버퍼 쓰기 시도, n5는 변환 오류 판정, n6는 FrameError/FrameSuccess와
+  무관한 버퍼 완료 신호입니다. n0→n7 할당 실패 반환 및 n0→n1 할당 성공 분기 외에는 n1→n2→n3→n4→n5, n5의 실제 변환 오류 true/false→n6 경로입니다.
+  n0·n5만 판정 노드이며 n1→n2, n2→n3, n3→n4, n4→n5는 선택된 정상 호출 경로를 요약하는 always 간선입니다.
 sources:
 - virtual-buffer-allocation
 - virtual-queue

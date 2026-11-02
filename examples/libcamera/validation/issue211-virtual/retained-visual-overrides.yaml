@@ -153,16 +153,17 @@
   - run_cam
   - completed_frames
   question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam 재현 실행은 어떤 준비 순서로 이어집니까?
-  prompt: host_approval 노드의 한영 라벨만 수정합니다. 승인 시점이 호스트 변경 실행 직전임을 한영 모두 명시합니다. 영어에는 immediately before라는
-    시점이 필요합니다. 별도 호스트 승인이라는 범위와 실행 직전이라는 시점만 짧게 쓰고 PR·Docker 경고를 이 노드에서 반복하지 않습니다. 다른 모든 노드와 간선, 필요한 승인·Docker·부팅·불일치·새
-    증거 조건을 그대로 보존합니다. 간선 한영 20자 한도와 연결된 실제 분기를 유지합니다.
+  prompt: 'device_verify 조건 노드의 한영 라벨만 수정합니다. 기록된 커널과 root의 /dev/udmabuf 접근, YAML의 크기 400x300 및 패턴 값 lines,
+    새 cam 명령의 카메라 Virtual2 및 스트림 400x300 NV12를 짧게 구분합니다. YAML: 크기/패턴과 cam: 카메라/스트림이라는 두 확인 대상을 명시하여 서로
+    혼동되지 않게 하세요. 이 조건 노드의 여러 필수 입력을 정확히 보이기 위해 한영 96자까지 허용하되 짧은 구절로 씁니다. 다른 모든 올바른 노드와 간선, 실행 직전 별도 승인,
+    조건 불일치 중단과 한 새 증거 위치 안 세 실행 분리는 그대로 보존합니다. 간선 authored 라벨은 한영 20자 이내이며 실제 분기 조건·인용은 보존합니다.'
   sources:
   - product-invocation-execution-contract
   - product-invocation-reproduction-procedure
   - product-invocation-official-cam-reader
   - virtual2-config
   - product-invocation-options
-  max_label_chars: 72
+  max_label_chars: 96
   condition_display: evidence
   answer_contract:
     basis: measurement
