@@ -86,6 +86,10 @@ design_topics:
     file: src/apps/cam/camera_session.cpp
     start: void CameraSession::requestComplete(Request *request)
     end: void CameraSession::sinkRelease(Request *request)
+  - id: submission-limit
+    file: src/apps/cam/camera_session.cpp
+    start: int CameraSession::queueRequest(Request *request)
+    end: void CameraSession::requestComplete(Request *request)
   answer_contract:
     basis: implementation
     required_terms:
@@ -108,17 +112,22 @@ design_topics:
       basis: implementation
     role: summary
   - id: processing
-    question: 후속 처리의 독자 동작을 먼저 쉬운 말로 네 짧은 문장 360자 이내로 설명하세요. 시작할 때 이미 설정된 프레임 한도에 도달했으면 완료 신호를 다시 내지 않고 반환합니다. 그렇지 않으면 선택한
-      출력 처리기(싱크)가 있으면 처리하고 프레임 정보를 출력한 뒤 처리 개수를 늘립니다. 그 결과 설정된 한도에 도달하면 완료 신호를 내고 반환합니다. 한도 전에는 싱크가 요청을 보유하면 재큐를 나중 완료 처리로
-      미루고, 보유하지 않으면 버퍼를 유지해 요청을 재사용·재큐합니다. CameraSession::processRequest 이름은 보조 식별자로 한 번만 쓰고 captureLimit_·captureCount_·sink_
-      같은 멤버 이름을 나열하지 마세요. 부품 이름보다 조건·동작·다음 단계를 먼저 설명하고, 전체 처리를 모두 마친 뒤 개수가 증가한다는 표현은 쓰지 마세요.
+    question: 후속 프레임 처리와 재제출을 쉬운 두 단락으로 설명하세요. 변수 나열 대신 독자의 조건·동작을 먼저 쓰고 같은 설정 한도가 처리 개수와 제출 횟수에 각각 적용됨을 구분하세요.
     sources:
     - callback-and-processing
+    - submission-limit
     max_statements: 1
     prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지
       마세요.
     answer_contract:
       basis: implementation
+    subquestions:
+    - 처리 한도가 설정되어 있고 이미 도달한 경우 완료 신호를 다시 내지 않고 반환한다고 먼저 설명하세요. 그 외에는 선택한 출력 처리기(싱크)의 처리만 싱크가 있을 때 수행하며, 프레임 정보 출력과 처리 개수 증가는
+      싱크 유무와 관계없이 진행됨을 분명히 하세요. 그 결과 설정된 처리 한도에 도달하면 완료 신호를 내고 반환합니다. CameraSession::processRequest 이름은 보조 식별자로 한 번만 쓰고 멤버
+      이름 나열 없이 세 짧은 문장 300자 이내로 쓰세요.
+    - 처리 종료 조건이 아니라면(한도 미설정 포함) 싱크가 요청을 보유할 때 재제출을 나중 완료 처리로 미루고, 보유하지 않을 때 버퍼를 유지해 요청을 재사용한 뒤 재제출을 시도한다고 설명하세요. 제출 시도 횟수에도
+      같은 설정 한도가 적용되며, 이미 그 횟수에 도달했으면 CameraSession::queueRequest가 실제 큐잉 없이 반환한다고 명시하세요. 실제 큐잉이 항상 성공하거나 무조건 재큐된다고 쓰지 마세요.
+      세 짧은 문장 280자 이내입니다.
   - id: observed
     question: 이번 실행에서 콜백과 후속 처리 스레드가 달랐지만 모든 실행의 배치를 보장하지 않는다고 설명하세요. 취소 분기는 소스에 존재하지만 이번 실행에서 동적으로 시험하지 않았다고 명확히 하세요. 다른
       동작은 소스로 확인하지 않았다는 의미로 읽힐 수 있는 '취소 분기만 확인' 또는 '취소 분기는 소스로 확인했을 뿐' 같은 표현은 피하고 짧은 두 문장으로 쓰세요.
