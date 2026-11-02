@@ -399,7 +399,7 @@ def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
     other = (out / 'device.html').read_text(encoding='utf-8')
     child = (out / 'scenarios/open.html').read_text(encoding='utf-8')
     assert '<summary>하위 문서 2 편</summary>' in other
-    # 현재 문서와 목차 페이지에서도 저장된 선택이 없으면 모든 묶음을 접는다.
+    # 최상위 그룹만 기본으로 펼치고 현재 문서의 하위 묶음도 접어 둔다.
     assert not _nav_folds(parent, 'nav-branch')[0]['open']
     assert not _nav_folds(child, 'nav-branch')[0]['open']
     assert any(link.get('aria-current') == 'page' for link in _nav_folds(child, 'nav-branch')[0]['links'])
@@ -412,7 +412,7 @@ def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
         assert ids[0] == ids[1] == ids[2]
         assert len(ids[0]) == len(set(ids[0]))
     for page in [parent, child, other]:
-        assert not any(node['open'] for node in _nav_folds(page, 'nav-group'))
+        assert all(node['open'] for node in _nav_folds(page, 'nav-group'))
 
 
 def test_task_sections_end_before_unclassified_pages_and_reader_groups(tmp_cfg, sample_model):
