@@ -3,13 +3,15 @@ topic: virtual-principle
 kind: flow
 title: 패턴 생성에서 cam의 완료 알림까지
 generation: llm
-max_nodes: 9
+max_nodes: 11
 max_label_chars: 44
 condition_display: evidence
 required_symbols:
 - exportFrameBuffers
 - queueRequest
 - queueRequestDevice
+- MappedFrameBuffer
+- ARGBToNV12
 - generateFrame
 - bufferCompleted
 - completeBuffer
@@ -17,18 +19,18 @@ required_symbols:
 - requestCompleted
 - PipelineHandlerVirtual::bufferCompleted
 question: 선택한 NV12 가상 캡처에서 실제 버퍼 준비와 요청 전달, CPU 패턴 쓰기, 버퍼·요청 완료 및 cam 콜백은 어떻게 연결됩니까?
-prompt: 핵심 프레임 경로를 설명하는 9노드 개념도입니다. schema가 각 노드에 고정한 symbol과 실제 quote_ids를 보존하세요. 화면 라벨에는 함수명 접두사와 내부 반환 0·후속 큐 처리 설명을 넣지
-  않고 짧은 독자 행동·판정만 씁니다. 한영 라벨 최대 44자입니다. 버퍼 준비는 캡처 전 준비이며, 버퍼 붙은 요청 제출과 가상 비동기 전달을 거쳐 CPU가 Virtual2 대각선 패턴을 NV12에 쓰기를 시도합니다.
-  패턴 쓰기 노드는 시도와 반환값이 0이 아닌가를 묻는 결정입니다. true는 버퍼 프레임 메타데이터의 FrameError 설정, false는 FrameSuccess 유지 후 같은 버퍼 완료 신호로 이어집니다. Virtual2·NV12·CPU를
-  라벨에 유지하세요. 스트림을 찾았다는 assert는 분기로 그리지 않으며 가상 전달에서 쓰기 시도로 가는 간선의 condition_ref는 always입니다. 버퍼 완료 신호는 연결된 핸들러로 전달되어 모든 요청 버퍼가
-  완료됐는지 판정합니다. true는 현재 요청 완료 표시와 순서상 가능한 통지 처리로, false는 이번 핸들러 호출만 끝나는 말단 노드로 갑니다. 마지막 필수 심볼 PipelineHandlerVirtual::bufferCompleted
-  노드는 말단이며 나가는 간선이 없습니다. 그 노드로 다시 돌아가 검사를 반복하지 마세요. 완료 표시에서 cam 콜백으로 가는 간선은 통지 순서가 된 완료 요청에 한해 신호가 나간다는 요약입니다. 앞선 요청이 아직 미완료이면
-  뒤 통지가 보류된다는 조건을 짧게 유지하세요. 전체 큐 순회·후속 큐 처리·일반 호출자의 오류 취소는 이 그림의 범위가 아닙니다. 본문과 접힌 근거가 함수 이름과 상세를 제공합니다. 새 조건 ID를 사용하고 실제 두
-  결정의 조건을 condition_ref에 보존하며 라벨에 = ! < > 기호를 직접 쓰지 마세요. 영어 once/only once를 쓰지 마세요. 9개 노드를 모두 실제 연결선으로 이어야 합니다. 양 결정은 각각 true와
-  false 두 결과의 간선을 가지며, 단일 연결선만 내거나 노드를 고립시키면 실패합니다. 캡처 준비부터 cam 콜백까지의 핵심 경로와 이번 호출 종료 분기를 모두 연결하세요. 마지막 독립 Terra 지적 한 곳만 수정합니다.
-  요청 제출(queueRequest 심볼)에서 가상 장치 전달(queueRequestDevice 심볼)로 가는 선은 준비된 요청을 전달하는 핵심 경로의 요약이며 별도 준비 여부 결정 노드가 없습니다. 이 선의 condition_ref를
-  반드시 always로 하고 [true]/[false] 표기는 쓰지 마세요. 직전의 올바른 9개 노드·9개 연결선, 모든 다른 condition_ref·라벨·quote_ids를 그대로 보존하세요. 다른 두 실제 결정의
-  true/false 결과와 실패 상태·핸들러 종료·순서상 통지 조건은 바꾸지 마세요.
+prompt: 선택한 Virtual2 NV12 가상 캡처의 핵심 원리를 11개 노드로 설명하세요. schema가 고정한 symbol과 실제 quote_ids를 보존하되 화면 라벨에는 함수명 접두사를 쓰지 말고 짧은 동작·판정만
+  한영 각각 44자 이내로 씁니다. 앞부분은 캡처 전 DMA-BUF 준비, 버퍼가 붙은 요청 제출, 준비된 요청의 가상 비동기 전달, 쓰기 방향 CPU 접근 동기화와 쓰기 가능한 DMA-BUF 매핑, 소프트웨어 줄무늬
+  템플릿의 CPU NV12 변환 시도, 생성·변환 결과 판정 순서입니다. MappedFrameBuffer 노드는 쓰기 매핑을, ARGBToNV12 노드는 소프트웨어 패턴을 CPU가 NV12로 변환해 매핑된 버퍼에 기록하려는
+  시도를 보여 주세요. Virtual2·NV12·CPU를 라벨에 유지하세요. generateFrame 노드는 선택한 NV12 변환 함수의 반환값이 0이 아닌가를 판정합니다. 별도의 CPU 메모리 쓰기 오류 검사나 모든
+  오류를 잡는 검사라고 쓰지 마세요. 변환 결과 true(0 아님)는 버퍼 프레임 메타데이터 FrameError 설정, false(0)는 FrameSuccess 유지 후 같은 버퍼 완료 신호로 이어집니다. 신호는 연결된
+  핸들러가 받아 요청의 모든 버퍼가 완료됐는지를 completeBuffer 심볼의 결정에서 검사합니다. true면 현재 요청 완료 표시·제출 순서 확인으로, false면 이번 핸들러 호출만 끝나는 말단으로 갑니다. 마지막
+  필수 심볼 PipelineHandlerVirtual::bufferCompleted는 말단이며 나가는 간선이 없습니다. 완료 표시에서 cam 콜백으로 가는 선은 순서가 된 완료 요청에 한해 신호를 보낸다는 요약이며,
+  앞선 요청이 아직 미완료이면 뒤 통지를 보류하는 조건을 짧게 유지합니다. 모든 11개 노드를 연결하고 두 실제 결정의 true/false 결과를 모두 표시하세요. 전체 큐 순회·후속 큐 처리·일반 호출자의 취소·내부
+  반환 0 설명은 생략합니다. 사전 준비에서 요청 제출, 요청 제출에서 가상 전달, 가상 전달에서 매핑, 매핑에서 CPU 변환, CPU 변환에서 결과 판정으로 가는 선은 핵심 경로 요약이므로 condition_ref
+  always를 사용합니다. 준비 여부나 스트림 찾기 assert를 별도 분기로 그리지 마세요. 실제 두 결정에만 source-bound condition_ref를 사용하세요. 라벨에 = ! < > 기호를 직접 쓰지
+  않습니다. Edge 인용은 양 끝의 symbol을 모두 포함해야 하므로 함수 선언이 다른 구절에 있으면 선언 구절도 함께 인용하세요. 예를 들어 virtual-queue:0에 queueRequestDevice 선언이
+  있습니다. 영어 once/only once를 쓰지 마세요.
 sources:
 - virtual-buffer-allocation
 - virtual-queue
@@ -55,7 +57,7 @@ answer_contract:
     message: 이 가상 queueRequestDevice는 0을 반환합니다. 일반 호출자의 오류 취소를 가상 경로 라벨에 섞지 마세요.
   - pattern: ENOBUFS|errno|할당기 무효
     message: 원시 할당 오류는 접힌 소스 근거에 두고 핵심 성공 경로를 짧게 표시하세요.
-  - pattern: (?m)^(?:exportFrameBuffers|queueRequest|queueRequestDevice|generateFrame|bufferCompleted|completeBuffer|completeRequest|requestCompleted)\s*[:：]
+  - pattern: (?m)^(?:exportFrameBuffers|queueRequest|queueRequestDevice|generateFrame|bufferCompleted|completeBuffer|completeRequest|requestCompleted|MappedFrameBuffer|(?:libyuv::)?ARGBToNV12)\s*[:：]
     message: 화면 라벨은 짧은 행동·판정으로 쓰고 함수 식별자는 본문·근거에 남기세요. 내부 symbol·quote_ids는 보존하세요.
   - pattern: (?i)returns\s+0|0\s*반환|큐\s*처리|\bdrain\b
     message: 핵심 독자 경로에 필요하지 않은 반환값·후속 큐 설명은 본문과 근거로 옮기세요.
@@ -70,7 +72,7 @@ answer_contract_en:
     message: Keep generic caller cancellation outside this accepted virtual request flow.
   - pattern: (?i)ENOBUFS|errno|allocator invalid
     message: Keep raw allocator error codes in evidence.
-  - pattern: (?m)^(?:exportFrameBuffers|queueRequest|queueRequestDevice|generateFrame|bufferCompleted|completeBuffer|completeRequest|requestCompleted)\s*[:：]
+  - pattern: (?m)^(?:exportFrameBuffers|queueRequest|queueRequestDevice|generateFrame|bufferCompleted|completeBuffer|completeRequest|requestCompleted|MappedFrameBuffer|(?:libyuv::)?ARGBToNV12)\s*[:：]
     message: 화면 라벨은 짧은 행동·판정으로 쓰고 함수 식별자는 본문·근거에 남기세요. 내부 symbol·quote_ids는 보존하세요.
   - pattern: (?i)returns\s+0|0\s*반환|큐\s*처리|\bdrain\b
     message: 핵심 독자 경로에 필요하지 않은 반환값·후속 큐 설명은 본문과 근거로 옮기세요.
