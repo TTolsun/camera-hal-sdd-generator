@@ -192,16 +192,17 @@ design_topics:
       required_terms:
       - - captureDone
   - id: reuse-request
-    question: 처리를 계속할 요청은 Request::ReuseBuffers로 버퍼를 유지해 재사용한 뒤 CameraSession::queueRequest
-      도우미를 호출한다고 한 문장으로만 쓰세요. 도우미 호출을 큐에 넣음·실제 제출·재제출 성공으로 단정하지 마세요. 도우미 내부 제출 한도는
-      다음 항목에서 설명합니다.
+    question: 이 항목은 기록된 출력 싱크 미요청 경로에만 해당함을 문장 앞에서 명시하세요. 그 경로에서 처리를 계속할 요청은 Request::ReuseBuffers로
+      버퍼를 유지해 재사용한 뒤 CameraSession::queueRequest 도우미를 호출한다는 한 문장만 쓰세요. 도우미 호출을 실제
+      제출 성공으로 단정하지 마세요. 출력 옵션이 다른 일반 경로에는 이 단정을 적용하지 않습니다.
     sources:
     - callback-and-processing
     - reuse-call
     max_statements: 1
     prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
       함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
-      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.
+      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요. 재사용 항목은 오해 방지를 위해 기록된 출력 싱크 미요청
+      경로라는 한정을 한 번 명시하는 예외입니다. 다른 옵션의 내부 동작이나 범위 경고 목록은 덧붙이지 않습니다.
     answer_contract:
       basis: implementation
       reject_patterns:

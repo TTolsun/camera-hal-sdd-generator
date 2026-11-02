@@ -20,34 +20,31 @@ required_symbols:
 - PipelineHandlerVirtual::bufferCompleted
 - RequestPending
 question: 선택한 NV12 가상 캡처에서 실제 버퍼 준비와 요청 전달, CPU 패턴 쓰기, 버퍼·요청 완료 및 cam 콜백은 어떻게 연결됩니까?
-prompt: '고정된 11개 symbol 바인딩의 핵심 가상 NV12 경로를 한영으로 설명하세요. 노드마다 인용과 고정 symbol을 유지합니다.
-  n0은 cam이 virtual 파이프라인을 통해 실제 DMA-BUF 버퍼를 확보하는 준비 단계입니다. n1은 Camera가 버퍼가 붙은 요청을
-  확인하고 파이프라인에 제출하는 단계입니다. n2는 virtual 파이프라인의 비동기 전달이며, n3은 쓰기 방향 CPU 동기화 범위 안에서 쓰기
-  매핑하는 단계입니다. n4는 CPU가 Virtual2의 lines 패턴을 NV12로 변환하고 매핑 버퍼에 쓰기를 시도하는 단계입니다. 변환과 쓰기를
-  무조건 성공으로 표시하지 않습니다. n5는 generateFrame의 선택된 NV12 변환 반환값이 0이 아닌가를 판정합니다. 참이면 버퍼 메타데이터
-  FrameError, 거짓이면 FrameSuccess를 유지하며 모두 n6 버퍼 완료 신호로 이어집니다. 일반 CPU 쓰기의 모든 오류를 검사한다는
-  뜻은 아닙니다. n7은 연결된 핸들러가 요청의 모든 버퍼 완료를 검사하며, 참이면 n8, 거짓이면 n10 이번 핸들러 호출 종료(요청 완료 표시
-  없음)로 갑니다. n8은 PipelineHandler가 현재 요청을 완료로 표시하는 단계이며 이 함수가 그 동작만 한다는 only는 쓰지 않습니다.
-  n9는 requestCompleted 신호로 cam 콜백에 제출 순서대로 통지하는 단계입니다. n8→n9에는 앞선 요청이 미완료이면 통지가 보류된다는
-  실제 조건을 유지하세요. n10은 말단입니다. n1에는 Camera, n8에는 PipelineHandler를 한영 화면 라벨에 명시해 책임을 구분하세요.
-  n4에는 Virtual2, lines, CPU, NV12와 쓰기 시도를, n9에는 requestCompleted와 제출 순서를 유지하세요. 노드
-  라벨은 72자 이내, authored 간선은 40자 이내입니다. 간선은 다음 동작의 반복 대신 짧은 조건·결과만 씁니다. n0→n1→n2→n3→n4→n5는
-  condition_ref always인 핵심 경로 요약이며 별도 준비/assert 분기를 추가하지 않습니다. 두 결정의 참/거짓을 실제 source-bound
-  condition_ref로 지정하고 모든 노드를 연결합니다. 모든 인용은 양 끝 symbol을 포함하며 필요하면 선언 구절을 추가합니다. 동기화는
-  매핑과 CPU 접근을 감싸는 범위이므로 ''동기화 후'' 또는 ''sync, then''은 쓰지 않습니다. 완료 순서는 submission/queue
-  order이며 completion order라고 쓰지 않습니다. authored 간선에 true/false를 반복하거나 노드 행동 전체를 문장으로
-  옮기지 않습니다. 내부 후속 큐 순회, 일반 호출자 취소와 반환 0의 상세는 근거로 남깁니다. 최종 경계 수정: 고정된 기존 11개 바인딩은 유지하고
-  n11 RequestPending 결정 하나를 추가하여 전체 12개 노드를 사용합니다. n2는 queueRequestDevice 자체가 비동기
-  호출된다는 뜻이 아니라 그 함수가 VirtualCameraData::processRequest의 queued 비동기 호출을 예약하는 단계입니다.
-  화면 라벨에 VirtualCameraData::processRequest와 예약/queued invocation 관계를 명시하세요. n8은 현재
-  요청 완료 표시입니다. 그 다음 n11은 제출 큐 맨 앞 요청의 상태가 RequestPending인가를 판단합니다. n8→n9 직접 연결을 제거하고
-  n8→n11, n11 거짓(큐 맨 앞이 완료 상태)이면 n9 requestCompleted 통지, n11 참(큐 맨 앞이 아직 Pending)이면
-  n10 이번 호출의 cam 통지 없이 마침으로 연결하세요. n10은 n7의 미완료 버퍼 분기와 공유하므로 요청 완료 표시가 항상 없다는 문구를
-  제거하고 이번 호출의 cam 통지가 없다는 공통 결과만 씁니다. n7→n10에서는 n8 완료 표시를 지나지 않고 n11→n10에서는 완료 표시를
-  지난다는 두 경로 차이를 유지하세요. 실제 source condition_ref의 RequestPending guard를 인용하고 true/false는
-  시스템 표시이므로 라벨에서 반복하지 않습니다. n11은 현재 완료 처리한 요청이 아니라 제출 큐 맨 앞 요청을 검사합니다. 이 그림은 제출 순서
-  통지 조건의 첫 검사 요약이며 전체 큐 반복을 그리지는 않습니다. 기존 올바른 n0,n1,n3,n4,n5,n6,n7,n8,n9 라벨·인용과 앞의
-  간선은 되도록 유지하고 새로운 일반 오류·보장·반환값·함수 목록을 덧붙이지 마세요.'
+prompt: 고정된 12개 symbol 바인딩을 유지하고 핵심 가상 NV12 경로를 짧은 한영 라벨로 설명하세요. n0은 cam이 virtual
+  파이프라인을 통해 DMA-BUF를 확보합니다. n1은 Camera가 버퍼가 붙은 요청을 확인하고 파이프라인에 제출합니다. n2는 VirtualCameraData::processRequest의
+  queued 호출을 예약합니다. queueRequestDevice 자체의 호출이 비동기라는 뜻이 아닙니다. 영어는 schedules 또는 queues라는
+  동사로 call 예약을 분명히 하고 reserves라는 모호한 동사는 쓰지 마세요. n3은 패턴 생성기가 CPU 쓰기 동기화 범위 안에서 버퍼를
+  쓰기용으로 매핑합니다. n2→n3은 패턴 생성기 호출 관계이며 processRequest 자체가 매핑한다고 쓰지 않습니다. n4는 CPU가 Virtual2
+  lines 패턴을 NV12로 변환해 매핑된 버퍼에 쓰기를 시도합니다. 영어에도 tries/attempts와 mapped buffer라는 쓰기 대상을
+  명시합니다. 성공 보장 경고를 반복하지 말고 시도 동사에 의미를 담습니다. n5는 NV12 변환 반환값이 0이 아닌가라는 판정입니다. CPU 오류
+  일반 주석은 필요 없습니다. 참이면 버퍼 프레임 메타데이터 FrameError, 거짓이면 FrameSuccess를 유지하며 모두 n6 버퍼 완료
+  신호로 이어집니다. n7은 연결된 핸들러가 모든 요청 버퍼 완료를 검사합니다. 참이면 n8 PipelineHandler가 현재 요청을 완료로 표시하고,
+  거짓이면 n10 이번 호출의 cam 통지 없이 마침으로 갑니다. n8 다음 n11은 제출 큐 맨 앞 요청이 아직 Pending인가를 판단합니다.
+  큐 맨 앞 요청은 현재 완료 처리 중인 요청과 같을 수도 다를 수도 있습니다. 다르다고 단정하는 괄호나 설명을 넣지 마세요. n11 참이면 n10으로
+  통지를 보류합니다. 거짓이면 n9에서 큐 앞부터 연속으로 완료된 요청들만 제출 순서대로 requestCompleted 신호를 통해 cam에 통지합니다.
+  n9는 현재 요청이 반드시 이 호출에서 통지된다는 보장이 아닙니다. 앞의 완료 요청들을 통지하다가 현재 요청 앞의 Pending에서 멈출 수도
+  있으므로 ready/completed queue prefix만 처리한다는 의미를 유지합니다. 전체 반복을 별도 노드로 늘리지 않고 이 핵심 조건을
+  요약합니다. n10은 두 종료 경로가 공유하므로 요청 완료 표시가 없다고 단정하지 않고 이번 호출의 통지가 없다는 공통 결과만 설명합니다. 모든
+  노드와 간선을 연결하고 세 결정의 두 결과를 실제 source-bound condition_ref로 표시합니다. n0→n1→n2→n3→n4→n5와
+  n8→n11의 연결은 always인 핵심 경로 요약입니다. n8→n9 직접 간선은 없습니다. 노드는 짧은 행동·판정, 간선은 짧은 관계·결과만
+  쓰고 행동 전체를 반복하지 않습니다. n1의 Camera, n8의 PipelineHandler, n2의 VirtualCameraData::processRequest,
+  n9의 requestCompleted와 n4의 CPU·Virtual2·lines·NV12는 필요합니다. 그 밖의 함수명 괄호 주석이나 긴 코드
+  식별자 목록은 근거로 남깁니다. 특히 n5의 generateFrame, n6의 bufferCompleted, n11의 RequestPending
+  enum은 화면에서 쉬운 동작·상태로 설명하고 내부 symbol은 그대로 보존합니다. 인용은 양 끝 symbol과 실제 guard를 포함해야 합니다.
+  n11→n10에는 Pending guard와 PipelineHandlerVirtual::bufferCompleted 선언 구절이 모두 필요합니다.
+  노드 72자, authored 간선 40자 한도 안에서 영어 25~55자의 자연스러운 표현을 우선합니다. authored true/false는
+  시스템 표시와 중복하지 않습니다. 쓰기 동기화는 매핑·CPU 접근을 감싸며, 완료 통지는 submission/queue order입니다. 물리
+  장치·성능 경고, 일반 취소와 반환값의 상세는 이 그림에 넣지 않습니다.
 sources:
 - virtual-buffer-allocation
 - virtual-queue
