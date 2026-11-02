@@ -31,6 +31,12 @@ def test_published_figure_deep_links_follow_the_moved_evidence(previous, anchor,
     links = [r for r in sections[previous]['routes'] if r.get('anchor') == anchor]
     assert len(links) == 1
     assert links[0]['to'] == sections[target]['output']+'#'+anchor
+    # Renamed figures keep their published anchors as explicit local routes.
+    aliases = [r for r in sections[target].get('routes', []) if r.get('anchor') == anchor]
+    if aliases:
+        assert len(aliases) == 1
+        assert aliases[0]['to'].startswith('#')
+        anchor = aliases[0]['to'][1:]
     moved = [v for v in figures[target] if slugify(v['title']) == anchor]
     assert len(moved) == 1
     assert moved[0]['topic'] in {t['id'] for t in sections[target]['design_topics']}

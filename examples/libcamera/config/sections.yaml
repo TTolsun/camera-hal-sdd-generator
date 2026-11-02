@@ -6075,6 +6075,9 @@ sections:
   - 완료가 오지 않거나 정지할 때 무엇을 확인해야 하는가?
   routes:
   - to: request-lifecycle.md
+  - q: 선두 요청의 준비 상태와 소프트웨어 큐 한도를 확인하세요.
+    to: '#선두-요청을-전달하거나-반복을-멈추는-조건'
+    anchor: 요청이-대기하거나-장치로-가는-조건
   facts:
     classes:
     - libcamera::Camera

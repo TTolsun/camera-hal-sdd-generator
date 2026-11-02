@@ -1355,8 +1355,8 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     sections = yaml.safe_load((Path(__file__).parents[1] / 'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
     designs = [section for section in sections if section.get('design_requirements')]
     assert len(designs) == 25
-    # The bounded callback observation is a measurement topic, not a fixed answer.
-    assert sum(len(section['design_topics']) for section in designs) == 81
+    # Includes the source-bound submission checks, without embedding fixed answers.
+    assert sum(len(section['design_topics']) for section in designs) == 82
     from sdd.config import load
     profile = Path(__file__).parents[1] / 'examples/libcamera/sdd.yaml'
     bound = {section['id']: section for section in load(profile).sections()}
