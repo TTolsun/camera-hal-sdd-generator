@@ -88,11 +88,11 @@ answer_contract:
 parts:
 - id: purpose
   role: summary
-  question: 그림 바로 앞에 놓이는 이 첫 문단에서, 고정한 libcamera 소스를 분석해 설명하는 구현 흐름임을 분명히 하세요. 선택된
-    Virtual2가 센서 대신 400x300 lines 줄무늬 패턴을 공급한다는 개요와, cam의 실제 DMA-BUF 확보·버퍼가 붙은 요청
-    제출 → CPU의 NV12 패턴 쓰기 시도 → 버퍼·요청 완료 조건을 거친 cam 통지라는 핵심 흐름을 쉬운 말로 세 짧은 문장 이내로 설명하세요.
-    상세 분기와 예외는 그림 뒤 항목이 설명하므로 이 문단에는 함수·클래스 이름, 관측한 내부 실행이라는 단정, 다른 영상 입력 옵션이나 경고
-    목록을 추가하지 않습니다.
+  question: libcamera의 virtual(가상) 파이프라인이라는 기능 이름을 첫 문장에 명시하세요. 그림 바로 앞에 놓이는 이 첫 문단에서,
+    고정한 libcamera 소스를 분석해 설명하는 구현 흐름임을 분명히 하세요. 선택된 Virtual2가 센서 대신 400x300 lines
+    줄무늬 패턴을 공급한다는 개요와, cam의 실제 DMA-BUF 확보·버퍼가 붙은 요청 제출 → CPU의 NV12 패턴 쓰기 시도 → 버퍼·요청
+    완료 조건을 거친 cam 통지라는 핵심 흐름을 쉬운 말로 세 짧은 문장 이내로 설명하세요. 상세 분기와 예외는 그림 뒤 항목이 설명하므로 이
+    문단에는 함수·클래스 이름, 관측한 내부 실행이라는 단정, 다른 영상 입력 옵션이나 경고 목록을 추가하지 않습니다.
   sources:
   - virtual-purpose
   - virtual2-config
@@ -116,6 +116,7 @@ parts:
     basis: implementation
     required_terms:
     - - 소스
+    - - virtual
     reject_patterns:
     - pattern: 그림.{0,12}없
       message: 소개 단위에서 다른 단위의 근거나 그림 상태를 부정하지 말고 제공된 기능·설정만 설명하세요.
