@@ -376,15 +376,13 @@ design_topics:
       required_terms:
       - - 권한
   - id: request-check
-    question: statement.text를 '8. '로 시작하세요. Virtual2 YAML은 400x300 해상도와 lines 줄무늬
-      패턴을 정하고, cam 명령은 Virtual2를 선택하며 스트림 인자로 400x300 NV12를 요청한다는 두 입력의 서로 다른 역할을
-      확인하는 행동을 설명하세요. YAML 자체가 NV12를 요청한다고 쓰지 마세요. 앞의 커널·접근·입력 조건 중 하나라도 다르면 실행을 중단하는
-      조건은 한 번만 남깁니다. 실제 적용 설정과 완료 결과는 실행 뒤 단계에서 확인합니다.
+    question: statement.text를 '8. '로 시작하세요. 실행 전에 두 입력을 대조하는 행동만 씁니다. Virtual2 YAML의
+      400x300 크기와 lines 줄무늬 설정을 확인하고, cam 명령에서 카메라 Virtual2 선택과 스트림 인자의 400x300 NV12
+      요청을 별도로 확인합니다. 커널·접근·입력 조건 중 하나라도 다르면 실행을 중단합니다.
     sources:
     - virtual2-config
     max_statements: 1
-    prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
-      증거로 사용하지 마세요. 명령·버전·파일 경로는 질문이 필수로 요구한 경우에만 쓰세요.
+    prompt: 실행 전 입력의 크기·패턴·카메라 선택·요청 포맷을 확인하는 직접 행동만 짧게 쓰세요.
     answer_contract:
       basis: measurement
       reject_patterns:
