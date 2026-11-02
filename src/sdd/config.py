@@ -140,7 +140,7 @@ class AutomationConfig:
         return opts, pub
 
 
-DOCUMENTATION_DEFAULTS = {"max_chars": 18000, "max_markdown_chars": 120000, "max_growth_ratio": 1.5,
+DOCUMENTATION_DEFAULTS = {"max_chars": None, "max_markdown_chars": None, "max_growth_ratio": None,
             "min_growth_chars": 1000, "duplicate_min_chars": 180}
 
 
@@ -149,12 +149,14 @@ def documentation_limits(values):
     if set(values) - set(DOCUMENTATION_DEFAULTS):
         raise ValueError("Unknown documentation limit")
     for name, value in values.items():
+        if name in {"max_chars", "max_markdown_chars", "max_growth_ratio"} and value is None:
+            continue
         if (isinstance(value, bool) or not isinstance(value, (int, float))
                 or not math.isfinite(value) or value <= 0):
             raise ValueError(f"documentation limit must be positive: {name}")
         if name != "max_growth_ratio" and not isinstance(value, int):
             raise ValueError(f"documentation limit must be an integer: {name}")
-    if values["max_growth_ratio"] <= 1:
+    if values["max_growth_ratio"] is not None and values["max_growth_ratio"] <= 1:
         raise ValueError("max_growth_ratio must exceed 1")
 
 

@@ -29,6 +29,7 @@ def rules(report):
 
 def test_failed_retries_cannot_ratchet_growth_baseline(tmp_cfg, sample_model):
     setup(tmp_cfg, sample_model)
+    tmp_cfg.raw['documentation']['limits'] = {'max_growth_ratio': 1.5}
     page(tmp_cfg, body="small prose " * 80)
     health.prepare(tmp_cfg)
     original = health.baseline(tmp_cfg)
@@ -107,9 +108,44 @@ def test_same_page_repetition_and_table_size(tmp_cfg, sample_model):
     assert "page-artifact-too-long" in rules(health.audit(tmp_cfg))
 
 
+def test_unconfigured_size_and_growth_do_not_block_publication(tmp_cfg, sample_model):
+    setup(tmp_cfg, sample_model)
+    page(tmp_cfg)
+    health.prepare(tmp_cfg)
+    prose = 'An explanation with explicit source conditions. ' * 600
+    page(tmp_cfg, body=prose + '\n\n```cpp\n' + 'symbol();\n' * 14000 + '```')
+    report = health.enforce(tmp_cfg)
+    assert report['status'] == 'ok'
+    assert report['pages']['overview.md']['chars'] > 18000
+    assert report['pages']['overview.md']['markdown_chars'] > 120000
+    assert all(health.settings(tmp_cfg)['limits'][key] is None
+               for key in ('max_chars', 'max_markdown_chars', 'max_growth_ratio'))
+
+
+def test_explicit_page_size_limit_does_not_limit_other_pages(tmp_cfg, sample_model):
+    setup(tmp_cfg, sample_model, ('overview', 'detail'))
+    page(tmp_cfg, body='Reader explanation. ' * 10)
+    page(tmp_cfg, 'detail.md', body='Another source explanation. ' * 1000)
+    tmp_cfg.raw['documentation']['pages'] = {'overview.md': {'max_chars': 100}}
+    report = health.audit(tmp_cfg)
+    assert [(item['rule'], item['pages']) for item in report['findings']] == [
+        ('page-too-long', ['overview.md'])]
+    with pytest.raises(RuntimeError, match='lifecycle'):
+        health.enforce(tmp_cfg)
+
+
+def test_null_disables_only_the_selected_explicit_limit(tmp_cfg, sample_model):
+    setup(tmp_cfg, sample_model)
+    tmp_cfg.raw['documentation']['limits'] = {'max_markdown_chars': 100, 'max_chars': 50}
+    tmp_cfg.raw['documentation']['pages'] = {'overview.md': {'max_markdown_chars': None}}
+    page(tmp_cfg, body='A deliberately longer source explanation. ' * 10)
+    assert rules(health.audit(tmp_cfg)) == {'page-too-long'}
+
+
 def test_scoped_source_inspectors_do_not_count_as_prose_growth(tmp_cfg, sample_model):
     from sdd.contract_render import _source_detail
     setup(tmp_cfg, sample_model)
+    tmp_cfg.raw['documentation']['limits'] = {'max_growth_ratio': 1.5}
     text = 'Reader explanation of the actual contract.'
     page(tmp_cfg, body=text)
     health.checkpoint(tmp_cfg, health.audit(tmp_cfg))
@@ -176,6 +212,7 @@ def test_invalid_limits_fail_closed(tmp_cfg, value):
 
 def test_site_failure_preserves_published_files_and_baseline(tmp_cfg, sample_model):
     setup(tmp_cfg, sample_model)
+    tmp_cfg.raw['documentation']['limits'] = {'max_chars': 18000}
     page(tmp_cfg)
     health.prepare(tmp_cfg)
     before = health.baseline(tmp_cfg)
@@ -206,6 +243,10 @@ def test_retired_scenario_is_removed_from_site_but_manuscript_preserved(tmp_cfg,
 def test_cli_audit_is_read_only_for_baseline_and_returns_failure(tmp_cfg, sample_model):
     from sdd.cli import main
     setup(tmp_cfg, sample_model)
+    config_path = tmp_cfg.root / 'sdd.yaml'
+    configured = yaml.safe_load(config_path.read_text(encoding='utf-8'))
+    configured['documentation'] = {'enabled': False, 'limits': {'max_chars': 18000}}
+    config_path.write_text(yaml.safe_dump(configured), encoding='utf-8')
     page(tmp_cfg, body="too much prose " * 2000)
     # The CLI loads its own config; audits run even when automatic checks are disabled.
     assert main(["--config", str(tmp_cfg.root / "sdd.yaml"), "audit-docs"]) == 2
