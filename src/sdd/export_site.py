@@ -435,7 +435,7 @@ def _navigation_html(entries, sections, rel, current):
             if group_open:
                 nav.append("</details>")
             if nav_group:
-                nav.append(f'<details class="nav-group" data-nav-id="{fold_id("group", nav_group)}">'
+                nav.append(f'<details class="nav-group" data-nav-id="{fold_id("group", nav_group)}" open>'
                            f'<summary>{html.escape(nav_group)}</summary>')
             group_open = bool(nav_group)
             last_group = nav_group

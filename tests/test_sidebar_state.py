@@ -41,7 +41,7 @@ function page({path='/site/', mobile=false, current=false}={}) {
     fold.dataset = {navId: id};
     fold.summary = new Events();
     fold.querySelector = () => fold.summary;
-    let open = false;
+    let open = id === 'group';
     Object.defineProperty(fold, 'open', {get: () => open, set: value => {
       order.push(id); open = value;
     }});
@@ -63,9 +63,10 @@ function page({path='/site/', mobile=false, current=false}={}) {
   return {folds, sidebar, win, order};
 }
 const key = 'sdd.sidebar.folds:/site/';
-// Every menu starts closed. Initial events do not create user preferences.
+// Top-level groups start open; nested tasks and branches start closed.
+// Initial events do not create user preferences.
 let a = page(); a.folds[0].fire('toggle');
-assert.deepEqual(a.folds.map(fold => fold.open), [false,false,false]);
+assert.deepEqual(a.folds.map(fold => fold.open), [true,false,false]);
 assert.deepEqual(JSON.parse(values.get(key)).states, {});
 let b = page({current:true}); assert.equal(b.folds[2].open, false);
 // Two native activations may coalesce into one toggle at the starting value.
@@ -75,6 +76,8 @@ b.folds[2].summary.fire('click'); b.folds[2].open = false;
 b.folds[2].fire('toggle');
 assert.deepEqual(JSON.parse(values.get(key)).states, {branch:false});
 // Full pagehide snapshot catches multiple fast changes before any toggle event.
+b.folds[0].summary.fire('click'); b.folds[0].open = false;
+b.folds[0].summary.fire('click');
 b.folds[0].open = true; b.folds[1].open = true; b.folds[2].open = true;
 b.win.fire('pagehide');
 assert.deepEqual(JSON.parse(values.get(key)).states, {group:true, task:true, branch:true});
@@ -105,7 +108,7 @@ a.folds[0].fire('toggle');
 assert.deepEqual(JSON.parse(values.get(key)).states, {group:true,task:true,branch:true});
 // Different deployments on this origin do not share choices. Mobile restores
 // folds without writing its panel offset into desktop scroll or scrolling body.
-assert.deepEqual(page({path:'/other/'}).folds.map(fold => fold.open), [false,false,false]);
+assert.deepEqual(page({path:'/other/'}).folds.map(fold => fold.open), [true,false,false]);
 const mobile = page({mobile:true}); mobile.sidebar.scrollTop = 80;
 mobile.folds[0].open = false; mobile.win.fire('pagehide');
 assert.equal(values.get('sdd.sidebar.scroll:/site/'), '350');
@@ -115,13 +118,13 @@ for (const bad of ['{', 'null', '[]', '{"version":2,"states":{"group":false}}',
                    '{"version":1,"states":[]}', '{"version":1,"states":{"group":"false"}}']) {
   values.set(key, bad);
   const fresh = page();
-  assert.deepEqual(fresh.folds.map(fold => fold.open), [false,false,false]);
+  assert.deepEqual(fresh.folds.map(fold => fold.open), [true,false,false]);
 }
 blocked = true;
-const noStorage = page(); noStorage.folds[0].open = true;
+const noStorage = page(); noStorage.folds[0].open = false;
 noStorage.folds[0].fire('toggle'); noStorage.win.fire('pagehide');
 noStorage.win.fire('pageshow');
-assert.equal(noStorage.folds[0].open, true);
+assert.equal(noStorage.folds[0].open, false);
 // Closed details may contain a geometrically measurable descendant in some
 // engines. Focus selection and the tab trap must use disclosure ancestry too.
 const reader = fs.readFileSync('src/sdd/site_assets/reader-tools.js', 'utf8');
