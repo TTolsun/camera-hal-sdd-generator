@@ -290,15 +290,17 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
         block = diagram_block(diagram)
         if "<!-- sdd:class-diagram -->" in body:
             # Keep the heading for existing route links, but never retain stale edges.
-            replacement = block.strip() or "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다."
+            replacement = "" if diagram else "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다."
             body = re.sub(r"<!-- sdd:class-diagram -->.*?<!-- /sdd:class-diagram -->", lambda _: replacement, body, flags=re.S)
-            block = ""
         if diagram:
             diagram_source = diagram
             before, marker, after = body.partition('??? note "근거와 검토 정보"')
             # Move intact generated sections into reading order; preserve their wording.
             parts = re.fullmatch(r"(.*?)^(## 관련 클래스\n.*?)(^## 구조 설명\n.*)", before, re.S | re.M)
-            if parts:
+            sources = re.search(r'^## 소스 근거\s*$', before, re.M)
+            if sources:
+                body = before[:sources.start()] + block + before[sources.start():] + marker + after
+            elif parts:
                 body = parts[1] + parts[3] + block + parts[2] + marker + after
             else:
                 body = before + block + marker + after
