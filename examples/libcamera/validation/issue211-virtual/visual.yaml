@@ -46,7 +46,11 @@ prompt: 고정된 12개 symbol 바인딩을 유지하고 핵심 가상 NV12 경�
   true/false는 시스템 표시와 중복하지 않습니다. 쓰기 동기화는 매핑·CPU 접근을 감싸며, 완료 통지는 submission/queue order입니다.
   물리 장치·성능 경고, 일반 취소와 반환값의 상세는 이 그림에 넣지 않습니다. Pending을 만나 보류하는 요청은 그 Pending 요청과 뒤
   요청들입니다. 그 앞의 완료 요청들은 같은 completeRequest 호출에서 이미 통지했을 수 있습니다. Pending 분기나 공통 종료 노드가
-  이번 호출 전체의 통지 건수를 0으로 단정하지 않게 하세요.
+  이번 호출 전체의 통지 건수를 0으로 단정하지 않게 하세요. 통지 보류는 함수 종료가 아닙니다. n10은 두 분기에서 직접 cam 통지로 진행하지
+  않는다는 통지 경계 상태로 표시하고 함수·핸들러의 ends/returns/finishes/종료/반환으로 쓰지 않습니다. Pending을 만나 통지
+  반복이 멈춰도 completeRequest의 doQueueRequests 같은 남은 작업은 계속되며, 같은 호출에서 앞의 완료 요청을 이미 통지했을
+  수 있습니다. 필요하면 n10 인용에 virtual-completion 선언·검사와 pipeline-completion의 Pending break를
+  함께 포함합니다.
 sources:
 - virtual-buffer-allocation
 - virtual-queue

@@ -191,9 +191,10 @@ design_topics:
       required_terms:
       - - captureDone
   - id: reuse-request
-    question: 기록된 명령에서 화면·파일 출력 옵션을 요청하지 않은 조건을 적용한 소스 분석임을 문장 앞에서 밝히세요. 그 조건에서는 처리를
-      계속할 요청의 버퍼를 Request::ReuseBuffers로 유지해 재사용하고 CameraSession::queueRequest 도우미를
-      호출하며, 실제 제출은 별도 한도 검사에 따른다는 관계만 두 짧은 문장 이내로 설명합니다. 조건을 한 번만 쓰고 바로 동작을 설명하세요.
+    question: 기록된 명령의 출력 옵션 미선택 조건을 적용한 소스 분석이라고 먼저 밝히세요. 이 조건에서 캡처 한도가 미설정이거나 처리
+      수가 한도에 미도달하면 Request::ReuseBuffers로 버퍼를 유지해 재사용하고 CameraSession::queueRequest
+      도우미를 호출하며, 실제 제출은 도우미의 별도 한도 검사에 따른다는 관계를 두 짧은 문장으로 쓰세요. 미설정 OR 미도달을 둘 다 명시하고
+      한도가 설정된 경우만으로 축소하지 않습니다. 직접 관측했다고 주장하거나 이전 오역을 부정하는 대비 문장은 추가하지 않습니다.
     sources:
     - callback-and-processing
     - reuse-call
@@ -211,6 +212,13 @@ design_topics:
       - pattern: 아니라|뜻이 아니|의미가 아니
         message: State the actual source condition directly instead of repeating a
           contrast with an earlier mistranslation.
+      required_terms:
+      - - 미설정
+        - 설정되지
+      - - 미도달
+        - 도달하지
+        - 아래
+        - 적으면
   - id: submission-limit
     question: CameraSession::queueRequest의 queueCount_는 카메라 제출 시도 직전에 늘리는 카운터라고 한
       짧은 문장으로 설명하세요. 설정 한도에 이미 도달하면 제출 없이 반환하고 그 밖에는 카운터를 늘려 제출을 시도한다는 분기만 다음 짧은 문장으로
@@ -259,7 +267,11 @@ design_topics:
   product:
     id: libcamera-official-cam-trial
     feature: wsl-virtual-capture
-  sources: []
+  sources:
+  - id: virtual2-config
+    file: src/libcamera/pipeline/virtual/data/virtual.yaml
+    start: '"Virtual2":'
+    end: '  test_pattern: "lines"'
   answer_contract:
     basis: measurement
     required_terms:
@@ -364,9 +376,12 @@ design_topics:
       required_terms:
       - - 권한
   - id: request-check
-    question: statement.text를 '8. '로 시작하세요. 개발자를 주어로 사용할 설정 파일·실행 입력이 Virtual2 400x300
-      NV12를 요청하는지 확인하는 행동을 직접 쓰세요. 앞의 커널·접근·요청 조건 중 하나라도 다르면 실행하지 않는 조건을 한 번만 남기세요.
-    sources: []
+    question: statement.text를 '8. '로 시작하세요. Virtual2 YAML은 400x300 해상도와 lines 줄무늬
+      패턴을 정하고, cam 명령은 Virtual2를 선택하며 스트림 인자로 400x300 NV12를 요청한다는 두 입력의 서로 다른 역할을
+      확인하는 행동을 설명하세요. YAML 자체가 NV12를 요청한다고 쓰지 마세요. 앞의 커널·접근·입력 조건 중 하나라도 다르면 실행을 중단하는
+      조건은 한 번만 남깁니다. 실제 적용 설정과 완료 결과는 실행 뒤 단계에서 확인합니다.
+    sources:
+    - virtual2-config
     max_statements: 1
     prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
       증거로 사용하지 마세요. 명령·버전·파일 경로는 질문이 필수로 요구한 경우에만 쓰세요.
