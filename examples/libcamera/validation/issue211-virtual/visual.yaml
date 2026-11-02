@@ -3,7 +3,7 @@ topic: virtual-principle
 kind: flow
 title: 소프트웨어 패턴을 실제 버퍼에 씁니다
 generation: llm
-max_nodes: 7
+max_nodes: 8
 max_label_chars: 72
 condition_display: evidence
 required_symbols:
@@ -14,19 +14,18 @@ required_symbols:
 - ARGBToNV12
 - generateFrame
 - bufferCompleted
+- startCapture
 question: 가상 파이프라인은 실제 DMA-BUF 버퍼를 어떻게 확보하고 CPU 패턴을 기록해 버퍼 완료를 알립니까?
-prompt: 고정된 7개 symbol 바인딩만 사용하여 버퍼 완료 신호까지 설명합니다. n0 cam이 virtual 파이프라인을 통해 실제 DMA-BUF
-  확보, n1 Camera가 버퍼가 붙은 요청을 파이프라인에 제출, n2 VirtualCameraData::processRequest의 queued
-  호출 예약, n3 패턴 생성기가 CPU 쓰기 동기화 범위 안에서 버퍼 쓰기 매핑, n4 CPU가 Virtual2 lines 패턴을 NV12로 변환해
-  매핑된 버퍼에 쓰기를 시도, n5 NV12 변환 오류 여부, n6 가상 데이터의 버퍼 완료 알림입니다. n0→n1→n2→n3→n4→n5와 n5의
-  참/거짓→n6만 그립니다. n5 참이면 버퍼 메타데이터 FrameError, 거짓이면 FrameSuccess 유지입니다. 변환 결과와 무관하게
-  버퍼 완료 신호는 나가므로 성공 보장으로 쓰지 않습니다. n2 호출 예약이 비동기이고 queueRequestDevice 자체가 비동기 호출되는
-  뜻은 아닙니다. n3의 매핑 주체는 패턴 생성기입니다. source-bound 실제 변환 결과 조건을 인용하고 나머지는 always인 핵심 경로
-  요약입니다. 요청 완료·큐 순서 검사는 다음 별도 그림이 설명합니다. 노드와 간선은 짧은 행동·결과만 쓰고 함수명 괄호 주석과 긴 반환값 설명은
-  근거로 남깁니다. n2는 VirtualCameraData::processRequest, n4는 CPU·Virtual2·lines·NV12와 mapped
-  buffer에 쓰기 시도 의미를 유지합니다. requestCompleted나 후속 요청 완료 노드를 이 버퍼 그림에 넣지 않습니다. source
-  인용에는 양 끝 symbol과 실제 guard가 있어야 합니다. 동기화는 매핑과 CPU 접근을 감싸는 범위이며 sync then/동기화 후라고
-  쓰지 않습니다. 간선은 가상 전달임을 분명히 하고 변환 오류 판정 전체를 반복하지 않습니다.
+prompt: 마지막 그림 검토의 세부 수정입니다. n1→n2, n2→n3, n3→n4, n4→n5는 선택된 가상 경로의 주요 호출 관계를 요약하는 always 간선입니다. 네 간선의
+  condition_ref를 always로 설정하고 prepared request 전달·패턴 생성 호출·쓰기 동기화 범위·변환 결과 확인 같은 짧은 관계만 표시하세요. 불리언 true/false나
+  특정 stream 일치 분기를 이 process 노드들에 붙이지 않습니다. 판정 노드는 n0 할당 실패 여부와 n5 변환 오류 여부이며, 각각의 두 결과와 정확한 실제 소스 조건을
+  그대로 보존합니다. n6는 프레임 상태와 무관한 버퍼 완료 신호이며 다음 요청 완료 그림의 핸들러로 이어짐을 한영 라벨에 짧게 표시합니다. n0→n7 실패 반환과 n0→n1 성공
+  경로, n2 VirtualCameraData::processRequest, 나머지 올바른 라벨·인용·구조는 유지합니다. 간선 authored 라벨은 한영 20자 이내로 짧게 쓰고
+  필수 실제 source guards는 보존합니다. 처음부터 생성할 때 n0는 startCapture의 allocator_->allocate 다음 ret < 0에 따른 할당 실패 판정이고
+  n7은 그 실패로 startCapture가 요청 제출 전에 오류를 반환하는 경로입니다. n1은 Camera의 버퍼 검증과 유효 요청 비동기 전달, n2는 VirtualCameraData::processRequest
+  queued 호출 예약, n3는 패턴 생성기의 CPU 쓰기 동기화 범위 안 쓰기용 매핑 시도, n4는 CPU의 Virtual2 lines NV12 변환·매핑 버퍼 쓰기 시도, n5는
+  변환 오류 판정, n6는 FrameError/FrameSuccess와 무관한 버퍼 완료 신호입니다. n0→n7 할당 실패 반환 및 n0→n1 할당 성공 분기 외에는 n1→n2→n3→n4→n5,
+  n5의 실제 변환 오류 true/false→n6 경로입니다.
 sources:
 - virtual-buffer-allocation
 - virtual-queue
@@ -59,17 +58,20 @@ answer_contract:
     message: 핵심 독자 경로에 필요하지 않은 반환값·후속 큐 설명은 본문과 근거로 옮기세요.
   - pattern: (?i)sync,\s*then|동기화 후
     message: CPU 쓰기 동기화가 매핑·변환 접근을 감싸는 범위임을 표시하세요.
+  - pattern: 버퍼를\s*확보합니다|매핑합니다
+    message: Allocation and mapping labels describe attempts, not guaranteed success. Use Korean attempt
+      verbs for n0/n3.
   required_terms:
   - - Virtual2
   - - NV12
   - - CPU
   - - lines
+  - - VirtualCameraData::processRequest
 answer_contract_en:
   basis: implementation
   reject_patterns:
   - pattern: (?i)cancelRequest|cancel on|return error
-    message: Keep generic caller cancellation outside this accepted virtual request
-      flow.
+    message: Keep generic caller cancellation outside this accepted virtual request flow.
   - pattern: (?i)ENOBUFS|errno|allocator invalid
     message: Keep raw allocator error codes in evidence.
   - pattern: (?m)^(?:exportFrameBuffers|queueRequest|queueRequestDevice|generateFrame|bufferCompleted|completeBuffer|completeRequest|requestCompleted|MappedFrameBuffer|(?:libyuv::)?ARGBToNV12)\s*[:：]
@@ -82,6 +84,9 @@ answer_contract_en:
     message: Request notifications follow submission/queue order, not completion order.
   - pattern: \btrue\b[^\n]*\btrue\b|\bfalse\b[^\n]*\bfalse\b
     message: Do not repeat the automatic branch marker.
+  - pattern: \bobtains\b|\bmaps\b
+    message: 'Describe n0 allocation and n3 mapping as attempts: attempts to allocate/map, not unconditional
+      obtains/maps.'
   required_terms:
   - - Virtual2
   - - NV12
@@ -90,5 +95,6 @@ answer_contract_en:
   - - tries
     - attempts
   - - mapped
+  - - VirtualCameraData::processRequest
 require_connected: true
-max_edge_label_chars: 40
+max_edge_label_chars: 20
