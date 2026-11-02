@@ -191,9 +191,10 @@ design_topics:
       required_terms:
       - - captureDone
   - id: reuse-request
-    question: 기록된 출력 싱크 미요청 경로에서 처리를 계속할 요청은 Request::ReuseBuffers로 버퍼를 유지해 재사용한 뒤
-      CameraSession::queueRequest 도우미를 호출한다는 한 문장만 쓰세요. 제출의 결과·보장·성공이나 다른 옵션 설명은 다음
-      항목으로 남기고 현재 문장에 붙이지 마세요.
+    question: 기록된 명령의 화면·파일 출력 옵션 미선택 조건을 적용한 소스 분석임을 먼저 밝히세요. 그 조건에서 처리를 계속할 요청은
+      Request::ReuseBuffers로 버퍼를 유지해 재사용하고 CameraSession::queueRequest 도우미를 호출하며,
+      실제 제출 여부는 별도 한도 검사에 따른다는 관계만 두 짧은 문장 이내로 씁니다. 해당 내부 호출을 새 실행에서 직접 관측했다고 표현하지
+      마세요. 출력 싱크가 요청을 보유하지 않는다는 뜻이 아니라 출력 옵션 자체를 요청하지 않은 조건입니다.
     sources:
     - callback-and-processing
     - reuse-call
