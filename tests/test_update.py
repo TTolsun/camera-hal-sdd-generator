@@ -96,7 +96,7 @@ def test_document_health_failure_retries_same_commit_without_advancing_baseline(
     import yaml
     from sdd import document_health
     _seed_baseline(tmp_cfg, source_repo[0])
-    tmp_cfg.raw["documentation"] = {"enabled": True}
+    tmp_cfg.raw["documentation"] = {"enabled": True, "limits": {"max_growth_ratio": 1.5}}
     tmp_cfg.sections_file.write_text(yaml.safe_dump({"sections": [
         {"id": "overview", "kind": "prose", "output": "overview.md"}]}))
     tmp_cfg.sdd_dir.mkdir()

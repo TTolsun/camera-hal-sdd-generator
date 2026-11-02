@@ -20,6 +20,7 @@ from pathlib import Path
 import yaml
 
 from .config import Config
+from .validation_stage import load_yaml
 
 PAGE = "glossary.md"
 HEADING = "이 문서의 용어"
@@ -63,7 +64,7 @@ def load(cfg: Config) -> Glossary:
     path = glossary_file(cfg)
     if not path.is_file():
         return Glossary([], set(), False)
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    data = load_yaml(path)
     terms = []
     seen: dict[str, str] = {}
     for i, raw in enumerate(data.get("terms", []) or []):

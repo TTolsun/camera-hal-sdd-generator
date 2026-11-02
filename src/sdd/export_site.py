@@ -145,7 +145,18 @@ def _sectioned(entries: list[tuple[str, str, str]], sections: dict[str, dict]) -
     return [entry for bucket in buckets.values() for entry in bucket]
 
 
+from .validation_execution import staged
+
+
+@staged
 def export_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None) -> Path:
+    from .publication_plan import check_baseline, check_catalog, check_reports
+    check_baseline(cfg)
+    try:
+        check_catalog(cfg)
+    except ValueError as exc:
+        raise RuntimeError('English publication preflight: ' + str(exc)) from exc
+    check_reports(cfg, 'before-export')
     from .document_health import enforce
     enforce(cfg)
     from .site_build import build_site

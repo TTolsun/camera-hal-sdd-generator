@@ -20,6 +20,9 @@ _QUEUE_TERMINOLOGY = (
 
 def _translation_terminology(strings):
     return _QUEUE_TERMINOLOGY + (
+        ' Translate the shared UI label 절 전체 근거 as section-wide evidence, never clause evidence. '
+        if any('절 전체 근거' in source for source in strings) else ''
+    ) + (
         ' 예약된 호출: scheduled calls, not observed dispatch.'
         if any('예약된 호출' in source for source in strings) else ''
     )
@@ -90,11 +93,22 @@ def _payload(catalog, sources, *, terms=None):
 
 
 def translate_missing(cfg, catalog, agent=None):
+    from .generation_run import Execution
+    execution = agent if isinstance(agent, Execution) else Execution(
+        cfg, agent or Agent(cfg.agent, cfg.build_dir/'translation-prompts'))
+    with execution.track('translation'), execution.document('translation', catalog['strings']):
+        result = _translate_missing(cfg, catalog, execution)
+        for source, value in result['strings'].items():
+            execution.unit_if_pending(source, 'manuscript-reused' if value == catalog['strings'][source] else 'completed')
+        return result
+
+
+def _translate_missing(cfg, catalog, agent=None):
     if cfg.agent.kind == 'dry-run':
         raise ValueError('Translation requires an actual LLM response.')
     size = cfg.site.batch_size()
     agent = agent or Agent(cfg.agent, cfg.build_dir / 'translation-prompts')
-    validated = {}
+    validated, states = {}, {}
     for source, value in catalog['strings'].items():
         if value:
             try:
@@ -102,6 +116,9 @@ def translate_missing(cfg, catalog, agent=None):
             except (ValueError, TypeError):
                 value = ''  # Re-translate a legacy value under the current rules.
         validated[source] = value or fixed_translation(source) or value
+        if validated[source]:
+            states[source] = 'manuscript-reused' if value else 'completed'
+    agent.units(states)
     catalog = {**catalog, 'strings': validated}
     from .translation_context import retained_carryover
     event = retained_carryover(catalog, validated)
@@ -157,14 +174,18 @@ def translate_missing(cfg, catalog, agent=None):
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Translation input exceeds the configured budget; text was not truncated.')
-            raw = cached if cached is not None and attempt == 0 else agent.chat(
-                system if attempt == 0 else retry_system, user,
-                tag=f'translation_{index}_{attempt}', **options)
+            from .translation_checkpoint import TranslationCall
+            call = TranslationCall(cfg, agent, system if attempt == 0 else retry_system, user,
+                                   options.get('response_schema'), units=[source])
+            from_cache = cached is not None and attempt == 0
+            raw = cached if from_cache else call.chat(f'translation_{index}_{attempt}')
             try:
                 result = json.loads(raw)
                 if not isinstance(result, dict) or set(result) != {'text'}:
                     raise ValueError('Return a text field only.')
                 translated[source] = _validate_text(source, result['text'])
+                if not from_cache:
+                    call.validated(dict(text=translated[source]))
                 answer_cache.save(cached_path, raw)
                 break
             except (ValueError, TypeError, KeyError) as exc:
@@ -172,6 +193,19 @@ def translate_missing(cfg, catalog, agent=None):
         else:
             raise ValueError(f'Translation failed validation: {source[:80]}')
     return {**catalog, 'strings': translated, 'review_status': 'human-review-pending'}
+
+
+def _batch_schema(texts):
+    return {'type': 'object', 'required': ['translations'], 'additionalProperties': False,
+            'properties': {'translations': {'type': 'object', 'required': list(texts),
+                'additionalProperties': False, 'properties': {key: {'type': 'string'} for key in texts}}}}
+
+
+def _input_size(cfg, system, user, schema):
+    if cfg.agent.kind == 'cli':
+        from .cli_agent import build_prompt
+        return len(build_prompt(system, user, schema))
+    return len(system) + len(user)
 
 
 def _batched(cfg, catalog, agent, size):
@@ -212,7 +246,7 @@ def _batched(cfg, catalog, agent, size):
         batch = dict(missing[offset:offset + size])
         while True:
             user = _payload(catalog, batch)
-            if len(system) + len(user) <= cfg.agent.max_input_chars:
+            if _input_size(cfg, system, user, _batch_schema(batch)) <= cfg.agent.max_input_chars:
                 break
             if len(batch) == 1:
                 raise ValueError('Translation input exceeds the configured budget; text was not truncated.')
@@ -221,17 +255,18 @@ def _batched(cfg, catalog, agent, size):
         feedback = ''
         for attempt in range(cfg.max_retries + 1):
             user = _payload(catalog, pending) + feedback
-            if len(system) + len(user) > cfg.agent.max_input_chars:
+            schema = _batch_schema(pending)
+            if _input_size(cfg, system, user, schema) > cfg.agent.max_input_chars:
                 raise ValueError('Translation retry exceeds the configured budget; text was not truncated.')
-            schema = {'type': 'object', 'required': ['translations'], 'additionalProperties': False,
-                      'properties': {'translations': {'type': 'object', 'required': list(pending),
-                         'additionalProperties': False, 'properties': {key: {'type': 'string'} for key in pending}}}}
             options = {'response_schema': schema} if cfg.agent.kind in SCHEMA_KINDS else {}
             # Eligible archived strings were already revalidated above. Only
             # missing/rejected strings remain, so do not replay a rejected batch
             # again and consume the live retry budget without making a call.
-            chat = getattr(agent, 'fresh_chat', agent.chat)
-            raw = chat(system, user, tag=f'translation_batch_{offset}_{attempt}', **options)
+            from .translation_checkpoint import TranslationCall
+            requested = dict(pending)
+            call = TranslationCall(cfg, agent, system, user, options.get('response_schema'),
+                                   fresh=True, units=list(requested.values()))
+            raw = call.chat(f'translation_batch_{offset}_{attempt}')
             try:
                 result = json.loads(raw)
                 values = result['translations']
@@ -247,6 +282,7 @@ def _batched(cfg, catalog, agent, size):
                 if pending:
                     raise ValueError(' / '.join(errors))
                 translated.update({source: accepted[key] for key, source in batch.items()})
+                call.validated({key: accepted[key] for key in requested})
                 print(f'Translation: {offset + len(batch)}/{len(missing)} strings', flush=True)
                 break
             except (ValueError, TypeError, KeyError) as exc:

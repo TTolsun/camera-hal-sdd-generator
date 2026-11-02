@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from .trial_workspace import contained_path, reject_symlinks
+from .validation_stage import load_json, read_bytes
 
 
 def canonical_request_hash(request: dict[str, Any]) -> str:
@@ -38,9 +39,9 @@ def load_record(receipt_path: Path, *, root: Path | None = None) -> CallRecord:
     prefix = receipt_path.name.removesuffix('.receipt.json')
     request_path = contained_path(root, relative.with_name(prefix + '.request.json'))
     response_path = contained_path(root, relative.with_name(prefix + '.response.txt'))
-    receipt = json.loads(receipt_path.read_bytes().decode('utf-8'))
-    request = json.loads(request_path.read_bytes().decode('utf-8'))
-    raw_bytes = response_path.read_bytes()
+    receipt = load_json(receipt_path)
+    request = load_json(request_path)
+    raw_bytes = read_bytes(response_path)
     raw = raw_bytes.decode('utf-8')
     if not isinstance(receipt, dict) or not isinstance(request, dict):
         raise ValueError(f'Call receipt and request must be JSON objects: {receipt_path}')

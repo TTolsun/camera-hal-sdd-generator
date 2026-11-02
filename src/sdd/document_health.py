@@ -188,12 +188,13 @@ def audit(cfg, model=None):
     active = {rel: page for rel, page in current.items() if rel not in retired}
     for rel, page in active.items():
         limits = {**options["limits"], **options.get("pages", {}).get(rel, {})}
-        if page["chars"] > limits["max_chars"]:
+        if limits["max_chars"] is not None and page["chars"] > limits["max_chars"]:
             finding("page-too-long", [rel], "split", f"Prose has {page['chars']} characters; limit is {limits['max_chars']}.")
-        if page["markdown_chars"] > limits["max_markdown_chars"]:
+        if limits["max_markdown_chars"] is not None and page["markdown_chars"] > limits["max_markdown_chars"]:
             finding("page-artifact-too-long", [rel], "split", "Markdown including tables and code exceeds its configured limit.")
         before = previous.get(rel, {}).get("chars", 0)
-        if (before and page["chars"] - before >= limits["min_growth_chars"]
+        if (limits["max_growth_ratio"] is not None and before
+                and page["chars"] - before >= limits["min_growth_chars"]
                 and page["chars"] / before > limits["max_growth_ratio"]):
             finding("page-growth", [rel], "review-or-split", f"Prose grew from {before} to {page['chars']} characters.")
         if (rel in expected and expected[rel].get("kind") != "manual"

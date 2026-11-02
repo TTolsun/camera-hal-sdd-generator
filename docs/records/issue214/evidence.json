@@ -1,0 +1,295 @@
+{
+  "schema": 1,
+  "benchmarks": {
+    "before-wall": {
+      "status": "passed",
+      "error": null,
+      "seconds": 84.97784870001487,
+      "profiled": false,
+      "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+      "model_calls": 0,
+      "mode": "normal-enforcement"
+    },
+    "before-profile": {
+      "status": "passed",
+      "error": null,
+      "seconds": 307.356486100005,
+      "profiled": true,
+      "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+      "model_calls": 0,
+      "mode": "normal-enforcement"
+    },
+    "optimized-historical-wall": {
+      "status": "passed",
+      "error": null,
+      "seconds": 11.890837499988265,
+      "profiled": false,
+      "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+      "model_calls": 0,
+      "mode": "frozen-full-validator-with-current-input-preparation"
+    },
+    "optimized-historical-profile": {
+      "status": "passed",
+      "error": null,
+      "seconds": 22.4217450999422,
+      "profiled": true,
+      "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+      "model_calls": 0,
+      "mode": "frozen-full-validator-with-current-input-preparation"
+    },
+    "after-wall": {
+      "status": "failed",
+      "error": "ValueError: Stale cross-document contract review: request-completion; run audit-consistency",
+      "seconds": 11.396710499946494,
+      "profiled": false,
+      "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+      "model_calls": 0
+    }
+  },
+  "profiles": {
+    "before-profile": [
+      {
+        "file": "consistency.py",
+        "function": "enforce",
+        "calls": 1,
+        "primitive_calls": 1,
+        "own_seconds": 0.010974600000000001,
+        "cumulative_seconds": 307.3556414
+      },
+      {
+        "file": "consistency.py",
+        "function": "request",
+        "calls": 15,
+        "primitive_calls": 15,
+        "own_seconds": 0.39539850000000004,
+        "cumulative_seconds": 301.31416640000003
+      },
+      {
+        "file": "__init__.py",
+        "function": "safe_load",
+        "calls": 863,
+        "primitive_calls": 863,
+        "own_seconds": 0.0036506000000000004,
+        "cumulative_seconds": 250.44049320000002
+      },
+      {
+        "file": "config.py",
+        "function": "sections",
+        "calls": 183,
+        "primitive_calls": 183,
+        "own_seconds": 0.011662700000000002,
+        "cumulative_seconds": 237.9638906
+      },
+      {
+        "file": "next_steps.py",
+        "function": "checked_footer",
+        "calls": 126,
+        "primitive_calls": 126,
+        "own_seconds": 0.015956400000000003,
+        "cumulative_seconds": 174.59138810000002
+      },
+      {
+        "file": "next_steps.py",
+        "function": "_next",
+        "calls": 126,
+        "primitive_calls": 126,
+        "own_seconds": 0.1095338,
+        "cumulative_seconds": 164.85874180000002
+      }
+    ],
+    "optimized-historical-profile": [
+      {
+        "file": "consistency.py",
+        "function": "enforce",
+        "calls": 1,
+        "primitive_calls": 1,
+        "own_seconds": 0.0058202,
+        "cumulative_seconds": 21.365228700000003
+      },
+      {
+        "file": "consistency.py",
+        "function": "request",
+        "calls": 15,
+        "primitive_calls": 15,
+        "own_seconds": 0.0048789,
+        "cumulative_seconds": 14.5596443
+      },
+      {
+        "file": "consistency.py",
+        "function": "_request",
+        "calls": 5,
+        "primitive_calls": 5,
+        "own_seconds": 0.11034690000000001,
+        "cumulative_seconds": 13.090484400000001
+      },
+      {
+        "file": "config.py",
+        "function": "sections",
+        "calls": 35,
+        "primitive_calls": 35,
+        "own_seconds": 0.0004506,
+        "cumulative_seconds": 1.6458791000000002
+      },
+      {
+        "file": "__init__.py",
+        "function": "safe_load",
+        "calls": 21,
+        "primitive_calls": 21,
+        "own_seconds": 0.0001293,
+        "cumulative_seconds": 1.6434768000000002
+      },
+      {
+        "file": "config.py",
+        "function": "_sections",
+        "calls": 1,
+        "primitive_calls": 1,
+        "own_seconds": 6.25e-05,
+        "cumulative_seconds": 1.1399138
+      },
+      {
+        "file": "next_steps.py",
+        "function": "checked_footer",
+        "calls": 42,
+        "primitive_calls": 42,
+        "own_seconds": 0.0033263000000000004,
+        "cumulative_seconds": 0.9050041000000001
+      },
+      {
+        "file": "next_steps.py",
+        "function": "_next",
+        "calls": 42,
+        "primitive_calls": 42,
+        "own_seconds": 0.00031160000000000004,
+        "cumulative_seconds": 0.054786400000000006
+      }
+    ]
+  },
+  "controlled_cli_matrix": [
+    {
+      "case": "same",
+      "transport": "controlled CLI double; no real model call",
+      "new_drafts": 0,
+      "reused": 2,
+      "revalidated": 0,
+      "failed": 0,
+      "seconds": 0.5307138999924064,
+      "unnecessary_outside_generation": 0,
+      "new_grounding_reviews": 0
+    },
+    {
+      "case": "question",
+      "transport": "controlled CLI double; no real model call",
+      "new_drafts": 1,
+      "reused": 1,
+      "revalidated": 0,
+      "failed": 0,
+      "seconds": 0.641586699988693,
+      "unnecessary_outside_generation": 0,
+      "new_grounding_reviews": 1
+    },
+    {
+      "case": "evidence",
+      "transport": "controlled CLI double; no real model call",
+      "new_drafts": 1,
+      "reused": 1,
+      "revalidated": 0,
+      "failed": 0,
+      "seconds": 0.633955099969171,
+      "unnecessary_outside_generation": 0,
+      "new_grounding_reviews": 1
+    },
+    {
+      "case": "summary",
+      "transport": "controlled CLI double; no real model call",
+      "new_drafts": 1,
+      "reused": 0,
+      "revalidated": 2,
+      "failed": 0,
+      "seconds": 0.9886845999862999,
+      "unnecessary_outside_generation": 0,
+      "new_grounding_reviews": 1
+    },
+    {
+      "case": "ui",
+      "transport": "controlled CLI double; no real model call",
+      "new_drafts": 0,
+      "reused": 2,
+      "revalidated": 0,
+      "failed": 0,
+      "seconds": 0.5415102000115439,
+      "unnecessary_outside_generation": 0,
+      "new_grounding_reviews": 0
+    },
+    {
+      "case": "validation-policy",
+      "transport": "controlled CLI double; no real model call",
+      "new_drafts": 0,
+      "reused": 0,
+      "revalidated": 2,
+      "failed": 0,
+      "seconds": 0.6572177999769337,
+      "unnecessary_outside_generation": 0,
+      "new_grounding_reviews": 0
+    },
+    {
+      "case": "grounding-policy",
+      "transport": "controlled CLI double; no real model call",
+      "new_drafts": 0,
+      "reused": 0,
+      "revalidated": 2,
+      "failed": 0,
+      "seconds": 0.865499900013674,
+      "unnecessary_outside_generation": 0,
+      "new_grounding_reviews": 2
+    },
+    {
+      "case": "style",
+      "transport": "controlled CLI double; no real model call",
+      "new_drafts": 2,
+      "reused": 0,
+      "revalidated": 0,
+      "failed": 0,
+      "seconds": 0.7956750000012107,
+      "unnecessary_outside_generation": 0,
+      "new_grounding_reviews": 2
+    }
+  ],
+  "archives": {
+    "base.zip": {
+      "bytes": 72838662,
+      "sha256": "ce88246782d3cd701ed4b6c86df4a4da7e70e20abca1447bf476b4b8d0dd8d76"
+    },
+    "followup.zip": {
+      "bytes": 56698855,
+      "sha256": "d1349b192ebd1cc4797de41781ef6374a24fe4d51c6baacbb688b2247933bdbe"
+    }
+  },
+  "restored_effective_inputs": {
+    "config\\contracts.yaml": "61c9271492ae89d964cabd49eb09f7a1bf3bb82fe6f6b263bf070df9a82d5656",
+    "config\\glossary.yaml": "3b7d78551bbfa44406cc6a5a4e9056fdf8f940f00dc26d544931f5833a32be4d",
+    "config\\product-evidence\\callback-observation.json": "f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c",
+    "config\\product-evidence\\libcamera-stack.txt": "fdd39a9c11328e6bb549203a2395b3f9331fa15d5e2da711b703643e299f8fc0",
+    "config\\products.yaml": "6c2287cb0b2ba758cd703f429d5797303a3b9fba2072143a0efbbce8916ebc87",
+    "config\\scenarios.yaml": "a01db3a97239e64ce609def2e2da688a8f83492ed46188e67f82026fb8e4ffa4",
+    "config\\sections.yaml": "75a4f3fd0349bb0172b4a46cc5535cc89dafaf1cea65dba3926683003c18a3b7",
+    "config\\visuals.yaml": "de7a4ad2a71a5c3287b78bd15533f925e895aca77f1fced920a0405bdceff57c",
+    "publication.yaml": "8281411c4077c0a052e096cdd5dda34ccc3ed7f4bb2492299fbe3bea9a947e49",
+    "independent-review.yaml": "4460cef1a765a47ecfd6d76f59f854f28a23c79b08763729277b86f5dce4949e",
+    "run/english.json": "ab183d8794bcd3cd36441a533a1995b81fcb413900288729d66e818357438601",
+    "run/facts/facts.json": "1e66fbc011cea3a66c76c12dbd3f6e12ac5a357eea59e579b0f019e7b6035303"
+  },
+  "fixed_generator": "ea5fa4c1b4eb2748d373cc911c3d4c67e87a93a1",
+  "fixed_source": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "fixed_sdd": "85b4cd8d6fd9e1778eac3f20cbd0df0e6b8b7cf3",
+  "interpretation": "Historical full validation uses unchanged archived policy and receipts with current preparation. It is not a current-policy approval. Failed normal current enforcement remains a failure. Controlled matrix calls are transport doubles, not native document drafting or independent review."
+}

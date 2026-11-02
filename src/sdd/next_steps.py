@@ -9,6 +9,7 @@ import re
 from .config import section_output
 from .document_metadata import split_frontmatter
 from .trial_workspace import contained_path
+from .validation_stage import read_bytes, read_text
 
 FOOTER = '다음 단계: [{next_title}]({next_link})'
 
@@ -25,7 +26,7 @@ def ordered_scenarios(cfg, model):
 
 
 def _next(cfg, model, name, meta):
-    section = next((s for s in cfg.sections() if s['id'] == meta.get('section')), None)
+    section = cfg.section(meta.get('section'))
     if section is None:
         return None
     sid = meta.get('scenario_id')
@@ -62,7 +63,7 @@ def checked_footer(cfg, model, name, meta, body):
     claim collector. A recognized missing/stale target fails before review.
     """
     expected = _next(cfg, model, name, meta)
-    if expected is None or not (cfg.templates_dir/'page.md').read_text(encoding='utf-8').strip().endswith(FOOTER):
+    if expected is None or not read_text(cfg.templates_dir/'page.md').strip().endswith(FOOTER):
         return None
     title, target = expected
     if any(c in target for c in ('#', '?', ':', '\\')) or not target.endswith('.md'):
@@ -79,7 +80,7 @@ def checked_footer(cfg, model, name, meta, body):
         return None
     if not path.is_file():
         raise ValueError(f'Generated next-step target missing: {name} -> {target}')
-    raw = path.read_bytes()
+    raw = read_bytes(path)
     target_meta, target_body = split_frontmatter(raw.decode('utf-8').replace('\r\n', '\n'))
     if target_meta.get('source_commit') != model.meta.get('source_commit'):
         raise ValueError(f'Generated next-step target source commit mismatch: {target}')

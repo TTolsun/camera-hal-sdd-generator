@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 import yaml
+from .validation_stage import parse_yaml
 
 
 GENERATION_METHODS = {
@@ -75,7 +76,7 @@ def manual_evidence_files(path: Path) -> list[str]:
     if not m:
         return []
     try:
-        data = yaml.safe_load(m.group(1)) or {}
+        data = parse_yaml(m.group(1)) or {}
     except yaml.YAMLError:
         return []
     return [str(f).replace("\\", "/") for f in (data.get("evidence_files") or [])]
@@ -88,7 +89,7 @@ def split_frontmatter(text: str) -> tuple[dict, str]:
     if not m:
         return {}, text
     try:
-        meta = yaml.safe_load(m.group(1)) or {}
+        meta = parse_yaml(m.group(1)) or {}
     except yaml.YAMLError:
         meta = {}
     return meta, text[m.end():]
