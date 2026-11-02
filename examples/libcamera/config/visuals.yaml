@@ -1772,8 +1772,8 @@ sections:
         quote: and are outside of
         sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - id: adaptation
-      label: '어댑테이션 (V4L2 호환·GStreamer·Android HAL): libcamera를 다른 프레임워크에 연결'
-      label_en: 'Adaptation (V4L2 compatibility, GStreamer, Android HAL): connects libcamera to other frameworks'
+      label: '어댑테이션 (V4L2 호환 예시, GStreamer libcamera 요소, libcamera 기반 Android 카메라 HAL 구현): libcamera를 다른 프레임워크에 연결'
+      label_en: 'Adaptation (V4L2 compatibility example, gstreamer libcamera element, libcamera-based Android camera HAL implementation): connects libcamera to other frameworks'
       evidence:
       - source: value/stack
         quote: The libcamera adaptation is an umbrella term designating the
@@ -1783,6 +1783,9 @@ sections:
         sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
       - source: value/stack
         quote: Notable examples are a V4L2 compatibility layer, a gstreamer
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: libcamera element, and an Android camera HAL implementation based
         sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     - id: framework
       label: 'libcamera 프레임워크: 카메라 장치 제어, 네이티브 C++ API 제공, 선택적 언어 바인딩'
@@ -1812,14 +1815,6 @@ sections:
         sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
     edges:
     - from: apps
-      to: framework
-      label: 네이티브 C++ API 사용
-      label_en: Use the native C++ API
-      evidence:
-      - source: value/stack
-        quote: and exposes a native C++ API to upper layers
-        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
-    - from: apps
       to: adaptation
       label: libcamera adaptation 기반으로 사용
       label_en: Use based on the libcamera adaptation
@@ -1845,6 +1840,17 @@ sections:
         sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
       - source: value/stack
         quote: handles all control of the camera devices in its core component,
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+    - from: apps
+      to: framework
+      label: 네이티브 C++ API 및 선택적 언어 바인딩 사용
+      label_en: Use the native C++ API and optional language bindings
+      evidence:
+      - source: value/stack
+        quote: exposes a native C++ API to upper layers
+        sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
+      - source: value/stack
+        quote: language bindings allow interfacing to libcamera from other
         sha256: 750a623b45ad76fbd899b56427ad76ef91bdc922497972317df868fe538c3b03
   - id: hardware-boundary
     topic: capabilities
