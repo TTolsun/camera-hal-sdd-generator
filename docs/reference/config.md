@@ -255,3 +255,24 @@ paths:
   generation: llm
   while_conditions: true
 ```
+
+## `require_connected`
+
+`generation: llm` 시각화 계획의 선택 필드입니다. 값은 `true` 또는 `false`만 허용하며, 다른 타입이면 `Visual require_connected must be boolean` 오류로 입력 검사에서 중단합니다.
+
+- 기본값은 `false`입니다. 필드를 생략하면 기존 설정과 같게 동작합니다.
+- `true`이면 생성된 초안의 노드가 방향을 무시했을 때 모두 하나의 연결 요소에 속하는지 검사합니다.
+- 연결되지 않은 초안은 거부되고, `cfg.max_retries`회 추가로 재시도합니다. 재시도까지 실패하면 마지막 오류로 생성이 실패합니다.
+- `disconnected IDs:`에는 첫 노드에서 방향을 무시하고 도달할 수 없는 노드 ID를 정렬해 나열합니다. 고립된 노드 하나만 뜻하지 않으며, 연결되지 않은 노드 묶음 전체가 포함될 수 있습니다.
+- 이 검사는 연결성만 확인합니다. 제어 흐름의 정확성, 분기 커버리지, 의미의 옳음을 증명하지 않으며 사람 승인을 대신하지 않습니다.
+- 값을 바꾸면 계획 입력 지문이 달라지므로 `generate`를 다시 실행해야 합니다. 자동으로 재생성되지 않습니다.
+
+```yaml
+id: capture_flow
+topic: capture
+kind: flow
+title: 캡처 흐름
+question: 캡처 요청은 어떻게 처리되는가
+generation: llm
+require_connected: true
+```

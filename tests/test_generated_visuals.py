@@ -129,6 +129,41 @@ def test_while_conditions_are_opt_in_and_copy_nested_expressions_verbatim():
     assert len(new) == 5
 
 
+def test_connected_visual_checks_components_and_preserves_legacy_default(tmp_cfg, automatic):
+    from sdd.generated_visuals import inputs, materialize, plans
+    section, model, _, agent = automatic
+    plan = plans(tmp_cfg, section)[0]
+    draft = copy.deepcopy(agent.draft)
+    draft['nodes'] += [dict(n, id=n['id']+'2') for n in draft['nodes']]
+    draft['edges'].append(dict(draft['edges'][0], **{'from': 'stop2', 'to': 'cancel2'}))
+    materialize(tmp_cfg, model, section, plan, draft, tmp_cfg.agent.label)
+    plan['require_connected'] = True
+    with pytest.raises(ValueError, match='disconnected IDs: cancel2, stop2'):
+        materialize(tmp_cfg, model, section, plan, draft, tmp_cfg.agent.label)
+    draft['edges'].append(dict(draft['edges'][0], **{'from': 'cancel', 'to': 'stop2'}))
+    graph = materialize(tmp_cfg, model, section, plan, draft, tmp_cfg.agent.label)
+    assert 'require_connected' not in graph
+    for invalid in [1, 'true', None]:
+        plan['require_connected'] = invalid
+        with pytest.raises(ValueError, match='require_connected must be boolean'):
+            inputs(tmp_cfg, model, section, plan)
+
+
+def test_disconnected_generation_preserves_previous_manuscript(tmp_cfg, automatic):
+    section, model, _, agent = automatic
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    previous = path.read_bytes()
+    visual_file = tmp_cfg.root/'visuals.yaml'
+    values = yaml.safe_load(visual_file.read_text(encoding='utf-8'))
+    values['sections']['device'][0]['require_connected'] = True
+    visual_file.write_text(yaml.safe_dump(values, allow_unicode=True), encoding='utf-8')
+    agent.draft['edges'][0]['to'] = 'stop'
+    tmp_cfg.max_retries = 0
+    with pytest.raises(ValueError, match='must connect every node'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == previous
+
+
 def test_while_edge_requires_opt_in_and_preserves_bound_loop_guard(tmp_cfg, automatic):
     from sdd.generated_visuals import inputs, materialize, plans
     section, model, save, agent = automatic

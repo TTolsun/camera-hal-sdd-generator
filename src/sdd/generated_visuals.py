@@ -136,7 +136,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'condition_display', 'prompt', 'sources', 'while_conditions'}:
+    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'condition_display', 'prompt', 'sources', 'while_conditions', 'require_connected'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -152,6 +152,8 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False):
         raise ValueError('Visual condition_display must be inline or evidence')
     if type(plan.get('while_conditions', False)) is not bool:
         raise ValueError('Visual while_conditions must be boolean')
+    if type(plan.get('require_connected', False)) is not bool:
+        raise ValueError('Visual require_connected must be boolean')
     for key in ('title', 'question'):
         _text(plan[key], key)
     if 'prompt' in plan:
@@ -241,7 +243,7 @@ def materialize(cfg, model, section, plan, draft, producer):
     limit = node_limit(cfg, plan)
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'prompt', 'sources', 'while_conditions')} | {'nodes': [], 'edges': [], 'producer': producer}
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'prompt', 'sources', 'while_conditions', 'require_connected')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):
@@ -301,6 +303,19 @@ def materialize(cfg, model, section, plan, draft, producer):
             for key in ('label', 'label_en'):
                 edge[key] += ' · ' + condition + ' [' + branch + ']'
         graph['edges'].append(edge)
+    if plan.get('require_connected', False):
+        neighbors = {node['id']: set() for node in graph['nodes']}
+        for edge in graph['edges']:
+            neighbors[edge['from']].add(edge['to'])
+            neighbors[edge['to']].add(edge['from'])
+        pending, reached = [graph['nodes'][0]['id']], set()
+        while pending:
+            node = pending.pop()
+            if node not in reached:
+                reached.add(node)
+                pending.extend(neighbors[node] - reached)
+        if missing_nodes := set(neighbors) - reached:
+            raise ValueError('Visual must connect every node; disconnected IDs: ' + ', '.join(sorted(missing_nodes)))
     if missing := set(plan.get('required_symbols', [])) - set(symbols.values()):
         raise ValueError('Visual is missing required question symbols: ' + ', '.join(sorted(missing)))
     from .answer_contracts import check
