@@ -170,10 +170,11 @@
     기록된 시험 커널 일치도 유지합니다. 조건 노드의 한영 라벨은 최대 72자를 쓰되 이 네 조건을 짧게 표시하고 상세 버전·필드명은 본문과 근거로
     남깁니다. 나머지 기존 10개 노드와 연결·인용·승인 시점은 그대로 보존합니다.
   sources:
-  - product-execution-contract
-  - product-reproduction-procedure
-  - product-official-cam-reader
+  - product-invocation-execution-contract
+  - product-invocation-reproduction-procedure
+  - product-invocation-official-cam-reader
   - virtual2-config
+  - product-invocation-options
   max_label_chars: 72
   condition_display: evidence
   answer_contract:

@@ -40,3 +40,40 @@ def test_attachment_preserves_prior_feature_and_binds_all_new_materials(tmp_path
     assert set(selected['evidence']) == {'invocation-'+name for name in ids} | {'invocation-options'}
     assert all(evidence[name]['feature'] == selected['id'] for name in selected['evidence'])
     assert (config/evidence['invocation-options']['file']).read_bytes() == scope.validate(DIRECTORY/'invocation-options.json')
+
+
+def test_shipped_virtual_visuals_resolve_against_attached_topic_sources(tmp_cfg):
+    """Fictional materials exercise the real recipe/attachment binding contract."""
+    import hashlib
+    from sdd.product_context import bind
+    config = tmp_cfg.root/'config'
+    config.mkdir(exist_ok=True)
+    ids = ['official-cam-reader', 'execution-contract', 'reproduction-procedure']
+    feature = dict(id='wsl-virtual-capture', need='Fixture need', usage='Synthetic binding test',
+                   availability='unknown', conditions=['fixture only'], exclusions=[],
+                   implementation=[], evidence=ids, claims=[])
+    product = dict(id='libcamera-official-cam-trial', scope='project', release=scope.BASELINE,
+                   configuration='fixture', simulation=True, as_of='2026-10-31', features=[feature])
+    documents = []
+    for ident in ids:
+        body = b'Fictional binding fixture; no runtime result.\n'
+        (config/(ident+'.txt')).write_bytes(body)
+        documents.append(dict(id=ident, type='measurement', supplier='Synthetic fixture', version='1',
+            date='2026-10-31', valid_until='2026-10-31', product=product['id'], release=scope.BASELINE,
+            configuration='fixture', feature=feature['id'], conditions=feature['conditions'],
+            availability='unknown', file=ident+'.txt', sha256=hashlib.sha256(body).hexdigest()))
+    path = config/'products.yaml'
+    path.write_text(yaml.safe_dump(dict(schema=1, products=[product], evidence=documents)))
+    scope.attach(tmp_cfg.root, DIRECTORY/'invocation-options.json')
+    tmp_cfg.raw['products'] = {'file': 'config/products.yaml'}
+    tmp_cfg.paths['products_file'] = path
+    section = yaml.safe_load((DIRECTORY/'section.yaml').read_bytes())
+    section['design_topics'].insert(1, yaml.safe_load((DIRECTORY/'topic.yaml').read_bytes()))
+    bound = bind(tmp_cfg, [section])[0]
+    topics = {topic['id']: topic for topic in bound['design_topics']}
+    plans = [yaml.safe_load((DIRECTORY/'visual.yaml').read_bytes())]
+    plans += yaml.safe_load((DIRECTORY/'retained-visual-overrides.yaml').read_bytes())
+    assert len(plans) == 5
+    for plan in plans:
+        available = {source['id'] for source in topics[plan['topic']]['sources']}
+        assert set(plan['sources']) <= available, (plan['id'], sorted(set(plan['sources']) - available))
