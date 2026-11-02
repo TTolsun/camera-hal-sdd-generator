@@ -41,8 +41,9 @@ class Window(HTMLParser):
 parser=argparse.ArgumentParser()
 parser.add_argument('--out',type=Path,required=True)
 parser.add_argument('--site',type=Path)
+parser.add_argument('--work',type=Path)
 args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=False)
-root=Path(__file__).resolve().parents[4];work=root/'build/issue211-reader'
+root=Path(__file__).resolve().parents[4];work=args.work.resolve() if args.work else root/'build/issue211-reader'
 rel='official-cam-validation.md'
 if args.site:
     inputs={lang:args.site/('en/' if lang=='en' else '')/rel.replace('.md','.html') for lang in ['ko','en']}
