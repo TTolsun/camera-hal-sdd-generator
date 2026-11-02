@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from sdd.reading_cleanup import compact_tables, class_targets, link_related_classes, merge_next_step
+from sdd.reading_cleanup import compact_tables, class_targets, link_related_classes, merge_next_step, promote_coverage
 
 
 def table(headers, rows):
@@ -37,6 +37,45 @@ def test_custom_coverage_scope_and_example_html_stay_intact():
     assert compact_tables(source) == source
     source = '<pre>' + coverage() + '</pre>'
     assert compact_tables(source) == source
+
+
+def test_question_guide_follows_lead_before_terms_with_content_and_links_intact():
+    lead = '<p><strong>도입할 범위를 판단하세요.</strong></p>'
+    terms = '<details class="page-terms"><summary>용어</summary><p>Camera</p></details>'
+    body = '<h2 id="life">수명</h2><p>본문</p><h2 id="verify">검증</h2>'
+    guide = compact_tables(coverage())
+    result = promote_coverage(lead + terms + body + guide)
+    assert result == lead + guide + terms + body
+    assert promote_coverage(result) == result
+    assert ' open' not in result
+
+
+def test_question_guide_without_lead_precedes_body_but_examples_and_custom_notes_stay():
+    guide = compact_tables(coverage())
+    body = '<h2 id="life">수명</h2>'
+    assert promote_coverage(body + guide) == guide + body
+    for source in ('<pre>' + guide + '</pre>', coverage('사용자 정의 검증 조건'),
+                   body + guide + guide):
+        assert promote_coverage(source) == source
+
+
+def test_manuscript_review_records_deduplicate_exact_values_but_keep_history():
+    from sdd.reading_cleanup import collect_manuscript_records
+    note = ('<details class="note"><summary>근거와 검토 정보</summary><ul>'
+            '<li>생성 방식: 추출 사실과 LLM 설명</li><li>검증 범위: 과거 범위</li>'
+            '<li>근거 수준: commit <code>old</code></li><li>검토 상태 기록일: 과거 날짜</li>'
+            '<li><a href="record.json">기록</a></li></ul></details>')
+    current = {'생성 방식': '추출 사실과 LLM 설명', '검증 범위': '현재 범위'}
+    content, record = collect_manuscript_records('<p>본문</p>' + note, current)
+    assert content == '<p>본문</p>'
+    assert '생성 방식:' not in record
+    for value in ('과거 범위', '<code>old</code>', '과거 날짜', 'href="record.json"'):
+        assert value in record
+    assert '원고 작성 당시 기록' in record
+    assert collect_manuscript_records(content, current) == (content, '')
+    assert collect_manuscript_records('<pre>' + note + '</pre>', current) == ('<pre>' + note + '</pre>', '')
+    scoped = note.replace('근거와 검토 정보</summary>', '근거와 검토 정보: package</summary>')
+    assert '생성 방식:' in collect_manuscript_records(scoped, current)[1]
 
 
 def test_single_call_becomes_labeled_record_without_losing_boundary_or_citations():

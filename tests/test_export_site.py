@@ -58,6 +58,43 @@ def test_site_preserves_verdicts_and_links_nested_pages(tmp_cfg, sample_model):
     assert (out / 'device.md').read_bytes() == originals[tmp_cfg.sdd_dir / 'device.md']
 
 
+@pytest.mark.parametrize('existing_diagram', [False, True])
+def test_class_diagram_precedes_source_evidence_without_changing_manuscript(tmp_cfg, sample_model, existing_diagram):
+    prepare(tmp_cfg, sample_model)
+    path = tmp_cfg.sdd_dir / 'device.md'
+    text = path.read_text(encoding='utf-8') + '\n## 소스 근거\n\n원문을 확인하세요.\n\n'
+    if existing_diagram:
+        text += '<!-- sdd:class-diagram -->\n## 클래스 관계\n\nOLD DIAGRAM\n<!-- /sdd:class-diagram -->\n'
+    text += '\n??? note "근거와 검토 정보"\n    검토 전입니다.\n'
+    path.write_text(text, encoding='utf-8')
+    site = export_site(tmp_cfg)
+    page = (site / 'device.html').read_text(encoding='utf-8')
+    assert page.index('<h2 id="클래스-관계">') < page.index('<h2 id="소스-근거">')
+    assert page.count('<h2 id="클래스-관계">') == 1
+    assert 'OLD DIAGRAM' not in page
+    assert page.count('id="page-evidence"') == 1
+    assert '<h2 id="page-evidence">문서 생성·검토 정보</h2>' in page
+    assert path.read_text(encoding='utf-8') == text
+    first = (site / 'site-manifest.json').read_bytes()
+    export_site(tmp_cfg)
+    assert (site / 'site-manifest.json').read_bytes() == first
+
+
+def test_site_combines_review_records_without_rewriting_original_or_approval(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    path = tmp_cfg.sdd_dir / 'device.md'
+    text = path.read_text(encoding='utf-8') + ('\n??? note "근거와 검토 정보"\n'
+        '    - 근거 수준: commit `old-source`\n    - 검토 상태 기록일: 과거 날짜 · 사람 검토 전\n')
+    path.write_text(text, encoding='utf-8')
+    page = (export_site(tmp_cfg) / 'device.html').read_text(encoding='utf-8')
+    assert '<summary>근거와 검토 정보</summary>' not in page
+    assert page.count('id="page-evidence"') == 1
+    assert page.index('id="page-evidence"') < page.index('원고 작성 당시 기록')
+    assert 'old-source' in page and '과거 날짜' in page
+    assert '<dt>사람 검토</dt><dd>사람 검토 전</dd>' in page
+    assert path.read_text(encoding='utf-8') == text
+
+
 def test_stale_facts_abort_before_publication(tmp_cfg, sample_model):
     prepare(tmp_cfg, sample_model)
     sample_model.meta['source_commit'] = 'b' * 40
@@ -399,7 +436,7 @@ def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
     other = (out / 'device.html').read_text(encoding='utf-8')
     child = (out / 'scenarios/open.html').read_text(encoding='utf-8')
     assert '<summary>하위 문서 2 편</summary>' in other
-    # 현재 문서와 목차 페이지에서도 저장된 선택이 없으면 모든 묶음을 접는다.
+    # 최상위 그룹만 기본으로 펼치고 현재 문서의 하위 묶음도 접어 둔다.
     assert not _nav_folds(parent, 'nav-branch')[0]['open']
     assert not _nav_folds(child, 'nav-branch')[0]['open']
     assert any(link.get('aria-current') == 'page' for link in _nav_folds(child, 'nav-branch')[0]['links'])
@@ -412,7 +449,7 @@ def test_하위_문서는_접었다_펼_수_있다(tmp_cfg, sample_model):
         assert ids[0] == ids[1] == ids[2]
         assert len(ids[0]) == len(set(ids[0]))
     for page in [parent, child, other]:
-        assert not any(node['open'] for node in _nav_folds(page, 'nav-group'))
+        assert all(node['open'] for node in _nav_folds(page, 'nav-group'))
 
 
 def test_task_sections_end_before_unclassified_pages_and_reader_groups(tmp_cfg, sample_model):

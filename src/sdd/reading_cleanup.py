@@ -128,6 +128,27 @@ def compact_tables(document: str) -> str:
     return ''.join(chunks)
 
 
+def promote_coverage(document: str) -> str:
+    """Move the generated question guide after the lead, before page terms.
+
+    Leave examples and custom notes intact. This is presentation only;
+    manuscript review records and the guide's contents stay unchanged.
+    """
+    pattern = (r'<pre\b[^>]*>.*?</pre>|<code\b[^>]*>.*?</code>|'
+               r'(<details class="note">\s*<summary>설계 질문과 검증 범위</summary>\s*'
+               r'<p>질문별 답변과 근거 연결을 검사했습니다\. 의미와 실행 결과는 사람 검토가 필요합니다\.</p>\s*'
+               r'<ul class="coverage-links">.*?</ul>\s*'
+               r'<p><span>확인 범위</span>: <span>코드 근거와 설명 연결</span></p>\s*</details>)')
+    matches = [match for match in re.finditer(pattern, document, re.S) if match[1]]
+    if len(matches) != 1:
+        return document
+    guide = matches[0]
+    remaining = document[:guide.start()] + document[guide.end():]
+    lead = re.match(r'\s*<p>.*?</p>', remaining, re.S)
+    position = lead.end() if lead else 0
+    return remaining[:position] + guide[0] + remaining[position:]
+
+
 def class_targets(indexes: dict[str, str]) -> dict[tuple[str, ...], str]:
     """Only an unambiguous, byte-equal index row can replace a local reference."""
     targets = {}
@@ -164,6 +185,38 @@ def link_related_classes(document: str, page: str, targets: dict[tuple[str, ...]
 
     return re.sub(r'(<h2 id="관련-클래스">관련 클래스</h2>\s*)<div class="table-scroll stack" tabindex="0" role="region" aria-label="표">(<table>.*?</table>)</div>',
                   related, document, flags=re.S)
+
+
+def collect_manuscript_records(document: str, current: dict[str, str]) -> tuple[str, str]:
+    """Move generated review lists into the page's unified evidence section.
+
+    Only byte-equivalent plain rows with the same page-wide scope are redundant.
+    Historical differences, links, package-specific records and custom notes
+    remain inspectable. Manuscripts and approval ledgers are never edited.
+    """
+    records = []
+    pattern = (r'<pre\b[^>]*>.*?</pre>|<code\b[^>]*>.*?</code>|'
+               r'(<details class="note">\s*<summary>근거와 검토 정보(?P<scope>: [^<>]+)?</summary>'
+               r'\s*<ul>(?P<rows>.*?)</ul>\s*</details>)')
+
+    def collect(match):
+        if not match[1]:
+            return match[0]
+        rows = match['rows']
+        items = re.findall(r'<li>.*?</li>', rows, re.S)
+        if not items or re.sub(r'<li>.*?</li>', '', rows, flags=re.S).strip() or '<ul' in rows:
+            return match[0]
+        if not match['scope']:
+            duplicates = {f'<li>{html.escape(key)}: {html.escape(value)}</li>' for key, value in current.items()}
+            items = [item for item in items if item not in duplicates]
+        if items:
+            records.append('<details class="note manuscript-record"><summary>원고 작성 당시 기록'
+                           + (match['scope'] or '') + '</summary>'
+                           + '<p>원고에 저장된 당시 기록입니다. 현재 문서의 기준과 다를 수 있습니다.</p>'
+                           + '<ul>' + ''.join(items) + '</ul></details>')
+        return ''
+
+    return re.sub(pattern, collect, document, flags=re.S), ''.join(records)
 
 
 def merge_next_step(document: str, following: str) -> tuple[str, str]:

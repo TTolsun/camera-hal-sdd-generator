@@ -301,15 +301,17 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
         block = diagram_block(diagram)
         if "<!-- sdd:class-diagram -->" in body:
             # Keep the heading for existing route links, but never retain stale edges.
-            replacement = block.strip() or "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다."
+            replacement = "" if diagram else "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다."
             body = re.sub(r"<!-- sdd:class-diagram -->.*?<!-- /sdd:class-diagram -->", lambda _: replacement, body, flags=re.S)
-            block = ""
         if diagram:
             diagram_source = diagram
             before, marker, after = body.partition('??? note "근거와 검토 정보"')
             # Move intact generated sections into reading order; preserve their wording.
             parts = re.fullmatch(r"(.*?)^(## 관련 클래스\n.*?)(^## 구조 설명\n.*)", before, re.S | re.M)
-            if parts:
+            sources = re.search(r'^## 소스 근거\s*$', before, re.M)
+            if sources:
+                body = before[:sources.start()] + block + before[sources.start():] + marker + after
+            elif parts:
                 body = parts[1] + parts[3] + block + parts[2] + marker + after
             else:
                 body = before + block + marker + after
@@ -345,8 +347,14 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
         block = reused[0][1].replace('\n### ', '\n## ', 1)
         block = re.sub(r'\]\(#(source-[0-9a-f]{16})\)',
                        lambda match: '](' + target + '#' + match[1] + ')', block)
-        first, separator, rest = body.lstrip('\n').partition('\n\n')
-        body = first + '\n\n' + block + (separator + rest if separator else '')
+        marker = '<!-- sdd:overview-visual -->'
+        if body.count(marker) > 1:
+            raise ValueError('Overview visual placement marker must be unique')
+        if marker in body:
+            body = body.replace(marker, block)
+        else:
+            first, separator, rest = body.lstrip('\n').partition('\n\n')
+            body = first + '\n\n' + block + (separator + rest if separator else '')
     return page_title, meta, body, diagram_source, visuals
 
 
@@ -446,7 +454,7 @@ def _navigation_html(entries, sections, rel, current):
             if group_open:
                 nav.append("</details>")
             if nav_group:
-                nav.append(f'<details class="nav-group" data-nav-id="{fold_id("group", nav_group)}">'
+                nav.append(f'<details class="nav-group" data-nav-id="{fold_id("group", nav_group)}" open>'
                            f'<summary>{html.escape(nav_group)}</summary>')
             group_open = bool(nav_group)
             last_group = nav_group
@@ -509,13 +517,17 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
             if following.startswith('<a class="next"'):
                 content, previous_next[i] = merge_next_step(content, following)
         info = []
+        current_records = {}
         method_label, method_scope = generation_info(str(meta.get("generation_method", "")))
         if meta:
             info.append(f'<dt>생성 방식</dt><dd>{html.escape(method_label)}</dd>')
             info.append(f'<dt>검증 범위</dt><dd>{html.escape(method_scope)}</dd>')
             check_name, check_result, check_scope = _check(meta)
+            current_records = {"생성 방식": method_label, "검증 범위": method_scope, check_name: check_result}
             info.append(f'<dt>{check_name}</dt><dd>{check_result} (<code>{html.escape(str(meta.get("status", "unrecorded")))}</code>). '
                         f'{html.escape(check_scope)}</dd>')
+            info.append('<dt>사람 검토</dt><dd>' + html.escape(_approval_label(
+                approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))) + '</dd>')
         for key, label in [("source_commit", "분석 기준 커밋"), ("generated_at", "문서 생성 시각"), ("agent", "문장 생성 모델")]:
             if meta.get(key):
                 info.append(f'<dt>{label}</dt><dd><code>{html.escape(str(meta[key]))}</code></dd>')
@@ -538,7 +550,10 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
             mmd = str(PurePosixPath(rel).with_suffix(".mmd"))
             (out / mmd).write_text(diagram_sources[rel] + "\n", encoding="utf-8", newline="\n")
             downloads += f' <a href="{_href(mmd, current)}">Mermaid 원문 ↗</a>'
-        evidence = f'<section class="evidence"><h2 id="page-evidence">생성 근거</h2><dl>{"".join(info)}</dl>{downloads}</section>' if info else ""
+        from .reading_cleanup import collect_manuscript_records
+        content, historical_records = collect_manuscript_records(content, current_records)
+        evidence = (f'<section class="evidence"><h2 id="page-evidence">문서 생성·검토 정보</h2>'
+                    f'<dl>{"".join(info)}</dl>{historical_records}{downloads}</section>') if info or historical_records else ""
         status = (_status(meta, approval_states.get(rel, "unreviewed"), ledger["pages"].get(rel))
                   if meta else '<span class="review-state">검토용 문서</span>')
         if meta:
