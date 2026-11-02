@@ -43,7 +43,7 @@ receipts = {sha256(p) for p in work.rglob('*.receipt.json')}
 
 base = Path(__file__).resolve().parent
 topic = yaml.safe_load((base/'topic.yaml').read_text(encoding='utf-8'))
-section = yaml.safe_load((root/'examples/libcamera/validation/issue211-reader/section.yaml').read_text(encoding='utf-8'))
+section = yaml.safe_load((base/'section.yaml').read_text(encoding='utf-8'))
 section['design_requirements'].insert(1, dict(id=topic['id'], question=topic['question']))
 section['design_topics'].insert(1, topic)
 p = work/'config/sections.yaml'; data = yaml.safe_load(p.read_text(encoding='utf-8'))
