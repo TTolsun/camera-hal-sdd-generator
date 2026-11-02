@@ -1958,7 +1958,7 @@ sections:
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
     - id: ready
       label: 선두 요청의 prepared_가 참인가?
-      label_en: Is the front request's prepared_ true?
+      label_en: Is the front request prepared_?
       evidence:
       - source: benefits/queue-code
         quote: if (!request->_d()->prepared_)
@@ -2043,7 +2043,7 @@ sections:
     - from: limit
       to: front
       label: '아니요: 선두 확인'
-      label_en: 'No: inspect the front request'
+      label_en: 'No: inspect front'
       evidence:
       - source: benefits/queue-code
         quote: Request *request = data->waitingRequests_.front();
@@ -2083,7 +2083,7 @@ sections:
     - from: fwd
       to: waiting
       label: 반복 조건 재검사
-      label_en: Recheck the loop condition
+      label_en: Recheck loop condition
       evidence:
       - source: benefits/queue-code
         quote: while (!data->waitingRequests_.empty())
