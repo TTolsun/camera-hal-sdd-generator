@@ -128,6 +128,27 @@ def compact_tables(document: str) -> str:
     return ''.join(chunks)
 
 
+def promote_coverage(document: str) -> str:
+    """Move the generated question guide after the lead, before page terms.
+
+    Leave examples and custom notes intact. This is presentation only;
+    manuscript review records and the guide's contents stay unchanged.
+    """
+    pattern = (r'<pre\b[^>]*>.*?</pre>|<code\b[^>]*>.*?</code>|'
+               r'(<details class="note">\s*<summary>설계 질문과 검증 범위</summary>\s*'
+               r'<p>질문별 답변과 근거 연결을 검사했습니다\. 의미와 실행 결과는 사람 검토가 필요합니다\.</p>\s*'
+               r'<ul class="coverage-links">.*?</ul>\s*'
+               r'<p><span>확인 범위</span>: <span>코드 근거와 설명 연결</span></p>\s*</details>)')
+    matches = [match for match in re.finditer(pattern, document, re.S) if match[1]]
+    if len(matches) != 1:
+        return document
+    guide = matches[0]
+    remaining = document[:guide.start()] + document[guide.end():]
+    lead = re.match(r'\s*<p>.*?</p>', remaining, re.S)
+    position = lead.end() if lead else 0
+    return remaining[:position] + guide[0] + remaining[position:]
+
+
 def class_targets(indexes: dict[str, str]) -> dict[tuple[str, ...], str]:
     """Only an unambiguous, byte-equal index row can replace a local reference."""
     targets = {}
