@@ -45,10 +45,17 @@ def test_visual_provenance_and_question_remain_in_collapsed_evidence(tmp_cfg, vi
     assert '```mermaid' in visible and 'Mermaid 원문' in visible
 
 
-def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_cfg, visual):
+@pytest.mark.parametrize('explicit_placement', [False, True])
+def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_cfg, visual, explicit_placement):
     import json
     section, model, graph, write = visual
     tmp_cfg.raw.setdefault('site', {})['overview_visual'] = dict(section='device', visual='stop-flow')
+    if explicit_placement:
+        intro = tmp_cfg.root/'intro.md'
+        intro.write_text('# 안내\n\n소개입니다.\n\n## 어디서 시작할까요?\n\n'
+                         '[장치 읽기](device.md)\n\n<!-- sdd:overview-visual -->\n\n'
+                         '## 자세히 읽기\n\n추가 안내입니다.\n', encoding='utf-8')
+        tmp_cfg.raw['site']['intro'] = str(intro)
     Generator(tmp_cfg, model, None).run()
     site = export_site(tmp_cfg)
     before = (site/'site-manifest.json').read_bytes()
@@ -57,9 +64,20 @@ def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_
     assert 'href="index.stop-flow.mmd"' in index
     assert 'device.html#source-' in index and 'href="#source-' not in index
     assert (site/'index.stop-flow.mmd').read_bytes() == (site/'device.stop-flow.mmd').read_bytes()
+    if explicit_placement:
+        article = index.split('<article>', 1)[1].split('</article>', 1)[0]
+        assert article.index('어디서 시작할까요?') < article.index('종료의 분기') < article.index('자세히 읽기')
+        assert '<!-- sdd:overview-visual -->' not in article
     export_site(tmp_cfg)
     assert (site/'site-manifest.json').read_bytes() == before
     assert json.loads(before)['outputs']['index.stop-flow.mmd']
+    if explicit_placement:
+        original_intro = intro.read_text(encoding='utf-8')
+        intro.write_text(original_intro + '\n<!-- sdd:overview-visual -->\n', encoding='utf-8')
+        with pytest.raises(ValueError, match='must be unique'):
+            export_site(tmp_cfg)
+        assert (site/'site-manifest.json').read_bytes() == before
+        intro.write_text(original_intro, encoding='utf-8')
     tmp_cfg.raw['visuals']['on_stale'] = 'omit'
     graph['nodes'][0]['evidence'][0]['sha256'] = '0'*64
     write()
