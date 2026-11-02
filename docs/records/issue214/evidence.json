@@ -4,27 +4,29 @@
     "before-wall": {
       "status": "passed",
       "error": null,
-      "seconds": 141.19990990002407,
+      "seconds": 84.97784870001487,
       "profiled": false,
       "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
       "platform": "Windows-11-10.0.26300-SP0",
       "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
-      "model_calls": 0
+      "model_calls": 0,
+      "mode": "normal-enforcement"
     },
     "before-profile": {
       "status": "passed",
       "error": null,
-      "seconds": 453.46517510002013,
+      "seconds": 307.356486100005,
       "profiled": true,
       "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
       "platform": "Windows-11-10.0.26300-SP0",
       "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
-      "model_calls": 0
+      "model_calls": 0,
+      "mode": "normal-enforcement"
     },
     "optimized-historical-wall": {
       "status": "passed",
       "error": null,
-      "seconds": 18.705557700013742,
+      "seconds": 11.221238399972208,
       "profiled": false,
       "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
       "platform": "Windows-11-10.0.26300-SP0",
@@ -35,7 +37,7 @@
     "optimized-historical-profile": {
       "status": "passed",
       "error": null,
-      "seconds": 35.09618390002288,
+      "seconds": 22.969458899926394,
       "profiled": true,
       "python": "3.14.7 (main, Sep  1 2026, 14:17:30) [MSC v.1944 64 bit (AMD64)]",
       "platform": "Windows-11-10.0.26300-SP0",
@@ -61,48 +63,48 @@
         "function": "enforce",
         "calls": 1,
         "primitive_calls": 1,
-        "own_seconds": 0.014897100000000002,
-        "cumulative_seconds": 453.46384240000003
+        "own_seconds": 0.010974600000000001,
+        "cumulative_seconds": 307.3556414
       },
       {
         "file": "consistency.py",
         "function": "request",
         "calls": 15,
         "primitive_calls": 15,
-        "own_seconds": 0.5773122,
-        "cumulative_seconds": 444.39852540000004
+        "own_seconds": 0.39539850000000004,
+        "cumulative_seconds": 301.31416640000003
       },
       {
         "file": "__init__.py",
         "function": "safe_load",
         "calls": 863,
         "primitive_calls": 863,
-        "own_seconds": 0.005095700000000001,
-        "cumulative_seconds": 369.8699436
+        "own_seconds": 0.0036506000000000004,
+        "cumulative_seconds": 250.44049320000002
       },
       {
         "file": "config.py",
         "function": "sections",
         "calls": 183,
         "primitive_calls": 183,
-        "own_seconds": 0.015788,
-        "cumulative_seconds": 351.56013540000004
+        "own_seconds": 0.011662700000000002,
+        "cumulative_seconds": 237.9638906
       },
       {
         "file": "next_steps.py",
         "function": "checked_footer",
         "calls": 126,
         "primitive_calls": 126,
-        "own_seconds": 0.0219401,
-        "cumulative_seconds": 256.3422847
+        "own_seconds": 0.015956400000000003,
+        "cumulative_seconds": 174.59138810000002
       },
       {
         "file": "next_steps.py",
         "function": "_next",
         "calls": 126,
         "primitive_calls": 126,
-        "own_seconds": 0.1391805,
-        "cumulative_seconds": 242.33512480000002
+        "own_seconds": 0.1095338,
+        "cumulative_seconds": 164.85874180000002
       }
     ],
     "optimized-historical-profile": [
@@ -111,64 +113,64 @@
         "function": "enforce",
         "calls": 1,
         "primitive_calls": 1,
-        "own_seconds": 0.007629500000000001,
-        "cumulative_seconds": 33.373737500000004
+        "own_seconds": 0.005938000000000001,
+        "cumulative_seconds": 21.937095600000003
       },
       {
         "file": "consistency.py",
         "function": "request",
         "calls": 15,
         "primitive_calls": 15,
-        "own_seconds": 0.0068693,
-        "cumulative_seconds": 24.2376611
+        "own_seconds": 0.004979600000000001,
+        "cumulative_seconds": 15.1346898
       },
       {
         "file": "consistency.py",
         "function": "_request",
         "calls": 5,
         "primitive_calls": 5,
-        "own_seconds": 0.17134000000000002,
-        "cumulative_seconds": 21.417684400000002
+        "own_seconds": 0.1172557,
+        "cumulative_seconds": 13.7160712
       },
       {
         "file": "config.py",
         "function": "sections",
         "calls": 35,
         "primitive_calls": 35,
-        "own_seconds": 0.0005949,
-        "cumulative_seconds": 3.123034
+        "own_seconds": 0.0004359,
+        "cumulative_seconds": 1.6015442000000002
       },
       {
         "file": "__init__.py",
         "function": "safe_load",
         "calls": 21,
         "primitive_calls": 21,
-        "own_seconds": 0.0001121,
-        "cumulative_seconds": 3.1178146
+        "own_seconds": 0.0001663,
+        "cumulative_seconds": 1.5812816
       },
       {
         "file": "config.py",
         "function": "_sections",
         "calls": 1,
         "primitive_calls": 1,
-        "own_seconds": 0.000126,
-        "cumulative_seconds": 2.3031516
+        "own_seconds": 5.910000000000001e-05,
+        "cumulative_seconds": 1.0918355
       },
       {
         "file": "next_steps.py",
         "function": "checked_footer",
         "calls": 42,
         "primitive_calls": 42,
-        "own_seconds": 0.0050359,
-        "cumulative_seconds": 1.4663890000000002
+        "own_seconds": 0.0039196000000000005,
+        "cumulative_seconds": 0.9393739000000001
       },
       {
         "file": "next_steps.py",
         "function": "_next",
         "calls": 42,
         "primitive_calls": 42,
-        "own_seconds": 0.0005217,
-        "cumulative_seconds": 0.0893621
+        "own_seconds": 0.00035410000000000004,
+        "cumulative_seconds": 0.0568735
       }
     ]
   },
