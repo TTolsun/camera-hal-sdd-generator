@@ -90,6 +90,18 @@ design_topics:
     file: src/apps/cam/camera_session.cpp
     start: int CameraSession::queueRequest(Request *request)
     end: void CameraSession::requestComplete(Request *request)
+  - id: frame-consumer
+    file: src/apps/cam/frame_sink.cpp
+    start: \class FrameSink
+    end: '* processing has been queued'
+  - id: sink-release-signal
+    file: src/apps/cam/camera_session.cpp
+    start: sink_->requestProcessed.connect(this, &CameraSession::sinkRelease);
+    end: return startCapture();
+  - id: sink-release-handler
+    file: src/apps/cam/camera_session.cpp
+    start: void CameraSession::sinkRelease(Request *request)
+    end: "\n}"
   answer_contract:
     basis: implementation
     required_terms:
@@ -119,6 +131,9 @@ design_topics:
     sources:
     - callback-and-processing
     - submission-limit
+    - frame-consumer
+    - sink-release-signal
+    - sink-release-handler
     max_statements: 1
     prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자, enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지
       마세요.
@@ -129,10 +144,10 @@ design_topics:
         message: 조건은 재제출 시도 여부·시점을 정하며 성공 여부를 정한다는 요약은 쓰지 마세요.
     subquestions:
     - 처리한 프레임 개수(captureCount_)를 설정된 한도와 비교한다는 관계를 쉬운 한국어로 명시하세요. 한도가 설정되어 있고 이 처리 개수가 이미 도달했으면 캡처 종료 신호를 다시 내지 않고 반환합니다.
-      그 외에는 선택한 출력 처리기(싱크)의 처리만 싱크가 있을 때 수행하며, 프레임 정보 출력과 처리 개수 증가는 싱크 유무와 관계없이 진행됩니다. 증가한 처리 개수가 설정 한도에 도달하면 캡처 종료 신호 captureDone을
+      싱크는 완료된 프레임을 소비하는 선택적 출력 처리기라는 역할을 짧게 정의하세요. 그 외에는 싱크의 처리만 싱크가 있을 때 수행하며, 프레임 정보 출력과 처리 개수 증가는 싱크 유무와 관계없이 진행됩니다. 증가한 처리 개수가 설정 한도에 도달하면 캡처 종료 신호 captureDone을
       내고 반환한다고 이름과 역할을 한 번 밝히세요. 요청 완료 알림 requestCompleted와 다른 신호입니다. CameraSession::processRequest 이름은 보조로 한 번만 쓰고, 세 짧은
       문장 380자 이내로 설명하세요.
-    - 처리 종료 조건이 아니면(한도 미설정 포함) 싱크가 요청을 보유할 때 재제출을 나중 완료 처리로 미루고, 보유하지 않으면 버퍼를 유지해 요청을 재사용한 뒤 재제출을 시도한다고 설명하세요. CameraSession::queueRequest는
+    - 처리 종료 조건이 아니면(한도 미설정 포함) 싱크가 요청을 보유할 때 재제출을 미룹니다. 싱크가 처리를 마쳐 requestProcessed를 내면 연결된 CameraSession::sinkRelease가 버퍼를 유지해 요청을 재사용하고 재제출을 시도하는 주체임을 명시하세요. 보유하지 않으면 processRequest에서 재사용 후 재제출을 시도합니다. CameraSession::queueRequest는
       처리 개수가 아니라 제출 개수(queueCount_)를 같은 설정 한도와 비교하며, 이미 이 제출 개수가 한도에 도달했으면 실제 큐잉 없이 반환한다고 명시하세요. 처리 개수와 제출 개수는 서로 다른 카운터라는
       관계를 흐리지 마세요. 조건은 시도 여부·시점을 정할 뿐 성공을 보장하지 않으므로 별도 성공 여부 문장을 추가하지 않습니다. 실패 뒤 재시도라는 뜻도 쓰지 마세요. 세 짧은 문장 340자 이내입니다.
   - id: observed
