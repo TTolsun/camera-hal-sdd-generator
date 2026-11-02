@@ -132,7 +132,9 @@ design_topics:
     - callback-and-processing
     max_statements: 1
     prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
-      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요.
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력
+      싱크 미요청 전제는 invocation-scope에서 한 번만 설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지
+      마세요.
     answer_contract:
       basis: implementation
     role: summary
@@ -146,6 +148,8 @@ design_topics:
     max_statements: 1
     answer_contract:
       basis: measurement
+    prompt: ' 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만 설명하므로
+      다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.'
   - id: processing
     question: CameraSession::processRequest는 진입할 때 처리 수 captureCount_와 설정 한도 captureLimit_를
       먼저 비교합니다. 한도가 설정되고 이미 도달했으면 종료 신호를 다시 내지 않고 반환한다는 조건만 짧게 설명하세요. 증가 동작은 다음 항목에서
@@ -154,7 +158,8 @@ design_topics:
     - callback-and-processing
     max_statements: 1
     prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
-      함수 이름만 쓰세요.
+      함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
+      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.
     answer_contract:
       basis: implementation
       reject_patterns:
@@ -164,14 +169,14 @@ design_topics:
       - - captureCount_
       - - captureLimit_
   - id: frame-work
-    question: 진입 검사에서 반환하지 않은 이 기록의 출력 싱크 미요청 경로에서 프레임 정보를 출력하고 처리 수를 늘린다고 설명하세요.
-      그 뒤 설정 한도에 도달하면 captureDone을 내고 processRequest가 반환하며 요청 완료 신호와 다르다고 짧게 쓰세요.
-      출력 싱크 옵션을 선택한 다른 경로는 확대 설명하지 마세요.
+    question: 진입 검사를 통과하면 프레임 정보를 출력하고 captureCount_를 늘립니다. 증가 후 설정 한도에 도달하면 captureDone을
+      내고 processRequest를 반환한다는 처리만 간결하게 설명하세요.
     sources:
     - callback-and-processing
     max_statements: 1
     prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
-      함수 이름만 쓰세요.
+      함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
+      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.
     answer_contract:
       basis: implementation
       reject_patterns:
@@ -180,29 +185,30 @@ design_topics:
       required_terms:
       - - captureDone
   - id: reuse-request
-    question: 프레임 처리 후 종료 조건에 해당하지 않으면 이 출력 싱크 미요청 경로는 버퍼를 유지해 요청을 재사용하고 CameraSession::queueRequest
-      도우미를 호출한다고 짧게 설명하세요. 도우미 호출은 실제 제출의 보장이 아니며 제출 조건은 다음 항목에서 설명합니다. 소스의 재사용 호출
-      이름을 간결히 적어도 됩니다. 뒤의 제출 한도와 실제 제출 여부는 다음 항목에서 구분합니다.
+    question: 처리를 계속할 요청은 Request::ReuseBuffers로 버퍼를 유지해 재사용하고 CameraSession::queueRequest
+      도우미를 호출한다는 동작만 한 문장으로 설명하세요.
     sources:
     - callback-and-processing
     - reuse-call
     max_statements: 1
     prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
-      함수 이름만 쓰세요.
+      함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
+      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.
     answer_contract:
       basis: implementation
       reject_patterns:
       - pattern: 확인되지\s*않|미확인
         message: 선택된 출력 싱크 미요청 경로의 직접 재사용 동작을 설명하세요.
   - id: submission-limit
-    question: CameraSession::queueRequest 도우미는 처리 개수와 다른 제출 개수 queueCount_를 같은 설정
-      한도와 비교합니다. 한도가 설정되고 제출 개수가 이미 도달했으면 실제 제출 없이 반환하며, 그 밖에는 카메라에 제출을 시도한다는 관계만
-      짧게 설명하세요. 재사용이나 처리 종료 조건은 앞 항목이 설명합니다.
+    question: queueCount_는 카메라 제출을 시도하기 전에 증가하는 별도 카운터이며 성공한 접수 개수가 아님을 설명하세요. 한도가
+      설정되고 이 카운터가 이미 도달하면 CameraSession::queueRequest가 실제 제출 없이 반환하고, 그 밖에는 카운터를 늘린
+      뒤 제출을 시도한다는 관계를 두 짧은 문장으로 쓰세요.
     sources:
     - submission-limit
     max_statements: 1
     prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
-      함수 이름만 쓰세요.
+      함수 이름만 쓰세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만
+      설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.
     answer_contract:
       basis: implementation
       reject_patterns:
@@ -220,7 +226,9 @@ design_topics:
     - callback-and-processing
     max_statements: 1
     prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
-      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요.
+      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요. 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력
+      싱크 미요청 전제는 invocation-scope에서 한 번만 설명하므로 다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지
+      마세요.
     answer_contract:
       basis: measurement
 - id: reproduce

@@ -51,7 +51,10 @@ prompt: '선택한 Virtual2 NV12 가상 캡처의 핵심 원리를 11개 노드�
   오류·모든 버퍼 완료·미완료 버퍼 남음처럼 핵심 조건·결과만 짧게 쓰세요. 시스템이 조건 참/거짓 표시를 붙입니다. 간선에 노드의 전체 행동을
   반복하지 마세요. CPU NV12 노드의 영어는 패턴을 NV12로 변환하고 매핑 버퍼에 쓰기를 시도한다는 두 동작을 문법적으로 명확히 표현하세요.
   tries pattern to NV12 같은 축약은 쓰지 마세요. 동작 의미를 잃지 않는 범위에서 간결하게 쓰세요. 무조건 연결 간선은 두세 단어의
-  짧은 연결어만 씁니다. 분기 간선은 짧은 조건·결과만 쓰고 노드의 행동 전체를 반복하지 마세요.'
+  짧은 연결어만 씁니다. 분기 간선은 짧은 조건·결과만 쓰고 노드의 행동 전체를 반복하지 마세요. 마지막 보완: 준비부터 CPU 변환까지의 노드
+  중 하나에 Virtual2의 lines 패턴 설정이 입력이며 CPU가 이 패턴을 NV12로 변환한다는 관계를 반드시 명시하세요. n8 requestCompleted의
+  화면 라벨에 requestCompleted 신호와 cam 통지를 표시하세요. 긴 식별자를 보존하기 위해 이 노드는 72자 이내를 허용합니다. n0은
+  기존 cam·virtual 할당 주체를 유지하고 n4 변환 노드에 lines 패턴 입력을 넣을 수 있습니다. 기존 분기와 노드 수를 유지합니다.'
 sources:
 - virtual-buffer-allocation
 - virtual-queue
@@ -88,6 +91,8 @@ answer_contract:
   - - Virtual2
   - - NV12
   - - CPU
+  - - lines
+  - - requestCompleted
 answer_contract_en:
   basis: implementation
   reject_patterns:
@@ -110,5 +115,7 @@ answer_contract_en:
   - - Virtual2
   - - NV12
   - - CPU
+  - - lines
+  - - requestCompleted
 require_connected: true
 max_edge_label_chars: 40
