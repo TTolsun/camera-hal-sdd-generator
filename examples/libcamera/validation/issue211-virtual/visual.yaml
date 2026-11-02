@@ -30,7 +30,10 @@ prompt: 선택한 Virtual2 NV12 가상 캡처의 핵심 원리를 11개 노드�
   반환 0 설명은 생략합니다. 사전 준비에서 요청 제출, 요청 제출에서 가상 전달, 가상 전달에서 매핑, 매핑에서 CPU 변환, CPU 변환에서 결과 판정으로 가는 선은 핵심 경로 요약이므로 condition_ref
   always를 사용합니다. 준비 여부나 스트림 찾기 assert를 별도 분기로 그리지 마세요. 실제 두 결정에만 source-bound condition_ref를 사용하세요. 라벨에 = ! < > 기호를 직접 쓰지
   않습니다. Edge 인용은 양 끝의 symbol을 모두 포함해야 하므로 함수 선언이 다른 구절에 있으면 선언 구절도 함께 인용하세요. 예를 들어 virtual-queue:0에 queueRequestDevice 선언이
-  있습니다. 영어 once/only once를 쓰지 마세요.
+  있습니다. 영어 once/only once를 쓰지 마세요. 최신 독립 Terra 지적 두 곳만 바로잡습니다. DMA-BUF 준비의 주체는 cam과 virtual 파이프라인이며 Virtual2 설정 자체가 할당하는 행위자로
+  쓰이지 않게 하세요. 첫 노드는 cam이 virtual 파이프라인을 통해 버퍼를 확보함을 한영 모두 짧게 명시합니다. MappedFrameBuffer 노드는 쓰기 동기화가 끝난 뒤 매핑한다는 의미가 아니라 CPU 쓰기
+  동기화 범위 안의 쓰기 매핑임을 표현하세요. 이어지는 CPU 변환도 같은 쓰기 동기화 범위 안에서 이뤄짐을 그 연결선에서 짧게 유지합니다. sync, then 또는 동기화 후 같은 완료 선행 표현을 쓰지 마세요. 나머지
+  올바른 11개 노드·11개 연결선과 두 결정의 결과·인용·순서 통지 조건은 보존합니다.
 sources:
 - virtual-buffer-allocation
 - virtual-queue
@@ -61,6 +64,8 @@ answer_contract:
     message: 화면 라벨은 짧은 행동·판정으로 쓰고 함수 식별자는 본문·근거에 남기세요. 내부 symbol·quote_ids는 보존하세요.
   - pattern: (?i)returns\s+0|0\s*반환|큐\s*처리|\bdrain\b
     message: 핵심 독자 경로에 필요하지 않은 반환값·후속 큐 설명은 본문과 근거로 옮기세요.
+  - pattern: (?i)sync,\s*then|동기화 후
+    message: CPU 쓰기 동기화가 매핑·변환 접근을 감싸는 범위임을 표시하세요.
   required_terms:
   - - Virtual2
   - - NV12
@@ -76,6 +81,8 @@ answer_contract_en:
     message: 화면 라벨은 짧은 행동·판정으로 쓰고 함수 식별자는 본문·근거에 남기세요. 내부 symbol·quote_ids는 보존하세요.
   - pattern: (?i)returns\s+0|0\s*반환|큐\s*처리|\bdrain\b
     message: 핵심 독자 경로에 필요하지 않은 반환값·후속 큐 설명은 본문과 근거로 옮기세요.
+  - pattern: (?i)sync,\s*then|동기화 후
+    message: CPU 쓰기 동기화가 매핑·변환 접근을 감싸는 범위임을 표시하세요.
   required_terms:
   - - Virtual2
   - - NV12
