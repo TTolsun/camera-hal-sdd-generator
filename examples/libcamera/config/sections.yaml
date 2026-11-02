@@ -6302,6 +6302,90 @@ sections:
       같은 원고 상태 설명을 답변마다 되풀이하지 마세요. 실제 실행·측정 결과나 새 중단·계측 기법을 주장하지 마세요. 재호출하지 않는다는 작성
       제약을 본문에서 반복하지 말고 관찰 대상과 분기·반환값에 집중하세요. 질문에 정한 문장 수를 지키며 다른 질문의 결과·확인 절차를 다시
       설명하지 마세요. description과 contract 부분은 그 역할대로 소스의 결과와 의무만 설명하세요.
+  - id: submission-checks
+    title: 요청 제출 오류 코드와 검사 순서
+    question: Camera::queueRequest()가 요청을 거부하는 조건을 반환값과 실제 검사 순서로 구분하세요.
+    covers:
+    - submission-checks
+    design_prompt: focused
+    sources:
+    - id: queue
+      file: src/libcamera/camera.cpp
+      start: \brief Queue a request to the camera
+      end: \brief Start capture from camera
+    - id: access
+      file: src/libcamera/camera.cpp
+      start: int Camera::Private::isAccessAllowed(State state, bool allowDisconnected,
+      end: int Camera::Private::isAccessAllowed(State low, State high,
+    parts:
+    - id: access
+      question: queueRequest의 첫 검사는 isAccessAllowed(CameraRunning)입니다. 연결 해제와 Running
+        상태가 아닌 경우를 -ENODEV 및 -EACCES에 연결하고, 음수이면 요청 내용 검사 전에 그대로 반환한다는 순서를 세 문장 이내로
+        설명하세요. 이 항목은 조사 명령이나 실행 결과가 아니라 구현 설명입니다.
+      sources:
+      - queue
+      - access
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - isAccessAllowed
+        - - CameraRunning
+        - - -ENODEV
+        - - -EACCES
+    - id: request
+      question: 접근 검사를 통과한 뒤 요청 생성 카메라, RequestPending 상태, controls().infoMap() 비교를
+        순서대로 설명하세요. 생성 카메라 불일치는 -EXDEV, 나머지 두 실패는 -EINVAL이며 controls 목록을 다른 목록으로 덮어쓰지
+        못하게 검사한다는 의미를 보존하세요. 네 문장 이내로 답하세요.
+      sources:
+      - queue
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - -EXDEV
+        - - -EINVAL
+        - - RequestPending
+        - - infoMap
+    - id: buffers
+      question: 버퍼 맵이 비어 있으면 -EINVAL을 반환하고, 그 다음 각 버퍼의 스트림이 activeStreams_에 있는지 검사하여
+        없는 스트림에도 -EINVAL을 반환함을 두 문장으로 설명하세요. 같은 오류 코드가 서로 다른 실패 원인을 뜻하므로 검사 지점을 함께 구분하세요.
+      sources:
+      - queue
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - 버퍼
+        - - activeStreams_
+        - - -EINVAL
+    - id: handoff
+      question: 모든 앞선 검사를 통과한 경우 patchControlList로 AeEnable을 전처리한 뒤 PipelineHandler::queueRequest를
+        ConnectionTypeQueued로 예약하고 0을 반환하는 구현을 두 문장 이내로 설명하세요. 0이 요청 완료를 뜻한다고 쓰지 마세요.
+        완료·준비 대기 상세는 다음 진단 절에서 다루므로 반복하지 마세요.
+      sources:
+      - queue
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - patchControlList
+        - - AeEnable
+        - - ConnectionTypeQueued
+        - - '0'
+    - id: allocation
+      question: queueRequest API 주석의 -ENOMEM 반환 설명과 제공된 queueRequest 구현의 명시적 반환 분기를
+        구분하세요. 주석에는 메모리 할당 실패가 나열되지만 이 발췌 함수 본문에 -ENOMEM을 직접 반환하는 분기가 없으므로 어느 할당이 실패했다고
+        단정하지 마세요. 두 문장 이내로 설명하세요.
+      sources:
+      - queue
+      max_statements: 1
+      answer_contract:
+        basis: description
+        required_terms:
+        - - -ENOMEM
+        - - 주석
+        - - 구현
   - id: diagnosis
     title: 실패 위치별 확인 순서
     question: 제출 실패와 완료 누락을 조사하는 개발자에게 순서가 있는 짧은 문단으로 설명하세요. 각 단계에 실제 파일·함수와 읽을 값,
@@ -6483,6 +6567,9 @@ sections:
     question: 구성 실패를 상태 검사·구성 검증·장치 구성·스트림 연결 중 어디로 좁히며 어떤 값을 관찰합니까?
     aspects:
     - failure
+  - id: submission-checks
+    question: 요청 제출 실패의 반환값을 어느 입력과 검사 순서에 연결합니까?
+    aspects: [failure]
   reader_profile: vendor
   design_generation: llm
   design_grounding: true

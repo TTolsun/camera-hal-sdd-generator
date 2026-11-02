@@ -3248,111 +3248,106 @@ sections:
   request-diagnosis:
   - id: queue-gates
     topic: diagnosis
-    kind: decision
-    title: 요청이 대기하거나 장치로 가는 조건
-    question: 준비 대기와 장치 큐 한도를 구분하세요. 준비 실패와 장치 제출 실패는 취소 경로로 이어집니다.
+    kind: flow
+    title: 선두 요청을 전달하거나 반복을 멈추는 조건
+    question: waitingRequests_ 순회에서 준비 상태와 queuedRequests_ 소프트웨어 큐 크기는 어떻게 전달을 제한합니까?
     nodes:
-    - id: wait
-      label: waitingRequests_
-      label_en: waitingRequests_
+    - id: waiting
+      label: waitingRequests_에 항목이 있는가?
+      label_en: Does waitingRequests_ contain an item?
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: data->waitingRequests_.push(request);
-    - id: ready
-      label: 선두 요청이 prepared_인가?
-      label_en: Is the front request prepared?
-      evidence:
-      - source: diagnosis/device-queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: if (!request->_d()->prepared_)
+        quote: while (!data->waitingRequests_.empty())
       shape: decision
     - id: limit
-      label: 장치 큐 한도에 도달했는가?
-      label_en: Device queue at its limit?
+      label: queuedRequests_ 크기가 maxQueuedRequestsDevice_인가?
+      label_en: Does queuedRequests_ size equal maxQueuedRequestsDevice_?
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
         quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
       shape: decision
-    - id: hold
-      label: 대기열에 유지
-      label_en: Stay in waiting queue
+    - id: ready
+      label: 선두 요청의 prepared_가 참인가?
+      label_en: Is the front request prepared_?
+      evidence:
+      - source: diagnosis/prepared-branch
+        sha256: f655f79ce0ac9e9361d1759b2974e6f382b7fe1e9e3aa35b51952572af8d5a6f
+        quote: if (!request->_d()->prepared_)
+      shape: decision
+    - id: forward
+      label: 먼저 pop(), 이어 doQueueRequest(request)
+      label_en: pop() first, then doQueueRequest(request)
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "data->waitingRequests_.pop();\n\t\tdoQueueRequest(request);"
+    - id: end
+      label: 이 호출의 전달 반복 종료
+      label_en: End this invocation's forwarding loop
+      evidence:
+      - source: diagnosis/prepared-branch
+        sha256: f655f79ce0ac9e9361d1759b2974e6f382b7fe1e9e3aa35b51952572af8d5a6f
         quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
-    - id: device
-      label: queueRequestDevice()
-      label_en: queueRequestDevice()
-      evidence:
-      - source: diagnosis/device-queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: int ret = queueRequestDevice(camera, request);
-    - id: cancel
-      label: 취소·완료 경로
-      label_en: Cancellation and completion
-      evidence:
-      - source: diagnosis/device-queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: fails in queuing the request to the hardware the request is cancelled.
     edges:
-    - from: wait
+    - from: waiting
       to: limit
-      label: doQueueRequests()에서 확인
-      label_en: Check in doQueueRequests()
+      label: 예
+      label_en: 'Yes'
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: while (!data->waitingRequests_.empty()) {
+        quote: while (!data->waitingRequests_.empty())
+    - from: waiting
+      to: end
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: while (!data->waitingRequests_.empty())
     - from: limit
-      to: hold
-      label: '예: 새 요청을 전달하지 않음'
-      label_en: 'Yes: stop forwarding'
+      to: end
+      label: '예: break'
+      label_en: 'Yes: break'
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)\n\t\t\tbreak;"
+        quote: "if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)\n\t\t\t\
+          break;"
     - from: limit
       to: ready
-      label: '아니오: 선두 요청 확인'
-      label_en: 'No: inspect front request'
+      label: '아니요: 선두 확인'
+      label_en: 'No: inspect front'
       evidence:
-      - source: diagnosis/device-queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: diagnosis/prepared-branch
+        sha256: f655f79ce0ac9e9361d1759b2974e6f382b7fe1e9e3aa35b51952572af8d5a6f
         quote: Request *request = data->waitingRequests_.front();
     - from: ready
-      to: hold
-      label: '아니오: 준비를 기다림'
-      label_en: 'No: wait for preparation'
+      to: end
+      label: '아니요: break'
+      label_en: 'No: break'
       evidence:
-      - source: diagnosis/device-queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+      - source: diagnosis/prepared-branch
+        sha256: f655f79ce0ac9e9361d1759b2974e6f382b7fe1e9e3aa35b51952572af8d5a6f
         quote: "if (!request->_d()->prepared_)\n\t\t\tbreak;"
     - from: ready
-      to: device
-      label: '예: 준비 실패로 취소되지 않은 요청'
-      label_en: 'Yes: unless cancelled during preparation'
+      to: forward
+      label: 예
+      label_en: 'Yes'
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}\n\n\tint ret = queueRequestDevice(camera, request);"
-    - from: device
-      to: cancel
-      label: 장치 제출 실패
-      label_en: Device queue failure
+        quote: "data->waitingRequests_.pop();\n\t\tdoQueueRequest(request);"
+    - from: forward
+      to: waiting
+      label: 반복 조건 재검사
+      label_en: Recheck loop condition
       evidence:
       - source: diagnosis/device-queue
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (ret)\n\t\tcancelRequest(request);"
-    - from: ready
-      to: cancel
-      label: 준비 중 취소된 요청은 장치 제출 생략
-      label_en: Skip device for cancelled request
-      evidence:
-      - source: diagnosis/device-queue
-        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}"
+        quote: "doQueueRequest(request);\n\t}"
   - id: configure-failures
     topic: configuration-failure
     kind: decision
@@ -3397,12 +3392,27 @@ sections:
         sha256: 5892a108abafcaf7266fb5798b70facc498e62efce52f04e773156c01471b509
         quote: ret = d->pipe_->invokeMethod(&PipelineHandler::configure,
     - id: ret
-      label: 장치 반환값을 확인
-      label_en: Inspect device return value
+      label: ret이 0이 아닌가?
+      label_en: Is ret nonzero?
       evidence:
-      - source: configuration-failure/configure
-        sha256: 5892a108abafcaf7266fb5798b70facc498e62efce52f04e773156c01471b509
-        quote: "ConnectionTypeBlocking, this, config);\n\tif (ret)\n\t\treturn ret;"
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: "if (ret)\n\t\treturn ret;"
+      shape: decision
+    - id: device-error
+      label: 비영 ret 그대로 반환
+      label_en: Return nonzero ret unchanged
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: "if (ret)\n\t\treturn ret;"
+    - id: streams
+      label: '다음: 스트림 연결 검사'
+      label_en: 'Next: check stream associations'
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: Stream *stream = cfg.stream();
     edges:
     - from: access
       to: accesserror
@@ -3438,12 +3448,816 @@ sections:
         quote: ret = d->pipe_->invokeMethod(&PipelineHandler::configure,
     - from: device
       to: ret
-      label: 0이 아니면 즉시 반환
-      label_en: Return immediately when nonzero
+      label: 반환값 검사
+      label_en: Check return value
       evidence:
       - source: configuration-failure/configure
         sha256: 5892a108abafcaf7266fb5798b70facc498e62efce52f04e773156c01471b509
         quote: "ConnectionTypeBlocking, this, config);\n\tif (ret)\n\t\treturn ret;"
+    - from: ret
+      to: device-error
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: "if (ret)\n\t\treturn ret;"
+    - from: ret
+      to: streams
+      label: '아니요: 0'
+      label_en: 'No: zero'
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: "d->activeStreams_.clear();\n\tfor (const StreamConfiguration &cfg :\
+          \ *config)"
+  - id: submission-checks
+    topic: submission-checks
+    kind: decision
+    title: 요청 제출 검사 순서
+    question: 반환 오류를 실제 검사 조건과 연결합니다. 성공 반환 뒤의 준비와 완료는 다음 절에서 확인합니다.
+    nodes:
+    - id: access
+      label: '접근 검사: CameraRunning'
+      label_en: 'Access check: CameraRunning'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: int ret = d->isAccessAllowed(Private::CameraRunning);
+      shape: decision
+    - id: access-error
+      label: -ENODEV
+      label_en: -ENODEV
+      evidence:
+      - source: submission-checks/access
+        sha256: abfbe004126b5eff84d798a97fdcf9b87428c66c671bb09b1b581306d9e8427c
+        quote: "if (!allowDisconnected && disconnected_)\n\t\treturn -ENODEV;"
+    - id: owner
+      label: 생성한 카메라와 같은가?
+      label_en: Same camera that created the request?
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: if (request->_d()->camera() != this)
+      shape: decision
+    - id: other-camera
+      label: -EXDEV
+      label_en: -EXDEV
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: return -EXDEV;
+    - id: pending
+      label: RequestPending인가?
+      label_en: Is status RequestPending?
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: if (request->status() != Request::RequestPending)
+      shape: decision
+    - id: controls
+      label: 원래 controls 정보 맵인가?
+      label_en: Original controls info map?
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: if (request->controls().infoMap() != &controls())
+      shape: decision
+    - id: buffers
+      label: 버퍼가 하나 이상 있는가?
+      label_en: At least one buffer?
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: if (request->buffers().empty())
+      shape: decision
+    - id: streams
+      label: 모든 스트림이 활성 상태인가?
+      label_en: Every stream active?
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: if (d->activeStreams_.find(stream) == d->activeStreams_.end())
+      shape: decision
+    - id: invalid
+      label: '-EINVAL: 실패 검사 구분'
+      label_en: '-EINVAL: identify the failed check'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: return -EINVAL;
+    - id: queued
+      label: AeEnable 전처리 후 queued 호출
+      label_en: Preprocess AeEnable; queue the call
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: patchControlList(request->controls());
+    - id: success
+      label: 0 반환
+      label_en: Return 0
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: return 0;
+    - id: state-error
+      label: -EACCES
+      label_en: -EACCES
+      evidence:
+      - source: submission-checks/access
+        sha256: abfbe004126b5eff84d798a97fdcf9b87428c66c671bb09b1b581306d9e8427c
+        quote: return -EACCES;
+    edges:
+    - from: access
+      to: access-error
+      label: 연결 해제
+      label_en: Disconnected
+      evidence:
+      - source: submission-checks/access
+        sha256: abfbe004126b5eff84d798a97fdcf9b87428c66c671bb09b1b581306d9e8427c
+        quote: "if (!allowDisconnected && disconnected_)\n\t\treturn -ENODEV;"
+    - from: access
+      to: owner
+      label: 접근 검사 통과
+      label_en: Access check passes
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: /* Requests can only be queued to the camera that created them. */
+    - from: owner
+      to: other-camera
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "if (request->_d()->camera() != this) {\n\t\tLOG(Camera, Error) << \"\
+          Request was not created by this camera\";\n\t\treturn -EXDEV;\n\t}"
+    - from: owner
+      to: pending
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: if (request->status() != Request::RequestPending)
+    - from: pending
+      to: invalid
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "if (request->status() != Request::RequestPending) {\n\t\tLOG(Camera,\
+          \ Error) << request->toString() << \" is not valid\";\n\t\treturn -EINVAL;\n\
+          \t}"
+    - from: pending
+      to: controls
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: /* Make sure the Request has a valid control list. */
+    - from: controls
+      to: invalid
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "if (request->controls().infoMap() != &controls()) {\n\t\tLOG(Camera,\
+          \ Error) << \"Overwriting Request::controls() is not allowed\";\n\t\treturn\
+          \ -EINVAL;\n\t}"
+    - from: controls
+      to: buffers
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: if (request->buffers().empty())
+    - from: buffers
+      to: invalid
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "if (request->buffers().empty()) {\n\t\tLOG(Camera, Error) << \"Request\
+          \ contains no buffers\";\n\t\treturn -EINVAL;\n\t}"
+    - from: buffers
+      to: streams
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: 'for (const auto &[stream, buffer] : request->buffers())'
+    - from: streams
+      to: invalid
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "if (d->activeStreams_.find(stream) == d->activeStreams_.end()) {\n\t\
+          \t\tLOG(Camera, Error) << \"Invalid request\";\n\t\t\treturn -EINVAL;\n\t\t\
+          }"
+    - from: streams
+      to: queued
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: /* Pre-process AeEnable. */
+    - from: queued
+      to: success
+      label: 예약 후 반환
+      label_en: Return after scheduling
+      evidence:
+      - source: submission-checks/queue
+        sha256: 96db61baeb32065c966b20942f97518ddbd3a43b36b64e8083eb29a90ecb7f4b
+        quote: "d->pipe_->invokeMethod(&PipelineHandler::queueRequest,\n\t\t\t     \
+          \  ConnectionTypeQueued, request);\n\n\treturn 0;"
+    - from: access
+      to: state-error
+      label: 연결 해제 아님·Running 불일치
+      label_en: Not disconnected; state is not Running
+      evidence:
+      - source: submission-checks/access
+        sha256: abfbe004126b5eff84d798a97fdcf9b87428c66c671bb09b1b581306d9e8427c
+        quote: "State currentState = state_.load(std::memory_order_acquire);\n\tif (currentState\
+          \ == state)\n\t\treturn 0;"
+      - source: submission-checks/access
+        sha256: abfbe004126b5eff84d798a97fdcf9b87428c66c671bb09b1b581306d9e8427c
+        quote: return -EACCES;
+  - id: diagnosis-add-buffer-rejections
+    topic: diagnosis
+    kind: decision
+    title: 버퍼 연결 실패를 구분하는 순서
+    question: 같은 -EEXIST라도 남은 fence와 중복 stream을 구분하고, 실패 검사 뒤의 요청 연결 경계를 확인합니다.
+    nodes:
+    - id: stream
+      label: stream이 비었나요?
+      label_en: Is stream null?
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (!stream)
+      shape: decision
+    - id: invalid
+      label: -EINVAL 반환
+      label_en: Return -EINVAL
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: return -EINVAL;
+    - id: fence
+      label: 버퍼에 fence가 남았나요?
+      label_en: Does the buffer retain a fence?
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (buffer->_d()->fence())
+      shape: decision
+    - id: retained
+      label: '-EEXIST: 남은 fence'
+      label_en: '-EEXIST: retained fence'
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: Can't add buffer that still references a fence
+    - id: duplicate
+      label: stream이 이미 등록됐나요?
+      label_en: Is the stream already registered?
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: if (!inserted)
+      shape: decision
+    - id: existing
+      label: '-EEXIST: 중복 stream'
+      label_en: '-EEXIST: duplicate stream'
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: FrameBuffer already set for stream
+    - id: attach
+      label: 요청 연결과 pending_ 추가
+      label_en: Attach request and add pending_
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "buffer->_d()->setRequest(this);\n\t_d()->pending_.insert(buffer);"
+    - id: success
+      label: 0 반환
+      label_en: Return 0
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: return 0;
+    edges:
+    - from: stream
+      to: invalid
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!stream) {\n\t\tLOG(Request, Error) << \"Invalid stream reference\"\
+          ;\n\t\treturn -EINVAL;\n\t}"
+    - from: stream
+      to: fence
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!stream) {\n\t\tLOG(Request, Error) << \"Invalid stream reference\"\
+          ;\n\t\treturn -EINVAL;\n\t}"
+    - from: fence
+      to: retained
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (buffer->_d()->fence()) {\n\t\tLOG(Request, Error) << \"Can't add\
+          \ buffer that still references a fence\";\n\t\treturn -EEXIST;\n\t}"
+    - from: fence
+      to: duplicate
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: auto [it, inserted] = bufferMap_.try_emplace(stream, buffer);
+    - from: duplicate
+      to: existing
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (!inserted) {\n\t\tLOG(Request, Error) << \"FrameBuffer already set\
+          \ for stream\";\n\t\treturn -EEXIST;\n\t}"
+    - from: duplicate
+      to: attach
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "buffer->_d()->setRequest(this);\n\t_d()->pending_.insert(buffer);"
+    - from: attach
+      to: success
+      label: 유효한 fence가 있으면 이동한 뒤 반환
+      label_en: Move a valid supplied fence if present, then return
+      evidence:
+      - source: diagnosis/buffer-code
+        sha256: c1c0b55f2925856df843fa155a14bb07eb616f52b6bde75cd3b0b5a4ab03b64a
+        quote: "if (fence && fence->isValid())\n\t\tbuffer->_d()->setFence(std::move(fence));\n\
+          \n\treturn 0;"
+  - id: diagnosis-dispatch-cancel-or-device
+    topic: diagnosis
+    kind: flow
+    title: void 전달 함수의 두 취소 경로
+    question: doQueueRequest는 이미 취소된 요청과 장치 전달 실패를 각각 어느 함수로 처리합니까?
+    nodes:
+    - id: cancelled
+      label: request->_d()->cancelled_인가?
+      label_en: Is request->_d()->cancelled_ true?
+      evidence:
+      - source: diagnosis/cancelled-branch
+        sha256: 1ebc4d56b99218bfb196cf7548aa7167a251392ddb7bf53af9ef4963cc24636b
+        quote: if (request->_d()->cancelled_)
+      shape: decision
+    - id: complete
+      label: completeRequest(request); return;
+      label_en: completeRequest(request); return;
+      evidence:
+      - source: diagnosis/cancelled-branch
+        sha256: 1ebc4d56b99218bfb196cf7548aa7167a251392ddb7bf53af9ef4963cc24636b
+        quote: "completeRequest(request);\n\t\treturn;"
+    - id: device
+      label: queueRequestDevice(camera, request)
+      label_en: queueRequestDevice(camera, request)
+      evidence:
+      - source: diagnosis/device-result-branch
+        sha256: 474a449d8915b2098739e2f25079a56e132930340a353c2538de1f3ca84c3a1e
+        quote: int ret = queueRequestDevice(camera, request);
+    - id: ret
+      label: ret가 0이 아닌가?
+      label_en: Is ret nonzero?
+      evidence:
+      - source: diagnosis/device-result-branch
+        sha256: 474a449d8915b2098739e2f25079a56e132930340a353c2538de1f3ca84c3a1e
+        quote: if (ret)
+      shape: decision
+    - id: cancel
+      label: cancelRequest(request)
+      label_en: cancelRequest(request)
+      evidence:
+      - source: diagnosis/device-result-branch
+        sha256: 474a449d8915b2098739e2f25079a56e132930340a353c2538de1f3ca84c3a1e
+        quote: cancelRequest(request);
+    - id: end
+      label: 'void 함수 끝: 정수 반환값 없음'
+      label_en: 'End of void function: no integer return'
+      evidence:
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: void PipelineHandler::doQueueRequest(Request *request)
+    edges:
+    - from: cancelled
+      to: complete
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: diagnosis/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\t\
+          return;\n\t}"
+    - from: cancelled
+      to: device
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/device-result-branch
+        sha256: 474a449d8915b2098739e2f25079a56e132930340a353c2538de1f3ca84c3a1e
+        quote: int ret = queueRequestDevice(camera, request);
+    - from: device
+      to: ret
+      label: 장치 함수 결과 검사
+      label_en: Inspect device result
+      evidence:
+      - source: diagnosis/device-result-branch
+        sha256: 474a449d8915b2098739e2f25079a56e132930340a353c2538de1f3ca84c3a1e
+        quote: if (ret)
+    - from: ret
+      to: cancel
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: diagnosis/device-result-branch
+        sha256: 474a449d8915b2098739e2f25079a56e132930340a353c2538de1f3ca84c3a1e
+        quote: "if (ret)\n\t\tcancelRequest(request);"
+    - from: ret
+      to: end
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/device-result-branch
+        sha256: 474a449d8915b2098739e2f25079a56e132930340a353c2538de1f3ca84c3a1e
+        quote: "if (ret)\n\t\tcancelRequest(request);"
+  - id: diagnosis-buffer-and-request-completion
+    topic: diagnosis
+    kind: flow
+    title: 버퍼 완료와 명시적 요청 완료의 경계
+    question: 마지막 버퍼가 끝났을 때 completeBuffer의 반환과 핸들러의 요청 완료 의무는 어떻게 구분됩니까?
+    nodes:
+    - id: call
+      label: CameraManager 스레드에서 completeBuffer
+      label_en: completeBuffer in CameraManager thread
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: This function shall be called from the CameraManager thread.
+    - id: all
+      label: 모든 버퍼가 완료됐는가?
+      label_en: Have all buffers completed?
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "True if all buffers contained in the request have completed, false\n\
+          \ * otherwise"
+      shape: decision
+    - id: 'false'
+      label: 'false: 남은 버퍼가 있음'
+      label_en: 'false: buffers remain'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "True if all buffers contained in the request have completed, false\n\
+          \ * otherwise"
+    - id: 'true'
+      label: 'true: 마지막 버퍼 완료, 요청 자동 완료 아님'
+      label_en: 'true: last buffer completed, request not automatically completed'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: is not completed automatically when the last buffer completes
+    - id: explicit
+      label: 핸들러가 completeRequest를 명시적으로 호출
+      label_en: Handler explicitly calls completeRequest
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: They shall complete requests explicitly with completeRequest().
+    edges:
+    - from: call
+      to: all
+      label: 버퍼 완료 통지·내부 추적 갱신
+      label_en: Notify buffer completion and update tracking
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "It notifies applications of buffer\n * completion and updates the request's\
+          \ internal buffer tracking."
+    - from: all
+      to: 'false'
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "false\n * otherwise"
+    - from: all
+      to: 'true'
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: True if all buffers contained in the request have completed
+    - from: 'true'
+      to: explicit
+      label: 필요한 작업이 있다면 그 작업 기회 후
+      label_en: After an opportunity for any remaining required work
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "The request\n * is not completed automatically when the last buffer\
+          \ completes to give\n * pipeline handlers a chance to perform any operation\
+          \ that may still be\n * needed. They shall complete requests explicitly with\
+          \ completeRequest()."
+  - id: diagnosis-submission-order-completion
+    topic: diagnosis
+    kind: flow
+    title: 제출 큐의 선두 상태와 반환 순서
+    question: CameraManager 스레드의 completeRequest는 어느 조건에서 반환 반복을 멈추고 어느 요청을 애플리케이션에
+      알립니까?
+    nodes:
+    - id: entry
+      label: 'CameraManager 스레드: 현재 요청 complete()'
+      label_en: 'CameraManager thread: complete() current request'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: request->_d()->complete();
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: This function shall be called from the CameraManager thread.
+    - id: queue
+      label: queuedRequests_가 비어 있지 않은가?
+      label_en: Is queuedRequests_ nonempty?
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty())
+      shape: decision
+    - id: pending
+      label: 선두 req->status()가 RequestPending인가?
+      label_en: Is front req->status() RequestPending?
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: if (req->status() == Request::RequestPending)
+      shape: decision
+    - id: assertion
+      label: ASSERT(!req->hasPendingBuffers()) 소스 위치
+      label_en: Source location of ASSERT(!req->hasPendingBuffers())
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: ASSERT(!req->hasPendingBuffers());
+    - id: notify
+      label: pop_front() 뒤 camera->requestComplete(req)
+      label_en: pop_front() then camera->requestComplete(req)
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "data->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);"
+    - id: end
+      label: 반환 반복 후 doQueueRequests(camera)
+      label_en: doQueueRequests(camera) after return loop
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: doQueueRequests(camera);
+    edges:
+    - from: entry
+      to: queue
+      label: 제출 큐를 확인
+      label_en: Inspect submission queue
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty())
+    - from: queue
+      to: pending
+      label: '예: 선두 확인'
+      label_en: 'Yes: inspect front'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: Request *req = data->queuedRequests_.front();
+    - from: queue
+      to: end
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty())
+    - from: pending
+      to: end
+      label: '예: break'
+      label_en: 'Yes: break'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+    - from: pending
+      to: assertion
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: ASSERT(!req->hasPendingBuffers());
+    - from: assertion
+      to: notify
+      label: 이어지는 소스 순서
+      label_en: Following source order
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "data->queuedRequests_.pop_front();\n\t\tcamera->requestComplete(req);"
+    - from: notify
+      to: queue
+      label: 다음 선두 검사
+      label_en: Inspect next front
+      evidence:
+      - source: diagnosis/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty())
+  - id: configuration-access-branches
+    topic: configuration-failure
+    kind: decision
+    title: 구성 접근 검사에서 관찰할 분기
+    question: 연결 해제를 먼저 확인한 뒤 상태 범위를 검사합니다. 단언과 로그 뒤의 코드는 실제 실행 결과로 단정하지 않습니다.
+    nodes:
+    - id: disconnected
+      label: 연결 해제 금지이며 disconnected_인가?
+      label_en: Disconnection disallowed and disconnected_?
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: if (!allowDisconnected && disconnected_)
+      shape: decision
+    - id: removed
+      label: -ENODEV 반환
+      label_en: Return -ENODEV
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: return -ENODEV;
+    - id: range
+      label: low ≤ currentState ≤ high인가?
+      label_en: low ≤ currentState ≤ high?
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: if (currentState >= low && currentState <= high)
+      shape: decision
+    - id: allowed
+      label: 0 반환
+      label_en: Return 0
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: return 0;
+    - id: denied
+      label: ASSERT·로그·-EACCES 코드 위치
+      label_en: ASSERT, log and -EACCES code locations
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: return -EACCES;
+    edges:
+    - from: disconnected
+      to: removed
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: "if (!allowDisconnected && disconnected_)\n\t\treturn -ENODEV;"
+    - from: disconnected
+      to: range
+      label: 아니요
+      label_en: 'No'
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: State currentState = state_.load(std::memory_order_acquire);
+    - from: range
+      to: allowed
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: "if (currentState >= low && currentState <= high)\n\t\treturn 0;"
+    - from: range
+      to: denied
+      label: '아니요: 후속 코드 관찰'
+      label_en: 'No: observe following code'
+      evidence:
+      - source: configuration-failure/access
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+        quote: "ASSERT(static_cast<unsigned int>(low) < std::size(camera_state_names)\
+          \ &&\n\t       static_cast<unsigned int>(high) < std::size(camera_state_names));"
+  - id: configuration-implementation-observation
+    topic: configuration-failure
+    kind: flow
+    title: 구성 호출의 실제 구현을 확인하는 조사 계획
+    question: 상태 검사를 통과한 기존 호출에서 타입·구현·반환값을 관찰하는 계획입니다. 검증이나 구성을 다시 호출하지 않습니다.
+    nodes:
+    - id: validate
+      label: '계획: config 동적 타입·validate 구현 기록'
+      label_en: 'Plan: record config type and validate implementation'
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: if (config->validate() != CameraConfiguration::Valid)
+    - id: result
+      label: 기존 validate 결과와 Valid 비교
+      label_en: Compare existing validate result with Valid
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: if (config->validate() != CameraConfiguration::Valid)
+      shape: decision
+    - id: invalid
+      label: -EINVAL 코드 위치
+      label_en: -EINVAL code location
+      evidence:
+      - source: configuration-failure/validation-check
+        sha256: 5ee265dc6e41d87b5c011c9621dca0bbee5126a9fdc4633d198adaa12a4f910e
+        quote: return -EINVAL;
+    - id: handler
+      label: '계획: 실제 configure 구현 기록'
+      label_en: 'Plan: record actual configure implementation'
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: "ret = d->pipe_->invokeMethod(&PipelineHandler::configure,\n\t\t\t\t\
+          \     ConnectionTypeBlocking, this, config);"
+    - id: return
+      label: 'ret 관찰: 비영이면 그대로 반환'
+      label_en: 'Observe ret: return unchanged if nonzero'
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: "if (ret)\n\t\treturn ret;"
+    edges:
+    - from: validate
+      to: result
+      label: 기존 호출 결과 관찰
+      label_en: Observe existing call result
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: if (config->validate() != CameraConfiguration::Valid)
+    - from: result
+      to: invalid
+      label: Valid 아님
+      label_en: Not Valid
+      evidence:
+      - source: configuration-failure/validation-check
+        sha256: 5ee265dc6e41d87b5c011c9621dca0bbee5126a9fdc4633d198adaa12a4f910e
+        quote: if (config->validate() != CameraConfiguration::Valid)
+    - from: result
+      to: handler
+      label: 'Valid: 원래 configure 호출에서 관찰'
+      label_en: 'Valid: observe original configure call'
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: "ret = d->pipe_->invokeMethod(&PipelineHandler::configure,\n\t\t\t\t\
+          \     ConnectionTypeBlocking, this, config);"
+    - from: handler
+      to: return
+      label: 원래 호출의 ret 기록
+      label_en: Record original call ret
+      evidence:
+      - source: configuration-failure/configure-code
+        sha256: e6185ee35674c441653590c65d2de1bc40d13b5a9d8ef8dc083936c54cb7f470
+        quote: "if (ret)\n\t\treturn ret;"
   ipu3-lsc-prepare:
   - id: lsc-update-gates
     topic: prepare
