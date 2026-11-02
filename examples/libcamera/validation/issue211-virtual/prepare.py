@@ -11,12 +11,16 @@ parser.add_argument('--previous', type=Path, required=True)
 parser.add_argument('--work', type=Path, required=True)
 args = parser.parse_args()
 previous, work = args.previous.resolve(), args.work.resolve()
+from invocation_scope import validate as validate_invocation, attach as attach_invocation
 baseline = json.loads((previous/'run/facts/facts.json').read_text(encoding='utf-8'))['meta']['source_commit']
 if baseline != '293d751a814e0d4c34e85ad457ccd9d5eefd1a61':
     raise ValueError('The virtual-principle addition requires the recorded issue211 baseline; commits must not be mixed')
+fixture = Path(__file__).resolve().parent/'invocation-options.json'
+validate_invocation(fixture)
 work.mkdir(parents=True, exist_ok=False)
 for name in ['config', 'run', 'build', 'historical-style']:
     shutil.copytree(previous/name, work/name)
+attach_invocation(work, fixture)
 for name in ['generation.yaml', 'publication.yaml', 'reader-verification.yaml',
              'historical-contract-review.yaml', 'new-document-review.yaml', 'site-intro.md']:
     text = (previous/name).read_text(encoding='utf-8')
@@ -49,5 +53,7 @@ visual = yaml.safe_load((base/'visual.yaml').read_text(encoding='utf-8'))
 p=work/'config/visuals.yaml'; data=yaml.safe_load(p.read_text(encoding='utf-8'))
 overrides = {v['id']: v for v in yaml.safe_load((base/'retained-visual-overrides.yaml').read_text(encoding='utf-8'))}
 data['sections'][section['id']] = [visual] + [overrides.get(v['id'], v) for v in data['sections'][section['id']]]
+present = {v['id'] for v in data['sections'][section['id']]}
+data['sections'][section['id']].extend(v for key, v in overrides.items() if key not in present)
 p.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=120), encoding='utf-8')
 print(json.dumps(dict(work=str(work), topics=[t['id'] for t in section['design_topics']], retained_receipts=len(receipts))))

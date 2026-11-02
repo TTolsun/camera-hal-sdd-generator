@@ -4,7 +4,7 @@ kind: flow
 title: 패턴 생성에서 cam의 완료 알림까지
 generation: llm
 max_nodes: 11
-max_label_chars: 44
+max_label_chars: 72
 condition_display: evidence
 required_symbols:
 - exportFrameBuffers
@@ -49,7 +49,9 @@ prompt: '선택한 Virtual2 NV12 가상 캡처의 핵심 원리를 11개 노드�
   앞선 미완료 요청이 없을 때만 진행하며 그렇지 않으면 보류된다는 조건만 짧게 남겨 노드의 통지 동작을 반복하지 마세요. 의미·인용·연결·다른 라벨을
   보존하고 선은 한국어 약 16자·영어 약 32자를 우선합니다. 한영 authored 간선 라벨에는 true/false를 직접 쓰지 말고 변환 성공·변환
   오류·모든 버퍼 완료·미완료 버퍼 남음처럼 핵심 조건·결과만 짧게 쓰세요. 시스템이 조건 참/거짓 표시를 붙입니다. 간선에 노드의 전체 행동을
-  반복하지 마세요.'
+  반복하지 마세요. CPU NV12 노드의 영어는 패턴을 NV12로 변환하고 매핑 버퍼에 쓰기를 시도한다는 두 동작을 문법적으로 명확히 표현하세요.
+  tries pattern to NV12 같은 축약은 쓰지 마세요. 동작 의미를 잃지 않는 범위에서 간결하게 쓰세요. 무조건 연결 간선은 두세 단어의
+  짧은 연결어만 씁니다. 분기 간선은 짧은 조건·결과만 쓰고 노드의 행동 전체를 반복하지 마세요.'
 sources:
 - virtual-buffer-allocation
 - virtual-queue
@@ -109,3 +111,4 @@ answer_contract_en:
   - - NV12
   - - CPU
 require_connected: true
+max_edge_label_chars: 40

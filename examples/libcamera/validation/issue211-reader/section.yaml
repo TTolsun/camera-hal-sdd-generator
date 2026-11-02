@@ -76,10 +76,8 @@ design_topics:
       basis: measurement
 - id: flow
   title: cam이 완료 알림을 받아 이벤트 루프에서 프레임을 처리합니다.
-  question: 먼저 완료 알림과 프레임 후속 처리가 다른 단계라는 뜻을 쉬운 말로 설명하세요. requestComplete의 취소 요청 분기,
-    정상 완료 요청을 callLater로 processRequest에 미루는 순서, 카메라 매니저 스레드를 막지 않으려는 코드의 명시적 의도를
-    연결하세요. processRequest가 캡처 한도를 확인하고 프레임을 처리한 뒤 captureCount_를 늘리는 흐름을 설명하세요. 이번
-    실행에서 콜백 스레드와 처리 스레드가 달랐다는 관찰을 코드의 모든 실행에 대한 보장과 구분하세요.
+  question: 기록된 출력 싱크 미요청 cam 명령의 콜백, 이벤트 루프 전달, 처리 한도와 제출 도우미를 설명하세요. 파일·화면 출력 옵션의
+    일반 경로는 이번 재현 설명의 범위 밖이며 소스 근거로 연결합니다.
   prompt: 현재 part의 질문만 짧게 답하세요. 다른 part가 설명할 환경·범위·경고를 반복해서 덧붙이지 마세요. 실제 수행한 가상 카메라
     시험이며 가짜 실행이 아닙니다. PID·TID 숫자, JSON 키·해시와 내부 출력 필드를 본문에 열거하지 마세요. 함수와 변수 이름은 backtick으로
     표시하세요. 제품 소개가 아닌 개발자용 동작 설명이며, 전체 페이지의 시험 범위를 매 문장에 되풀이하지 마세요.
@@ -87,7 +85,7 @@ design_topics:
   - flow
   product:
     id: libcamera-official-cam-trial
-    feature: wsl-virtual-capture
+    feature: recorded-no-output-sink
   sources:
   - id: callback-and-processing
     file: src/apps/cam/camera_session.cpp
@@ -97,20 +95,21 @@ design_topics:
     file: src/apps/cam/camera_session.cpp
     start: int CameraSession::queueRequest(Request *request)
     end: void CameraSession::requestComplete(Request *request)
-  - id: frame-consumer
-    file: src/apps/cam/frame_sink.cpp
-    start: \class FrameSink
-    end: '* processing has been queued'
-  - id: sink-release-signal
+  - id: app-start
     file: src/apps/cam/camera_session.cpp
-    start: sink_->requestProcessed.connect(this, &CameraSession::sinkRelease);
-    end: return startCapture();
-  - id: sink-release-handler
+    start: int CameraSession::start()
+    end: void CameraSession::stop()
+  - id: session-state
+    file: src/apps/cam/camera_session.h
+    start: std::shared_ptr<libcamera::Camera> camera_;
+    end: unsigned int cameraIndex_;
+  - id: reuse-call
     file: src/apps/cam/camera_session.cpp
-    start: void CameraSession::sinkRelease(Request *request)
-    end: '
-
-      }'
+    scope:
+      start: void CameraSession::processRequest(Request *request)
+      end: void CameraSession::sinkRelease(Request *request)
+    start: request->reuse(Request::ReuseBuffers);
+    end: queueRequest(request);
   answer_contract:
     basis: implementation
     required_terms:
@@ -137,34 +136,82 @@ design_topics:
     answer_contract:
       basis: implementation
     role: summary
+  - id: invocation-scope
+    question: 세 실제 실행 명령은 화면·파일 출력 싱크 옵션을 요청하지 않았다는 사실을 먼저 밝히세요. 이 항목과 그림은 그 명령의 소스
+      경로를 설명하며, 다른 출력 옵션의 비동기 보유 경로를 실행 검증한 결과가 아니라고 두 짧은 문장으로 범위를 정하세요. 옵션 전체 목록이나
+      원시 명령은 근거에 둡니다.
+    sources:
+    - app-start
+    - session-state
+    max_statements: 1
+    answer_contract:
+      basis: measurement
   - id: processing
-    question: 처리 한도, 선택적 프레임 소비자, 싱크의 반환 경로, 제출 한도를 네 짧은 단락으로 나누어 설명하세요.
+    question: CameraSession::processRequest는 진입할 때 처리 수 captureCount_와 설정 한도 captureLimit_를
+      먼저 비교합니다. 한도가 설정되고 이미 도달했으면 종료 신호를 다시 내지 않고 반환한다는 조건만 짧게 설명하세요. 증가 동작은 다음 항목에서
+      설명합니다.
     sources:
     - callback-and-processing
-    - submission-limit
-    - frame-consumer
-    - sink-release-signal
-    - sink-release-handler
     max_statements: 1
-    prompt: 질문에 필요한 짧고 쉬운 한국어 두세 문장으로만 답하고, 함수·변수 이름은 backtick으로 표시하세요. PID·TID 숫자,
-      enum 숫자, JSON 필드·해시·도구 버전과 다른 절의 경고를 반복하지 마세요.
+    prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
+      함수 이름만 쓰세요.
     answer_contract:
       basis: implementation
       reject_patterns:
-      - pattern: 성공 여부
-        message: 조건은 재제출 시도 여부·시점을 정하며 성공 여부를 정한다는 요약은 쓰지 마세요.
-    subquestions:
-    - 처리한 프레임 수 captureCount_와 설정된 captureLimit_를 비교한다는 관계를 먼저 설명하세요. 한도가 설정되어 있고
-      이미 도달했으면 processRequest가 종료 신호를 다시 내지 않고 반환한다고 짧은 두 문장으로 쓰세요. 다른 단락의 동작은 반복하지
-      마세요.
-    - 싱크는 완료된 프레임을 소비하는 선택적 출력 처리기라고 먼저 정의하세요. 싱크가 있으면 싱크 처리도 하지만 프레임 정보 출력과 처리 개수
-      증가는 싱크 유무와 관계없이 수행된다고 설명하세요. 증가 뒤 처리 한도에 도달하면 캡처 종료 신호 captureDone을 내고 반환하며
-      요청 완료 신호와 다르다고 세 짧은 문장으로 쓰세요. 이미 소개한 카운터 식별자를 반복하지 마세요.
-    - 처리 종료 조건이 아닐 때 싱크가 요청을 보유하면 processRequest는 반환하고 재제출을 미룬다고 설명하세요. 이후 싱크의 requestProcessed
-      신호에 연결된 sinkRelease가 버퍼를 유지해 요청을 재사용하고 재제출을 시도합니다. 보유하지 않으면 processRequest가
-      재사용과 재제출 시도를 수행한다고 세 짧은 문장으로 쓰세요. 여기서 제출 성공을 보장하지 마세요.
-    - CameraSession::queueRequest는 처리 개수와 다른 제출 개수 queueCount_를 같은 설정 한도와 비교한다고 명시하세요.
-      제출 개수가 이미 한도에 도달했으면 실제 큐잉 없이 반환한다고 두 짧은 문장으로 쓰세요. 다른 단락의 식별자·조건은 반복하지 마세요.
+      - pattern: 증가|늘리|\+\+|처리할 때
+        message: 현재 항목이 설명하는 단계만 쓰고 다른 단계나 전체 호출식을 반복하지 마세요.
+      required_terms:
+      - - captureCount_
+      - - captureLimit_
+  - id: frame-work
+    question: 진입 검사에서 반환하지 않은 이 기록의 출력 싱크 미요청 경로에서 프레임 정보를 출력하고 처리 수를 늘린다고 설명하세요.
+      그 뒤 설정 한도에 도달하면 captureDone을 내고 processRequest가 반환하며 요청 완료 신호와 다르다고 짧게 쓰세요.
+      출력 싱크 옵션을 선택한 다른 경로는 확대 설명하지 마세요.
+    sources:
+    - callback-and-processing
+    max_statements: 1
+    prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
+      함수 이름만 쓰세요.
+    answer_contract:
+      basis: implementation
+      reject_patterns:
+      - pattern: sink_->|request->|Request::ReuseBuffers|requeue|sinkRelease|requestProcessed
+        message: 현재 항목이 설명하는 단계만 쓰고 다른 단계나 전체 호출식을 반복하지 마세요.
+      required_terms:
+      - - captureDone
+  - id: reuse-request
+    question: 프레임 처리 후 종료 조건에 해당하지 않으면 이 출력 싱크 미요청 경로는 버퍼를 유지해 요청을 재사용하고 CameraSession::queueRequest
+      도우미를 호출한다고 짧게 설명하세요. 도우미 호출은 실제 제출의 보장이 아니며 제출 조건은 다음 항목에서 설명합니다. 소스의 재사용 호출
+      이름을 간결히 적어도 됩니다. 뒤의 제출 한도와 실제 제출 여부는 다음 항목에서 구분합니다.
+    sources:
+    - callback-and-processing
+    - reuse-call
+    max_statements: 1
+    prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
+      함수 이름만 쓰세요.
+    answer_contract:
+      basis: implementation
+      reject_patterns:
+      - pattern: 확인되지\s*않|미확인
+        message: 선택된 출력 싱크 미요청 경로의 직접 재사용 동작을 설명하세요.
+  - id: submission-limit
+    question: CameraSession::queueRequest 도우미는 처리 개수와 다른 제출 개수 queueCount_를 같은 설정
+      한도와 비교합니다. 한도가 설정되고 제출 개수가 이미 도달했으면 실제 제출 없이 반환하며, 그 밖에는 카메라에 제출을 시도한다는 관계만
+      짧게 설명하세요. 재사용이나 처리 종료 조건은 앞 항목이 설명합니다.
+    sources:
+    - submission-limit
+    max_statements: 1
+    prompt: 이 항목의 조건·동작만 쉬운 짧은 평서문으로 설명하세요. 다른 항목의 코드·조건을 반복하지 마세요. 전체 호출 식 대신 필요한
+      함수 이름만 쓰세요.
+    answer_contract:
+      basis: implementation
+      reject_patterns:
+      - pattern: captureDone|requeue
+        message: 현재 항목이 설명하는 단계만 쓰고 다른 단계나 전체 호출식을 반복하지 마세요.
+      - pattern: 확인되지\s*않|미확인|확인할\s*수\s*없
+        message: 선택한 두 소스가 재사용과 한도 조건을 직접 보여 줍니다.
+      required_terms:
+      - - queueCount_
   - id: observed
     question: 이번 실행에서 콜백과 후속 처리 스레드가 달랐지만 모든 실행의 배치를 보장하지 않는다고 설명하세요. 취소 분기는 소스에 존재하지만
       이번 실행에서 동적으로 시험하지 않았다고 명확히 하세요. 다른 동작은 소스로 확인하지 않았다는 의미로 읽힐 수 있는 '취소 분기만 확인'
@@ -258,7 +305,9 @@ design_topics:
       basis: measurement
   - id: kernel-boot
     question: statement.text를 '5. '로 시작하세요. 승인된 계획에 따라 시험 커널을 설치하고 부팅하는 준비 과업만 짧게
-      설명하세요. 커널 버전 대조와 장치 접근은 6번의 별도 사전 검사입니다. 이미 부팅되었다는 실행 결과를 보고하지 마세요.
+      설명하세요. 커널 버전 대조와 장치 접근은 6번의 별도 사전 검사입니다. 이미 부팅되었다는 실행 결과를 보고하지 마세요. Docker 중지는
+      앞 단계가 설명했으므로 반복하지 마세요. 커널 설치·부팅은 이 재현의 필수 준비이며 생략할 수 있다고 쓰지 마세요. 메타 설명 없이 설치하고
+      부팅하는 행동만 한 문장으로 쓰세요.
     sources: []
     max_statements: 1
     prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
@@ -266,13 +315,11 @@ design_topics:
     answer_contract:
       basis: measurement
       reject_patterns:
-      - pattern: 실행\s*뒤|적용\s*결과|6\.18|linux-msft|접근|권한|Virtual2
+      - pattern: 실행\s*뒤|적용\s*결과|6\.18|linux-msft|접근|권한|Virtual2|Docker|생략|과업|문단|것입니다|모듈|조사
         message: 이 단계가 아닌 준비·검사나 과거 결과를 반복하지 말고 현재 과업만 설명하세요.
-  - id: preflight
-    question: statement.text를 '6. '로 시작하세요. 실행 중 커널 버전을 기록된 6.18.33.2-microsoft-standard-WSL2-issue211과
-      대조하고, root 자식 컨텍스트가 /dev/udmabuf을 실제로 열 수 있는 접근 권한을 검사하며, 설정 파일·실행 입력이 Virtual2
-      400x300 NV12를 요청하는지 확인하는 사전 검사 과업으로 묶으세요. 하나라도 다르면 실행하지 않습니다. 권한이라는 단어를 쓰되 과거
-      모드 복제 의무를 만들지 마세요. 실제 적용 결과 검증은 8번에 맡기세요.
+  - id: kernel-check
+    question: statement.text를 '6. '로 시작하세요. 개발자를 주어로 실행 중인 커널 버전을 기록된 6.18.33.2-microsoft-standard-WSL2-issue211과
+      대조합니다. 이 행동만 직접 쓰고 다른 검사는 반복하지 마세요.
     sources: []
     max_statements: 1
     prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
@@ -280,16 +327,41 @@ design_topics:
     answer_contract:
       basis: measurement
       reject_patterns:
-      - pattern: 실행\s*후|실행\s*뒤|새\s*증거|과거.*모드
-        message: 이 단계가 아닌 준비·검사나 과거 결과를 반복하지 말고 현재 과업만 설명하세요.
+      - pattern: 과업|문단|실행\s*후|실행\s*뒤
+        message: 직접 검사 행동만 쓰고 실행 후 결과나 메타 설명을 반복하지 마세요.
+  - id: access-check
+    question: statement.text를 '7. '로 시작하세요. 개발자를 주어로 root 자식 컨텍스트가 /dev/udmabuf을 실제로
+      열 수 있는 접근 권한을 검사하는 행동만 직접 쓰세요. 권한이라는 단어를 쓰고 일반 권한 변경 지침은 쓰지 마세요.
+    sources: []
+    max_statements: 1
+    prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
+      증거로 사용하지 마세요. 명령·버전·파일 경로는 질문이 필수로 요구한 경우에만 쓰세요.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 과업|문단|실행\s*후|실행\s*뒤
+        message: 직접 검사 행동만 쓰고 실행 후 결과나 메타 설명을 반복하지 마세요.
       required_terms:
       - - 권한
+  - id: request-check
+    question: statement.text를 '8. '로 시작하세요. 개발자를 주어로 사용할 설정 파일·실행 입력이 Virtual2 400x300
+      NV12를 요청하는지 확인하는 행동을 직접 쓰세요. 앞의 커널·접근·요청 조건 중 하나라도 다르면 실행하지 않는 조건을 한 번만 남기세요.
+    sources: []
+    max_statements: 1
+    prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
+      증거로 사용하지 마세요. 명령·버전·파일 경로는 질문이 필수로 요구한 경우에만 쓰세요.
+    answer_contract:
+      basis: measurement
+      reject_patterns:
+      - pattern: 과업|문단|실행\s*후|실행\s*뒤
+        message: 직접 검사 행동만 쓰고 실행 후 결과나 메타 설명을 반복하지 마세요.
+      required_terms:
       - - Virtual2
       - - NV12
   - id: execution
-    question: statement.text를 '7. '로 시작하세요. 사전 검사를 통과한 뒤 연결된 안내에 따라 관찰 도구의 제어 아래에서
-      수정하지 않은 공식 cam 디버그 빌드를 실행하는 과업만 한 문장으로 쓰세요. 관찰 도구가 cam을 관찰하며 cam이 관찰 도구가 아닙니다.
-      경로 준비·버전·권한·증거 위치는 다른 단계에서 설명합니다.
+    question: statement.text를 '9. '로 시작하세요. 개발자는 사전 검사를 통과하면 연결된 안내에 따라 디버거 관찰하에 수정하지
+      않은 공식 cam을 세 번 독립 실행하고 각 실행의 새 증거를 남긴다는 행동만 짧게 씁니다. 관찰 도구가 관찰한다는 순환 설명이나 파일
+      경로·버전은 반복하지 마세요.
     sources: []
     max_statements: 1
     prompt: 이 번호가 맡은 독자 과업만 짧은 평서문으로 쓰세요. 다른 번호의 준비·검사를 반복하지 마세요. 과거 실행의 결과를 새 실행의
@@ -297,10 +369,14 @@ design_topics:
     answer_contract:
       basis: measurement
       reject_patterns:
-      - pattern: 관찰 도구로|root|커널|SHA|디렉터리|경로|프로브|추출|권한|\d번\s*단계
+      - pattern: 관찰 도구로|root|커널|SHA|디렉터리|경로|프로브|추출|권한|\d번\s*단계|관찰 도구가|방식으로|과업
         message: 이 단계가 아닌 준비·검사나 과거 결과를 반복하지 말고 현재 과업만 설명하세요.
+      required_terms:
+      - - 세
+        - '3'
+      - - 독립
   - id: results
-    question: statement.text를 '8. '로 시작하세요. 이번 새 실행이 생성한 증거 디렉터리의 결과로 카메라 선택 Virtual2,
+    question: statement.text를 '10. '로 시작하세요. 이번 새 실행이 생성한 증거 디렉터리의 결과로 카메라 선택 Virtual2,
       실제 적용 스트림 400x300 NV12, 각 독립 실행의 정상 3프레임과 종료 코드 0을 확인하는 검증 과업만 짧게 쓰세요. 과거 링크는
       형식과 절차의 참고이며 새 성공의 증거가 아닙니다. 사전 입력 검사나 커널·장치 접근을 반복하지 마세요.
     sources: []
