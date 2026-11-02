@@ -18,7 +18,7 @@
   - sinkRelease
   - queueRequest
   question: 취소 반환, 이벤트 루프 전달, 진입 한도 검사, 프레임 처리·증가 뒤 완료 신호 또는 재큐까지는 어떻게 이어집니까?
-  prompt: 기존 취소·callLater·processRequest 진입/증가 후 처리 한도 분기 순서를 보존하며 싱크의 후속 경로를 포함한
+  prompt: '기존 취소·callLater·processRequest 진입/증가 후 처리 한도 분기 순서를 보존하며 싱크의 후속 경로를 포함한
     열두 노드로 설명하세요. n0~n8은 requestComplete, RequestCancelled, 해당 함수 반환(캡처 종료 신호 없음),
     callLater, processRequest 진입 처리 한도, 선택 싱크 처리와 requeue 저장 및 개수 증가, 증가 후 처리 한도,
     captureDone, 저장된 requeue의 싱크 보유 판정입니다. n9는 queueCount_ 제출 개수가 설정 한도에 도달했는가를 묻는
@@ -31,7 +31,12 @@
     고르고 인용 근거를 붙이세요. 싱크 보유 이후 경로를 현재 함수의 동기 실행처럼 표현하지 말고, requestProcessed가 발생한 뒤의
     콜백이라는 시점을 드러내세요. 재제출은 이전 실패를 전제한 retry가 아닙니다. 한영 라벨은 행동·판정·조건만 짧게, 코드 식별자는 필요한
     경우 한 번만 쓰세요. 긴 원시 식은 근거 영역에 두고 한글 노드 30자·영문 60자 안팎, 간선은 가능한 더 짧게 씁니다. 노드12개 한도를
-    넘기지 마세요.
+    넘기지 마세요. 최신 대조 지적: n4 첫 등장에는 CameraSession::processRequest를 표시합니다. n9 질문과 참 간선은
+    한도 설정 AND 제출 개수 도달을 모두 포함하며 거짓은 한도 미설정 OR 미도달입니다. n10 라벨은 sinkRelease의 버퍼 유지 재사용과
+    queueRequest 도우미 호출만 나타내고 실제 제출이나 resubmit이라고 쓰지 않습니다. n8 보유 간선은 현재 함수 반환 뒤 이미
+    진행 중일 수 있는 싱크 처리가 완료되어 requestProcessed가 발생한 시점을 표시합니다. 나중에 처리를 시작한다고 쓰지 마세요.
+    authored 간선 라벨에 true/false를 직접 쓰지 마세요. 시스템이 조건 표시를 붙입니다. 간선은 핵심 조건만, 노드는 핵심 행동만
+    짧게 쓰며 같은 설명을 양쪽에서 반복하지 마세요.'
   sources:
   - callback-and-processing
   - submission-limit
@@ -45,7 +50,18 @@
     reject_patterns:
     - pattern: (?i)\bretry\b
       message: This is resubmission, not retry after a previous failure.
+    - pattern: sinkRelease[^\n]*\bresubmit\b
+      message: sinkRelease describes reuse and helper call, not actual submission.
+    - pattern: sink processes it later
+      message: Show processing completion, not delayed processing start.
+    - pattern: \btrue\b[^\n]*\btrue\b|\bfalse\b[^\n]*\bfalse\b
+      message: Do not repeat the automatic branch marker.
   require_connected: true
+  answer_contract:
+    basis: implementation
+    reject_patterns:
+    - pattern: 나중에\s*처리
+      message: 이후의 싱크 처리 완료 신호를 표시하세요.
 - id: reproduction-flow
   topic: reproduce
   kind: flow
