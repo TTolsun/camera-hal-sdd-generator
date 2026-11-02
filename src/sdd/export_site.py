@@ -334,8 +334,14 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
         block = reused[0][1].replace('\n### ', '\n## ', 1)
         block = re.sub(r'\]\(#(source-[0-9a-f]{16})\)',
                        lambda match: '](' + target + '#' + match[1] + ')', block)
-        first, separator, rest = body.lstrip('\n').partition('\n\n')
-        body = first + '\n\n' + block + (separator + rest if separator else '')
+        marker = '<!-- sdd:overview-visual -->'
+        if body.count(marker) > 1:
+            raise ValueError('Overview visual placement marker must be unique')
+        if marker in body:
+            body = body.replace(marker, block)
+        else:
+            first, separator, rest = body.lstrip('\n').partition('\n\n')
+            body = first + '\n\n' + block + (separator + rest if separator else '')
     return page_title, meta, body, diagram_source, visuals
 
 

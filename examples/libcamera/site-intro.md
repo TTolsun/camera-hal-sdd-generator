@@ -2,6 +2,24 @@
 
 **기능·강점·연동 조건을 판단하려면 For Vendor에서, 처음 구조를 배우거나 다른 팀의 코드를 수정하려면 For Developer에서 시작하세요.**
 
+
+## 어디서 시작할까요?
+
+<div class="reader-start">
+<section>
+<h3>For Vendor</h3>
+<p>기능과 지원 조건을 확인하고 연동·구현 범위를 정합니다.</p>
+<a href="vendor-overview.md">제품 개요부터 읽기 →</a>
+</section>
+<section>
+<h3>For Developer</h3>
+<p>전체 구조를 익히고 요청 처리 흐름을 따라갑니다.</p>
+<a href="overview.md">시스템 개요부터 읽기 →</a>
+</section>
+</div>
+
+<!-- sdd:overview-visual -->
+
 ## Vendor가 먼저 확인할 내용
 
 1. [libcamera 제품 개요](vendor-overview.md)에서 해결하는 문제, 제공 기능과 공통 설계의 강점을 확인합니다.

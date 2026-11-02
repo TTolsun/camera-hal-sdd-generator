@@ -10,7 +10,7 @@ a{color:var(--accent);text-underline-offset:4px}button,input{font:inherit}button
 .brand{text-decoration:none;color:var(--ink);font-size:18px;font-weight:700;display:flex;align-items:center;gap:12px}.brand-mark{color:var(--accent);font-size:27px}.header-actions{display:flex;gap:8px}#search-open{width:245px;display:flex;justify-content:space-between;color:var(--muted);font-size:13px;background:#fafcfb}
 kbd{border:1px solid var(--line);border-radius:3px;padding:0 5px;font:11px/1.8 "Geist Mono",Consolas,monospace;color:var(--muted)}
 .layout{--sidebar-width:clamp(180px,var(--preferred-sidebar-width,240px),min(420px,45%));display:grid;grid-template-columns:var(--sidebar-width) minmax(0,1fr) 205px;max-width:1380px;margin:auto;min-height:calc(100vh - 68px)}
-#sidebar{position:sticky;top:68px;align-self:start;min-width:0;height:calc(100vh - 68px);overflow:auto;border-right:1px solid var(--line);padding:35px 22px 32px 24px;font-size:14px}
+#sidebar{position:sticky;top:68px;align-self:start;min-width:0;height:calc(100vh - 68px);overflow:auto;border-right:1px solid var(--line);padding:24px 18px 24px 20px;font-size:14px}
 .sidebar-resizer{display:none}
 body.resizing-sidebar,body.resizing-sidebar *{cursor:col-resize!important;user-select:none!important}
 /* Keep title wrapping stable when expanding branches introduces a scrollbar. */
@@ -21,9 +21,9 @@ body.resizing-sidebar,body.resizing-sidebar *{cursor:col-resize!important;user-s
 .sidebar-resizer::after{content:'';width:3px;height:32px;border-radius:999px;background:#b5c5bd}
 .sidebar-resizer:hover::after,body.resizing-sidebar .sidebar-resizer::after{background:var(--accent);box-shadow:0 0 0 4px var(--soft)}
 .sidebar-resizer:focus-visible::after{background:var(--accent);outline:2px solid var(--accent);outline-offset:4px}}
-.edition{font-size:10px;font-weight:600;letter-spacing:.11em;color:var(--muted);margin:0 0 28px}
+.edition{font-size:10px;font-weight:600;letter-spacing:.11em;color:var(--muted);margin:0 0 18px}
 #sidebar details[data-nav-id]{border:0;border-radius:0;margin:0;padding:0;background:none;font-size:inherit}
-#sidebar details.nav-group{margin:24px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+#sidebar details.nav-group{margin:16px 0 8px;padding-top:10px;border-top:1px solid var(--line)}
 #sidebar details.nav-group:first-child{margin-top:0}
 #sidebar details[data-nav-id]>summary{list-style:none;position:relative;cursor:pointer;padding:6px 8px 6px 20px;border-radius:4px;user-select:none;line-height:1.6}
 #sidebar details[data-nav-id]>summary::-webkit-details-marker{display:none}
@@ -31,12 +31,12 @@ body.resizing-sidebar,body.resizing-sidebar *{cursor:col-resize!important;user-s
 #sidebar details[data-nav-id][open]>summary::before{content:'▾'}
 #sidebar .nav-group>summary{font-size:16px;font-weight:750;color:var(--ink)}
 #sidebar details[data-nav-id]>summary:hover{background:#f8faf9;color:var(--ink)}
-#sidebar a{display:block;padding:8px 11px;text-decoration:none;color:var(--ink);line-height:1.55;border-left:2px solid transparent;border-radius:0 4px 4px 0;margin:3px 0}
+#sidebar a{display:block;padding:6px 11px;text-decoration:none;color:var(--ink);line-height:1.55;border-left:2px solid transparent;border-radius:0 4px 4px 0;margin:2px 0}
 #sidebar a.nav-sub{padding-left:24px;font-size:14px;color:var(--muted)}
-#sidebar .nav-branch>summary{font-size:12px;font-weight:500;color:var(--muted);padding-left:24px}
+#sidebar .nav-branch>summary{font-size:14px;font-weight:500;color:var(--ink);padding-left:24px}
 #sidebar a:hover{background:#f8faf9}
 #sidebar a[aria-current=page]{color:var(--accent);background:#edf5f1;font-weight:600}
-.sidebar-note{border-top:1px solid var(--line);padding:22px 10px;margin-top:42px;font-size:12px;color:var(--muted)}
+.sidebar-note{border-top:1px solid var(--line);padding:16px 10px;margin-top:24px;font-size:12px;color:var(--muted)}
 /* Selected documents use one quiet surface; keyboard rings stay inside each row. */
 #sidebar a{border-radius:6px}
 #sidebar a[aria-current=page]{background:#edf5f1;border-left-color:transparent}
@@ -79,8 +79,8 @@ button.term{display:inline;font:inherit;color:inherit;background:none;border:0;b
 
 /* Page state badges are short words; the exact record stays in the page evidence. */
 /* Three visible levels: audience, task, then document. */
-#sidebar details.nav-section{margin:8px 0 18px 3px;padding-left:9px;border-left:1px solid var(--line)}
-#sidebar .nav-section>summary{font-size:11px;font-weight:650;letter-spacing:.02em;color:var(--muted)}
+#sidebar details.nav-section{margin:4px 0 6px 3px;padding-left:9px;border-left:1px solid var(--line)}
+#sidebar .nav-section>summary{font-size:14px;font-weight:600;color:var(--ink)}
 #sidebar .nav-section>a{margin-left:0}
 .state-help{font-size:12px;color:var(--muted)}.state-help:hover{color:var(--accent)}
 
@@ -117,3 +117,9 @@ tr[id^="symbol-"]:target{background:#edf5f1}tr[id^="symbol-"]{scroll-margin-top:
   #diagram-dialog .dialog-head button,.diagram-tools button{min-width:44px;min-height:44px}.diagram-tools input{min-height:44px;flex:1 0 100%;width:100%;min-width:0;max-width:100%}.diagram-tools{gap:8px}.diagram-pan-hint{line-height:1.5}
 }
 @media print{.menu-backdrop,.sidebar-close,.index-tools,.evidence-return{display:none!important}}
+
+/* Introductory reader routes precede the unchanged source-bound overview visual. */
+.reader-start{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0 24px}
+.reader-start>section{border:1px solid var(--line);border-radius:8px;padding:18px 20px;min-width:0}
+.reader-start h3{font-size:17px;margin:0 0 8px}.reader-start p{margin:0 0 12px;color:var(--muted);font-size:14px}.reader-start a{font-weight:600;font-size:14px}
+@media(max-width:600px){.reader-start{grid-template-columns:1fr;gap:12px}.reader-start>section{padding:16px}.reader-start a{display:inline-block;min-height:44px;align-content:center}}
