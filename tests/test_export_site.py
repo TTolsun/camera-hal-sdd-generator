@@ -58,6 +58,26 @@ def test_site_preserves_verdicts_and_links_nested_pages(tmp_cfg, sample_model):
     assert (out / 'device.md').read_bytes() == originals[tmp_cfg.sdd_dir / 'device.md']
 
 
+@pytest.mark.parametrize('existing_diagram', [False, True])
+def test_class_diagram_precedes_source_evidence_without_changing_manuscript(tmp_cfg, sample_model, existing_diagram):
+    prepare(tmp_cfg, sample_model)
+    path = tmp_cfg.sdd_dir / 'device.md'
+    text = path.read_text(encoding='utf-8') + '\n## 소스 근거\n\n원문을 확인하세요.\n\n'
+    if existing_diagram:
+        text += '<!-- sdd:class-diagram -->\n## 클래스 관계\n\nOLD DIAGRAM\n<!-- /sdd:class-diagram -->\n'
+    text += '\n??? note "근거와 검토 정보"\n    검토 전입니다.\n'
+    path.write_text(text, encoding='utf-8')
+    site = export_site(tmp_cfg)
+    page = (site / 'device.html').read_text(encoding='utf-8')
+    assert page.index('<h2 id="클래스-관계">') < page.index('<h2 id="소스-근거">')
+    assert page.count('<h2 id="클래스-관계">') == 1
+    assert 'OLD DIAGRAM' not in page
+    assert path.read_text(encoding='utf-8') == text
+    first = (site / 'site-manifest.json').read_bytes()
+    export_site(tmp_cfg)
+    assert (site / 'site-manifest.json').read_bytes() == first
+
+
 def test_stale_facts_abort_before_publication(tmp_cfg, sample_model):
     prepare(tmp_cfg, sample_model)
     sample_model.meta['source_commit'] = 'b' * 40
