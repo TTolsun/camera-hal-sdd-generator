@@ -125,6 +125,12 @@ parts:
     basis: implementation
     required_terms:
     - - 시도
+    reject_patterns:
+    - pattern: 물리|하드웨어|ISP|성능|검증 범위
+      message: Keep the execution limits at the end of the page, without repeating
+        them in this implementation explanation.
+  prompt: ' 이 항목에는 물리 센서·ISP·하드웨어 DMA·성능의 범위 경고를 덧붙이지 마세요. 페이지 끝의 검증 범위가 이미 설명합니다.
+    질문에 명시된 버퍼·변환·완료 조건만 유지하세요.'
 - id: completion
   question: 기준 소스에서 확인한 가상 요청 처리를 네 짧은 문장 400자 이내로 설명하세요. 가상 요청은 비동기 전달되고 VirtualCameraData::processRequest가
     목표 시각까지 기다린 뒤 패턴 작성을 시도합니다. 생성 실패는 FrameError로 표시되며 버퍼 완료 신호만으로 성공을 단정하지 않습니다.
@@ -149,3 +155,9 @@ parts:
   max_statements: 1
   answer_contract:
     basis: implementation
+    reject_patterns:
+    - pattern: 물리|하드웨어|ISP|성능|검증 범위
+      message: Keep the execution limits at the end of the page, without repeating
+        them in this implementation explanation.
+  prompt: ' 이 항목에는 물리 센서·ISP·하드웨어 DMA·성능의 범위 경고를 덧붙이지 마세요. 페이지 끝의 검증 범위가 이미 설명합니다.
+    질문에 명시된 버퍼·변환·완료 조건만 유지하세요.'
