@@ -124,10 +124,9 @@ design_topics:
   design_prompt: focused
   parts:
   - id: dispatch
-    question: 완료 알림은 프레임 후속 처리와 다른 단계임을 먼저 설명하고, requestComplete가 RequestCancelled이면
-      반환하며 그 밖에는 callLater로 processRequest를 이벤트 루프에 미루는 순서와 카메라 매니저 스레드를 막지 않으려는 명시된
-      의도를 연결하세요. 200자 이내로 답하세요. 첫 등장에는 CameraSession::processRequest로 소유 클래스를 명시해
-      VirtualCameraData::processRequest와 구분하세요.
+    question: CameraSession::requestComplete는 취소 상태 RequestCancelled면 반환하고 그 밖에는 callLater로
+      CameraSession::processRequest를 이벤트 루프에 미룬다고 먼저 설명하세요. 카메라 매니저 스레드를 막지 않으려는 소스의
+      이유를 이어서 두 짧은 문장으로 씁니다. 다른 처리 한도·범위 설명은 이 항목에 반복하지 않습니다.
     sources:
     - callback-and-processing
     max_statements: 1
@@ -139,8 +138,9 @@ design_topics:
       basis: implementation
     role: summary
   - id: invocation-scope
-    question: 세 실제 실행 명령은 화면·파일 출력 옵션을 요청하지 않았다는 사실과, 다른 출력 옵션의 비동기 보유 경로는 이번 실행 검증
-      범위가 아니라는 경계를 두 짧은 문장으로만 설명하세요. 옵션별 내부 구현은 접힌 소스 근거에 남깁니다.
+    question: 세 실제 실행 명령은 화면·파일 출력 옵션을 요청하지 않았다는 사실을 한 문장으로 쓰세요. 다른 출력 옵션을 선택한 동작은
+      이번 실행으로 검증하지 않았다고 한 문장만 덧붙이세요. 모든 출력 옵션이 요청을 비동기로 보유한다고 주장하거나 비동기 보유 경로를 일반화하지
+      마세요.
     sources:
     - app-start
     - session-state
@@ -154,9 +154,9 @@ design_topics:
     prompt: ' 이 항목의 질문에만 한두 짧은 문장으로 답하세요. 출력 싱크 미요청 전제는 invocation-scope에서 한 번만 설명하므로
       다른 항목에는 반복하지 마세요. 앞 항목의 조건을 다시 설명하지 마세요.'
   - id: processing
-    question: CameraSession::processRequest는 진입할 때 처리 수 captureCount_와 설정 한도 captureLimit_를
-      먼저 비교합니다. 한도가 설정되고 이미 도달했으면 종료 신호를 다시 내지 않고 반환한다는 조건만 짧게 설명하세요. 증가 동작은 다음 항목에서
-      설명합니다.
+    question: processRequest 진입 시 captureLimit_가 설정되어 있고 captureCount_가 이미 도달하면 captureDone을
+      다시 내지 않고 반환한다는 조건과 동작만 한 짧은 문장으로 쓰세요. 첫 등장은 CameraSession::processRequest로 쓰고
+      다음 항목의 증가 동작은 반복하지 마세요.
     sources:
     - callback-and-processing
     max_statements: 1
@@ -172,9 +172,8 @@ design_topics:
       - - captureCount_
       - - captureLimit_
   - id: frame-work
-    question: 이미 앞 항목의 진입 검사를 통과한 지점부터 설명하세요. 프레임 정보를 출력하고 captureCount_를 늘린 뒤, 한도가
-      설정되어 있고 증가한 처리 수가 도달하면 captureDone을 내고 processRequest에서 반환한다고 두 짧은 문장 이내로 쓰세요.
-      앞 항목의 진입 검사 자체를 반복하지 마세요.
+    question: 프레임 정보를 출력하고 captureCount_를 늘린 뒤, 설정된 한도에 도달하면 captureDone을 내고 processRequest를
+      반환한다는 동작만 한두 짧은 문장으로 쓰세요. 진입 검사는 반복하지 마세요.
     sources:
     - callback-and-processing
     max_statements: 1
@@ -192,9 +191,9 @@ design_topics:
       required_terms:
       - - captureDone
   - id: reuse-request
-    question: 이 항목은 기록된 출력 싱크 미요청 경로에만 해당함을 문장 앞에서 명시하세요. 그 경로에서 처리를 계속할 요청은 Request::ReuseBuffers로
-      버퍼를 유지해 재사용한 뒤 CameraSession::queueRequest 도우미를 호출한다는 한 문장만 쓰세요. 도우미 호출을 실제
-      제출 성공으로 단정하지 마세요. 출력 옵션이 다른 일반 경로에는 이 단정을 적용하지 않습니다.
+    question: 기록된 출력 싱크 미요청 경로에서 처리를 계속할 요청은 Request::ReuseBuffers로 버퍼를 유지해 재사용한 뒤
+      CameraSession::queueRequest 도우미를 호출한다는 한 문장만 쓰세요. 제출의 결과·보장·성공이나 다른 옵션 설명은 다음
+      항목으로 남기고 현재 문장에 붙이지 마세요.
     sources:
     - callback-and-processing
     - reuse-call
@@ -212,9 +211,9 @@ design_topics:
         message: The helper is called; actual submission is conditional and belongs
           to the next item.
   - id: submission-limit
-    question: queueCount_는 카메라 제출을 시도하기 전에 증가하는 별도 카운터이며 성공한 접수 개수가 아님을 설명하세요. 한도가
-      설정되고 이 카운터가 이미 도달하면 CameraSession::queueRequest가 실제 제출 없이 반환하고, 그 밖에는 카운터를 늘린
-      뒤 제출을 시도한다는 관계를 두 짧은 문장으로 쓰세요.
+    question: CameraSession::queueRequest의 queueCount_는 카메라 제출 시도 직전에 늘리는 카운터라고 한
+      짧은 문장으로 설명하세요. 설정 한도에 이미 도달하면 제출 없이 반환하고 그 밖에는 카운터를 늘려 제출을 시도한다는 분기만 다음 짧은 문장으로
+      쓰세요. 성공적으로 접수된 개수라는 뜻으로 쓰지 말고 캡처 처리 한도·재사용·다른 옵션은 반복하지 않습니다.
     sources:
     - submission-limit
     max_statements: 1

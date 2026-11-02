@@ -16,17 +16,16 @@
   - captureDone
   - Request::ReuseBuffers
   question: 기록된 출력 싱크 미요청 경로에서 완료 콜백은 어떤 처리와 종료로 이어집니까?
-  prompt: '이 그림의 범위는 명령과 app-start 소스로 확인한 출력 싱크 미요청 경로입니다. 열 노드: n0 CameraSession::requestComplete,
-    n1 RequestCancelled 판정, n2 requestComplete 반환, n3 callLater, n4 CameraSession::processRequest
-    진입 한도 설정 AND 도달 판정, n5 processRequest 반환(종료 신호 없음), n6 프레임 정보 출력·captureCount_
-    증가, n7 증가 후 한도 설정 AND 도달 판정, n8 captureDone 후 processRequest 반환, n9 버퍼 유지 재사용
-    후 제출 도우미 호출. n0→n1, 취소면 n2, 아니면 n3→n4, 진입 한도면 n5, 그 밖에는 n6→n7, 증가 후 한도면 n8, 그
-    밖에는 n9입니다. 처리·제출 도우미는 다음 별도 그림에서 상세히 설명합니다. 반환 노드 이름에는 각각 requestComplete 또는 processRequest를
-    명시해 합치지 마세요. 취소 분기는 소스에 있으나 이번 실행에서 동적으로 시험한 분기가 아닙니다. 출력 옵션을 선택한 FrameSink 비동기
-    보유 경로를 이 선택된 명령의 그림에 섞지 마세요. 거짓 한도 분기는 미설정 OR 미도달을 뜻합니다. 실제 source condition_ref를
-    쓰고, authored 라벨에는 true/false를 반복하지 마세요. 간선은 핵심 조건, 노드는 핵심 동작만 짧게 씁니다. 화살표는 짧은
-    조건·이벤트만 씁니다. 노드에 있는 동작을 문장으로 반복하지 말고 무조건 간선은 두세 단어의 짧은 연결어만 씁니다. 상세 조건은 본문과 근거에서
-    확인합니다.'
+  prompt: 기록된 출력 싱크 미요청 경로의 고정 10개 노드를 유지하세요. 기존 취소·진입 한도·증가 후 한도 분기와 출처를 보존하며 한영
+    라벨만 줄입니다. n0 CameraSession::requestComplete 진입, n1 RequestCancelled인가, n2 requestComplete
+    반환, n3 callLater로 이벤트 루프에 위임, n4 processRequest 진입에서 한도 설정 AND 처리 수 도달인가, n5 processRequest
+    반환(captureDone 재발행 없음), n6 프레임 정보 출력과 처리 수 증가, n7 증가 후 한도 설정 AND 도달인가, n8 captureDone
+    후 processRequest 반환, n9 버퍼 유지 재사용 후 제출 도우미 호출입니다. n0→n1, 취소면 n2, 아니면 n3→n4, 진입
+    한도면 n5, 그 밖에는 n6→n7, 증가 후 한도면 n8, 그 밖에는 n9입니다. 반환 주체는 각각 명시하고 서로 합치지 않습니다. 두 캡처
+    한도 검사와 신호의 차이는 유지하되 긴 함수 호출식·같은 스레드 이유·출력 범위·제출 도우미 내부를 각 노드에 반복하지 마세요. 제출 도우미는
+    다음 별도 그림이 설명합니다. 간선에는 짧은 조건만, 노드에는 짧은 행동만 씁니다. 한도 거짓은 미설정 OR 미도달입니다. source condition_ref와
+    모든 양 끝 symbol 인용을 보존합니다. authored true/false는 시스템 표시와 중복하지 않습니다. 노드·화살표에 같은 동작
+    전체를 반복하지 않습니다. 취소는 소스 분기이며 이번 실행에서 동적 시험한 것은 아닙니다.
   sources:
   - callback-and-processing
   - app-start
@@ -47,33 +46,25 @@
 - id: submission-gate
   topic: flow
   kind: decision
-  title: 재사용 뒤 제출 도우미가 실제 제출 여부를 정합니다
+  title: 제출 도우미는 별도 카운터로 제출을 제한합니다
   generation: llm
-  max_nodes: 5
+  max_nodes: 3
   required_symbols:
-  - Request::ReuseBuffers
-  - CameraSession::queueRequest
   - queueCount_
   - return
   - camera_
-  question: 재사용한 요청이 제출 도우미에서 반환되거나 카메라에 제출되는 조건은 무엇입니까?
+  question: 제출 도우미의 별도 카운터 한도에 따라 제출하지 않거나 제출을 시도하는 조건은 무엇입니까?
   sources:
-  - reuse-call
   - submission-limit
   max_label_chars: 72
   condition_display: evidence
   require_connected: true
-  prompt: '다섯 노드: n0 버퍼 유지 재사용, n1 CameraSession::queueRequest 도우미 호출, n2 제출 한도 설정
-    AND queueCount_ 도달 판정, n3 queueRequest 도우미의 실제 제출 없는 반환, n4 카메라 제출 시도입니다. n0→n1→n2,
-    실제 소스 한도 조건이 참이면 n3, 거짓(미설정 OR 미도달)이면 n4입니다. 이 도우미는 호출 자체가 제출 보장이 아니며 처리 개수와 제출
-    개수는 다릅니다. n3 반환 주체는 CameraSession::queueRequest라고 분명히 쓰고, n4는 성공 보장이 아닌 시도라고 씁니다.
-    전체 C++ 호출식·부등식은 근거에 두고 필요한 함수 이름과 짧은 조건만 라벨에 씁니다. true/false는 시스템이 붙이므로 authored
-    라벨에 쓰지 마세요. 화살표는 짧은 조건·이벤트만 씁니다. 노드에 있는 동작을 문장으로 반복하지 말고 무조건 간선은 두세 단어의 짧은 연결어만
-    씁니다. 상세 조건은 본문과 근거에서 확인합니다. 그림의 시작점은 앞선 소스 경로에서 이미 버퍼를 유지해 재사용한 상태입니다. n0→n1과
-    n1→n2는 condition_ref always이며 requeue를 새로 판정하는 간선을 넣지 마세요. requeue 판정은 재사용 전의
-    본래 소스 위치에 있으며 출력 싱크 미요청이라는 전제에서 이미 통과한 조건입니다. 노드나 간선 라벨과 condition_ref에 requeue를
-    넣지 마세요. reuse-call 근거는 이전 조건 검사를 이미 지난 뒤의 두 호출만 선택합니다. 앞선 콜백·requeue 조건을 이 그림으로
-    옮기지 마세요.'
+  prompt: 앞 그림이 이미 재사용과 도우미 호출을 설명하므로 이 그림은 도우미 내부의 세 노드만 사용합니다. n0은 한도가 설정되고 제출 카운터
+    queueCount_가 이미 도달했는가라는 결정입니다. 참이면 n1 제출 없이 도우미에서 반환, 거짓(한도 미설정 OR 미도달)이면 n2 카운터
+    증가 후 카메라 제출 시도입니다. 세 노드와 두 조건 간선만 연결합니다. 실제 조건의 두 branch를 source condition_ref로
+    인용하고 화살표는 설정·도달 또는 미설정·미도달만 짧게 표시합니다. 카운터는 실제 제출 시도 전에 증가하며 성공 접수를 세는 것이 아닙니다.
+    n2는 시도이며 제출 성공 보장이 아닙니다. 재사용 노드·도우미 호출 노드를 반복하지 마세요. true/false는 시스템 표시와 중복하지
+    않고 한영 동작·조건을 간결하게 씁니다. source guard와 양 끝 symbol 인용을 보존합니다.
   answer_contract_en:
     basis: implementation
     reject_patterns:
