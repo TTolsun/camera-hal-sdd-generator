@@ -1,0 +1,15 @@
+visual_audit:
+  # Inventory is collected before review. Enable only with the complete ledger.
+  enabled: false
+  thresholds:
+    ko:
+      chars: 600
+      paragraphs: 3
+      rationale: 'Initial rule retained: pipeline-handler#정지와-미완료-요청 has 1521 Korean characters and 5 paragraphs; both length and branch/ownership signals require review.'
+    en:
+      chars: 600
+      paragraphs: 3
+      rationale: 'Initial rule retained: the same stop/uncompleted-request item has 2601 English characters and 5 paragraphs. Longer English alone does not approve a figure or an omission.'
+  deferred_pages:
+    official-cam-validation.html: 'Generator PR #231 and public SDD PR #78 own the virtual-capture narrative and figures; inspect after their merge.'
+    en/official-cam-validation.html: 'Generator PR #231 and public SDD PR #78 own the virtual-capture narrative and figures; inspect after their merge.'

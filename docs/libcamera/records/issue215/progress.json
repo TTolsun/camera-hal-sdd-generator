@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "status": "in-progress",
+  "generator_baseline": "81bbede4aec948a3751550674b29c19927e453d7",
+  "public_baseline": "7d824a9753721edd86a4b509a979230033532f9c",
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "official_upstream": "25cb6cd274d3112d03d9a825e47eb2c15c70da24",
+  "build_id": "4ff388b8cd10b1db43f940ce650727c4b03a71e8b84a0054f9cc76f9e46210fe",
+  "manifest_sha256": "6ffaed26c2df24d93b8a16c209404bddf73445d6d36621cb81d73d7bd4ba489c",
+  "style_sha256": {
+    "fluent-korean.md": "ce5aa71e58371e3fc02ff8cb165e07c9234f5166f6541423a91cc4cb40878975",
+    "i-have-adhd.md": "3170b16ace00aecb0dd7feb54c0b5aa642e7502acda06ecd24fd89a11c7127e9",
+    "README.md": "b87a84b1bc31079837dc4dc4527ce02c9dc2cbc3a26ff7e99e0872941d213995"
+  },
+  "pages": 62,
+  "items": 556,
+  "counts": {
+    "appropriate": 0,
+    "needs_visual": 0,
+    "omit": 0,
+    "unreviewed": 556
+  },
+  "unresolved": 556,
+  "candidate_counts": {
+    "ko": 163,
+    "en": 176
+  },
+  "baseline_verification": {
+    "html_pages": 62,
+    "broken_links": 0,
+    "manifest_verified": true
+  },
+  "other_session": {
+    "generator_pr": 231,
+    "public_pr": 78,
+    "state": "pending-merge-and-integration",
+    "scope": [
+      "official-cam-validation",
+      "require_guard_branches",
+      "identifier wrapping"
+    ]
+  },
+  "existing_rule_pr": {
+    "pr": 216,
+    "merge": "2793c94d7307813ce4effbb24c59eee26999e0e3",
+    "count_as_new": false
+  },
+  "human_review": "pending",
+  "generator_merge": null,
+  "public_merge": null,
+  "pages_release": null,
+  "scope_exclusions": [
+    "issue163 reader evaluation",
+    "physical camera and in-house HAL validation"
+  ],
+  "inventory": "inventory-v6.json.gz",
+  "inventory_policy": "All headings including 132 visual titles are now explicit review records; current acceptance pending.",
+  "tests": {
+    "item_audit_passed": 33,
+    "broader_preceding_checks": [
+      131,
+      116
+    ],
+    "full_regression": "running-frozen-snapshot"
+  },
+  "draft_generation": {
+    "page": "pipeline-handler.md",
+    "initial_graph": "5 nodes, 6 edges; independent grounding REJECTED",
+    "current": "Two revised questions generating via native Codex/Terra High",
+    "human_review": "pending"
+  },
+  "prior_results": "Initial inventory and original CLI results retained without repinning to changed audit fingerprints."
+}

@@ -74,6 +74,9 @@ def verify_site(root: Path, manifest: bool = True) -> dict:
                 errors.append(f"Missing anchor: {path.name} -> {link}")
     if errors:
         raise RuntimeError("Site verification failed:\n" + "\n".join(errors))
+    if manifest:
+        from .visual_audit import verify_published
+        verify_published(root, data)
     return {"html_pages": len(pages), "broken_links": 0, "manifest_verified": manifest}
 
 
@@ -91,8 +94,15 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
             raise RuntimeError("Unexpected staging directory")
         render(cfg, stage, mermaid_src)
         verify_site(stage, manifest=False)
+        from .visual_audit import publication_gate
+        publication_gate(cfg, stage)
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
+        from .visual_audit import policy as audit_policy
+        audit_settings = audit_policy(cfg)
+        audit_file = audit_settings.get('reviews')
+        if audit_settings.get('enabled', False) and audit_file:
+            inputs['item_visual_reviews'] = digest(cfg.root / audit_file)
         from .render_profiles import inputs as editorial_inputs
         inputs.update({'editorial/'+key:value for key,value in editorial_inputs(cfg).items()})
         from .product_context import input_paths
@@ -134,7 +144,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "generated_design.py", code_root / "generated_visuals.py",
                                             code_root / "config.py", code_root / "render_profiles.py", code_root / "design_types.py",
                                             code_root / "validation_stage.py", code_root / "input_watch.py", code_root / "publication_plan.py",
-                                            code_root / "validation_execution.py",
+                                            code_root / "validation_execution.py", code_root / "visual_audit.py",
                                             code_root / "execution_lock.py", code_root / "generation_run.py",
                                             code_root / "consistency.py", code_root / "consistency_sources.py",
                                             code_root / "consistency_analysis.py", code_root / "cli_schema.py",

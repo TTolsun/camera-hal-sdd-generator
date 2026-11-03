@@ -251,6 +251,8 @@ H2 본문 절의 H3 이하 소제목·그림과 그 뒤의 설명은 같은 근�
 
 ## 질문별 그림
 
+최종 조립 문서의 독립 항목 조사와 발행 차단 설정은 [항목별 시각화 검사](../reference/visual-audit.md)를 따릅니다. `visual_audit.enabled`를 켜면 원고 생성과 최종 한영 사이트에서 항목별 판정·지문·검토 범위를 검사합니다. 이 설정의 구현과 실제 libcamera 전체 보완·공개 배포의 완료는 구분합니다.
+
 ### 사내 LLM으로 초안 자동 생성하기
 
 **사내 템플릿의 `config/visuals.yaml`에는 질문만 적습니다. 노드·화살표·근거 해시를 손으로 작성하지 않습니다. 꼭 포함할 실제 함수·상태는 선택적인 required_symbols로 지정할 수 있으며 소스나 그림에 없으면 실패합니다.** 각 질문에 `generation: llm`을 지정하면 `generate`, `run`, `update`가 기존 `agent` 연결을 사용해 그림 JSON 초안을 요청합니다. 기본 `agent.kind: cli`는 Hermes를 실행하며 OpenCode·Claude Code로 바꿀 수 있습니다. 모델·제공자·인증은 선택한 CLI에서 관리합니다. [CLI 선택 안내](../inhouse/cli-agents.md)를 따릅니다. 실제 HAL과 모델에서 별도 검증하기 전에는 사내 적용 완료로 판단하지 않습니다.

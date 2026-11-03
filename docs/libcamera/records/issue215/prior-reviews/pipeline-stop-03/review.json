@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "id": "en/pipeline-handler.html#정지와-미완료-요청",
+      "status": "needs_visual",
+      "reason": "The section has no local figure. The stop sequence, queue transfers, completion re-entry, and normal queueing conditions involve ordering and branches that merit a diagram. The supplied excerpts support those relationships; the internal implementation of doQueueRequest is not shown.",
+      "question": "Stopping and outstanding requests",
+      "figures": [],
+      "source_windows": [
+        "en/pipeline-handler.html#source-eefd1bbecb1aad0a",
+        "en/pipeline-handler.html#source-d63c9e57bcf862b0",
+        "en/pipeline-handler.html#source-01ad7c6605c3296a"
+      ],
+      "unreviewed_scope": [
+        "The internal implementation of doQueueRequest and the excluded details were not supplied."
+      ],
+      "proposed_question": "How does stop separate and cancel waiting requests in order, and why does completion re-entry not resubmit them, compared with normal queueing conditions?"
+    },
+    {
+      "id": "pipeline-handler.html#정지와-미완료-요청",
+      "status": "needs_visual",
+      "reason": "이 절에는 로컬 그림이 없습니다. 정지 순서, 큐 이동, 완료 처리의 재진입과 정상 큐잉 조건은 순서와 분기가 얽혀 있어 다이어그램이 필요합니다. 제공된 발췌는 이 관계를 뒷받침하지만 doQueueRequest의 내부 구현은 보여 주지 않습니다.",
+      "question": "정지와 미완료 요청",
+      "figures": [],
+      "source_windows": [
+        "pipeline-handler.html#source-eefd1bbecb1aad0a",
+        "pipeline-handler.html#source-d63c9e57bcf862b0",
+        "pipeline-handler.html#source-01ad7c6605c3296a"
+      ],
+      "unreviewed_scope": [
+        "doQueueRequest의 내부 구현과 제외된 세부 내용은 제공되지 않아 검토하지 못했습니다."
+      ],
+      "proposed_question": "정지할 때 대기 요청은 어떤 순서로 분리되고 취소되며, 정상 큐잉 조건과 달리 완료 처리의 재진입에서 왜 다시 제출되지 않는가?"
+    }
+  ],
+  "seconds": 9.75,
+  "human_review": "pending",
+  "inventory_sha256": "0c71f562a9f5e8e679a337ef01186949cbea0557e2271325e65e395b8749b856",
+  "input_sha256": "a4966d175093217e6adf4161c9bb3abe7fcbd636b8a2017759267bb8d4b6be3e"
+}
