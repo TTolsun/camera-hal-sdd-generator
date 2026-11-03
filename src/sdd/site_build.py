@@ -108,6 +108,8 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         intro = cfg.site.intro
         if intro:
             inputs["intro"] = digest(cfg.root / intro)
+        if cfg.site.guide_visuals:
+            inputs['guide_visuals'] = digest(cfg.root / cfg.site.guide_visuals)
         catalog = cfg.site.english_catalog
         if catalog:
             inputs["english_catalog"] = digest(cfg.root / catalog)
@@ -138,7 +140,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "config.py", code_root / "render_profiles.py", code_root / "design_types.py",
                                             code_root / "validation_stage.py", code_root / "input_watch.py", code_root / "publication_plan.py",
                                             code_root / "validation_execution.py", code_root / "visual_audit.py", code_root / "site_paths.py", code_root / "mermaid_text.py",
-                                            code_root / "execution_lock.py", code_root / "generation_run.py",
+                                            code_root / "execution_lock.py", code_root / "generation_run.py", code_root / "guide_visuals.py",
                                             code_root / "consistency.py", code_root / "consistency_sources.py",
                                             code_root / "consistency_analysis.py", code_root / "cli_schema.py",
                                             code_root / "design_request.py", code_root / "design_response.py",

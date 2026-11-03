@@ -1,0 +1,205 @@
+{
+  "schema": 1,
+  "scope": "Baseline candidate calibration only; not final accepted release",
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "effective_thresholds": {
+    "default": {
+      "chars": 600,
+      "paragraphs": 3
+    },
+    "en": {
+      "chars": 600,
+      "paragraphs": 3,
+      "rationale": "Initial rule retained: the same stop/uncompleted-request item has 2601 English characters and 5 paragraphs. Longer English alone does not approve a figure or an omission."
+    },
+    "ko": {
+      "chars": 600,
+      "paragraphs": 3,
+      "rationale": "Initial rule retained: pipeline-handler#정지와-미완료-요청 has 1521 Korean characters and 5 paragraphs; both length and branch/ownership signals require review."
+    }
+  },
+  "threshold_policy_changed": false,
+  "rationale": "Keep 600 characters or 3 explanatory paragraphs as conservative candidate signals in each language. Complexity still selects short items. Native meaning/source review decides both diagram acceptance and individual omission; no length-only approval.",
+  "paired_body_items": 161,
+  "median_english_to_korean_char_ratio": 1.839,
+  "languages": {
+    "ko": {
+      "items": 212,
+      "threshold_candidates": 84,
+      "additional_short_complex_candidates": 80,
+      "examples": [
+        {
+          "case": "long_omit",
+          "id": "pipeline-handler.html#관련-클래스",
+          "url": "pipeline-handler.html#관련-클래스",
+          "chars": 659,
+          "paragraphs": 17,
+          "complexity": [],
+          "judgment": "omit",
+          "reason": "관련 클래스 링크 목록이며 별도의 과정이나 관계를 설명하는 항목이 아닙니다.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\pipeline-handler\\review.json"
+        },
+        {
+          "case": "long_omit",
+          "id": "pipeline-requests.html#관련-클래스",
+          "url": "pipeline-requests.html#관련-클래스",
+          "chars": 659,
+          "paragraphs": 17,
+          "complexity": [],
+          "judgment": "omit",
+          "reason": "클래스 링크 목록이므로 별도의 과정이나 관계 그림이 필요하지 않습니다.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\pipeline-requests\\review.json"
+        },
+        {
+          "case": "short_needs_visual",
+          "id": "vendor-integration.html#정지와-오류-처리의-책임",
+          "url": "vendor-integration.html#정지와-오류-처리의-책임",
+          "chars": 599,
+          "paragraphs": 2,
+          "complexity": [
+            "state",
+            "order",
+            "responsibility"
+          ],
+          "judgment": "needs_visual",
+          "reason": "정지 과정은 대기 요청 분리, 장치 정지와 취소, 대기 요청 완료를 정해진 순서로 조정합니다. 공통 코드와 장치 구현의 책임을 보여 주는 그림이 없습니다.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-03\\vendor-integration\\review.json"
+        },
+        {
+          "case": "short_needs_visual",
+          "id": "pipeline-handler.html#구성의-입력과-검증-책임",
+          "url": "pipeline-handler.html#구성의-입력과-검증-책임",
+          "chars": 594,
+          "paragraphs": 1,
+          "complexity": [
+            "state",
+            "responsibility",
+            "ownership"
+          ],
+          "judgment": "needs_visual",
+          "reason": "두 구성 호출의 호출자와 구현 책임, 스레드, 반환 결과 사이의 관계를 보여 주는 로컬 그림이 없습니다.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\pipeline-handler\\review.json"
+        },
+        {
+          "case": "long_needs_visual",
+          "id": "camera-model.html#클래스별-책임",
+          "url": "camera-model.html#클래스별-책임",
+          "chars": 591,
+          "paragraphs": 3,
+          "complexity": [
+            "responsibility",
+            "ownership"
+          ],
+          "judgment": "needs_visual",
+          "reason": "세 클래스의 역할과 Camera의 공유 수명을 함께 이해해야 하지만 이 절에는 이를 설명하는 그림이 없습니다.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\camera-model\\review.json"
+        },
+        {
+          "case": "long_needs_visual",
+          "id": "ipu3-lsc-flow.html#초기화와-크롭-설정",
+          "url": "ipu3-lsc-flow.html#초기화와-크롭-설정",
+          "chars": 633,
+          "paragraphs": 3,
+          "complexity": [
+            "state",
+            "ownership"
+          ],
+          "judgment": "needs_visual",
+          "reason": "그리드 계산 결과가 초기화와 크롭 설정에 순서대로 전달되는 관계를 보여 주는 로컬 그림이 없습니다.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\ipu3-lsc-flow\\review.json"
+        }
+      ]
+    },
+    "en": {
+      "items": 212,
+      "threshold_candidates": 117,
+      "additional_short_complex_candidates": 60,
+      "examples": [
+        {
+          "case": "long_omit",
+          "id": "en/onboarding.html#$heading-0",
+          "url": "en/onboarding.html",
+          "chars": 570,
+          "paragraphs": 7,
+          "complexity": [
+            "state",
+            "order"
+          ],
+          "judgment": "omit",
+          "reason": "The introduction presents a short reading order and navigation questions; these do not need a separate diagram.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\onboarding\\review.json"
+        },
+        {
+          "case": "long_omit",
+          "id": "en/ipa.html#프레임-입력과-결과-인터페이스",
+          "url": "en/ipa.html#프레임-입력과-결과-인터페이스",
+          "chars": 642,
+          "paragraphs": 2,
+          "complexity": [],
+          "judgment": "omit",
+          "reason": "The section lists two sets of method and event signatures; their independent parameters can be compared directly without a diagram.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\ipa\\review.json"
+        },
+        {
+          "case": "short_needs_visual",
+          "id": "en/overview.html#캡처-세션의-상태와-자원",
+          "url": "en/overview.html#캡처-세션의-상태와-자원",
+          "chars": 589,
+          "paragraphs": 1,
+          "complexity": [
+            "state",
+            "order",
+            "ownership"
+          ],
+          "judgment": "needs_visual",
+          "reason": "The preparation, repeated start and stop, reconfiguration, and release paths are state transitions that benefit from a local state diagram.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\overview\\review.json"
+        },
+        {
+          "case": "short_needs_visual",
+          "id": "en/vendor-integration.html#연동-순서와-책임",
+          "url": "en/vendor-integration.html#연동-순서와-책임",
+          "chars": 515,
+          "paragraphs": 1,
+          "complexity": [
+            "state",
+            "responsibility"
+          ],
+          "judgment": "needs_visual",
+          "reason": "The local figure shows the application session sequence and restart loop, but does not answer the stated question about provider and vendor implementation responsibilities. The source also assigns synchronization to the caller.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-03\\vendor-integration\\review.json"
+        },
+        {
+          "case": "long_needs_visual",
+          "id": "en/framebuffer-allocator.html#중복-할당과-내보내기-실패를-구분하기",
+          "url": "en/framebuffer-allocator.html#중복-할당과-내보내기-실패를-구분하기",
+          "chars": 610,
+          "paragraphs": 2,
+          "complexity": [
+            "branch",
+            "ownership"
+          ],
+          "judgment": "needs_visual",
+          "reason": "The insertion and export branches have different return values and effects on the allocation entry; a local flow diagram would make that distinction clear.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\framebuffer-allocator\\review.json"
+        },
+        {
+          "case": "long_needs_visual",
+          "id": "en/overview.html#정적-근거의-확인-범위",
+          "url": "en/overview.html#정적-근거의-확인-범위",
+          "chars": 614,
+          "paragraphs": 1,
+          "complexity": [
+            "state",
+            "branch",
+            "ownership"
+          ],
+          "judgment": "needs_visual",
+          "reason": "The local class diagram does not answer the start-state and error-branch question. The supplied full source establishes the branch beyond the truncated excerpt.",
+          "review_record": "build\\issue215\\reviews\\full-inventory-02\\overview\\review.json"
+        }
+      ]
+    }
+  },
+  "human_review": "pending"
+}

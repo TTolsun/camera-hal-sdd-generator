@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "status": "in-progress",
+  "generator_baseline": "81bbede4aec948a3751550674b29c19927e453d7",
+  "public_baseline": "7d824a9753721edd86a4b509a979230033532f9c",
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "official_upstream": "25cb6cd274d3112d03d9a825e47eb2c15c70da24",
+  "build_id": "4ff388b8cd10b1db43f940ce650727c4b03a71e8b84a0054f9cc76f9e46210fe",
+  "manifest_sha256": "6ffaed26c2df24d93b8a16c209404bddf73445d6d36621cb81d73d7bd4ba489c",
+  "style_sha256": {
+    "fluent-korean.md": "ce5aa71e58371e3fc02ff8cb165e07c9234f5166f6541423a91cc4cb40878975",
+    "i-have-adhd.md": "3170b16ace00aecb0dd7feb54c0b5aa642e7502acda06ecd24fd89a11c7127e9",
+    "README.md": "b87a84b1bc31079837dc4dc4527ce02c9dc2cbc3a26ff7e99e0872941d213995"
+  },
+  "pages": 62,
+  "items": 556,
+  "counts": {
+    "appropriate": 128,
+    "needs_visual": 125,
+    "omit": 267,
+    "unreviewed": 36
+  },
+  "unresolved": 161,
+  "candidate_counts": {
+    "ko": 163,
+    "en": 176
+  },
+  "baseline_verification": {
+    "html_pages": 62,
+    "broken_links": 0,
+    "manifest_verified": true
+  },
+  "other_session": {
+    "generator_pr": 231,
+    "public_pr": 78,
+    "state": "pending-merge-and-integration",
+    "scope": [
+      "official-cam-validation",
+      "require_guard_branches",
+      "identifier wrapping"
+    ]
+  },
+  "existing_rule_pr": {
+    "pr": 216,
+    "merge": "2793c94d7307813ce4effbb24c59eee26999e0e3",
+    "count_as_new": false
+  },
+  "human_review": "pending",
+  "generator_merge": {
+    "pr": 233,
+    "sha": "172dd9a1d3834cda398d6798df113e28a94a2676",
+    "ci_run": 41694260329,
+    "ci_jobs": "all four Linux/Windows and Python3.11/3.14 passed"
+  },
+  "public_merge": null,
+  "pages_release": null,
+  "scope_exclusions": [
+    "issue163 reader evaluation",
+    "physical camera and in-house HAL validation"
+  ],
+  "inventory": "baseline-item-review-v11.json.gz",
+  "inventory_policy": "556 explicit records: 424 explanatory/introduction records and132 auxiliary visual-title headings; auxiliary headings do not add independent questions.",
+  "tests": {
+    "item_gate_ci": "PR233 all4 CI passed",
+    "literal_followup_local": 166,
+    "literal_followup_ci": "PR234 pending"
+  },
+  "draft_generation": {
+    "pipeline_shutdown": "6 bilingual selected items accepted by native review; further pipeline responsibilities/configuration/search generated, full-page review pending",
+    "onboarding": "Fresh changed-item review accepted all6; 4 exact unchanged items reused without repinning",
+    "lsc_structure": "10 bilingual items resolved after fresh evidence ownership render",
+    "allocator": "18 bilingual items resolved before latest literal rendering change; rerender/review changed fingerprints still required",
+    "camera_model": "Whole-page input overflow failed; three subsequent native groups reviewed all30 records; 2 need correction to stop immediate-return path",
+    "camera_requests": "28 records reviewed:20 appropriate,6 omit,2 require end-to-end diagram; supplementary draft generated",
+    "lsc_flow": "24 records reviewed:6 appropriate,16 omit,2 require build-input identity relation; supplementary draft generated",
+    "human_review": "pending"
+  },
+  "prior_results": "Initial inventory and original CLI results retained without repinning to changed audit fingerprints.",
+  "generator_pr": 233,
+  "native_archive": "native-evidence-01.zip",
+  "current_gate_unreviewed": {
+    "deferred_other_session": 14,
+    "baseline_evidence_panel_ownership": 22,
+    "fix": "Generator PR233 corrects ownership during fresh render; final source-bound review still required"
+  },
+  "followup_generator_pr": 234,
+  "review_coverage": "All60 baseline pages outside the two deferred virtual-capture pages received independent native Terra High reviews. Unresolved candidate and mechanical failures remain; this is not whole-site completion.",
+  "generator_merges": [
+    {
+      "pr": 233,
+      "sha": "172dd9a1d3834cda398d6798df113e28a94a2676",
+      "ci": "all4 passed"
+    },
+    {
+      "pr": 234,
+      "sha": "c99849fb62f0ea3ae5895f1ef0a604cc6416269a",
+      "ci_run": 41704195877,
+      "ci": "all4 passed"
+    }
+  ],
+  "current_branch": "codex/issue-215-inventory-remediation",
+  "native_archive_checkpoint": "native-evidence-02-index.json",
+  "integrated_draft": {
+    "sections": 22,
+    "path": "build/issue215/integrated-draft-02",
+    "facts_sha256": "31bfc75bb49d523688f5808b652a1e9cfc924b5bae65c77edd9fdf100817963e",
+    "manuscripts": "Byte copies of completed native drafts; no manual manuscript or HTML corrections",
+    "structural_facts": "Original293 extraction retained; configured source windows recollected, not a new full AST extraction",
+    "initial_assembly_failure": "ipu3-lsc-prepare and ipa-module-validation retain old README style hash; real current-profile generation in progress"
+  },
+  "common_translation": {
+    "verified_glossary_native_units": 181,
+    "profile": "Independent native Codex CLI/gpt-6.1-terra/high",
+    "note": "Only raw receipt-bound compatible units can seed later runs; input/source/schema/policy changes do not repin old reviews"
+  },
+  "outstanding": [
+    "Full current-contract bilingual integration review and home reader-path diagram",
+    "Finish style-policy refresh of two documents and any remaining semantic/rendering failures",
+    "Other-session PR231/PR78 are still unmerged; the other chat failed at model capacity and was not messaged or resumed",
+    "Merge remaining generator followup; public SDD PR/merge; same-build Pages and live asset verification"
+  ]
+}

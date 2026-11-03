@@ -174,7 +174,13 @@ def render_values(cfg, model, section, values):
                 key = f"{record['file']}:{record['line']}:{record['sha256']}"
                 anchor = hashlib.sha256(key.encode()).hexdigest()[:16]
                 links.append(f"[{record['file']}:{record['line']}](#source-{anchor})")
-            proof.append(f"| {html.escape(name).replace('|', '&#124;')} | {' · '.join(dict.fromkeys(links))} |")
+            # The same short Korean label can have different meanings in
+            # different diagrams. Keep its verified English label with this
+            # exact proof row instead of forcing a site-wide dictionary value.
+            literal = re.sub(r'[`*_~\[\]()!\\|]',lambda m:'&#'+str(ord(m[0]))+';',html.escape(name))
+            label = ('<span data-sdd-label-en="'+html.escape(item['label_en'],quote=True).replace('|','&#124;')+'">'
+                     +literal+'</span>')
+            proof.append(f"| {label} | {' · '.join(dict.fromkeys(links))} |")
         for node in nodes:
             if set(node) - {'id', 'label', 'label_en', 'shape', 'evidence'}:
                 raise ValueError('Unknown visual node setting')

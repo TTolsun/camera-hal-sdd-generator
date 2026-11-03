@@ -59,6 +59,7 @@ def test_catalog_refresh_records_carryover_and_preserves_output_on_bad_history(t
     from sdd import export_site
     from sdd.localization_cli import prepare_catalog
     old, new = catalog('a'*40), catalog('b'*40)
+    old['diagram_label_policy']='scoped-proof-v1'
     key = next(iter(old['translation_contexts']))
     old['strings'] = {key: '{{0}} moves waiting requests.'}
     record = {k: v for k, v in next(iter(new['source_contexts'].values())).items()
