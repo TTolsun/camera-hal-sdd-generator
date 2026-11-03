@@ -2,7 +2,7 @@
 name: camera-hal-sdd
 description: camera-hal-sdd-generator를 사내 Camera HAL에 처음 적용하거나 SDD를 갱신할 때 사용합니다. 제품 빌드 설정, 소스에 근거한 Vendor·Developer 계약 작성, 문서·사이트 검증과 변경 후 재검토를 수행합니다. 사람 승인이나 실기기 시험 결과를 대신 만들지 않습니다.
 metadata:
-  version: "9"
+  version: "10"
   repository: camera-hal-sdd-generator
 ---
 
@@ -12,7 +12,7 @@ metadata:
 
 반입 ZIP을 받은 경우 [패키지 시작 안내](../../docs/inhouse/package.md)의 무결성 검사·실행 순서·합격 기준·복구 진입점을 먼저 사용합니다. 안내와 CLI는 같은 커밋의 파일을 사용하며 설치된 스킬만 최신 것으로 바꾸지 않습니다.
 
-기본 모델 실행은 Hermes CLI이며 사용자가 선택하면 OpenCode 또는 Claude Code CLI로 바꿉니다. `agent.kind: cli`와 `agent.runner`를 사용하고 `docs/inhouse/cli-agents.md`를 따릅니다. 모델과 제공자는 선택한 CLI에서 설정합니다. CLI 실패를 Ollama 직접 호출이나 다른 CLI로 대체하지 않습니다.
+모델 실행은 사용자가 선택한 CLI를 따릅니다. `agent.kind: cli`와 `agent.runner`로 Hermes(`hermes`), OpenCode(`opencode`), Claude Code(`claude`), Codex(`codex`)를 독립 실행합니다. 사내에서 Hermes를 선택했다면 공개 예제나 템플릿의 Codex 기본값으로 되돌리지 않습니다. 선택이 없으면 기존 사내 설정을 유지하고, 신규 적용에서 승인된 실행기가 정해지지 않았으면 모델 호출 전에 확인합니다. [CLI 선택 안내](../../docs/inhouse/cli-agents.md)에 따라 최종 `runner`·`command`·`model`·`args`를 확인하며 모델·제공자·추론 강도는 선택한 CLI에 맞춥니다. CLI 실패를 다른 CLI·직접 API·저장 응답·수동 원고로 대체해 성공으로 보고하지 않습니다.
 
 ## 저장소와 실행 환경 찾기
 
@@ -43,7 +43,7 @@ metadata:
 
 처음 계약을 쓰거나 편집할 때는 [집필 규칙](../../style/README.md)의 두 원문과 [독자별 품질](../../docs/concepts/reader-quality.md)을 읽습니다. 필수 항목과 형식은 [sections.yaml 참조](../../docs/reference/sections.md)가 기준입니다. 다른 파일에 스키마를 새로 정의하지 않습니다.
 
-사용자가 실제 LLM으로 자동 생성 시험을 요청하면 에이전트가 작성한 `statements`나 `response-bundle`로 대신하지 않습니다. 실제 모델을 `ollama` 또는 `openai-compatible`로 연결하고 [전체 모델 시험](../../docs/inhouse/contract-authoring.md#사내-llm-생성-시험)을 수행합니다. 기존 원고가 없는 출력 폴더에서 모든 섹션·모델 응답 연결·문서 검사·번역·사이트 검증·반복 빌드를 확인합니다. 소스 구조에서 직접 만드는 색인·그림과 LLM이 쓰는 설명을 구분하고 실패한 실행도 보존합니다. 자동 검사 결과를 의미 검토나 사람 승인으로 기록하지 않습니다.
+사용자가 실제 LLM으로 자동 생성 시험을 요청하면 에이전트가 작성한 `statements`나 `response-bundle`로 대신하지 않습니다. [선택한 CLI의 시험 절차](../../docs/inhouse/cli-agents.md#공개-입력으로-재생성-시험)를 사용하고, 실제 대상 문서는 별도 출력 경로에서 생성·검사·번역·사이트 검증·반복 빌드를 확인합니다. 실행한 섹션과 미실행 범위, 원응답·영수증을 기록하며 작은 공개 시험을 전체 문서나 사내 HAL 검증 완료로 표시하지 않습니다. Ollama는 선택한 CLI 뒤의 제공 서버로 사용할 수 있습니다. [직접 HTTP 비교 시험](../../docs/inhouse/contract-authoring.md#사내-llm-생성-시험)은 사용자가 별도로 요청한 경우에만 수행하며 CLI 시험과 구분합니다. 소스 구조에서 직접 만드는 색인·그림과 LLM이 쓰는 설명을 구분하고 실패한 실행도 보존합니다. 자동 검사 결과를 의미 검토나 사람 승인으로 기록하지 않습니다.
 
 ## 계약을 작성할 때
 
