@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "id": "en/pipeline-handler.html#정지와-미완료-요청",
+      "status": "needs_visual",
+      "reason": "No local figure explains the ordered stop sequence, queue ownership and re-entry, or the conditions governing normal request submission. The supplied excerpts support a sequence and branch diagram; they do not verify a particular device implementation.",
+      "question": "Stopping and outstanding requests",
+      "figures": [],
+      "source_windows": [
+        "en/pipeline-handler.html#source-eefd1bbecb1aad0a",
+        "en/pipeline-handler.html#source-d63c9e57bcf862b0",
+        "en/pipeline-handler.html#source-01ad7c6605c3296a"
+      ],
+      "unreviewed_scope": [
+        "Specific device implementation behavior and excluded details were not supplied for review."
+      ],
+      "proposed_question": "How does stop isolate waiting requests, prevent their requeue during stopDevice completion, and cancel them in order, and how does this differ from the conditions for queueing requests on normal completion?"
+    },
+    {
+      "id": "pipeline-handler.html#정지와-미완료-요청",
+      "status": "needs_visual",
+      "reason": "로컬 그림이 정지 처리 순서, 대기 큐의 분리와 재진입, 정상 완료 시 요청 전달 조건을 설명하지 않습니다. 제공된 발췌는 순서와 분기를 나타내는 그림의 근거가 되지만 특정 장치 구현을 검증하지는 않습니다.",
+      "question": "정지와 미완료 요청",
+      "figures": [],
+      "source_windows": [
+        "pipeline-handler.html#source-eefd1bbecb1aad0a",
+        "pipeline-handler.html#source-d63c9e57bcf862b0",
+        "pipeline-handler.html#source-01ad7c6605c3296a"
+      ],
+      "unreviewed_scope": [
+        "특정 장치 구현의 동작과 제외된 세부 내용은 검토 자료로 제공되지 않았습니다."
+      ],
+      "proposed_question": "정지할 때 대기 요청을 어떻게 분리하고 stopDevice 완료 처리 중 재큐잉을 방지하며 순서대로 취소하는가? 이 과정은 정상 완료 시 요청 전달 조건과 어떻게 다른가?"
+    }
+  ],
+  "seconds": 9.031,
+  "human_review": "pending",
+  "inventory_sha256": "4855abab4816e7cc1b5918ae56079a37e5a475e93fbe2c67568f021a47f307ce",
+  "input_sha256": "bcdbb31ae99718f8af8a53cff1ff160640f05c8eb996b89c3289f11b5027dfd5"
+}

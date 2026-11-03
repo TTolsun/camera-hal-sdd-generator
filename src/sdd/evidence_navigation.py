@@ -134,7 +134,15 @@ def compact_evidence(document: str, valid: set[str]) -> str:
                 seen.add(key)
                 unique.append((cite, element))
         refs = unique
-        return rendered + (_panel(refs, 'section', destinations) if refs else '')
+        panel = _panel(refs, 'section', destinations) if refs else ''
+        # The next H2 may start inside an owned diagram block. Its opening
+        # comment belongs to that next item; previous-section citations must
+        # precede the comment, or the visual audit would misbind them as proof
+        # for the new figure. Example code is already protected above.
+        marker = re.search(r'\s*<!-- sdd:(?:class-diagram|visual:[a-z][a-z0-9_-]*) -->\s*$', rendered)
+        if panel and marker:
+            return rendered[:marker.start()] + panel + rendered[marker.start():]
+        return rendered + panel
 
     # Headings inside examples must not become section boundaries.
     chunks = re.split(r'(<pre\b[^>]*>.*?</pre>)', document, flags=re.S)
