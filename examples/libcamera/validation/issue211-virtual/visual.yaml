@@ -4,7 +4,7 @@ kind: flow
 title: Virtual2 줄 패턴 NV12 변환·기록 시도 흐름
 generation: llm
 max_nodes: 9
-max_label_chars: 60
+max_label_chars: 72
 condition_display: evidence
 required_symbols:
 - PipelineHandler::queueRequest
@@ -27,7 +27,11 @@ prompt: 앞 준비 그림에서 실제 Camera 큐 호출을 통과한 요청부�
   n8는 상태와 무관한 버퍼 완료 신호이며 다음 완료·순서 그림으로 이어집니다. n0/n1 source pipeline-register와 pipeline-dispatch, n2 request-status-completion
   및 pipeline-completion 근거를 함께 확인합니다. 준비 도우미/할당/Camera API/제출 카운터를 이 그림에 다시 넣지 않습니다. 노드 60자, authored
   간선 20자, 한국어·영어 모두 짧은 행동·질문으로 씁니다. 쓰기 방향 동기화는 매핑/변환/쓰기를 둘러싸는 범위이며 그 뒤 따로 시작한다고 쓰지 마세요. 취소 분기 true/false와
-  변환 오류 true/false는 실제 guard를 보존합니다. 이것은 전체 그림을 새로 해석하는 작업이 아니라 유효한 native 초안의 두 표시 항목을 수정하는 작업입니다.
+  변환 오류 true/false는 실제 guard를 보존합니다. 현재 유효한 아홉 노드와 모든 guard·양쪽 결과·인용·간선을 그대로 보존하고 첫 노드와 마지막 노드 표시만 고칩니다.
+  n0는 앞의 초기 준비 그림에서 DMA-BUF 버퍼가 연결된 요청을 PipelineHandler가 받아 준비한다는 출발점을 짧게 표시합니다. 요청에 버퍼를 붙이는 cam-request-buffers와
+  요청을 받는 pipeline-dispatch의 인용을 함께 사용하세요. n8은 버퍼 완료 신호가 다음 완료·통지 순서 그림으로 이어지며 그 그림에서 cam 콜백 통지 조건을 확인한다는
+  끝점을 짧게 표시합니다. 버퍼 완료만으로 cam 콜백이 즉시 또는 무조건 발생한다고 쓰지 않습니다. 두 언어에 같은 이전/다음 그림 연결을 넣습니다. n2의 취소 완료·앞선 미완료
+  요청 통지 보류와 n6→n7의 성공/오류 결과 반환은 이미 올바르므로 정확히 보존하고 다른 모든 표시는 바꾸지 않습니다. 노드 72자·간선 20자 이내입니다.
 sources:
 - pipeline-dispatch
 - pipeline-register
@@ -39,6 +43,7 @@ sources:
 - virtual-start
 - virtual-completion
 - virtual2-config
+- cam-request-buffers
 while_conditions: true
 answer_contract:
   basis: implementation
@@ -73,6 +78,7 @@ answer_contract:
   - - lines
   - - VirtualCameraData::processRequest
   - - PipelineHandler
+  - - DMA-BUF
 answer_contract_en:
   basis: implementation
   reject_patterns:
@@ -118,6 +124,7 @@ answer_contract_en:
   - - PipelineHandler
   - - Cancelled completion
     - Complete cancelled
+  - - DMA-BUF
 require_connected: true
 max_edge_label_chars: 20
 require_guard_branches: true
