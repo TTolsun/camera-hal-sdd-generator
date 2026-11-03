@@ -1,0 +1,161 @@
+{
+  "schema": 1,
+  "scope": "Literal Mermaid label rendering and mobile dialog close control; not full issue215 acceptance or public deployment",
+  "reason": "HTML entities were displayed literally by Mermaid. Bare Markdown punctuation could alter the shown label. Quoted Mermaid labels now use decimal entity codes; only generated line breaks remain markup.",
+  "actual_browser": {
+    "vendored_mermaid": "Public baseline vendored Mermaid module",
+    "viewports": [
+      "390x844",
+      "1440x1000"
+    ],
+    "labels_preserved": true,
+    "node_count": 2,
+    "page_overflow": false,
+    "synthetic_fixture": true,
+    "libcamera_onboarding_punctuation_checked": true
+  },
+  "independent_code_review": {
+    "record": "build/issue215/code-review-19/review.json",
+    "findings": [],
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "tests": {
+    "passed": 166,
+    "log": "build/issue215/pytest-44.log",
+    "earlier_assertions": "Two expected raw-source assertions updated for the intentional entity serialization; earlier failed logs remain local."
+  },
+  "reserved_scope": {
+    "pr": 231,
+    "qualified_identifier_wrapping": "Unchanged; separate existing wrap_label body patch"
+  },
+  "generator_base": "172dd9a1d3834cda398d6798df113e28a94a2676",
+  "archive": {
+    "file": "mermaid-literal-evidence-01.zip",
+    "sha256": "3f1c571714129e15e350ab06348ecddde498ffcb38de3b4044daa5347893d900",
+    "entries": [
+      {
+        "path": "build/issue215/code-review-19/execution-profile.json",
+        "sha256": "3268cbc12309e34c097b5f637c91275839c98472b88ad28f408c755701742ac2",
+        "bytes": 633
+      },
+      {
+        "path": "build/issue215/code-review-19/inputs.json",
+        "sha256": "85da9e56480b4d41bf7c4d1e215eb15e9ac4f6c910f4cc5bd3f5aff7e14818dc",
+        "bytes": 29003
+      },
+      {
+        "path": "build/issue215/code-review-19/prompts/001_code-review.md",
+        "sha256": "38047f75cfe7f33cd6cc2669802567ccaf948cb313884ba8d82796fe7ac0dd7d",
+        "bytes": 29435
+      },
+      {
+        "path": "build/issue215/code-review-19/prompts/001_code-review.response.md",
+        "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+        "bytes": 17
+      },
+      {
+        "path": "build/issue215/code-review-19/prompts/001_code-review.schema.json",
+        "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+        "bytes": 770
+      },
+      {
+        "path": "build/issue215/code-review-19/prompts/calls/69ade5efa9d44e39914c1b5476effe4b/001.receipt.json",
+        "sha256": "e00bba899dc23ea07aced7900871aef15e049e4bbedf958c9215a7c767315b84",
+        "bytes": 2194
+      },
+      {
+        "path": "build/issue215/code-review-19/prompts/calls/69ade5efa9d44e39914c1b5476effe4b/001.request.json",
+        "sha256": "3c1e2ef9a6dbc08d3860bc48a2f6445048d3d6eab6762bc58c70f30cba0dbd6c",
+        "bytes": 31612
+      },
+      {
+        "path": "build/issue215/code-review-19/prompts/calls/69ade5efa9d44e39914c1b5476effe4b/001.response.txt",
+        "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+        "bytes": 15
+      },
+      {
+        "path": "build/issue215/code-review-19/prompts/cli/call-civ4e9sz.stderr.txt",
+        "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+        "bytes": 29
+      },
+      {
+        "path": "build/issue215/code-review-19/prompts/cli/call-civ4e9sz.stdout.txt",
+        "sha256": "0c61cb99221d69e90570c6603f7f1034c3dda272e55c284d367ee6e66122b480",
+        "bytes": 364
+      },
+      {
+        "path": "build/issue215/code-review-19/review.json",
+        "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+        "bytes": 15
+      },
+      {
+        "path": "build/issue215/code-review-19.log",
+        "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+        "bytes": 17
+      },
+      {
+        "path": "build/issue215/code-review-19.py",
+        "sha256": "a2e6e51492cf1a7042e520399256f4c36b23d470342769896ddd963417eb989c",
+        "bytes": 3029
+      },
+      {
+        "path": "build/issue215/escaping-fixture-03/config/sections.yaml",
+        "sha256": "8bd7e8c6024da7569804bf9c7d79f8f0bd9404f04b13427e211f9f8a8ec013dc",
+        "bytes": 106
+      },
+      {
+        "path": "build/issue215/escaping-fixture-03/input.json",
+        "sha256": "24326c148a416df4b472ef108dd99847e6405288813fc73a2ad82f14897605fe",
+        "bytes": 182
+      },
+      {
+        "path": "build/issue215/escaping-fixture-03/manuscripts/literal.md",
+        "sha256": "91d45b4722edf09f34e6b627e29fbab3d0ec3a2f9ae77840b23b86621fdebc32",
+        "bytes": 352
+      },
+      {
+        "path": "build/issue215/escaping-fixture-03/sdd.yaml",
+        "sha256": "d81b3b1bfe8c41887296d03bab542cf2be2c6fc643b0d2f62ed08c11b39fa3a0",
+        "bytes": 589
+      },
+      {
+        "path": "build/issue215/pytest-44.log",
+        "sha256": "5fb286aa10cafdbe21b8943400b59bba59ff16093137470e13402accc638b807",
+        "bytes": 276
+      },
+      {
+        "path": "build/issue215/ui-preview-01/literal-punctuation-desktop.png",
+        "sha256": "ca349d89495de0bd84affc678ff03aa5231a73fc5146027d341c2513397b7d8f",
+        "bytes": 56401
+      },
+      {
+        "path": "build/issue215/ui-preview-01/literal-punctuation-mobile.png",
+        "sha256": "70f8166a422de38d9da80cb0527b980910531c647ae3138f1dc22f97cd9605e6",
+        "bytes": 25750
+      },
+      {
+        "path": "build/issue215/ui-preview-01/literal-punctuation-verification.json",
+        "sha256": "f01e66e5c06a75930f84786df2f09d86332021b6624c88d45fa471d73d12e426",
+        "bytes": 303
+      },
+      {
+        "path": "build/issue215/ui-preview-01/onboarding-mobile-en-fixed.png",
+        "sha256": "b1f24aace4ac2a78b1491680807138c43239674dbed21724fe132366ae971185",
+        "bytes": 37784
+      },
+      {
+        "path": "build/issue215/ui-preview-01/onboarding-mobile-en.png",
+        "sha256": "7ff811df7793ed6a487453b7ab6a8ee6f07b3a6c17ac4b6d4adbd1fd347a5548",
+        "bytes": 39631
+      }
+    ]
+  },
+  "human_review": "pending",
+  "public_sdd_merge": null,
+  "pages_release": null
+}
