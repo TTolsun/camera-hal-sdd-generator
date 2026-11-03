@@ -3,7 +3,7 @@
   kind: decision
   title: 초기 캡처 시작 시 DMA-BUF 요청 준비와 제출만 다룹니다.
   generation: llm
-  max_nodes: 10
+  max_nodes: 12
   required_symbols:
   - allocate
   - createRequest
@@ -15,7 +15,7 @@
   - PipelineHandler::queueRequest
   - queueCount_
   - Camera::start
-  question: 초기 캡처를 시작할 때 버퍼·요청 준비와 실제 큐 제출을 거치는 조건은 무엇입니까?
+  question: 초기 캡처에서 할당·요청 준비·카메라 시작·제출 한도와 실제 큐 호출, 큐 호출 오류 뒤 정리 및 초기 요청 순회는 어떻게 연결됩니까?
   sources:
   - cam-request-buffers
   - camera-queue
@@ -23,31 +23,14 @@
   max_label_chars: 70
   condition_display: evidence
   require_connected: true
-  prompt: '초기 요청 준비 그림을 아홉 노드로 작성합니다. n0 allocate: cam의 allocator_->allocate 호출 결과가 실패인가? true→n5 초기 시작
-    실패 반환,false→n1 createRequest: 요청 생성 실패? true→n5,false→n2 addBuffer: 버퍼 연결 실패? true→n5,false→n3 CameraSession::queueRequest:
-    설정된 제출 한도가 이미 찼는가? true→n6 captureLimit_: 제출 없이 도우미 반환,false→n8 queueCount_: 제출 시도 수 증가→n4 Camera::queueRequest:
-    실제 카메라 큐 호출 action box→n7 PipelineHandler::queueRequest: 검증 통과 시 Camera 호출 내부에서 queued 비동기 호출을 예약합니다.
-    n4는 호출 결과를 검사하는 decision이 아닙니다. n4→n7 always 간선은 호출 내부의 검증 통과 경로만 요약하며 호출 반환 후 예약한다고 그리지 않습니다. Camera
-    API 내부 검증 실패의 여러 반환 분기는 이 그림의 정상 내부 예약 요약 밖이며 전체 Camera API 제어 흐름 그림으로 주장하지 않습니다. n5 오류 반환은 n0/n1/n2의
-    시작 준비 실패를 받습니다. 도우미 한도 true/false 및 세 준비 실패 guard는 실제 소스 조건의 두 결과를 보존합니다. n0/n1/n2/n3는 decision입니다.
-    한영 라벨에서는 함수·내부 카운터 이름·반환 숫자·긴 괄호 경고를 모두 근거에 두고, 위에 설명한 짧은 행동·질문만 사용합니다. n7의 짧은 라벨에는 호출 내부 예약이며 검증
-    통과 경로임을 명시합니다. 노드의 symbol과 quote_ids로 정확한 소스 이름을 보존합니다. 한영 authored 간선은 20자 이내입니다.  n0는 할당기 유효성만 보는
-    검사가 아니라 cam startCapture의 allocator_->allocate 반환 ret<0를 판정합니다. 할당기가 유효해도 할당 호출은 실패할 수 있습니다. 노드 라벨은
-    버퍼 할당 실패 여부만 짧게 질문합니다. 원시 호출식·ret 비교·할당기 유효성 검사는 화면에 쓰지 않습니다. 모든 노드·간선 인용은 현재 제공된 세 source 창에서 새로
-    선택하며 제거된 virtual-buffer-allocation, allocator-to-camera, camera-export 인용을 재사용하지 않습니다. n4는 카메라 큐 호출이라는
-    행동만, n7은 호출 내부에서 검증 통과 시 비동기 예약한다는 행동만 짧게 표시합니다. 검증 실패 분기는 이 그림 밖이라는 괄호 경고를 노드에 넣지 않습니다.  현재 유효한 아홉
-    노드와 모든 인용·guard·간선을 보존하고 n7의 한영 라벨 및 n4→n7의 라벨에서 예약/reservation이라는 단어를 빼세요. 검증을 통과하면 Camera 호출 내부에서
-    요청 처리를 비동기로 전달한다는 의미를 짧게 표현합니다. 영어는 queue 또는 dispatch 동사를 사용하고 자원 예약으로 읽히는 명사를 쓰지 않습니다. 호출이 반환된 뒤
-    전달한다는 뜻으로 바꾸지 않습니다.  현재 유효한 모든 노드·인용·guard·간선을 보존하고 n2에서 n3로 가는 false 간선의 한영 라벨만 고칩니다. 이 간선은 버퍼 연결
-    후 제출 한도 검사로 진행한다는 의미입니다. 이 지점에서 이미 제출했다고 쓰지 않습니다. n3의 한도 검사 결과에 따라 제출 없이 반환할 수 있습니다. 다른 모든 표시를 정확히
-    보존합니다.  기존 아홉 노드·올바른 한영 라벨·guard·인용은 보존하고 Camera::start를 n9 decision으로 추가합니다. 버퍼 연결 검사 n2의 false 간선을
-    n3 대신 n9로 보내고 n9는 cam의 camera_->start() 반환이 실패인지 실제 ret<0 조건으로 판정합니다. true는 기존 n5 시작 실패 반환, false는
-    n3 제출 한도 검사로 갑니다. Camera::start 심볼은 camera-queue 창 끝의 함수 선언과 cam-request-buffers의 실제 camera_->start()
-    호출·결과 검사 구절을 함께 인용합니다. sink_->start()와 혼동하지 않습니다. 새 간선마다 두 끝점 심볼 및 실제 guard 인용을 포함하고 두 결과를 모두 보존합니다.
-    한영 노드 라벨은 카메라 세션 시작 실패 여부만 짧게 묻고 코드식은 근거에 둡니다. 나머지 실제 큐 호출 내부의 비동기 전달·제출 생략 조건은 변경하지 않습니다.  현재 유효한
-    열 노드와 모든 표시·인용·guard·간선을 정확히 보존하고 n9의 한국어 label과 영어 label_en만 고칩니다. n9는 camera_->start() 실패 여부이므로
-    더 넓은 카메라 세션 시작이라고 쓰지 않고 카메라 시작 실패 여부만 짧게 묻습니다. camera session이라는 영어와 카메라 세션이라는 한국어를 제거합니다. 다른 모든 필드를
-    바꾸지 않습니다.'
+  prompt: 현재 열 노드의 준비 실패, 카메라 시작, 제출 한도, 증가와 Camera::queueRequest 호출 내부의 검증 통과시 비동기 전달을 보존하며 startCapture의
+    큐 호출 오류 정리 경로를 보완합니다. 최대12노드를 지킵니다. 기존 n4 카메라 큐 호출에서 기존 n7로 가는 관계는 호출 내부의 검증 통과시 비동기 전달이며, 호출 반환 뒤에
+    전달되는 것으로 바꾸지 않습니다. 별도로 n4에서 새 n10의 도우미 반환값 오류 판정으로 이어갑니다. n10은 startCapture의 실제 ret < 0 판정이며 true는
+    새 n11의 카메라 중지, 출력 싱크가 있으면 중지, 오류 반환입니다. false는 초기 요청 순회를 계속하는 기존 n6으로 연결합니다. n6 표시는 오류 없는 이번 도우미 반환
+    뒤 초기 요청 순회 계속으로 고칩니다. 기존 n3 제출 한도 true도 도우미가0을 반환해 같은 n6으로 이어지되 간선에 제출 없이 반환임을 명시합니다. n3 false→증가→실제
+    카메라 호출은 보존합니다. n6의 이 공통 관계와 n10/n11을 cam-request-buffers의 실제 초기 요청 순회·도우미 반환·오류 정리 코드로 인용하고 기존 n6
+    symbol captureLimit_ 바인딩을 근거에서 유지합니다. n10의 true/false 모두 실제 같은 ret<0 guard를 사용하세요. 큐 오류 정리를 앞선 준비
+    실패의 공통 반환 노드와 혼동하지 않습니다. 모든 기존 실제 조건·인용·required_symbols와 한영 의미를 유지합니다. 노드는 짧은 동작구/질문72자, 간선20자입니다.
   answer_contract_en:
     basis: implementation
     reject_patterns:
