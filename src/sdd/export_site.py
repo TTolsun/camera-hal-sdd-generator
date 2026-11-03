@@ -8,6 +8,7 @@ import json
 import posixpath
 import re
 import shutil
+from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 from urllib.parse import quote, urlsplit
 
@@ -51,6 +52,36 @@ def source_link_template(settings: SiteConfig | dict) -> str:
         raise RuntimeError("site.source_link_template 의 자리표시자는 {url} {commit} {file} {line} "
                            f"만 쓸 수 있습니다: {e}")
     return template
+
+
+def _class_diagram_markers(body, rel):
+    """Locate rendered comments, keeping inline pairs and ignoring code examples."""
+    matches = list(re.finditer(r'<!-- (/?)sdd:class-diagram -->', body))
+    if not matches:
+        return []
+    prefix = 'sdd-class-marker-probe-'+hashlib.sha256(body.encode()).hexdigest()+'-'
+    index = iter(range(len(matches)))
+    marked = re.sub(r'<!-- (/?)sdd:class-diagram -->',
+                    lambda _: '<!-- '+prefix+str(next(index))+' -->', body)
+    rendered, _, _ = _render(marked, rel, {rel}, None, '', '')
+
+    class Probes(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.code_depth, self.found = 0, set()
+        def handle_starttag(self, tag, attrs):
+            if tag in {'pre', 'code'}:
+                self.code_depth += 1
+        def handle_endtag(self, tag):
+            if tag in {'pre', 'code'}:
+                self.code_depth = max(0, self.code_depth-1)
+        def handle_comment(self, value):
+            value = value.strip()
+            if not self.code_depth and value.startswith(prefix) and value[len(prefix):].isdigit():
+                self.found.add(int(value[len(prefix):]))
+    probes = Probes()
+    probes.feed(rendered)
+    return [match for i, match in enumerate(matches) if i in probes.found]
 
 
 def _path(rel: str) -> str:
@@ -299,12 +330,25 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
             raise RuntimeError(f"Facts and page source commits differ: {rel}")
         diagram = section_diagram(cfg, model, section) if model else ""
         block = diagram_block(diagram)
-        if "<!-- sdd:class-diagram -->" in body:
+        preserve_diagram_position = False
+        from .next_steps import _outside_fence
+        markers = _class_diagram_markers(body, rel)
+        if markers:
+            if len(markers) != 2 or markers[0][1] or not markers[1][1]:
+                raise ValueError('Class diagram needs exactly one complete owned marker pair')
+            source_heading = next((m for m in re.finditer(r'^## 소스 근거\s*$', body, re.M)
+                                   if _outside_fence(body[:m.start()])), None)
+            # Facts narration already places its relationship picture directly
+            # after the structural explanation. Keep that question/figure pair
+            # together instead of moving it past unrelated function/class tables.
+            preserve_diagram_position = (bool(diagram) and section.get('narration') == 'facts'
+                and (source_heading is None or markers[0].start() < source_heading.start()))
             # Keep the heading for existing route links, but never retain stale edges.
-            replacement = "" if diagram else "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다."
-            body = re.sub(r"<!-- sdd:class-diagram -->.*?<!-- /sdd:class-diagram -->", lambda _: replacement, body, flags=re.S)
+            replacement = block if preserve_diagram_position else ("" if diagram else "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다.")
+            body = body[:markers[0].start()] + replacement + body[markers[1].end():]
         if diagram:
             diagram_source = diagram
+        if diagram and not preserve_diagram_position:
             before, marker, after = body.partition('??? note "근거와 검토 정보"')
             # Move intact generated sections into reading order; preserve their wording.
             parts = re.fullmatch(r"(.*?)^(## 관련 클래스\n.*?)(^## 구조 설명\n.*)", before, re.S | re.M)

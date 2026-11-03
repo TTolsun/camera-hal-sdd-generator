@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 import subprocess
 import hashlib
+import html
 import time
 from urllib.parse import unquote, urlsplit
 
@@ -17,7 +18,7 @@ from sdd.config import load
 from sdd.cli_agent import command, arguments, build_prompt
 from sdd.generation_run import Execution
 from sdd.llm import Agent
-from sdd.visual_audit import Document, digest, source_window
+from sdd.visual_audit import Document, digest, source_window, node_window, all_nodes
 
 
 def main():
@@ -31,6 +32,7 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--plan-only', action='store_true', help='Archive exact payload and measured input size without calling the CLI')
     parser.add_argument('--source', type=Path, help='Matching official checkout used for immutable git-show source windows')
+    parser.add_argument('--facts', type=Path, help='Matching immutable structural facts for locating every displayed class declaration')
     parser.add_argument('--fit-input', action='store_true', help='Execution-local character boundary equals the measured complete prompt')
     parser.add_argument('--input-rationale', help='Required explanation for an execution-local input boundary adjustment')
     args = parser.parse_args()
@@ -41,6 +43,9 @@ def main():
     report = json.loads(args.inventory.read_bytes())
     if not re.fullmatch(r'[0-9a-f]{40}', report.get('source_commit', '')):
         raise ValueError('Immutable source review requires a full source commit')
+    facts = json.loads(args.facts.read_bytes()) if args.facts else None
+    if facts and facts.get('meta', {}).get('source_commit') != report['source_commit']:
+        raise ValueError('Structural facts and reviewed source commits differ')
     selected = [row for row in report['items'] if (row['page'].removeprefix('en/') == args.page if args.page
                                                    else row['id'].removeprefix('en/') in args.item)]
     expected = len([row for row in selected if row['language'] == 'ko'])
@@ -48,22 +53,57 @@ def main():
         raise ValueError('Every selected item needs exactly two language peers')
     if any(row['page'] in report['policy']['deferred_pages'] for row in selected):
         raise ValueError('Another session owns a selected item; wait for integration')
-    windows, additional, document_windows = {}, {}, {}
+    windows, additional, document_windows, structural_classes = {}, {}, {}, {}
     for row in selected:
+        doc = None
         # Excluded source/log material stays outside explanatory length counts,
         # but its actual presentation must be visible to the editorial review.
-        if row['excluded'] and row['anchor']:
+        if row['excluded']:
             path = args.site/row['page']
             doc = Document(path.read_text(encoding='utf-8'))
-            text = source_window(doc, row['anchor'], root=args.site.resolve(), page=row['page'])
+            text = (source_window(doc, row['anchor'], root=args.site.resolve(), page=row['page'])
+                    if row['anchor'] else node_window(doc.root, args.site.resolve(), row['page']))
             document_windows[row['id']] = dict(text=text, sha256=digest(text),
                 purpose='Presentation including folded source/log material; not explanatory length')
-        for href in row['available_source_windows'] + [u for f in row['figures'] for u in f['evidence']]:
+        structural_hrefs = []
+        if any(f['id'] == 'class-diagram' for f in row['figures']):
+            # Class declarations live in the neighboring declaration table,
+            # whereas behavioral excerpts often contain only implementations.
+            doc = doc or Document((args.site/row['page']).read_text(encoding='utf-8'))
+            structural_hrefs = [a.attrs.get('href', '') for a in doc.root.all('a')]
+            if facts:
+                labels = {html.unescape(re.sub(r'<br\s*/?>', '', label))
+                          for f in row['figures'] if f['id'] == 'class-diagram'
+                          for label in re.findall(r'\bc\d+\["([^"]+)"\]', f['source'])}
+                for name, cls in facts['classes'].items():
+                    if not any(name == label or name.endswith('::'+label) for label in labels):
+                        continue
+                    structural_classes[name] = cls
+                    if cls.get('loc', {}).get('file'):
+                        structural_hrefs.append('git:'+report['source_commit']+':'+cls['loc']['file'])
+            for href in structural_hrefs.copy():
+                parts = urlsplit(href)
+                if (parts.scheme or parts.netloc or not parts.path.endswith('.html')
+                        or not parts.fragment.startswith('symbol-')):
+                    continue
+                from sdd.site_paths import owned_path
+                name = ((args.site/row['page']).parent/unquote(parts.path)).resolve().relative_to(args.site.resolve()).as_posix()
+                target = owned_path(args.site.resolve(), name)
+                symbols = Document(target.read_text(encoding='utf-8'))
+                found = [n for n in all_nodes(symbols.root) if n.attrs.get('id') == unquote(parts.fragment)]
+                if len(found) != 1:
+                    raise ValueError('Class declaration window missing or ambiguous: '+href)
+                text = node_window(found[0], args.site.resolve(), name)
+                document_windows[name+'#'+parts.fragment] = dict(text=text, sha256=digest(text),
+                    purpose='Exact class declaration row linked by this page; not explanatory length')
+                structural_hrefs.extend(a.attrs.get('href', '') for a in found[0].all('a'))
+        for href in row['available_source_windows'] + [u for f in row['figures'] for u in f['evidence']] + structural_hrefs:
             parts = urlsplit(href)
             if parts.scheme or parts.netloc:
                 marker = '/'+report['source_commit']+'/'
-                if args.source and marker in parts.path:
-                    name = unquote(parts.path.split(marker, 1)[1])
+                git_path = parts.scheme == 'git' and parts.path.startswith(report['source_commit']+':')
+                if args.source and (git_path or marker in parts.path):
+                    name = unquote(parts.path.split(':', 1)[1] if git_path else parts.path.split(marker, 1)[1])
                     from sdd.site_paths import owned_path
                     owned_path(args.source.resolve(), name)
                     key = 'git:'+report['source_commit']+':'+name
@@ -104,6 +144,8 @@ def main():
         item_inputs.append(compact)
     payload = dict(items=item_inputs, figures=figures, source_windows=windows, additional_source_windows=additional,
                    document_windows=document_windows,
+                   structural_classes=structural_classes,
+                   structural_facts_sha256=hashlib.sha256(args.facts.read_bytes()).hexdigest() if args.facts else None,
                    inventory_sha256=digest(report), source_commit=report.get('source_commit'))
     args.out.mkdir(parents=True, exist_ok=False)
     (args.out/'inputs.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
@@ -112,6 +154,10 @@ def main():
     system = ('You independently review source-bound Korean/English libcamera documentation per item. '
               'Return all supplied item IDs exactly once. Evaluate whether a local figure answers the specific reader question; '
               'a generic diagram that does not answer that question or a link elsewhere cannot qualify. '
+              'role=visual_title is an auxiliary figure heading, not automatically another independent reader question. '
+              'Judge the stated caption/legend scope: an extracted direct-inheritance/field-reference figure does not promise '
+              'all API calls or all possible source relationships. Do not invent a broader completeness question for that caption; '
+              'check shown relationships against supplied declarations, and never use a generic class figure to satisfy another behavioral item. '
               'A directly adjacent sibling figure may qualify only when it directly answers this same question; '
               'name its exact adjacent_item and adjacent_fingerprint and explain that relation individually. '
               'Use empty adjacent fields when no adjacent reuse is needed. Long explanation (600 chars or 3 paragraphs), '
@@ -159,7 +205,7 @@ def main():
                       inventory_sha256=digest(report), input_sha256=digest(payload),
                       additional_source_manifest={key:{k:v for k,v in value.items() if k != 'text'} for key,value in additional.items()})
         (args.out/'review.json').write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-        print(json.dumps(result, ensure_ascii=False))
+        print(json.dumps(result, ensure_ascii=True))
     finally:
         execution.persist()
 

@@ -1,4 +1,4 @@
-"""Render/translate an isolated two-page preview through production helpers.
+"""Render/translate isolated selected pages through production helpers.
 
 This is a UI preview, not a full-site publication or an acceptance bypass.
 The public checkout and original runtime/approval records remain untouched.
@@ -27,6 +27,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--work', type=Path, required=True)
 parser.add_argument('--public', type=Path, required=True)
 parser.add_argument('--out', type=Path, required=True)
+parser.add_argument('--section', action='append', help='Selected section ID; default pipeline-handler')
 args = parser.parse_args()
 work, public, out = args.work.resolve(), args.public.resolve(), args.out.resolve()
 if out.exists():
@@ -43,8 +44,11 @@ sections = {s.get('output', s['id']+'.md'):s for s in cfg.sections()}
 texts = {p.relative_to(cfg.sdd_dir).as_posix():p.read_text(encoding='utf-8') for p in cfg.sdd_dir.rglob('*.md')}
 terms = glossary.load(cfg)
 texts[glossary.PAGE] = glossary.page(terms)
-entries = [(sections['pipeline-handler.md'].get('group', 'For Vendor'), sections['pipeline-handler.md']['title'], 'pipeline-handler.md'),
-           ('For Developer', '용어집', glossary.PAGE)]
+selected = args.section or ['pipeline-handler']
+entries = [(s.get('group', 'For Vendor'), s['title'], rel) for rel, s in sections.items() if s['id'] in selected]
+if len(entries) != len(set(selected)):
+    raise ValueError('Every selected section must exist exactly once')
+entries.append(('For Developer', '용어집', glossary.PAGE))
 ledger = approvals.load(cfg)
 states = {rel:approvals.page_status(ledger, rel, texts[rel]) for _,_,rel in entries}
 
@@ -84,7 +88,7 @@ with tempfile.TemporaryDirectory(prefix='.issue215-preview-', dir=work) as tempo
         strings[key] = value
     catalog = dict(schema=1, review_status='human-review-pending', pages=pages, strings=strings,
                    source_commit=model.meta['source_commit'], translation_contexts=contexts, source_contexts=pool,
-                   scope='Isolated pipeline/glossary preview; not whole-site acceptance')
+                   scope='Isolated selected-page/glossary preview; not whole-site acceptance')
     catalog_path = work/'preview-english.json'
     if catalog_path.exists():
         raise ValueError('Preserve the previous catalog and use a new work root for another preview')
@@ -108,9 +112,11 @@ with tempfile.TemporaryDirectory(prefix='.issue215-preview-', dir=work) as tempo
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)
     result = verify_site(out, manifest=False)
+    changed = [rel.removesuffix('.md')+'.html' for _, _, rel in entries]
+    changed += ['en/'+name for name in changed.copy()]
     report = dict(scope='Preview only; not publication or full-site visual acceptance',
         source_commit=model.meta['source_commit'], human_review='pending', verification=result,
-        changed_pages=['pipeline-handler.html', 'en/pipeline-handler.html', 'glossary.html', 'en/glossary.html'],
-        html_sha256={name:hashlib.sha256((out/name).read_bytes()).hexdigest() for name in ['pipeline-handler.html','en/pipeline-handler.html']})
+        changed_pages=changed,
+        html_sha256={name:hashlib.sha256((out/name).read_bytes()).hexdigest() for name in changed})
     (out/'preview-scope.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     print(json.dumps(report, ensure_ascii=False))
