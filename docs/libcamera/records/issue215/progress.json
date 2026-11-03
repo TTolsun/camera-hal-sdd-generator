@@ -33,7 +33,7 @@
   "other_session": {
     "generator_pr": 231,
     "public_pr": 78,
-    "state": "pending-merge-and-integration",
+    "state": "PR231 draft/unmerged; last read-only API reports mergeable true. PR78 remains unmerged; recheck before integration. No messages, resume, interruption or worktree changes.",
     "scope": [
       "official-cam-validation",
       "require_guard_branches",
@@ -73,6 +73,11 @@
       "passed": 261,
       "skipped": 1,
       "log": "build/issue215/pytest-69.log"
+    },
+    "current_scope_and_migration": {
+      "passed": 268,
+      "log": "build/issue215/pytest-75.log",
+      "scope": "Current patch; no synthetic model response is a real native run"
     }
   },
   "draft_generation": {
@@ -106,10 +111,17 @@
       "sha": "c99849fb62f0ea3ae5895f1ef0a604cc6416269a",
       "ci_run": 41704195877,
       "ci": "all4 passed"
+    },
+    {
+      "pr": 235,
+      "sha": "d771418576d49a899f1036d131488d7de1bc7639",
+      "head": "119d6a3baab06adb84f4b6c98a503b0db5490e6e",
+      "ci_run": 41724756532,
+      "ci": "all4 passed"
     }
   ],
-  "current_branch": "codex/issue-215-inventory-remediation",
-  "native_archive_checkpoint": "native-evidence-03-index.json",
+  "current_branch": "codex/issue-215-public-item-audit",
+  "native_archive_checkpoint": "native-evidence-04-index.json",
   "integrated_draft": {
     "sections": 25,
     "path": "build/issue215/integrated-draft-05",
@@ -127,7 +139,8 @@
   "common_translation": {
     "verified_glossary_native_units": 181,
     "profile": "Independent native Codex CLI/gpt-6.1-terra/high",
-    "note": "Only raw receipt-bound compatible units can seed later runs; input/source/schema/policy changes do not repin old reviews"
+    "note": "Only raw receipt-bound compatible units can seed later runs; input/source/schema/policy changes do not repin old reviews",
+    "status": "Full28-section/home/glossary preview translated1585 missing units through actual native CLI. New-policy strict rerender/revalidation in progress; no whole-site semantic acceptance or release."
   },
   "outstanding": [
     "Full current-contract bilingual integration translation and item review; baseline counts are not current acceptance",
@@ -144,11 +157,81 @@
     "evidence_navigation": "Corrected anchor/panel contract; actual home-preview-02 English link opens guide, displays separate guide commit, and Back to explanation restores source-link focus."
   },
   "native_code_review": {
-    "run": "build/issue215/code-review-35",
+    "run": "build/issue215/code-review-40",
     "findings": [],
-    "human_review": "pending",
-    "followup": "Code35 accepted prior patch. Additional scoped-label and policy-migration fixes are under code40 independent review; no final acceptance claimed yet."
+    "scope": "Current strict native reuse, guide source/heading/input guards, scoped proof labels and legacy policy migration",
+    "human_review": "pending"
   },
   "current_full_item_counts": null,
-  "current_checkpoint": "25 document draft sections, 28 KO source/render preflight pages passed; full EN translation in progress. No public release or completed all-item audit."
+  "current_checkpoint": "25 document draft sections, 28 KO source/render preflight pages passed; full EN translation in progress. No public release or completed all-item audit.",
+  "current_generator_pr": {
+    "pr": 235,
+    "sha": "d771418576d49a899f1036d131488d7de1bc7639",
+    "head": "119d6a3baab06adb84f4b6c98a503b0db5490e6e",
+    "ci_run": 41724756532,
+    "ci": "all4 passed",
+    "state": "merged"
+  },
+  "current_work": {
+    "branch": "codex/issue-215-public-item-audit",
+    "scope": "Preserve published questions and remedy actual item-review findings; not a release",
+    "current_preview": "integrated-preview-07",
+    "inventory": "integrated-inventory-09.json",
+    "pages": 62,
+    "records": 682,
+    "reader_questions": 424,
+    "auxiliary_visual_titles": 258,
+    "baseline_reader_questions": 424,
+    "missing_baseline_reader_questions": 0,
+    "inventory_errors": 0,
+    "changed_preview_pages": 60,
+    "preview_only": true,
+    "manifest_verified": false,
+    "facts_sha256": "d56b1f9f20af40b25c1447a5e3cbf28ccc157610b6a21d6885949f9214654830",
+    "preliminary_native_review": {
+      "run": "full-current-08",
+      "reviewed_records": 648,
+      "counts": {
+        "appropriate": 227,
+        "omit": 380,
+        "needs_visual": 39,
+        "unreviewed": 2
+      },
+      "deferred_records": 14,
+      "scope": "Earlier preview-06, before request-diagnosis/home restoration and stricter source-window binding; requires per-fingerprint current review. Counts include auxiliary titles and are not final acceptance."
+    },
+    "preservation": {
+      "restored": [
+        "Both home validation-status items",
+        "Both request submission-error/check-order items",
+        "Ten existing request-diagnosis diagrams from published source config"
+      ],
+      "new_augmentation": false,
+      "reason": "Earlier draft incorrectly used older example config. Restoration uses actual current native generation and original public source plans, never hand edits to output."
+    },
+    "core_followup": {
+      "review": "code-review-55",
+      "model": "gpt-6.1-terra",
+      "reasoning": "high",
+      "runner": "codex",
+      "findings": [],
+      "focused_test_log": "pytest-100.log",
+      "focused_tests_passed": 87,
+      "remaining_modules_test_log": "pytest-101.log",
+      "remaining_tests": "running",
+      "prior_broad_test_log": "pytest-99.log",
+      "prior_broad_passed": 236,
+      "prior_broad_skipped": 1,
+      "prior_broad_note": "Before final readable-article selection patch; not final current-tree full validation",
+      "evidence_archive": "native-evidence-05.tar.xz",
+      "evidence_index": "native-evidence-05-index.json",
+      "archive_sha256": "3662c0c2c1cc995a3ab66316319b7c5270f6371d96b768e253e946a84a0fdd38"
+    },
+    "remediation_generation": {
+      "ipa": "Discovery/signature/interface creation/Threaded stop/Isolated destructor/module load completed generation; synchronous IPC was rejected twice and is being retried with narrower immutable source windows. Independent acceptance remains pending.",
+      "scenarios": "Stop, complete_request, configure and manager_start replacement generation completed; queue_request and vendor-assurance remain in progress.",
+      "human_review": "pending"
+    }
+  },
+  "completion": "Goal remains active; unresolved actual diagrams and external-session integration, final reviews/CI/merges/Pages/public build identity verification remain required. Do not close issue215."
 }

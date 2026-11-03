@@ -15,7 +15,7 @@ from sdd.config import load
 from sdd.facts.model import KnowledgeModel
 from sdd import glossary, approvals
 from sdd.export_site import (_render_pages, _write_assets, _write_pages, _write_search,
-                             source_link_template)
+                             _site_navigation, _prepare_site_pages, source_link_template)
 from sdd.localization_cli import diagram_translation_scopes
 from sdd.site_localization import display_strings, source_hash, localize_site, KOREAN
 from sdd.translation_context import collect, git_loader
@@ -24,6 +24,7 @@ from sdd.translation import fixed_translation
 from sdd.translation_provenance import verified_catalog_units
 from sdd.trial_workspace import is_link
 from sdd.site_build import verify_site
+from preview_search import merge_search
 
 ROOT = Path(__file__).resolve().parents[4]
 parser = argparse.ArgumentParser(description=__doc__)
@@ -80,8 +81,6 @@ sections = {s.get('output', s['id']+'.md'):s for s in cfg.sections()}
 texts = {p.relative_to(cfg.sdd_dir).as_posix():p.read_text(encoding='utf-8') for p in cfg.sdd_dir.rglob('*.md')}
 terms = glossary.load(cfg)
 texts[glossary.PAGE] = glossary.page(terms)
-if args.include_home:
-    texts['index.md'] = (work/cfg.site.intro).read_text(encoding='utf-8')
 if args.glossary_only and args.section:
     raise ValueError('Select glossary-only or section pages')
 selected = [] if args.glossary_only else (args.section or ['pipeline-handler'])
@@ -92,19 +91,32 @@ entries.append(('For Developer', '용어집', glossary.PAGE))
 if args.include_home:
     entries.append(('For Developer', '시작', 'index.md'))
 ledger = approvals.load(cfg)
-states = {rel:approvals.page_status(ledger, rel, texts[rel]) for _,_,rel in entries}
+states = {rel:approvals.page_status(ledger, rel, texts[rel]) for _,_,rel in entries if rel in texts}
+# Use complete navigation in every preview mode, while rendering only selected
+# pages. Deferred documents remain byte copies of the public baseline and are
+# neither regenerated nor approved here. Home/status use the real composition
+# when requested; unselected home text is not written or translated.
+selected_paths = {rel for _,_,rel in entries}
+sections,navigation_entries = _site_navigation(cfg,cfg.site,set())
+texts,states,ledger,terms,model = _prepare_site_pages(
+    cfg,cfg.site,sections,navigation_entries,check_consistency=False)
+entries = [entry for entry in navigation_entries if entry[2] in selected_paths]
 
 with tempfile.TemporaryDirectory(prefix='.issue215-preview-', dir=work) as temporary:
     stage = Path(temporary).resolve()
     if stage.parent != work:
         raise ValueError('Unexpected preview staging directory')
+    class_documents = {rel.removesuffix('.md')+'.html':(public/'docs'/rel.removesuffix('.md')).with_suffix('.html').read_text(encoding='utf-8')
+                       for rel,section in sections.items() if section.get('kind')=='per-package'
+                       and rel not in {entry[2] for entry in entries}}
     rendered, search, diagrams, visuals = _render_pages(cfg, entries, sections, texts, terms, model,
-                                                       cfg.site.source_url, source_link_template(cfg.site))
+        cfg.site.source_url, source_link_template(cfg.site),class_documents=class_documents)
     asset_version, terms_version = _write_assets(cfg, stage, None, visuals, terms)
     shutil.copytree(public/'docs/assets/mermaid', stage/'assets/mermaid')
-    _write_pages(cfg, stage, entries, sections, rendered, states, ledger, diagrams,
+    _write_pages(cfg, stage, navigation_entries, sections, rendered, states, ledger, diagrams,
                  'assets/mermaid/mermaid.esm.min.mjs', title=cfg.site.title,
-                 asset_version=asset_version, terms_version=terms_version)
+                 asset_version=asset_version, terms_version=terms_version,
+                 selected_pages={rel for _,_,rel in entries})
     _write_search(stage, rendered, search, terms)
     previous_path = args.previous_catalog or public/'publication/issue214/english.json'
     previous = json.loads(previous_path.read_bytes())
@@ -172,6 +184,7 @@ with tempfile.TemporaryDirectory(prefix='.issue215-preview-', dir=work) as tempo
     catalog_path.write_text(json.dumps(catalog, ensure_ascii=False, indent=2)+'\n', encoding='utf-8', newline='\n')
     cfg.raw['site']['english_catalog'] = str(catalog_path)
     localize_site(cfg, stage)
+    merge_search(public/'docs', stage, {rel for _,_,rel in entries})
     shutil.copytree(public/'docs', out)
     # A mixed preview must never retain the baseline's publication identity.
     (out/'site-manifest.json').unlink()

@@ -164,3 +164,24 @@ def test_dangling_preview_plan_cannot_write_into_public_inputs(run_layout):
     assert result.returncode != 0
     assert not target.exists() and not out.exists()
     assert 'Preserve the previous catalog/plan' in result.stderr
+
+
+def test_raw_line_anchor_evidence_reaches_native_plan_without_html_parsing(run_layout):
+    import json
+    from sdd.visual_audit import inspect_site,policy
+    home,_,_,_,_=run_layout
+    site=home/'site';(site/'en').mkdir(parents=True)
+    for prefix,lang in (('','ko'),('en/','en')):
+        (site/(prefix+'source.cpp')).write_text('void stop() {}\n',encoding='utf-8')
+        (site/(prefix+'guide.html')).write_text(
+            '<html lang="'+lang+'"><article><h2 id="question">Stop</h2>'
+            '<p>One condition. <a class="citation" href="source.cpp#L1">source</a></p></article></html>',encoding='utf-8')
+    report=inspect_site(site,policy(),source_commit='a'*40)
+    inventory=home/'inventory.json';inventory.write_text(json.dumps(report),encoding='utf-8')
+    out=home/'review'
+    result=run('review_inventory.py',['--inventory',inventory,'--site',site,
+        '--profile',TOOLS/'independent-review-profile.yaml','--page','guide.html','--out',out,'--plan-only'])
+    assert result.returncode==0,result.stderr
+    payload=json.loads((out/'inputs.json').read_bytes())
+    assert payload['source_windows']['source.cpp#L1']['text']=='void stop() {}\n'
+    assert json.loads((out/'input-plan.json').read_bytes())['native_call'] is False

@@ -96,6 +96,10 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         audit_file = audit_settings.get('reviews')
         if audit_settings.get('enabled', False) and audit_file:
             inputs['item_visual_reviews'] = digest(cfg.root / audit_file)
+        if audit_settings.get('enabled',False) and audit_settings.get('baseline'):
+            inputs['item_visual_baseline'] = digest(cfg.root/audit_settings['baseline']['file'])
+            from .visual_audit import REPORT, digest as audit_digest
+            inputs['item_visual_retention'] = audit_digest(json.loads((stage/REPORT).read_bytes())['baseline_retention'])
         from .render_profiles import inputs as editorial_inputs
         inputs.update({'editorial/'+key:value for key,value in editorial_inputs(cfg).items()})
         from .product_context import input_paths

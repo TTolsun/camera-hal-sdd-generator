@@ -718,3 +718,41 @@ def test_page_state_uses_plain_words_and_keeps_status_code_in_evidence(tmp_cfg, 
     index = (out / 'index.html').read_text(encoding='utf-8')
     assert '<code>ok</code>' not in index and '<code>needs-review</code>' not in index
     assert '>인용 검사 확인 필요</span>' in index
+def test_selected_page_write_keeps_complete_navigation_without_touching_other_pages(tmp_cfg,sample_model):
+    from sdd.export_site import (_site_navigation,_prepare_site_pages,_render_pages,
+                                 _write_pages,source_link_template)
+    prepare(tmp_cfg,sample_model)
+    sections,entries=_site_navigation(tmp_cfg,tmp_cfg.site,set())
+    texts,states,ledger,terms,model=_prepare_site_pages(tmp_cfg,tmp_cfg.site,sections,entries,check_consistency=False)
+    rendered,_,diagrams,_=_render_pages(tmp_cfg,entries,sections,texts,terms,model,
+                                      tmp_cfg.site.source_url,source_link_template(tmp_cfg.site))
+    entries.append(('For Developer','Glossary','glossary.md'))
+    out=tmp_cfg.root/'partial-write';out.mkdir()
+    other=out/'nested/detail.html';other.parent.mkdir();other.write_text('Prior other page',encoding='utf-8')
+    args=(tmp_cfg,out,entries,sections,{'device.md':rendered['device.md']},states,ledger,diagrams,'assets/mermaid.mjs')
+    settings=dict(title='Fixture',asset_version='fixture',terms_version='fixture')
+    with pytest.raises(ValueError,match='outside the complete navigation'):
+        _write_pages(*args,**settings,selected_pages={'unknown.md'})
+    assert not (out/'device.html').exists()
+    _write_pages(*args,**settings,selected_pages={'device.md'})
+    assert other.read_text(encoding='utf-8')=='Prior other page'
+    assert not (out/'index.html').exists()
+    assert 'nested/detail.html' in (out/'device.html').read_text(encoding='utf-8')
+    assert '"terms": "fixture"' in (out/'device.html').read_text(encoding='utf-8')
+
+
+def test_partial_render_uses_untouched_class_declarations(tmp_cfg,sample_model):
+    from sdd.export_site import _render_pages,source_link_template
+    from test_reading_cleanup import table,CLASS_HEADERS,ROW,related
+    prepare(tmp_cfg,sample_model)
+    sections={'guide.md':{'kind':'prose'},'reference.md':{'kind':'per-package'}}
+    entries=[('For Developer','Guide','guide.md'),('For Developer','Reference','reference.md')]
+    meta='---\nsource_commit: '+sample_model.meta['source_commit']+'\nstatus: needs-review\n---\n\n'
+    prose=related().replace('<div class="table-scroll stack" tabindex="0" role="region" aria-label="표">','').replace('</div>','')
+    texts={'guide.md':meta+'# Guide\n\n'+prose,'reference.md':meta+'# Reference\n\n'+table(CLASS_HEADERS,[ROW])}
+    args=(tmp_cfg,entries,sections,texts,[],sample_model,tmp_cfg.site.source_url,source_link_template(tmp_cfg.site))
+    full,_,_,_=_render_pages(*args)
+    assert 'reference.html#symbol-' in full['guide.md'][2],full['reference.md'][2]
+    partial,_,_,_=_render_pages(tmp_cfg,entries[:1],*args[2:],class_documents={'reference.html':full['reference.md'][2]})
+    assert partial['guide.md'][2]==full['guide.md'][2]
+    assert 'reference.md' not in partial
