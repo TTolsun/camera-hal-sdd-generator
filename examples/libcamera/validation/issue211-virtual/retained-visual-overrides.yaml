@@ -84,7 +84,7 @@
   kind: flow
   title: 버퍼 완료와 요청 완료·순서 통지는 별개입니다
   generation: llm
-  max_nodes: 7
+  max_nodes: 9
   max_label_chars: 56
   max_edge_label_chars: 20
   condition_display: evidence
@@ -104,19 +104,18 @@
   - camera-notification
   - cam-signal-connection
   - virtual-start
-  question: 버퍼 완료 뒤 모든 버퍼 완료 조건, 앞선 Pending 요청에 의한 통지 대기, 가능한 완료 요청들의 순서 통지는 어떻게 cam 콜백으로 이어집니까?
-  prompt: '일곱 노드로 버퍼 완료와 통지 순서만 명시합니다. n0는 앞 그림의 버퍼 완료 수신, n1은 해당 요청의 모든 버퍼 완료 판정입니다. 미완료 결과는 n2 나머지 버퍼
-    완료 대기, 완료 결과는 n3 이미 큐에 들어간 해당 요청의 완료 상태 표시입니다. n3→n4는 큐 맨 앞 상태 확인 관계입니다. n4(RequestPending)는 큐 맨 앞
-    요청의 실제 Pending guard를 판정합니다. Pending true는 n6(queuedRequests_)의 뒤 요청 통지 보류, false는 n5(requestCompleted)의
-    통지 가능한 완료 큐 앞부분을 제출 순서대로 cam requestComplete에 알리는 요약입니다. n5는 방금 완료 표시한 요청만 즉시 통지한다고 단정하지 않으며, 첫 Pending
-    전까지의 가능한 완료 요청들만 처리하는 집합 동작입니다. 내부 큐 스캔 반복과 후속 새 요청 제출은 이 독자 그림의 범위가 아니며 소스 근거에 남깁니다. n1과 n4는 각 실제
-    guard의 두 결과를 갖춘 decision이고 다른 노드의 간선에 true/false를 붙이지 않습니다. n5 한영 라벨에는 requestCompleted와 cam requestComplete
-    연결을 명시합니다. 구현 변수명은 근거에 두고 짧은 라벨로 설명합니다. 한영 노드 최대 56자, authored 간선 20자입니다. 조건·인용은 현재 소스에서 실제로 확인합니다.
-    이전 초안은 편집 입력이며 실행 증거나 응답 재생이 아닙니다. 이전 초안: 새 범위의 일곱 노드는 제공된 소스에서 새 native CLI 응답으로 구성합니다. 처음 생성할 때
-    일곱 노드는 앞 그림의 버퍼 완료 수신, 모든 요청 버퍼 완료 판정, 나머지 버퍼 완료 대기, 이미 큐에 들어간 요청의 완료 상태 표시, 큐 맨 앞 Pending 판정, 통지
-    가능한 완료 큐 앞부분의 제출 순서 cam 콜백 통지, 뒤 요청 통지 보류입니다. 모든 버퍼 판정과 맨 앞 Pending 판정은 실제 source guard의 true/false
-    두 결과를 갖춥니다. 통지는 막 완료 표시한 요청의 즉시 통지 보장이 아니며 준비된 완료 앞부분만 requestCompleted로 cam requestComplete에 알리는
-    요약입니다. 내부 반복과 새로운 요청 제출은 근거에 남깁니다.'
+  question: 가상 버퍼 완료 경로의 모든 버퍼 완료 판정과, 완료 표시 뒤 제출 순서 큐의 연속 통지 및 반복 종료는 어떻게 연결됩니까?
+  prompt: 현재 일곱 노드의 가상 버퍼 완료 판정과 앞선 Pending 통지 보류 조건을 보존하며 큐 반복을 정확히 보완합니다. 기존 n3 완료 표시 뒤 새 n7 결정 노드로
+    큐에 요청이 남았는지 실제 while 조건을 검사합니다. n7 true는 n4 맨 앞 Pending 검사로, false는 새 n8 이번 통지 검사 종료로 연결합니다. n4 true는
+    기존 n6 뒤 요청 보류와 반복 중단입니다. n4 false는 n5로 맨 앞 요청 하나를 큐에서 꺼내 requestCompleted 신호와 cam requestComplete
+    콜백에 알립니다. n5에서 n7로 되돌아가 다음 맨 앞 요청을 다시 검사합니다. 통지 가능한 앞부분을 반복 처리하다 Pending 또는 빈 큐에서 멈춥니다. n5가 한 번에 모든
+    요청을 통지한다고 쓰지 마세요. 이후 doQueueRequests의 기다리던 요청 전달은 이 그림의 통지 검사 범위 밖이며 n8을 함수 전체 반환으로 쓰지 마세요. 실제 while
+    !queuedRequests_.empty 조건의 true/false 두 분기를 인용하고, Pending 및 completeBuffer 두 분기도 모두 보존합니다. 새 n7/n8과
+    n5 반복에 맞춘 간선 외의 소스 바인딩과 노드는 보존합니다. 한영 라벨은 짧은 동작구/질문, 노드 최대56자, 간선20자입니다. 처음 생성할 때 일곱 노드는 앞 그림의 버퍼
+    완료 수신, 모든 요청 버퍼 완료 판정, 나머지 버퍼 완료 대기, 이미 큐에 들어간 요청의 완료 상태 표시, 큐 맨 앞 Pending 판정, 통지 가능한 완료 큐 앞부분의 제출
+    순서 cam 콜백 통지, 뒤 요청 통지 보류입니다. 모든 버퍼 판정과 맨 앞 Pending 판정은 실제 source guard의 true/false 두 결과를 갖춥니다. 통지는
+    막 완료 표시한 요청의 즉시 통지 보장이 아니며 준비된 완료 앞부분만 requestCompleted로 cam requestComplete에 알리는 요약입니다. 내부 반복과 새로운
+    요청 제출은 근거에 남깁니다.
   answer_contract:
     basis: implementation
     reject_patterns:
@@ -206,16 +205,18 @@
   - Virtual2
   - cam
   question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam 재현 실행은 어떤 준비 순서로 이어집니까?
-  prompt: 현재 유효한 열두 노드·모든 source 인용·간선·검사값을 정확히 보존하고 device_verify(커널·권한 검사)의 범위 번호만 바로잡습니다. 이 노드는 실행
-    중인 커널이 기록된 커널과 일치하며 root가 /dev/udmabuf에 접근하는 6–7번 검사만 담당합니다. 따라서 한영 라벨에서 6–11을 6–7로 바꾸고 이 노드가 모든 입력
-    검사까지 담당한다고 쓰지 않습니다. 다음 YAML 검사는8번, cam 입력 검사는9–11번을 담당하는 기존 의미와 값들을 유지합니다. 다른 모든 표시와 인용은 바꾸지 않습니다.
+  prompt: 현재 열두 노드와 모든 간선·실제 조건·인용·검사 순서를 그대로 보존하고 한영 표시 라벨만 짧은 동작구/질문으로 줄입니다. 재현 본문에 이미 있는 도우미 사용시 인자
+    전달 설명은 긴 cam 검사 노드에서 반복하지 않습니다. cam 노드는 Virtual2, 400×300, NV12, cam 캡처 한도 3 / cam capture limit 3의
+    검사만 간결하게 나타내세요. 커널/장치 노드도 6–7, 기록된 커널/recorded kernel, root, /dev/udmabuf만 짧게 연결합니다. YAML 노드는 Virtual2
+    400×300 lines를 검사합니다. 호스트 승인은 실행 직전/immediately의 별도 승인임을 보존합니다. 한영 노드72자, 간선20자 이내입니다. 400과300은 ×
+    또는 공백으로 구분해야 하며 x로 붙이지 않습니다. 값들을 무관한 노드로 옮기거나 의미 없는 키워드 목록을 쓰지 말고 실제 각 검사의 질문으로 표현합니다.
   sources:
   - product-invocation-execution-contract
   - product-invocation-reproduction-procedure
   - product-invocation-official-cam-reader
   - virtual2-config
   - product-invocation-options
-  max_label_chars: 96
+  max_label_chars: 72
   condition_display: evidence
   answer_contract:
     basis: measurement
