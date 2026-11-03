@@ -310,8 +310,16 @@ design_topics:
       - pattern: 배포판|공유.*커널
         message: Keep the shared-kernel condition once in the modules part; this part covers Kconfig/dependencies.
     role: summary
+  - id: providers
+    question: statement.text를 '2. '로 시작하여 조사 결과에 맞는 DMA-BUF 할당기를 선택한다고 짧게 쓰세요. 이 기록과 같은 조건으로 재현할 때는 udmabuf가
+      필요하다는 한정을 둘째 문장에 남기세요.
+    sources: []
+    max_statements: 1
+    prompt: 이 단계의 독자 행동과 필요한 조건만 짧게 직접 씁니다. 구현 심볼 목록, 다른 단계 설명, 반복 경고, 근거 자료 자체에 관한 해설을 덧붙이지 마세요.
+    answer_contract:
+      basis: measurement
   - id: modules
-    question: statement.text를 '2. '로 시작하세요. 선택한 커널과 할당기에 필요한 모듈만 설치 여부와 커널 버전 일치를 조사한다는 한 가지 행동을 짧게 씁니다.
+    question: statement.text를 '3. '로 시작하세요. 선택한 커널과 할당기에 필요한 모듈만 설치 여부와 커널 버전 일치를 조사한다는 한 가지 행동을 짧게 씁니다.
       기록된 udmabuf 시험은 내장 드라이버였으며 별도 모듈을 설치하지 않았다는 둘째 짧은 문장으로 한정합니다. 모든 지원 모듈의 사용을 요구하거나 지금 모듈을 로드한다고 쓰지
       마세요. WSL 공유 커널 조건은 그림과 연결 안내에 이미 있으므로 반복하지 않습니다. 설정 심볼·의존 목록·후보 조사는 다른 항목에 남깁니다.
     sources: []
@@ -322,14 +330,6 @@ design_topics:
       reject_patterns:
       - pattern: Kconfig|의존|후보
         message: 모듈 단위에는 다른 단위의 커널 설정·의존성·후보 조사를 반복하지 마세요.
-  - id: providers
-    question: statement.text를 '3. '로 시작하여 조사 결과에 맞는 DMA-BUF 할당기를 선택한다고 짧게 쓰세요. 이 기록과 같은 조건으로 재현할 때는 udmabuf가
-      필요하다는 한정을 둘째 문장에 남기세요.
-    sources: []
-    max_statements: 1
-    prompt: 이 단계의 독자 행동과 필요한 조건만 짧게 직접 씁니다. 구현 심볼 목록, 다른 단계 설명, 반복 경고, 근거 자료 자체에 관한 해설을 덧붙이지 마세요.
-    answer_contract:
-      basis: measurement
   - id: approval
     question: statement.text를 '4. '로 시작하세요. 변경안·커널 이미지 해시·영향·백업·복구 절차가 포함된 호스트 변경 계획에 대해 실행 직전에 별도 승인을
       받는 한 가지 행동만 짧게 씁니다. 계획을 작성하는 행동과 Docker 조건을 이 항목에서 다시 나열하지 마세요. Docker 조건은 그림과 연결 안내에서 확인합니다.

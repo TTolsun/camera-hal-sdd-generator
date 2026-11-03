@@ -27,12 +27,9 @@ prompt: 앞 준비 그림에서 실제 Camera 큐 호출을 통과한 요청부�
   n8는 상태와 무관한 버퍼 완료 신호이며 다음 완료·순서 그림으로 이어집니다. n0/n1 source pipeline-register와 pipeline-dispatch, n2 request-status-completion
   및 pipeline-completion 근거를 함께 확인합니다. 준비 도우미/할당/Camera API/제출 카운터를 이 그림에 다시 넣지 않습니다. 노드 60자, authored
   간선 20자, 한국어·영어 모두 짧은 행동·질문으로 씁니다. 쓰기 방향 동기화는 매핑/변환/쓰기를 둘러싸는 범위이며 그 뒤 따로 시작한다고 쓰지 마세요. 취소 분기 true/false와
-  변환 오류 true/false는 실제 guard를 보존합니다. 현재 유효한 아홉 노드·모든 실제 조건·양쪽 결과·인용·간선을 정확히 보존하고 세 노드의 한영 라벨만 짧게 줄입니다.
-  n0는 앞 준비 그림에서 오는 버퍼 연결 요청을 PipelineHandler가 준비한다는 뜻을 짧게 표시합니다. n5는 CPU 쓰기 동기화 안에서 쓰기용 DMA-BUF 매핑을 시도한다는
-  뜻을 짧게 표시하여 DMA-BUF 용어를 이 노드에 둡니다. n8는 버퍼 완료 뒤 다음 그림에서 cam 통지 조건을 확인한다는 연결만 짧게 표시합니다. 한 노드 안에서 프레임 상태
-  경고와 그림 간 안내를 길게 되풀이하지 않습니다. n0/n5/n8 각각 한 행동과 필요한 연결만 남기고 나머지 노드·인용·간선을 재작성하지 않습니다. n2 취소 완료와 앞선 미완료
-  요청 통지 보류, n6→n7 성공/오류 결과 반환은 이미 올바르므로 그대로 둡니다. PipelineHandler와 VirtualCameraData::processRequest 식별자는
-  보존합니다.
+  변환 오류 true/false는 실제 guard를 보존합니다. 현재 유효한 아홉 노드·한영 라벨·source guard·인용·간선을 정확히 보존하고 n1에서 n2로 가는 취소 true
+  간선의 label/label_en만 고칩니다. 이 간선은 취소 요청을 완료 처리하는 분기로 진행한다는 뜻이며 즉시 통지한다는 뜻이 아닙니다. 통지 또는 보류는 다음 n2와 완료 순서
+  그림이 이미 정확히 설명합니다. 따라서 취소 완료 처리로 진행한다는 짧은 표현으로 쓰고 notify/통지라는 동사를 이 간선에서 제거합니다. 다른 모든 표시와 인용은 바꾸지 않습니다.
 sources:
 - pipeline-dispatch
 - pipeline-register
