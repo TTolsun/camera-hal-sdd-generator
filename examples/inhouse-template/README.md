@@ -9,6 +9,7 @@
 | 파일 | 채울 것 |
 |---|---|
 | `sdd.yaml` | `source_url`(코드 열람 주소), 필요하면 `ndk_build.args`, 모델을 쓸 때 `agent` |
+| `sdd.cli.local.example.yaml` | 선택한 CLI의 `runner`·`command`·`model`·`args`. `sdd.local.yaml`로 복사하면 적용됩니다. |
 | `config/scenarios.yaml` | `<namespace>`와 실제 시그니처, 대조한 정의 위치 |
 | `config/glossary.yaml` | 사내 약어의 뜻. `export-site`가 뜻이 없는 약어를 알려 줍니다. |
 | `handoff.md` | 단계별 완료·실패·재개 명령과 증거 경로 |
@@ -23,7 +24,11 @@
 
 NDK-build가 아닌 제품의 설정은 [환경별 선택](../../docs/inhouse/agent.md#1-환경과-데이터-경계)을 따릅니다.
 
-모델은 `dry-run`으로 시작합니다. 사내 모델 연결과 LLM 판정은 생성기 저장소의 `docs/inhouse/03-update-system.md`에서 켭니다.
+## 사내 CLI 선택
+
+사용자가 선택한 Hermes, OpenCode, Claude Code 또는 Codex CLI를 사용합니다. 템플릿의 Codex/Terra High는 저장소의 기본 예시이며 사내 사용의 필수 조건이 아닙니다. 사내에서 Hermes를 사용할 때는 `sdd.cli.local.example.yaml`을 `sdd.yaml` 옆의 `sdd.local.yaml`로 복사합니다. 다른 CLI는 예시의 `runner`를 `opencode`, `claude`, `codex`로 바꾸고 해당 CLI의 모델·인자를 설정합니다. 기존 로컬 파일이 있으면 다른 설정을 보존하고 `agent`만 병합합니다.
+
+`model: ""`, `args: []`, `command: []`는 상속된 모델·인자·실행 경로를 지우고 선택한 CLI의 설정과 PATH를 사용하게 합니다. 로컬 파일에서 키를 생략하는 것만으로는 기본 설정의 값이 제거되지 않습니다. 인증·제공자·모델은 승인된 CLI 설정에서 준비하고 [CLI 선택 안내](../../docs/inhouse/cli-agents.md)에 따라 `doctor`와 실제 호출을 구분해 검증합니다. 호출 없는 점검은 명시적으로 `kind: dry-run`을 지정하며 LLM 생성 성공으로 기록하지 않습니다.
 
 `build/`와 `sdd.local.yaml`만 Git에서 제외합니다. 원고, 승인 장부, Mermaid 사본은 커밋해야 다른 작업 공간에서도 승인과 그림이 유지됩니다.
 

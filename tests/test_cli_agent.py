@@ -20,6 +20,30 @@ def test_default_and_local_runner_selection(tmp_path):
     assert (cfg.kind, cfg.runner, cfg.model) == ('cli', 'claude', 'approved-model')
 
 
+@pytest.mark.parametrize('runner', ['hermes', 'opencode', 'claude', 'codex'])
+def test_shipped_cli_override_clears_previous_runner_identity(tmp_path, runner):
+    from sdd.cli_agent import arguments
+
+    template = Path(__file__).resolve().parents[1] / 'examples/inhouse-template'
+    base = yaml.safe_load((template / 'sdd.yaml').read_text(encoding='utf-8'))
+    base['agent']['command'] = ['previous-cli', '--old-wrapper-option']
+    path = tmp_path / 'sdd.yaml'
+    path.write_text(yaml.safe_dump(base), encoding='utf-8')
+    override = yaml.safe_load((template / 'sdd.cli.local.example.yaml').read_text(encoding='utf-8'))
+    override['agent']['runner'] = runner
+    path.with_name('sdd.local.yaml').write_text(yaml.safe_dump(override), encoding='utf-8')
+
+    cfg = load(path)
+    assert (cfg.agent.kind, cfg.agent.runner, cfg.agent.model) == ('cli', runner, '')
+    assert cfg.agent.command == [] and cfg.agent.args == []
+    assert not cfg.agent.allow_direct_api
+    assert cfg.agent.max_input_chars == base['agent']['max_input_chars']
+    assert cfg.ndk_build['enabled'] == base['source']['ndk_build']['enabled']
+    argv = arguments(cfg.agent)
+    assert '--model' not in argv and 'gpt-6.1-terra' not in argv
+    assert 'model_reasoning_effort="high"' not in argv
+
+
 @pytest.mark.parametrize('agent', [{'runner': 'unknown'}, {'command': 'hermes -z'},
                                   {'args': [None]}, {'allow_direct_api': 'false'}])
 def test_invalid_cli_config_is_rejected(tmp_path, agent):
