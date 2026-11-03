@@ -106,7 +106,7 @@ def main():
                 excluded_by_page[row['page']] = {}
                 for node in all_nodes(doc.root):
                     if node.tag in {'pre', 'script', 'style', 'details'}:
-                        text = node_window(node, args.site.resolve(), row['page'])
+                        text = node_window(node, args.site.resolve(), row['page'],exclude_navigation=True)
                         excluded_by_page[row['page']][(node.tag, digest(text))] = text
             owned = []
             for record in row['excluded']:
@@ -191,11 +191,16 @@ def main():
             path = path.resolve()
             if not path.is_relative_to(args.site.resolve()) or not path.is_file():
                 raise ValueError('Missing or unsafe source window: '+href)
-            doc = Document(path.read_text(encoding='utf-8'))
             key = path.relative_to(args.site.resolve()).as_posix()+'#'+parts.fragment
             page = path.relative_to(args.site.resolve()).as_posix()
             raw = path.read_text(encoding='utf-8')
-            text = source_window(doc, unquote(parts.fragment), root=args.site.resolve(), page=page)
+            if path.suffix == '.html':
+                text = source_window(Document(raw), unquote(parts.fragment), root=args.site.resolve(), page=page)
+            else:
+                lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', unquote(parts.fragment))
+                if not lines or int(lines[1]) > int(lines[2] or lines[1]) or int(lines[2] or lines[1]) > len(raw.splitlines()):
+                    raise ValueError('Source window line range is invalid: '+key)
+                text = raw
             windows[key] = dict(text=text, sha256=digest(text))
         document = {key:row[key] for key in ('title', 'body', 'tables', 'content_blocks')}
         document_hash = digest(document)
@@ -218,9 +223,9 @@ def main():
                 raw = path.read_text(encoding='utf-8')
                 if path.suffix == '.html':
                     text = source_window(Document(raw), fragment, root=args.site.resolve(), page=target)
-                    actual_hash = digest([raw, text] if target != row['page'] else text)
+                    actual_hash = digest([path.read_bytes().hex(), text] if target != row['page'] else text)
                 else:
-                    text, actual_hash = raw, digest(raw)
+                    text, actual_hash = raw, digest(path.read_bytes().hex())
             if actual_hash != expected_hash:
                 raise ValueError('Source window changed since inventory; make a new inventory: '+key)
             windows[key] = dict(text=text, sha256=digest(text), inventory_sha256=actual_hash)

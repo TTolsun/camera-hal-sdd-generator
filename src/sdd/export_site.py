@@ -414,7 +414,7 @@ def _heading_search(items, page_title, rel):
         yield from _heading_search(item.get("children", []), page_title, rel)
 
 
-def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_template):
+def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_template, *, class_documents=None):
     known = set(texts)
     rendered_pages = {}
     search = []
@@ -438,8 +438,10 @@ def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_
 
         search.extend(_heading_search(tokens, page_title, rel))
     from .reading_cleanup import class_targets, link_related_classes
-    targets = class_targets({_html_path(rel): page[2] for rel, page in rendered_pages.items()
-                             if sections.get(rel, {}).get('kind') == 'per-package'})
+    declarations = dict(class_documents or {})
+    declarations.update({_html_path(rel): page[2] for rel, page in rendered_pages.items()
+                         if sections.get(rel, {}).get('kind') == 'per-package'})
+    targets = class_targets(declarations)
     for rel, (page_title, meta, content, toc) in rendered_pages.items():
         if sections.get(rel, {}).get('kind', 'prose') == 'prose':
             rendered_pages[rel] = (page_title, meta, link_related_classes(content, _html_path(rel), targets), toc)
@@ -554,8 +556,14 @@ def _pagination_html(entries, sections, index, rel, current):
 
 
 def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, ledger, diagram_sources,
-                 mermaid_src, *, title, asset_version, terms_version):
+                 mermaid_src, *, title, asset_version, terms_version, selected_pages=None):
+    if selected_pages is not None:
+        selected_pages = set(selected_pages)
+        if selected_pages - {entry[2] for entry in entries}:
+            raise ValueError('Selected page is outside the complete navigation')
     for index, (group, name, rel) in enumerate(entries):
+        if selected_pages is not None and rel not in selected_pages:
+            continue
         current = _html_path(rel)
         root = _href("index.html", current).removesuffix("index.html") or "./"
         page_title, meta, content, toc = rendered_pages[rel]
@@ -612,7 +620,7 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
         page_config = {"root": root, "mermaid": mermaid_src}
         if sections.get(rel, {}).get('kind') == 'per-package':
             page_config['index'] = True
-        if glossary.PAGE in rendered_pages and rel != glossary.PAGE:
+        if any(entry[2] == glossary.PAGE for entry in entries) and rel != glossary.PAGE:
             page_config["terms"] = terms_version  # 본문의 첫 용어에 밑줄과 뜻 상자를 붙인다(site.js)
         config_json = json.dumps(page_config, ensure_ascii=False).replace("<", "\\u003c")
         doc = f'''<!doctype html>

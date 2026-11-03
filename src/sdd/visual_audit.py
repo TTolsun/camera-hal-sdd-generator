@@ -7,6 +7,7 @@ an editorial/automated review record, not human approval or runtime evidence.
 from __future__ import annotations
 
 import argparse
+import gzip
 from collections import Counter
 from dataclasses import dataclass, field
 import hashlib
@@ -38,11 +39,16 @@ def digest(value):
 
 def policy(cfg=None):
     raw = cfg.visual_audit if cfg else {}
-    allowed = {'enabled', 'reviews', 'thresholds', 'signals', 'deferred_pages'}
+    allowed = {'enabled', 'reviews', 'thresholds', 'signals', 'deferred_pages', 'baseline'}
     if not isinstance(raw, dict) or set(raw) - allowed:
-        raise ValueError('visual_audit accepts enabled, reviews, thresholds, signals, deferred_pages')
+        raise ValueError('visual_audit accepts enabled, reviews, thresholds, signals, deferred_pages, baseline')
     if type(raw.get('enabled', False)) is not bool:
         raise ValueError('visual_audit.enabled must be boolean')
+    baseline = raw.get('baseline')
+    if baseline is not None and (not isinstance(baseline,dict) or set(baseline) != {'file','sha256'}
+            or not isinstance(baseline.get('file'),str) or not baseline['file']
+            or not re.fullmatch(r'[0-9a-f]{64}',str(baseline.get('sha256','')))):
+        raise ValueError('visual_audit.baseline requires file and pinned sha256')
     thresholds = {'default': {'chars': 600, 'paragraphs': 3}}
     supplied = raw.get('thresholds', {})
     if not isinstance(supplied, dict):
@@ -134,7 +140,7 @@ def canonical(node):
     return node if isinstance(node, str) else dict(tag=node.tag, attrs=node.attrs, children=[canonical(c) for c in node.children])
 
 
-def window_bundle(text, structure, nodes, root, page):
+def window_bundle(text, structure, nodes, root, page, *, heading_context=None):
     assets, references = [], []
     for child in nodes:
         if child.attrs.get('href'):
@@ -167,31 +173,90 @@ def window_bundle(text, structure, nodes, root, page):
                     raise ValueError('Source window asset missing: '+name)
                 assets.append(dict(path=name, sha256=digest(asset.read_bytes().hex())))
     binding = dict(structure_sha256=digest(structure), assets=assets, references=sorted(set(references)))
+    if heading_context is not None:
+        binding['heading_context'] = heading_context
     return text+WINDOW_BINDING+json.dumps(binding, ensure_ascii=False, sort_keys=True)
 
 
-def node_window(node, root, page):
-    return window_bundle(node.text(), canonical(node), list(all_nodes(node)), root, page)
+def without_navigation(current):
+    if isinstance(current,str):
+        return current
+    return Node(current.tag,dict(current.attrs),[without_navigation(child) for child in current.children
+                if not isinstance(child,Node) or child.tag not in {'nav','aside','footer'}])
+
+
+def node_window(node, root, page, *, heading_context=None, exclude_navigation=False):
+    if exclude_navigation:
+        node=without_navigation(node)
+    return window_bundle(node.text(), canonical(node), list(all_nodes(node)), root, page,
+                         heading_context=heading_context)
 
 
 def source_window(document, fragment, *, root=None, page=''):
-    """Resolve an empty source anchor to its precise folded excerpt, not the list."""
+    """Resolve readable evidence and its owning headings as the browser does."""
     nodes = list(all_nodes(document.root))
     found = [n for n in nodes if n.attrs.get('id') == fragment]
     if len(found) != 1:
         raise ValueError('Source window missing or ambiguous: '+fragment)
+    parents = {id(c): p for p in nodes for c in p.children if isinstance(c, Node)}
+    def inside_navigation(node):
+        while node is not document.root:
+            if node.tag in {'nav','aside','footer'}:
+                return True
+            node = parents[id(node)]
+        return False
+    if inside_navigation(found[0]):
+        raise ValueError('Source target is inside excluded navigation: '+fragment)
+    owner = found[0]
+    while owner is not document.root and owner.tag != 'article':
+        owner = parents[id(owner)]
+    if owner is document.root:
+        raise ValueError('Source target has no owning article: '+fragment)
+    scoped_nodes = list(all_nodes(owner))
+    owner_index = next(i for i,node in enumerate(nodes) if node is owner)
+    titles = [node for node in nodes[:owner_index] if node.tag == 'h1' and not inside_navigation(node)]
+    context=[]
+    for node in ([titles[-1]] if titles else []) + scoped_nodes:
+        if inside_navigation(node):
+            continue
+        heading = bool(re.fullmatch(r'h[1-6]',node.tag))
+        if heading:
+            while context and int(context[-1]['tag'][1]) >= int(node.tag[1]):
+                context.pop()
+        if node is found[0]:
+            break
+        if heading:
+            context.append(dict(tag=node.tag,id=node.attrs.get('id',''),text=plain(without_navigation(node))))
+    window = found[0]
+    parent = parents.get(id(window))
+    anchor = parent if parent and parent.tag == 'p' else window
+    container = parents.get(id(anchor))
+    if container and re.fullmatch(r'source-[0-9a-f]{16}',fragment):
+        position = next(i for i, n in enumerate(container.children) if n is anchor)
+        following = next((n for n in container.children[position+1:] if isinstance(n, Node) and n.tag != '!'), None)
+        if following and following.tag == 'details':
+            ancestor=following
+            while ancestor is not document.root and ancestor is not owner:
+                ancestor=parents[id(ancestor)]
+            if ancestor is not owner:
+                raise ValueError('Source panel crosses its owning article boundary: '+fragment)
+            return node_window(following, root, page,heading_context=context+([dict(tag=window.tag,id=fragment,text=plain(without_navigation(window)))] if re.fullmatch(r'h[1-6]',window.tag) else []),exclude_navigation=True)
     if re.fullmatch(r'h[1-6]', found[0].tag):
         level = int(found[0].tag[1])
         def events(node):
             if isinstance(node, str):
                 yield 'text', node
                 return
+            if node.tag in {'nav','aside','footer'}:
+                return
             yield 'start', node
             for child in node.children:
                 yield from events(child)
             yield 'end', node
         collecting, parts, structure, selected = False, [], [], []
-        for kind, event in events(document.root):
+        for kind, event in events(owner):
+            if kind == 'end' and event is owner:
+                break
             if kind == 'start':
                 if event is found[0]:
                     collecting = True
@@ -206,20 +271,10 @@ def source_window(document, fragment, *, root=None, page=''):
                     structure.append([kind, event])
                 else:
                     structure.append([kind, event.tag])
-        return window_bundle(''.join(parts), structure, selected, root, page)
-    parents = {id(c): p for p in nodes for c in p.children if isinstance(c, Node)}
-    window = found[0]
-    parent = parents.get(id(window))
-    container = parents.get(id(parent)) if parent else None
-    if (parent and container and parent.tag == 'p' and not parent.text().strip()
-            and 'source-excerpts' in container.attrs.get('class', '').split()):
-        position = next(i for i, n in enumerate(container.children) if n is parent)
-        following = next((n for n in container.children[position+1:] if isinstance(n, Node)), None)
-        if following and following.tag == 'details':
-            return node_window(following, root, page)
-    while window is not document.root and window.tag != 'details':
+        return window_bundle(''.join(parts), structure, selected, root, page,heading_context=context)
+    while window is not owner and window.tag != 'details':
         window = parents[id(window)]
-    return node_window(found[0] if window is document.root else window, root, page)
+    return node_window(found[0] if window is owner else window, root, page,heading_context=context,exclude_navigation=True)
 
 
 def plain(node):
@@ -246,9 +301,10 @@ def source_container(node):
 
 def inventory_page(source, page, options, *, source_commit='', root=None, draft=False):
     doc = Document(source)
-    article = next(doc.root.all('article'), None)
-    if article is None:
-        raise ValueError('Visualization audit requires an article: ' + page)
+    articles = list(without_navigation(doc.root).all('article'))
+    if len(articles) != 1:
+        raise ValueError('Visualization audit requires exactly one readable article: ' + page)
+    article = articles[0]
     html = next(doc.root.all('html'), Node('html'))
     lang = html.attrs.get('lang', 'ko')
     thresholds = options['thresholds'].get(lang, options['thresholds']['default'])
@@ -377,7 +433,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
         for child in node.children:
             walk(child)
 
-    walk(article)
+    walk(without_navigation(article))
     if active is not None:
         raise ValueError('Unclosed visualization marker: '+page)
     by_id = {row['id']: row for row in rows}
@@ -443,9 +499,10 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                             last = int(lines[2] or lines[1])
                             if first > last or last > len(raw.splitlines()):
                                 raise ValueError('Source window line range is invalid: '+key)
-                        # Cross-file windows bind all target bytes so an edit
-                        # next to a line anchor cannot escape revalidation.
-                        window_hashes[key] = digest([raw, selected] if path.suffix == '.html' else raw)
+                        # Keep the existing conservative cross-file byte pin.
+                        # The separately supplied selected window is the actual
+                        # review scope; a file hash never claims whole-file review.
+                        window_hashes[key] = digest([path.read_bytes().hex(), selected] if path.suffix == '.html' else path.read_bytes().hex())
                         window_references[key] = json.loads(selected.rsplit(WINDOW_BINDING, 1)[1])['references'] if path.suffix == '.html' else []
                     else:
                         row['unresolved_source_windows'].append(href)
@@ -648,13 +705,84 @@ def apply_reviews(report, reviews):
 def verify_published(root, manifest):
     """Recompute item fingerprints in verify-site, not just the report's hash."""
     if REPORT not in manifest['outputs']:
+        if manifest.get('inputs',{}).get('item_visual_baseline') or manifest.get('inputs',{}).get('item_visual_retention'):
+            raise ValueError('Published visualization baseline requires its audit report')
         return
     recorded = json.loads(owned_path(root, REPORT).read_bytes())
     report = inspect_site(root, recorded['policy'], manifest=manifest, source_commit=recorded['source_commit'])
     records = {r['id']: {**r, 'figures': r.get('reviewed_figures', [])} for r in recorded['items']}
     if set(records) != {r['id'] for r in report['items']}:
         raise ValueError('Published visualization item set changed')
-    enforce(apply_reviews(report, dict(schema=1, items=records)))
+    apply_reviews(report, dict(schema=1, items=records))
+    baseline=recorded['policy'].get('baseline')
+    retained=recorded.get('baseline_retention')
+    pinned=manifest.get('inputs',{}).get('item_visual_baseline')
+    contract_digest=manifest.get('inputs',{}).get('item_visual_retention')
+    if baseline or retained or pinned or contract_digest:
+        if (not isinstance(baseline,dict) or not isinstance(retained,dict)
+                or not re.fullmatch(r'[0-9a-f]{64}',str(pinned))
+                or retained.get('sha256') != pinned or baseline.get('sha256') != pinned
+                or contract_digest != digest(retained)):
+            raise ValueError('Published visualization baseline retention contract missing or changed')
+        retain_baseline_items(report,retained)
+    enforce(report)
+
+
+def baseline_contract(cfg, options):
+    """Retain the actual previous item set even when a new ledger is complete."""
+    spec = options.get('baseline')
+    if spec is None:
+        return None
+    path = cfg.root/spec['file']
+    raw = read_bytes(path)
+    if hashlib.sha256(raw).hexdigest() != spec['sha256']:
+        raise ValueError('Visualization baseline digest changed')
+    data = json.loads(gzip.decompress(raw) if path.suffix == '.gz' else raw)
+    if not isinstance(data,dict) or data.get('schema') != 1 or not isinstance(data.get('items'),list) or not data['items']:
+        raise ValueError('Visualization baseline requires a schema1 inventory')
+    required, positional = {}, {}
+    seen = set()
+    for row in data['items']:
+        if (not isinstance(row,dict) or not isinstance(row.get('id'),str) or not row['id']
+                or row['id'] in seen or not re.fullmatch(r'[0-9a-f]{64}',str(row.get('fingerprint','')))):
+            raise ValueError('Visualization baseline has invalid or duplicate item identities')
+        seen.add(row['id'])
+        if row.get('role') != 'visual_title':
+            required[row['id']] = row['fingerprint']
+            if re.search(r'#\$heading-[0-9]+$',row['id']):
+                if row.get('level') != 1 or row.get('title') != 'Page introduction':
+                    raise ValueError('Retained reader questions require persistent explicit anchors: '+row['id'])
+                identity = {key:row.get(key) for key in ('title','level','ancestors')}
+                if not isinstance(identity['title'],str) or not isinstance(identity['level'],int) or not isinstance(identity['ancestors'],list):
+                    raise ValueError('Positional baseline items require their heading identity')
+                positional[row['id']] = identity
+    if not required:
+        raise ValueError('Visualization baseline contains no reader questions')
+    return dict(schema=1,sha256=spec['sha256'],source_commit=data.get('source_commit',''),
+                build_id=data.get('baseline_build_id'),required_items=required,positional_identities=positional,
+                scope='Stable reader-question identities only; no historical review or figure approval is reused')
+
+
+def retain_baseline_items(report, contract):
+    if (not isinstance(contract,dict) or contract.get('schema') != 1
+            or not re.fullmatch(r'[0-9a-f]{64}',str(contract.get('sha256','')))
+            or not isinstance(contract.get('required_items'),dict) or not contract['required_items']
+            or any(not isinstance(key,str) or not re.fullmatch(r'[0-9a-f]{64}',str(value))
+                   for key,value in contract['required_items'].items())):
+        raise ValueError('Invalid published baseline retention contract')
+    current = {row['id']:row for row in report['items']}
+    identities=contract.get('positional_identities')
+    if (not isinstance(identities,dict) or set(identities) != {key for key in contract['required_items'] if re.search(r'#\$heading-[0-9]+$',key)}
+            or any(not isinstance(value,dict) or set(value) != {'title','level','ancestors'} for value in identities.values())):
+        raise ValueError('Invalid positional baseline heading identities')
+    missing = [key for key in contract['required_items']
+               if key not in current or current[key].get('role') == 'visual_title']
+    report['errors'].extend('Baseline reader question deleted or replaced by a figure title: '+key for key in sorted(missing))
+    for key,identity in identities.items():
+        if key in current and any(current[key].get(name)!=value for name,value in identity.items()):
+            report['errors'].append('Positional baseline reader question changed identity; retain an explicit anchor or review a new baseline: '+key)
+    report['baseline_retention'] = contract
+    return report
 
 
 def enforce(report):
@@ -671,6 +799,8 @@ def publication_gate(cfg, stage):
     commit = load_json(cfg.facts_path).get('meta', {}).get('source_commit', '') if cfg.facts_path.exists() else ''
     report = inspect_site(stage, options, source_commit=commit)
     apply_reviews(report, load_json(cfg.root/options['reviews']))
+    if contract := baseline_contract(cfg,options):
+        retain_baseline_items(report,contract)
     enforce(report)
     (stage/REPORT).write_text(json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2)+'\n', encoding='utf-8', newline='\n')
 

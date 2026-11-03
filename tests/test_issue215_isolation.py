@@ -164,3 +164,35 @@ def test_dangling_preview_plan_cannot_write_into_public_inputs(run_layout):
     assert result.returncode != 0
     assert not target.exists() and not out.exists()
     assert 'Preserve the previous catalog/plan' in result.stderr
+
+
+def test_raw_line_anchor_evidence_reaches_native_plan_without_html_parsing(run_layout,monkeypatch):
+    import importlib.util
+    import json
+    from sdd.visual_audit import inspect_site,policy
+    home,_,_,_,_=run_layout
+    site=home/'site';(site/'en').mkdir(parents=True)
+    for prefix,lang in (('','ko'),('en/','en')):
+        (site/(prefix+'source.cpp')).write_text('void stop() {}\n',encoding='utf-8')
+        (site/(prefix+'guide.html')).write_text(
+            '<html lang="'+lang+'"><article><h2 id="question">Stop</h2>'
+            '<p>One condition. <a class="citation" href="source.cpp#L1">source</a></p></article></html>',encoding='utf-8')
+    report=inspect_site(site,policy(),source_commit='a'*40)
+    inventory=home/'inventory.json';inventory.write_text(json.dumps(report),encoding='utf-8')
+    out=home/'review'
+    monkeypatch.syspath_prepend(str(TOOLS))
+    spec=importlib.util.spec_from_file_location('synthetic_issue215_review',TOOLS/'review_inventory.py')
+    helper=importlib.util.module_from_spec(spec);spec.loader.exec_module(helper)
+    # This plan-only fixture never locates or runs a CLI. CI need not install
+    # Codex; an accidental model-execution path must fail this synthetic test.
+    monkeypatch.setattr(helper,'command',lambda config:['synthetic-plan-only-not-executed'])
+    def no_model(*args,**kwargs):
+        raise AssertionError('A plan-only fixture must not create a model execution')
+    monkeypatch.setattr(helper,'Agent',no_model)
+    monkeypatch.setattr(helper,'Execution',no_model)
+    monkeypatch.setattr(sys,'argv',['review_inventory.py','--inventory',str(inventory),'--site',str(site),
+        '--profile',str(TOOLS/'independent-review-profile.yaml'),'--page','guide.html','--out',str(out),'--plan-only'])
+    helper.main()
+    payload=json.loads((out/'inputs.json').read_bytes())
+    assert payload['source_windows']['source.cpp#L1']['text']=='void stop() {}\n'
+    assert json.loads((out/'input-plan.json').read_bytes())['native_call'] is False
