@@ -154,7 +154,7 @@ design_topics:
   - id: processing
     question: processRequest에 들어올 때 처리 한도가 설정되어 있고 처리 수가 이미 그 한도에 도달했다면, 완료 신호를 다시 내지 않고 즉시 반환하여 후속 프레임
       처리를 건너뛴다는 한 가지 조건·동작만 짧은 평서문 하나로 씁니다. 요청마다 다시 호출된다는 일반화, 남은 요청 모두에 대한 설명, 이유·효과·뒷 단계 해설을 덧붙이지 않습니다.
-      취소 분기는 앞 콜백 설명이 맡습니다.
+      취소 분기는 앞 콜백 설명이 맡습니다. 여기서 다시 내지 않는 신호는 captureDone이므로 일반적인 완료 신호라고 쓰지 말고 `captureDone`을 명시하세요.
     sources:
     - callback-and-processing
     max_statements: 1
@@ -176,6 +176,7 @@ design_topics:
       - - captureLimit_
         - 처리 한도
       - - 건너
+      - - captureDone
   - id: frame-work
     question: 프레임 정보를 출력하고 처리 수를 하나 늘린 뒤, 설정된 처리 한도에 도달하면 captureDone 신호를 내고 후속 처리 함수를 끝낸다는 순서만 두 짧은 문장으로
       설명하세요. 진입 검사는 반복하지 않습니다. 내부 카운터 식별자는 근거에 남깁니다.

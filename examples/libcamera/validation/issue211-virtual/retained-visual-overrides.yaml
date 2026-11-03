@@ -26,22 +26,28 @@
   max_label_chars: 70
   condition_display: evidence
   require_connected: true
-  prompt: 정확히 9개 노드 n0..n8로 별도 준비 그림을 새로 작성하세요. n0 exportFrameBuffers 실제 할당 실패 guard true→n5 시작 실패 반환,
-    false→n1 요청 생성 실패 여부(!request) true→n5,false→n2 addBuffer 실패 guard true→n5,false→n3입니다. 세 검사 모두 cam
-    startCapture 실제 guard 근거를 갖춥니다. 다른 시작 조건이 충족된 주요 경로의 요약이며 n5는 앞선 요청이 전혀 제출되지 않았다고 단정하지 않습니다. n3 CameraSession::queueRequest는
-    한도가 설정되고 제출 시도 수가 이미 한도 이상인지 결정합니다. 실제 helper guard true→n6 captureLimit_는 이 요청을 제출하지 않고 0 반환, false→n8
-    queueCount_ 제출 시도 수 증가→n4 Camera::queueRequest 실제 API 호출 실패 판정입니다. n4의 guard는 호출자 startCapture의 실제
-    helper ret<0를 인용하되 도우미 한도 분기를 이미 통과한 Camera 호출 결과임을 밝힙니다. true→n5,false→n7 PipelineHandler::queueRequest
-    비동기 전달이며 다음 패턴 그림으로 이어집니다. helper가 0 반환했다고 언제나 제출한 것으로 그리지 마세요. 짧은 한영 행동·질문 라벨, 한 노드 한 행동, 간선 20자
-    이내입니다. 모든 실제 guard의 양쪽 결과는 같은 decision에서 출발하며 source guard를 보존합니다.  이 그림에 변환/완료 동작을 추가하지 마세요. 현재 유효한
-    아홉 노드·각 guard의 두 결과·간선·인용은 보존하고 초기 startCapture 경로로 범위를 명확히 합니다. n3 라벨의 재제출에도 동일 적용이라는 부연을 한영 모두 제거합니다.
-    n5는 초기 시작 실패 반환만 짧게 씁니다. 재제출 오류까지 startCapture로 반환한다고 그리지 마세요. 후속 cam 처리의 재제출은 반환값을 무시한다는 차이는 후속 처리
-    본문이 설명합니다. 다른 기존 라벨의 불필요한 괄호 경고는 줄이고 핵심 행동만 남깁니다.
+  prompt: '초기 요청 준비 그림을 아홉 노드로 작성합니다. n0 exportFrameBuffers: DMA-BUF 할당 실패? true→n5 초기 시작 실패 반환,false→n1
+    createRequest: 요청 생성 실패? true→n5,false→n2 addBuffer: 버퍼 연결 실패? true→n5,false→n3 CameraSession::queueRequest:
+    설정된 제출 한도가 이미 찼는가? true→n6 captureLimit_: 제출 없이 도우미 반환,false→n8 queueCount_: 제출 시도 수 증가→n4 Camera::queueRequest:
+    실제 카메라 큐 호출 action box→n7 PipelineHandler::queueRequest: 검증 통과 시 Camera 호출 내부에서 queued 비동기 호출을 예약합니다.
+    n4는 호출 결과를 검사하는 decision이 아닙니다. n4→n7 always 간선은 호출 내부의 검증 통과 경로만 요약하며 호출 반환 후 예약한다고 그리지 않습니다. Camera
+    API 내부 검증 실패의 여러 반환 분기는 이 그림의 정상 내부 예약 요약 밖이며 전체 Camera API 제어 흐름 그림으로 주장하지 않습니다. n5 오류 반환은 n0/n1/n2의
+    시작 준비 실패를 받습니다. 도우미 한도 true/false 및 세 준비 실패 guard는 실제 소스 조건의 두 결과를 보존합니다. n0/n1/n2/n3는 decision입니다.
+    한영 라벨에서는 함수·내부 카운터 이름·반환 숫자·긴 괄호 경고를 모두 근거에 두고, 위에 설명한 짧은 행동·질문만 사용합니다. n7의 짧은 라벨에는 호출 내부 예약이며 검증
+    통과 경로임을 명시합니다. 노드의 symbol과 quote_ids로 정확한 소스 이름을 보존합니다. 한영 authored 간선은 20자 이내입니다.'
   answer_contract_en:
     basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+      message: Use concise preparation actions and decisions in authored labels. Keep function/counter
+        identifiers in symbol bindings and evidence.
   max_edge_label_chars: 20
   answer_contract:
     basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+      message: Use concise preparation actions and decisions in authored labels. Keep function/counter
+        identifiers in symbol bindings and evidence.
   require_guard_branches: true
   while_conditions: true
 - id: request-completion-order
@@ -169,18 +175,18 @@
   - run_cam
   - completed_frames
   question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam 재현 실행은 어떤 준비 순서로 이어집니까?
-  prompt: 현재 유효한 10개 노드와 모든 연결·기존 한영 조건을 보존하고 device_verify 실행 전 판정에 cam 캡처 프레임 한도 3과 재현 도우미 사용 시 이 인자가
-    실제 전달된다는 확인을 추가합니다. 기존 커널·root 접근·YAML 크기/패턴·카메라·스트림 조건도 모두 보존합니다. 모든 조건이 일치할 때만 실행한다는 간선은 이 조건 전체를
-    가리킵니다. product-invocation-options 실제 원본 인자 근거와 재현 절차 근거를 새 판정의 인용에 함께 넣습니다. 노드 140자, authored 간선 20자
-    이내입니다. 나머지 준비·승인·결과와 예외 연결은 바꾸지 않습니다. 화면에는 한국어 캡처 한도 3, 영어 capture limit 3처럼 말로 표현하고 대입 연산자나 원시 CLI
-    인자 문자열을 넣지 않습니다. 정확한 인자는 번호 절차와 접힌 명령 근거가 보여 줍니다.
+  prompt: 현재 10개 노드·인용·모든 연결·기존 조건은 그대로 보존하고 device_verify 한영 라벨을 고칩니다. 모든 실행에서 cam에 전달되는 캡처 한도 3을 확인해야
+    하며, 그와 별도로 재현 도우미를 쓰면 인자 전달 경로도 확인해야 합니다. 한도 3을 도우미를 쓰는 경우에만 적용하는 조건으로 묶지 않습니다. 이 판정 노드에 한국어 cam 캡처
+    한도 3, 영어 cam capture limit 3이라는 독립된 조건을 먼저 쓰고, 세미콜론 뒤에 도우미 사용 시 인자 전달 확인이라는 별도 조건을 붙입니다. 기존 커널, root
+    장치 접근, YAML 400x300 및 lines, cam Virtual2와 400x300 NV12 조건도 보존합니다. 원시 명령 문자열이나 대입 연산자는 화면 라벨에 쓰지 않습니다.
+    노드 160자·간선 20자 이내입니다.
   sources:
   - product-invocation-execution-contract
   - product-invocation-reproduction-procedure
   - product-invocation-official-cam-reader
   - virtual2-config
   - product-invocation-options
-  max_label_chars: 140
+  max_label_chars: 160
   condition_display: evidence
   answer_contract:
     basis: measurement
@@ -194,6 +200,7 @@
     - - 기록
     - - YAML
     - - lines
+    - - cam 캡처 한도 3
     reject_patterns:
     - pattern: completed_frames
       message: Keep evidence field names in evidence; show normal frames to the reader.
@@ -211,6 +218,7 @@
     - - YAML
     - - lines
     - - immediately
+    - - cam capture limit 3
     reject_patterns:
     - pattern: completed_frames
       message: Keep evidence field names in evidence; show normal frames to the reader.
