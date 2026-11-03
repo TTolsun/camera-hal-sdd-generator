@@ -234,6 +234,7 @@ design_topics:
       필드 이름·카운터 증가·반환값은 근거에 남깁니다.
     sources:
     - submission-limit
+    - callback-and-processing
     max_statements: 1
     prompt: 핵심 행동과 조건을 쉬운 동사와 구체적 주어로 먼저 설명하세요. 내부 카운터 식별자나 전체 호출식을 나열하지 않습니다. 다른 항목의 조건·경고를 반복하지 않습니다.
     answer_contract:
