@@ -3,7 +3,7 @@
   kind: decision
   title: 초기 캡처 시작 시 DMA-BUF 요청 준비와 제출만 다룹니다.
   generation: llm
-  max_nodes: 9
+  max_nodes: 10
   required_symbols:
   - allocate
   - createRequest
@@ -14,6 +14,7 @@
   - captureLimit_
   - PipelineHandler::queueRequest
   - queueCount_
+  - Camera::start
   question: 초기 캡처를 시작할 때 버퍼·요청 준비와 실제 큐 제출을 거치는 조건은 무엇입니까?
   sources:
   - cam-request-buffers
@@ -39,7 +40,11 @@
     요청 처리를 비동기로 전달한다는 의미를 짧게 표현합니다. 영어는 queue 또는 dispatch 동사를 사용하고 자원 예약으로 읽히는 명사를 쓰지 않습니다. 호출이 반환된 뒤
     전달한다는 뜻으로 바꾸지 않습니다.  현재 유효한 모든 노드·인용·guard·간선을 보존하고 n2에서 n3로 가는 false 간선의 한영 라벨만 고칩니다. 이 간선은 버퍼 연결
     후 제출 한도 검사로 진행한다는 의미입니다. 이 지점에서 이미 제출했다고 쓰지 않습니다. n3의 한도 검사 결과에 따라 제출 없이 반환할 수 있습니다. 다른 모든 표시를 정확히
-    보존합니다.'
+    보존합니다.  기존 아홉 노드·올바른 한영 라벨·guard·인용은 보존하고 Camera::start를 n9 decision으로 추가합니다. 버퍼 연결 검사 n2의 false 간선을
+    n3 대신 n9로 보내고 n9는 cam의 camera_->start() 반환이 실패인지 실제 ret<0 조건으로 판정합니다. true는 기존 n5 시작 실패 반환, false는
+    n3 제출 한도 검사로 갑니다. Camera::start 심볼은 camera-queue 창 끝의 함수 선언과 cam-request-buffers의 실제 camera_->start()
+    호출·결과 검사 구절을 함께 인용합니다. sink_->start()와 혼동하지 않습니다. 새 간선마다 두 끝점 심볼 및 실제 guard 인용을 포함하고 두 결과를 모두 보존합니다.
+    한영 노드 라벨은 카메라 세션 시작 실패 여부만 짧게 묻고 코드식은 근거에 둡니다. 나머지 실제 큐 호출 내부의 비동기 전달·제출 생략 조건은 변경하지 않습니다.'
   answer_contract_en:
     basis: implementation
     reject_patterns:
