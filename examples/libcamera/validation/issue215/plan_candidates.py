@@ -47,7 +47,8 @@ for row in report['items']:
             '각 화살표가 인용한 구절 묶음에는 양 끝 symbol이 실제로 존재해야 합니다. 필요한 근거가 없으면 새 사실을 지어내지 마세요. '
             '한영 모두 같은 조건·부정·반환 경계를 보존하며, 영문 노드는 90자 이내, 영문 화살표는 70자 이내의 완전한 짧은 문장으로 '
             '직접 요약하세요. 상한에 맞추려고 문장 끝을 자르거나 제어 문자를 넣지 마세요. 복잡한 단일 질문이 12개 노드에 안 맞으면 '
-            '조건을 생략해 통과시키지 말고 실패 원인을 남겨 질문 분할과 소스 창을 다시 검토하게 하세요.')))
+            '조건을 생략해 통과시키지 말고 실패 원인을 남겨 질문 분할과 소스 창을 다시 검토하게 하세요. '
+            '같은 한국어 라벨을 반복한다면 영어 대응도 정확히 같은 문자열을 쓰세요. 서로 다른 영어 뜻을 같은 한국어 라벨로 뭉개지 마세요.')))
 args.out.mkdir(parents=True, exist_ok=False)
 for section, values in plans.items():
     (args.out/(section+'.yaml')).write_text(yaml.safe_dump({section:values},allow_unicode=True,sort_keys=False),encoding='utf-8')
