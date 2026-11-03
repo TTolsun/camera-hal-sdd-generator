@@ -218,14 +218,18 @@
       "focused_test_log": "pytest-100.log",
       "focused_tests_passed": 87,
       "remaining_modules_test_log": "pytest-101.log",
-      "remaining_tests": "running",
+      "remaining_tests": "153 passed, 1 skipped",
       "prior_broad_test_log": "pytest-99.log",
       "prior_broad_passed": 236,
       "prior_broad_skipped": 1,
       "prior_broad_note": "Before final readable-article selection patch; not final current-tree full validation",
       "evidence_archive": "native-evidence-05.tar.xz",
       "evidence_index": "native-evidence-05-index.json",
-      "archive_sha256": "3662c0c2c1cc995a3ab66316319b7c5270f6371d96b768e253e946a84a0fdd38"
+      "archive_sha256": "3662c0c2c1cc995a3ab66316319b7c5270f6371d96b768e253e946a84a0fdd38",
+      "current_tests_passed": 240,
+      "current_tests_skipped": 1,
+      "validation_record": "preservation-validation.json",
+      "implementation_commit": "21f1c952b64480315a0ae571d032f6c9fd7b1628"
     },
     "remediation_generation": {
       "ipa": "Discovery/signature/interface creation/Threaded stop/Isolated destructor/module load completed generation; synchronous IPC was rejected twice and is being retried with narrower immutable source windows. Independent acceptance remains pending.",

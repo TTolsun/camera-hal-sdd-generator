@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "scope": "Generator preservation changes only; whole-site semantic acceptance and public deployment remain pending",
+  "implementation_commit": "21f1c952b64480315a0ae571d032f6c9fd7b1628",
+  "native_review": {
+    "run": "code-review-55",
+    "findings": [],
+    "archive": "native-evidence-05.tar.xz",
+    "source_text_sha256": {
+      "src/sdd/visual_audit.py": "f561a79b3b21912a4cfe9df3dfc6b76ee9d34c7cba528ce45ae674c9794572ca",
+      "src/sdd/export_site.py": "50a48a77eff8a7919f6fb7a6fc2f027d46e12a43cc87b2bf38cacb603a96f985",
+      "src/sdd/site_build.py": "b19a7b97033831cbefa1a5550d666e6f5844ef00dd3da8ba848ee378aef96258",
+      "src/sdd/evidence_navigation.py": "1b86ee71c880ce495cc3d3da2e5f584021b096479ee8df2a54aa7ba9ddd3ddd4",
+      "src/sdd/site_assets/reader-tools.js": "c97fa418bc3fa279589ca1e5968ce360d8c684ed4948de802a82369df6144ab0",
+      "examples/libcamera/validation/issue215/preview_pipeline.py": "cf762b67c25140f63697e52cf05ae90bd10c56e8cdde6920e5a57ce098e40693",
+      "examples/libcamera/validation/issue215/review_inventory.py": "62fae92ed1580f243ed89dc3c5b7bee603b3d02894608e51f3de1c5dc2ca6275",
+      "tests/test_visual_audit_retention.py": "fa1dec6d3bb53d27c8165dc63580e101951b2960c4d9078c134134d3c63e1f65",
+      "tests/test_visual_audit_windows.py": "582722dc17f6cef19a3b363038020b6418d8e64ad7145db486af287c6be6410e",
+      "tests/test_visual_audit.py": "a470db164e301c6f28e0d04ad08c80c6d68ccf31360c0430054641fc85bca5c4",
+      "tests/test_export_site.py": "b470f55cf5d4f58a473383de05dbda70483ba8ece6642e84cce647e2d9b0b1db",
+      "examples/libcamera/validation/issue215/preview_search.py": "a52134a5b1b1b131a445ff93df101911ad28013c1ea1b33d97187b9c2eb767ab",
+      "tests/test_issue215_preview_search.py": "280aff07d60c9a113720278834ba314b85b1a040dc00b7862c020ebedd0ff96d",
+      "tests/test_issue215_isolation.py": "27cf64b3ec45c6f6a0ed1ce05a91a3ec280001ec5d55f88317356e01db082dc0"
+    },
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "tests": {
+    "100": {
+      "sha256": "2adb7a1872268b9d4b82001eebc588777767cd23b8f9a3e215a96301984b0f85",
+      "passed": 87,
+      "skipped": 0,
+      "scope": "Core audit/retention/source windows"
+    },
+    "101": {
+      "sha256": "5975ba875ce0ab669abebbc646801d38212a4ebba7c52f9221f52707ca8cc555",
+      "passed": 153,
+      "skipped": 1,
+      "scope": "Exporter, run isolation, preview search, localization, dependencies, guide visuals and translations"
+    }
+  },
+  "passed": 240,
+  "skipped": 1,
+  "human_review": "pending"
+}
