@@ -105,17 +105,13 @@
   - cam-signal-connection
   - virtual-start
   question: 가상 버퍼 완료 경로의 모든 버퍼 완료 판정과, 완료 표시 뒤 제출 순서 큐의 연속 통지 및 반복 종료는 어떻게 연결됩니까?
-  prompt: 현재 일곱 노드의 가상 버퍼 완료 판정과 앞선 Pending 통지 보류 조건을 보존하며 큐 반복을 정확히 보완합니다. 기존 n3 완료 표시 뒤 새 n7 결정 노드로
-    큐에 요청이 남았는지 실제 while 조건을 검사합니다. n7 true는 n4 맨 앞 Pending 검사로, false는 새 n8 이번 통지 검사 종료로 연결합니다. n4 true는
-    기존 n6 뒤 요청 보류와 반복 중단입니다. n4 false는 n5로 맨 앞 요청 하나를 큐에서 꺼내 requestCompleted 신호와 cam requestComplete
-    콜백에 알립니다. n5에서 n7로 되돌아가 다음 맨 앞 요청을 다시 검사합니다. 통지 가능한 앞부분을 반복 처리하다 Pending 또는 빈 큐에서 멈춥니다. n5가 한 번에 모든
-    요청을 통지한다고 쓰지 마세요. 이후 doQueueRequests의 기다리던 요청 전달은 이 그림의 통지 검사 범위 밖이며 n8을 함수 전체 반환으로 쓰지 마세요. 실제 while
-    !queuedRequests_.empty 조건의 true/false 두 분기를 인용하고, Pending 및 completeBuffer 두 분기도 모두 보존합니다. 새 n7/n8과
-    n5 반복에 맞춘 간선 외의 소스 바인딩과 노드는 보존합니다. 한영 라벨은 짧은 동작구/질문, 노드 최대56자, 간선20자입니다. 처음 생성할 때 일곱 노드는 앞 그림의 버퍼
-    완료 수신, 모든 요청 버퍼 완료 판정, 나머지 버퍼 완료 대기, 이미 큐에 들어간 요청의 완료 상태 표시, 큐 맨 앞 Pending 판정, 통지 가능한 완료 큐 앞부분의 제출
-    순서 cam 콜백 통지, 뒤 요청 통지 보류입니다. 모든 버퍼 판정과 맨 앞 Pending 판정은 실제 source guard의 true/false 두 결과를 갖춥니다. 통지는
-    막 완료 표시한 요청의 즉시 통지 보장이 아니며 준비된 완료 앞부분만 requestCompleted로 cam requestComplete에 알리는 요약입니다. 내부 반복과 새로운
-    요청 제출은 근거에 남깁니다.
+  prompt: 현재 아홉 노드와 모든 간선·실제 조건·인용·반복을 정확히 보존하며 n6,n7,n8의 한영 표시만 짧게 정리합니다. n6은 앞선 미완료 요청 때문에 뒤 요청 통지 보류,
+    n7은 통지할 요청이 남았는가라는 짧은 질문, n8은 이번 통지 검사 종료입니다. 표시 라벨에는 while, queuedRequests_, 코드 접미사, 구현 변수명을 쓰지 않습니다.
+    실제 노드 symbol과 quote_ids 및 조건 바인딩은 그대로 유지하므로 근거는 잃지 않습니다. n7 true/false와 n4 true/false, n5에서 n7로 돌아가는
+    반복을 모두 보존합니다. 한영 노드56자·간선20자 한도를 지킵니다. 처음 생성할 때 일곱 노드는 앞 그림의 버퍼 완료 수신, 모든 요청 버퍼 완료 판정, 나머지 버퍼 완료 대기,
+    이미 큐에 들어간 요청의 완료 상태 표시, 큐 맨 앞 Pending 판정, 통지 가능한 완료 큐 앞부분의 제출 순서 cam 콜백 통지, 뒤 요청 통지 보류입니다. 모든 버퍼 판정과
+    맨 앞 Pending 판정은 실제 source guard의 true/false 두 결과를 갖춥니다. 통지는 막 완료 표시한 요청의 즉시 통지 보장이 아니며 준비된 완료 앞부분만
+    requestCompleted로 cam requestComplete에 알리는 요약입니다. 내부 반복과 새로운 요청 제출은 근거에 남깁니다.
   answer_contract:
     basis: implementation
     reject_patterns:
