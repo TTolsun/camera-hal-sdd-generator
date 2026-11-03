@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "scope": "Opt-in atomic configured-source-window quotes; no whole-site semantic acceptance or public release",
+  "base_commit": "47d97132f79d848c20a3de20c2ca4a99930da8ea",
+  "native_review": {
+    "run": "code-review-58",
+    "findings": [],
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "archive": "native-evidence-06.tar.xz",
+    "source_text_sha256": {
+      "src/sdd/generated_visuals.py": "75af7b93309e97be27c3057956cde3c11fa4ce98456b692ad535f5f4b4314e41",
+      "src/sdd/design_response.py": "deb70dda7ad27f001267e4a9712c5b0dc1fe9fa67acd13bedbfefaaad0ad83c8",
+      "src/sdd/visuals.py": "e43e0df702e2a66a604d56d820491d78f1218e2f407d7c1880051eba9e07c5ca",
+      "tests/test_generated_visuals.py": "8f2291eb943029ba70f9fc71c3d96049523205c03f827e58f63d89f3c5db18c7",
+      "docs/reference/config.md": "22795c0cd575f42e0dfbe5e41ddd7c69fcab38ed5aed1c0b42dd9697e9b811ff"
+    }
+  },
+  "tests": {
+    "log": "pytest-107.log",
+    "sha256": "e6cd8d67cd38be947dbc34c6151f65eeaf046f742066a3be3edb090e70ed8204",
+    "passed": 95
+  },
+  "actual_generation": {
+    "work": "ipa-grounded-replacements-07/step-01",
+    "section": "ipa",
+    "visual": "synchronous-ipc-outcomes",
+    "completed": true,
+    "semantic_acceptance": false,
+    "reason": "Independent graph review09 reported remaining qualified-insertion and receive-path issues; refine through the CLI."
+  },
+  "human_review": "pending"
+}

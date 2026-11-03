@@ -277,4 +277,17 @@ generation: llm
 require_connected: true
 ```
 
+## `whole_sources`
+
+`generation: llm` 그림에서 지정한 소스 창 전체를 하나의 인용 구절로 제공하는 선택 목록입니다. 기본값은 빈 목록이며 기존 문단별 인용과 Doxygen 반환값 묶음을 유지합니다.
+
+```yaml
+sources: [sync-call, sync-wrapper]
+whole_sources: [sync-call, sync-wrapper]
+```
+
+짧은 `return 0;`에 인용 ID가 없거나 같은 함수의 `erase(iter);`가 반복되어 구절 유일성 검사가 실패할 때 사용할 수 있습니다. 파일 전체를 자동으로 읽는 설정은 아니며, 예제의 소스 선택자로 고정한 함수 창 전체를 제공합니다. 값은 `sources`에서 선택한 ID의 중복 없는 목록이어야 합니다. 지정한 소스에는 문단별 인용을 함께 중복 제공하지 않습니다.
+
+계획을 바꾸면 입력 지문이 달라져 해당 그림을 다시 생성해야 합니다. 인용 유일성·원문 해시·소스 커밋·노드 한도와 입력 크기 검사는 유지하며 초과 입력을 자르지 않습니다. 함수 전체를 인용했다는 사실은 화살표의 의미나 제어 흐름을 승인하지 않으므로 별도 근거 검토가 필요합니다. focused 응답과 그림 응답의 JSON 필드는 바꾸지 않습니다.
+
 ## max_edge_label_chars\n\n**결론:** `generation: llm` 시각화 계획 항목에 두는 선택 키입니다. 생략하면 edge 전용 길이 제한이 없습니다. 값은 8 이상 240 이하의 정수만 허용하며, edge의 한국어 `label`과 영어 `label_en` 각각에 적용됩니다. node 라벨은 영향을 받지 않습니다.\n\n```yaml\n- id: example_flow\n  topic: example_topic\n  kind: flow\n  title: 예시 흐름\n  question: 예시 질문\n  generation: llm\n  max_label_chars: 120\n  max_edge_label_chars: 60\n```\n\n1. **타입 검사:** 정수가 아닌 값(bool, 실수, 문자열)과 8 미만 또는 240 초과 값은 설정 검사에서 오류로 거부합니다.\n2. **상한 결합:** 실효 상한은 `max_edge_label_chars`와 `max_label_chars` 중 작은 값입니다. `max_label_chars`가 없으면 edge 값만 적용됩니다.\n3. **검사 시점:** 모델이 작성한 원문 label을 먼저 검사합니다. 그 뒤에 소스 조건과 `[true]` 또는 `[false]` 표기가 덧붙으며, 이는 `condition_ref`가 실제 조건을 선택한 경우에만 해당합니다. `always`는 아무것도 덧붙이지 않습니다.\n4. **자르기 없음:** 초과한 label은 자르지 않고 거부합니다. 이 키는 최종 렌더링 폭 상한이 아닙니다.\n5. **이중 검사:** schema를 지원하는 에이전트에는 `maxLength`로 전달되며, 최종 검사는 항상 로컬에서 수행합니다.\n\n**다음 행동:** 이 값을 바꾸면 해당 시각화 계획의 입력 지문만 달라집니다. 다른 시각화 결과는 계속 재사용할 수 있고, 이전 네이티브 초안은 수정용으로 제공될 수 있습니다. 계획을 바꾼 뒤에는 `generate`를 다시 실행합니다.

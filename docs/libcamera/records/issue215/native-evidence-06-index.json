@@ -1,0 +1,2579 @@
+{
+  "schema": 1,
+  "scope": "Atomic configured source-window quote option, native code reviews56–58, actual rejected IPC trials and successful Codex/Terra High generation07. Successful generation is not semantic acceptance; graph review found remaining issues and final bilingual review/publication is unfinished.",
+  "archive": "native-evidence-06.tar.xz",
+  "archive_sha256": "6a61a1beba36950b675340e656f19bdaaaf43883a2614f90efdd450a44da5893",
+  "bytes": 449124,
+  "unique_archived_cli_receipts": 80,
+  "receipt_hashes_not_in_archives02_05": 27,
+  "count_note": "Copied checkpoint receipts are historical reuse, not additional calls. Counts are receipt SHA identities, not diagrams or human approvals.",
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "human_review": "pending",
+  "entries": [
+    {
+      "path": "build/issue215/code-review-56/build/generation-runs/596512cdedd643c685594ef983e03f05.json",
+      "sha256": "583dd585431ccd0e75b9e16c75e545cf0a0f43097ec1996cda6a1931a4d0a147",
+      "bytes": 966
+    },
+    {
+      "path": "build/issue215/code-review-56/execution-profile.json",
+      "sha256": "a60cd15d69b0c40d78b6c3872adab68fee2167ec232263c57ec4b7af3c293321",
+      "bytes": 634
+    },
+    {
+      "path": "build/issue215/code-review-56/inputs.json",
+      "sha256": "057b8f19d17d769c2a60e8233f7d18af9b93953253d706333e345c6cc381655d",
+      "bytes": 134402
+    },
+    {
+      "path": "build/issue215/code-review-56/prompts/001_code-review.md",
+      "sha256": "69d10ae9f873e7795caa74de8f150bdb4326e8d228a7c0261757fbed214d5404",
+      "bytes": 134693
+    },
+    {
+      "path": "build/issue215/code-review-56/prompts/001_code-review.response.md",
+      "sha256": "d65290fc80b55fc6cde82a053242c951ed77ad22832ad610a797f40b9b43370a",
+      "bytes": 588
+    },
+    {
+      "path": "build/issue215/code-review-56/prompts/001_code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-56/prompts/calls/fa4fe0c49cd049c694294836905eb1bf/001.receipt.json",
+      "sha256": "3fa85f297cbe8cbdc7968b358dd5b6b8f337f96f860e0b0d74027c0295aee58f",
+      "bytes": 2193
+    },
+    {
+      "path": "build/issue215/code-review-56/prompts/calls/fa4fe0c49cd049c694294836905eb1bf/001.request.json",
+      "sha256": "c234c857212680e00e6ec559504e11129546cbda0f255635de0ce816582ade05",
+      "bytes": 138493
+    },
+    {
+      "path": "build/issue215/code-review-56/prompts/calls/fa4fe0c49cd049c694294836905eb1bf/001.response.txt",
+      "sha256": "1ba6bc5d30f52ccba038aa6a36edcbb934ec10344a2e4c3fe203009ee4da2b9c",
+      "bytes": 586
+    },
+    {
+      "path": "build/issue215/code-review-56/prompts/cli/call-qkaf9wt0.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-56/prompts/cli/call-qkaf9wt0.stdout.txt",
+      "sha256": "910b853ba312ca045be52e1a184da89e9aa58fec1316fa1b0083bf96c1953218",
+      "bytes": 952
+    },
+    {
+      "path": "build/issue215/code-review-56/review.json",
+      "sha256": "1ba6bc5d30f52ccba038aa6a36edcbb934ec10344a2e4c3fe203009ee4da2b9c",
+      "bytes": 586
+    },
+    {
+      "path": "build/issue215/code-review-56.log",
+      "sha256": "d65290fc80b55fc6cde82a053242c951ed77ad22832ad610a797f40b9b43370a",
+      "bytes": 588
+    },
+    {
+      "path": "build/issue215/code-review-56.py",
+      "sha256": "d570ff45747e7f9dc2004abc62ea297c0068c5585642d27e67a1af208598367d",
+      "bytes": 3278
+    },
+    {
+      "path": "build/issue215/code-review-57/build/generation-runs/ab78835f5315446c80a676ba12ce381d.json",
+      "sha256": "4db307cbe55d3d7d45d0f550a736c4dd5fe6481594bc29914ef562ab1850e4e8",
+      "bytes": 968
+    },
+    {
+      "path": "build/issue215/code-review-57/execution-profile.json",
+      "sha256": "bdeef52d748c8255b24fb5dd0695c8c10b2bf62d16ccb358b101313a0ea2d866",
+      "bytes": 634
+    },
+    {
+      "path": "build/issue215/code-review-57/inputs.json",
+      "sha256": "3a679d0ac354b60c383bf2b18489ac75d2b68fda9f02198870cb564b64243dd1",
+      "bytes": 138456
+    },
+    {
+      "path": "build/issue215/code-review-57/prompts/001_code-review.md",
+      "sha256": "79158b4af40f0956883697fb3bb5d9e58c308b2edcc35965ecf7cee402a72398",
+      "bytes": 138695
+    },
+    {
+      "path": "build/issue215/code-review-57/prompts/001_code-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "build/issue215/code-review-57/prompts/001_code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-57/prompts/calls/dc3be952143d47d282df25836e43025f/001.receipt.json",
+      "sha256": "9e8e3d05fad110f44e819b0b811ec27b64cf883ced2402850c5f811f6d45a1e7",
+      "bytes": 2194
+    },
+    {
+      "path": "build/issue215/code-review-57/prompts/calls/dc3be952143d47d282df25836e43025f/001.request.json",
+      "sha256": "072d8b569abf8f0bb9ef3a98645faa784d9ef869441edef3c0ed8db83e57a872",
+      "bytes": 142564
+    },
+    {
+      "path": "build/issue215/code-review-57/prompts/calls/dc3be952143d47d282df25836e43025f/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-57/prompts/cli/call-jrslsahv.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-57/prompts/cli/call-jrslsahv.stdout.txt",
+      "sha256": "9dd714eb958b6316d699d38a1153c9cca9ae474898d380cc77225e50be6ee48a",
+      "bytes": 364
+    },
+    {
+      "path": "build/issue215/code-review-57/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-57.log",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "build/issue215/code-review-57.py",
+      "sha256": "3bef9f7f6c0ad23dea0b526b99bfa12eeb7eea777e7dccac173b01a7274fed57",
+      "bytes": 3720
+    },
+    {
+      "path": "build/issue215/code-review-58/build/generation-runs/56bc1226cd2e44c487e0804602a3744f.json",
+      "sha256": "75106eb5b53be81b3efdedaf847d3b0f87fce351ab7fdb6c39c9e7bf9acdb500",
+      "bytes": 985
+    },
+    {
+      "path": "build/issue215/code-review-58/execution-profile.json",
+      "sha256": "5017b409d816e6c22cc9e069684b72ad88dd2deaac75f14016c50bb9284de91b",
+      "bytes": 634
+    },
+    {
+      "path": "build/issue215/code-review-58/inputs.json",
+      "sha256": "5ebc3702875bfd3070d9f7a6bc94e45624a8761b7a47787a87ae47c6e5bb572a",
+      "bytes": 138233
+    },
+    {
+      "path": "build/issue215/code-review-58/prompts/001_code-review.md",
+      "sha256": "c90883628a746e65a32fb5c75dda3ad358f70b10bf8892c3e6acc818ff91375a",
+      "bytes": 138524
+    },
+    {
+      "path": "build/issue215/code-review-58/prompts/001_code-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "build/issue215/code-review-58/prompts/001_code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-58/prompts/calls/8582653840754f93896dd1b34aca8ad3/001.receipt.json",
+      "sha256": "a83c03ba73cc2b1f97c4bcf9ecc62f7ce0c88a925eeaec5dc92e51008ba6fbf8",
+      "bytes": 2194
+    },
+    {
+      "path": "build/issue215/code-review-58/prompts/calls/8582653840754f93896dd1b34aca8ad3/001.request.json",
+      "sha256": "4ae3edb34a83156313253ffb1e70cdd528e73d879b11a427becec89af080fe59",
+      "bytes": 142375
+    },
+    {
+      "path": "build/issue215/code-review-58/prompts/calls/8582653840754f93896dd1b34aca8ad3/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-58/prompts/cli/call-382ljp0x.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-58/prompts/cli/call-382ljp0x.stdout.txt",
+      "sha256": "0c89abac0c4735f44cae1b7a441b8179ee76a9d9d45c277b8ffd8fc25cb3d663",
+      "bytes": 364
+    },
+    {
+      "path": "build/issue215/code-review-58/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-58.log",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "build/issue215/code-review-58.py",
+      "sha256": "2024000c959715ab8423e9a9867a333c0cc4872d626b5720b845d6781a1b4f24",
+      "bytes": 4129
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-01/generation-02.log",
+      "sha256": "046974f29f9b36750735ac8307133a0cb856775fb6da84f1473172f69336c076",
+      "bytes": 155
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-01/progress.json",
+      "sha256": "393a8ba43d179f36883b5289e46d878790fbab13fa193d2f9fc837f88ebfdc71",
+      "bytes": 588
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-01.log",
+      "sha256": "c3a6652f16a3f933ca1af94e89f89ef0fc6e2dd6f02c957da997904eb360b011",
+      "bytes": 335
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-01.yaml",
+      "sha256": "d17ec9195afa6245df7840e297b112194792e0e040fb2bf8f4e725653015bc5a",
+      "bytes": 19026
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-02/generation-06.log",
+      "sha256": "9005a3df2fff2429926b97ee7f0cd694e1ec552a6bcc887ddff82afb1a5a54d5",
+      "bytes": 118
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-02/progress.json",
+      "sha256": "ebf4f579b9c366a17655f2f5a27b1220a12c99b620ba620e3aaf3f798a8646f9",
+      "bytes": 1571
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-02.log",
+      "sha256": "20c519831a864d5ba668a7cba9c434c896b6cd9faf1b350115fe5aa52545bb0b",
+      "bytes": 1010
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-02.yaml",
+      "sha256": "f2e6d64f708207f10568919741be07b1700e8471c43cf7f62901b32cf8ce7098",
+      "bytes": 16249
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-03/generation-01.log",
+      "sha256": "53b729242616f2f16222408229b433855fd244885c569b894ae57a40239ff791",
+      "bytes": 132
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-03/progress.json",
+      "sha256": "c7f4f46cca2ef2330a336076a9cb05b7ab898767ac4a1a3b07e795d9769e783c",
+      "bytes": 344
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-03.log",
+      "sha256": "15776eb2ac90200acb683c2c99e445b6ab02c335239e4b0a7f9fa39502129c67",
+      "bytes": 168
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-03.yaml",
+      "sha256": "fe8c360b9f10e44fc1f1557f322b62d5dd393f696ebb4c14d2b35b673944ee47",
+      "bytes": 3454
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-04.log",
+      "sha256": "7e45a28975a2302eba5b35abfb2740a5271e41fe5dafcd28ca137b0d6d77acd6",
+      "bytes": 1814
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-04.yaml",
+      "sha256": "1a84d7f6dec708a439052ae62f8d49fc522d19c8227dbea519ada325aafb4e90",
+      "bytes": 3832
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-05/generation-01.log",
+      "sha256": "fa706a4ba497e6e4e79236a325e509557f881afe31c2b8a348f24a47fef2a0b3",
+      "bytes": 290
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-05/progress.json",
+      "sha256": "52eec6d6ea034117524382af580fcbeb622c4782008b0f52ed3a4df30058ddfb",
+      "bytes": 344
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-05.log",
+      "sha256": "957f4788addd4ff259190bc2ca6d32022f6271d40691c9534f8bc6816b9a5489",
+      "bytes": 168
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-06/generation-01.log",
+      "sha256": "eac153d1bf139b9af658f14be2d70dbd9274ffe121f6e376fab341c279116dc0",
+      "bytes": 138
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-06/progress.json",
+      "sha256": "f1a4b0dbfb2b96257fb6047789a7d820ddf423b3f907bad0264aae7973149d68",
+      "bytes": 344
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-06.log",
+      "sha256": "20e46cd77fbee0ca5dcbe58644a25c39e7da13eb724a94d776ae81e527eb7bba",
+      "bytes": 168
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-06.yaml",
+      "sha256": "2917048427fdd24b60fd85a0dda44e97d3953a43c8dac2fe503a3115d714b2a7",
+      "bytes": 4225
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/generation-01.log",
+      "sha256": "2a6241f830f145d9325cff6d3f07befd6f725af045a0e3d8c1f40e1684928a45",
+      "bytes": 27
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/progress.json",
+      "sha256": "cba17cc7217d08fa17f250a3167f0310c085068d3e341ded64f9a5622dcda469",
+      "bytes": 363
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/0015bbc47d897eaf33bca5d8dcb7c198fef03f013ebc13fec17c4108def777dd.json",
+      "sha256": "e8c310fb0c920444ceecf92bfbf3b30eaa55b31ce0d08188cc75938832da54c4",
+      "bytes": 29934
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/09aa2d56aa68a43b53a449606e79e32db477c6df404654e651115cdc329042bc.json",
+      "sha256": "914173b6e01b20a2962c6c8b17fcdf20b0589548531954e59ce540bfbcaab989",
+      "bytes": 29203
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/10f224fa5949935fa792f042ffb51f0d43d92b6a5209565a91bc4ab65c5dc9b2.json",
+      "sha256": "58c6b8867c46005bef4b305536ce29e615b46fc4ae6c38c9c9ad5406a2bd0681",
+      "bytes": 30593
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/15f6efbcffca5b334ac6b0c2c4f67ed61598d36072cfc1e6287705abef15af73.json",
+      "sha256": "9dababdca185c4a5c4fdf8a751128e0447d4fb2d15268b181ceb6ca92f706cae",
+      "bytes": 27125
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/1a68e16a57f82bf155faaafd8df07dd293b7a6d19aaba3d3f3b38853cf786536.json",
+      "sha256": "4cca6b1627194ad0ac39ecf44553c2672b83793eb112699c0971e01843cc70cf",
+      "bytes": 24788
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/20b6003bd2a8a0e5fce5f64cf83d361771a9ed92df022c0a94bfc5920818ae5c.json",
+      "sha256": "209e2ed4fdbac5137b3e2444bac0079fc95e8b519c0875504f63941f5386b08a",
+      "bytes": 28163
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/2af01d2a6911ec3f01a5e5d86872e79a36b830adb2f1b14fe8f598acf93f3339.json",
+      "sha256": "06468c1db02ad7ae445763a8e6f1652b1f2ddb90fd517c11cbecadba55df4fec",
+      "bytes": 24359
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/36e7037274592822c3969bd5452a35c742a691171623256d38c929c784bcc1b1.json",
+      "sha256": "298f3f3bcb5a8132d13637ef03e3337c629f8093ab89d74f9a068f02526a0e39",
+      "bytes": 24455
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/44c246964c65d4b9e448d916393838cbe01932d9c866bab7308cad0d23fc2005.json",
+      "sha256": "63ab946cd6c3bcbced4203223939b589e9d2b8f4d48d81b1541e7f1b489803c8",
+      "bytes": 26334
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/661b731036bbddc70b15ec9a768088401967c706a9546e64608ee5f1ac4ce402.json",
+      "sha256": "10f3d11232791bfb5b0bbc0bf188c0ae93d7bbd8bbef2b86e1c86adea69c25df",
+      "bytes": 27298
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/70ba98d8c769064d1cd80ccfeeccebc1283ca72b5d2ba221f706592caf039eb8.json",
+      "sha256": "b8997950c2655b0213d916671ff5f9279ff47ad943eaf6a4e6f63cedcbd87da4",
+      "bytes": 35852
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/8ad349444e4bc38403f85b0f05aadb6aa071b4063847e58d1e74df05b9cb374c.json",
+      "sha256": "48da51527abbcb73d9e0966d0aa6733c84991c152e9a50c89adcbfe9bd52f5e9",
+      "bytes": 39878
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/94fd31ba78c667c3b7fb1b6f0f3f4cca4fcb021bf54e10967fca9ca525ad808d.json",
+      "sha256": "5fce9b09e2462c51bacba64f9b869b4fe846c131d24bae1fa4517e97703e16e6",
+      "bytes": 24344
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/97684b9974f00242e45c5eb8d17d3467b709848c482edb47fa7aa97284cc4e3c.json",
+      "sha256": "26b67aa429e5a9afc06893d53b8d53f2d0d725f5781f25fdcd45455c3de2bf5d",
+      "bytes": 28946
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/98fdadb84a75826678a85fd7cd7bd28f797d8a9b372638a92df79c4b3be65d0d.json",
+      "sha256": "40cfb69cf27d2bd193b08fd4c16b1d7d6108aafab47d23722266b67a8680a4f5",
+      "bytes": 29751
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/9b36c128bf90be44c75a8108125a50184aef6037d823f7e8e710475e1070f992.json",
+      "sha256": "a25c68ddb53c2edc7d95733a082e7a94764b9522867d306103dfc4d7a961b62c",
+      "bytes": 31384
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/a059a2ba659c08be310f31cafd40fe77d401447505129bc8af812e8c4a5a3f0a.json",
+      "sha256": "34cad860a548185c7e4fa7bc303b016846891a892ac4811014a7ea3d6a17cfd4",
+      "bytes": 29760
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/a8a0fd90199dbcc4c7b3d60aaebf6ec365aa12e08944ee1814010b3d342e62f7.json",
+      "sha256": "3751732ae171d1dbeb091591954221572bba7522937756e4238a2c5c2b6b84c8",
+      "bytes": 31452
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/b2aee18829c86e5fdf5c6b32dea6420f1ca69b20c46ad2414c0ea350e35171d0.json",
+      "sha256": "afa4a71a2f93d37cba22d43308eb774bdc53af307f7845dd686b6a796a4e959f",
+      "bytes": 27442
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/b98071c6733bbb0147202c8eb566875d63e82ae1947a192bb258d6d1da9a34ce.json",
+      "sha256": "fe260942c39178ec7e6069903791572600d8067d78808a3aa9a5e8f580903d06",
+      "bytes": 27434
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/c028b1b2b8954e26528444cb16c5a82cc78c02060ecc1f61717e55eff4f47ee5.json",
+      "sha256": "3ef2ac7cd81aa892f1be2a68ba5f3c93301f72630043b63a8189ad0367c7bffa",
+      "bytes": 24326
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/cd38c383eac940577fb6512256af59755f44160502bfe6017753040e822b520a.json",
+      "sha256": "3e8bedf654fe765cc1498e3cfe341a3c2822c369eee561675fe31a3f1cf82735",
+      "bytes": 29805
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/cf19dbd8a580d4c660f75802fc633bb92c44a128482cc602e06861bc150f0a89.json",
+      "sha256": "e0dea1ff9f376338b0a46ce928751fd0b8a5eb340b36d5b35eec30b7c144b03e",
+      "bytes": 24854
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/d74240d1e7f77ba27fd4accd4f2a526316902b1108dc5cc68e69bf99ebe62518.json",
+      "sha256": "500bd45508be7f8b8699c689f266a65d3d359374c42d5e2d80f2169e257e55d1",
+      "bytes": 26177
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/dab94572c079d52bd7a17d2e1134bf9d4b95a07c6d2c3f1bc559f9f7aea4beb7.json",
+      "sha256": "f23f722401726dc777f22ed960f0882e682cbe76f1ef5041ff31ebc957a732f9",
+      "bytes": 29615
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/cli-checkpoints/eca3ae3d6b812a9cc9596d090df90e56fa61c4db15bd1e1565be898567b20c41.json",
+      "sha256": "9afe52bceaaa2ff96ac88b62a142249683f0e99aa0907787e70f4477da14fb04",
+      "bytes": 25416
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/generation-runs/d091a2a1e5cf46dd9a0dcf335629afd3.json",
+      "sha256": "20d2fb0493425859bb278b3ca90b7ede65c2a77276c89b889d7d82c66910fc47",
+      "bytes": 251071
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/001_visual_ipa_synchronous-ipc-outcomes_0.md",
+      "sha256": "f22b1e9fc42f4771b6df8ed493dd9e71108f35afda09ef07ff09df77d082d311",
+      "bytes": 13994
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/001_visual_ipa_synchronous-ipc-outcomes_0.response.md",
+      "sha256": "0e564996c4882c2adfe73760d1993f63923b02983448fc5471f9feec26d8a0bb",
+      "bytes": 5873
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/001_visual_ipa_synchronous-ipc-outcomes_0.schema.json",
+      "sha256": "9e337e4059ea9be6559fcad00b32f54ab1e9ea8069b46c86a050f5f3350a3899",
+      "bytes": 5078
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/09adc640284a48679a85be7d10e20e22/001.receipt.json",
+      "sha256": "512fd6f3b807ff2720866a736b6167e6548d7edcc41a5637319536f60db775e6",
+      "bytes": 2215
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/09adc640284a48679a85be7d10e20e22/001.request.json",
+      "sha256": "c5d3f3389603dadbc83264ce6a097b19981fc364f4f1de966002a78d0715bc31",
+      "bytes": 20881
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/09adc640284a48679a85be7d10e20e22/001.response.txt",
+      "sha256": "023a7cb41100f7dfeb8d039798bee2abc1be424ee847e70594a08b3b8fa395b9",
+      "bytes": 5231
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/0a514710d0714f788cc0ea4d6757b484/001.receipt.json",
+      "sha256": "c7f3f1b7979ace6b2836136c618832d95edba030bc25d614ac2caf3c1b81d0d0",
+      "bytes": 2220
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/0a514710d0714f788cc0ea4d6757b484/001.request.json",
+      "sha256": "8e325035885b7e32ff5a7f4ae57b5e259b9694228eac0431f9c79fffff92edb0",
+      "bytes": 28196
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/0a514710d0714f788cc0ea4d6757b484/001.response.txt",
+      "sha256": "9b464e14385bc2952491f5ce536e1b71a2fc75fd2fdb24f4932f3da38dc80f24",
+      "bytes": 5204
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/0a514710d0714f788cc0ea4d6757b484/002.receipt.json",
+      "sha256": "ca9dda5de9c83453bcf2162ca29b400edb42c1c4490cb7295e700dde4849d585",
+      "bytes": 2219
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/0a514710d0714f788cc0ea4d6757b484/002.request.json",
+      "sha256": "5c3acde70292fb784df5d1f83513c5d62b0bd973314497e11caec1432e1fbe0b",
+      "bytes": 34432
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/0a514710d0714f788cc0ea4d6757b484/002.response.txt",
+      "sha256": "5da3110f3c8ceec8f1722e8316e47f0cf7d2c215f0850660452586ee4bde92f2",
+      "bytes": 5249
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/001.receipt.json",
+      "sha256": "615252a2e5cd3ffac8fa96cbd648d5e251392860475e4743fe7571b28daf0c6c",
+      "bytes": 2205
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/001.request.json",
+      "sha256": "6cf18b509eeb258143e576a5d9edeeecb5bb3eb0ebabff2d8fe63ef9e4d54361",
+      "bytes": 13955
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/001.response.txt",
+      "sha256": "54c8d610c361f58304e9ea1545a615ace52d5b85c160faa13d31d9065563ce36",
+      "bytes": 558
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/002.receipt.json",
+      "sha256": "712a24661040c8340cb74792b79617e2d8baf210467f8bdd6d17b9acc589c8ed",
+      "bytes": 2218
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/002.request.json",
+      "sha256": "49115ee334ad41db1a6be120b2c5741dbbbf6550915969e6ac00c454cf24cd93",
+      "bytes": 5019
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/002.response.txt",
+      "sha256": "159d88d3ac6701f4260f62337fc288195e1f9b58fd661fae6040892dad63fc06",
+      "bytes": 240
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/003.receipt.json",
+      "sha256": "2d7e6490069be9a3e58d66d86154d76fd651d1d4c0a826c24b76478f9afb4558",
+      "bytes": 2205
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/003.request.json",
+      "sha256": "9000ffaf7a9791f80602738e558f8a12fa0ce228ee40f4f3851ce141ef9a65e1",
+      "bytes": 11981
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/003.response.txt",
+      "sha256": "a3d8b11f2841dc441fa2b81764f2b8c87290bbb8f50c9f742ccb76d8f144aef4",
+      "bytes": 356
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/004.receipt.json",
+      "sha256": "e319d6acfc51d8025646d7d3550efb0c8f913561b917607b9760597db6b32f3d",
+      "bytes": 2218
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/004.request.json",
+      "sha256": "da3561c9c4c176ddb43132569b26f32394ee5a601cc1a94c1847f10d52bc5ae6",
+      "bytes": 4083
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/004.response.txt",
+      "sha256": "b2744baf8d3cbb314929e0b1ad60519770393c4c0ccb340f5d068db34ee23663",
+      "bytes": 175
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/005.receipt.json",
+      "sha256": "eacffa0c010385ae8660091d8ad01b3e4e2bd18f567951e0f64322e479197308",
+      "bytes": 2208
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/005.request.json",
+      "sha256": "b817735cad9f490bcae1f173071882ba9b412c50a393a69b296004c3dcbc3ae3",
+      "bytes": 12575
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/005.response.txt",
+      "sha256": "6142c7a3a50096cffdcf7bd3f1e40b372caaca3df8521214c57dab53ce20f4a1",
+      "bytes": 553
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/006.receipt.json",
+      "sha256": "519b31634ebbfcd7b67707e8e677b7ede1298cea3fc4b6920b877782eb26fa0a",
+      "bytes": 2221
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/006.request.json",
+      "sha256": "7e7e813b60da6adc10d6ee92ff814ab410d9ecec09f16b6fa65aa4c116505e88",
+      "bytes": 3981
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/006.response.txt",
+      "sha256": "c5bb2f1c7ddf7baba4c53bc639bb55b7e6c2ce46bdffdb8cdccc76d7cc4bc3ce",
+      "bytes": 226
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/007.receipt.json",
+      "sha256": "60b5250e3bbda35de61b13d3875144a7025ff359dbc3032fbaa51952380611ed",
+      "bytes": 2202
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/007.request.json",
+      "sha256": "345733e343154d353bf5cafb61283b80d04c1f787ac95f20cb84a2a01ff4f000",
+      "bytes": 12646
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/007.response.txt",
+      "sha256": "99e6e85dad56b895c57e3d35708d56d8bd306a2e516ccac73723af1f1ba09d9a",
+      "bytes": 631
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/008.receipt.json",
+      "sha256": "8b60bce02f22bb2ff7fa0f4596df978a562ca99fbf8016ff95535ef92d1efbd0",
+      "bytes": 2211
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/008.request.json",
+      "sha256": "759f070cfbd1c4cee01bfcb469e87a77ca537046b26e3febbbe78254dcffbf2d",
+      "bytes": 4130
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/008.response.txt",
+      "sha256": "03c9e6d5958b684588f2abea3b6864f1e576e64a89d85aa93d3c96c7ae0108a7",
+      "bytes": 207
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/009.receipt.json",
+      "sha256": "a1afc668c2f0a281ebb41276775ab8487ba2699158a1e74b670e4464bfdd31c6",
+      "bytes": 2197
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/009.request.json",
+      "sha256": "0c9d66aa736d57cb01c66bce5e693166d970abb86f73b3739d2dc89b3a7814d4",
+      "bytes": 11833
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/009.response.txt",
+      "sha256": "3b8a8ddf1bc1aed07afb70c50b37549880ff4a3e1b7cc6667917a7d4f79759dc",
+      "bytes": 349
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/010.receipt.json",
+      "sha256": "479efd74f4269acc2e50046be79259894134248aa99eb680edd0e0489b612006",
+      "bytes": 2210
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/010.request.json",
+      "sha256": "d45f71366b1bc016511883c84980031009f44afeabbd4d7b12b37768bdf6009a",
+      "bytes": 3487
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/010.response.txt",
+      "sha256": "87bb06507cf552be9f4aae8e3f963d48553860f7953950eb21122133a24a77f7",
+      "bytes": 196
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/011.receipt.json",
+      "sha256": "85cc56d4a84c11230aa6d3d4da335d1f653b266eaa5fc1edb28465d49944bb78",
+      "bytes": 2201
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/011.request.json",
+      "sha256": "2ed53d55e723f670c25ac5df44ec70dec4aa5cb46b25294d850e0d1493bf7f4d",
+      "bytes": 11786
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/011.response.txt",
+      "sha256": "639d436242d4026e2c39397c78c92000450ea10784b9261700a3e84366475c2e",
+      "bytes": 259
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/012.receipt.json",
+      "sha256": "8745eeb8b988d6e8de1c04d710fe60526c7bbc6ef91fa146c11594fc8536d123",
+      "bytes": 2215
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/012.request.json",
+      "sha256": "cd16935132f948268281b36c016c1d7d40f689d309d0e459fb9acb715a141059",
+      "bytes": 3081
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/012.response.txt",
+      "sha256": "d00cda85ad9afa48d5238df8db38cba59954a59d5ff83823a81224a69dc4e72e",
+      "bytes": 153
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/013.receipt.json",
+      "sha256": "f781cc649885e19cf09b332782635e6389fc750edd55ddcb869bc98cf0cd1dae",
+      "bytes": 2198
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/013.request.json",
+      "sha256": "a985c5c49c04c5190c3f2c0d801d17502bd93ed339ce959595e327fa363bb373",
+      "bytes": 11807
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/013.response.txt",
+      "sha256": "2b198d59f6ef98f5db45529176de7fe1901aa1f52821151995419117703a2847",
+      "bytes": 438
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/014.receipt.json",
+      "sha256": "c9024c1e2cdc4f75d80438800808e7c61ff4afcc11e994bf4448a6e0bacd27e3",
+      "bytes": 2211
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/014.request.json",
+      "sha256": "fd67debb2471cba8a424ae92574ffd792ab9332db40e2a048b657a352804fdd1",
+      "bytes": 3322
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/014.response.txt",
+      "sha256": "9d10a9ab1964e217769ac88d214560de1faad42982c87fe8c8cb49231ae8d739",
+      "bytes": 226
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/015.receipt.json",
+      "sha256": "952c92f3552504bf220db464d101c995ed677441682bbb4941b0d5d8b8f6c81e",
+      "bytes": 2196
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/015.request.json",
+      "sha256": "8f864507cb0b0f626872506979de05c7a2225ec1a3ed89d15ce80cb5a54c8802",
+      "bytes": 13738
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/015.response.txt",
+      "sha256": "6a153c49bd7b30592ece2c24949aac0833272a0308f96a1c9d394e2299934253",
+      "bytes": 331
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/016.receipt.json",
+      "sha256": "287ef468780f0337a1862b11ba7c6eab71ca8a69fc73f5119b142aab6c625878",
+      "bytes": 2210
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/016.request.json",
+      "sha256": "d1fb78a18901b1402ccc33323a13a6f1e880b192d7f09e0fac1da944d055dc95",
+      "bytes": 5395
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/016.response.txt",
+      "sha256": "c23d439d7aa28cc2db6a50187770a310d2252f7d69a7c9cd8ce6c6232d929595",
+      "bytes": 234
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/017.receipt.json",
+      "sha256": "690949b3bbd6ce2fc103e015518f5e4c8822921c4bf11aa89d8786330d414437",
+      "bytes": 2197
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/017.request.json",
+      "sha256": "1e50da47d16116b3bf2692fcdc64e03d43fd1bcb306c800f5e4853d1cf01722a",
+      "bytes": 11754
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/017.response.txt",
+      "sha256": "0d27be95abbf1b62031c4a58474c6a5ca689363d5bd2ae74a75d55c95c6adc48",
+      "bytes": 251
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/018.receipt.json",
+      "sha256": "83cbbdaff54edbba0f197c8d3fc5c5602fe17e6420f21894fab9d144ca684d71",
+      "bytes": 2211
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/018.request.json",
+      "sha256": "338ba70a9e5512780f08f009767a8b81ac3ac1ae791bd6dccbc70027d780f3e0",
+      "bytes": 3101
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/018.response.txt",
+      "sha256": "a5bc7f98048cccb388fb55722def9c40e159c08f1347aaa41d7a2e1ddcfb0302",
+      "bytes": 147
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/019.receipt.json",
+      "sha256": "9e3ecfd529a835e55fb11cfd00ddbecfa7d5eb38998a7be36edd0568d4430b0b",
+      "bytes": 2206
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/019.request.json",
+      "sha256": "070be3d62c8d391a74b7b54c7b64bf5e3c0075758884f2deac6070bc263f3dd2",
+      "bytes": 11489
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/019.response.txt",
+      "sha256": "822bb1c0345263971ca011288a6ba73f04cd410903a82706a9329fa75264434a",
+      "bytes": 279
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/020.receipt.json",
+      "sha256": "f7ec80aee179a157c56c054c996125598b72f735e7811b762569da3232c40b34",
+      "bytes": 2220
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/020.request.json",
+      "sha256": "ce571fe55ad89d69f63381ea6a60d3a56d222160f545ba36bc94f053e8f01a89",
+      "bytes": 3168
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/020.response.txt",
+      "sha256": "eee3bb850a72a1d99bb201ea2159b1c66a312581afee98ada23dfa19423fd4a5",
+      "bytes": 169
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/021.receipt.json",
+      "sha256": "ed985b1ff110058fecda6b2f1f357e49b5468b104fed1b74c1b5d172ea093b0b",
+      "bytes": 2203
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/021.request.json",
+      "sha256": "609cbb061585f4796e6ace862544dfcc2d0e131bc879439acbe5e552dc580840",
+      "bytes": 16152
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/021.response.txt",
+      "sha256": "1f319cfc6c9c7cb51f061c3e1acaa4eb3cd51df276f30a4e48b1890612cde539",
+      "bytes": 238
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/022.receipt.json",
+      "sha256": "de6c3b571632ced705ed653bfbb164757bd3aaa5160c2fe941a2b0cd557367ec",
+      "bytes": 2217
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/022.request.json",
+      "sha256": "4188375c0adc82390c8734e2714e0d129c6d150d0bb196e71cdc70bcdf9fa2a1",
+      "bytes": 6566
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/022.response.txt",
+      "sha256": "9622c96d89033ee05f497905e650673a783c8f5f0da6f0b4946f381b18d73bc4",
+      "bytes": 148
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/023.receipt.json",
+      "sha256": "cc39ebcfcf73ed7f1398677d47276e2b9b07d7facbf0929402c26ffde0b9f586",
+      "bytes": 2214
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/023.request.json",
+      "sha256": "c1651181c1b3d7aaa5e9d11a1443a5029c64a3b32220ed18bd30735189646ba1",
+      "bytes": 14650
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/023.response.txt",
+      "sha256": "c3d48df222276069a56c4418d764e2c42f68153160b2278a11f9aec643c9e59c",
+      "bytes": 705
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/024.receipt.json",
+      "sha256": "505fa950c257d9ff4b7ac391182db33b37290ead5d1e8478a612b4ab1b2ab2eb",
+      "bytes": 2214
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/024.request.json",
+      "sha256": "308900d3290738635284a6c331404726f6d799ffe6f30ade311c55f0aedf0a09",
+      "bytes": 15639
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/024.response.txt",
+      "sha256": "48c261ae671c1e85fd67dd548785eb1c321be3db4a97bb19e924d9fb4b67559f",
+      "bytes": 700
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/025.receipt.json",
+      "sha256": "0776e56490acae1531ada82a19e60ce7820ad8c424af03ab2b0b0a038b869579",
+      "bytes": 2227
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/025.request.json",
+      "sha256": "a3ac10bde809f523e470f0b51f8cd1bbc07b7e4c2ccaaee638d986bbc33ae4c9",
+      "bytes": 5934
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/025.response.txt",
+      "sha256": "18d96466f62a2198d68575c54dd8002b464906c80dc6da3b87bf878033cf757d",
+      "bytes": 244
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/026.receipt.json",
+      "sha256": "0f081796dd2d4092e7b5b78efaba736cf38da4008842ee53c2cd9e3e0fa42e13",
+      "bytes": 2201
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/026.request.json",
+      "sha256": "fe0cab46f04c5942525b2b520e93cd14f93f8ade926f9e244b8aa7d621fad265",
+      "bytes": 20319
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/026.response.txt",
+      "sha256": "d79b04226c3fc50dfaaddf957b6fb5c57c761c1c99bc5eb4dbcb72686a364f9f",
+      "bytes": 707
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/027.receipt.json",
+      "sha256": "043fb7959249f46a536cb2300d997fe9738fe2f00e7fca968a626c7752d2d6b2",
+      "bytes": 2214
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/027.request.json",
+      "sha256": "0ed7c3cba6f8278705c71aadf1d5fab58030cf69e5d653a3244fe3726e99e15c",
+      "bytes": 10300
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/027.response.txt",
+      "sha256": "547779a9b56ad9f3af1008c1cebe3191e6139dc213ab1835092c0bf4427d5a71",
+      "bytes": 247
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/028.receipt.json",
+      "sha256": "4836cf26084b6e9d44181a1b0edfebef5371c3fa214729b51c0b8dd52e6ec097",
+      "bytes": 2199
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/028.request.json",
+      "sha256": "78b40f608e74848d6bbeff3be90e7ddeacab6ef826ed6f6515b740f0eda56243",
+      "bytes": 14067
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/028.response.txt",
+      "sha256": "b63e2ba2df8bb584e101a0f231dfd757935a0a812fa3d7b84fc81f5b3a10a15e",
+      "bytes": 716
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/029.receipt.json",
+      "sha256": "2b311d55d03cefb2ecccbf12364033e91f0b32fb4f39cde03a2ec472fc788d5e",
+      "bytes": 2199
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/029.request.json",
+      "sha256": "420405155e8de7ac0724aea972cac17ff9bbe5bc2cb3c6caf360547e9a8b216e",
+      "bytes": 15493
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/029.response.txt",
+      "sha256": "ce08db671eaec8304f5a7c7c01e4652b06b2562841d27bbb82da9644b67096d7",
+      "bytes": 604
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/030.receipt.json",
+      "sha256": "4aaa510e79f74e99c025824405fd2817cc9a7abbe72b00f20a5a9b903c756670",
+      "bytes": 2212
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/030.request.json",
+      "sha256": "560fdd8b75ac0ec65b6fd75a0e64295bde63a4bb33a29e5ad6e5f167104a6cee",
+      "bytes": 5229
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/030.response.txt",
+      "sha256": "c428d41b3e6a9dd35c861926531c2b43e0df7422bbdf04254c65f851d404c356",
+      "bytes": 340
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/031.receipt.json",
+      "sha256": "92f9e86606eac2977f4393faeefed6d10641035b3201abb3c681d85442077dd3",
+      "bytes": 2196
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/031.request.json",
+      "sha256": "9db54df08cb46b29b8c2ab77bf90beb121a36129e7b2568f0a6571b0e812377e",
+      "bytes": 15954
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/031.response.txt",
+      "sha256": "96f675f14c18ae28f83dd243ab27e9ca9a33018a4702eff1d9042d12b9069062",
+      "bytes": 574
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/032.receipt.json",
+      "sha256": "abaae901e20aea0830ff97f785ee6be41683729d45434a513fece54be1e6d0cf",
+      "bytes": 2209
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/032.request.json",
+      "sha256": "faac0a4445b80e20d575fd0b1ec4844fff30113f39a0faf1a6e9feb42be68322",
+      "bytes": 6416
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/032.response.txt",
+      "sha256": "7e3f833192a26f67132a91c62fd14226e9888cfc5277a1f854fbdeb6077b052a",
+      "bytes": 252
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/033.receipt.json",
+      "sha256": "18054f9544253ad3bfc0eb6adea60c56ff3a4a86622969c77da3160dde986255",
+      "bytes": 2201
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/033.request.json",
+      "sha256": "6fa63022be78dbd83a9a471ed679552fda4a096b19718db16daa608c7fd605a1",
+      "bytes": 11493
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/033.response.txt",
+      "sha256": "727f0ac98933886d911506e3d4c7c97b83560965c02fa9eec77e726974430ec6",
+      "bytes": 328
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/034.receipt.json",
+      "sha256": "8e213405eea5a12d7f866a169ce35d25379b7ba8022697bc593bb45c2dfdad33",
+      "bytes": 2215
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/034.request.json",
+      "sha256": "61f4425865c6ed02a44cd940f717751b16008499fb01e7b45f61602443a1c25c",
+      "bytes": 3100
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/034.response.txt",
+      "sha256": "8eade1d1c93c8ab8e3a1fde2e69c2d3be10763d2ccfaa47ae37d32f02e37f2c4",
+      "bytes": 189
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/035.receipt.json",
+      "sha256": "e221fe3c56818e01cd9093524aa817537c8b4b1cc8bd849c20f60abe788e3157",
+      "bytes": 2192
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/035.request.json",
+      "sha256": "63c3a31ddc9eb088e9a126ba9858dd1887d6ab20323ae33941615708a01f531c",
+      "bytes": 14200
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/035.response.txt",
+      "sha256": "5d1eb64b7290caa4301eba98da4abe2aa69c87ba9c40d870ce7917fe23a66d53",
+      "bytes": 1392
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/036.receipt.json",
+      "sha256": "8cac795d1ccf877525f9d8351b80dd5cda1b4065583b9f78db88368b76622a40",
+      "bytes": 2202
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/036.request.json",
+      "sha256": "8920ac5cf748296373aa272ea660131283b6716887af26ae8ee534791e05ed65",
+      "bytes": 7252
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/036.response.txt",
+      "sha256": "052c9ec86f5b2a4368fe7e2c6df2e0df2c41a0fafc8c032c39da63ecbc17ab7b",
+      "bytes": 469
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/037.receipt.json",
+      "sha256": "c408216b05ff3f2f6e04b0ca733361838ccd773229d51a66fcf3f147930a3950",
+      "bytes": 2191
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/037.request.json",
+      "sha256": "bd0cea3e512597057e3e850603a5d566d1ae2643abbee75630dd529dc89dbf35",
+      "bytes": 23119
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/037.response.txt",
+      "sha256": "e258a077f07a9e7002664a5b2f6ae63ef689a077627b4296efb5c71e066cc181",
+      "bytes": 1095
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/038.receipt.json",
+      "sha256": "4ee513d9315d0fc6f6f62964bebd0b68e748529cf7202c6d24412c2e34272477",
+      "bytes": 2201
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/038.request.json",
+      "sha256": "bcf19d94ef71aea1c63e642ce8e066f6ad3b92ec228c71a02b6e836977aa4884",
+      "bytes": 13588
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/038.response.txt",
+      "sha256": "6bcaf6854345c60732c8e77d20940e15ed4feb585734d385965ff78d59c6df32",
+      "bytes": 589
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/039.receipt.json",
+      "sha256": "7cef4e1c3065e479d44843398863b989c203a44774eb381e3de52259df4f5a13",
+      "bytes": 2201
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/039.request.json",
+      "sha256": "d0be627fdb3cd5b5cd9661df3f412e0db37f214fb81d54ea36848d6b8dde2828",
+      "bytes": 13956
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/039.response.txt",
+      "sha256": "606e161d299813fe4657fa14f6f69c6becddfb8b892cbb4bc2b27d6a82716bc7",
+      "bytes": 659
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/040.receipt.json",
+      "sha256": "f333fba5a906ec771ffee4132c84bc25382671ff23c83a9e7263da76cbc61af2",
+      "bytes": 2214
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/040.request.json",
+      "sha256": "3512bc28f44fb9db2631742970f0ecccdc11c14363ae7f9372d2692ab5bad7c0",
+      "bytes": 5851
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/040.response.txt",
+      "sha256": "e0627fc171846ec3a4e98d48e8605f3bfa2250e32dd24bcd65ee09ab73c90e3e",
+      "bytes": 216
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/041.receipt.json",
+      "sha256": "70d0313a7db23c94df9353ca70ee7c5a692fdb62932ce3a6c7d0425fd50d6716",
+      "bytes": 2205
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/041.request.json",
+      "sha256": "f04e419cf8cf4f3f7a4a9c808b0f51ebfbddcc65648a9defa9db860c550b44d5",
+      "bytes": 13840
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/041.response.txt",
+      "sha256": "dbe7f16110a100fb1df27633149d2e0f1b903c9726a4c0b094763022f4a2a7d0",
+      "bytes": 334
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/042.receipt.json",
+      "sha256": "2ebb01ce2567602e2e0aa5b7f880b20b9206af8acc7d04b05c036e3b22508019",
+      "bytes": 2219
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/042.request.json",
+      "sha256": "dad69362bbaccec9c566271b13347cb931e46209d064f11dd7e01aeb509db2c7",
+      "bytes": 5232
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/042.response.txt",
+      "sha256": "abd435ea2486875ae4df2dbb82c8b6056d6ffcd0927748c7001799d719033e91",
+      "bytes": 211
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/043.receipt.json",
+      "sha256": "c77e8ed3b1ce63a59ee0bb02a2dcaed5f82b2575fa6e9d36e5dbfd21f5a7a888",
+      "bytes": 2201
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/043.request.json",
+      "sha256": "f9dd12adf558464f82d14eebe44731eef45977ad42d7360ccb9f7bca0bb88ef1",
+      "bytes": 15694
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/043.response.txt",
+      "sha256": "b7c134be957a15a091674dcc26cd3c6dcb5153f7f974a2bfdde34f541d8de3f6",
+      "bytes": 462
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/044.receipt.json",
+      "sha256": "976ca5adbbbdfe5a2d3893ce6f3837f382eb0a5df5955c860f0edaf949d0c321",
+      "bytes": 2214
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/044.request.json",
+      "sha256": "27020d7b4ce6129d6dad0421fc2bec9fa0ac70d9e4db0b0b4d0934825f925fc3",
+      "bytes": 6129
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/044.response.txt",
+      "sha256": "13846ecb8f1bc1aa4eb7888241deee74c6fd25bbddcbdb4fae00672919bca32d",
+      "bytes": 227
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/045.receipt.json",
+      "sha256": "e1825e3eb5082314d9e19b75be220402070012445a0885ee6c6fac4668ba0994",
+      "bytes": 2199
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/045.request.json",
+      "sha256": "17060f4a6675dd2aecd23ba0d31a8b5474ba3b8e11d1af362f87b5b6fff0a322",
+      "bytes": 16135
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/045.response.txt",
+      "sha256": "18ddc6849d46adcf805afb5b5d64e6d96075a490f31dc19d5ef0a66557175f24",
+      "bytes": 564
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/046.receipt.json",
+      "sha256": "a14a489da8fa8d8dbed61bd0c87a4ad7b21117886c5b47d6d1b290718a082d5f",
+      "bytes": 2215
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/046.request.json",
+      "sha256": "a52712073ffeef137a6d632e6f06122d079e541f8468590b890ff841f90e3ceb",
+      "bytes": 6390
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/046.response.txt",
+      "sha256": "33b9e57a2f99626ffc13bb5a4adf606a42a21549330348f8c44a5527907edec5",
+      "bytes": 252
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/047.receipt.json",
+      "sha256": "70aaa892fd575ef3df8425f68bbb4bbee5348e3c06b774b43d599ce348e74c1f",
+      "bytes": 2202
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/047.request.json",
+      "sha256": "763c30089cb105e354af001b182f1a2e8ec80c2082cfecccb86ccf6aaec26b11",
+      "bytes": 16058
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/047.response.txt",
+      "sha256": "c63183ed9ab6bde2cac5e314ff3c4d0d70389d6cdd66467eb70d6f7d608a9804",
+      "bytes": 539
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/048.receipt.json",
+      "sha256": "d979b0729b733ed30f1e8270417ed6b637ee2abade6d47bc702855364c0e41c2",
+      "bytes": 2216
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/048.request.json",
+      "sha256": "7cb28e9bb289ae70ff7fbecf605f6a0fd01cd293097295c55bd50626154950d4",
+      "bytes": 6489
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/048.response.txt",
+      "sha256": "c7edaac2e8ac5f31ab12dc5d630ce3a244882ce65a5d6b5f6206172cf293a255",
+      "bytes": 223
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/049.receipt.json",
+      "sha256": "e655778fc6e7b464f87c840711823789ca903c0888065aa5120a00c0fd0f2072",
+      "bytes": 2207
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/049.request.json",
+      "sha256": "69debb55c747ad1007839a2a1d98b397d16bc97820026b68c765b7f6f1865bb6",
+      "bytes": 52048
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/049.response.txt",
+      "sha256": "f08e851728ab2a1d94de1e8fcfca842d441e94eeacbe69096be1938df53e670e",
+      "bytes": 4528
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/050.receipt.json",
+      "sha256": "76caf466387eae44f685ad70b82dc9f8fc9bfa7b4a6dc499228bee3e3a4f1c6b",
+      "bytes": 2207
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/050.request.json",
+      "sha256": "9ab360808f31ff922968ac57aab9de5bd15d59f1a2e886f5ab3dbb288e543a35",
+      "bytes": 57419
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/1cf615091fbc4474bc18da5bf9cb9085/050.response.txt",
+      "sha256": "706fe8d7e815f5452549f2866ebdd7b59ab405bc59b1259eb2b2c564aad56ed5",
+      "bytes": 5267
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/448dc909acb44b0d8526b0a95f272cfc/001.receipt.json",
+      "sha256": "95f1afab20ebb418078c2d6cc2d05a2a39c475665250e26e7291b63b82851cd1",
+      "bytes": 2211
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/448dc909acb44b0d8526b0a95f272cfc/001.request.json",
+      "sha256": "75175503da561c0552a80f3b3980bd46abdab377a48be44aa2cbc1e9c98d246a",
+      "bytes": 23054
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/448dc909acb44b0d8526b0a95f272cfc/001.response.txt",
+      "sha256": "0625b78c84e3a3978ec40d744cd138bc7b7723f57e6fb66cd48567f3c0f1aa81",
+      "bytes": 3899
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/52e9980705fe49faa2accbbad4553da6/001.receipt.json",
+      "sha256": "0229c09364a96134e9b7adc3d1e2cccdfffa0248b118a7c7fd2e32f88f2d7613",
+      "bytes": 2206
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/52e9980705fe49faa2accbbad4553da6/001.request.json",
+      "sha256": "3f0a7700326169c88b0e7542a21b1ba67714ed92f3d935c97a5fcee6b810e9d6",
+      "bytes": 37542
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/52e9980705fe49faa2accbbad4553da6/001.response.txt",
+      "sha256": "1520c0f87cf023c1aff95cfa061152834909d588167f314c951562e3b07496b8",
+      "bytes": 5501
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/52e9980705fe49faa2accbbad4553da6/002.receipt.json",
+      "sha256": "73693e6e5540c7de418dc0172ff993242f51a656c208ff8cccac5fb760777f4a",
+      "bytes": 2205
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/52e9980705fe49faa2accbbad4553da6/002.request.json",
+      "sha256": "405a0a4a081cacf0edabdd0fd37052599b23b234f126b41e5f90cc971e4d3d3d",
+      "bytes": 43978
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/52e9980705fe49faa2accbbad4553da6/002.response.txt",
+      "sha256": "9534c8ded735349adbbe465e096bc4bfed837b3b51f5585e30a268eb846b0582",
+      "bytes": 6216
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/555b539011a44a8bb801892129d0e0cd/001.receipt.json",
+      "sha256": "9b613ce467b4c3d1bc7674c6b6afe3cd5708fc0364438e447b5c262d92870859",
+      "bytes": 2218
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/555b539011a44a8bb801892129d0e0cd/001.request.json",
+      "sha256": "a89dfde8669ef9abfedf61c465b9c3963ceaa51112bf0a0604be08f949620da6",
+      "bytes": 22298
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/555b539011a44a8bb801892129d0e0cd/001.response.txt",
+      "sha256": "1c17db400b589056464edbab7eeebad0a3c248a77a800405071244235f2e2c1a",
+      "bytes": 4234
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/566d6c888d374bb8ab4df67e27f79403/001.receipt.json",
+      "sha256": "1defe5c28a05e947fca41aaab9f95d9b122fd473242ae49d16ff3971065c850f",
+      "bytes": 2216
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/566d6c888d374bb8ab4df67e27f79403/001.request.json",
+      "sha256": "6fa1a62789f529f730959b602075c17768d3573b51b4a3f29c5df25c11a8cf24",
+      "bytes": 20034
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/566d6c888d374bb8ab4df67e27f79403/001.response.txt",
+      "sha256": "5fe96cf61d0836812bd23c9c846067e0bc93db1b68f80b7fe75446e31167e277",
+      "bytes": 4862
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/566d6c888d374bb8ab4df67e27f79403/002.receipt.json",
+      "sha256": "4371630af3ffed579944229da1f80359a940fc36ee05b8d87c43aa52e29c69e2",
+      "bytes": 2216
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/566d6c888d374bb8ab4df67e27f79403/002.request.json",
+      "sha256": "09827d2667d7c30521bf6b2560201e19e3aadc168eacabe288dd2aa5a7af39e4",
+      "bytes": 25726
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/566d6c888d374bb8ab4df67e27f79403/002.response.txt",
+      "sha256": "ce490a4bc5f92ec242e2791885ce27504e37b3dbdc12d5aa1086e78cf1c6897e",
+      "bytes": 6916
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/5b01dee7e88f477998d7cce24a7f041a/001.receipt.json",
+      "sha256": "74de7623552ce0a4aa824f6f5590a04e646fdffcd9ece585675b5da1f33e7f3e",
+      "bytes": 2216
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/5b01dee7e88f477998d7cce24a7f041a/001.request.json",
+      "sha256": "459c569eb9fe272a5da4fd9ae63e0a3652f5b3d89e5719147b34f2bcb3e2e43f",
+      "bytes": 22875
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/5b01dee7e88f477998d7cce24a7f041a/001.response.txt",
+      "sha256": "f6b846fcf04bb3588832049284e47b1d81af7a16f159904fd49344c94f2b0a23",
+      "bytes": 1183
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8089e5aa9e9043809ab13054b639e4e7/001.receipt.json",
+      "sha256": "3c597dc90247749c4206c03468e67bcc255ecf950223daa17d493d0ed1b8868f",
+      "bytes": 2216
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8089e5aa9e9043809ab13054b639e4e7/001.request.json",
+      "sha256": "7354af6fb592d810cc944c8623f0a09559aa92b00c18d344de9c00f10b8b4f69",
+      "bytes": 25534
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8089e5aa9e9043809ab13054b639e4e7/001.response.txt",
+      "sha256": "76a1edf78552a92ee87e2ba0cb25f8466beb57bbec7bb1c3d0c6dc5c6c1fe0e2",
+      "bytes": 6160
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8089e5aa9e9043809ab13054b639e4e7/002.receipt.json",
+      "sha256": "48788698ed657f7f5d9be730d3d42028a9bbc9d708957c7e76f7960bb1e94977",
+      "bytes": 2221
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8089e5aa9e9043809ab13054b639e4e7/002.request.json",
+      "sha256": "6617bc484df3a00088e985c24e41bffc5b7f182135e6ddab4e67a4b2ae8c80db",
+      "bytes": 33030
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8089e5aa9e9043809ab13054b639e4e7/002.response.txt",
+      "sha256": "13a3cd5da35852e584376a23dc549ce5b3f08c7cb84644d43cc75f5df6528da5",
+      "bytes": 6141
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8620e36bd43543ca9298ea4a2738083f/001.receipt.json",
+      "sha256": "4fd58b0ede1b8b0bbf19d1bbda16eeae3588638a392a8ee7ee5609229dad4be8",
+      "bytes": 2217
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8620e36bd43543ca9298ea4a2738083f/001.request.json",
+      "sha256": "50c6fd4dbc74be668e5e89f665e6b40194280e482e85322e7fc04b855ff15c88",
+      "bytes": 24955
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8620e36bd43543ca9298ea4a2738083f/001.response.txt",
+      "sha256": "5ef505d19f6625f3a6a1f834c85dc22d7ef730ec24566eb0255c099794c4ac0c",
+      "bytes": 5143
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8620e36bd43543ca9298ea4a2738083f/002.receipt.json",
+      "sha256": "e925185857f6f3ac8a7cd39ccc2d1c71e4112381bf1378e178735d8fe9d62448",
+      "bytes": 2217
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8620e36bd43543ca9298ea4a2738083f/002.request.json",
+      "sha256": "41993fb7c1b6d246b2b21bb6242da338039c376986f2d7c01437bcd9a1f3edee",
+      "bytes": 31116
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/8620e36bd43543ca9298ea4a2738083f/002.response.txt",
+      "sha256": "1a8a009cb975c60973820ec97c4848024ac42fc22941100a88cda4387684d68d",
+      "bytes": 4785
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/de9181c620bb4254ac13dfb9bdc4b91b/001.receipt.json",
+      "sha256": "1280033435f889ca1650eff3415dcd77e4625188912d00b628a0342a3f8cda0f",
+      "bytes": 2218
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/de9181c620bb4254ac13dfb9bdc4b91b/001.request.json",
+      "sha256": "a89dfde8669ef9abfedf61c465b9c3963ceaa51112bf0a0604be08f949620da6",
+      "bytes": 22298
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/de9181c620bb4254ac13dfb9bdc4b91b/001.response.txt",
+      "sha256": "9d6d2320009664b57b6d22d0139094b2d7ea072e51c0091343e09f06fc494522",
+      "bytes": 4576
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/de9181c620bb4254ac13dfb9bdc4b91b/002.receipt.json",
+      "sha256": "5182845c608855a8bffeb2df29cb5390533e7d6525d1ef680e04a36147cfebd5",
+      "bytes": 2222
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/de9181c620bb4254ac13dfb9bdc4b91b/002.request.json",
+      "sha256": "b86a828e45700d1a4868b19fdfc66e6fecd92e907d9746fc7d94d1992fdee45a",
+      "bytes": 27922
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/de9181c620bb4254ac13dfb9bdc4b91b/002.response.txt",
+      "sha256": "77c8bd8445514f25263b2db741b30fd72be0de309d677cae1b8b71eaef33374b",
+      "bytes": 5090
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/e24953595da04c6aa903b62d025adcf9/001.receipt.json",
+      "sha256": "9e561544d455b95631f00cdfc7a6acc2d3b51b569cd5e3359ff913c8a2640a2a",
+      "bytes": 2202
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/e24953595da04c6aa903b62d025adcf9/001.request.json",
+      "sha256": "c5e88a75d419d327357ce85b9017aa0f5df9fce1dbca99947948e1ba08c0913e",
+      "bytes": 31565
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/e24953595da04c6aa903b62d025adcf9/001.response.txt",
+      "sha256": "815232f05888a496c08656b42242b359e1075a516c5c04bf9bbca34ca97cf114",
+      "bytes": 900
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/e88990984e5c4ef7820ef27691470bd1/001.receipt.json",
+      "sha256": "6db20d4caf9b3bf99512892f3e144092c7c64e582495b3ae179c50f6eb3d71f0",
+      "bytes": 2219
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/e88990984e5c4ef7820ef27691470bd1/001.request.json",
+      "sha256": "24157a695141edb15e2467e8b843186735425cd24836c1bffd0a73d68d562311",
+      "bytes": 20945
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/e88990984e5c4ef7820ef27691470bd1/001.response.txt",
+      "sha256": "71fb60898be8d0548bd756bfd3891afd8beca6558a72f3b22a74a14a7739232b",
+      "bytes": 3638
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/edb006ddba0f4556addb6e70d1a666ce/001.receipt.json",
+      "sha256": "83fd7f4c8ae942e099f8ea3daeb35aa89749454c0ae4eb1e7c5fbf9010b70765",
+      "bytes": 2217
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/edb006ddba0f4556addb6e70d1a666ce/001.request.json",
+      "sha256": "633ad371f098e051121fdf07817a2861186b6a41b1a877abfdb709ca1f18cd2d",
+      "bytes": 19641
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/edb006ddba0f4556addb6e70d1a666ce/001.response.txt",
+      "sha256": "5d6011b189303ff83d1cbb6676618f015b18945a8098d669248a799a483ad1f9",
+      "bytes": 5871
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/001.receipt.json",
+      "sha256": "26710c3404d2d5fd2c8003dcbcf8693963b985d59854299ffa9d5317920d49da",
+      "bytes": 2201
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/001.request.json",
+      "sha256": "b1b74a226ae652d92aebda17bb10caebc11e5e022bdd5602e47f0d882e40f7df",
+      "bytes": 16427
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/001.response.txt",
+      "sha256": "536ea5af4a6101ba9662d26211dc6a8d4634fef5b73ff792481f1949c389d457",
+      "bytes": 481
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/002.receipt.json",
+      "sha256": "972fcdc7650f581a16b637f1c7b9f852c6d1a14cb312c30aa5fc01c303bef6cc",
+      "bytes": 2210
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/002.request.json",
+      "sha256": "6666c39a8e3bb82f12aa0c093f9abf9dabeeb9d95b43d8520171ef1686e481cc",
+      "bytes": 6584
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/002.response.txt",
+      "sha256": "00f0ef0e88c2e387b415b462979184411086779de5f57c1005aaed4d23dce49f",
+      "bytes": 223
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/003.receipt.json",
+      "sha256": "4a77fd31dae5d112ac788b22f104cef06b083ff3ac3a8cc2a9a89b6fc102bbda",
+      "bytes": 2199
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/003.request.json",
+      "sha256": "27254e332d6401803416d2927e17dd50cae52b24f09606199fee3f9d03011e93",
+      "bytes": 17530
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/003.response.txt",
+      "sha256": "8216e37504b2125539f3945d5dae9596de6f945236d3987ee1f968c9cd880e16",
+      "bytes": 567
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/004.receipt.json",
+      "sha256": "255303e6c235f89d6f5bd41ab9f18af54431e901905e1ad4a9d8314eb67cd8a5",
+      "bytes": 2215
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/004.request.json",
+      "sha256": "998f220f6a25522f550c34e6973992fde4389e61d6258587f75aca8fc461bcfa",
+      "bytes": 7294
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/004.response.txt",
+      "sha256": "f8d1ca7b8c4d15e1705f04697d6693c157427d8bd1efb363b9d8945cab0c9fd8",
+      "bytes": 302
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/005.receipt.json",
+      "sha256": "1142c235077f758b56b6cff4551d5bb2510124cefc7471174d5b1b4bd4ce37fb",
+      "bytes": 2202
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/005.request.json",
+      "sha256": "425e2c66cbfedb4e1ac95f702d9de672ac915b8aa75e4c940f1fdbdd6b411c21",
+      "bytes": 17453
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/005.response.txt",
+      "sha256": "2ca86b9a60bb2b954a795424c151827fcc4888faed2cccbd55e6c35167eb831d",
+      "bytes": 549
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/006.receipt.json",
+      "sha256": "fff2b192a9f83e283dd8a9713da19cee5784f2468513d834a66307e7d7c88563",
+      "bytes": 2211
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/006.request.json",
+      "sha256": "2b270b0b60c1b8a155f670c1ff93516c60c9bf85dbfdad0f999af10f949008b0",
+      "bytes": 7400
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/006.response.txt",
+      "sha256": "1f7d5981b73e29bf46f2d760992b2945bcc973b8dff0ae1e11ee1eb62fdfd761",
+      "bytes": 242
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/007.receipt.json",
+      "sha256": "1e44d884a584031aed867a0ed27f3537730aa8b72cb03c562b5bf9332d70f1e9",
+      "bytes": 2216
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/007.request.json",
+      "sha256": "809807c2f3ba57b953ca6887e71276ef3f2014653653c0d83da09c1366c7f659",
+      "bytes": 19651
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/007.response.txt",
+      "sha256": "b072ad3ea88d2087dd8e56a1c42d6e18b9fcbf2de525b038b39164119c0a2e26",
+      "bytes": 5085
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/008.receipt.json",
+      "sha256": "6e92aa743a829f41e69d03f1b641c4c366b0d0b15640e8d283718c7b6d988d50",
+      "bytes": 2217
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/008.request.json",
+      "sha256": "ca6ebf59a407f356a36c373ec36544e0b20d8a9a23f5e437842a7cb7af1b6bb8",
+      "bytes": 25820
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/calls/f23e7a334c2940c796d76b07ee171b54/008.response.txt",
+      "sha256": "2e23ad142756c060f5cecb05f114dad174b4828318e7205685e05f80ba4b8dfa",
+      "bytes": 4421
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-2t36mevc.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-2t36mevc.stdout.txt",
+      "sha256": "74b506047335ab6f0fb68797e2880b89899d4478b3d8ab4f3223847aece7cdfd",
+      "bytes": 5088
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-31z8bsap.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-31z8bsap.stdout.txt",
+      "sha256": "6c355e25f9f7e0d68922c7daa989a5b1114388142d6a70d585cbb0bed7cb007b",
+      "bytes": 5352
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-3q4bavbq.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-3q4bavbq.stdout.txt",
+      "sha256": "d57ce60f26afa23bd063a94ab98d138e836f3510998a91366bc934f4a224cc3a",
+      "bytes": 4410
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-404wh38b.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-404wh38b.stdout.txt",
+      "sha256": "30a34b95eb0eadcbe34a0a09f96b3138617d8f3b3ec5d27cb5d3c48ace6a99d0",
+      "bytes": 1320
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-4cuu3cdt.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-4cuu3cdt.stdout.txt",
+      "sha256": "e8ef27e67159a9056b1621041e98f2383998de51a70bd31bb148347b6e73fb67",
+      "bytes": 573
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-4g4ndz07.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-4g4ndz07.stdout.txt",
+      "sha256": "ed51cc9f67318b21109ba7cc32cc72ce92ccde5c14019b57c56b75fe6f4a874e",
+      "bytes": 606
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-52txm7ja.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-52txm7ja.stdout.txt",
+      "sha256": "798aa3c81faeba8097ea831c9ada5f281838ed6df3fd3b385698fe85355d1167",
+      "bytes": 921
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-58gti2ey.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-58gti2ey.stdout.txt",
+      "sha256": "a91f52445cbdf0bc0de608867a01dc68b3474c884f28a8c0a7af57e9be5c4b3d",
+      "bytes": 6122
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-5rlwrk75.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-5rlwrk75.stdout.txt",
+      "sha256": "6833b77a561f36d8bbd94ba069d3e15060ed238acdd332476c6477a06271b94a",
+      "bytes": 690
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-6bpruz2p.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-6bpruz2p.stdout.txt",
+      "sha256": "464281a1ae8cd06a5cf28fda28a35d28d3c34ced6f3aab096d93b9ebc46316d2",
+      "bytes": 578
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-6pzd0r7d.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-6pzd0r7d.stdout.txt",
+      "sha256": "cdcbe3de69f24ad91243c6090e668a5338433c4dda0e5246b7e995427d379f94",
+      "bytes": 6078
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-6qkxa_aa.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-6qkxa_aa.stdout.txt",
+      "sha256": "55a2303269fc0d5effca09161734fe4a91e81fad84803f7d4fa1973358313c12",
+      "bytes": 588
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-728h8mfw.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-728h8mfw.stdout.txt",
+      "sha256": "7f90075251e6fc18ed6147902c8be4cdcb52d30543212a9ae900b61fe8be55d7",
+      "bytes": 6203
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-72_mflvn.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-72_mflvn.stdout.txt",
+      "sha256": "1d8b66dad939f39b536f150ff793e4bca5a943e0db7428582fa75bb2175f5e53",
+      "bytes": 6419
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7_36i47i.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7_36i47i.stdout.txt",
+      "sha256": "a65b4a024664e321b2e09dd9795d0c2ffa39e616e65f21ce33988ff9e79e1b95",
+      "bytes": 641
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7f2polh7.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7f2polh7.stdout.txt",
+      "sha256": "1d4ae08b904c47ebda72b8784e1e6ed11c060bf8fc8913d951b07f18b8ef8a12",
+      "bytes": 507
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7ifs2vx1.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7ifs2vx1.stdout.txt",
+      "sha256": "ad6d752bfd08b415d89165558f121f6320c54cfa7502dab16b713ac6a9839adf",
+      "bytes": 719
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7o43ba_0.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7o43ba_0.stdout.txt",
+      "sha256": "1495392c92663a612669cd7ad395454373d5cc1c2cc1ad51333fc646c1631fa6",
+      "bytes": 5321
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7szr8n2t.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7szr8n2t.stdout.txt",
+      "sha256": "b3f2a8b27a839b919e5506d2718142ea56e7cc69d3cbf46a078e6f3f5c2b0eee",
+      "bytes": 712
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7zyl85e8.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-7zyl85e8.stdout.txt",
+      "sha256": "853353a2190747be929626a1bf6951f6c01cd1065a80efc5ad819bc11fe80ad6",
+      "bytes": 825
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-823na8t5.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-823na8t5.stdout.txt",
+      "sha256": "cc4198de193b62cf6ede91ccd7e3462bcddbc71cc505a93db747b2b0463b0abc",
+      "bytes": 1649
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-9k7w6fp4.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-9k7w6fp4.stdout.txt",
+      "sha256": "c48482e98941e493e39210dd81b703381e1d9b8fbb6fc86698b07a5ecaf527f5",
+      "bytes": 844
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-9lovntup.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-9lovntup.stdout.txt",
+      "sha256": "2c2e49317ceb8f44a0f9e2b75972332ade980c630297a4de6bba1adc26f8fcd9",
+      "bytes": 994
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-a39xopyv.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-a39xopyv.stdout.txt",
+      "sha256": "b67383e54ea74c1accaa462c8cadcaa91df824b43e4cd7d1236f2af3b195e7b9",
+      "bytes": 609
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-a91lzfdb.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-a91lzfdb.stdout.txt",
+      "sha256": "67c6ca891d7a222aa4fbb97c09f5b3454629938f7f27a7da2e2462665640b660",
+      "bytes": 598
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ab2i1h5h.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ab2i1h5h.stdout.txt",
+      "sha256": "083e45e104a9f8fea12fcc4c7a8867e543a0389a11b4620a122b157fcee141a5",
+      "bytes": 557
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ac3_bkpe.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ac3_bkpe.stdout.txt",
+      "sha256": "f26a649297707cd420a52972bfda860c1700fa40a5524cf68f90ccc874d87a5e",
+      "bytes": 594
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ccq4dpjh.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ccq4dpjh.stdout.txt",
+      "sha256": "155d84b353933e87fa867239baa065be609af2a6b9f4b2270f183e105ea531e2",
+      "bytes": 693
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-cq1h783o.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-cq1h783o.stdout.txt",
+      "sha256": "6ef0de73a6d6e77ce5a4e72156ea7835a3bf1eee914d56693ff102ca53be1bdf",
+      "bytes": 550
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-dn3ddx6z.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-dn3ddx6z.stdout.txt",
+      "sha256": "9829131bc042720a865aa083174b2fc22b66c169b7be14e7d06965bed52d7db8",
+      "bytes": 502
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-dqaxqqof.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-dqaxqqof.stdout.txt",
+      "sha256": "f056a494174a675927f0320e553e25e529285b280e81d3b44675e3a81fe57c96",
+      "bytes": 580
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-eb1c4pay.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-eb1c4pay.stdout.txt",
+      "sha256": "eaf35bec03a6fec27fac3e82fc105e1640c94e0611e64334b38ea8b3814dfebe",
+      "bytes": 565
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ehmdytgf.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ehmdytgf.stdout.txt",
+      "sha256": "fe2e9e81340d13c92d79c42053d39356971bfc0b4db8b00840c77e33dc6344f2",
+      "bytes": 600
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ernolm_1.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ernolm_1.stdout.txt",
+      "sha256": "1b9342e82f4ab4c19c4ec877524623250fb210e80e0179c2de6258b56ecfc60d",
+      "bytes": 1065
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-fika6phi.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-fika6phi.stdout.txt",
+      "sha256": "25ee96dacec07bccadde4c171cd29d7227f3b29ecddfe05c4894178ff8b62652",
+      "bytes": 916
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-guxgghze.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-guxgghze.stdout.txt",
+      "sha256": "f80ddf9abb5fa5f99d0b554f44088eeed1911f66126a49cc08eb6ce1604a5ef5",
+      "bytes": 6031
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-gx17y9i6.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-gx17y9i6.stdout.txt",
+      "sha256": "ad2932d8a764bd0f546a2b0dd43ab1e8c316f82d05bae9a2e5bb1e03393d5316",
+      "bytes": 5460
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-h21xd13y.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-h21xd13y.stdout.txt",
+      "sha256": "e7ccd45b86d9230adb51fd876fcca2afdbabe2cb4df8b7bf2513553185ce1e80",
+      "bytes": 1074
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-if_ct0bz.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-if_ct0bz.stdout.txt",
+      "sha256": "dd29d866bcd10fc2e624a122cd47dbffa491b55b45d5a8836477d008e98a8d08",
+      "bytes": 580
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-iw1ysa4s.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-iw1ysa4s.stdout.txt",
+      "sha256": "aac96f0d7af1a659dd3a80b39c5e579a6fc3062d93468a790c9e56d3176666e5",
+      "bytes": 5639
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-iwen33_y.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-iwen33_y.stdout.txt",
+      "sha256": "06df3056912df4ec101c96539484611269b7d79f68093b44fc916977a2e24c26",
+      "bytes": 8076
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-j2923a7l.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-j2923a7l.stdout.txt",
+      "sha256": "e1c4e9331db8b23227d97be3d7023ba40f01635a7dcdda96db734648f5b02dec",
+      "bytes": 523
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-jk1u02co.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-jk1u02co.stdout.txt",
+      "sha256": "0589441dc98a0e59120ece8b482f04d5afcb6760e22463c6da3472800d4f5841",
+      "bytes": 5685
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-jpa66die.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-jpa66die.stdout.txt",
+      "sha256": "39a4d4707d7e9684f1853d02d28103b6665b52dc2c1c15334224cdeb15cd866c",
+      "bytes": 937
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-jzc59g7e.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-jzc59g7e.stdout.txt",
+      "sha256": "1b6831ea0979137967af8298bb8ee5c1f6cbe9759bf6b5e84993d76cc0d5918d",
+      "bytes": 1500
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-k99ztwx9.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-k99ztwx9.stdout.txt",
+      "sha256": "a7b9254e623eb14814043a9e26b9081550bc2326e5db70dd22ba862db39d2501",
+      "bytes": 1022
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-klgdcm98.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-klgdcm98.stdout.txt",
+      "sha256": "e43e68217e842c681f5b5ca0e849e4fda084948827aabe97f10ff1919d927c69",
+      "bytes": 6851
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-kqy_rw9c.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-kqy_rw9c.stdout.txt",
+      "sha256": "c0dc94cc8c10bc296ef95230c8db215a65a9be430053c4b17047a0e85d98c930",
+      "bytes": 7358
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-l3gorob5.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-l3gorob5.stdout.txt",
+      "sha256": "dec46e24bcb7722cba640e83609bf00740a2c70da50032150535285b142a04d3",
+      "bytes": 5997
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-l42wbnbr.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-l42wbnbr.stdout.txt",
+      "sha256": "e9d1ed0a53001da06886ad5348200a4e9b3e5ee84e01852e7c4ca09c6ccde970",
+      "bytes": 659
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-miwnl272.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-miwnl272.stdout.txt",
+      "sha256": "bcfed2c6dac7956355cd54a7f5548ed55ea18105277a849739c4de693be96aff",
+      "bytes": 1815
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-mq6xjdva.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-mq6xjdva.stdout.txt",
+      "sha256": "2fa0a63a56d2662074b41dd099e449ec13d0efec5afe99d5430dd860b09f7d55",
+      "bytes": 927
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-mxtmcrr7.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-mxtmcrr7.stdout.txt",
+      "sha256": "91d1169e2ecf0e3e762fc65c8370a55aec3fbfd9cd23fe6192e0c00088fa613b",
+      "bytes": 529
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-n10pwemj.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-n10pwemj.stdout.txt",
+      "sha256": "8c6754f032b3d6f458881a9f73822b1fbde67703423b96c42a6e68f40b3bd3b0",
+      "bytes": 844
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ndzspo0c.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ndzspo0c.stdout.txt",
+      "sha256": "7d8861e9d7103cb8f4f2c7ba888d6df8221195c812ee6394a0a74e27a455c0ef",
+      "bytes": 7344
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-now2v5b_.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-now2v5b_.stdout.txt",
+      "sha256": "9debcc67dc1b08c28bfbf7330f8adbb385be3ced9131a4df419eef58db0ab0f9",
+      "bytes": 6228
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-oedmih9m.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-oedmih9m.stdout.txt",
+      "sha256": "a46ba0a9834d25973c8af1a3d71a8384b1b8cb848bbd1497fe4bd5d0ca05579b",
+      "bytes": 902
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-oljei40n.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-oljei40n.stdout.txt",
+      "sha256": "d2baa7c9b65f25931c2cdeaff38ae444068942483af40c5b6396266f8179a89f",
+      "bytes": 956
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-p882y46b.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-p882y46b.stdout.txt",
+      "sha256": "db706d6abd26147f9f25623a832b6df147a19837b5f6730eacd6f71dce83cc52",
+      "bytes": 6028
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-pmr373kq.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-pmr373kq.stdout.txt",
+      "sha256": "ad179ab9f387d835ee1859552d8e8ddbc62df13481d7704e79e4ecd7b3b431eb",
+      "bytes": 581
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ptl7zipx.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-ptl7zipx.stdout.txt",
+      "sha256": "cd02f9272129f60c876da1e0e0bca172bb5e3904df8afc5a1fe1e4b24ddf7b58",
+      "bytes": 613
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-qd2vspt_.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-qd2vspt_.stdout.txt",
+      "sha256": "39be517f9d5ebd85e6ce107de9caab02846efcf4ed52acba722a55108c91099b",
+      "bytes": 4668
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-qdlatwom.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-qdlatwom.stdout.txt",
+      "sha256": "d445744cfe02d2f82db9186db51f87f89745f0caa207c56b1873aa2b43e98a08",
+      "bytes": 696
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-qu1uj7df.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-qu1uj7df.stdout.txt",
+      "sha256": "5c91581137d71b76bef2783c51b28cd3e33ee8c45db5b30dc625b3050a2b0cd2",
+      "bytes": 601
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-tm5e_p3c.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-tm5e_p3c.stdout.txt",
+      "sha256": "036444350951192f8b9e464ca10ed4dc2370032ca3431d3187be8faa8eb61041",
+      "bytes": 912
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-u05cruki.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-u05cruki.stdout.txt",
+      "sha256": "b909f5035d9cd758cbdf88338fb891d74aaa3503c3d918d9d676d207df6d09aa",
+      "bytes": 1079
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-u_kl9utq.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-u_kl9utq.stdout.txt",
+      "sha256": "62f80151125bfd2fcb55b79f879438db6e510df68489268af3e7aa1207c69e6e",
+      "bytes": 694
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-uuf2fm0l.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-uuf2fm0l.stdout.txt",
+      "sha256": "5ce47755e97469d25c24b0060698dd320328b91d2a598b370956ead3505dabc5",
+      "bytes": 1070
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-vs52utqs.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-vs52utqs.stdout.txt",
+      "sha256": "1010212ec1723ebfc60c9fd7618902903947dedb496cac20c66da2bbcc7c39f5",
+      "bytes": 967
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-vs8_dnxe.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-vs8_dnxe.stdout.txt",
+      "sha256": "8599d79b0660a391d82d3f80db8522faf0e30db11b08b231f13eb68f93513593",
+      "bytes": 801
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-w1v0mirh.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-w1v0mirh.stdout.txt",
+      "sha256": "127812b133f5504d7679ebb21f2f1774e811515c4ff841a84c16df2db455a492",
+      "bytes": 570
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-wao0_qz6.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-wao0_qz6.stdout.txt",
+      "sha256": "be7e451aaf8e3c8244353f14e9f1524cc20f03d34e53a48497867acd82cdd13c",
+      "bytes": 543
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-wr9t6m90.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-wr9t6m90.stdout.txt",
+      "sha256": "1fc5507b6a105bb0d5edd49a87ce5cd59805d03d62ee8b8b16faaf323a9557b0",
+      "bytes": 592
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-x9se09lg.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-x9se09lg.stdout.txt",
+      "sha256": "3ba802d4a7a98d63ed246786f80172748b5e3627f9d42f8ea0f1d60943165e26",
+      "bytes": 501
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-y3c1jdlw.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-y3c1jdlw.stdout.txt",
+      "sha256": "07442273a58ddb5c5d9576218cfe7922436040ebc5c5a2beb15bc902b9263ae4",
+      "bytes": 7157
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-y621pwyt.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-y621pwyt.stdout.txt",
+      "sha256": "db9d8d068b6e1f9b1c4a5841a99cd82ef7f72bee656c1a3bf437fd568467be40",
+      "bytes": 930
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-z281a3qb.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/build/prompts/cli/call-z281a3qb.stdout.txt",
+      "sha256": "f88f3b954695dbacc5ef470601a9ce0d570ed7b2ea1da2886508268ddb407f6c",
+      "bytes": 621
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/checkpoint-copy-provenance.json",
+      "sha256": "2047d4da65cf6b6ece5d78efa50ed329ee92a611b2a73579a8fe87c04376b7db",
+      "bytes": 56030
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/contracts.yaml",
+      "sha256": "61c9271492ae89d964cabd49eb09f7a1bf3bb82fe6f6b263bf070df9a82d5656",
+      "bytes": 4184
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/glossary.yaml",
+      "sha256": "f41ebba40104c90697a1418e2c5ab5f550a362f2832afe41ffc8c0ff34b719a2",
+      "bytes": 13962
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/product-evidence/callback-observation.json",
+      "sha256": "f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c",
+      "bytes": 5037
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/product-evidence/issue211-execution-contract.json",
+      "sha256": "fe1292511ffbf64b3e2aaee046d28048675c0283b82187cfa421e0431c834e0d",
+      "bytes": 809
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/product-evidence/libcamera-stack.txt",
+      "sha256": "fdd39a9c11328e6bb549203a2395b3f9331fa15d5e2da711b703643e299f8fc0",
+      "bytes": 606
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/product-evidence/official-cam-observation.json",
+      "sha256": "6724319768e46327e26f324d536ccaf22e9b71852e055a7b3c91318f0c11a7f1",
+      "bytes": 15711
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/product-evidence/official-cam-reader.json",
+      "sha256": "6ad6510d9624cd8075ccdc0a4622214c441afc5a778a2e577b4c7a76bf10efc0",
+      "bytes": 5943
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/product-evidence/official-cam-reproduction.md",
+      "sha256": "93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7",
+      "bytes": 7035
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/products.yaml",
+      "sha256": "146f4ac579dbe71bac9dec5ffafbe0bb3413e7bb56a402f0c01c4cf2c5f24c4c",
+      "bytes": 6918
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/scenarios.yaml",
+      "sha256": "a01db3a97239e64ce609def2e2da688a8f83492ed46188e67f82026fb8e4ffa4",
+      "bytes": 3594
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/sections.yaml",
+      "sha256": "cf66de542438289a26d7a567277d16f474948817bec1bcd857045f7fedfb9d11",
+      "bytes": 451852
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/visuals.before-contract-label-limit.yaml",
+      "sha256": "80af55c14168c03944d426a0725777372d45730d1df388e77eb4a7868a62e9a0",
+      "bytes": 177375
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/visuals.before-rejected-stop-03.yaml",
+      "sha256": "0f0a05f9c984f4bd68538a201b29565c2f4c9927c2013023c09fa99232e23ff9",
+      "bytes": 175103
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/visuals.before-rejected-stop.yaml",
+      "sha256": "5aa7488d524ec18083046b1d18d77736bc71da9492c16ba787fe3ddfaa49f267",
+      "bytes": 173286
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/visuals.before-truncated-english.yaml",
+      "sha256": "b73d6c49682a8c2b9a1c52901ff718dcc571c1891f7fcc17531a97a47c78bec2",
+      "bytes": 176231
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/visuals.before-truncated-node.yaml",
+      "sha256": "7815f247562c39d66b6290538565e62f7f162411fac35cf1556d7958d8df31ee",
+      "bytes": 176694
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/visuals.final.yaml",
+      "sha256": "cb28d3d64eb57d18ac8f8f66aac8b42291a98db76e283c79f336a98270efb173",
+      "bytes": 135549
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/visuals.next.yaml",
+      "sha256": "1deae9d7e37267d8df74beb245086164efdae9ed5d95a0bd72670f105a99efc8",
+      "bytes": 105897
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/config/visuals.yaml",
+      "sha256": "dd9457f87fc9df5cc09853efd90114a3434cc3e2e72d4fdcc12c4fb5401cc064",
+      "bytes": 391753
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/followup-provenance.json",
+      "sha256": "8ceef599c4ca8a864a7c651232803b3525cb3e6108782e74d3dcac80c5519f99",
+      "bytes": 773
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/generation.yaml",
+      "sha256": "debcdb4689c67d3c04c315c8f194bb2d1776b70b4b1f1c4b4b408301e5fb7360",
+      "bytes": 2759
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/run/facts/facts.json",
+      "sha256": "0119dcb4081a8854085a3c5ec40cc0612ca5f885a61013246672ce70fb149bb2",
+      "bytes": 2580289
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07/step-01/run/manuscripts/ipa.md",
+      "sha256": "18b4880b0c6e31f9570b683411c32c7248c32026114d5efa4a74f9964fd89f78",
+      "bytes": 334809
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07.log",
+      "sha256": "670af5a3d26733de1f57e631a5dfe7734ec91f8c1881dc02cfeb537e02185af3",
+      "bytes": 168
+    },
+    {
+      "path": "build/issue215/ipa-grounded-replacements-07.yaml",
+      "sha256": "36e19b6c26bb16761e26615cc8b664861a8ba3b1388f682316354e44752fb8c8",
+      "bytes": 4696
+    },
+    {
+      "path": "build/issue215/ipa-sync-source-additions-04.yaml",
+      "sha256": "6ff0ed55b27d9d21213f2104202d6e0259f87dca3a78dca1faf66a9b7f311ce8",
+      "bytes": 324
+    },
+    {
+      "path": "build/issue215/ipa-sync-source-additions-05.yaml",
+      "sha256": "35fb34e6d0596183a3322c87bf804b38c4ee1bc530d20b0bf942f80dd147dd5e",
+      "bytes": 462
+    },
+    {
+      "path": "build/issue215/pytest-103.log",
+      "sha256": "2fd328f0058c67bda8179db599d9d17fc12f5d73c8633e1f332f274ee44d3f07",
+      "bytes": 4908
+    },
+    {
+      "path": "build/issue215/pytest-104.log",
+      "sha256": "ed15eb9b4e2f317bdebce530681740cf1fd1a5520bcdc1f69949003e29b01976",
+      "bytes": 102
+    },
+    {
+      "path": "build/issue215/pytest-105.log",
+      "sha256": "836d4960a03a267a21cf389793dfc9b6383469e10f4f9c8c168318b742c29218",
+      "bytes": 93
+    },
+    {
+      "path": "build/issue215/pytest-106.log",
+      "sha256": "ad86688f83ce2186160276959e4c781a5ff21fc6e5dfd561a96b233f46bd4c61",
+      "bytes": 2337
+    },
+    {
+      "path": "build/issue215/pytest-107.log",
+      "sha256": "e6cd8d67cd38be947dbc34c6151f65eeaf046f742066a3be3edb090e70ed8204",
+      "bytes": 193
+    }
+  ]
+}

@@ -229,12 +229,25 @@
       "current_tests_passed": 240,
       "current_tests_skipped": 1,
       "validation_record": "preservation-validation.json",
-      "implementation_commit": "21f1c952b64480315a0ae571d032f6c9fd7b1628"
+      "implementation_commit": "21f1c952b64480315a0ae571d032f6c9fd7b1628",
+      "pr": 236,
+      "merged": true,
+      "merge_commit": "47d97132f79d848c20a3de20c2ca4a99930da8ea",
+      "ci_run": 41737833639,
+      "ci": "All four Windows/Linux Python3.11/3.14 jobs passed; Ubuntu2561, Windows2560+1skip"
     },
     "remediation_generation": {
-      "ipa": "Discovery/signature/interface creation/Threaded stop/Isolated destructor/module load completed generation; synchronous IPC was rejected twice and is being retried with narrower immutable source windows. Independent acceptance remains pending.",
-      "scenarios": "Stop, complete_request, configure and manager_start replacement generation completed; queue_request and vendor-assurance remain in progress.",
+      "ipa": "All seven replacement graphs completed generation, including synchronous IPC after whole_sources support. Separate materialized review09 found eight additional semantic gaps across existing/new graphs; all remain pending refinement.",
+      "scenarios": "All six section replacement runs09 completed generation. Separate materialized source/label reviews09 found additional semantic gaps; no final item acceptance is claimed.",
       "human_review": "pending"
+    },
+    "atomic_source_quotes": {
+      "validation_record": "atomic-source-validation.json",
+      "review": "code-review-58",
+      "findings": [],
+      "tests_passed": 95,
+      "archive": "native-evidence-06.tar.xz",
+      "scope": "Function-window evidence support; diagram semantic acceptance still pending"
     }
   },
   "completion": "Goal remains active; unresolved actual diagrams and external-session integration, final reviews/CI/merges/Pages/public build identity verification remain required. Do not close issue215."
