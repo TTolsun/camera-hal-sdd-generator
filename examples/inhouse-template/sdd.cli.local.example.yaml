@@ -1,0 +1,11 @@
+# 사용자가 선택한 CLI를 적용할 때 sdd.yaml 옆의 sdd.local.yaml로 복사한다.
+# 기존 sdd.local.yaml이 있으면 덮어쓰지 말고 agent 항목만 병합한다.
+# runner만 바꾸면 기존 모델·인자가 상속되므로 아래 네 항목을 함께 지정한다.
+agent:
+  kind: cli
+  runner: hermes             # hermes | opencode | claude | codex
+  command: []               # PATH의 선택한 CLI. 필요하면 승인된 실행 파일의 인자 목록
+  model: ""                 # 해당 CLI에 설정한 모델. 실행별 모델 ID로 바꿀 수 있음
+  args: []                  # 이전 실행기의 인자를 지움. 선택한 CLI의 인자로 교체
+# 이 파일 자체는 자동 적용되지 않는다. Hermes는 선택 예시이며 공통 필수값이 아니다.
+# 인증은 CLI에서 설정한다. 토큰·사내 모델명은 공개 저장소에 커밋하지 않는다.
