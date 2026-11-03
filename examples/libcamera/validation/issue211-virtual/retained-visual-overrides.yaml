@@ -5,7 +5,7 @@
   generation: llm
   max_nodes: 9
   required_symbols:
-  - exportFrameBuffers
+  - allocate
   - createRequest
   - addBuffer
   - CameraSession::queueRequest
@@ -16,31 +16,34 @@
   - queueCount_
   question: 초기 캡처를 시작할 때 버퍼·요청 준비와 실제 큐 제출을 거치는 조건은 무엇입니까?
   sources:
-  - virtual-buffer-allocation
   - cam-request-buffers
-  - allocator-to-camera
-  - camera-export
   - camera-queue
   - pipeline-dispatch
-  - virtual2-config
   max_label_chars: 70
   condition_display: evidence
   require_connected: true
-  prompt: '초기 요청 준비 그림을 아홉 노드로 작성합니다. n0 exportFrameBuffers: DMA-BUF 할당 실패? true→n5 초기 시작 실패 반환,false→n1
-    createRequest: 요청 생성 실패? true→n5,false→n2 addBuffer: 버퍼 연결 실패? true→n5,false→n3 CameraSession::queueRequest:
+  prompt: '초기 요청 준비 그림을 아홉 노드로 작성합니다. n0 allocate: cam의 allocator_->allocate 호출 결과가 실패인가? true→n5 초기 시작
+    실패 반환,false→n1 createRequest: 요청 생성 실패? true→n5,false→n2 addBuffer: 버퍼 연결 실패? true→n5,false→n3 CameraSession::queueRequest:
     설정된 제출 한도가 이미 찼는가? true→n6 captureLimit_: 제출 없이 도우미 반환,false→n8 queueCount_: 제출 시도 수 증가→n4 Camera::queueRequest:
     실제 카메라 큐 호출 action box→n7 PipelineHandler::queueRequest: 검증 통과 시 Camera 호출 내부에서 queued 비동기 호출을 예약합니다.
     n4는 호출 결과를 검사하는 decision이 아닙니다. n4→n7 always 간선은 호출 내부의 검증 통과 경로만 요약하며 호출 반환 후 예약한다고 그리지 않습니다. Camera
     API 내부 검증 실패의 여러 반환 분기는 이 그림의 정상 내부 예약 요약 밖이며 전체 Camera API 제어 흐름 그림으로 주장하지 않습니다. n5 오류 반환은 n0/n1/n2의
     시작 준비 실패를 받습니다. 도우미 한도 true/false 및 세 준비 실패 guard는 실제 소스 조건의 두 결과를 보존합니다. n0/n1/n2/n3는 decision입니다.
     한영 라벨에서는 함수·내부 카운터 이름·반환 숫자·긴 괄호 경고를 모두 근거에 두고, 위에 설명한 짧은 행동·질문만 사용합니다. n7의 짧은 라벨에는 호출 내부 예약이며 검증
-    통과 경로임을 명시합니다. 노드의 symbol과 quote_ids로 정확한 소스 이름을 보존합니다. 한영 authored 간선은 20자 이내입니다.'
+    통과 경로임을 명시합니다. 노드의 symbol과 quote_ids로 정확한 소스 이름을 보존합니다. 한영 authored 간선은 20자 이내입니다.  n0는 할당기 유효성만 보는
+    검사가 아니라 cam startCapture의 allocator_->allocate 반환 ret<0를 판정합니다. 할당기가 유효해도 할당 호출은 실패할 수 있습니다. 노드 라벨은
+    버퍼 할당 실패 여부만 짧게 질문합니다. 원시 호출식·ret 비교·할당기 유효성 검사는 화면에 쓰지 않습니다. 모든 노드·간선 인용은 현재 제공된 세 source 창에서 새로
+    선택하며 제거된 virtual-buffer-allocation, allocator-to-camera, camera-export 인용을 재사용하지 않습니다. n4는 카메라 큐 호출이라는
+    행동만, n7은 호출 내부에서 검증 통과 시 비동기 예약한다는 행동만 짧게 표시합니다. 검증 실패 분기는 이 그림 밖이라는 괄호 경고를 노드에 넣지 않습니다. '
   answer_contract_en:
     basis: implementation
     reject_patterns:
     - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
       message: Use concise preparation actions and decisions in authored labels. Keep function/counter
         identifiers in symbol bindings and evidence.
+    - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+      message: The allocation gate tests the actual cam allocate() return, not allocator validity. Keep
+        comparisons and raw calls in source evidence.
   max_edge_label_chars: 20
   answer_contract:
     basis: implementation
@@ -48,6 +51,9 @@
     - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
       message: Use concise preparation actions and decisions in authored labels. Keep function/counter
         identifiers in symbol bindings and evidence.
+    - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+      message: The allocation gate tests the actual cam allocate() return, not allocator validity. Keep
+        comparisons and raw calls in source evidence.
   require_guard_branches: true
   while_conditions: true
 - id: request-completion-order
