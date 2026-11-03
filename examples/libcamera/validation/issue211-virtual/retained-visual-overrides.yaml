@@ -1,10 +1,54 @@
+- id: submission-gate
+  topic: virtual-principle
+  kind: decision
+  title: DMA-BUF 요청 준비와 제출 한도 게이트를 실제 Camera 큐 호출과 구분한다 (소스 분석)
+  generation: llm
+  max_nodes: 9
+  required_symbols:
+  - exportFrameBuffers
+  - createRequest
+  - addBuffer
+  - CameraSession::queueRequest
+  - Camera::queueRequest
+  - startCapture
+  - captureLimit_
+  - PipelineHandler::queueRequest
+  - queueCount_
+  question: 버퍼·요청 준비와 제출 도우미의 한도 검사를 거쳐 실제 카메라 큐 호출로 진행하는 조건은 무엇입니까?
+  sources:
+  - virtual-buffer-allocation
+  - cam-request-buffers
+  - allocator-to-camera
+  - camera-export
+  - camera-queue
+  - pipeline-dispatch
+  - virtual2-config
+  max_label_chars: 70
+  condition_display: evidence
+  require_connected: true
+  prompt: 정확히 9개 노드 n0..n8로 별도 준비 그림을 새로 작성하세요. n0 exportFrameBuffers 실제 할당 실패 guard true→n5 시작 실패 반환,
+    false→n1 요청 생성 실패 여부(!request) true→n5,false→n2 addBuffer 실패 guard true→n5,false→n3입니다. 세 검사 모두 cam
+    startCapture 실제 guard 근거를 갖춥니다. 다른 시작 조건이 충족된 주요 경로의 요약이며 n5는 앞선 요청이 전혀 제출되지 않았다고 단정하지 않습니다. n3 CameraSession::queueRequest는
+    한도가 설정되고 제출 시도 수가 이미 한도 이상인지 결정합니다. 실제 helper guard true→n6 captureLimit_는 이 요청을 제출하지 않고 0 반환, false→n8
+    queueCount_ 제출 시도 수 증가→n4 Camera::queueRequest 실제 API 호출 실패 판정입니다. n4의 guard는 호출자 startCapture의 실제
+    helper ret<0를 인용하되 도우미 한도 분기를 이미 통과한 Camera 호출 결과임을 밝힙니다. true→n5,false→n7 PipelineHandler::queueRequest
+    비동기 전달이며 다음 패턴 그림으로 이어집니다. helper가 0 반환했다고 언제나 제출한 것으로 그리지 마세요. 짧은 한영 행동·질문 라벨, 한 노드 한 행동, 간선 20자
+    이내입니다. 모든 실제 guard의 양쪽 결과는 같은 decision에서 출발하며 source guard를 보존합니다. 제출 한도는 재사용 후 재제출에도 같은 도우미로 적용됩니다.
+    이 그림에 변환/완료 동작을 추가하지 마세요.
+  answer_contract_en:
+    basis: implementation
+  max_edge_label_chars: 20
+  answer_contract:
+    basis: implementation
+  require_guard_branches: true
+  while_conditions: true
 - id: request-completion-order
   topic: virtual-principle
   kind: flow
   title: 버퍼 완료와 요청 완료·순서 통지는 별개입니다
   generation: llm
-  max_nodes: 8
-  max_label_chars: 72
+  max_nodes: 7
+  max_label_chars: 56
   max_edge_label_chars: 20
   condition_display: evidence
   while_conditions: true
@@ -14,26 +58,28 @@
   - completeBuffer
   - FrameBuffer
   - completeRequest
-  - queuedRequests_
   - RequestPending
   - requestCompleted
-  - doQueueRequests
+  - queuedRequests_
   sources:
   - virtual-completion
   - pipeline-completion
   - camera-notification
   - cam-signal-connection
   - virtual-start
-  question: 버퍼 완료 뒤 요청 완료와 제출 순서 통지는 어떻게 구분되며 Pending을 만나면 어떤 작업이 이어집니까?
-  prompt: n0,n3,n6의 한영 라벨만 바꿉니다. n0는 앞 가상 프레임 그림에서 나온 버퍼 완료 신호를 핸들러가 받는다는 연결입니다. n3는 현재 요청의 상태를 완료로 변경하는
-    한 단계입니다. 이는 함수 전체 동작이 이 단계뿐이라는 뜻이 아니므로 only/만이라는 제한이나 호출 순서 제약 설명을 쓰지 않습니다. n3 뒤의 큐 검사·앞 Pending 검사·통지·대기
-    요청 처리는 기존 개별 노드가 나타냅니다. n6는 큐 맨 앞 요청을 제출 순서대로 꺼내 requestCompleted 신호로 cam의 requestComplete 콜백에 통지한다는
-    동작이며 다음 콜백 그림으로 연결됨을 짧게 표시합니다. critical requestCompleted와 requestComplete 이름은 보존하여 cam의 실제 콜백 연결을
-    명확히 합니다. 다른 모든 올바른 라벨·인용·노드·실제 조건·큐 반복은 유지합니다. 간선 authored 라벨은 한영 20자 이내로 짧게 쓰고 필수 실제 source guards는
-    보존합니다. 처음부터 생성할 때 n0는 버퍼 완료 수신, n1은 이 요청의 모든 버퍼 완료 여부, n2는 이 요청의 나머지 FrameBuffer 완료 대기, n3는 현재 요청
-    상태를 완료로 변경하는 단계, n4는 제출 큐에 요청이 남았는지 반복 검사, n5는 큐 맨 앞 Pending 검사, n6는 완료된 맨 앞을 꺼내 cam에 순서 통지하고 n4로
-    반복, n7은 후속 대기 요청 처리입니다. n1 false→n2, true→n3→n4, n4 true→n5, false→n7, n5 true→n7, false→n6→n4입니다.
-    실제 분기 조건과 source symbol은 보존하고 내부 변수·호출 이름은 화면 라벨에 쓰지 않습니다.
+  question: 버퍼 완료 뒤 모든 버퍼 완료 조건, 앞선 Pending 요청에 의한 통지 대기, 가능한 완료 요청들의 순서 통지는 어떻게 cam 콜백으로 이어집니까?
+  prompt: '일곱 노드로 버퍼 완료와 통지 순서만 명시합니다. n0는 앞 그림의 버퍼 완료 수신, n1은 해당 요청의 모든 버퍼 완료 판정입니다. 미완료 결과는 n2 나머지 버퍼
+    완료 대기, 완료 결과는 n3 이미 큐에 들어간 해당 요청의 완료 상태 표시입니다. n3→n4는 큐 맨 앞 상태 확인 관계입니다. n4(RequestPending)는 큐 맨 앞
+    요청의 실제 Pending guard를 판정합니다. Pending true는 n6(queuedRequests_)의 뒤 요청 통지 보류, false는 n5(requestCompleted)의
+    통지 가능한 완료 큐 앞부분을 제출 순서대로 cam requestComplete에 알리는 요약입니다. n5는 방금 완료 표시한 요청만 즉시 통지한다고 단정하지 않으며, 첫 Pending
+    전까지의 가능한 완료 요청들만 처리하는 집합 동작입니다. 내부 큐 스캔 반복과 후속 새 요청 제출은 이 독자 그림의 범위가 아니며 소스 근거에 남깁니다. n1과 n4는 각 실제
+    guard의 두 결과를 갖춘 decision이고 다른 노드의 간선에 true/false를 붙이지 않습니다. n5 한영 라벨에는 requestCompleted와 cam requestComplete
+    연결을 명시합니다. 구현 변수명은 근거에 두고 짧은 라벨로 설명합니다. 한영 노드 최대 56자, authored 간선 20자입니다. 조건·인용은 현재 소스에서 실제로 확인합니다.
+    이전 초안은 편집 입력이며 실행 증거나 응답 재생이 아닙니다. 이전 초안: 새 범위의 일곱 노드는 제공된 소스에서 새 native CLI 응답으로 구성합니다. 처음 생성할 때
+    일곱 노드는 앞 그림의 버퍼 완료 수신, 모든 요청 버퍼 완료 판정, 나머지 버퍼 완료 대기, 이미 큐에 들어간 요청의 완료 상태 표시, 큐 맨 앞 Pending 판정, 통지
+    가능한 완료 큐 앞부분의 제출 순서 cam 콜백 통지, 뒤 요청 통지 보류입니다. 모든 버퍼 판정과 맨 앞 Pending 판정은 실제 source guard의 true/false
+    두 결과를 갖춥니다. 통지는 막 완료 표시한 요청의 즉시 통지 보장이 아니며 준비된 완료 앞부분만 requestCompleted로 cam requestComplete에 알리는
+    요약입니다. 내부 반복과 새로운 요청 제출은 근거에 남깁니다.'
   answer_contract:
     basis: implementation
     reject_patterns:
@@ -48,6 +94,9 @@
       message: A node describes a completion-marking step, not the entirety of completeRequest. Do not
         claim only/sole behavior or add an internal call-order aside; later nodes show ordered notification
         and waiting work.
+    required_terms:
+    - - requestCompleted
+    - - requestComplete
   answer_contract_en:
     basis: implementation
     reject_patterns:
@@ -62,6 +111,10 @@
       message: A node describes a completion-marking step, not the entirety of completeRequest. Do not
         claim only/sole behavior or add an internal call-order aside; later nodes show ordered notification
         and waiting work.
+    required_terms:
+    - - requestCompleted
+    - - requestComplete
+  require_guard_branches: true
 - id: completion-flow
   topic: flow
   kind: decision
@@ -80,13 +133,9 @@
   - captureDone
   - Request::ReuseBuffers
   question: 기록된 출력 싱크 미요청 경로에서 완료 콜백은 어떤 처리와 종료로 이어집니까?
-  prompt: 현재 그래프의 구조·소스 인용을 유지하고 한영 라벨을 새로 간결하게 작성하세요. 노드는 한 행동 또는 한 질문, 간선은 1~3단어의 짧은 관계나 결과만 표시합니다.
-    노드의 전체 조건이나 행동을 간선에 반복하지 않습니다. 실제 조건은 condition_ref와 인용에서 유지하고 true/false는 자동 표시를 사용합니다. 함수·변수 이름은
-    source symbol과 근거에서 보존하며 화면은 쉬운 행동으로 설명합니다. 노드와 간선의 ID·shape·quote_ids, from·to·condition_ref 및 분기·반복·후속
-    처리 구조는 그대로 유지합니다. 한국어와 영어의 주체·조건·결과는 같습니다. 각 간선의 한영 authored 라벨은 20자 이하입니다. 실패를 성공으로 바꾸거나 호출을 제출 성공으로
-    강화하지 않습니다. 기록된 출력 싱크 미요청 경로입니다. 취소 시 requestComplete 반환, callLater 후 이벤트 루프 processRequest 진입, 한도
-    설정 AND 도달의 진입 검사와 증가 후 검사, 서로 다른 반환·captureDone 결과, Request::ReuseBuffers 후 제출 도우미 호출을 구분합니다. 아래는
-    라벨을 제거한 기존 구조이며 실제 새 CLI가 라벨을 작성하고 모든 검사를 통과해야 합니다.
+  prompt: n6의 한영 라벨만 보완합니다. 한도가 미설정 또는 미도달인 경로에서 프레임 정보를 출력한 뒤 처리 카운터를 하나 증가시킨다는 실제 순서를 둘 다 표시합니다. 카운터
+    증가만 쓰고 프레임 정보 출력을 빠뜨리지 않습니다. 다른 모든 올바른 라벨·노드·간선·취소/진입 한도/증가 뒤 한도 조건과 인용은 그대로 보존합니다. 한영 노드 64자, authored
+    간선 20자 이내의 짧고 분명한 동작구를 씁니다. 실제 조건과 현재 올바른 라벨은 보존합니다.
   sources:
   - callback-and-processing
   - app-start
@@ -104,41 +153,6 @@
   answer_contract:
     basis: implementation
   max_edge_label_chars: 20
-- id: submission-gate
-  topic: flow
-  kind: decision
-  title: 제출 도우미는 별도 카운터로 제출을 제한합니다
-  generation: llm
-  max_nodes: 3
-  required_symbols:
-  - queueCount_
-  - return
-  - camera_
-  question: 제출 도우미의 별도 카운터 한도에 따라 제출하지 않거나 제출을 시도하는 조건은 무엇입니까?
-  sources:
-  - submission-limit
-  max_label_chars: 52
-  condition_display: evidence
-  require_connected: true
-  prompt: 현재 그래프의 구조·소스 인용을 유지하고 한영 라벨을 새로 간결하게 작성하세요. 노드는 한 행동 또는 한 질문, 간선은 1~3단어의 짧은 관계나 결과만 표시합니다.
-    노드의 전체 조건이나 행동을 간선에 반복하지 않습니다. 실제 조건은 condition_ref와 인용에서 유지하고 true/false는 자동 표시를 사용합니다. 함수·변수 이름은
-    source symbol과 근거에서 보존하며 화면은 쉬운 행동으로 설명합니다. 노드와 간선의 ID·shape·quote_ids, from·to·condition_ref 및 분기·반복·후속
-    처리 구조는 그대로 유지합니다. 한국어와 영어의 주체·조건·결과는 같습니다. 각 간선의 한영 authored 라벨은 20자 이하입니다. 실패를 성공으로 바꾸거나 호출을 제출 성공으로
-    강화하지 않습니다. 세 노드로 한도 설정 AND 제출 카운터 도달 판정, 제출 없는 반환, 카운터 증가 후 실제 카메라 제출 시도를 구분합니다. 도우미 진입 이전 재사용을 다시
-    그리지 않습니다. 아래는 라벨을 제거한 기존 구조이며 실제 새 CLI가 라벨을 작성하고 모든 검사를 통과해야 합니다.
-  answer_contract_en:
-    basis: implementation
-    reject_patterns:
-    - pattern: \bretry\b
-      message: Resubmission is not retry after a failure.
-    - pattern: requeue
-      message: This figure starts after reuse; do not move its earlier requeue guard after reuse.
-  max_edge_label_chars: 20
-  answer_contract:
-    basis: implementation
-    reject_patterns:
-    - pattern: requeue
-      message: This figure starts after reuse; do not move its earlier requeue guard after reuse.
 - id: reproduction-flow
   topic: reproduce
   kind: flow

@@ -277,4 +277,54 @@ generation: llm
 require_connected: true
 ```
 
-## max_edge_label_chars\n\n**결론:** `generation: llm` 시각화 계획 항목에 두는 선택 키입니다. 생략하면 edge 전용 길이 제한이 없습니다. 값은 8 이상 240 이하의 정수만 허용하며, edge의 한국어 `label`과 영어 `label_en` 각각에 적용됩니다. node 라벨은 영향을 받지 않습니다.\n\n```yaml\n- id: example_flow\n  topic: example_topic\n  kind: flow\n  title: 예시 흐름\n  question: 예시 질문\n  generation: llm\n  max_label_chars: 120\n  max_edge_label_chars: 60\n```\n\n1. **타입 검사:** 정수가 아닌 값(bool, 실수, 문자열)과 8 미만 또는 240 초과 값은 설정 검사에서 오류로 거부합니다.\n2. **상한 결합:** 실효 상한은 `max_edge_label_chars`와 `max_label_chars` 중 작은 값입니다. `max_label_chars`가 없으면 edge 값만 적용됩니다.\n3. **검사 시점:** 모델이 작성한 원문 label을 먼저 검사합니다. 그 뒤에 소스 조건과 `[true]` 또는 `[false]` 표기가 덧붙으며, 이는 `condition_ref`가 실제 조건을 선택한 경우에만 해당합니다. `always`는 아무것도 덧붙이지 않습니다.\n4. **자르기 없음:** 초과한 label은 자르지 않고 거부합니다. 이 키는 최종 렌더링 폭 상한이 아닙니다.\n5. **이중 검사:** schema를 지원하는 에이전트에는 `maxLength`로 전달되며, 최종 검사는 항상 로컬에서 수행합니다.\n\n**다음 행동:** 이 값을 바꾸면 해당 시각화 계획의 입력 지문만 달라집니다. 다른 시각화 결과는 계속 재사용할 수 있고, 이전 네이티브 초안은 수정용으로 제공될 수 있습니다. 계획을 바꾼 뒤에는 `generate`를 다시 실행합니다.
+## max_edge_label_chars
+
+**결론:** `generation: llm` 시각화 계획 항목에 두는 선택 키입니다. 생략하면 edge 전용 길이 제한이 없습니다. 값은 8 이상 240 이하의 정수만 허용하며, edge의 한국어 `label`과 영어 `label_en` 각각에 적용됩니다. node 라벨은 영향을 받지 않습니다.
+
+```yaml
+- id: example_flow
+  topic: example_topic
+  kind: flow
+  title: 예시 흐름
+  question: 예시 질문
+  generation: llm
+  max_label_chars: 120
+  max_edge_label_chars: 60
+```
+
+1. **타입 검사:** 정수가 아닌 값(bool, 실수, 문자열)과 8 미만 또는 240 초과 값은 설정 검사에서 오류로 거부합니다.
+2. **상한 결합:** 실효 상한은 `max_edge_label_chars`와 `max_label_chars` 중 작은 값입니다. `max_label_chars`가 없으면 edge 값만 적용됩니다.
+3. **검사 시점:** 모델이 작성한 원문 label을 먼저 검사합니다. 그 뒤에 소스 조건과 `[true]` 또는 `[false]` 표기가 덧붙으며, 이는 `condition_ref`가 실제 조건을 선택한 경우에만 해당합니다. `always`는 아무것도 덧붙이지 않습니다.
+4. **자르기 없음:** 초과한 label은 자르지 않고 거부합니다. 이 키는 최종 렌더링 폭 상한이 아닙니다.
+5. **이중 검사:** schema를 지원하는 에이전트에는 `maxLength`로 전달되며, 최종 검사는 항상 로컬에서 수행합니다.
+
+**다음 행동:** 이 값을 바꾸면 해당 시각화 계획의 입력 지문만 달라집니다. 다른 시각화 결과는 계속 재사용할 수 있고, 이전 네이티브 초안은 수정용으로 제공될 수 있습니다. 계획을 바꾼 뒤에는 `generate`를 다시 실행합니다.
+
+## require_guard_branches
+
+**결론:** LLM 시각 계획의 선택적 boolean 플래그입니다. 켜면 조건(guard) 간선이 결정 노드에서 나오는지, 그 노드가 쓰는 원본 조건마다 `true`와 `false` 결과가 모두 있는지 로컬에서 검사합니다.
+
+### 1. 설정 위치와 기본값
+- `generation: llm`인 시각 계획 항목에 둡니다.
+- 생략하면 `false`로 동작합니다.
+- boolean이 아닌 값은 설정 검증에서 거부합니다.
+
+```yaml
+- id: capture-guards
+  topic: capture
+  kind: decision
+  title: 캡처 분기
+  question: 캡처 요청은 어떤 조건에서 처리되는가?
+  generation: llm
+  require_guard_branches: true
+```
+
+### 2. 검사 규칙
+1. `always`가 아닌 `condition_ref` 간선은 `decision` 모양 노드에서 출발해야 합니다.
+2. 그 노드가 사용하는 원본 조건마다 `true`와 `false` 결과가 모두 있어야 합니다.
+3. 기존 원본 바인딩 검사(끝점 심볼과 조건 ID의 인용 근거 포함 여부)는 그대로 적용됩니다.
+4. 프롬프트의 추가 지시는 모델에게 주는 안내일 뿐이며, 실제 강제는 생성 후 로컬 검사가 맡습니다.
+
+### 3. 한계
+- 구조 검사는 원본의 모든 분기를 그리도록 요구하지 않습니다.
+- 의미상 완전성을 증명하지 않으며, 사람 승인을 뜻하지 않습니다.

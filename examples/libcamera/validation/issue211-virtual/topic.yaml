@@ -75,6 +75,10 @@ sources:
   file: src/libcamera/pipeline_handler.cpp
   start: void PipelineHandler::registerRequest(
   end: void PipelineHandler::queueRequest(
+- id: request-status-completion
+  file: src/libcamera/request.cpp
+  start: void Request::Private::complete()
+  end: void Request::Private::doCancelRequest()
 design_prompt: focused
 answer_contract:
   basis: implementation
@@ -90,7 +94,8 @@ parts:
   question: 고정 libcamera 소스에서 분석한 virtual 파이프라인의 개요를 네 짧은 문장으로 설명합니다. 첫 문장은 고정 소스 분석이라는 범위와, 실제 센서 대신
     소프트웨어 테스트 패턴이나 이미지 입력을 지원하는 virtual 기능의 일반 설명입니다. 둘째 문장은 이번에 선택한 Virtual2 구성이 400x300 lines 패턴을 공급한다는
     구체 사례입니다. 기능 전체가 이 설정 하나로 고정됐다고 정의하지 마세요. 셋째 문장은 할당이 성공한 뒤 cam이 실제 DMA-BUF 버퍼를 붙인 요청의 전달을 준비하는 관계입니다.
-    넷째 문장은 CPU가 NV12 변환과 매핑된 버퍼 쓰기를 모두 시도한다는 뜻입니다. 완료 조건과 구현 식별자는 뒤 항목·근거가 맡으므로 반복하지 않습니다.
+    넷째 문장은 CPU가 NV12 변환과 매핑된 버퍼 쓰기를 모두 시도한다는 뜻입니다. 완료 조건과 구현 식별자는 뒤 항목·근거가 맡으므로 반복하지 않습니다. 세 번째 문장에서 버퍼
+    종류는 실제 DMA-BUF임을 반드시 명시합니다.
   sources:
   - virtual-purpose
   - virtual2-config
@@ -120,6 +125,7 @@ parts:
     - - 매핑
     - - 시도
     - - Virtual2
+    - - DMA-BUF
     reject_patterns:
     - pattern: 그림.{0,12}없
       message: 소개 단위에서 다른 단위의 근거나 그림 상태를 부정하지 말고 제공된 기능·설정만 설명하세요.
@@ -177,6 +183,7 @@ parts:
   - camera-queue
   - virtual-start
   - pipeline-register
+  - request-status-completion
   max_statements: 1
   answer_contract:
     basis: implementation

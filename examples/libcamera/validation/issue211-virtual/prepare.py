@@ -52,7 +52,10 @@ p.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=120
 visual = yaml.safe_load((base/'visual.yaml').read_text(encoding='utf-8'))
 p=work/'config/visuals.yaml'; data=yaml.safe_load(p.read_text(encoding='utf-8'))
 overrides = {v['id']: v for v in yaml.safe_load((base/'retained-visual-overrides.yaml').read_text(encoding='utf-8'))}
-data['sections'][section['id']] = [visual] + [overrides.get(v['id'], v) for v in data['sections'][section['id']]]
+# Preparation precedes pattern generation; then retain the callback and
+# reproduction figures without duplicating an overridden historical plan.
+preparation = overrides.pop('submission-gate')
+data['sections'][section['id']] = [preparation, visual] + [overrides.get(v['id'], v) for v in data['sections'][section['id']] if v['id'] != preparation['id']]
 present = {v['id'] for v in data['sections'][section['id']]}
 data['sections'][section['id']].extend(v for key, v in overrides.items() if key not in present)
 p.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=120), encoding='utf-8')
