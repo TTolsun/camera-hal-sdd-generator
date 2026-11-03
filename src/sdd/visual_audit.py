@@ -18,6 +18,7 @@ import re
 from urllib.parse import unquote, urlsplit
 
 from .validation_stage import load_json
+from .site_paths import owned_path
 
 STATUSES = ('appropriate', 'needs_visual', 'omit', 'unreviewed')
 LABELS = dict(zip(STATUSES, ('적절한 그림 있음', '보완 필요', '생략 가능', '근거 부족·미검토')))
@@ -36,7 +37,7 @@ def digest(value):
 
 
 def policy(cfg=None):
-    raw = cfg.raw.get('visual_audit', {}) if cfg else {}
+    raw = cfg.visual_audit if cfg else {}
     allowed = {'enabled', 'reviews', 'thresholds', 'signals', 'deferred_pages'}
     if not isinstance(raw, dict) or set(raw) - allowed:
         raise ValueError('visual_audit accepts enabled, reviews, thresholds, signals, deferred_pages')
@@ -125,12 +126,86 @@ def all_nodes(node):
             yield from all_nodes(child)
 
 
-def source_window(document, fragment):
+WINDOW_BINDING = '\n[window binding]\n'
+
+
+def canonical(node):
+    return node if isinstance(node, str) else dict(tag=node.tag, attrs=node.attrs, children=[canonical(c) for c in node.children])
+
+
+def window_bundle(text, structure, nodes, root, page):
+    assets, references = [], []
+    for child in nodes:
+        if child.attrs.get('href'):
+            references.append(child.attrs['href'])
+        urls = [child.attrs[k] for k in ('src', 'poster') if child.attrs.get(k)]
+        if child.tag in {'image', 'use'}:
+            urls.extend(child.attrs[k] for k in ('href', 'xlink:href') if child.attrs.get(k))
+        if child.tag == 'object' and child.attrs.get('data'):
+            urls.append(child.attrs['data'])
+        if child.attrs.get('srcset'):
+            for candidate in child.attrs['srcset'].split(','):
+                fields = candidate.strip().split()
+                if not fields or len(fields) > 2 or (len(fields) == 2 and not re.fullmatch(r'[0-9]+(?:\.[0-9]+)?[wx]', fields[1])):
+                    raise ValueError('Unsupported source-window srcset; use explicit local image candidates')
+                urls.append(fields[0])
+        if re.search(r'url\s*\(', child.attrs.get('style', ''), re.I):
+            raise ValueError('Source-window CSS URL assets need explicit local markup')
+        for value in urls:
+            url = urlsplit(value)
+            if url.scheme == 'data':
+                continue  # Embedded bytes already participate in canonical attrs.
+            if url.scheme or url.netloc:
+                raise ValueError('Unfetched external source-window asset: '+value)
+            if not url.path and url.fragment:
+                raise ValueError('Source-window inline SVG references need an explicit local asset file')
+            if root is not None and url.path:
+                name = posixpath.normpath(posixpath.join(posixpath.dirname(page), unquote(url.path)))
+                asset = owned_path(root, name)
+                if not asset.is_file():
+                    raise ValueError('Source window asset missing: '+name)
+                assets.append(dict(path=name, sha256=digest(asset.read_bytes().hex())))
+    binding = dict(structure_sha256=digest(structure), assets=assets, references=sorted(set(references)))
+    return text+WINDOW_BINDING+json.dumps(binding, ensure_ascii=False, sort_keys=True)
+
+
+def node_window(node, root, page):
+    return window_bundle(node.text(), canonical(node), list(all_nodes(node)), root, page)
+
+
+def source_window(document, fragment, *, root=None, page=''):
     """Resolve an empty source anchor to its precise folded excerpt, not the list."""
     nodes = list(all_nodes(document.root))
     found = [n for n in nodes if n.attrs.get('id') == fragment]
     if len(found) != 1:
         raise ValueError('Source window missing or ambiguous: '+fragment)
+    if re.fullmatch(r'h[1-6]', found[0].tag):
+        level = int(found[0].tag[1])
+        def events(node):
+            if isinstance(node, str):
+                yield 'text', node
+                return
+            yield 'start', node
+            for child in node.children:
+                yield from events(child)
+            yield 'end', node
+        collecting, parts, structure, selected = False, [], [], []
+        for kind, event in events(document.root):
+            if kind == 'start':
+                if event is found[0]:
+                    collecting = True
+                elif collecting and re.fullmatch(r'h[1-6]', event.tag) and int(event.tag[1]) <= level:
+                    break
+                if collecting:
+                    selected.append(event)
+                    structure.append([kind, event.tag, event.attrs])
+            elif collecting:
+                if kind == 'text':
+                    parts.append(event)
+                    structure.append([kind, event])
+                else:
+                    structure.append([kind, event.tag])
+        return window_bundle(''.join(parts), structure, selected, root, page)
     parents = {id(c): p for p in nodes for c in p.children if isinstance(c, Node)}
     window = found[0]
     parent = parents.get(id(window))
@@ -140,10 +215,10 @@ def source_window(document, fragment):
         position = next(i for i, n in enumerate(container.children) if n is parent)
         following = next((n for n in container.children[position+1:] if isinstance(n, Node)), None)
         if following and following.tag == 'details':
-            return following.text()
+            return node_window(following, root, page)
     while window is not document.root and window.tag != 'details':
         window = parents[id(window)]
-    return (found[0] if window is document.root else window).text()
+    return node_window(found[0] if window is document.root else window, root, page)
 
 
 def plain(node):
@@ -168,7 +243,7 @@ def source_container(node):
     return bool(summary and re.match(r'(?:소스 근거|Source evidence|설계 질문과 검증 범위|Design questions and verification scope)', plain(summary), re.I))
 
 
-def inventory_page(source, page, options, *, source_commit='', root=None):
+def inventory_page(source, page, options, *, source_commit='', root=None, draft=False):
     doc = Document(source)
     article = next(doc.root.all('article'), None)
     if article is None:
@@ -190,7 +265,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
         row = dict(id=page+'#'+locator, page=page, anchor=anchor, url=page+('#'+anchor if anchor else ''), language=lang,
                    title=title, question=title, level=level, parent=stack[-1]['id'] if stack else None,
                    ancestors=[dict(id=p['id'], title=p['title'], level=p['level']) for p in stack],
-                   paragraphs=[], loose_text=[], summaries=[], tables=[], figures=[], available_source_windows=[], excluded=[], children=[])
+                   paragraphs=[], loose_text=[], summaries=[], content_blocks=[], tables=[], figures=[], available_source_windows=[], excluded=[], children=[])
         if stack:
             stack[-1]['children'].append(row['id'])
         rows.append(row)
@@ -214,7 +289,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
                 if active is not None:
                     raise ValueError('Nested visualization marker: '+page)
                 visual_owner, visual_stack = current, list(stack)
-                active = dict(id=match[1] if match else 'class-diagram', source='', evidence=[], text=[], heading_count=0)
+                active = dict(id=match[1] if match else 'class-diagram', source='', evidence=[], downloads=[], convenience_designations=[], evidence_groups=[], text=[], markup_bindings=[], heading_count=0)
                 current['figures'].append(active)
             elif value.startswith('/sdd:visual:') or value == '/sdd:class-diagram':
                 expected = ('/sdd:class-diagram' if active and active['id'] == 'class-diagram'
@@ -228,6 +303,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
                 raise ValueError('Malformed visualization marker: '+page)
             return
         if active is not None:
+            active['markup_bindings'].append(digest(node_window(node, root, page)))
             if re.fullmatch(r'h[1-6]', node.tag):
                 if node.tag not in {'h2', 'h3'} or active['heading_count']:
                     raise ValueError('Ordinary section inside visualization marker: '+page)
@@ -247,10 +323,15 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
                 if not download_only and plain(node):
                     current['paragraphs'].append(plain(node))
             if node.tag == 'a':
-                active['evidence'].append(node.attrs.get('href', ''))
+                href = node.attrs.get('href', '')
+                if node.attrs.get('data-sdd-convenience') == 'true':
+                    active['convenience_designations'].append(href)
+                active['downloads' if urlsplit(href).path.endswith('.mmd') else 'evidence'].append(href)
             if node.tag == 'details':
                 active['text'].append(plain(node))
                 active['evidence'].extend(a.attrs.get('href', '') for a in node.all('a'))
+                active['convenience_designations'].extend(a.attrs.get('href', '') for a in node.all('a') if a.attrs.get('data-sdd-convenience') == 'true')
+                active['evidence_groups'].extend([[a.attrs.get('href', '') for a in tr.all('a')] for tr in node.all('tr')])
                 if any(re.fullmatch(r'h[1-6]', n.tag) for n in all_nodes(node) if n is not node):
                     raise ValueError('Ordinary section inside visualization marker: '+page)
                 summary = next(node.all('summary'), None)
@@ -261,7 +342,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
                 walk(child)
             return
         if node.tag in {'pre', 'script', 'style'} or (node.tag == 'details' and source_container(node)):
-            current['excluded'].append(dict(kind=node.tag, chars=len(plain(node)), sha256=digest(node.text())))
+            current['excluded'].append(dict(kind=node.tag, chars=len(plain(node)), sha256=digest(node_window(node, root, page))))
             for link in node.all('a'):
                 href = link.attrs.get('href', '')
                 if href:
@@ -271,6 +352,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
             return
         if node.tag == 'summary':
             current['summaries'].append(plain(node))
+            current['content_blocks'].append(digest(node_window(node, root, page)))
             return
         if re.fullmatch(r'h[2-6]', node.tag):
             anchor = node.attrs.get('id')
@@ -278,10 +360,12 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
             return
         if node.tag == 'table':
             current['tables'].append(plain(node))
+            current['content_blocks'].append(digest(node_window(node, root, page)))
             return
         simple_container = node.tag in {'div', 'blockquote', 'section', 'figcaption'} and not any(
             n.tag in {'p', 'li', 'table', 'details', 'pre', 'h2', 'h3', 'h4', 'h5', 'h6'} for n in all_nodes(node) if n is not node)
         if node.tag == 'p' or simple_container or (node.tag == 'li' and not list(node.all('p')) and not list(node.all('li'))):
+            current['content_blocks'].append(digest(node_window(node, root, page)))
             value = plain(node)
             if value:
                 current['paragraphs'].append(value)
@@ -296,7 +380,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
     if active is not None:
         raise ValueError('Unclosed visualization marker: '+page)
     by_id = {row['id']: row for row in rows}
-    window_hashes = {}
+    window_hashes, window_references = {}, {}
     for row in reversed(rows):
         if row['loose_text']:
             row['paragraphs'].append(' '.join(' '.join(row['loose_text']).split()))
@@ -313,29 +397,42 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
         row['table_count'] = len(row['tables'])
         row['figures'] = [{**f, 'sha256': digest(f)} for f in row['figures']]
         row['available_source_windows'] = sorted(set(row['available_source_windows']))
-        document_hash = digest(dict(title=row['title'], body=body, tables=row['tables']))
+        document_hash = digest(dict(title=row['title'], body=body, tables=row['tables'], content_blocks=row['content_blocks']))
         row['source_window_hashes'] = {'item:'+row['id']: document_hash}
         if row['anchor']:
             row['source_window_hashes'][row['id']] = document_hash
         row['unresolved_source_windows'] = []
+        row['source_window_references'] = {}
         for href in row['available_source_windows']+[u for f in row['figures'] for u in f['evidence']]:
             parts = urlsplit(href)
+            if not parts.scheme and not parts.netloc and parts.path and not parts.fragment:
+                target = posixpath.normpath(posixpath.join(posixpath.dirname(page), unquote(parts.path)))
+                if root is None:
+                    row['unresolved_source_windows'].append(href)
+                    continue
+                path = owned_path(root, target)
+                if not path.is_file():
+                    row['unresolved_source_windows'].append(href)
+                    continue
+                row['source_window_hashes'][target] = digest(path.read_bytes().hex())
+                continue
             if not parts.scheme and not parts.netloc and parts.fragment:
                 fragment = unquote(parts.fragment)
                 target = posixpath.normpath(posixpath.join(posixpath.dirname(page), unquote(parts.path))) if parts.path else page
                 key = target+'#'+fragment
                 if key not in window_hashes:
                     if target == page:
-                        window_hashes[key] = digest(source_window(doc, fragment))
+                        selected = source_window(doc, fragment, root=root, page=page)
+                        window_hashes[key] = digest(selected)
+                        window_references[key] = json.loads(selected.rsplit(WINDOW_BINDING, 1)[1])['references']
                     elif root is not None:
-                        from .site_build import owned_path
                         path = owned_path(root, target)
                         if not path.is_file():
                             row['unresolved_source_windows'].append(href)
                             continue
                         raw = path.read_text(encoding='utf-8')
                         if path.suffix == '.html':
-                            source_window(Document(raw), fragment)
+                            selected = source_window(Document(raw), fragment, root=root, page=target)
                         else:
                             lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', fragment)
                             if not lines:
@@ -347,13 +444,60 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
                                 raise ValueError('Source window line range is invalid: '+key)
                         # Cross-file windows bind all target bytes so an edit
                         # next to a line anchor cannot escape revalidation.
-                        window_hashes[key] = digest(raw)
+                        window_hashes[key] = digest([raw, selected] if path.suffix == '.html' else raw)
+                        window_references[key] = json.loads(selected.rsplit(WINDOW_BINDING, 1)[1])['references'] if path.suffix == '.html' else []
                     else:
                         row['unresolved_source_windows'].append(href)
                         continue
                 row['source_window_hashes'][key] = window_hashes[key]
+                row['source_window_references'][key] = window_references[key]
             elif parts.scheme or parts.netloc:
                 row['unresolved_source_windows'].append(href)
+        for figure in row['figures']:
+            figure['download_bindings'] = []
+            for href in figure.get('downloads', []):
+                url = urlsplit(href)
+                if url.scheme or url.netloc or url.query or url.fragment or not url.path:
+                    raise ValueError('Unsupported visualization download: '+href)
+                name = posixpath.normpath(posixpath.join(posixpath.dirname(page), unquote(url.path)))
+                expected = figure['source']+'\n'  # Exporter's explicit UTF-8/LF serialization.
+                if draft:
+                    figure['download_bindings'].append(dict(path=name, kind='derived-after-draft', source_sha256=digest(expected)))
+                else:
+                    if root is None:
+                        raise ValueError('Visualization download needs a publication root: '+href)
+                    path = owned_path(root, name)
+                    if not path.is_file() or path.read_bytes() != expected.encode('utf-8'):
+                        raise ValueError('Visualization download missing or differs from inline figure: '+href)
+                    figure['download_bindings'].append(dict(path=name, kind='published-file', sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
+            selected_evidence, convenience = [], []
+            for href in figure['evidence']:
+                url = urlsplit(href)
+                binding = None
+                if (url.scheme or url.netloc) and href in figure.get('convenience_designations', []):
+                    for group in figure.get('evidence_groups', []):
+                        if href not in group:
+                            continue
+                        for local in group:
+                            loc = urlsplit(local)
+                            if loc.scheme or loc.netloc:
+                                continue
+                            name = posixpath.normpath(posixpath.join(posixpath.dirname(page), unquote(loc.path))) if loc.path else page
+                            key = name+('#'+unquote(loc.fragment) if loc.fragment else '')
+                            if href in row['source_window_references'].get(key, []):
+                                binding = dict(url=href, local_window=key, local_sha256=row['source_window_hashes'][key], external_fetched=False)
+                                break
+                        if binding:
+                            break
+                if binding:
+                    convenience.append(binding)
+                    row['unresolved_source_windows'] = [u for u in row['unresolved_source_windows'] if u != href]
+                else:
+                    selected_evidence.append(href)
+            figure['evidence'] = selected_evidence
+            figure['convenience_links'] = convenience
+            figure.pop('sha256', None)
+            figure['sha256'] = digest(figure)
         row['source_commit'] = source_commit
         row['fingerprint'] = digest({**row, 'child_fingerprints': [by_id[c]['fingerprint'] for c in row['children']],
                                      'policy': {k: options[k] for k in ('thresholds', 'signals')}, 'version': 1})
@@ -366,7 +510,6 @@ def inventory_page(source, page, options, *, source_commit='', root=None):
 
 def inspect_site(root, options, *, manifest=None, source_commit=''):
     """The manifest is authoritative when supplied; staging uses every HTML file."""
-    from .site_build import owned_path
     root = Path(root).resolve()
     files = sorted(rel for rel in manifest['outputs'] if rel.endswith('.html')) if manifest else sorted(p.relative_to(root).as_posix() for p in root.rglob('*.html'))
     rows = []
@@ -391,6 +534,9 @@ def inspect_site(root, options, *, manifest=None, source_commit=''):
         canonical = row['id'].removeprefix('en/')
         pairs.setdefault(canonical, []).append(row)
     errors = []
+    for page in options['deferred_pages']:
+        if page not in files:
+            errors.append('Deferred page missing from inventory: '+page)
     bilingual = any(name.startswith('en/') for name in files)
     if bilingual:
         for key, values in pairs.items():
@@ -406,6 +552,9 @@ def inspect_site(root, options, *, manifest=None, source_commit=''):
 def apply_reviews(report, reviews):
     if reviews.get('schema') != 1 or not isinstance(reviews.get('items'), dict):
         raise ValueError('Visualization reviews require schema 1 and an items mapping')
+    if 'pages' in report:
+        missing = set(reviews['items'])-{r['id'] for r in report['items']}
+        report['errors'].extend('Reviewed item deleted or moved: '+key for key in sorted(missing))
     for row in report['items']:
         record = reviews['items'].get(row['id'])
         if not record:
@@ -449,6 +598,29 @@ def apply_reviews(report, reviews):
                         errors.append('Adjacent figure changed')
             if not isinstance(figures, list) or not figures or not set(figures) <= available:
                 errors.append('Reviewed local figure missing, deleted or stale-omitted')
+            else:
+                def local_key(href):
+                    url = urlsplit(href)
+                    if url.scheme or url.netloc:
+                        return None
+                    target = posixpath.normpath(posixpath.join(posixpath.dirname(row['page']), unquote(url.path))) if url.path else row['page']
+                    return target+('#'+unquote(url.fragment) if url.fragment else '')
+                owned_figures = [(row, f) for f in row['figures']]
+                if adjacent and neighbor is not None:
+                    owned_figures.extend((neighbor, f) for f in neighbor['figures'])
+                for owner, figure in owned_figures:
+                    if figure['id'] not in figures:
+                        continue
+                    for href in figure['evidence']:
+                        key = local_key(href)
+                        if key is not None:
+                            resolved = key in owner['source_window_hashes']
+                        else:
+                            # Explicitly bound convenience links were removed
+                            # from selected evidence during fresh inspection.
+                            resolved = False
+                        if not resolved:
+                            errors.append('Reviewed figure evidence window is unresolved: '+href)
         if errors:
             row.update(status='unreviewed', reason='; '.join(errors))
         else:
@@ -474,7 +646,6 @@ def apply_reviews(report, reviews):
 
 def verify_published(root, manifest):
     """Recompute item fingerprints in verify-site, not just the report's hash."""
-    from .site_build import owned_path
     if REPORT not in manifest['outputs']:
         return
     recorded = json.loads(owned_path(root, REPORT).read_bytes())
@@ -523,7 +694,7 @@ def manuscript_gate(cfg, model, path, text):
         raise ValueError('Visualization manuscript and facts commits differ')
     content, _, _ = _render(body, rel, {rel}, model, '', commit)
     rows = inventory_page('<html lang="ko"><article>'+content+'</article></html>',
-                          _html_path(rel), options, source_commit=commit)
+                          _html_path(rel), options, source_commit=commit, root=cfg.sdd_dir, draft=True)
     records = load_json(cfg.root/options['reviews'])
     report = dict(items=rows, errors=[], policy=options)
     apply_reviews(report, {'schema': records.get('schema'), 'items': records.get('manuscripts', {})})

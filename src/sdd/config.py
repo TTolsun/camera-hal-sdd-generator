@@ -275,6 +275,10 @@ class Config:
         return _settings(SiteConfig, self._option('site') or {})
 
     @property
+    def visual_audit(self):
+        return self._option('visual_audit', {})
+
+    @property
     def update(self) -> UpdateConfig:
         return _settings(UpdateConfig, self._option('update') or {})
 

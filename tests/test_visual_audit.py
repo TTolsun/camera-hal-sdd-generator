@@ -13,7 +13,7 @@ def document(body, lang='ko'):
 
 FIGURE = ('<!-- sdd:visual:states --><h3 id="figure">State picture</h3>'
           '<pre class="mermaid">flowchart TB\n a["ready"]\n b["done"]\n a --> b</pre>'
-          '<details><summary>Evidence</summary><a href="source.html#L1">code</a></details>'
+          '<details class="note"><summary>Figure evidence</summary><a href="#source-inline">code</a><pre id="source-inline">actual source</pre></details>'
           '<!-- /sdd:visual:states -->')
 
 
@@ -283,6 +283,131 @@ def test_malformed_marker_prefix_fails_closed(body):
 def test_visual_details_cannot_hide_section_and_link_changes_are_bound():
     source = '<h2 id="one">One</h2>'+FIGURE
     with pytest.raises(ValueError, match='Ordinary section'):
-        report(source.replace('<summary>Evidence</summary>', '<summary>Evidence</summary><h3>hidden</h3>'))
-    original, changed = report(source), report(source.replace('source.html#L1','other.html#L2'))
+        report(source.replace('<summary>Figure evidence</summary>', '<summary>Figure evidence</summary><h3>hidden</h3>'))
+    original, changed = report(source), report(source.replace('#source-inline','other.html#L2'))
     assert original['items'][1]['figures'][0]['sha256'] != changed['items'][1]['figures'][0]['sha256']
+
+
+def test_same_page_heading_window_includes_section_body():
+    source = '<h2 id="one">One</h2><details class="evidence-links"><a href="#two">source</a></details><h2 id="two">Two</h2><p>original</p><h3 id="sub">Sub</h3><p>nested</p>'
+    original = report(source)
+    changed = report(source.replace('original', 'changed'))
+    assert original['items'][1]['source_window_hashes']['guide.html#two'] != changed['items'][1]['source_window_hashes']['guide.html#two']
+
+
+def test_fragmentless_local_evidence_is_fingerprinted(tmp_path):
+    source = '<h2 id="one">One</h2><details class="evidence-links"><a href="source.txt">source</a></details>'
+    (tmp_path/'guide.html').write_text(document(source), encoding='utf-8')
+    (tmp_path/'source.txt').write_text('original', encoding='utf-8')
+    original = inspect_site(tmp_path, policy())
+    records = ledger(original)
+    records['items']['guide.html#one']['source_windows'] = ['source.txt']
+    enforce(apply_reviews(original, records))
+    (tmp_path/'source.txt').write_text('changed', encoding='utf-8')
+    updated = apply_reviews(inspect_site(tmp_path, policy()), records)
+    assert updated['items'][1]['status'] == 'unreviewed'
+
+
+def test_unresolved_figure_evidence_cannot_be_approved_with_item_window():
+    result = report('<h2 id="one">One</h2>'+FIGURE.replace('#source-inline', 'missing.html#L1'))
+    records = ledger(result)
+    records['items']['guide.html#one'].update(status='appropriate', figures=['states'])
+    apply_reviews(result, records)
+    assert result['items'][1]['status'] == 'unreviewed'
+    assert 'unresolved' in result['items'][1]['reason']
+
+
+def test_heading_source_link_attributes_and_asset_bytes_are_bound(tmp_path):
+    guide = document('<h2 id="one">One</h2><details class="evidence-links"><a href="#two">source</a></details><h2 id="two">Two</h2><p><a href="target.txt">link</a><img src="image.svg"></p>')
+    (tmp_path/'guide.html').write_text(guide, encoding='utf-8')
+    (tmp_path/'target.txt').write_text('target', encoding='utf-8')
+    (tmp_path/'image.svg').write_text('<svg>first</svg>', encoding='utf-8')
+    original = inspect_site(tmp_path, policy())
+    before = original['items'][1]['source_window_hashes']['guide.html#two']
+    (tmp_path/'image.svg').write_text('<svg>changed</svg>', encoding='utf-8')
+    changed = inspect_site(tmp_path, policy())
+    assert before != changed['items'][1]['source_window_hashes']['guide.html#two']
+
+
+def test_draft_figure_download_is_not_unresolved_hal_evidence(tmp_cfg, sample_model):
+    from sdd.site_markdown import _render
+    tmp_cfg.raw['visual_audit'] = dict(enabled=True, reviews='reviews.json')
+    body = '## Question\n\ntext\n\n'+FIGURE.replace('<!-- /sdd:visual:states -->', '<p><a href="guide.states.mmd">Mermaid original</a></p><!-- /sdd:visual:states -->')
+    rendered, _, _ = _render(body, 'guide.md', {'guide.md'}, sample_model, '', 'abc123')
+    rows = inventory_page(document(rendered), 'guide.html', policy(tmp_cfg), source_commit='abc123', root=tmp_cfg.sdd_dir, draft=True)
+    records = ledger(dict(items=rows))
+    records['items']['guide.html#question'].update(status='appropriate', figures=['states'])
+    (tmp_cfg.root/'reviews.json').write_text(json.dumps(dict(schema=1, items={}, manuscripts=records['items'])), encoding='utf-8')
+    manuscript_gate(tmp_cfg, sample_model, tmp_cfg.sdd_dir/'guide.md', '---\nsource_commit: abc123\n---\n'+body)
+    assert not (tmp_cfg.sdd_dir/'guide.states.mmd').exists()
+
+
+def test_folded_source_attributes_and_local_assets_invalidate_review(tmp_path):
+    text = document('<h2 id="one">One</h2><details class="evidence-links"><a href="#source-code">source</a></details><details class="source-excerpts"><pre id="source-code">code</pre><img src="image.svg"></details>')
+    (tmp_path/'guide.html').write_text(text, encoding='utf-8')
+    (tmp_path/'image.svg').write_text('<svg>old</svg>', encoding='utf-8')
+    original = inspect_site(tmp_path, policy())
+    (tmp_path/'image.svg').write_text('<svg>changed</svg>', encoding='utf-8')
+    changed = inspect_site(tmp_path, policy())
+    assert original['items'][1]['source_window_hashes'] != changed['items'][1]['source_window_hashes']
+
+
+def test_text_position_inside_source_markup_is_bound():
+    prefix = '<h2 id="one">One</h2><details class="evidence-links"><a href="#source-code">source</a></details><details class="source-excerpts" id="source-code">'
+    first = report(prefix+'<a href="target">linked</a> outside</details>')
+    second = report(prefix+'<a href="target">linked outside</a></details>')
+    assert first['items'][1]['source_window_hashes'] != second['items'][1]['source_window_hashes']
+
+
+def test_unrelated_external_target_cannot_borrow_any_local_proof_link():
+    local = '<details class="source-excerpts" id="source-code"><pre>actual code</pre><a href="https://source.example/right">full source</a></details>'
+    picture = FIGURE.replace('<a href="#source-inline">code</a>', '<table><tr><td><a href="#source-code">excerpt</a><a href="https://source.example/wrong">unrelated target</a></td></tr></table>')
+    result = report('<h2 id="one">One</h2>'+picture+local)
+    records = ledger(result)
+    records['items']['guide.html#one'].update(status='appropriate', figures=['states'])
+    apply_reviews(result, records)
+    assert result['items'][1]['status'] == 'unreviewed'
+    assert 'unresolved' in result['items'][1]['reason']
+    matched = report('<h2 id="one">One</h2>'+picture.replace('href="https://source.example/wrong"','href="https://source.example/right" data-sdd-convenience="true"')+local)
+    records = ledger(matched)
+    records['items']['guide.html#one'].update(status='appropriate', figures=['states'])
+    enforce(apply_reviews(matched, records))
+    binding = matched['items'][1]['figures'][0]['convenience_links'][0]
+    assert binding['local_window'] == 'guide.html#source-code' and binding['external_fetched'] is False
+
+
+def test_responsive_image_candidates_are_bound(tmp_path):
+    source = document('<h2 id="one">One</h2><details class="evidence-links"><a href="#source-code">source</a></details><details class="source-excerpts" id="source-code"><img srcset="small.svg 1x, large.svg 2x"></details>')
+    (tmp_path/'guide.html').write_text(source, encoding='utf-8')
+    for name in ['small.svg', 'large.svg']:
+        (tmp_path/name).write_text('<svg>old</svg>', encoding='utf-8')
+    original = inspect_site(tmp_path, policy())
+    (tmp_path/'large.svg').write_text('<svg>changed</svg>', encoding='utf-8')
+    changed = inspect_site(tmp_path, policy())
+    assert original['items'][1]['source_window_hashes'] != changed['items'][1]['source_window_hashes']
+
+
+def test_published_mermaid_download_must_match_inline_source(tmp_path):
+    source = document('<h2 id="one">One</h2>'+FIGURE.replace('<!-- /sdd:visual:states -->', '<p><a href="guide.states.mmd">Mermaid</a></p><!-- /sdd:visual:states -->'))
+    (tmp_path/'guide.html').write_text(source, encoding='utf-8')
+    with pytest.raises(ValueError, match='download missing'):
+        inspect_site(tmp_path, policy())
+    (tmp_path/'guide.states.mmd').write_text('wrong diagram', encoding='utf-8')
+    with pytest.raises(ValueError, match='differs'):
+        inspect_site(tmp_path, policy())
+    (tmp_path/'guide.states.mmd').write_text('flowchart TB\n a["ready"]\n b["done"]\n a --> b\n', encoding='utf-8', newline='\n')
+    assert inspect_site(tmp_path, policy())['items'][1]['figures'][0]['download_bindings']
+    with (tmp_path/'guide.states.mmd').open('a', encoding='utf-8') as stream:
+        stream.write('\n')
+    with pytest.raises(ValueError, match='differs'):
+        inspect_site(tmp_path, policy())
+
+
+def test_svg_image_asset_is_bound(tmp_path):
+    source = document('<h2 id="one">One</h2><details class="evidence-links"><a href="#source-code">source</a></details><details class="source-excerpts" id="source-code"><svg><image href="image.svg"/></svg></details>')
+    (tmp_path/'guide.html').write_text(source, encoding='utf-8')
+    (tmp_path/'image.svg').write_text('<svg>old</svg>', encoding='utf-8')
+    original = inspect_site(tmp_path, policy())
+    (tmp_path/'image.svg').write_text('<svg>changed</svg>', encoding='utf-8')
+    changed = inspect_site(tmp_path, policy())
+    assert original['items'][1]['source_window_hashes'] != changed['items'][1]['source_window_hashes']

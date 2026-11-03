@@ -53,21 +53,22 @@
     "issue163 reader evaluation",
     "physical camera and in-house HAL validation"
   ],
-  "inventory": "inventory-v6.json.gz",
+  "inventory": "inventory-v10.json.gz",
   "inventory_policy": "All headings including 132 visual titles are now explicit review records; current acceptance pending.",
   "tests": {
-    "item_audit_passed": 33,
-    "broader_preceding_checks": [
-      131,
-      116
-    ],
-    "full_regression": "running-frozen-snapshot"
+    "item_and_dependency_checks": 66,
+    "related_integration_checks": 184,
+    "initial_pr_ci": "failed: import cycle and raw configuration boundary; both fixed, new CI pending"
   },
   "draft_generation": {
     "page": "pipeline-handler.md",
-    "initial_graph": "5 nodes, 6 edges; independent grounding REJECTED",
-    "current": "Two revised questions generating via native Codex/Terra High",
+    "stop_order": "native independent review stop-diagrams-07 passed",
+    "reentry": "native independent review stop-diagrams-04 passed; graph unchanged",
+    "bilingual_page_review": "pending",
+    "browser": "pending",
     "human_review": "pending"
   },
-  "prior_results": "Initial inventory and original CLI results retained without repinning to changed audit fingerprints."
+  "prior_results": "Initial inventory and original CLI results retained without repinning to changed audit fingerprints.",
+  "generator_pr": 233,
+  "native_archive": "native-evidence-01.zip"
 }
