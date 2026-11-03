@@ -169,10 +169,11 @@
   - run_cam
   - completed_frames
   question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam 재현 실행은 어떤 준비 순서로 이어집니까?
-  prompt: 현재 유효한 10개 노드와 모든 연결·기존 한영 조건을 보존하고 device_verify 실행 전 판정에 cam --capture=3과 재현 도우미 사용 시 이 인자가
+  prompt: 현재 유효한 10개 노드와 모든 연결·기존 한영 조건을 보존하고 device_verify 실행 전 판정에 cam 캡처 프레임 한도 3과 재현 도우미 사용 시 이 인자가
     실제 전달된다는 확인을 추가합니다. 기존 커널·root 접근·YAML 크기/패턴·카메라·스트림 조건도 모두 보존합니다. 모든 조건이 일치할 때만 실행한다는 간선은 이 조건 전체를
     가리킵니다. product-invocation-options 실제 원본 인자 근거와 재현 절차 근거를 새 판정의 인용에 함께 넣습니다. 노드 140자, authored 간선 20자
-    이내입니다. 나머지 준비·승인·결과와 예외 연결은 바꾸지 않습니다.
+    이내입니다. 나머지 준비·승인·결과와 예외 연결은 바꾸지 않습니다. 화면에는 한국어 캡처 한도 3, 영어 capture limit 3처럼 말로 표현하고 대입 연산자나 원시 CLI
+    인자 문자열을 넣지 않습니다. 정확한 인자는 번호 절차와 접힌 명령 근거가 보여 줍니다.
   sources:
   - product-invocation-execution-contract
   - product-invocation-reproduction-procedure
