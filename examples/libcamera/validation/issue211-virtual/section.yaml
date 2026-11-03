@@ -21,8 +21,10 @@ next:
 design_requirements:
 - id: conclusion
   question: 무엇이 캡처를 막았고, 어떤 조건에서 공식 cam 캡처가 성공했으며, 현재 바로 재실행할 수 있습니까?
-- id: initial-requests
-  question: 기록된 단일 스트림·출력 싱크 미요청 구성에서 카메라 시작 전 모든 초기 요청 준비, 제출 한도와 큐 호출 오류 처리는 어떤 순서입니까?
+- id: initial-preparation
+  question: 기록된 단일 스트림·출력 싱크 미요청 구성에서 모든 초기 요청·버퍼는 카메라 시작 전에 어떻게 준비되며 준비 실패는 어떻게 처리됩니까?
+- id: initial-submission
+  question: 같은 기록 구성에서 카메라 시작 뒤 남은 초기 요청을 순회하며 제출 한도를 적용하고 큐 반환 오류와 정상 순회 종료를 어떻게 처리합니까?
 - id: flow
   question: 완료 알림을 받은 함수가 왜 후속 처리를 이벤트 루프로 미루며, 정상 요청과 취소 요청은 어떻게 나뉩니까?
 - id: reproduce
@@ -74,20 +76,44 @@ design_topics:
       마세요.
     answer_contract:
       basis: measurement
-- id: initial-requests
-  title: 기록된 단일 스트림에서 초기 요청을 준비하고 제출합니다
-  question: 기록된 단일 스트림·출력 싱크 미요청 구성에서 카메라 시작 전 모든 초기 요청 준비, 제출 한도와 큐 호출 오류 처리는 어떤 순서입니까?
+- id: initial-preparation
+  title: 단일 스트림의 초기 요청을 먼저 준비합니다
+  question: 기록된 단일 스트림·출력 싱크 미요청 구성에서 모든 초기 요청·버퍼는 카메라 시작 전에 어떻게 준비되며 준비 실패는 어떻게 처리됩니까?
   covers:
-  - initial-requests
+  - initial-preparation
   product:
     id: libcamera-official-cam-trial
     feature: recorded-no-output-sink
   design_prompt: focused
   sources:
-  - id: pipeline-dispatch
-    file: src/libcamera/pipeline_handler.cpp
-    start: void PipelineHandler::queueRequest(
-    end: ' * \fn PipelineHandler::queueRequestDevice()'
+  - id: cam-preparation
+    file: src/apps/cam/camera_session.cpp
+    start: int CameraSession::startCapture()
+    end: "\tret = camera_->start();"
+  parts:
+  - id: prepare
+    question: 기록된 단일 스트림·출력 싱크 미요청 구성을 대상으로 한다는 범위를 먼저 밝히고, cam이 버퍼를 할당한 뒤 각 초기 요청을 생성하고 버퍼를 붙여 저장하며 모든
+      요청이 준비된 다음에 카메라 시작 단계로 넘어간다는 순서를 두 짧은 문장으로 설명합니다. 할당·생성·연결 중 실패하면 오류를 반환한다는 짧은 문장을 덧붙여도 됩니다. 변수명·후속
+      큐 호출·콜백은 나열하지 않습니다.
+    sources:
+    - cam-preparation
+    max_statements: 1
+    answer_contract:
+      basis: implementation
+      required_terms:
+      - - 단일 스트림
+      - - 요청
+      - - 버퍼
+- id: initial-submission
+  title: 준비된 초기 요청을 한도 안에서 제출합니다
+  question: 같은 기록 구성에서 카메라 시작 뒤 남은 초기 요청을 순회하며 제출 한도를 적용하고 큐 반환 오류와 정상 순회 종료를 어떻게 처리합니까?
+  covers:
+  - initial-submission
+  product:
+    id: libcamera-official-cam-trial
+    feature: recorded-no-output-sink
+  design_prompt: focused
+  sources:
   - id: cam-request-buffers
     file: src/apps/cam/camera_session.cpp
     start: int CameraSession::startCapture()
@@ -96,33 +122,37 @@ design_topics:
     file: src/libcamera/camera.cpp
     start: int Camera::queueRequest(
     end: int Camera::start(
-  prompt: 이 항목은 실제 기록된 한 개 스트림과 출력 싱크 미요청 구성을 대상으로 초기 준비와 제출을 설명합니다. 앞 항목은 virtual의 프레임 생성과 완료 통지를 설명하므로
-    반복하지 않습니다. 내부 변수·코드 식별자는 근거 영역에 둡니다.
   parts:
-  - id: overview
-    question: 기록된 단일 스트림·출력 싱크 미요청 구성의 초기 캡처 준비·제출이라는 범위를 먼저 명시하고, cam이 모든 초기 요청과 버퍼를 먼저 준비한 뒤 카메라를 시작하고
-      요청별 제출 한도를 검사한다는 순서를 짧게 설명합니다. 큐 호출은 검증 실패시 오류를 반환하고, 통과하면 요청을 비동기로 전달한 뒤0을 반환하며, 초기 제출 도우미가 음수
-      오류를 반환하면 카메라를 중지하고 오류를 반환한다는 관계를 덧붙입니다. 짧은 한 문단3–4문장으로 쓰고 콜백·재현 설명이나 내부 식별자를 반복하지 않습니다. 일반 다중 스트림
-      전체 흐름이라고 확대하지 마세요. 제출 한도를 검사한 뒤 모든 요청을 무조건 카메라 큐 호출로 넘긴다고 쓰지 마세요. 한도가 이미 찼으면 도우미가 카메라 큐 호출 없이0을
-      반환해 제출을 생략하고, 한도가 미설정이거나 아직 미달일 때에만 카메라 큐 호출로 진행한다는 분기를 명시합니다. 이 조건은 영어에서도 보존합니다. 범위·전체 준비 뒤 시작·검증
-      결과·오류 중지를 짧은 한 문단으로 유지합니다.
+  - id: start
+    role: summary
+    question: 기록된 단일 스트림·출력 싱크 미요청 구성에서, cam이 모든 초기 요청 준비를 마친 뒤 카메라를 시작하고 초기 요청들을 순회한다는 관계를 짧은 한두 문장으로
+      설명합니다. 카메라 시작 실패시 오류를 반환한다는 조건을 포함합니다. 한도 검사·큐 결과는 뒤 항목이 맡습니다.
     sources:
     - cam-request-buffers
-    - camera-queue
-    - pipeline-dispatch
-    - product-invocation-options
+    max_statements: 1
+    answer_contract:
+      basis: implementation
+  - id: limit
+    question: 설정된 제출 한도에 이미 도달했으면 도우미가 카메라 큐 호출 없이0을 반환해 현재 요청 제출을 생략한다고 짧게 설명합니다. 한도가 미설정이거나 아직 미달일 때만
+      제출 시도 수를 늘리고 카메라 큐 호출로 진행한다는 다른 결과를 다음 짧은 문장으로 명시합니다. 변수명이나 이전 준비 단계를 반복하지 않습니다.
+    sources:
+    - cam-request-buffers
     max_statements: 1
     answer_contract:
       basis: implementation
       required_terms:
-      - - 단일 스트림
-      - - 요청
-      - - 버퍼
-      - - 카메라
       - - 한도
       - - 생략
-        - 제출하지
-        - 큐 호출 없이
+  - id: queue-result
+    question: 카메라 큐 호출은 요청 검증에 실패하면 오류를 반환하고, 통과하면 요청을 비동기로 전달한 뒤0을 반환한다는 관계를 짧게 설명합니다. 초기 제출 도우미의 반환값이
+      음수 오류이면 cam이 이미 시작한 카메라를 중지하고 오류를 반환한다는 결과를 다음 짧은 문장으로 씁니다. 출력 싱크 미요청 범위이며, 내부식별자나 다른 출력 옵션의 동작은
+      덧붙이지 않습니다.
+    sources:
+    - cam-request-buffers
+    - camera-queue
+    max_statements: 1
+    answer_contract:
+      basis: implementation
 - id: flow
   title: cam이 완료 알림을 받아 이벤트 루프에서 프레임을 처리합니다.
   question: 기록된 출력 싱크 미요청 cam 명령의 콜백, 이벤트 루프 전달, 처리 한도와 제출 도우미를 설명하세요. 파일·화면 출력 옵션의 일반 경로는 이번 재현 설명의 범위

@@ -1,30 +1,88 @@
 - id: submission-gate
-  topic: initial-requests
+  topic: initial-preparation
   kind: decision
-  title: 단일 스트림의 초기 준비·제출과 실패 처리
+  title: 단일 스트림의 초기 요청 준비와 종료
   generation: llm
-  max_nodes: 11
+  max_nodes: 7
   required_symbols:
   - allocate
   - createRequest
   - addBuffer
-  - CameraSession::queueRequest
-  - Camera::queueRequest
-  - startCapture
-  - captureLimit_
+  - requests_
+  - nbuffers
+  question: 기록된 단일 스트림·출력 싱크 미요청 구성에서 모든 초기 요청·버퍼는 카메라 시작 전에 어떻게 준비되며 준비 실패는 어떻게 처리됩니까?
+  sources:
+  - cam-preparation
+  max_label_chars: 64
+  condition_display: evidence
+  require_connected: true
+  prompt: 기록된 단일 스트림·출력 싱크 미요청 구성의 준비 단계만 새 일곱 노드로 설명합니다. 할당 실패 판정, 오류 반환, 준비할 초기 요청이 남았는지 판정, 요청 생성 실패
+    판정, 버퍼 연결 실패 판정, 현재 요청 저장, 모든 초기 요청 준비 완료의 일곱 역할입니다. 할당 성공 뒤 남은 요청 판정으로 갑니다. 남은 요청이 있으면 생성→연결→저장하고
+    남은 요청 판정으로 되돌아가며, 없으면 준비 완료 종료 노드로 갑니다. 카메라 시작과 제출은 다음 별도 그림이 맡습니다. 기록이 단일 스트림이므로 일반 다중 스트림 반복이라고
+    확대하지 않습니다. 각 실제 if의 true/false 두 결과를 정확한 condition_ref로 사용합니다. 초기 요청 존재 판정은 실제 counted for 루프의 남은
+    반복/종료를 설명하는 결정 노드입니다. for는 제공된 if/while 조건 목록에 없으므로 그 두 관계는 always와 명확한 남음/없음 라벨을 쓰고 실제 for 구절을 인용합니다.
+    임의의 다른 if 조건 ID를 for에 붙이지 않습니다. 오류 반환 노드는 할당·생성·연결 실패의 공통 오류 반환이며 카메라를 중지하지 않습니다. 모든 노드·간선 인용을 실제
+    준비 소스에 연결하고, 내부 변수명·함수명을 표시 라벨에 나열하지 않습니다. 짧은 한영 노드64자·간선20자 이내입니다.
+  answer_contract_en:
+    basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+      message: Use concise preparation actions and decisions in authored labels. Keep function/counter
+        identifiers in symbol bindings and evidence.
+    - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+      message: The allocation gate tests the actual cam allocate() return, not allocator validity. Keep
+        comparisons and raw calls in source evidence.
+    - pattern: (?m)^[^·\n]*(?:reservation|예약)
+      message: Express queuing/dispatching request work asynchronously inside the validated camera call,
+        not resource reservation.
+    - pattern: (?m)^[^·\n]*(?:카메라 세션|camera session)
+      message: This gate checks camera_->start(), not all of CameraSession::startCapture.
+  max_edge_label_chars: 20
+  answer_contract:
+    basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+      message: Use concise preparation actions and decisions in authored labels. Keep function/counter
+        identifiers in symbol bindings and evidence.
+    - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+      message: The allocation gate tests the actual cam allocate() return, not allocator validity. Keep
+        comparisons and raw calls in source evidence.
+    - pattern: (?m)^[^·\n]*(?:reservation|예약)
+      message: Express queuing/dispatching request work asynchronously inside the validated camera call,
+        not resource reservation.
+    - pattern: (?m)^[^·\n]*(?:카메라 세션|camera session)
+      message: This gate checks camera_->start(), not all of CameraSession::startCapture.
+  require_guard_branches: true
+  while_conditions: true
+- id: initial-submission
+  topic: initial-submission
+  kind: decision
+  title: 초기 요청 제출 반복과 오류 반환
+  generation: llm
+  max_nodes: 9
+  required_symbols:
   - Camera::start
-  question: 기록된 단일 스트림·출력 싱크 미요청 구성에서 카메라 시작 전 모든 초기 요청 준비, 제출 한도와 큐 호출 오류 처리는 어떤 순서입니까?
+  - requests_
+  - CameraSession::queueRequest
+  - queueCount_
+  - Camera::queueRequest
+  - stop
+  question: 같은 기록 구성에서 카메라 시작 뒤 남은 초기 요청을 순회하며 제출 한도를 적용하고 큐 반환 오류와 정상 순회 종료를 어떻게 처리합니까?
   sources:
   - cam-request-buffers
   - camera-queue
-  - pipeline-dispatch
   max_label_chars: 72
   condition_display: evidence
   require_connected: true
-  prompt: 현재 단일 스트림·출력 싱크 미요청 범위의11노드, 모든 간선·실제 조건·인용을 보존하고 n4의 한영 표시만 고칩니다. n4는 카메라 큐 호출이라는 주어와 요청 검증을
-    먼저 명시하고, 검증 실패는 오류 반환이며 통과는 비동기 전달 뒤0반환이라는 두 가능한 호출 결과를 짧게 표현합니다. 영어의 Check fail / Pass처럼 주어와 호출을
-    생략하지 마세요. Camera queue call 또는 Camera queue를 주어로 쓰고 validates/validation으로 요청 검증임을 드러냅니다. 최대72자이므로
-    명확한 주어·조건·반환 관계를 생략할 필요가 없습니다. 다른 노드·간선은 기존 간결한 표시를 유지합니다. 한영 노드72자·간선20자 한도를 지킵니다.
+  prompt: 같은 단일 스트림·출력 싱크 미요청 구성의 초기 제출을 새 아홉 노드로 설명합니다. 카메라 시작 실패 판정, 시작 오류 반환, 순회할 초기 요청이 남았는지 판정, 제출
+    한도 도달 판정, 제출 시도수 증가, 카메라 큐 호출, 도우미 반환 음수 오류 판정, 큐 오류시 카메라 중지 후 오류 반환, 초기 제출 순회 완료의 아홉 역할입니다. 시작 실패면
+    시작 오류 반환, 성공이면 남은 요청 판정입니다. 남았으면 한도 판정, 없으면 정상 종료 노드입니다. 한도 도달이면 현재 요청을 제출하지 않고 도우미가0을 반환해 다음 초기 요청
+    판정으로 되돌아갑니다. 미설정 또는 미달이면 시도수 증가→카메라 큐 호출→도우미 반환값 판정입니다. 반환 오류면 카메라 중지 후 오류 반환, 오류 없으면 다음 초기 요청 판정으로
+    되돌아갑니다. 카메라 큐 호출 라벨 자체는 요청 검증 실패시 오류 반환, 통과시 비동기 전달 후0반환을 명확한 주어로 짧게 설명합니다. 비동기 전달을 호출 반환 뒤의 별도 분기로
+    그리지 않습니다. 실제 if의 두 결과는 실제 condition_ref true/false를 씁니다. 남은 초기 요청 존재 판정은 실제 range for의 반복/종료를 설명하는
+    결정 노드이며 for는 제공된 if/while 목록에 없으므로 두 관계는 always와 명확한 남음/없음 표시 및 실제 for 인용을 사용합니다. 임의의 다른 if ID를 for에
+    쓰지 않습니다. 정상 종료는 초기 제출 순회의 종료이며 전체 프레임 캡처 완료 신호나 함수 callback 반환을 뜻하지 않습니다. 변수명·불필요한 코드 식별자·출력 싱크 처리를
+    라벨에 넣지 않습니다. 한영 노드72자·간선20자 이내입니다.
   answer_contract_en:
     basis: implementation
     reject_patterns:
