@@ -14,6 +14,68 @@ from sdd.export_html import _split
 from test_design_contracts import contract
 
 
+def test_atomic_source_window_keeps_short_returns_and_repeated_fragments(tmp_cfg,automatic):
+    from sdd.generated_visuals import inputs,materialize,plans,visual_passages
+    from sdd.design_response import source_passages
+    section,model,_,agent=automatic
+    text='int Device::stop() {\n    cancelPending();\n\n    return 0;\n}'
+    record=model.evidence['device/shutdown/stop']
+    record.update(text=text,sha256=hashlib.sha256(text.encode()).hexdigest())
+    source=section['design_topics'][0]['sources'][0]
+    source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
+    plan=plans(tmp_cfg,section)[0]
+    ordinary=inputs(tmp_cfg,model,section,plan)
+    assert visual_passages({'stop':text})==source_passages({'stop':text})
+    assert not any('return 0;' in quote for _,quote in ordinary[2].values())
+    atomic={**plan,'whole_sources':['stop']}
+    full=inputs(tmp_cfg,model,section,atomic)
+    assert full[0]!=ordinary[0]
+    assert full[2]=={'stop:0':('stop',text)}
+    draft=copy.deepcopy(agent.draft)
+    draft['nodes'].append(dict(id='done',symbol='stop',label='0을 반환합니다.',
+        label_en='It returns 0.',shape='box',quote_ids=['stop:0']))
+    draft['edges'].append(dict(**{'from':'cancel','to':'done'},label='호출 뒤 반환합니다.',
+        label_en='It returns after the call.',condition_ref='always',quote_ids=['stop:0']))
+    graph=materialize(tmp_cfg,model,section,atomic,draft,'synthetic-unit-fixture')
+    assert 'whole_sources' not in graph
+    assert 'return 0;' in graph['nodes'][-1]['evidence'][0]['quote']
+    assert not agent.calls
+    repeated='int call() {\n    erase(iter);\n\n    if (failed) { erase(iter); return -1; }\n\n    erase(iter);\n\n    return 0;\n}'
+    _,quotes=visual_passages({'call':repeated},whole_sources=['call'])
+    assert quotes['call:0']==('call',repeated)
+    assert repeated.count(quotes['call:0'][1])==1
+
+
+@pytest.mark.parametrize('value',[True,None,'stop',['missing'],['stop','stop'],[None],{}])
+def test_atomic_source_scope_rejects_invalid_or_unselected_windows(tmp_cfg,automatic,value):
+    from sdd.generated_visuals import inputs,plans
+    section,model,_,agent=automatic
+    plan={**plans(tmp_cfg,section)[0],'whole_sources':value}
+    with pytest.raises(ValueError,match='whole_sources'):
+        inputs(tmp_cfg,model,section,plan)
+    assert not agent.calls
+
+
+def test_atomic_source_opt_in_regenerates_then_reuses_with_normal_export(tmp_cfg,automatic):
+    section,model,save,agent=automatic
+    path=Generator(tmp_cfg,model,agent).run()[0]
+    initial_calls=len(agent.calls)
+    config=tmp_cfg.root/'visuals.yaml'
+    data=yaml.safe_load(config.read_text(encoding='utf-8'))
+    data['sections']['device'][0]['whole_sources']=['stop']
+    config.write_text(yaml.safe_dump(data,allow_unicode=True),encoding='utf-8')
+    Generator(tmp_cfg,model,agent).run()
+    assert len(agent.calls)==initial_calls+1
+    Generator(tmp_cfg,model,agent).run()
+    assert len(agent.calls)==initial_calls+1
+    assert (export_site(tmp_cfg)/'device.html').is_file()
+    generated=path.read_bytes()
+    model.evidence['device/shutdown/stop']['sha256']='0'*64
+    with pytest.raises(ValueError,match='hash|지문|근거|changed'):
+        Generator(tmp_cfg,model,agent).run()
+    assert path.read_bytes()==generated
+
+
 @pytest.mark.parametrize('previous,anchor,target', [
     ('camera-model', '요청과-버퍼를-유지할-기간', 'camera-requests'),
     ('request-lifecycle', '요청이-대기하거나-장치로-가는-조건', 'request-diagnosis'),
