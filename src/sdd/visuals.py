@@ -12,6 +12,8 @@ import re
 import unicodedata
 from pathlib import PurePosixPath
 
+from .mermaid_text import wrapped_html_label
+
 import yaml
 
 from .config import section_output
@@ -153,8 +155,8 @@ def render_values(cfg, model, section, values):
                         and ''.join(match[2].split()) in quotes):
                     return match[1]+' ['+match[3]+']'
                 return value
-            ko = wrap_label(display(_text(item.get('label'), 'label')))
-            en = wrap_label(display(_text(item.get('label_en'), 'label_en')))
+            ko = wrapped_html_label(wrap_label(display(_text(item.get('label'), 'label'))))
+            en = wrapped_html_label(wrap_label(display(_text(item.get('label_en'), 'label_en'))))
             if ko in translations and translations[ko] != en:
                 raise ValueError('Conflicting visual label translations')
             translations[ko] = en

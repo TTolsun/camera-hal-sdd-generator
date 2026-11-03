@@ -173,7 +173,7 @@ def test_diagrams_stay_near_explanation_in_markdown_html_and_english(tmp_cfg, vi
     source = (site / 'device.stop-flow.mmd').read_text(encoding='utf-8')
     english = english_diagram(source)
     assert 'Pending requests' in english and '대기 요청' not in english
-    assert 'v_pending -->|"cancelled by stop()"| v_cancelled' in english
+    assert 'v_pending -->|"cancelled by stop#40;#41;"| v_cancelled' in english
     manifest = (site / 'site-manifest.json').read_bytes()
     export_site(tmp_cfg)
     assert (site / 'site-manifest.json').read_bytes() == manifest
@@ -243,7 +243,7 @@ def test_missing_heading_and_unsafe_labels(tmp_cfg, visual):
     graph['nodes'][0]['label'] = '"><script>alert(1)</script>'
     write()
     _, block, source = render(tmp_cfg, model, section)[0]
-    assert '<script>' not in block and '&lt;script&gt;' in source
+    assert '<script>' not in block and '#60;script#62;' in source
 
 
 def test_procedure_numbering_survives_nearby_visual(tmp_cfg, visual):

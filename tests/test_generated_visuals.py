@@ -443,7 +443,7 @@ def test_compact_guard_display_preserves_exact_guard_and_proof(tmp_cfg, automati
     graph=materialize(tmp_cfg,model,section,plan,agent.draft,'cli/test/model')
     block,source=render_values(tmp_cfg,model,section,[graph])[0][1:]
     assert graph['edges'][0]['label'].endswith('ret == 0 [true]')
-    assert 'ret == 0' not in source and '[true]' in source
+    assert 'ret == 0' not in source and '#91;true#93;' in source
     assert 'ret == 0' in block.partition('??? note')[2]
     graph['edges'][0]['evidence'][0]['quote']='if (ret >= 0) { stop(); cancelPending(); }'
     with pytest.raises(ValueError):render_values(tmp_cfg,model,section,[graph])
