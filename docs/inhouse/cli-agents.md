@@ -37,6 +37,7 @@ agent:
 agent:
   kind: cli
   runner: hermes
+  command: []
   model: qwen3.5:9b-ctx64k
   args: [--provider, custom, --reasoning, high]
 ```
@@ -57,6 +58,7 @@ OpenCode에서는 `runner: opencode`와 해당 CLI의 `provider/model` ID를, Cl
 agent:
   kind: cli
   runner: codex
+  command: []
   model: gpt-6.1-terra
   args: [-c, 'model_reasoning_effort="high"']
 ```
@@ -69,6 +71,7 @@ agent:
 agent:
   kind: cli
   runner: hermes
+  command: []
   model: approved-internal-model
   args: [--provider, approved-provider, --reasoning, high]
 ```
@@ -85,6 +88,7 @@ CLI 실행 파일이나 사내 실행 래퍼를 지정해야 한다면 `command:
 agent:
   kind: cli
   runner: codex
+  command: []
   model: gpt-6.1-terra
   args: [-c, 'model_reasoning_effort="high"']
 ```
