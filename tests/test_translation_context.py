@@ -169,8 +169,12 @@ def test_catalog_reuses_unchanged_context_and_invalidates_changed_binding(tmp_cf
     model.meta['source_commit'] = 'revision-b'
     record['commit'] = 'revision-b'
     model.save(tmp_cfg.facts_path)
+    catalog.pop('diagram_label_policy')
+    path.write_text(json.dumps(catalog),encoding='utf-8')
     prepare_catalog(tmp_cfg, path)
-    assert json.loads(path.read_text(encoding='utf-8'))['strings'][key] == ''
+    refreshed=json.loads(path.read_bytes())
+    assert refreshed['strings'][key] == ''
+    assert hashlib.sha256(key.encode()).hexdigest() in refreshed['legacy_diagram_label_revalidation']['invalidated_source_sha256']
 
 
 def test_enclosing_evidence_is_inherited_without_changing_html():
@@ -179,6 +183,44 @@ def test_enclosing_evidence_is_inherited_without_changing_html():
     contexts, pool = {}, {}
     translation_context.collect(document, model, contexts, pool)
     assert next(iter(contexts.values()))[0]['source_ids']
+
+
+def test_diagram_labels_never_seed_unrelated_prose_catalog_units(tmp_cfg, monkeypatch):
+    from sdd import export_site
+    from sdd.facts.model import KnowledgeModel
+    from sdd.localization_cli import prepare_catalog
+    KnowledgeModel(meta=dict(source_commit='a'*40)).save(tmp_cfg.facts_path)
+    def render(cfg,out,**kwargs):
+        (out/'page.html').write_text('<article><p>반환</p><table><tr><td>'
+            '<span data-sdd-label-en="Return ownership">반환</span></td></tr></table></article>',encoding='utf-8')
+        (out/'one.mmd').write_text('flowchart TB\n%% sdd:translations '+json.dumps(
+            {'반환':'Return ownership'},ensure_ascii=False)+'\nx["반환"]\n',encoding='utf-8')
+        (out/'assets').mkdir()
+        (out/'assets/search.json').write_text('[]',encoding='utf-8')
+        return out
+    monkeypatch.setattr(export_site,'_render_site',render)
+    path=tmp_cfg.root/'english.json'
+    prepare_catalog(tmp_cfg,path)
+    catalog=json.loads(path.read_bytes())
+    assert catalog['strings'] == {'반환':''}
+    assert catalog['source_bound_diagram_labels_sha256']
+    # Reproduce the old global seed with an unchanged recorded prose context.
+    catalog.pop('diagram_label_policy')
+    catalog['strings']['반환']='Return ownership'
+    path.write_text(json.dumps(catalog),encoding='utf-8')
+    legacy = path.read_bytes()
+    prepare_catalog(tmp_cfg,path)
+    catalog=json.loads(path.read_bytes())
+    assert catalog['strings'] == {'반환':''}
+    event=catalog['legacy_diagram_label_revalidation']
+    assert event['from_catalog_sha256'] == hashlib.sha256(legacy).hexdigest()
+    assert event['invalidated_source_sha256'] == [hashlib.sha256('반환'.encode()).hexdigest()]
+    catalog['strings']['반환']='Ordinary return'
+    path.write_text(json.dumps(catalog),encoding='utf-8')
+    prepare_catalog(tmp_cfg,path)
+    refreshed=json.loads(path.read_bytes())
+    assert refreshed['strings'] == {'반환':'Ordinary return'}
+    assert refreshed['legacy_diagram_label_revalidation'] == event
 
 
 @pytest.mark.parametrize('change', ['missing-commit', 'wrong-commit', 'wrong-range', 'wrong-offset', 'unrelated-context'])

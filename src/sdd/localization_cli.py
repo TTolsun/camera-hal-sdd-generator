@@ -11,12 +11,13 @@ from .validation_execution import staged
 from .validation_stage import current, load_json, read_bytes
 from .state_io import save
 
-def diagram_translations(directory):
-    """Keep visible labels consistent with the graph's declared English edition."""
-    values = {}
+def diagram_translation_scopes(directory):
+    """Validate and retain each diagram's declared English labels separately."""
+    scopes = {}
     def unwrap(value):
         return html.unescape(value.replace('<br/>', '')).strip()
     for path in sorted(directory.rglob('*.mmd')):
+        local = {}
         for raw in re.findall(r'^%% sdd:translations (.+)$', path.read_text(encoding='utf-8'), re.M):
             for source, translated in json.loads(raw).items():
                 source, translated = unwrap(source), unwrap(translated)
@@ -24,10 +25,20 @@ def diagram_translations(directory):
                     continue
                 if not translated or KOREAN.search(translated):
                     raise ValueError('Diagram label needs an English translation')
-                if source in values and values[source] != translated:
-                    raise ValueError('Conflicting English translations for the same diagram label')
-                values[source] = translated
-    return values
+                if source in local and local[source] != translated:
+                    raise ValueError('Conflicting English translations within the same diagram')
+                local[source] = translated
+        scopes[path.relative_to(directory).as_posix()] = local
+    return scopes
+
+
+def diagram_translations(directory):
+    """Compatibility view of unambiguous labels; never a prose catalog seed."""
+    values = {}
+    for labels in diagram_translation_scopes(directory).values():
+        for source,translated in labels.items():
+            values.setdefault(source,set()).add(translated)
+    return {source:next(iter(translations)) for source,translations in values.items() if len(translations)==1}
 
 @locked('translation')
 @staged
@@ -46,7 +57,7 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
         # translation. It is never synchronized to a publication directory.
         # The public export path always checks the completed bilingual review.
         out = _render_site(cfg, Path(temporary), check_consistency=False)
-        declared_labels = diagram_translations(out)
+        declared_labels = diagram_translation_scopes(out)
         from .facts.model import KnowledgeModel
         from .translation_context import collect, git_loader
         model = KnowledgeModel.load(cfg.facts_path)
@@ -66,7 +77,9 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
             for item in json.loads((out / 'assets/glossary.json').read_text(encoding='utf-8')):
                 units.update(v.strip() for v in [item['term'], item['definition'], *item['names']] if KOREAN.search(v))
     catalog = {'schema': 1, 'review_status': 'human-review-pending', 'pages': pages,
-               'strings': {key: declared_labels.get(key, previous.get('strings', {}).get(key, '')) for key in sorted(units)}}
+               'strings': {key: previous.get('strings', {}).get(key, '') for key in sorted(units)}}
+    catalog['source_bound_diagram_labels_sha256'] = hashlib.sha256(
+        json.dumps(declared_labels,ensure_ascii=False,sort_keys=True).encode()).hexdigest()
     catalog.update(source_commit=model.meta['source_commit'],
                    translation_contexts=contexts, source_contexts=source_contexts)
     # Legacy values keep their original status. Once context was recorded, a
@@ -94,9 +107,45 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
             event = retained_carryover(previous, catalog['strings'])
             if event:
                 catalog['source_carryover'] = event
-    catalog['legacy_reuse_policy'] = ('Values imported without recorded context retain their prior review status; '
-        'they are not newly inferred or context-reviewed. Literal authenticated contexts at a new commit may '
-        'retain translations with recorded lineage; changed code, location, scope or subjects require retranslation.')
+    catalog['legacy_reuse_policy'] = ('Unversioned values require original native-context authentication or retranslation '
+        'because old catalogs did not distinguish diagram seeds from prose. Authenticated historical values are not '
+        'new inference or human approval. Literal unchanged contexts at a new commit retain their recorded lineage; '
+        'changed code, location, scope or subjects require retranslation.')
+    catalog['diagram_label_policy'] = 'scoped-proof-v1'
+    if 'legacy_diagram_label_revalidation' in previous:
+        catalog['legacy_diagram_label_revalidation'] = copy.deepcopy(previous['legacy_diagram_label_revalidation'])
+    if previous.get('diagram_label_policy') != catalog['diagram_label_policy']:
+        from .translation import fixed_translation
+        from .translation_provenance import verified_catalog_units
+        selected = cfg.agent
+        if cfg.paths.get('translation_profile') is not None:
+            from .config import load
+            selected = load(cfg.paths['translation_profile']).agent
+        authenticated = (verified_catalog_units(selected, previous,
+            [cfg.build_dir/'translation-prompts/calls'], batch_only=True,
+            instruction_strings=catalog['strings'])
+            if selected.kind == 'cli' and selected.model and previous.get('strings') else {})
+        invalidated = {hashlib.sha256(key.encode()).hexdigest() for key,value in catalog['strings'].items()
+                       if not value and previous.get('strings',{}).get(key)}
+        for key,value in catalog['strings'].items():
+            # Old catalogs did not identify diagram-seeded values. Authenticate
+            # the original CLI context or invalidate; never relabel an unknown
+            # old value as a new prose translation under the scoped policy.
+            if value and key not in authenticated and fixed_translation(key) != value:
+                catalog['strings'][key] = ''
+                invalidated.add(hashlib.sha256(key.encode()).hexdigest())
+        catalog['legacy_diagram_label_revalidation'] = dict(
+            from_catalog_sha256=hashlib.sha256(original).hexdigest() if original is not None else None,
+            invalidated_source_sha256=sorted(invalidated),
+            original_native_source_sha256=sorted(hashlib.sha256(key.encode()).hexdigest() for key in authenticated),
+            assessment='Unversioned diagram seeds cannot approve prose. Reuse requires the selected CLI and current instruction policy; incompatible original calls remain historical, not corrupt or newly approved.')
+        if invalidated and 'source_carryover' in catalog:
+            from .translation_context import retained_carryover
+            retained = retained_carryover(catalog,catalog['strings'])
+            if retained:
+                catalog['source_carryover'] = retained
+            else:
+                catalog.pop('source_carryover',None)
     translation_agent = None
     if translate:
         # Rendering can retain the original figure-generation profile while

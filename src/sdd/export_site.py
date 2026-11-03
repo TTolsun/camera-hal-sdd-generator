@@ -20,6 +20,7 @@ from .document_metadata import generation_info, reader_label, split_frontmatter
 from .export_html import _nav_entries, _title_of_text
 from .site_markdown import SOURCE_LINK_TEMPLATES, _href, _html_path, _render
 from .facts.model import KnowledgeModel
+from .validation_stage import read_text
 
 MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.esm.min.mjs"
 MERMAID_ENTRY = "mermaid.esm.min.mjs"
@@ -230,7 +231,7 @@ def _site_navigation(cfg, settings, retired):
 
 
 def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=True):
-    texts = {rel: (cfg.sdd_dir / rel).read_text(encoding="utf-8") for _, _, rel in entries}
+    texts = {rel: read_text(cfg.sdd_dir / rel) for _, _, rel in entries}
     # 사람 승인 장부. 표시가 검사 결과를 바꾸지는 않지만, 승인·미승인 상태를 구분해 보여 준다.
     from . import approvals as approvals_mod
     ledger = approvals_mod.load(cfg)
@@ -243,7 +244,7 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
     if "index.md" not in texts:
         intro = settings.intro
         if intro:
-            texts["index.md"] = (cfg.root / str(intro)).read_text(encoding="utf-8")
+            texts["index.md"] = read_text(cfg.root / str(intro))
         else:
             texts["index.md"] = "# 문서 안내\n\n코드에서 추출한 구조와 문장별 근거를 함께 확인하세요.\n"
         texts["index.md"] += "\n## 문서 검증 현황 {#문서-목록}\n\n"
@@ -367,6 +368,10 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
     artifact = from_manuscript(cfg, model, section, texts[rel]) if section else None
     visuals = render_visuals(cfg, model, section, artifact) if section else []
     body = place(body, visuals, section)
+    if rel == 'index.md':
+        from .guide_visuals import inject
+        body, guide_visuals = inject(cfg, body, {value[0]['id'] for value in visuals})
+        visuals += guide_visuals
     if rel == 'index.md' and cfg.site.overview_visual is not None:
         selection = cfg.site.overview_visual
         if (not isinstance(selection, dict) or set(selection) != {'section', 'visual'}

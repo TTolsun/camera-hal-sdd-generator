@@ -13,16 +13,26 @@ import subprocess
 import sys
 import yaml
 
+from sdd.config import load
+
 ROOT = Path(__file__).resolve().parents[4]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--base', type=Path, required=True)
 parser.add_argument('--plans', type=Path, required=True)
 parser.add_argument('--work', type=Path, required=True)
 parser.add_argument('--checkpoint-source', type=Path)
+parser.add_argument('--source-additions', type=Path)
 args = parser.parse_args()
 base, work = args.base.resolve(), args.work.resolve()
-if not work.is_relative_to(ROOT) or work.exists():
-    raise ValueError('Choose a new isolated workspace output')
+if not work.is_relative_to(ROOT):
+    raise ValueError('Incremental output is outside the workspace: '+str(work))
+if work.is_relative_to(base) or base.is_relative_to(work):
+    raise ValueError('Incremental base and output must not overlap: '+str(work))
+source = load(base/'generation.yaml').source_root.resolve()
+if work.is_relative_to(source) or source.is_relative_to(work):
+    raise ValueError('Incremental work must not overlap the source checkout: '+str(work))
+if work.exists():
+    raise ValueError('Preserve the existing incremental output: '+str(work))
 work.mkdir(parents=True)
 plans = yaml.safe_load(args.plans.read_bytes())
 if len(plans) != 1:
@@ -34,8 +44,11 @@ for index, plan in enumerate(values, 1):
     stage = work/f'step-{index:02d}'
     selected = work/f'plan-{index:02d}.yaml'
     selected.write_text(yaml.safe_dump({section:[plan]},allow_unicode=True,sort_keys=False),encoding='utf-8')
-    subprocess.run([sys.executable,str(Path(__file__).with_name('prepare_followup.py')),
-                    '--base',str(base),'--work',str(stage),'--plans',str(selected)],check=True,cwd=ROOT)
+    prepare = [sys.executable,str(Path(__file__).with_name('prepare_followup.py')),
+               '--base',str(base),'--work',str(stage),'--plans',str(selected)]
+    if args.source_additions and index==1:
+        prepare += ['--source-additions',str(args.source_additions.resolve())]
+    subprocess.run(prepare,check=True,cwd=ROOT)
     reused = {}
     if checkpoint_source:
         for relative in ['build/cli-checkpoints','build/prompts/calls','build/prompts/cli']:

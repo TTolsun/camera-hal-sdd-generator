@@ -135,3 +135,26 @@ def test_stacked_table_column_labels_are_translated():
     result = ''.join(parser.output)
     assert '<td data-label="Role &quot;comment&quot;">value</td>' in result
     assert '<td data-label="">x</td>' in result
+def test_scoped_figure_proof_labels_keep_distinct_native_meanings():
+    from sdd.site_localization import DisplayText, display_strings, display_pairs
+    document = ('<p>반환</p><table><tr><td><span data-sdd-label-en="Return the request">반환</span></td></tr>'
+                '<tr><td><span data-sdd-label-en="Return ownership &amp; keep &lt;Buffer&gt;">반환</span></td></tr></table>')
+    assert display_strings(document) == ['반환']
+    parser = DisplayText(lambda value:'Generic return')
+    parser.feed(document)
+    rendered = ''.join(parser.output)
+    assert '<p>Generic return</p>' in rendered
+    assert '>Return the request</span>' in rendered
+    assert '>Return ownership &amp; keep &lt;Buffer&gt;</span>' in rendered
+    pairs = display_pairs(document,{'반환':'Generic return'})
+    assert [p['translated'] for p in pairs] == ['Generic return','Return the request','Return ownership & keep <Buffer>']
+
+
+@pytest.mark.parametrize('tag,value,body',[('span','','반환'),('span','반환','반환'),
+    ('div','Return','반환'),('span','Return','<b>반환</b>')])
+def test_invalid_scoped_figure_labels_fail_closed(tag,value,body):
+    from sdd.site_localization import DisplayText
+    parser = DisplayText(lambda value:value)
+    parser.feed(f'<{tag} data-sdd-label-en="{value}">{body}</{tag}>')
+    with pytest.raises(ValueError,match='scoped diagram'):
+        parser.output

@@ -15,12 +15,12 @@
   "pages": 62,
   "items": 556,
   "counts": {
-    "appropriate": 0,
-    "needs_visual": 0,
-    "omit": 0,
-    "unreviewed": 556
+    "appropriate": 128,
+    "needs_visual": 125,
+    "omit": 267,
+    "unreviewed": 36
   },
-  "unresolved": 556,
+  "unresolved": 161,
   "candidate_counts": {
     "ko": 163,
     "en": 176
@@ -46,29 +46,109 @@
     "count_as_new": false
   },
   "human_review": "pending",
-  "generator_merge": null,
+  "generator_merge": {
+    "pr": 233,
+    "sha": "172dd9a1d3834cda398d6798df113e28a94a2676",
+    "ci_run": 41694260329,
+    "ci_jobs": "all four Linux/Windows and Python3.11/3.14 passed"
+  },
   "public_merge": null,
   "pages_release": null,
   "scope_exclusions": [
     "issue163 reader evaluation",
     "physical camera and in-house HAL validation"
   ],
-  "inventory": "inventory-v10.json.gz",
-  "inventory_policy": "All headings including 132 visual titles are now explicit review records; current acceptance pending.",
+  "inventory": "baseline-item-review-v11.json.gz",
+  "inventory_policy": "556 explicit records: 424 explanatory/introduction records and132 auxiliary visual-title headings; auxiliary headings do not add independent questions.",
   "tests": {
-    "item_and_dependency_checks": 66,
-    "related_integration_checks": 184,
-    "initial_pr_ci": "failed: import cycle and raw configuration boundary; both fixed, new CI pending"
+    "item_gate_ci": "PR233 all4 CI passed",
+    "literal_followup_local": 166,
+    "literal_followup_ci": "PR234 all4 CI passed",
+    "native_provenance_and_guide_regressions": {
+      "passed": 96,
+      "skipped": 1,
+      "log": "build/issue215/pytest-68.log"
+    },
+    "translation_site_gate_regressions": {
+      "passed": 261,
+      "skipped": 1,
+      "log": "build/issue215/pytest-69.log"
+    }
   },
   "draft_generation": {
-    "page": "pipeline-handler.md",
-    "stop_order": "native independent review stop-diagrams-07 passed",
-    "reentry": "native independent review stop-diagrams-04 passed; graph unchanged",
-    "bilingual_page_review": "pending",
-    "browser": "pending",
+    "pipeline_shutdown": "6 bilingual selected items accepted by native review; further pipeline responsibilities/configuration/search generated, full-page review pending",
+    "onboarding": "Fresh changed-item review accepted all6; 4 exact unchanged items reused without repinning",
+    "lsc_structure": "10 bilingual items resolved after fresh evidence ownership render",
+    "allocator": "18 bilingual items resolved before latest literal rendering change; rerender/review changed fingerprints still required",
+    "camera_model": "Whole-page input overflow failed; three subsequent native groups reviewed all30 records; 2 need correction to stop immediate-return path",
+    "camera_requests": "28 records reviewed:20 appropriate,6 omit,2 require end-to-end diagram; supplementary draft generated",
+    "lsc_flow": "24 records reviewed:6 appropriate,16 omit,2 require build-input identity relation; supplementary draft generated",
     "human_review": "pending"
   },
   "prior_results": "Initial inventory and original CLI results retained without repinning to changed audit fingerprints.",
   "generator_pr": 233,
-  "native_archive": "native-evidence-01.zip"
+  "native_archive": "native-evidence-01.zip",
+  "current_gate_unreviewed": {
+    "deferred_other_session": 14,
+    "baseline_evidence_panel_ownership": 22,
+    "fix": "Generator PR233 corrects ownership during fresh render; final source-bound review still required"
+  },
+  "followup_generator_pr": 234,
+  "review_coverage": "All60 baseline pages outside the two deferred virtual-capture pages received independent native Terra High reviews. Unresolved candidate and mechanical failures remain; this is not whole-site completion.",
+  "generator_merges": [
+    {
+      "pr": 233,
+      "sha": "172dd9a1d3834cda398d6798df113e28a94a2676",
+      "ci": "all4 passed"
+    },
+    {
+      "pr": 234,
+      "sha": "c99849fb62f0ea3ae5895f1ef0a604cc6416269a",
+      "ci_run": 41704195877,
+      "ci": "all4 passed"
+    }
+  ],
+  "current_branch": "codex/issue-215-inventory-remediation",
+  "native_archive_checkpoint": "native-evidence-03-index.json",
+  "integrated_draft": {
+    "sections": 25,
+    "path": "build/issue215/integrated-draft-05",
+    "facts_sha256": "31bfc75bb49d523688f5808b652a1e9cfc924b5bae65c77edd9fdf100817963e",
+    "manuscripts": "Byte copies of completed native drafts; no manual manuscript or HTML corrections",
+    "structural_facts": "Original293 extraction retained; configured source windows recollected, not a new full AST extraction",
+    "initial_assembly_failure": "ipu3-lsc-prepare and ipa-module-validation retain old README style hash; real current-profile generation in progress",
+    "source_render_preflight": {
+      "pages": 28,
+      "failures": 0,
+      "scope": "Korean source/render checks; no English acceptance or release"
+    },
+    "style_refresh": "ipu3-lsc-prepare, ipa-module-validation and request-diagnosis regenerated through the current native public profile; six static scenario appendices regenerated through Generator"
+  },
+  "common_translation": {
+    "verified_glossary_native_units": 181,
+    "profile": "Independent native Codex CLI/gpt-6.1-terra/high",
+    "note": "Only raw receipt-bound compatible units can seed later runs; input/source/schema/policy changes do not repin old reviews"
+  },
+  "outstanding": [
+    "Full current-contract bilingual integration translation and item review; baseline counts are not current acceptance",
+    "Other-session PR231/PR78 remain unmerged; virtual-capture items stay deferred, chat was not messaged or resumed",
+    "Merge remaining generator followup; public SDD PR/merge after other-session integration; same-build Pages/live artifact verification"
+  ],
+  "count_context": "Historical baseline-v11 judgments only; not the current integrated manuscript/site count or completion status.",
+  "guide_visual": {
+    "artifact": "examples/libcamera/site-guide-visuals.json",
+    "source_commit": "c99849fb62f0ea3ae5895f1ef0a604cc6416269a",
+    "generation": "Actual native Codex/Terra High response; separate project reading-guide evidence, not libcamera runtime",
+    "native_item_review": "Prototype home-preview-01: 2 body items appropriate and2 auxiliary titles omitted; later source-anchor/label rendering changes require final fingerprint review.",
+    "ui": "Desktop KO and mobile EN: diagrams rendered, outside numbered procedures, no horizontal overflow, search one glossary hit, Escape and focus restoration verified",
+    "evidence_navigation": "Corrected anchor/panel contract; actual home-preview-02 English link opens guide, displays separate guide commit, and Back to explanation restores source-link focus."
+  },
+  "native_code_review": {
+    "run": "build/issue215/code-review-35",
+    "findings": [],
+    "human_review": "pending",
+    "followup": "Code35 accepted prior patch. Additional scoped-label and policy-migration fixes are under code40 independent review; no final acceptance claimed yet."
+  },
+  "current_full_item_counts": null,
+  "current_checkpoint": "25 document draft sections, 28 KO source/render preflight pages passed; full EN translation in progress. No public release or completed all-item audit."
 }
