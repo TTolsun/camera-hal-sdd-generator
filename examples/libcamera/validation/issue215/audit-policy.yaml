@@ -1,3 +1,6 @@
+paths:
+  style: ../../../../style
+
 visual_audit:
   # Inventory is collected before review. Enable only with the complete ledger.
   enabled: false

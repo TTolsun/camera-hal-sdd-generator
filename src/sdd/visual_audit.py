@@ -17,7 +17,7 @@ import posixpath
 import re
 from urllib.parse import unquote, urlsplit
 
-from .validation_stage import load_json
+from .validation_stage import load_json, read_bytes
 from .site_paths import owned_path
 
 STATUSES = ('appropriate', 'needs_visual', 'omit', 'unreviewed')
@@ -69,7 +69,8 @@ def policy(cfg=None):
     if (not isinstance(deferred, dict) or any(not isinstance(k, str) or not isinstance(v, str)
                                            or not v.strip() for k, v in deferred.items())):
         raise ValueError('deferred_pages must map page paths to explicit pending review reasons')
-    return {**raw, 'thresholds': thresholds, 'signals': signals, 'deferred_pages': deferred}
+    styles = {p.name:hashlib.sha256(read_bytes(p)).hexdigest() for p in sorted(cfg.style_dir.glob('*.md'))} if cfg else {}
+    return {**raw, 'thresholds': thresholds, 'signals': signals, 'deferred_pages': deferred, 'style_policy': styles}
 
 
 @dataclass
@@ -500,7 +501,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
             figure['sha256'] = digest(figure)
         row['source_commit'] = source_commit
         row['fingerprint'] = digest({**row, 'child_fingerprints': [by_id[c]['fingerprint'] for c in row['children']],
-                                     'policy': {k: options[k] for k in ('thresholds', 'signals')}, 'version': 1})
+                                     'policy': {k: options[k] for k in ('thresholds', 'signals', 'style_policy')}, 'version': 1})
         row['status'] = 'unreviewed'
         row['reason'] = options['deferred_pages'].get(page, 'No current item review; candidate heuristics are not acceptance')
         row['source_windows'] = []

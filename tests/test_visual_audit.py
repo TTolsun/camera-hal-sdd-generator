@@ -411,3 +411,12 @@ def test_svg_image_asset_is_bound(tmp_path):
     (tmp_path/'image.svg').write_text('<svg>changed</svg>', encoding='utf-8')
     changed = inspect_site(tmp_path, policy())
     assert original['items'][1]['source_window_hashes'] != changed['items'][1]['source_window_hashes']
+
+
+def test_writing_policy_change_requires_new_item_review(tmp_cfg):
+    original = report('<h2 id="one">One</h2><p>text</p>', policy(tmp_cfg))
+    records = ledger(original)
+    guide = tmp_cfg.style_dir/'README.md'
+    guide.write_text(guide.read_text(encoding='utf-8')+'\nNew visualization review policy.\n', encoding='utf-8')
+    changed = apply_reviews(report('<h2 id="one">One</h2><p>text</p>', policy(tmp_cfg)), records)
+    assert changed['unresolved'] == len(changed['items'])

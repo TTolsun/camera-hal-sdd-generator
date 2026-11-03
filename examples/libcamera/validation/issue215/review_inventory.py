@@ -6,6 +6,7 @@ is archived; a successful call is not final publication or human acceptance.
 import argparse
 from dataclasses import asdict
 import json
+import re
 from pathlib import Path
 import subprocess
 import hashlib
@@ -38,6 +39,8 @@ def main():
             or cfg.agent.command or cfg.agent.args != ['-c', 'model_reasoning_effort="high"']):
         raise ValueError('This public independent review requires native Codex/Terra High with no inherited wrapper')
     report = json.loads(args.inventory.read_bytes())
+    if not re.fullmatch(r'[0-9a-f]{40}', report.get('source_commit', '')):
+        raise ValueError('Immutable source review requires a full source commit')
     selected = [row for row in report['items'] if (row['page'].removeprefix('en/') == args.page if args.page
                                                    else row['id'].removeprefix('en/') in args.item)]
     expected = len([row for row in selected if row['language'] == 'ko'])
@@ -45,8 +48,16 @@ def main():
         raise ValueError('Every selected item needs exactly two language peers')
     if any(row['page'] in report['policy']['deferred_pages'] for row in selected):
         raise ValueError('Another session owns a selected item; wait for integration')
-    windows, additional = {}, {}
+    windows, additional, document_windows = {}, {}, {}
     for row in selected:
+        # Excluded source/log material stays outside explanatory length counts,
+        # but its actual presentation must be visible to the editorial review.
+        if row['excluded'] and row['anchor']:
+            path = args.site/row['page']
+            doc = Document(path.read_text(encoding='utf-8'))
+            text = source_window(doc, row['anchor'], root=args.site.resolve(), page=row['page'])
+            document_windows[row['id']] = dict(text=text, sha256=digest(text),
+                purpose='Presentation including folded source/log material; not explanatory length')
         for href in row['available_source_windows'] + [u for f in row['figures'] for u in f['evidence']]:
             parts = urlsplit(href)
             if parts.scheme or parts.netloc:
@@ -74,6 +85,7 @@ def main():
             windows[key] = dict(text=text, sha256=digest(text))
     properties = dict(id={'type': 'string'}, status={'type': 'string', 'enum': ['appropriate', 'needs_visual', 'omit', 'unreviewed']},
         reason={'type': 'string'}, question={'type': 'string'}, figures={'type': 'array', 'items': {'type': 'string'}},
+        adjacent_item={'type': 'string'}, adjacent_fingerprint={'type': 'string'},
         source_windows={'type': 'array', 'items': {'type': 'string'}},
         additional_source_windows={'type': 'array', 'items': {'type': 'string'}},
         unreviewed_scope={'type': 'array', 'items': {'type': 'string'}}, proposed_question={'type': 'string'})
@@ -91,6 +103,7 @@ def main():
             compact['figures'].append(dict(id=figure['id'], sha256=figure['sha256'], definition=key))
         item_inputs.append(compact)
     payload = dict(items=item_inputs, figures=figures, source_windows=windows, additional_source_windows=additional,
+                   document_windows=document_windows,
                    inventory_sha256=digest(report), source_commit=report.get('source_commit'))
     args.out.mkdir(parents=True, exist_ok=False)
     (args.out/'inputs.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
@@ -98,7 +111,10 @@ def main():
         argv=command(cfg.agent)+arguments(cfg.agent, schema)), ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     system = ('You independently review source-bound Korean/English libcamera documentation per item. '
               'Return all supplied item IDs exactly once. Evaluate whether a local figure answers the specific reader question; '
-              'a generic class diagram or a link elsewhere cannot qualify. Long explanation (600 chars or 3 paragraphs), '
+              'a generic diagram that does not answer that question or a link elsewhere cannot qualify. '
+              'A directly adjacent sibling figure may qualify only when it directly answers this same question; '
+              'name its exact adjacent_item and adjacent_fingerprint and explain that relation individually. '
+              'Use empty adjacent fields when no adjacent reuse is needed. Long explanation (600 chars or 3 paragraphs), '
               'states, order, branches, responsibility and ownership warrant a meaningful diagram unless a concrete table or '
               'simple independent facts suffice. Length/figure count alone never approves. Inspect both languages. '
               'Use exact source_window_hashes keys, including item:<ID> for a document-only inventory window. '
