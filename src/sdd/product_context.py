@@ -169,7 +169,8 @@ def bind(cfg, sections):
                                 'start': source_id, 'end': source_id, 'kind': 'product',
                                 'product_record': doc, 'text': text})
                 for part in topic.get('parts', []):
-                    part['sources'].append(source_id)
+                    if source_id not in part['sources']:
+                        part['sources'].append(source_id)
             topic['sources'] = sources
     return result
 
