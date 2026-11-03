@@ -27,7 +27,10 @@ prompt: 앞 준비 그림에서 실제 Camera 큐 호출을 통과한 요청부�
   n8는 상태와 무관한 버퍼 완료 신호이며 다음 완료·순서 그림으로 이어집니다. n0/n1 source pipeline-register와 pipeline-dispatch, n2 request-status-completion
   및 pipeline-completion 근거를 함께 확인합니다. 준비 도우미/할당/Camera API/제출 카운터를 이 그림에 다시 넣지 않습니다. 노드 60자, authored
   간선 20자, 한국어·영어 모두 짧은 행동·질문으로 씁니다. 쓰기 방향 동기화는 매핑/변환/쓰기를 둘러싸는 범위이며 그 뒤 따로 시작한다고 쓰지 마세요. 취소 분기 true/false와
-  변환 오류 true/false는 실제 guard를 보존합니다.
+  변환 오류 true/false는 실제 guard를 보존합니다. 현재 유효한 9개 노드·간선·소스 guard·양쪽 결과·인용은 그대로 보존합니다. n6의 한국어는 CPU가 Virtual2
+  lines 패턴의 NV12 변환과 매핑 버퍼 쓰기를 함께 시도함을 명시하며 변환하고 쓰기를 시도처럼 앞 동작 성공을 단정하지 않습니다. 영어에는 conversion 또는 converting과
+  writing to the mapped buffer가 모두 시도 대상임을 명확히 표현합니다. n2 취소 완료 통지는 앞선 Pending 요청이면 보류된다는 조건을 짧게 남기고 즉시
+  보장 없음이라는 반복 경고는 생략합니다. 함수명이 있는 n4는 VirtualCameraData::processRequest 식별자를 보존합니다. 그 밖의 올바른 의미는 바꾸지 않습니다.
 sources:
 - pipeline-dispatch
 - pipeline-register
@@ -58,6 +61,8 @@ answer_contract:
     message: Keep implementation function names and literal return-value guards in evidence. Use brief
       actions/decisions in authored visible labels; preserve actual symbol bindings and conditions. VirtualCameraData::processRequest
       remains the necessary scheduled target identity.
+  - pattern: 변환하고|변환한 뒤
+    message: Both conversion and mapped-buffer writing are attempted; do not assert prior conversion success.
   required_terms:
   - - Virtual2
   - - NV12
@@ -97,6 +102,9 @@ answer_contract_en:
   - - VirtualCameraData::processRequest
   - - writing
     - write
+  - - convert
+    - converting
+    - conversion
 require_connected: true
 max_edge_label_chars: 20
 require_guard_branches: true
