@@ -70,6 +70,16 @@ def main():
     baseline_sections['sections'] = [deepcopy(target) if s['id']=='request-lifecycle' else s
                                      for s in baseline_sections['sections']]
     (RUN/'config/sections.yaml').write_text(yaml.safe_dump(baseline_sections,allow_unicode=True,sort_keys=False),encoding='utf-8')
+    glossary_path = RUN/'config/glossary.yaml'
+    glossary = yaml.safe_load(glossary_path.read_bytes())
+    current_glossary = yaml.safe_load((ROOT/'examples/libcamera/config/glossary.yaml').read_bytes())
+    known = {term['term'] for term in glossary['terms']}
+    glossary['terms'].extend(deepcopy(term) for term in current_glossary['terms']
+                            if term['term'] in {'QBUF','STREAMOFF','DQBUF'} and term['term'] not in known)
+    aliases = next(term for term in glossary['terms'] if term['term']=='errno')['aliases']
+    if 'ENOENT' not in aliases:
+        aliases.append('ENOENT')
+    glossary_path.write_text(yaml.safe_dump(glossary,allow_unicode=True,sort_keys=False),encoding='utf-8')
     # Question-specific figures use the existing source-bound generator.
     visuals = yaml.safe_load((BASE/'config/visuals.yaml').read_bytes())
     current_visuals = yaml.safe_load((ROOT/'examples/libcamera/config/visuals.yaml').read_bytes())

@@ -1,0 +1,137 @@
+overrides:
+  callback-order-flow:
+    prompt: 상태 검사를 통과하는 선택 UVC의 내부 호출 순서입니다. 11개 노드를 사용해 PH completeBuffer 진입, bufferCompleted 신호 발생과 emit
+      반환, Private completeBuffer, pending 제거·연결 해제, PH 반환, UVC 명시적 completeRequest, complete, 선두 Pending 검사,
+      pop_front, Camera requestComplete, requestCompleted 신호 발생을 구분하세요. bufferCompleted와 requestCompleted 노드는
+      한국어와 영어 모두 신호 발생/emit 반환으로 명시하고 애플리케이션 수신 함수 실행·복귀로 쓰지 마세요. Queued 수신 실행은 이 순서에 속하지 않으며 pending 갱신보다
+      앞이나 뒤일 수 있습니다. Direct 수신만 emit 안에서 동기 호출됩니다. 이 그림에 수신 함수를 추가하지 말고 별도 콜백 경계 그림으로 연결하세요. pending 제거에서 요청
+      완료로 병렬 분기하지 마세요.
+  uvc-depth-flow:
+    question: 제어 적용 뒤 QBUF 실패의 취소와, 성공 제출 뒤 별도로 도착한 장치 완료 알림은 어디에서 갈라집니까?
+    prompt: 최대 9노드로 queueRequestDevice, processControls, queueBuffer, queuedBuffers_, cancelRequest, bufferAvailable,
+      imageBufferReady, completeRequest를 구분하세요. 제어 음수는 QBUF 전에 취소로, 제어 성공 뒤 QBUF 실패는 제어 롤백 보장 없이 취소로 연결합니다.
+      QBUF 성공은 큐 등록으로 연결하고, 여기에서 장치 알림이 별도로 발생하고 DQBUF가 성공한 조건에만 bufferAvailable→imageBufferReady→버퍼 뒤 요청 완료로
+      이어집니다. 이 연결은 동기 호출이나 하드웨어 완료 보장이 아니라 별도 장치 이벤트 조건입니다. 등록→장치 알림을 무조건 즉시 실행으로 그리지 마세요. DQBUF 실패의 알림 부재를
+      표시하고 성공 경로와 섞지 마세요. Fatal cache_ 부재는 정상 음수 반환으로 일반화하지 마세요.
+    sources:
+    - submit
+    - controls
+    - qbuf
+    - dequeue
+    - uvc-ready
+    - uvc-wiring
+    - complete
+    - dispatch
+    whole_sources:
+    - submit
+    - controls
+    - qbuf
+    - dequeue
+    - uvc-ready
+    - uvc-wiring
+    - complete
+    - dispatch
+additions:
+- id: callback-boundaries-flow
+  topic: callback-depth
+  kind: flow
+  title: 직접 중첩 호출과 별도 Queued 수신의 경계
+  generation: llm
+  max_nodes: 9
+  question: emit 안의 Direct 실행, emit 뒤 내부 갱신, 별도 Queued 수신과 stop 반환의 수명 협의는 어떻게 다릅니까?
+  prompt: 지정한 8개 노드로 Signal::emit→슬롯의 activate→BoundMethodBase::activatePack 실제 호출 간선을 반드시 연결하세요. Object 멤버
+    슬롯의 activate에서 activatePack으로 이어지는 원문은 bound-overloads에 있습니다. activatePack의 Direct→invokePack과 Queued→postMessage를
+    분기하고, Direct 수신은 emit 안에서 동기 실행합니다. postMessage 뒤 Object::message 처리는 수신 객체와 실제 메시지 소비가 성립한 조건이며 emit 반환·completeBuffer
+    내부 갱신보다 앞이나 뒤일 수 있으므로 그 선후를 고정하지 마세요. emit 반환 뒤에만 Request::Private::completeBuffer 내부 갱신으로 연결합니다. Camera::stop
+    노드에서는 해당 Blocking 호출의 완료와 다른 Queued 수신자의 마지막 사용을 확인하는 수명 협의를 검증 계획으로 구분하세요. stop 반환에서 모든 수신 처리가 끝났다는 간선을
+    만들지 마세요. Direct에서 같은 함수 중첩은 별도 허용 문서가 없으면 금지이며 임의 Camera 상태 변경의 재진입 허용으로 쓰지 않습니다. 신호 발생과 수신 실행을 같은 노드로
+    쓰지 마세요. 경계·협의의 그림이며 지원·실행 성공 보장을 만들지 마세요.
+  sources:
+  - signals
+  - signal-overloads
+  - connections
+  - object-message
+  - invocation
+  - receiver-lifetime
+  - completion
+  - status
+  - stop-entry
+  - thread-rules
+  - bound-overloads
+  - thread-dispatch
+  - invoke-message
+  whole_sources:
+  - signals
+  - signal-overloads
+  - connections
+  - object-message
+  - invocation
+  - receiver-lifetime
+  - completion
+  - status
+  - stop-entry
+  - thread-rules
+  - bound-overloads
+  - thread-dispatch
+  - invoke-message
+  required_symbols:
+  - emit
+  - activate
+  - activatePack
+  - invokePack
+  - postMessage
+  - message
+  - completeBuffer
+  - stop
+- id: failure-investigation-flow
+  topic: review
+  kind: flow
+  title: 실패 주입별 다음 관찰 분기
+  generation: llm
+  max_nodes: 9
+  question: 준비 timeout, 제출 실패, DQBUF 실패, STREAMOFF 실패에서 각각 무엇을 기록하고 어느 다음 분기를 확인합니까?
+  prompt: 네 가지 독립된 실패 조사 경로를 지정한 9개 심볼 노드로 그리세요. timeout은 cancel 뒤 emitPrepareCompleted로 가며 prepared_를 기록합니다.
+    UVC queueRequestDevice는 findBuffer·processControls·queueBuffer 실패를 반환하며, 호출한 doQueueRequest의 비0 ret 검사가
+    cancelRequest로 이어지는 실제 경로를 반드시 연결하세요. 제어 처리 음수와 제어 적용 뒤 QBUF 음수를 노드 레이블에서 구분하고 부분 적용·롤백 보장 없음·ret·error_idx를
+    기록합니다. 이 호출자는 dispatch-flow 원문에 제공되어 있으므로 미확인이라고 쓰지 마세요. bufferAvailable→dequeueBuffer 호출과 nullptr의 해당
+    bufferReady 부재에서 ret·index·queuedBuffers_를 확인합니다. streamOff 실패의 조기 반환 뒤에도 UVC stopDevice가 반환을 무시하고 releaseBuffers를
+    호출하는 경로에서 cache_ reset·잔존 큐·후속 DQBUF 접근 조건을 확인합니다. 이 네 작은 경로 사이에 실행 순서나 자동 복구 화살표를 만들지 마세요. cache_ 부재 Fatal은
+    정상 음수 반환과 구분합니다. 실제 오류 주입 실행이 아닌 소스 기반 검증 위치입니다.
+  sources:
+  - prepare-flow
+  - uvc-submit
+  - uvc-controls
+  - control-result
+  - qbuf-flow
+  - dequeue-flow
+  - common-stop
+  - streamoff-flow
+  - uvc-stop
+  - release-buffers
+  - request-invariant
+  - completion-flow
+  - dispatch-flow
+  whole_sources:
+  - prepare-flow
+  - uvc-submit
+  - uvc-controls
+  - control-result
+  - qbuf-flow
+  - dequeue-flow
+  - common-stop
+  - streamoff-flow
+  - uvc-stop
+  - release-buffers
+  - request-invariant
+  - completion-flow
+  - dispatch-flow
+  required_symbols:
+  - timeout
+  - emitPrepareCompleted
+  - queueRequestDevice
+  - doQueueRequest
+  - cancelRequest
+  - dequeueBuffer
+  - bufferAvailable
+  - streamOff
+  - releaseBuffers

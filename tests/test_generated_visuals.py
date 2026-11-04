@@ -1209,3 +1209,35 @@ def test_cited_fragments_cannot_synthesize_a_balanced_guard(tmp_cfg,automatic,mo
     else:draft['edges'][0]['condition_ref']='c0:true'
     with pytest.raises(ValueError,match='cited source guards|absent from its cited source passages'):
         materialize(tmp_cfg,model,section,plan,draft,'synthetic-unit-fixture')
+
+
+@pytest.mark.parametrize('field',['label','label_en'])
+def test_braced_expression_cannot_reuse_a_bare_source_guard(tmp_cfg,automatic,field):
+    from sdd.generated_visuals import materialize,plans
+    section,model,_,agent=automatic
+    record=model.evidence['device/shutdown/stop']
+    record['text']='void Device::stop() { if (ret == 0) { cancelPending(); } }'
+    record['sha256']=hashlib.sha256(record['text'].encode()).hexdigest()
+    source=section['design_topics'][0]['sources'][0]
+    source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
+    draft=copy.deepcopy(agent.draft)
+    draft['edges'][0].update(condition_ref='c0:true')
+    draft['edges'][0][field]='bool{ret == 0}'
+    with pytest.raises(ValueError,match='cited source guards'):
+        materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')
+
+
+@pytest.mark.parametrize('field',['label','label_en'])
+@pytest.mark.parametrize('label',['sizeof ret == 0','(bool)ret == 0'])
+def test_unary_or_cast_expression_is_not_the_cited_guard(tmp_cfg,automatic,field,label):
+    from sdd.generated_visuals import materialize,plans
+    section,model,_,agent=automatic
+    record=model.evidence['device/shutdown/stop']
+    record['text']='void Device::stop() { if (ret == 0) { cancelPending(); } }'
+    record['sha256']=hashlib.sha256(record['text'].encode()).hexdigest()
+    source=section['design_topics'][0]['sources'][0]
+    source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
+    draft=copy.deepcopy(agent.draft);draft['edges'][0].update(condition_ref='c0:true')
+    draft['edges'][0][field]=label
+    with pytest.raises(ValueError,match='cited source guards'):
+        materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')

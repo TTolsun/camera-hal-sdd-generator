@@ -46,6 +46,8 @@ else:
     result['status']='failed'
 result['source_clean_after']=not git('status','--porcelain=v1','--untracked-files=all')
 result['linked_library_unchanged']=sha(library)==library_sha
+if not result['source_clean_after'] or not result['linked_library_unchanged']:
+    result['status']='failed'
 (out/'verification.json').write_text(json.dumps(result,indent=2)+'\n')
 print(json.dumps(result))
-sys.exit(0 if result['status']=='passed' and result['source_clean_after'] and result['linked_library_unchanged'] else 1)
+sys.exit(0 if result['status']=='passed' else 1)

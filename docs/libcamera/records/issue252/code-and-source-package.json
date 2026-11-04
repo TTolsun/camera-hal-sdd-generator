@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "archive": "code-and-source-evidence.zip",
+  "archive_sha256": "159b065d71be929a43b0e076c7a9fd25ed82c3041ba454a77a40c1511d1c3694",
+  "bytes": 10338704,
+  "files": 498,
+  "index_sha256": "8cf5dc6b07421e919746af05287661510c7bcb71c20dc0b4760f4c38689a9628",
+  "public_source_only": true,
+  "human_review": "pending",
+  "scope": "Code CLI reviews and failed attempts, original build/extraction/probe and frozen source windows. Final manuscript translation/semantic review/site/deployment evidence is tracked separately in public publication/issue252."
+}

@@ -360,7 +360,7 @@ def materialize(cfg, model, section, plan, draft, producer):
                             left,right=offset,offset+len(expected)
                             while left and right<len(remaining) and remaining[left-1]=='(' and remaining[right]==')':
                                 left-=1;right+=1
-                            operators={'and','or','bitand','bitor','xor','and_eq','or_eq','xor_eq','not','not_eq','compl','==','!=','<=','>=','&&','||','.','->','->*','[',']','+','-','--','*','/','%','&','|','^','?','!','~',',','<','>','='}
+                            operators={'sizeof','alignof','co_await','co_yield','typeid','noexcept','new','delete','throw','(',')','and','or','bitand','bitor','xor','and_eq','or_eq','xor_eq','not','not_eq','compl','{','}','==','!=','<=','>=','&&','||','.','->','->*','[',']','+','-','--','*','/','%','&','|','^','?','!','~',',','<','>','='}
                             before=remaining[left-1] if left else None
                             after=remaining[right] if right<len(remaining) else None
                             qualified_before=left>=2 and remaining[left-2:left]==[':',':']

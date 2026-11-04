@@ -59,10 +59,12 @@ def main():
     assert generated_inputs(build)==provenance['generated_inputs']
     model = KnowledgeModel.load(out/'facts/facts.json')
     assert model.meta['source_commit']==sha
+    assert model.meta['translation_units']==len(normalized)==135
+    assert model.meta['comments']['tus']==135 and model.meta['comments']['errors']==0
     expected = ['libcamera::Camera','libcamera::Request','libcamera::PipelineHandler',
                 'libcamera::V4L2Device','libcamera::V4L2VideoDevice','libcamera::PipelineHandlerUVC']
     assert all(name in model.classes for name in expected)
-    report = dict(source_commit=sha,compile_db_sha256=hashlib.sha256((out/'compile_commands.json').read_bytes()).hexdigest(),
+    report = dict(translation_units=model.meta['translation_units'],parse_stats=model.meta['comments'],source_commit=sha,compile_db_sha256=hashlib.sha256((out/'compile_commands.json').read_bytes()).hexdigest(),
                   analysis_only_adjustments=adjustments,
                   build_provenance_sha256=hashlib.sha256(provenance_bytes).hexdigest(),source_clean_before_and_after=True,
                   facts_sha256=hashlib.sha256((out/'facts/facts.json').read_bytes()).hexdigest(),

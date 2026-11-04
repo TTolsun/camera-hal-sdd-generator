@@ -132,6 +132,13 @@ def main():
             if visual['id'] in whole:
                 visual['sources']=list(whole[visual['id']])
                 visual['whole_sources']=list(whole[visual['id']])
+        changes=yaml.safe_load((HERE/'visual-amendments.yaml').read_bytes())
+        additions={visual['id']:visual for visual in changes['additions']}
+        for visual in visuals['sections']['request-lifecycle']:
+            visual.update(deepcopy(changes['overrides'].get(visual['id'],{})))
+            visual.update(deepcopy(additions.get(visual['id'],{})))
+        existing={visual['id'] for visual in visuals['sections']['request-lifecycle']}
+        visuals['sections']['request-lifecycle'].extend(deepcopy(visual) for visual in changes['additions'] if visual['id'] not in existing)
         # Persist only the new automatic plan block in the main example.
         # No unrelated unpublished request-diagnosis diagrams are introduced.
         baseline = yaml.safe_load((RUN.parent/'public/publication/issue214/config/visuals.yaml').read_bytes())

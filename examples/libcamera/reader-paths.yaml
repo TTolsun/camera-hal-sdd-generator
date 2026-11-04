@@ -18,7 +18,7 @@ claims:
     kind: fact
     condition: 구현 책임은 코드 객체와 호출자의 계약입니다. 특정 사내 부서·담당자에게 수정 책임을 배정한 것이 아닙니다.
     sources:
-      - {section: request-lifecycle, topic: resources, part: ownership}
+      - {section: request-lifecycle, topic: resources, part: summary}
   - id: stopping
     title: 정지와 연결 해제의 차이
     kind: fact

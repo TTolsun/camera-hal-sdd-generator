@@ -17,6 +17,9 @@ def main():
     rows, historical = [], 0
     imported=RUN/'historical-native-restoration-latest.json'
     preserved={row['receipt'] for row in json.loads(imported.read_bytes())['receipts']} if imported.exists() else set()
+    newest=RUN/'historical-native-restoration-newest.json'
+    if newest.exists():
+        preserved.update(path.replace(chr(92),'/') for path in json.loads(newest.read_bytes())['receipt_paths'])
     for calls in sorted(RUN.rglob('calls')):
         if not calls.is_dir():
             continue

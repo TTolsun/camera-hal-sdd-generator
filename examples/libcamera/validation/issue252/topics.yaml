@@ -192,11 +192,12 @@ topics:
     - status
     max_statements: 2
   - id: frame-validity
-    question: 선택한 경로에서 프레임 상태를 판정할 때 완전히 한정된 FrameMetadata::FrameSuccess·FrameMetadata::FrameError·FrameMetadata::FrameCancelled를 각 문장의 주어로 사용하여 FrameMetadata::Status의 API 주석 계약을 세 짧은 문장으로 대조하세요. FrameMetadata::FrameSuccess는 프레임 데이터와
-      모든 metadata 필드가 유효합니다. FrameMetadata::FrameError는 데이터가 일부·전체 손상되거나 없거나 유효하지 않으며 sequence·timestamp만 유효하고 나머지 필드는 유효하지
-      않을 수 있습니다. FrameMetadata::FrameCancelled는 데이터가 유효하지 않고 status 외의 metadata 필드는 유효하지 않습니다. RequestComplete는 cancelled_
-      기준이므로 이 판정을 대신할 수 없다는 기존 설명에 연결하되 되풀이하지 말고, 실제 하드웨어·DMA 검증을 했다는 주장으로 확대하지 마세요. FrameStartup/IPA 등 선택
-      밖 상태를 포함한 전체 열거형 완료 표라고 쓰지 마세요.
+    question: 선택한 경로에서 프레임 상태를 판정할 때 완전히 한정된 FrameMetadata::FrameSuccess·FrameMetadata::FrameError·FrameMetadata::FrameCancelled를
+      각 문장의 주어로 사용하여 FrameMetadata::Status의 API 주석 계약을 세 짧은 문장으로 대조하세요. FrameMetadata::FrameSuccess는 프레임 데이터와
+      모든 metadata 필드가 유효합니다. FrameMetadata::FrameError는 데이터가 일부·전체 손상되거나 없거나 유효하지 않으며 sequence·timestamp만 유효하고
+      나머지 필드는 유효하지 않을 수 있습니다. FrameMetadata::FrameCancelled는 데이터가 유효하지 않고 status 외의 metadata 필드는 유효하지 않습니다.
+      RequestComplete는 cancelled_ 기준이므로 이 판정을 대신할 수 없다는 기존 설명에 연결하되 되풀이하지 말고, 실제 하드웨어·DMA 검증을 했다는 주장으로 확대하지
+      마세요. FrameStartup/IPA 등 선택 밖 상태를 포함한 전체 열거형 완료 표라고 쓰지 마세요.
     sources:
     - frame-validity
     max_statements: 1
@@ -238,6 +239,16 @@ topics:
     file: src/libcamera/v4l2_videodevice.cpp
     start: void V4L2VideoDevice::bufferAvailable()
     end: \brief Start the video stream
+  - id: disconnect
+    file: src/libcamera/camera.cpp
+    start: void Camera::Private::disconnect()
+    end: '
+
+      }'
+  - id: camera-complete
+    file: src/libcamera/camera.cpp
+    start: void Camera::requestComplete(Request *request)
+    end: '} /* namespace libcamera */'
   parts:
   - id: order
     question: PipelineHandler::stop가 waitingRequests_를 지역 큐로 swap해 stopDevice 내부 완료에서 재투입되지 않게 하고, 장치 정지 후
@@ -290,6 +301,18 @@ topics:
     - common-stop
     - camera-stop
     max_statements: 2
+  - id: disconnect-stop
+    question: 실행 중 Camera::Private::disconnect는 Running을 Configured로 바꾸고 disconnected_를 설정합니다. 이후 Camera::stop은
+      isRunning이 거짓이면 즉시 0을 반환하고 PipelineHandler::stop을 호출하지 않으므로 연결 해제 뒤 정리·완료 배출을 보장하지 않습니다. 이 상태에서 잔여 요청이
+      Camera::requestComplete에 실제 도달한다는 조건이면 Configured는 허용 범위 밖이어서 Fatal 경계에 도달합니다. 이 세 분기를 명시하고 상태 전이·stop
+      진입과 반환·잔여 완료 진입의 상대 순서와 수명을 변경 검증에서 기록하도록 세 문장으로 설명하세요. 실제 장치 분리·후속 완료 발생·정상 복구를 관측했다고 쓰지 마세요.
+    sources:
+    - disconnect
+    - camera-stop
+    - camera-complete
+    max_statements: 2
+    answer_contract:
+      basis: investigation
 - id: callback-order
   title: 버퍼 알림과 요청 반환의 내부 경계
   question: 버퍼 신호와 내부 추적 갱신 및 요청 완료 통지의 순서를 구분하여 재사용 시점을 판단하세요.
@@ -466,6 +489,10 @@ topics:
     file: src/libcamera/base/thread.cpp
     start: \page thread Thread Support
     end: "\n */"
+  - id: stop-entry
+    file: src/libcamera/camera.cpp
+    start: int Camera::stop()
+    end: \brief Handle request completion and notify application
   parts:
   - id: delivery
     question: CameraManager 문맥에서 완료 신호를 내는 위치와 Object 슬롯의 수신 문맥을 두 문장 이내로 구분하세요. Auto의 현재·수신 스레드 비교와 Direct
@@ -551,3 +578,10 @@ topics:
     max_statements: 1
     answer_contract:
       basis: investigation
+  - id: blocking-context
+    question: ConnectionTypeBlocking에서 Thread::current()와 수신 Object의 thread가 같으면 Direct로 바꾸어 즉시 호출하고, 다르면 InvokeMessage를
+      게시한 뒤 해당 호출의 semaphore를 기다리는 구현을 두 문장 이내로 설명하세요. 이 대기가 다른 Queued 수신자들의 처리 완료나 전체 큐 drain을 뜻한다고 확대하지 마세요.
+    sources:
+    - connections
+    - stop-entry
+    max_statements: 1

@@ -6059,6 +6059,10 @@ sections:
       file: src/libcamera/base/thread.cpp
       start: \page thread Thread Support
       end: "\n */"
+    - id: stop-entry
+      file: src/libcamera/camera.cpp
+      start: int Camera::stop()
+      end: \brief Handle request completion and notify application
     parts:
     - id: delivery
       question: CameraManager 문맥에서 완료 신호를 내는 위치와 Object 슬롯의 수신 문맥을 두 문장 이내로 구분하세요. Auto의 현재·수신 스레드 비교와 Direct
@@ -6144,6 +6148,13 @@ sections:
       max_statements: 1
       answer_contract:
         basis: investigation
+    - id: blocking-context
+      question: ConnectionTypeBlocking에서 Thread::current()와 수신 Object의 thread가 같으면 Direct로 바꾸어 즉시 호출하고, 다르면 InvokeMessage를
+        게시한 뒤 해당 호출의 semaphore를 기다리는 구현을 두 문장 이내로 설명하세요. 이 대기가 다른 Queued 수신자들의 처리 완료나 전체 큐 drain을 뜻한다고 확대하지 마세요.
+      sources:
+      - connections
+      - stop-entry
+      max_statements: 1
   - id: stopping
     title: 정지와 연결 해제를 구분하기
     question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking
@@ -6397,6 +6408,16 @@ sections:
       file: src/libcamera/v4l2_videodevice.cpp
       start: void V4L2VideoDevice::bufferAvailable()
       end: \brief Start the video stream
+    - id: disconnect
+      file: src/libcamera/camera.cpp
+      start: void Camera::Private::disconnect()
+      end: '
+
+        }'
+    - id: camera-complete
+      file: src/libcamera/camera.cpp
+      start: void Camera::requestComplete(Request *request)
+      end: '} /* namespace libcamera */'
     parts:
     - id: order
       question: PipelineHandler::stop가 waitingRequests_를 지역 큐로 swap해 stopDevice 내부 완료에서 재투입되지 않게 하고, 장치 정지 후
@@ -6449,6 +6470,18 @@ sections:
       - common-stop
       - camera-stop
       max_statements: 2
+    - id: disconnect-stop
+      question: 실행 중 Camera::Private::disconnect는 Running을 Configured로 바꾸고 disconnected_를 설정합니다. 이후 Camera::stop은
+        isRunning이 거짓이면 즉시 0을 반환하고 PipelineHandler::stop을 호출하지 않으므로 연결 해제 뒤 정리·완료 배출을 보장하지 않습니다. 이 상태에서 잔여 요청이
+        Camera::requestComplete에 실제 도달한다는 조건이면 Configured는 허용 범위 밖이어서 Fatal 경계에 도달합니다. 이 세 분기를 명시하고 상태 전이·stop
+        진입과 반환·잔여 완료 진입의 상대 순서와 수명을 변경 검증에서 기록하도록 세 문장으로 설명하세요. 실제 장치 분리·후속 완료 발생·정상 복구를 관측했다고 쓰지 마세요.
+      sources:
+      - disconnect
+      - camera-stop
+      - camera-complete
+      max_statements: 2
+      answer_contract:
+        basis: investigation
   - id: review
     title: 변경 검토와 실행 확인
     question: 기존 호출의 기록과 함께 준비·제출·완료·정지의 실패 주입별 예상 분기와 변경 불변조건을 연결하는 검증 계획을 제시하세요. 실행 결과를 만들지 마세요. 완료 횟수는 신호
