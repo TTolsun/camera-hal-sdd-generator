@@ -521,6 +521,169 @@ sections:
       - source: stopping/stop
         sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
         quote: d->setState(Private::CameraConfigured);
+  - id: completed-but-not-returned
+    topic: resources
+    stage: conditions
+    kind: flow
+    title: 완료 상태와 애플리케이션 반환의 차이
+    question: A 다음 B를 제출한 조건부 예이며 두 요청 사이에 다른 요청이 있을 수도 있습니다. cancelled_가 B의 상태를 정하고, 반환 루프는 현재 선두를 하나씩 검사합니다. 중간
+      Pending 요청에서도 중단하므로 A가 끝났다는 사실만으로 B 반환을 보장하지 않습니다. 수명 화살표는 접근·유효성 계약이며 실제 콜백 시각이나 함수 전체의 종료 순서가 아닙니다.
+    nodes:
+    - id: b
+      label: 'B의 처리 종료: completeRequest(B)'
+      label_en: 'B processing finished: completeRequest(B)'
+      evidence:
+      - &id002
+        source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: request->_d()->complete();
+    - id: flag
+      label: cancelled_ 값은?
+      label_en: Value of cancelled_?
+      evidence:
+      - &id001
+        source: resources/internal-completion
+        sha256: 8498bd73d69b1968ec400ec4ac12b473ec4ded1098969af3318c7238fe9d68b8
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+      shape: decision
+    - id: complete
+      label: RequestComplete
+      label_en: RequestComplete
+      evidence:
+      - *id001
+    - id: cancelled
+      label: RequestCancelled
+      label_en: RequestCancelled
+      evidence:
+      - *id001
+    - id: head
+      label: 현재 큐 선두가 RequestPending인가?
+      label_en: Is the current queue head RequestPending?
+      evidence:
+      - &id003
+        source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+      shape: decision
+    - id: wait
+      label: 선두 Pending에서 반환 루프 중단
+      label_en: Stop the return loop at a Pending head
+      evidence:
+      - *id002
+      - *id003
+    - id: return
+      label: 현재 선두를 제거하고 앱에 반환
+      label_en: Pop the current head and return it to the app
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+      - &id004
+        source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->requestComplete(req);
+    - id: handler
+      label: 완료 함수 반환 뒤 핸들러 접근 금지
+      label_en: No handler access after completion function returns
+      evidence:
+      - &id005
+        source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function\
+          \ returns."
+    - id: buffer
+      label: 요청 완료 콜백까지 버퍼 유지
+      label_en: Keep buffer valid until request completion callback
+      evidence:
+      - &id006
+        source: resources/buffer-duty
+        sha256: 996424643a0de2ec5fbd8b8491639ae1afea030ab989179410e7a1eaa48c1673
+        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
+    - id: end
+      label: 이 반환 루프 종료
+      label_en: End this return loop
+      evidence:
+      - &id007
+        source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty()) {
+    edges:
+    - from: b
+      to: flag
+      label: 내부 complete에서 상태 선택
+      label_en: Select status in internal complete
+      evidence:
+      - *id002
+      - *id001
+    - from: flag
+      to: complete
+      label: 'false'
+      label_en: 'false'
+      evidence:
+      - *id001
+    - from: flag
+      to: cancelled
+      label: 'true'
+      label_en: 'true'
+      evidence:
+      - *id001
+    - from: complete
+      to: head
+      label: 상태 갱신 뒤 선두 검사
+      label_en: Check queue head after status update
+      evidence:
+      - *id002
+      - *id003
+    - from: cancelled
+      to: head
+      label: 취소 상태도 같은 선두 검사
+      label_en: Same head check for cancelled status
+      evidence:
+      - *id002
+      - *id003
+    - from: head
+      to: wait
+      label: 선두가 Pending이면 break
+      label_en: Break if the head is Pending
+      evidence:
+      - *id003
+    - from: head
+      to: return
+      label: Pending 아님
+      label_en: Not Pending
+      evidence:
+      - *id003
+      - *id004
+    - from: b
+      to: handler
+      label: 함수 반환 시점의 접근 경계
+      label_en: Access boundary when the function returns
+      evidence:
+      - *id005
+    - from: b
+      to: buffer
+      label: B도 자기 요청 완료 콜백까지 유효성 보장
+      label_en: Keep B buffers valid until its own request completion callback
+      evidence:
+      - *id006
+    - from: return
+      to: head
+      label: 다음 선두
+      label_en: Next head
+      evidence:
+      - *id007
+    - from: return
+      to: end
+      label: 큐가 비었으면 이 루프 종료
+      label_en: End this loop if the queue is empty
+      evidence:
+      - *id007
+    - from: wait
+      to: end
+      label: break로 루프 종료
+      label_en: Exit the loop via break
+      evidence:
+      - *id003
   - id: lifecycle-timeout-fence-recovery
     topic: resources
     kind: flow
@@ -1496,7 +1659,7 @@ sections:
       label: '계획: 실제 stopDevice 구현 복귀 이벤트 관찰 (구현 미검토, 측정 결과 아님)'
       label_en: 'Plan: observe the actual stopDevice implementation return event (implementation not reviewed, not
         a measured result)'
-      evidence: &id001
+      evidence: &id008
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: \fn PipelineHandler::stopDevice()
@@ -1538,7 +1701,7 @@ sections:
       label: 구현 복귀를 관찰한 뒤 호출 뒤 위치와 비교 (호출 직전 로그는 복귀의 증거가 아님)
       label_en: Compare with the post-call position after an observed implementation return (a before-call log is
         not evidence of return)
-      evidence: *id001
+      evidence: *id008
   - id: stopping-completion-contract
     topic: stopping
     kind: flow
@@ -1597,7 +1760,7 @@ sections:
       label: bufferCompleted 알림
       label_en: bufferCompleted notification
       evidence:
-      - &id002
+      - &id009
         source: resources/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: camera->bufferCompleted.emit(request, buffer);
@@ -1605,7 +1768,7 @@ sections:
       label: 요청 내부 버퍼 추적 갱신
       label_en: Update internal buffer tracking
       evidence:
-      - &id003
+      - &id010
         source: resources/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: return request->_d()->completeBuffer(buffer);
@@ -1613,7 +1776,7 @@ sections:
       label: 명시적 completeRequest
       label_en: Explicit completeRequest
       evidence:
-      - &id004
+      - &id011
         source: resources/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: They shall complete requests explicitly with completeRequest().
@@ -1621,7 +1784,7 @@ sections:
       label: 제출 순서로 애플리케이션 반환
       label_en: Return to application in submission order
       evidence:
-      - &id005
+      - &id012
         source: resources/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: camera->requestComplete(req);
@@ -1635,14 +1798,14 @@ sections:
       label: emit 뒤 갱신
       label_en: Update after emit
       evidence:
-      - *id002
-      - *id003
+      - *id009
+      - *id010
     - from: tracking
       to: complete
       label: 마지막 버퍼만으로 자동 완료되지 않음
       label_en: Last buffer does not automatically complete request
       evidence:
-      - *id004
+      - *id011
     - from: complete
       to: return
       label: 완료된 선두부터 반환
@@ -1652,170 +1815,7 @@ sections:
         source: resources/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
-      - *id005
-  - id: completed-but-not-returned
-    topic: resources
-    stage: conditions
-    kind: flow
-    title: 완료 상태와 애플리케이션 반환의 차이
-    question: A 다음 B를 제출한 조건부 예이며 두 요청 사이에 다른 요청이 있을 수도 있습니다. cancelled_가 B의 상태를 정하고, 반환 루프는 현재 선두를 하나씩 검사합니다. 중간
-      Pending 요청에서도 중단하므로 A가 끝났다는 사실만으로 B 반환을 보장하지 않습니다. 수명 화살표는 접근·유효성 계약이며 실제 콜백 시각이나 함수 전체의 종료 순서가 아닙니다.
-    nodes:
-    - id: b
-      label: 'B의 처리 종료: completeRequest(B)'
-      label_en: 'B processing finished: completeRequest(B)'
-      evidence:
-      - &id007
-        source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: request->_d()->complete();
-    - id: flag
-      label: cancelled_ 값은?
-      label_en: Value of cancelled_?
-      evidence:
-      - &id006
-        source: resources/internal-completion
-        sha256: 8498bd73d69b1968ec400ec4ac12b473ec4ded1098969af3318c7238fe9d68b8
-        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
-      shape: decision
-    - id: complete
-      label: RequestComplete
-      label_en: RequestComplete
-      evidence:
-      - *id006
-    - id: cancelled
-      label: RequestCancelled
-      label_en: RequestCancelled
-      evidence:
-      - *id006
-    - id: head
-      label: 현재 큐 선두가 RequestPending인가?
-      label_en: Is the current queue head RequestPending?
-      evidence:
-      - &id008
-        source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
-      shape: decision
-    - id: wait
-      label: 선두 Pending에서 반환 루프 중단
-      label_en: Stop the return loop at a Pending head
-      evidence:
-      - *id007
-      - *id008
-    - id: return
-      label: 현재 선두를 제거하고 앱에 반환
-      label_en: Pop the current head and return it to the app
-      evidence:
-      - source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: "This function ensures that requests will be returned to the application in\n * submission order"
-      - &id009
-        source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: camera->requestComplete(req);
-    - id: handler
-      label: 완료 함수 반환 뒤 핸들러 접근 금지
-      label_en: No handler access after completion function returns
-      evidence:
-      - &id010
-        source: resources/complete-access
-        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function\
-          \ returns."
-    - id: buffer
-      label: 요청 완료 콜백까지 버퍼 유지
-      label_en: Keep buffer valid until request completion callback
-      evidence:
-      - &id011
-        source: resources/buffer-duty
-        sha256: 996424643a0de2ec5fbd8b8491639ae1afea030ab989179410e7a1eaa48c1673
-        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
-    - id: end
-      label: 이 반환 루프 종료
-      label_en: End this return loop
-      evidence:
-      - &id012
-        source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: while (!data->queuedRequests_.empty()) {
-    edges:
-    - from: b
-      to: flag
-      label: 내부 complete에서 상태 선택
-      label_en: Select status in internal complete
-      evidence:
-      - *id007
-      - *id006
-    - from: flag
-      to: complete
-      label: 'false'
-      label_en: 'false'
-      evidence:
-      - *id006
-    - from: flag
-      to: cancelled
-      label: 'true'
-      label_en: 'true'
-      evidence:
-      - *id006
-    - from: complete
-      to: head
-      label: 상태 갱신 뒤 선두 검사
-      label_en: Check queue head after status update
-      evidence:
-      - *id007
-      - *id008
-    - from: cancelled
-      to: head
-      label: 취소 상태도 같은 선두 검사
-      label_en: Same head check for cancelled status
-      evidence:
-      - *id007
-      - *id008
-    - from: head
-      to: wait
-      label: 선두가 Pending이면 break
-      label_en: Break if the head is Pending
-      evidence:
-      - *id008
-    - from: head
-      to: return
-      label: Pending 아님
-      label_en: Not Pending
-      evidence:
-      - *id008
-      - *id009
-    - from: b
-      to: handler
-      label: 함수 반환 시점의 접근 경계
-      label_en: Access boundary when the function returns
-      evidence:
-      - *id010
-    - from: b
-      to: buffer
-      label: B도 자기 요청 완료 콜백까지 유효성 보장
-      label_en: Keep B buffers valid until its own request completion callback
-      evidence:
-      - *id011
-    - from: return
-      to: head
-      label: 다음 선두
-      label_en: Next head
-      evidence:
       - *id012
-    - from: return
-      to: end
-      label: 큐가 비었으면 이 루프 종료
-      label_en: End this loop if the queue is empty
-      evidence:
-      - *id012
-    - from: wait
-      to: end
-      label: break로 루프 종료
-      label_en: Exit the loop via break
-      evidence:
-      - *id008
   - id: completion-change-checks
     topic: resources
     stage: change
@@ -1827,7 +1827,7 @@ sections:
       label: 완료 책임 변경
       label_en: Change completion responsibility
       evidence:
-      - *id004
+      - *id011
     - id: thread
       label: CameraManager 스레드 호출 의무
       label_en: Must call from CameraManager thread
