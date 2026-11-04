@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "carry-profile-review",
+  "completed_at": "2026-11-04T20:43:05.477361+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "69400fc4501e10147917837d9ffbdcc31b54474800a2947b347e8f19d9932d59",
+  "response_sha256": "138cf5db02dfec041cb305c812726a6f5a248bac89ce4139c6be43c833183a72",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "c5e9524ad3c501e1ceed97b0c25f117cadaa375a01382ff1ef03132f8cd60353",
+    "prompt_sha256": "79e330f31e5b7124f7809c4c6d54d7a5e5eb9428a1af1ceab8de0da2cdaac133",
+    "provider": {
+      "thread_id": "01a1a84c-fcba-7c31-8adc-ba2405ece327",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 40069,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 117,
+        "reasoning_output_tokens": 59
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-6swphflt.stdout.txt",
+    "native_schema_sha256": "a9d721893f9be6ebde09da047d01cca984e2fca4dcde319e180e2638b870fa93"
+  },
+  "human_review": "pending"
+}

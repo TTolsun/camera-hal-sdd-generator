@@ -1,0 +1,82 @@
+"""One fixed, instrumented issue253 run; not a reusable product runner."""
+import datetime,hashlib,json,os,pathlib,shutil,subprocess,sys,time
+import yaml
+
+generator=pathlib.Path(__file__).resolve().parents[3]
+export=generator/'build/issue253/cost-followup/linux-run-01'
+native=pathlib.Path('/home/baboess/.cache/camera-hal-sdd-issue253-cost-v1')
+origin=pathlib.Path('/home/baboess/.cache/camera-hal-sdd-issue193-293/source')
+base='be909e49b7cfcbf8e888b6a17928ae06fd7f9a96'
+head='293d751a814e0d4c34e85ad457ccd9d5eefd1a61'
+if native.exists() or export.exists(): raise SystemExit('Fresh output directories are required; no prior records will be replaced.')
+native.mkdir(parents=True);export.mkdir(parents=True)
+source=native/'source'
+env={**os.environ,'CC':'clang','CXX':'clang++','PYTHONPATH':str(generator/'src')}
+ledger={'schema':1,'generator':'d392d7520b74f2c5a462daaba5c1b72a31f46269','base':base,'head':head,'native':str(native),'stages':[],'human_active_review_seconds':None,'status':'running'}
+def save():
+    raw=json.dumps(ledger,ensure_ascii=False,indent=2)+'\n'
+    (export/'execution.json').write_text(raw,encoding='utf-8')
+    (native/'execution.json').write_text(raw,encoding='utf-8')
+def run(name,argv,cwd=native,timeout=1800):
+    started=datetime.datetime.now(datetime.timezone.utc).isoformat();tick=time.perf_counter()
+    row={'stage':name,'argv':argv,'cwd':str(cwd),'started_at':started,'status':'running','human_active_review_seconds':None,'wait_seconds':None}
+    ledger['stages'].append(row);save();print('START '+name,flush=True)
+    target=export/(name+'.log')
+    try:
+        with target.open('w',encoding='utf-8') as out:
+            p=subprocess.run(argv,cwd=cwd,env=env,stdout=out,stderr=subprocess.STDOUT,timeout=timeout)
+        row.update(returncode=p.returncode,status='completed' if p.returncode==0 else 'failed')
+    except Exception as exc:
+        row.update(status='failed',error=repr(exc))
+    finally:
+        row.update(ended_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),elapsed_seconds=time.perf_counter()-tick)
+        save();print('END '+name+' '+json.dumps(row),flush=True)
+    if row['status']!='completed': raise RuntimeError('Stage failed: '+name)
+def configure(label):
+    target=native/label;target.mkdir()
+    cfg=yaml.safe_load((generator/'examples/libcamera/sdd.yaml').read_text(encoding='utf-8'))
+    cfg['source']['root']=str(source)
+    cfg['source']['compile_commands']=str(target/'compile_commands.json')
+    cfg['paths']={k:str((generator/'examples/libcamera'/v).resolve()) for k,v in cfg['paths'].items()}
+    cfg['paths']['products_file']=str(generator/'examples/libcamera/config/products.yaml')
+    cfg['output']={'facts_dir':str(target/'facts'),'sdd_dir':str(target/'sdd'),'diagrams_dir':str(target/'diagrams')}
+    path=target/'sdd.yaml';path.write_text(yaml.safe_dump(cfg,allow_unicode=True,sort_keys=False),encoding='utf-8')
+    return path
+def extract(label,cfg):
+    run(label+'-compdb',[sys.executable,str(generator/'examples/libcamera/prepare_compdb.py'),'--build-dir',str(source/'build'),'--out',str(cfg.parent/'compile_commands.json')])
+    run(label+'-extract',[sys.executable,str(generator/'tools/run_sdd.py'),'--config',str(cfg),'extract'])
+    facts=cfg.parent/'facts/facts.json';data=json.loads(facts.read_text(encoding='utf-8'))
+    assert data['meta']['source_commit']==(base if label=='base' else head)
+    shutil.copyfile(facts,export/(label+'-facts.json'))
+    shutil.copyfile(cfg.parent/'compile_commands.json',export/(label+'-compile_commands.json'))
+    shutil.copyfile(cfg,export/(label+'-sdd.yaml'))
+    ledger[label+'_facts']={'sha256':hashlib.sha256(facts.read_bytes()).hexdigest(),'meta':{k:v for k,v in data['meta'].items() if k not in ['compile_units','parsed_files']},'qcam_parsed_files':[p for p in data['meta']['parsed_files'] if '/qcam/' in p]}
+    save()
+try:
+    run('source-clone',['git','clone','--no-hardlinks','--no-checkout',str(origin),str(source)])
+    run('source-base',['git','checkout','--detach',base],source)
+    cached=origin/'subprojects/libpisp'
+    run('libpisp-source-clone',['git','clone','--no-hardlinks',str(cached),str(source/'subprojects/libpisp')])
+    run('libpisp-pin',['git','checkout','--detach','v1.5.0'],source/'subprojects/libpisp')
+    run('tool-versions',[sys.executable,'-c','import subprocess,sys; print(sys.version); [subprocess.run(c,check=True) for c in [["clang++","--version"],["meson","--version"],["pkg-config","--modversion","Qt6Core","Qt6Gui","Qt6OpenGL","Qt6OpenGLWidgets","Qt6Widgets"],["git","-C","'+str(source/'subprojects/libpisp')+'","rev-parse","HEAD"]]]'])
+    run('base-meson',['meson','setup','build','-Dpipelines=all','-Dipas=ipu3,mali-c55,rkisp1,rpi/pisp,rpi/vc4,softisp,vimc','-Dcam=enabled','-Dgstreamer=enabled','-Dqcam=enabled','-Ddocumentation=disabled','-Dtest=false'],source)
+    run('base-build',['ninja','-C','build','-j','3'],source)
+    bcfg=configure('base');extract('base',bcfg)
+    shutil.copyfile(source/'build/meson-info/intro-buildoptions.json',export/'base-meson-options.json')
+    shutil.copyfile(source/'build/meson-info/intro-dependencies.json',export/'base-meson-dependencies.json')
+    run('source-head',['git','checkout','--detach',head],source)
+    run('head-incremental-build',['ninja','-C','build','-j','3'],source)
+    hcfg=configure('head');extract('head',hcfg)
+    shutil.copyfile(source/'build/meson-info/intro-buildoptions.json',export/'head-meson-options.json')
+    run('head-impact',[sys.executable,str(generator/'tools/run_sdd.py'),'--config',str(hcfg),'impact','--base',base,'--head',head,'--base-facts',str(bcfg.parent/'facts/facts.json'),'--fail-on-coverage-gap'])
+    ledger['status']='completed'
+except Exception as exc:
+    ledger.update(status='failed',error=repr(exc))
+finally:
+    for label in ['base','head']:
+        for name in ['impact.json','impact-review.md']:
+            candidate=native/label/'build'/name
+            if candidate.exists():shutil.copyfile(candidate,export/(label+'-'+name))
+    save()
+print(json.dumps({'status':ledger['status'],'export':str(export)}),flush=True)
+sys.exit(0 if ledger['status']=='completed' else 1)

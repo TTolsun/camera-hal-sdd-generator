@@ -1,0 +1,223 @@
+The Meson build system
+Version: 1.10.1
+Source dir: /home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source
+Build dir: /home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/build
+Build type: native build
+Project name: libcamera
+Project version: 0.7.2
+C compiler for the host machine: clang (clang 21.1.8 "Ubuntu clang version 21.1.8 (6ubuntu1)")
+C linker for the host machine: clang ld.bfd 2.46
+C++ compiler for the host machine: clang++ (clang 21.1.8 "Ubuntu clang version 21.1.8 (6ubuntu1)")
+C++ linker for the host machine: clang++ ld.bfd 2.46
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+meson.build:38: WARNING: The sources and meson.build disagree about the version: 0.0.0 != 0.7.2
+Header "unistd.h" has symbol "close_range" : YES 
+Header "fcntl.h" has symbol "F_ADD_SEALS" : YES 
+Header "unistd.h" has symbol "issetugid" : NO 
+Header "locale.h" has symbol "locale_t" : YES 
+Header "sys/mman.h" has symbol "memfd_create" : YES 
+Header "stdlib.h" has symbol "secure_getenv" : YES 
+Header "version" has symbol "_LIBCPP_VERSION" : NO 
+Header "version" has symbol "__GLIBCXX__" : YES 
+Message: Detected C++ standard library: libstdc++
+Compiler for C supports arguments -Wno-c99-designator: YES 
+Found pkg-config: YES (/usr/bin/pkg-config) 2.5.1
+Did not find CMake 'cmake'
+Found CMake: NO
+Run-time dependency lttng-ust found: NO (tried pkgconfig and cmake)
+Program ./parser.py found: YES (/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/utils/codegen/ipc/./parser.py)
+Program ./generate.py found: YES (/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/utils/codegen/ipc/./generate.py)
+Program ./extract-docs.py found: YES (/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/utils/codegen/ipc/./extract-docs.py)
+Configuring version.h using configuration
+Program openssl found: YES (/usr/bin/openssl)
+Run-time dependency libyuv found: NO (tried pkgconfig and cmake)
+Has header "libyuv.h" : YES 
+Library yuv found: YES
+Library atomic found: YES
+Run-time dependency threads found: YES
+Run-time dependency libdw found: NO (tried pkgconfig and cmake)
+Run-time dependency libunwind found: NO (tried pkgconfig and cmake)
+Header "execinfo.h" has symbol "backtrace" : YES 
+Found pkg-config: YES (/usr/bin/pkg-config) 2.5.1
+Library rt found: YES
+Run-time dependency libpisp found: NO (tried pkgconfig and cmake)
+Looking for a fallback subproject for the dependency libpisp
+
+Executing subproject libpisp 
+
+libpisp| Project name: libpisp
+libpisp| Project version: 1.5.0
+libpisp| C compiler for the host machine: clang (clang 21.1.8 "Ubuntu clang version 21.1.8 (6ubuntu1)")
+libpisp| C linker for the host machine: clang ld.bfd 2.46
+libpisp| C++ compiler for the host machine: clang++ (clang 21.1.8 "Ubuntu clang version 21.1.8 (6ubuntu1)")
+libpisp| C++ linker for the host machine: clang++ ld.bfd 2.46
+libpisp| Configuring pisp_build_config.h using configuration
+libpisp| Run-time dependency nlohmann_json found: NO (tried pkgconfig and cmake)
+libpisp| Looking for a fallback subproject for the dependency nlohmann_json
+libpisp| Using subprojects/libpisp/subprojects/nlohmann_json.wrap
+libpisp| Downloading nlohmann_json source from https://github.com/nlohmann/json/releases/download/v3.12.0/include.zip
+
+Executing subproject libpisp:nlohmann_json
+
+nlohmann_json| Project name: nlohmann_json
+nlohmann_json| Project version: 3.12.0
+nlohmann_json| C++ compiler for the host machine: clang++ (clang 21.1.8 "Ubuntu clang version 21.1.8 (6ubuntu1)")
+nlohmann_json| C++ linker for the host machine: clang++ ld.bfd 2.46
+nlohmann_json| Build targets in project: 45
+nlohmann_json| Subproject nlohmann_json finished.
+
+libpisp| Dependency nlohmann_json from subproject subprojects/nlohmann_json-3.12.0 found: YES 3.12.0
+libpisp| Dependency threads found: YES unknown (cached)
+libpisp| Library dl found: YES
+libpisp| Run-time dependency Boost found: NO (tried system)
+libpisp| Dependency gstreamer-1.0 skipped: feature gstreamer disabled
+libpisp| Dependency gstreamer-base-1.0 skipped: feature gstreamer disabled
+libpisp| Dependency gstreamer-video-1.0 skipped: feature gstreamer disabled
+libpisp| Dependency gstreamer-allocators-1.0 skipped: feature gstreamer disabled
+libpisp| Build targets in project: 47
+libpisp| Subproject libpisp finished.
+
+Dependency libpisp from subproject subprojects/libpisp found: YES 1.5.0
+Run-time dependency egl found: YES 1.5
+Run-time dependency glesv2 found: YES 3.2
+Check usable header "EGL/egl.h" with dependency egl: YES 
+Run-time dependency dl found: YES
+Run-time dependency libudev found: YES 259
+Run-time dependency yaml-0.1 found: YES 0.2.5
+Run-time dependency gnutls found: YES 3.8.12
+Header "uchar.h" has symbol "mbrtoc16" skipped: feature android disabled
+Run-time dependency tensorflow-lite found: NO (tried pkgconfig and cmake)
+Run-time dependency libevent_pthreads found: YES 2.1.12-stable
+Run-time dependency libtiff-4 found: NO (tried pkgconfig and cmake)
+Run-time dependency GTest found: NO (tried pkgconfig and system)
+Looking for a fallback subproject for the dependency gtest
+Downloading gtest source from https://github.com/google/googletest/archive/release-1.11.0.zip
+Downloading gtest patch from https://wrapdb.mesonbuild.com/v2/gtest_1.11.0-1/get_patch
+
+Executing subproject gtest 
+
+gtest| Project name: gtest
+gtest| Project version: 1.11.0
+gtest| C++ compiler for the host machine: clang++ (clang 21.1.8 "Ubuntu clang version 21.1.8 (6ubuntu1)")
+gtest| C++ linker for the host machine: clang++ ld.bfd 2.46
+gtest| Dependency threads found: YES unknown (cached)
+gtest| Dependency threads found: YES unknown (cached)
+gtest| Dependency threads found: YES unknown (cached)
+gtest| Dependency threads found: YES unknown (cached)
+gtest| Build targets in project: 90
+gtest| Subproject gtest finished.
+
+Dependency gtest from subproject subprojects/googletest-release-1.11.0 found: YES 1.11.0
+Run-time dependency libdrm found: YES 2.4.131
+sdl2-config found: NO
+Run-time dependency sdl2 found: NO (tried pkgconfig, config-tool and cmake)
+Run-time dependency libjpeg found: YES 2.1.5
+Run-time dependency qt6 (modules: Core, Gui, OpenGL, OpenGLWidgets, Widgets) found: YES 6.10.2 (pkg-config)
+Detecting Qt6 tools
+Run-time dependency qt6 (modules: Core) found: YES 6.10.2 (pkg-config)
+Program /usr/lib/qt6/bin/moc found: NO
+Program /usr/lib/qt6/libexec/moc found: YES 6.10.2 6.10.2 (/usr/lib/qt6/libexec/moc)
+Program /usr/lib/qt6/bin/rcc found: NO
+Program /usr/lib/qt6/libexec/rcc found: YES 6.10.2 6.10.2 (/usr/lib/qt6/libexec/rcc)
+Program /usr/lib/qt6/bin/lrelease found: NO
+Program /usr/lib/qt6/libexec/lrelease found: NO
+Program lrelease6 found: NO
+Program lrelease-qt6 found: NO
+Program lrelease found: NO
+Program /usr/lib/qt6/bin/uic found: NO
+Program /usr/lib/qt6/libexec/uic found: YES 6.10.2 6.10.2 (/usr/lib/qt6/libexec/uic)
+Program /usr/lib/qt6/bin/qmlcachegen found: NO
+Program /usr/lib/qt6/libexec/qmlcachegen found: NO
+Program qmlcachegen6 found: NO
+Program qmlcachegen-qt6 found: NO
+Program qmlcachegen found: NO
+Program /usr/lib/qt6/bin/qmltyperegistrar found: NO
+Program /usr/lib/qt6/libexec/qmltyperegistrar found: NO
+Program qmltyperegistrar6 found: NO
+Program qmltyperegistrar-qt6 found: NO
+Program qmltyperegistrar found: NO
+Run-time dependency glib-2.0 found: YES 2.88.0
+Run-time dependency gstreamer-video-1.0 found: YES 1.28.2
+Run-time dependency gstreamer-allocators-1.0 found: YES 1.28.2
+Program python3 found: YES (/usr/bin/python3)
+pybind11-config found: NO
+Run-time dependency pybind11 found: NO (tried pkgconfig, config-tool and cmake)
+Configuring libcamerify using configuration
+Program doxygen skipped: feature documentation disabled
+Program dot skipped: feature documentation disabled
+Program sphinx-build-3 sphinx-build skipped: feature documentation disabled
+Configuring config.h using configuration
+Build targets in project: 99
+
+libcamera 0.7.2
+
+  Versions
+    libcamera git version    : 0.0.0+1-be909e49
+    Source version match     : NO
+    Sources                  : 0.7.2+1-be909e49-nvm
+
+  Paths
+    LIBCAMERA_DATA_DIR       : "/usr/local/share/libcamera"
+    LIBCAMERA_SYSCONF_DIR    : "/usr/local/etc/libcamera"
+    IPA_PROXY_DIR            : "/usr/local/libexec/libcamera"
+    IPA_CONFIG_DIR           : "/usr/local/etc/libcamera/ipa:/usr/local/share/libcamera/ipa"
+    IPA_MODULE_DIR           : "/usr/local/lib/x86_64-linux-gnu/libcamera/ipa"
+
+  Configuration
+    SoftISP support          : YES
+    SoftISP GPU acceleration : YES
+    IPA modules signed with  : gnutls
+    Enabled pipelines        : imx8-isi
+                               ipu3
+                               mali-c55
+                               rkisp1
+                               rpi/pisp
+                               rpi/vc4
+                               simple
+                               uvcvideo
+                               vimc
+                               virtual
+    Enabled IPA modules      : ipu3
+                               mali-c55
+                               rkisp1
+                               rpi/pisp
+                               rpi/vc4
+                               softisp
+                               vimc
+    Controls files           : control_ids_core.yaml
+                               control_ids_debug.yaml
+                               control_ids_draft.yaml
+                               control_ids_rpi.yaml
+    Properties files         : property_ids_draft.yaml
+                               property_ids_core.yaml
+    Hotplug support          : YES
+    Tracing support          : NO
+    Android support          : NO
+    GStreamer support        : YES
+    Python bindings          : NO
+    V4L2 emulation support   : YES
+    Unit tests               : NO
+
+  Applications
+    cam application          : YES
+    cam options              : output-kms
+    DNG output support       : NO
+    qcam application         : YES
+    lc-compliance application: YES
+
+  Subprojects
+    gtest                    : YES
+    libpisp                  : YES
+    nlohmann_json            : YES (from libpisp)
+
+  User defined options
+    cam                      : enabled
+    documentation            : disabled
+    gstreamer                : enabled
+    ipas                     : ipu3,mali-c55,rkisp1,rpi/pisp,rpi/vc4,softisp,vimc
+    pipelines                : all
+    qcam                     : enabled
+    test                     : false
+
+Found ninja-1.13.2 at /usr/bin/ninja

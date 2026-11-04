@@ -1,0 +1,29 @@
+[
+  {
+    "task": "T2",
+    "status": "completed",
+    "started_at": "2026-11-04T19:55:59.298663+00:00",
+    "ended_at": "2026-11-04T19:56:20.644985+00:00",
+    "elapsed_seconds": 21.34660069993697,
+    "prompt_chars": 112905,
+    "human_active_review_seconds": null
+  },
+  {
+    "task": "D1",
+    "status": "completed",
+    "started_at": "2026-11-04T19:56:20.647336+00:00",
+    "ended_at": "2026-11-04T19:56:41.127820+00:00",
+    "elapsed_seconds": 20.480912400060333,
+    "prompt_chars": 128176,
+    "human_active_review_seconds": null
+  },
+  {
+    "task": "D2",
+    "status": "completed",
+    "started_at": "2026-11-04T20:00:46.079948+00:00",
+    "ended_at": "2026-11-04T20:01:07.436743+00:00",
+    "elapsed_seconds": 21.35906950000208,
+    "prompt_chars": 175942,
+    "human_active_review_seconds": null
+  }
+]

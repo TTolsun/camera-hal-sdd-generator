@@ -1,0 +1,16 @@
+import hashlib,json,pathlib,subprocess,shutil,datetime,importlib.metadata
+root=pathlib.Path(__file__).resolve().parents[3]
+out=root/'build/issue253/cost-followup/generation-input-lock.json'
+if out.exists(): raise SystemExit('Input lock already exists; no overwrite.')
+repo=root/'build/issue253/cost-followup/document-baseline'
+sha=subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True).strip()
+assert sha=='4d656cd88c2a366dec7894e87301bf5205e98b36'
+manifest=json.loads((repo/'docs/site-manifest.json').read_text(encoding='utf-8'))
+digest=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+assert all(digest(repo/'docs'/p)==h for p,h in manifest['outputs'].items())
+catalog=root/'build/issue253/cost-followup/catalog-inputs/0'
+assert digest(catalog)==manifest['inputs']['english_catalog']
+executable=pathlib.Path(shutil.which('codex'))
+inputs={p.relative_to(root).as_posix():digest(p) for name in ['src/sdd','style','templates','examples/libcamera/config','examples/libcamera/prompts'] for p in (root/name).rglob('*') if p.is_file() and '__pycache__' not in p.parts}
+record={'frozen_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'kind':'supplementary-generation-stage-input-lock','source_base':'be909e49b7cfcbf8e888b6a17928ae06fd7f9a96','source_head':'293d751a814e0d4c34e85ad457ccd9d5eefd1a61','generator':'d392d7520b74f2c5a462daaba5c1b72a31f46269','document_input':sha,'document_build_id':manifest['build_id'],'catalog_sha256':digest(catalog),'site_manifest_sha256':digest(repo/'docs/site-manifest.json'),'generation_profile':{'kind':'cli','runner':'codex','command':[],'model':'gpt-6.1-terra','args':['-c','model_reasoning_effort="high"']},'review_profile':'docs/libcamera/records/issue253/review.yaml','cli_executable':str(executable),'cli_sha256':digest(executable),'cli_version':subprocess.check_output([str(executable),'--version'],text=True).strip(),'libraries':{p:importlib.metadata.version(p) for p in ['Markdown','pymdown-extensions','PyYAML','jsonschema']},'inputs':inputs,'method':'Copy current public source293 manuscripts as historical inputs into a separate baseline directory; normal reverse impact and carry-forward must verify parent-commit compatibility. Generate affected baseline sections with the selected CLI; then compare the actual forward change using matching base/head facts and same settings. Record incompatibilities instead of bypassing guards. Render and translation are staged after generation; site checks remain required. Initial setup/cost is separate from forward update.','original_reader_comparison_unchanged':True,'human_evaluation':'pending'}
+out.write_text(json.dumps(record,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps({k:v for k,v in record.items() if k!='inputs'},ensure_ascii=False))

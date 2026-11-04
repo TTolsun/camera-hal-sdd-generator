@@ -1,0 +1,172 @@
+{
+ "base": "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+ "head": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+ "changed_files": [
+  "src/apps/qcam/viewfinder_gl.cpp",
+  "src/apps/qcam/viewfinder_gl.h"
+ ],
+ "changed_classes": [
+  "ViewFinderGL",
+  "ViewFinderGL::QPrivateSignal"
+ ],
+ "sections": {
+  "overview": [
+   "watch 일치: src/apps/qcam/viewfinder_gl.cpp, src/apps/qcam/viewfinder_gl.h"
+  ],
+  "component-index": [
+   "watch 일치: src/apps/qcam/viewfinder_gl.cpp, src/apps/qcam/viewfinder_gl.h",
+   "클래스 변경: ViewFinderGL, ViewFinderGL::QPrivateSignal"
+  ]
+ },
+ "scenarios": {},
+ "packages": [
+  "src/apps/qcam"
+ ],
+ "coverage": {
+  "schema": 1,
+  "status": "mapped",
+  "baseline_available": true,
+  "ignored_files": [],
+  "files": [
+   {
+    "file": "src/apps/qcam/viewfinder_gl.cpp",
+    "watch_sections": [
+     "component-index",
+     "overview"
+    ],
+    "manual_review_sections": [],
+    "status": "mapped"
+   },
+   {
+    "file": "src/apps/qcam/viewfinder_gl.h",
+    "watch_sections": [
+     "component-index",
+     "overview"
+    ],
+    "manual_review_sections": [],
+    "status": "mapped"
+   }
+  ],
+  "entities": [
+   {
+    "kind": "class",
+    "name": "ViewFinderGL",
+    "files": [
+     "src/apps/qcam/viewfinder_gl.cpp",
+     "src/apps/qcam/viewfinder_gl.h"
+    ],
+    "evidence": {
+     "base": [
+      "src/apps/qcam/viewfinder_gl.cpp:110",
+      "src/apps/qcam/viewfinder_gl.cpp:119",
+      "src/apps/qcam/viewfinder_gl.cpp:126",
+      "src/apps/qcam/viewfinder_gl.cpp:136",
+      "src/apps/qcam/viewfinder_gl.cpp:329",
+      "src/apps/qcam/viewfinder_gl.cpp:397",
+      "src/apps/qcam/viewfinder_gl.cpp:412",
+      "src/apps/qcam/viewfinder_gl.cpp:493",
+      "src/apps/qcam/viewfinder_gl.cpp:504",
+      "src/apps/qcam/viewfinder_gl.cpp:512",
+      "src/apps/qcam/viewfinder_gl.cpp:544",
+      "src/apps/qcam/viewfinder_gl.cpp:62",
+      "src/apps/qcam/viewfinder_gl.cpp:69",
+      "src/apps/qcam/viewfinder_gl.cpp:74",
+      "src/apps/qcam/viewfinder_gl.cpp:79",
+      "src/apps/qcam/viewfinder_gl.cpp:845",
+      "src/apps/qcam/viewfinder_gl.cpp:870",
+      "src/apps/qcam/viewfinder_gl.h:28",
+      "src/apps/qcam/viewfinder_gl.h:32",
+      "src/apps/qcam/viewfinder_gl.h:35",
+      "src/apps/qcam/viewfinder_gl.h:36",
+      "src/apps/qcam/viewfinder_gl.h:38",
+      "src/apps/qcam/viewfinder_gl.h:40",
+      "src/apps/qcam/viewfinder_gl.h:43",
+      "src/apps/qcam/viewfinder_gl.h:44",
+      "src/apps/qcam/viewfinder_gl.h:46",
+      "src/apps/qcam/viewfinder_gl.h:49",
+      "src/apps/qcam/viewfinder_gl.h:52",
+      "src/apps/qcam/viewfinder_gl.h:53",
+      "src/apps/qcam/viewfinder_gl.h:54",
+      "src/apps/qcam/viewfinder_gl.h:57",
+      "src/apps/qcam/viewfinder_gl.h:58",
+      "src/apps/qcam/viewfinder_gl.h:60",
+      "src/apps/qcam/viewfinder_gl.h:61",
+      "src/apps/qcam/viewfinder_gl.h:62",
+      "src/apps/qcam/viewfinder_gl.h:63",
+      "src/apps/qcam/viewfinder_gl.h:64"
+     ],
+     "head": [
+      "src/apps/qcam/viewfinder_gl.cpp:110",
+      "src/apps/qcam/viewfinder_gl.cpp:119",
+      "src/apps/qcam/viewfinder_gl.cpp:126",
+      "src/apps/qcam/viewfinder_gl.cpp:136",
+      "src/apps/qcam/viewfinder_gl.cpp:329",
+      "src/apps/qcam/viewfinder_gl.cpp:397",
+      "src/apps/qcam/viewfinder_gl.cpp:412",
+      "src/apps/qcam/viewfinder_gl.cpp:494",
+      "src/apps/qcam/viewfinder_gl.cpp:505",
+      "src/apps/qcam/viewfinder_gl.cpp:513",
+      "src/apps/qcam/viewfinder_gl.cpp:545",
+      "src/apps/qcam/viewfinder_gl.cpp:62",
+      "src/apps/qcam/viewfinder_gl.cpp:69",
+      "src/apps/qcam/viewfinder_gl.cpp:74",
+      "src/apps/qcam/viewfinder_gl.cpp:79",
+      "src/apps/qcam/viewfinder_gl.cpp:852",
+      "src/apps/qcam/viewfinder_gl.cpp:877",
+      "src/apps/qcam/viewfinder_gl.h:28",
+      "src/apps/qcam/viewfinder_gl.h:32",
+      "src/apps/qcam/viewfinder_gl.h:35",
+      "src/apps/qcam/viewfinder_gl.h:36",
+      "src/apps/qcam/viewfinder_gl.h:38",
+      "src/apps/qcam/viewfinder_gl.h:40",
+      "src/apps/qcam/viewfinder_gl.h:43",
+      "src/apps/qcam/viewfinder_gl.h:44",
+      "src/apps/qcam/viewfinder_gl.h:46",
+      "src/apps/qcam/viewfinder_gl.h:49",
+      "src/apps/qcam/viewfinder_gl.h:52",
+      "src/apps/qcam/viewfinder_gl.h:53",
+      "src/apps/qcam/viewfinder_gl.h:54",
+      "src/apps/qcam/viewfinder_gl.h:57",
+      "src/apps/qcam/viewfinder_gl.h:58",
+      "src/apps/qcam/viewfinder_gl.h:60",
+      "src/apps/qcam/viewfinder_gl.h:61",
+      "src/apps/qcam/viewfinder_gl.h:62",
+      "src/apps/qcam/viewfinder_gl.h:63",
+      "src/apps/qcam/viewfinder_gl.h:64"
+     ]
+    },
+    "sections": [
+     "component-index"
+    ],
+    "status": "mapped"
+   },
+   {
+    "kind": "class",
+    "name": "ViewFinderGL::QPrivateSignal",
+    "files": [
+     "src/apps/qcam/viewfinder_gl.h"
+    ],
+    "evidence": {
+     "base": [
+      "src/apps/qcam/viewfinder_gl.h:32"
+     ],
+     "head": [
+      "src/apps/qcam/viewfinder_gl.h:32"
+     ]
+    },
+    "sections": [
+     "component-index"
+    ],
+    "status": "mapped"
+   }
+  ],
+  "findings": [],
+  "classified": [],
+  "limitations": [
+   "File-level scope mapping does not prove changed-line coverage, generated prose accuracy or human approval.",
+   "Without baseline facts, removed entities in surviving files may be missed.",
+   "A watch hit, package summary or scenario call is not class/function documentation coverage.",
+   "Comment, whitespace and #include-only changes are classified without review; an #include can still change preprocessing elsewhere."
+  ]
+ }
+}

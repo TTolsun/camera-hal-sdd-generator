@@ -1,0 +1,1 @@
+{"status":"passed","findings":[],"limitations":["Review was limited to the supplied source excerpts; no code or tests were executed.","The synthetic CLI replies are not inference evidence, and automatic verification is not human approval."]}

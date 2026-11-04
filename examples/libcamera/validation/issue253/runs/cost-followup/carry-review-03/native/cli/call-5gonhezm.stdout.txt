@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a1a848-c69d-7842-83d0-1be08ad78c8e"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"status\":\"passed\",\"findings\":[],\"limitations\":[\"Review was limited to the supplied source excerpts; no code or tests were executed.\",\"The synthetic CLI replies are not inference evidence, and automatic verification is not human approval.\"]}"}}
+{"type":"turn.completed","usage":{"input_tokens":40163,"cached_input_tokens":11008,"cache_write_input_tokens":0,"output_tokens":193,"reasoning_output_tokens":135}}

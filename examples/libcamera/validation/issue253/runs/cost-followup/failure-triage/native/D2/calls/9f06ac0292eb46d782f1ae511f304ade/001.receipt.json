@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "D2-failure-triage",
+  "completed_at": "2026-11-04T20:01:07.436743+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "c4da7f1157d0922b9b2ad5d641cc2a02c4080ffe07a895c32c17345c1c0f5119",
+  "response_sha256": "6dfc31d05738ab102bd1234a972dff6ae72a2bb3b5e7e13a6d7058e1cddd8394",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "42939dd44447613a583ed0dc9afeb09e3a09b48621cf1bbb42bec0c9c51fa01c",
+    "prompt_sha256": "5ada5d3d132eb89655d48191972bb60e6e0f16e821d24822b44e9072cbe33841",
+    "provider": {
+      "thread_id": "01a1a826-5825-72d2-b978-6a9272f2ed21",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 72143,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 902,
+        "reasoning_output_tokens": 108
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-yw7v932w.stdout.txt",
+    "native_schema_sha256": "858c638e2fb0bcbb4417de9b6a9197cf48107e10bca5ffd6f50c1f9e44e488e2"
+  },
+  "human_review": "pending"
+}

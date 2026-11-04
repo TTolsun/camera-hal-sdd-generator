@@ -1,0 +1,8 @@
+{
+  "elapsed_seconds": 18.8957615,
+  "started_at": "2026-11-04T19:35:54.7389202Z",
+  "ended_at": "2026-11-04T19:36:13.6402054Z",
+  "human_active_review_seconds": null,
+  "exit_code": 0,
+  "stage": "environment-qt-install"
+}

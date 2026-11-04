@@ -1,0 +1,18 @@
+import hashlib,json,pathlib,shutil
+root=pathlib.Path(__file__).resolve().parents[3];work=root/'build/issue253/cost-followup'
+dest=root/'build/issue253/reader-improvement/generator/examples/libcamera/validation/issue253/runs/cost-followup'
+added={}
+def copy(src,rel):
+    target=dest/rel
+    if target.exists():raise SystemExit('No overwrite: '+str(target))
+    target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,target)
+    added[rel]=hashlib.sha256(target.read_bytes()).hexdigest()
+for p in (work/'carry-review-final').rglob('*'):
+    if p.is_file():copy(p,'carry-review-final/'+p.relative_to(work/'carry-review-final').as_posix())
+for name in ['result.json','probe.yaml','default-authentication.yaml','reader-authentication.yaml','vendor-authentication.yaml','diagnosis-authentication.yaml']:
+    copy(work/'carry-probe-before-child'/name,'carry-probe-before-child/'+name)
+for name in ['probe_published_carry.py','review_carry.py','archive_additions.py']:
+    copy(work/name,'historical-scripts/final-'+name+'.txt')
+copy(work/'carry-suite-corrected.log','carry-suite-corrected.log')
+(dest/'additions-manifest.json').write_text(json.dumps({'schema':1,'files':added,'human_review':'pending','baseline_note':'before-child loaded only da0ca376:src/sdd/carryover.py into the same child runtime used after the fix, without replacing source files. result.runtime names the environment module path, not that loaded function.','test_note':'A prior expanded suite had one assertion mistakenly inserted into an existing test. It was moved to the new regression. The corrected final suite log is authoritative; synthetic replies are not inference evidence.'},indent=2),encoding='utf-8')
+print(json.dumps({'added':len(added)}))

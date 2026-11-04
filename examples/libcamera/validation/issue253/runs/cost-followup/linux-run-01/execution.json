@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "generator": "d392d7520b74f2c5a462daaba5c1b72a31f46269",
+  "base": "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+  "head": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "native": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v1",
+  "stages": [
+    {
+      "stage": "source-clone",
+      "argv": [
+        "git",
+        "clone",
+        "--no-hardlinks",
+        "--no-checkout",
+        "/home/baboess/.cache/camera-hal-sdd-issue193-293/source",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v1/source"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v1",
+      "started_at": "2026-11-04T19:40:51.711255+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:40:51.983258+00:00",
+      "elapsed_seconds": 0.2719939839998915
+    },
+    {
+      "stage": "source-base",
+      "argv": [
+        "git",
+        "checkout",
+        "--detach",
+        "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v1/source",
+      "started_at": "2026-11-04T19:40:51.987742+00:00",
+      "status": "failed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 128,
+      "ended_at": "2026-11-04T19:40:51.997773+00:00",
+      "elapsed_seconds": 0.010034176999852207
+    }
+  ],
+  "human_active_review_seconds": null,
+  "status": "failed",
+  "error": "RuntimeError('Stage failed: source-base')"
+}

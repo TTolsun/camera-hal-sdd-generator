@@ -1,0 +1,33 @@
+import datetime,json,pathlib,time
+from sdd.config import load
+from sdd.llm import Agent
+root=pathlib.Path(__file__).resolve().parents[3];work=root/'build/issue253/cost-followup/failure-triage'
+source=root/'build/issue253/source'
+read=lambda p:p.read_text(encoding='utf-8')
+pages={p.stem:json.loads(read(p)) for p in work.glob('*.json')}
+rubric=read(root/'docs/libcamera/records/issue253/rubric.md')
+camera=read(source/'src/libcamera/camera.cpp').splitlines()
+cpp={name:read(source/name) for name in ['src/libcamera/pipeline_handler.cpp','src/libcamera/request.cpp']}
+camera_window='\n'.join(f'{i+1}: {line}' for i,line in enumerate(camera) if i>=1230)
+rows=[dict(row,evaluator_id=e) for e in ['E01','E02','E03'] for row in json.loads(read(root/f'docs/libcamera/records/issue253/automated/{e}.json')) if row['condition']=='B']
+tasks={
+ 'T2': {'pages':{n:pages[n] for n in ['vendor-overview','vendor-integration']},'source':{'Documentation/libcamera_architecture.rst':read(source/'Documentation/libcamera_architecture.rst'),'Documentation/platform_support.rst':read(source/'Documentation/platform_support.rst'),'src/libcamera/pipeline_handler.cpp':cpp['src/libcamera/pipeline_handler.cpp']},'missing':'device-specific hardware pipeline configuration responsibility'},
+ 'D1': {'pages':{'request-diagnosis':pages['request-diagnosis']},'source':{**cpp,'src/libcamera/camera.cpp:1231-end':camera_window},'missing':'preparation timeout and Camera/application completion notification observation'},
+ 'D2': {'pages':{'request-lifecycle':pages['request-lifecycle'],'official-cam-validation-body':[s for s in pages['official-cam-validation'] if s['id'] not in ['소스-근거','page-evidence']]},'source':{'src/libcamera/pipeline_handler.cpp':cpp['src/libcamera/pipeline_handler.cpp'],'src/libcamera/camera.cpp:1401-end':'\n'.join(f'{i+1}: {line}' for i,line in enumerate(camera) if i>=1400)},'missing':'device-specific stopDevice review, duplicate completion, callback observation before and after stop returns'}
+}
+schema={'type':'object','additionalProperties':False,'properties':{'task_id':{'type':'string'},'findings':{'type':'array','items':{'type':'object','additionalProperties':False,'properties':{'condition':{'type':'string'},'status':{'type':'string','enum':['documented-in-body','only-in-source','documented-linked','missing','cannot-assess']},'page_anchor':{'type':'string'},'evidence':{'type':'string'},'action':{'type':'string'}},'required':['condition','status','page_anchor','evidence','action']}},'confirmed_document_blocker':{'type':'boolean'},'limitations':{'type':'array','items':{'type':'string'}}},'required':['task_id','findings','confirmed_document_blocker','limitations']}
+ledger=json.loads(read(work/'execution.json'))
+for task,payload in tasks.items():
+    if (work/(task+'-review.json')).exists():continue
+    user=json.dumps({'instruction':'Triage the automatic reader omissions against the exact frozen B pages and source293. Do not re-score human productivity or create a new reader trial. For each missing condition distinguish direct explanatory body, raw source only, a clear linked document, actual missing explanation, or unavailable evidence. Avoid adding duplicates when the answer is present. Cite the exact page/section and source condition; HTML text is supplied by h2 id, including raw source sections separately. Do not treat a parser/LLM omission as a document defect. Recommend a concrete minimal generation/config/navigation improvement only where supported. No actual browser or device execution is established. Review visualization relevance from its textual flow/evidence only, not pixel readability.', 'task':task,'missing_conditions_to_check':payload['missing'],'rubric':rubric,'pages':payload['pages'],'source':payload['source'],'B_reader_answers':[x for x in rows if x['task_id']==task]},ensure_ascii=False)
+    assert len(user)<180000,(task,len(user))
+    start=datetime.datetime.now(datetime.timezone.utc).isoformat();tick=time.perf_counter();status='failed'
+    print('START '+task+' '+str(len(user)),flush=True)
+    try:
+        a=Agent(load(root/'docs/libcamera/records/issue253/review.yaml').agent,dump_dir=work/'native'/task)
+        raw=a.chat('You independently ground public documentation against exact supplied source and report bounded findings. This is not human evaluation or approval.',user,tag=task+'-failure-triage',response_schema=schema)
+        (work/(task+'-review.json')).write_text(json.dumps(json.loads(raw),ensure_ascii=False,indent=2),encoding='utf-8');status='completed'
+    except Exception as exc:(work/(task+'-error.txt')).write_text(repr(exc),encoding='utf-8')
+    ledger.append({'task':task,'status':status,'started_at':start,'ended_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'elapsed_seconds':time.perf_counter()-tick,'prompt_chars':len(user),'human_active_review_seconds':None})
+    (work/'execution.json').write_text(json.dumps(ledger,indent=2),encoding='utf-8')
+    print('END '+task+' '+status,flush=True)

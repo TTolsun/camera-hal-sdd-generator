@@ -1,0 +1,416 @@
+ninja: Entering directory `build'
+[1/412] Generating subprojects/libpisp/src/version.cpp with a custom command
+[2/412] Generating include/libcamera/ipa/core_mojom_module with a custom command (wrapped by meson to set env)
+[3/412] Generating utils/codegen/ipc/mojom_templates with a custom command (wrapped by meson to set env)
+[4/412] Generating include/libcamera/control_ids_rpi.yaml_h with a custom command (wrapped by meson to set env)
+[5/412] Generating include/libcamera/ipa/ipu3_mojom_module with a custom command (wrapped by meson to set env)
+[6/412] Generating include/libcamera/ipa/mali-c55_mojom_module with a custom command (wrapped by meson to set env)
+[7/412] Generating include/libcamera/ipa/rkisp1_mojom_module with a custom command (wrapped by meson to set env)
+[8/412] Generating include/libcamera/ipa/raspberrypi_mojom_module with a custom command (wrapped by meson to set env)
+[9/412] Generating include/libcamera/ipa/softisp_mojom_module with a custom command (wrapped by meson to set env)
+[10/412] Generating include/libcamera/formats_h with a custom command
+[11/412] Generating include/libcamera/property_ids_core.yaml_h with a custom command (wrapped by meson to set env)
+[12/412] Generating include/libcamera/ipa/vimc_mojom_module with a custom command (wrapped by meson to set env)
+[13/412] Generating src/ipa-priv-key with a custom command
+........+...+.....+.+.....+....+++++++++++++++++++++++++++++++++++++++*.................+.+.........+..+++++++++++++++++++++++++++++++++++++++*....+...+...+.....+............+...................+......+.....+.........+.+...+.........+.....+.+......+.........+.....+.+.........+.....+.+......+..+..........+........+.......+..+....+..++++++
+..+...+..+...+++++++++++++++++++++++++++++++++++++++*...+.......+...+..............+++++++++++++++++++++++++++++++++++++++*.....................+......+..+............+....+.....+.+......+............+...+............+...+...+..+...+..........+..+....++++++
+[14/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/flags.cpp.o
+[15/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/class.cpp.o
+[16/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/bound_method.cpp.o
+[17/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/object.cpp.o
+[18/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/shared_fd.cpp.o
+[19/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/signal.cpp.o
+[20/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/unique_fd.cpp.o
+[21/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/backtrace.cpp.o
+[22/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/event_dispatcher.cpp.o
+[23/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/event_dispatcher_poll.cpp.o
+[24/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/event_notifier.cpp.o
+[25/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/file.cpp.o
+[26/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/memfd.cpp.o
+[27/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/log.cpp.o
+[28/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/message.cpp.o
+[29/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/mutex.cpp.o
+[30/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/semaphore.cpp.o
+[31/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/thread.cpp.o
+[32/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/timer.cpp.o
+[33/412] Compiling C++ object src/libcamera/base/libcamera-base.so.0.7.2.p/utils.cpp.o
+[34/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_common_pisp_logging.cpp.o
+[35/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/meson-generated_.._version.cpp.o
+[36/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_common_pisp_utils.cpp.o
+[37/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_variants_variant.cpp.o
+[38/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_frontend_frontend.cpp.o
+[39/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_backend.cpp.o
+[40/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_common_pisp_pwl.cpp.o
+[41/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_backend_prepare.cpp.o
+[42/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_context_stage.cpp.o
+[43/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_crop_stage.cpp.o
+[44/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_input_stage.cpp.o
+[45/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_output_stage.cpp.o
+[46/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_pipeline.cpp.o
+[47/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_backend_default_config.cpp.o
+[48/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_pisp_tiling.cpp.o
+[49/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_rescale_stage.cpp.o
+[50/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_split_stage.cpp.o
+[51/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_tiling_stages.cpp.o
+[52/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp_backend_backend_debug.cpp.o
+[53/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/helpers_buffer.cpp.o
+[54/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/helpers_backend_device.cpp.o
+[55/412] Generating include/libcamera/internal/tp_header with a custom command
+[56/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/helpers_media_device.cpp.o
+[57/412] Generating include/libcamera/ipa/core_ipa_interface_h with a custom command (wrapped by meson to set env)
+[58/412] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/helpers_v4l2_device.cpp.o
+[59/412] Generating include/libcamera/ipa/core_ipa_serializer_h with a custom command (wrapped by meson to set env)
+[60/412] Generating include/libcamera/ipa/ipu3_ipa_interface_h with a custom command (wrapped by meson to set env)
+[61/412] Generating include/libcamera/ipa/ipu3_ipa_serializer_h with a custom command (wrapped by meson to set env)
+[62/412] Generating include/libcamera/ipa/ipu3_proxy_h with a custom command (wrapped by meson to set env)
+[63/412] Generating include/libcamera/ipa/mali-c55_ipa_interface_h with a custom command (wrapped by meson to set env)
+[64/412] Generating include/libcamera/ipa/mali-c55_ipa_serializer_h with a custom command (wrapped by meson to set env)
+[65/412] Generating include/libcamera/ipa/mali-c55_proxy_h with a custom command (wrapped by meson to set env)
+[66/412] Generating include/libcamera/ipa/rkisp1_ipa_interface_h with a custom command (wrapped by meson to set env)
+[67/412] Generating include/libcamera/ipa/rkisp1_ipa_serializer_h with a custom command (wrapped by meson to set env)
+[68/412] Generating include/libcamera/ipa/raspberrypi_ipa_interface_h with a custom command (wrapped by meson to set env)
+[69/412] Generating include/libcamera/ipa/rkisp1_proxy_h with a custom command (wrapped by meson to set env)
+[70/412] Generating include/libcamera/ipa/raspberrypi_ipa_serializer_h with a custom command (wrapped by meson to set env)
+[71/412] Generating include/libcamera/ipa/softisp_ipa_interface_h with a custom command (wrapped by meson to set env)
+[72/412] Generating include/libcamera/ipa/raspberrypi_proxy_h with a custom command (wrapped by meson to set env)
+[73/412] Generating include/libcamera/ipa/softisp_ipa_serializer_h with a custom command (wrapped by meson to set env)
+[74/412] Generating include/libcamera/ipa/softisp_proxy_h with a custom command (wrapped by meson to set env)
+[75/412] Generating include/libcamera/ipa/vimc_ipa_interface_h with a custom command (wrapped by meson to set env)
+[76/412] Generating include/libcamera/gen-header with a custom command
+[77/412] Generating include/libcamera/ipa/vimc_ipa_serializer_h with a custom command (wrapped by meson to set env)
+[78/412] Linking target src/libcamera/base/libcamera-base.so.0.7.2
+[79/412] Generating include/libcamera/ipa/vimc_proxy_h with a custom command (wrapped by meson to set env)
+[80/412] Linking target subprojects/libpisp/src/libpisp.so.1.5.0
+[81/412] Generating src/libcamera/proxy/ipu3_proxy_cpp with a custom command (wrapped by meson to set env)
+[82/412] Generating src/libcamera/proxy/mali-c55_proxy_cpp with a custom command (wrapped by meson to set env)
+[83/412] Generating src/libcamera/proxy/rkisp1_proxy_cpp with a custom command (wrapped by meson to set env)
+[84/412] Generating src/libcamera/proxy/raspberrypi_proxy_cpp with a custom command (wrapped by meson to set env)
+[85/412] Generating src/libcamera/proxy/softisp_proxy_cpp with a custom command (wrapped by meson to set env)
+[86/412] Generating src/libcamera/shaders/gen-shader-headers with a custom command
+[87/412] Generating src/libcamera/proxy/vimc_proxy_cpp with a custom command (wrapped by meson to set env)
+[88/412] Generating src/libcamera/version.cpp with a custom command
+[89/412] Generating src/libcamera/controls_ids_cpp with a custom command (wrapped by meson to set env)
+[90/412] Generating src/libcamera/ipa_pub_key_cpp with a custom command
+writing RSA key
+[91/412] Generating src/libcamera/properties_ids_cpp with a custom command (wrapped by meson to set env)
+[92/412] Generating symbol file subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp.so.1.5.0.symbols
+[93/412] Generating symbol file src/libcamera/base/libcamera-base.so.0.7.2.p/libcamera-base.so.0.7.2.symbols
+[94/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._version.cpp.o
+[95/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._property_ids.cpp.o
+[96/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._control_ids.cpp.o
+[97/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._proxy_ipu3_ipa_proxy.cpp.o
+[98/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._proxy_mali-c55_ipa_proxy.cpp.o
+[99/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._proxy_rkisp1_ipa_proxy.cpp.o
+[100/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._proxy_vimc_ipa_proxy.cpp.o
+[101/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._proxy_softisp_ipa_proxy.cpp.o
+[102/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._proxy_raspberrypi_ipa_proxy.cpp.o
+[103/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._ipa_pub_key.cpp.o
+[104/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/camera_manager.cpp.o
+[105/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/camera.cpp.o
+[106/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/color_space.cpp.o
+[107/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/fence.cpp.o
+[108/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/controls.cpp.o
+[109/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/framebuffer.cpp.o
+[110/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/orientation.cpp.o
+[111/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/framebuffer_allocator.cpp.o
+[112/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/geometry.cpp.o
+[113/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pixel_format.cpp.o
+[114/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/transform.cpp.o
+[115/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/bayer_format.cpp.o
+[116/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/stream.cpp.o
+[117/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/request.cpp.o
+[118/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/byte_stream_buffer.cpp.o
+[119/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/camera_controls.cpp.o
+[120/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/camera_lens.cpp.o
+[121/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/control_validator.cpp.o
+[122/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/clock_recovery.cpp.o
+[123/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/control_serializer.cpp.o
+[124/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/converter.cpp.o
+[125/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/debug_controls.cpp.o
+[126/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/delayed_controls.cpp.o
+[127/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/device_enumerator_sysfs.cpp.o
+[128/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/device_enumerator.cpp.o
+[129/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/dma_buf_allocator.cpp.o
+[130/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_controls.cpp.o
+[131/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/formats.cpp.o
+[132/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_interface.cpp.o
+[133/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/global_configuration.cpp.o
+[134/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_data_serializer.cpp.o
+[135/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_manager.cpp.o
+[136/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_module.cpp.o
+[137/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipa_proxy.cpp.o
+[138/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipc_pipe.cpp.o
+[139/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipc_pipe_unixsocket.cpp.o
+[140/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/ipc_unixsocket.cpp.o
+[141/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/mapped_framebuffer.cpp.o
+[142/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/matrix.cpp.o
+[143/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/media_device.cpp.o
+[144/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/media_object.cpp.o
+[145/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/media_pipeline.cpp.o
+[146/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pub_key.cpp.o
+[147/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/shared_mem_object.cpp.o
+[148/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/process.cpp.o
+[149/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_handler.cpp.o
+[150/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/source_paths.cpp.o
+[151/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sysfs.cpp.o
+[152/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_device.cpp.o
+[153/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_pixelformat.cpp.o
+[154/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_request.cpp.o
+[155/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/value_node.cpp.o
+[156/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_videodevice.cpp.o
+[157/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/v4l2_subdevice.cpp.o
+[158/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/vector.cpp.o
+[159/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/yaml_parser.cpp.o
+[160/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/converter_converter_dw100.cpp.o
+[161/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/converter_converter_dw100_vertexmap.cpp.o
+[162/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/converter_converter_v4l2_m2m.cpp.o
+[163/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_ipu3_cio2.cpp.o
+[164/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_imx8-isi_imx8-isi.cpp.o
+[165/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_ipu3_frames.cpp.o
+[166/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_ipu3_imgu.cpp.o
+[167/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_ipu3_ipu3.cpp.o
+[168/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_mali-c55_rzg2l-cru.cpp.o
+[169/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_mali-c55_mali-c55.cpp.o
+[170/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_rpi_common_delayed_controls.cpp.o
+[171/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_rkisp1_rkisp1_path.cpp.o
+[172/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_rkisp1_rkisp1.cpp.o
+[173/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_rpi_common_rpi_stream.cpp.o
+[174/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_rpi_common_pipeline_base.cpp.o
+[175/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_rpi_pisp_pisp.cpp.o
+[176/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_rpi_vc4_vc4.cpp.o
+[177/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_uvcvideo_uvcvideo.cpp.o
+[178/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_simple_simple.cpp.o
+[179/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_vimc_vimc.cpp.o
+[180/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_virtual_image_frame_generator.cpp.o
+[181/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_virtual_config_parser.cpp.o
+[182/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_virtual_test_pattern_generator.cpp.o
+[183/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sensor_camera_sensor.cpp.o
+[184/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/pipeline_virtual_virtual.cpp.o
+[185/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sensor_camera_sensor_legacy.cpp.o
+[186/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sensor_camera_sensor_properties.cpp.o
+[187/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/software_isp_benchmark.cpp.o
+[188/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/sensor_camera_sensor_raw.cpp.o
+[189/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/software_isp_debayer.cpp.o
+[190/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/software_isp_debayer_cpu.cpp.o
+[191/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/software_isp_swstats_cpu.cpp.o
+[192/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/software_isp_software_isp.cpp.o
+[193/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/egl.cpp.o
+[194/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/software_isp_debayer_egl.cpp.o
+[195/412] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/device_enumerator_udev.cpp.o
+[196/412] Compiling C++ object src/ipa/libipa/libipa.a.p/agc.cpp.o
+[197/412] Linking target src/libcamera/libcamera.so.0.7.2
+[198/412] Compiling C++ object src/ipa/libipa/libipa.a.p/agc_mean_luminance.cpp.o
+[199/412] Compiling C++ object src/ipa/libipa/libipa.a.p/algorithm.cpp.o
+[200/412] Compiling C++ object src/ipa/libipa/libipa.a.p/agc_msv.cpp.o
+[201/412] Compiling C++ object src/ipa/libipa/libipa.a.p/awb_grey.cpp.o
+[202/412] Compiling C++ object src/ipa/libipa/libipa.a.p/awb_bayes.cpp.o
+[203/412] Compiling C++ object src/ipa/libipa/libipa.a.p/awb.cpp.o
+[204/412] Compiling C++ object src/ipa/libipa/libipa.a.p/ccm.cpp.o
+[205/412] Compiling C++ object src/ipa/libipa/libipa.a.p/colours.cpp.o
+[206/412] Compiling C++ object src/ipa/libipa/libipa.a.p/camera_sensor_helper.cpp.o
+[207/412] Compiling C++ object src/ipa/libipa/libipa.a.p/exposure_mode_helper.cpp.o
+[208/412] Compiling C++ object src/ipa/libipa/libipa.a.p/fc_queue.cpp.o
+[209/412] Compiling C++ object src/ipa/libipa/libipa.a.p/fixedpoint.cpp.o
+[210/412] Compiling C++ object src/ipa/libipa/libipa.a.p/histogram.cpp.o
+[211/412] Compiling C++ object src/ipa/libipa/libipa.a.p/gamma.cpp.o
+[212/412] Compiling C++ object src/ipa/libipa/libipa.a.p/interpolator.cpp.o
+[213/412] Compiling C++ object src/ipa/libipa/libipa.a.p/lsc_base.cpp.o
+[214/412] Compiling C++ object src/ipa/libipa/libipa.a.p/lsc.cpp.o
+[215/412] Compiling C++ object src/ipa/libipa/libipa.a.p/lsc_polynomial.cpp.o
+[216/412] Compiling C++ object src/ipa/libipa/libipa.a.p/lsc_table.cpp.o
+[217/412] Compiling C++ object src/ipa/libipa/libipa.a.p/lux.cpp.o
+[218/412] Compiling C++ object src/ipa/libipa/libipa.a.p/module.cpp.o
+[219/412] Compiling C++ object src/ipa/libipa/libipa.a.p/quantized.cpp.o
+[220/412] Compiling C++ object src/ipa/libipa/libipa.a.p/pwl.cpp.o
+[221/412] Compiling C++ object src/ipa/libipa/libipa.a.p/v4l2_params.cpp.o
+[222/412] Compiling C++ object src/ipa/libipa/libipa.a.p/v4l2_stats.cpp.o
+[223/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper.cpp.o
+[224/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_ov5647.cpp.o
+[225/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx219.cpp.o
+[226/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx283.cpp.o
+[227/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx290.cpp.o
+[228/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx296.cpp.o
+[229/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx355.cpp.o
+[230/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx415.cpp.o
+[231/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx477.cpp.o
+[232/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx519.cpp.o
+[233/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_imx708.cpp.o
+[234/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_mira220.cpp.o
+[235/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_ov64a40.cpp.o
+[236/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_ov7251.cpp.o
+[237/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_ov9281.cpp.o
+[238/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_starvis2.cpp.o
+[239/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_vd55g1.cpp.o
+[240/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/cam_helper_vd56g3.cpp.o
+[241/412] Compiling C++ object src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a.p/md_parser_smia.cpp.o
+[242/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/algorithm.cpp.o
+[243/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/controller.cpp.o
+[244/412] Compiling C++ object src/ipa/rpi/common/librpi_ipa_common.a.p/ipa_base.cpp.o
+[245/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/histogram.cpp.o
+[246/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/device_status.cpp.o
+[247/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_af.cpp.o
+[248/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_agc.cpp.o
+[249/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_agc_channel.cpp.o
+[250/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_alsc.cpp.o
+[251/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_awb.cpp.o
+[252/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_awb_bayes.cpp.o
+[253/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_black_level.cpp.o
+[254/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_cac.cpp.o
+[255/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_ccm.cpp.o
+[256/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_contrast.cpp.o
+[257/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_decompand.cpp.o
+[258/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_denoise.cpp.o
+[259/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_dpc.cpp.o
+[260/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_geq.cpp.o
+[261/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_hdr.cpp.o
+[262/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_lux.cpp.o
+[263/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_noise.cpp.o
+[264/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_saturation.cpp.o
+[265/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_sdn.cpp.o
+[266/412] Generating symbol file src/libcamera/libcamera.so.0.7.2.p/libcamera.so.0.7.2.symbols
+[267/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_sharpen.cpp.o
+[268/412] Generating src/libcamera/proxy/worker/ipu3_proxy_worker with a custom command (wrapped by meson to set env)
+[269/412] Generating src/libcamera/proxy/worker/mali-c55_proxy_worker with a custom command (wrapped by meson to set env)
+[270/412] Generating src/libcamera/proxy/worker/rkisp1_proxy_worker with a custom command (wrapped by meson to set env)
+[271/412] Generating src/libcamera/proxy/worker/raspberrypi_proxy_worker with a custom command (wrapped by meson to set env)
+[272/412] Generating src/libcamera/proxy/worker/softisp_proxy_worker with a custom command (wrapped by meson to set env)
+[273/412] Linking static target src/ipa/libipa/libipa.a
+[274/412] Generating src/libcamera/proxy/worker/vimc_proxy_worker with a custom command (wrapped by meson to set env)
+[275/412] Compiling C++ object src/ipa/rpi/controller/librpi_ipa_controller.a.p/rpi_tonemap.cpp.o
+[276/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/ipa_context.cpp.o
+[277/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/algorithms_af.cpp.o
+[278/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/ipu3.cpp.o
+[279/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/algorithms_agc.cpp.o
+[280/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/algorithms_awb.cpp.o
+[281/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/algorithms_blc.cpp.o
+[282/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/algorithms_ccm.cpp.o
+[283/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/algorithms_tone_mapping.cpp.o
+[284/412] Compiling C++ object src/ipa/ipu3/ipa_ipu3.so.p/algorithms_lsc.cpp.o
+[285/412] Compiling C++ object src/ipa/mali-c55/ipa_mali_c55.so.p/ipa_context.cpp.o
+[286/412] Compiling C++ object src/ipa/mali-c55/ipa_mali_c55.so.p/algorithms_agc.cpp.o
+[287/412] Compiling C++ object src/ipa/mali-c55/ipa_mali_c55.so.p/mali-c55.cpp.o
+[288/412] Compiling C++ object src/ipa/mali-c55/ipa_mali_c55.so.p/algorithms_awb.cpp.o
+[289/412] Compiling C++ object src/ipa/mali-c55/ipa_mali_c55.so.p/algorithms_blc.cpp.o
+[290/412] Compiling C++ object src/ipa/mali-c55/ipa_mali_c55.so.p/algorithms_ccm.cpp.o
+[291/412] Compiling C++ object src/ipa/mali-c55/ipa_mali_c55.so.p/algorithms_lsc.cpp.o
+[292/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/params.cpp.o
+[293/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/ipa_context.cpp.o
+[294/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/rkisp1.cpp.o
+[295/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_awb.cpp.o
+[296/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_agc.cpp.o
+[297/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_ccm.cpp.o
+[298/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_blc.cpp.o
+[299/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_compress.cpp.o
+[300/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_dpcc.cpp.o
+[301/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_dpf.cpp.o
+[302/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_cproc.cpp.o
+[303/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_goc.cpp.o
+[304/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_filter.cpp.o
+[305/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_gsl.cpp.o
+[306/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_lux.cpp.o
+[307/412] Linking static target src/ipa/rpi/cam_helper/librpi_ipa_cam_helper.a
+[308/412] Linking static target src/ipa/rpi/common/librpi_ipa_common.a
+[309/412] Linking static target src/ipa/rpi/controller/librpi_ipa_controller.a
+[310/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_lsc.cpp.o
+[311/412] Compiling C++ object src/ipa/rkisp1/ipa_rkisp1.so.p/algorithms_wdr.cpp.o
+[312/412] Compiling C++ object src/ipa/softisp/ipa_softisp.so.p/ipa_context.cpp.o
+[313/412] Compiling C++ object src/ipa/rpi/pisp/ipa_rpi_pisp.so.p/pisp.cpp.o
+[314/412] Compiling C++ object src/ipa/rpi/vc4/ipa_rpi_vc4.so.p/vc4.cpp.o
+[315/412] Compiling C++ object src/ipa/softisp/ipa_softisp.so.p/softisp.cpp.o
+[316/412] Compiling C++ object src/ipa/softisp/ipa_softisp.so.p/algorithms_adjust.cpp.o
+[317/412] Compiling C++ object src/ipa/softisp/ipa_softisp.so.p/algorithms_awb.cpp.o
+[318/412] Compiling C++ object src/ipa/softisp/ipa_softisp.so.p/algorithms_agc.cpp.o
+[319/412] Compiling C++ object src/ipa/softisp/ipa_softisp.so.p/algorithms_blc.cpp.o
+[320/412] Compiling C++ object src/ipa/softisp/ipa_softisp.so.p/algorithms_ccm.cpp.o
+[321/412] Compiling C++ object src/apps/common/libapps.a.p/image.cpp.o
+[322/412] Compiling C++ object src/ipa/vimc/ipa_vimc.so.p/vimc.cpp.o
+[323/412] Compiling C++ object src/apps/common/libapps.a.p/options.cpp.o
+[324/412] Compiling C++ object src/ipa/softisp/ipa_softisp.so.p/algorithms_lsc.cpp.o
+[325/412] Compiling C++ object src/apps/common/libapps.a.p/ppm_writer.cpp.o
+[326/412] Compiling Qt resources src/apps/qcam/qt6-feathericons_qrc
+[327/412] Compiling Qt resources src/apps/qcam/qt6-shaders_qrc
+[328/412] Generating 'src/apps/qcam/qcam.p/moc_cam_select_dialog.cpp'
+[329/412] Generating 'src/apps/qcam/qcam.p/moc_main_window.cpp'
+[330/412] Compiling C++ object src/apps/common/libapps.a.p/stream_options.cpp.o
+[331/412] Generating 'src/apps/qcam/qcam.p/moc_viewfinder_gl.cpp'
+[332/412] Generating 'src/apps/qcam/qcam.p/moc_viewfinder_qt.cpp'
+[333/412] Compiling C object utils/ipu3/ipu3-pack.p/ipu3-pack.c.o
+[334/412] Compiling C object utils/ipu3/ipu3-unpack.p/ipu3-unpack.c.o
+[335/412] Generating src/gstreamer/gstlibcamera-controls.cpp with a custom command (wrapped by meson to set env)
+[336/412] Compiling C++ object src/apps/common/libapps.a.p/event_loop.cpp.o
+[337/412] Compiling C++ object src/libcamera/proxy/worker/ipu3_ipa_proxy.p/meson-generated_.._ipu3_ipa_proxy_worker.cpp.o
+[338/412] Compiling C++ object src/libcamera/proxy/worker/mali-c55_ipa_proxy.p/meson-generated_.._mali-c55_ipa_proxy_worker.cpp.o
+[339/412] Compiling C++ object src/libcamera/proxy/worker/rkisp1_ipa_proxy.p/meson-generated_.._rkisp1_ipa_proxy_worker.cpp.o
+[340/412] Compiling C++ object src/libcamera/proxy/worker/softisp_ipa_proxy.p/meson-generated_.._softisp_ipa_proxy_worker.cpp.o
+[341/412] Compiling C++ object src/libcamera/proxy/worker/raspberrypi_ipa_proxy.p/meson-generated_.._raspberrypi_ipa_proxy_worker.cpp.o
+[342/412] Compiling C++ object src/libcamera/proxy/worker/vimc_ipa_proxy.p/meson-generated_.._vimc_ipa_proxy_worker.cpp.o
+[343/412] Linking target src/ipa/ipu3/ipa_ipu3.so
+[344/412] Linking target src/ipa/mali-c55/ipa_mali_c55.so
+[345/412] Linking target src/ipa/rkisp1/ipa_rkisp1.so
+[346/412] Linking target src/ipa/rpi/vc4/ipa_rpi_vc4.so
+[347/412] Linking target src/ipa/rpi/pisp/ipa_rpi_pisp.so
+[348/412] Linking static target src/apps/common/libapps.a
+[349/412] Linking target src/ipa/softisp/ipa_softisp.so
+[350/412] Linking target src/ipa/vimc/ipa_vimc.so
+[351/412] Compiling C++ object src/apps/lc-compliance/lc-compliance.p/environment.cpp.o
+[352/412] Compiling C++ object src/apps/lc-compliance/lc-compliance.p/main.cpp.o
+[353/412] Compiling C++ object src/apps/lc-compliance/lc-compliance.p/test_base.cpp.o
+[354/412] Compiling C++ object src/apps/lc-compliance/lc-compliance.p/helpers_capture.cpp.o
+[355/412] Compiling C++ object src/apps/lc-compliance/lc-compliance.p/tests_capture_test.cpp.o
+[356/412] Compiling C++ object src/apps/cam/cam.p/camera_session.cpp.o
+[357/412] Compiling C++ object src/apps/cam/cam.p/capture_script.cpp.o
+[358/412] Compiling C++ object src/apps/lc-compliance/lc-compliance.p/.._.._.._subprojects_googletest-release-1.11.0_googletest_src_gtest-all.cc.o
+[359/412] Compiling C++ object src/apps/cam/cam.p/file_sink.cpp.o
+[360/412] Compiling C++ object src/apps/cam/cam.p/frame_sink.cpp.o
+[361/412] Compiling C++ object src/apps/cam/cam.p/kms_sink.cpp.o
+[362/412] Compiling C++ object src/apps/qcam/qcam.p/meson-generated_.._qt6-feathericons_qrc.cpp.o
+[363/412] Compiling C++ object src/apps/qcam/qcam.p/meson-generated_.._qt6-shaders_qrc.cpp.o
+[364/412] Compiling C++ object src/apps/cam/cam.p/main.cpp.o
+[365/412] Compiling C++ object src/apps/cam/cam.p/drm.cpp.o
+[366/412] Compiling C++ object src/apps/qcam/qcam.p/meson-generated_moc_cam_select_dialog.cpp.o
+[367/412] Compiling C++ object src/apps/qcam/qcam.p/meson-generated_moc_main_window.cpp.o
+[368/412] Compiling C++ object src/apps/qcam/qcam.p/meson-generated_moc_viewfinder_gl.cpp.o
+[369/412] Compiling C++ object src/apps/qcam/qcam.p/format_converter.cpp.o
+[370/412] Compiling C++ object src/apps/qcam/qcam.p/meson-generated_moc_viewfinder_qt.cpp.o
+[371/412] Compiling C++ object src/apps/qcam/qcam.p/cam_select_dialog.cpp.o
+[372/412] Compiling C++ object src/apps/qcam/qcam.p/message_handler.cpp.o
+[373/412] Compiling C++ object src/apps/qcam/qcam.p/main.cpp.o
+[374/412] Compiling C++ object src/apps/qcam/qcam.p/main_window.cpp.o
+[375/412] Compiling C++ object src/apps/qcam/qcam.p/viewfinder_gl.cpp.o
+[376/412] Compiling C++ object src/apps/ipa-verify/ipa_verify.p/main.cpp.o
+[377/412] Compiling C++ object src/apps/qcam/qcam.p/viewfinder_qt.cpp.o
+[378/412] Compiling C++ object src/gstreamer/libgstlibcamera.so.p/gstlibcamera.cpp.o
+[379/412] Compiling C++ object src/gstreamer/libgstlibcamera.so.p/meson-generated_.._gstlibcamera-controls.cpp.o
+[380/412] Compiling C++ object src/gstreamer/libgstlibcamera.so.p/gstlibcamera-utils.cpp.o
+[381/412] Compiling C++ object src/gstreamer/libgstlibcamera.so.p/gstlibcamerapad.cpp.o
+[382/412] Compiling C++ object src/gstreamer/libgstlibcamera.so.p/gstlibcameraallocator.cpp.o
+[383/412] Compiling C++ object src/gstreamer/libgstlibcamera.so.p/gstlibcamerapool.cpp.o
+[384/412] Compiling C++ object src/gstreamer/libgstlibcamera.so.p/gstlibcameraprovider.cpp.o
+[385/412] Compiling C++ object src/gstreamer/libgstlibcamera.so.p/gstlibcamerasrc.cpp.o
+[386/412] Compiling C++ object src/v4l2/v4l2-compat.so.p/v4l2_camera_file.cpp.o
+[387/412] Compiling C++ object src/v4l2/v4l2-compat.so.p/v4l2_camera.cpp.o
+[388/412] Compiling C++ object src/v4l2/v4l2-compat.so.p/v4l2_camera_proxy.cpp.o
+[389/412] Linking target utils/ipu3/ipu3-pack
+[390/412] Compiling C++ object src/v4l2/v4l2-compat.so.p/v4l2_compat.cpp.o
+[391/412] Generating subprojects/libpisp/src/libpisp/backend/Default config to build dir with a custom command
+[392/412] Linking target utils/ipu3/ipu3-unpack
+[393/412] Linking target src/libcamera/proxy/worker/ipu3_ipa_proxy
+[394/412] Linking target src/libcamera/proxy/worker/mali-c55_ipa_proxy
+[395/412] Linking target src/libcamera/proxy/worker/rkisp1_ipa_proxy
+[396/412] Linking target src/libcamera/proxy/worker/raspberrypi_ipa_proxy
+[397/412] Linking target src/libcamera/proxy/worker/softisp_ipa_proxy
+[398/412] Generating src/ipa/ipu3/ipa_ipu3.so.sign with a custom command
+[399/412] Linking target src/libcamera/proxy/worker/vimc_ipa_proxy
+[400/412] Generating src/ipa/mali-c55/ipa_mali_c55.so.sign with a custom command
+[401/412] Generating src/ipa/rkisp1/ipa_rkisp1.so.sign with a custom command
+[402/412] Generating src/ipa/rpi/pisp/ipa_rpi_pisp.so.sign with a custom command
+[403/412] Generating src/ipa/rpi/vc4/ipa_rpi_vc4.so.sign with a custom command
+[404/412] Generating src/ipa/softisp/ipa_softisp.so.sign with a custom command
+[405/412] Generating src/ipa/vimc/ipa_vimc.so.sign with a custom command
+[406/412] Compiling C++ object src/v4l2/v4l2-compat.so.p/v4l2_compat_manager.cpp.o
+[407/412] Linking target src/apps/lc-compliance/lc-compliance
+[408/412] Linking target src/apps/cam/cam
+[409/412] Linking target src/apps/ipa-verify/ipa_verify
+[410/412] Linking target src/gstreamer/libgstlibcamera.so
+[411/412] Linking target src/v4l2/v4l2-compat.so
+[412/412] Linking target src/apps/qcam/qcam
