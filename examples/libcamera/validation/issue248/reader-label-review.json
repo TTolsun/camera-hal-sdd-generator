@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "verdict": "pass",
+  "source_questions": 6,
+  "archive_sha256": "c6ec3e5d83e1ed367bc2c2cc46711a63992426bb77ead47bac092ae7ba85e530",
+  "profile": {
+    "kind": "cli",
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "focused_tests": 147,
+  "human_reader_evaluation": "pending"
+}

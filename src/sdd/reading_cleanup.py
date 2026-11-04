@@ -79,11 +79,18 @@ def compact_tables(document: str, *, question_edits=None) -> str:
     # There is no default phrase classifier: the same sentence may be a real
     # requirement in another question. Historical manuscripts remain intact.
     specifications = question_edits if question_edits is not None else {}
+    def valid_edit(value):
+        if isinstance(value, dict):
+            label = value.get('label')
+            return (set(value) == {'label'} and isinstance(label, str)
+                    and any(char.isalnum() for char in label))
+        return (isinstance(value, list) and bool(value)
+                and all(isinstance(item, str) and item.strip() for item in value)
+                and len(value) == len(set(value)))
     if not isinstance(specifications, dict) or any(
-            not re.fullmatch(r'[0-9a-f]{64}', key) or not isinstance(values, list) or not values
-            or any(not isinstance(value, str) or not value.strip() for value in values)
-            or len(values) != len(set(values)) for key, values in specifications.items()):
-        raise ValueError('Question edits require complete-question SHA-256 keys and unique nonempty sentences.')
+            not isinstance(key, str) or not re.fullmatch(r'[0-9a-f]{64}', key) or not valid_edit(value)
+            for key, value in specifications.items()):
+        raise ValueError('Question edits require complete-question SHA-256 keys and a reader label or unique nonempty sentences.')
     seen = set()
 
     def reader_question(question):
@@ -93,6 +100,10 @@ def compact_tables(document: str, *, question_edits=None) -> str:
         if key in seen:
             raise ValueError('Configured question edit matches more than one requirement.')
         seen.add(key)
+        if isinstance(specifications[key], dict):
+            # A navigation question is authored separately from the complete
+            # generation requirement; never render configured HTML or Markdown.
+            return html.escape(specifications[key]['label'].strip(), quote=False)
         editorial_directions = specifications[key]
         if any(question.count(direction) != 1 for direction in editorial_directions):
             raise ValueError('Configured editorial sentence is missing or ambiguous.')
