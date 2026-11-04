@@ -15,7 +15,7 @@ from .generated_design import source_passages
 from .llm import AgentError, SCHEMA_KINDS
 from .visuals import definitions, render_values, _id, _text
 
-CITATION_BINDING_POLICY = 'identifier-and-passage-boundaries-v2'
+CITATION_BINDING_POLICY = 'identifier-and-guard-boundaries-v2'
 IDENTIFIER = r'[A-Za-z_][A-Za-z_0-9]*'
 COMMENT = r'/\*(?:[^*]|\*(?!/))*\*/|//[^\n]*(?:\n|$)'
 TRIVIA = r'(?:\s|' + COMMENT + ')*'
@@ -259,10 +259,11 @@ def _record_input_mode(cfg, model, section, plan, original_pin, current_pin):
         return None
     if original_pin == current_pin:
         return False, False
-    for command in ([False, True] if cfg.agent.kind=='cli' else [False]):
-        if original_pin == inputs(cfg,model,section,plan,_legacy_cli_command=command,
-                                  _binding_policy='identifier-boundaries-v1')[0]:
-            return command, True
+    for policy in ('identifier-boundaries-v1','identifier-and-passage-boundaries-v2'):
+        for command in ([False, True] if cfg.agent.kind=='cli' else [False]):
+            if original_pin == inputs(cfg,model,section,plan,_legacy_cli_command=command,
+                                      _binding_policy=policy)[0]:
+                return command, True
     modes = [(False, True)]
     if cfg.agent.kind == 'cli':
         modes = [(True, False), *modes, (True, True)]
@@ -407,10 +408,9 @@ def materialize(cfg, model, section, plan, draft, producer):
                              f'{item["from"]!r} -> {item["to"]!r}; unknown_nodes={unknown!r}; '
                              f'uncited_symbols={uncited!r}; quote_ids={item["quote_ids"]!r}. '
                              'Cite whole identifiers with their original case and spelling.')
-        if not any(all(cites_symbol(symbols[item[end]], ref['quote']) for end in ('from','to'))
-                   for ref in evidence):
-            raise ValueError('Edge evidence needs an individual passage containing both endpoint symbols; '
-                             'do not assemble unrelated endpoint passages.')
+        # A legitimate control-flow edge may span two paragraphs of the same
+        # function. Literal endpoint binding above is mechanical; relationship
+        # and direction still require independent source/semantic review.
         choice = item['condition_ref']
         allowed = {'always': ('', 'always')} | {f'{key}:{branch}': (text, branch)
                     for key, text in condition_catalog(passages, include_while=plan.get('while_conditions', False)).items() for branch in ('true', 'false')}

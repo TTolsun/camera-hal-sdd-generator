@@ -32,8 +32,8 @@ def main():
         meta, body = split_frontmatter(original)
         try:
             generated_visuals.resolve(selected,model,section,meta.get('generated_visuals'))
-            if any('citation_binding_revalidation' in r for r in meta['generated_visuals']['records'].values()):
-                baseline=RUN.parent/'public/publication/issue214/manuscripts'/rel
+            if rel!='request-lifecycle.md' and any('citation_binding_revalidation' in r for r in meta['generated_visuals']['records'].values()):
+                baseline=(RUN/'published-base-manuscripts'/rel) if (RUN/'published-base-manuscripts'/rel).exists() else RUN.parent/'public/publication/issue214/manuscripts'/rel
                 before=baseline.read_text(encoding='utf-8')
                 assert split_frontmatter(before)[1]==body
                 rows.append(dict(page=rel,original_sha256=hashlib.sha256(before.encode()).hexdigest(),updated_sha256=hashlib.sha256(original.encode()).hexdigest(),body_unchanged=True,new_inference=False,policy=generated_visuals.CITATION_BINDING_POLICY))

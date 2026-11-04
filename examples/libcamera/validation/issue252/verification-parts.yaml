@@ -73,14 +73,16 @@ parts:
 - id: delivery-case
   question: '콜백 시험 계획: 허용된 내부 doQueueRequests 재진입에서는 pop이 먼저 이루어져 중복 투입하지 않는지 확인하고, Direct와 지연된 Queued 수신에서는
     현재·수신 스레드, cookie·sequence·콜백 진입/복귀·stop 앞뒤와 객체 수명을 기록하도록 하세요. 같은 함수의 콜백 중첩 진입은 별도 허용 문서 없이 하지 말고, stop의
-    Blocking 반환과 별도 Queued 수신자 처리 완료를 구분해 확인하는 계획을 두 문장 이내로 제시하세요. 표식을 정확한 C++ 반환 명령의 관찰이나 실제 실행 결과로 표시하지 마세요.'
+    Blocking 반환과 별도 Queued 수신자 처리 완료를 구분해 확인하는 계획을 두 문장 이내로 제시하세요. 표식을 정확한 C++ 반환 명령의 관찰이나 실제 실행 결과로 표시하지 마세요.
+    Signal 발신자의 포인터·참조 수명 책임과 별도 Queued 수신자의 마지막 사용을 추적하고, 요청 소유자가 삭제·재사용 전에 이를 동기화하는 완료/해제 협의가 지켜지는지 확인하는
+    검증 조건을 추가하세요. 요청 완료 신호나 한 핸들러의 복귀를 모든 지연 수신자 사용 종료로 간주하지 마세요.'
   sources:
   - connection-rules
   - signal-lifetime
   - thread-contract
   - dispatch-flow
   - owner-duty
-  max_statements: 2
+  max_statements: 3
 - id: stop-crossing-case
   question: 제출과 정지의 교차 시험 계획에서 queued 메시지의 게시·메서드 실행, CameraStopping 설정, 공통 stop의 대기 분리와 stopDevice, 준비·장치
     재투입, Camera::requestComplete 상태 검사까지의 상대 순서를 기록하도록 하세요. 호출자 동기화 의무를 유지하고, 정지 뒤 실제 메서드가 실행되는 조건이 성립하는 경우를

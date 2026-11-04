@@ -980,23 +980,27 @@ def test_guard_comparison_operator_keeps_lexical_boundaries(tmp_cfg,automatic,gu
         materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')
 
 
-def test_edge_cannot_assemble_endpoint_symbols_from_unrelated_passages(tmp_cfg,automatic):
-    from sdd.generated_visuals import materialize,plans
+def test_edge_can_cite_split_passages_of_one_function_without_claiming_semantic_approval(tmp_cfg,automatic):
+    from sdd.generated_visuals import materialize,plans,inputs
     section,model,_,agent=automatic
     record=model.evidence['device/shutdown/stop']
+    record['text']='void Device::stop() {\n\n    cancelPending();\n\n}'
+    record['sha256']=hashlib.sha256(record['text'].encode()).hexdigest()
     source=section['design_topics'][0]['sources'][0]
-    def update(text):
-        record.update(text=text,sha256=hashlib.sha256(text.encode()).hexdigest())
-        source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
-    update('void Device::stop() { int first = 1; }\n\nvoid cancelPending() { int unrelated = 2; }')
+    source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
+    plan=plans(tmp_cfg,section)[0]
+    passages=inputs(tmp_cfg,model,section,plan)[2]
+    stop=next(k for k,(_,q) in passages.items() if 'Device::stop' in q)
+    cancel=next(k for k,(_,q) in passages.items() if 'cancelPending' in q)
+    assert stop!=cancel
     draft=copy.deepcopy(agent.draft)
-    draft['nodes'][1]['quote_ids']=['stop:1']
-    draft['edges'][0]['quote_ids']=['stop:0','stop:1']
-    with pytest.raises(ValueError,match='individual passage containing both'):
-        materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')
-    update('void Device::stop() { cancelPending(); }')
-    materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],agent.draft,'synthetic-unit-fixture')
-
+    draft['nodes'][0]['quote_ids']=[stop]
+    draft['nodes'][1]['quote_ids']=[cancel]
+    draft['edges'][0]['quote_ids']=[stop,cancel]
+    materialize(tmp_cfg,model,section,plan,draft,'synthetic-unit-fixture')
+    draft['edges'][0]['quote_ids']=[stop]
+    with pytest.raises(ValueError,match='uncited_symbols'):
+        materialize(tmp_cfg,model,section,plan,draft,'synthetic-unit-fixture')
 
 def test_identifier_v1_record_reuses_only_after_current_policy_revalidation(tmp_cfg,automatic):
     from sdd.generated_visuals import inputs,materialize,plans,generate,resolve,CITATION_BINDING_POLICY

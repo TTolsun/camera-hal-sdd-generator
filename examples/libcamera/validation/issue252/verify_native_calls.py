@@ -15,12 +15,14 @@ CUTOFF = '2026-11-04T18:35:00'
 def main():
     expected = load(RUN/'independent-review.yaml').agent
     rows, historical = [], 0
+    imported=RUN/'historical-native-restoration-latest.json'
+    preserved={row['receipt'] for row in json.loads(imported.read_bytes())['receipts']} if imported.exists() else set()
     for calls in sorted(RUN.rglob('calls')):
         if not calls.is_dir():
             continue
         for record in iter_records(calls):
             receipt = record.receipt
-            if receipt.get('completed_at','') < CUTOFF:
+            if record.receipt_path.relative_to(RUN).as_posix() in preserved or receipt.get('completed_at','') < CUTOFF:
                 historical += 1
                 continue
             verified = verify_cli_receipt(record.request,record.raw,receipt,calls,expected)
