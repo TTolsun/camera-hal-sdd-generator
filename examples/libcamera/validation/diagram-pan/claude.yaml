@@ -1,0 +1,12 @@
+agent:
+  args:
+  - --effort
+  - high
+  - --setting-sources
+  - project,local
+  full_style_guides: true
+  kind: cli
+  max_input_chars: 128000
+  model: claude-haiku-5-5
+  runner: claude
+  timeout_sec: 600
