@@ -155,7 +155,7 @@ def render_values(cfg, model, section, values):
         if ident in seen:
             raise ValueError('Duplicate visual ID')
         seen.add(ident)
-        if set(visual) - {'id', 'topic', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display'}:
+        if set(visual) - {'id', 'topic', 'stage', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display'}:
             raise ValueError('Unknown visual setting')
         if visual.get('condition_display','inline') not in ('inline','evidence'):
             raise ValueError('Visual condition_display must be inline or evidence')
@@ -163,7 +163,11 @@ def render_values(cfg, model, section, values):
             raise ValueError('Visual kind or topic is invalid')
         if titles.count(topics[visual['topic']].get('title')) != 1:
             raise ValueError('Visual target heading must be unique')
+        if 'stage' in visual and (not isinstance(visual['stage'], str) or visual['stage'] not in {
+                s['id'] for s in topics[visual['topic']].get('explanation', [])}):
+            raise ValueError('Visual stage must belong to its topic explanation')
         title, question = (_text(visual.get(k), k) for k in ('title', 'question'))
+        title_prefix = '#### ' if topics[visual['topic']].get('explanation') else '### '
         nodes, edges = visual.get('nodes'), visual.get('edges')
         if not isinstance(nodes, list) or not nodes or any(not isinstance(n, dict) for n in nodes):
             raise ValueError('Visual nodes must be a nonempty object list')
@@ -244,7 +248,7 @@ def render_values(cfg, model, section, values):
         if stale:
             # Validate all nodes and edges above, even after the first stale pin.
             # Do not emit the old interpretation, its links, or a Mermaid file.
-            block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n'
+            block = (f'<!-- sdd:visual:{ident} -->\n{title_prefix}{title}\n\n'
                      '소스 근거가 달라져 이 질문의 그림을 제외했습니다. 그림은 재검토가 필요합니다. '
                      '현재 설명과 소스 근거를 확인하세요.\n'
                      f'<!-- /sdd:visual:{ident} -->')
@@ -259,7 +263,7 @@ def render_values(cfg, model, section, values):
             metadata += ['', 'LLM 그림 초안 · 사람 검토 전', '', '작성 모델: `' + html.escape(producer) + '`']
         note = '??? note "그림 근거와 확인 범위"\n' + '\n'.join('    ' + line for line in [*metadata, '', *proof])
         download = PurePosixPath(section_output(section)).stem + '.' + ident + '.mmd'
-        block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n'
+        block = (f'<!-- sdd:visual:{ident} -->\n{title_prefix}{title}\n\n'
                  f'```mermaid\n{source}\n```\n\n[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
         result.append((visual, block, source))
     return result
@@ -275,13 +279,23 @@ def place(body, rendered, section):
     topics = {t['id']: t for t in section.get('design_topics', [])}
     grouped = {}
     for visual, block, _ in rendered:
-        grouped.setdefault(visual['topic'], []).append(block)
-    for tid, blocks in grouped.items():
+        stages = topics[visual['topic']].get('explanation', [])
+        stage = visual.get('stage') or (stages[0]['id'] if stages else None)
+        grouped.setdefault((visual['topic'], stage), []).append(block)
+    for (tid, stage), blocks in grouped.items():
         heading = '## ' + topics[tid]['title']
         matches = list(re.finditer(r'^' + re.escape(heading) + r'\n+', body, re.M))
         if len(matches) != 1:
             raise ValueError(f'Visual target heading missing or ambiguous: {heading}')
         start = matches[0].end()
+        if stage:
+            title = next(s['title'] for s in topics[tid]['explanation'] if s['id'] == stage)
+            boundary = re.search(r'^## ', body[start:], re.M)
+            stop = start + boundary.start() if boundary else len(body)
+            targets = list(re.finditer(r'^### ' + re.escape(title) + r'\n+', body[start:stop], re.M))
+            if len(targets) != 1:
+                raise ValueError('Visual explanation stage missing or ambiguous: ' + title)
+            start += targets[0].end()
         from .product_context import scope_notice
         notice = scope_notice(topics[tid])
         if notice and body.startswith(notice,start):

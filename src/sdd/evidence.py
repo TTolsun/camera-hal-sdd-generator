@@ -187,6 +187,17 @@ def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: 
         raise ValueError('grouped must be a boolean')
     if type(preserve_lists) is not bool:
         raise ValueError('preserve_lists must be a boolean')
+    if topic.get('explanation'):
+        from .explanation import render
+        gaps = []
+        def render_part(statements):
+            selected = {k: v for k, v in topic.items() if k != 'explanation'}
+            selected['statements'] = statements
+            text, findings = contract_text(model, section, selected, grouped=grouped, preserve_lists=preserve_lists)
+            gaps.extend(findings)
+            return text
+        text = render(topic, topic.get('statements', []), render_part)
+        return text, gaps
     entries, gaps = [], []
     sources = {s['id']: s for s in topic.get('sources', [])}
     summaries = summary_parts(topic)

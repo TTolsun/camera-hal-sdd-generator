@@ -1,0 +1,8 @@
+terms:
+  - term: API
+    full: Application Programming Interface
+    definition: 소프트웨어 구성 요소를 호출할 때 따르는 인터페이스와 사용 규칙입니다. 이 표본은 libcamera 함수의 호출 조건과 반환값을 확인합니다.
+  - term: LLM
+    full: Large Language Model
+    definition: 문장을 생성하거나 검토하는 대규모 언어 모델입니다. 모델의 자동 판정은 실행 성공이나 사람 승인을 뜻하지 않습니다.
+common: []
