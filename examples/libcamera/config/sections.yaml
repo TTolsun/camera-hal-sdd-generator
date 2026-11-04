@@ -5401,7 +5401,9 @@ sections:
         - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){3}
           message: 전달 중단 조건과 완료 후 재시도 연결을 세 문장 이내로 설명하세요.
     - id: dispatch
-      question: 이 void 함수의 취소 여부 분기와 각 호출을 설명하세요. 반환값을 지어내지 마세요.
+      question: 이 void 함수가 요청을 queuedRequests_에 추가하는 처리와 취소 여부 분기의 각 호출을 설명하세요.
+        queuedRequests_를 별도 준비 대기 큐인 waitingRequests_나 일반적인 대기 목록으로 바꾸어 부르지 마세요.
+        반환값을 지어내지 마세요.
       sources:
       - dispatch
       max_statements: 3
@@ -5412,6 +5414,7 @@ sections:
         - - cancelled_
         - - completeRequest
         - - queueRequestDevice
+        - - queuedRequests_
     - id: device-result
       question: queueRequestDevice() 구현자가 장치에 요청 파라미터를 프로그래밍하여 제공된 버퍼에 캡처되는 프레임에 적용해야 하는 책임을
         설명하세요. 성공 시 0, 오류 시 음수 오류 코드 반환 계약을 함께 구분하세요. 실제 특정 장치에서 수행했다고 쓰거나 다른 큐의 준비·완료 경로를 반복하지
