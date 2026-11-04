@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "human_review": "pending",
+  "calls": [
+    {
+      "tag": "completion-demo_completion_completion-rule_0",
+      "started_seconds": 0.1561223000753671,
+      "status": "completed",
+      "section": "completion-demo",
+      "seconds": 7.8619046999374405
+    },
+    {
+      "tag": "visual_completion-demo_completion-branches_0",
+      "started_seconds": 8.036035800003447,
+      "status": "completed",
+      "section": null,
+      "seconds": 9.478652099962346
+    }
+  ],
+  "documents": [
+    {
+      "section": "completion-demo",
+      "started_seconds": 0.15201439999509603,
+      "status": "passed",
+      "units": {
+        "completion-demo_completion_completion-rule": "newly-generated"
+      },
+      "seconds": 7.8790022999746725
+    }
+  ],
+  "limits": {
+    "max_calls": 0,
+    "max_seconds": 0,
+    "document_max_calls": 0,
+    "document_max_seconds": 0
+  },
+  "operation_id": null,
+  "operation_limits": {},
+  "phases": [
+    {
+      "name": "generation",
+      "status": "completed",
+      "started_seconds": 5.230004899203777e-05,
+      "seconds": 17.66293490002863
+    },
+    {
+      "name": "prepare",
+      "status": "completed",
+      "started_seconds": 0.08139820001088083,
+      "seconds": 0.05999800004065037
+    }
+  ],
+  "owner_pid": 37672,
+  "started_at": 1793818245.4821112,
+  "current_phase": null,
+  "seconds": 17.665,
+  "updated_at": 1793818263.146637,
+  "counts": {
+    "completed": 1,
+    "reused": 0,
+    "revalidated": 0,
+    "failed": 0,
+    "running": 0,
+    "not_started": 0
+  },
+  "cumulative": {
+    "calls": 2,
+    "elapsed_seconds": 17.665,
+    "cli_seconds": 17.340556799899787
+  },
+  "current_task": null
+}

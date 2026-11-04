@@ -4,3 +4,5 @@
 docs/inhouse/records/goal-138-140/inputs/** -text whitespace=cr-at-eol
 # Raw issue211 stdout/stderr, receipts and archived inputs retain their hashes.
 examples/libcamera/validation/issue211/runs/** -text -whitespace
+# Preserve public pilot CLI provenance and source snapshots byte-for-byte.
+examples/libcamera/validation/issue251/runs/** -text -whitespace

@@ -1,0 +1,8 @@
+flowchart TB
+%% sdd:translations {"onFrameDone을 호출합니다. · <br/>ret #62;= 0 #91;false#93;": "Calls onFrameDone. · ret #62;= <br/>0 #91;false#93;", "onFrameDone을 호출합니다. · <br/>ret #62;= 0 #91;true#93;": "Calls onFrameDone. · ret #62;= <br/>0 #91;true#93;", "onFrameDone이 frame의 <br/>완료를 처리합니다.": "onFrameDone handles <br/>completion of frame.", "runPipes가 frame을 <br/>처리합니다.": "runPipes processes frame.", "sendResult가 frame의 결과를 <br/>전송합니다.": "sendResult sends the result <br/>for frame.", "sendResult를 호출합니다. · <br/>ret #62;= 0 #91;true#93;": "Calls sendResult. · ret #62;= <br/>0 #91;true#93;"}
+  v_n0["runPipes가 frame을 <br/>처리합니다."]
+  v_n1["sendResult가 frame의 결과를 <br/>전송합니다."]
+  v_n2["onFrameDone이 frame의 <br/>완료를 처리합니다."]
+  v_n0 -->|"sendResult를 호출합니다. · <br/>ret #62;= 0 #91;true#93;"| v_n1
+  v_n1 -->|"onFrameDone을 호출합니다. · <br/>ret #62;= 0 #91;true#93;"| v_n2
+  v_n0 -->|"onFrameDone을 호출합니다. · <br/>ret #62;= 0 #91;false#93;"| v_n2

@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "issue251-independent-grounding",
+  "completed_at": "2026-11-04T18:59:12.826589+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "7dc2e188766aba6b844198f42e54730f0855e7684405d3b1261087c6a324e991",
+  "response_sha256": "f218381edbcf2a57c4fe3d41c187db52352762602820912e0797ff22351e9816",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "a967cf73e334542449c0fe09e9c4df93899ef0d0d0433705056aaa092c533b3a",
+    "prompt_sha256": "3c28a88dfeb5f17ffd225172d4add8220601a4191ada268ed1441207af3984de",
+    "provider": {
+      "thread_id": "01a1a7ed-c28f-7792-a5b4-197ad37aa515",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 27731,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 536,
+        "reasoning_output_tokens": 251
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-a39eewrd.stdout.txt",
+    "native_schema_sha256": "f6c294a9c651c72ea998d77914abf58c526e9441daf5fb633d1e235fd7449002"
+  },
+  "human_review": "pending"
+}

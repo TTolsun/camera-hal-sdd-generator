@@ -1,0 +1,50 @@
+{
+ "base": "16f6cb06d425cf390706a9c6b918fce003bcf44e",
+ "head": "0c92b75dd1f9fc2ac97d2ef08e246bc081faaf48",
+ "changed_files": [
+  "src/device/RequestManager.cpp"
+ ],
+ "changed_classes": [],
+ "sections": {
+  "completion-demo": [
+   "watch 일치: src/device/RequestManager.cpp",
+   "설계 근거 파일 변경: src/device/RequestManager.cpp"
+  ]
+ },
+ "scenarios": {},
+ "packages": [],
+ "coverage": {
+  "schema": 1,
+  "status": "needs-review",
+  "baseline_available": false,
+  "ignored_files": [],
+  "files": [
+   {
+    "file": "src/device/RequestManager.cpp",
+    "watch_sections": [
+     "completion-demo"
+    ],
+    "manual_review_sections": [],
+    "status": "needs-review"
+   }
+  ],
+  "entities": [],
+  "findings": [
+   {
+    "reason": "no-extracted-entity",
+    "kind": "file",
+    "name": "src/device/RequestManager.cpp",
+    "files": [
+     "src/device/RequestManager.cpp"
+    ]
+   }
+  ],
+  "classified": [],
+  "limitations": [
+   "File-level scope mapping does not prove changed-line coverage, generated prose accuracy or human approval.",
+   "Without baseline facts, removed entities in surviving files may be missed.",
+   "A watch hit, package summary or scenario call is not class/function documentation coverage.",
+   "Comment, whitespace and #include-only changes are classified without review; an #include can still change preprocessing elsewhere."
+  ]
+ }
+}

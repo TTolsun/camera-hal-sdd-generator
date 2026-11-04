@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a1a7e6-4387-7350-98e5-4985783cd0dd"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"statements\":[{\"text\":\"runPipes의 반환값이 0 이상이면 if 블록에서 sendResult를 호출하며, 음수이면 sendResult를 호출하지 않습니다. onFrameDone은 if 블록 밖에서 반환값과 관계없이 호출되어 실패 시에도 프레임 완료 처리를 수행합니다.\",\"quote_id\":\"on-frame:0\",\"evidence\":[\"on-frame\"],\"covers\":[\"completion-rule\"],\"kind\":\"behavior\"}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":12912,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":102,"reasoning_output_tokens":0}}

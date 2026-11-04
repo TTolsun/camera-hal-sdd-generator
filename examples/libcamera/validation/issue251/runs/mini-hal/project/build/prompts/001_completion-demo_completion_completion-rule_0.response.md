@@ -1,0 +1,1 @@
+{"statements":[{"text":"runPipes의 반환값이 0 이상이면 if 블록에서 sendResult를 호출하며, 음수이면 sendResult를 호출하지 않습니다. onFrameDone은 if 블록 밖에서 반환값과 관계없이 호출되어 실패 시에도 프레임 완료 처리를 수행합니다.","quote_id":"on-frame:0","evidence":["on-frame"],"covers":["completion-rule"],"kind":"behavior"}]}

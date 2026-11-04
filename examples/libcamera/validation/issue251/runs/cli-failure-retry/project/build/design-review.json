@@ -1,0 +1,22 @@
+{
+  "source_commit": "0c92b75dd1f9fc2ac97d2ef08e246bc081faaf48",
+  "sections": {
+    "completion-demo": {
+      "status": "documented",
+      "requirements": [
+        {
+          "id": "completion-rule",
+          "question": "RequestManager::onFrame에서 runPipes 반환값에 따른 sendResult 조건과 onFrameDone 호출을 설명하세요. if 블록 안팎을 구분하고 실패 시 정리도 설명하세요. 실행 스레드나 성공 보장을 추정하지 마세요.",
+          "status": "documented",
+          "topics": [
+            "completion"
+          ],
+          "limitations": []
+        }
+      ],
+      "findings": [],
+      "human_review": "pending",
+      "scope": "LLM answer coverage, current source bindings and structural checks; not semantic or runtime approval."
+    }
+  }
+}

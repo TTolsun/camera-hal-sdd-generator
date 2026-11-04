@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "human_review": "pending",
+  "calls": [],
+  "documents": [],
+  "limits": {
+    "max_calls": 0,
+    "max_seconds": 0,
+    "document_max_calls": 0,
+    "document_max_seconds": 0
+  },
+  "operation_id": null,
+  "operation_limits": {},
+  "phases": [
+    {
+      "name": "export_site",
+      "status": "completed",
+      "started_seconds": 3.69000481441617e-05,
+      "seconds": 0.31533949996810406
+    },
+    {
+      "name": "build_site",
+      "status": "completed",
+      "started_seconds": 0.05585030000656843,
+      "seconds": 0.23245969996787608
+    }
+  ],
+  "owner_pid": 25096,
+  "started_at": 1793818495.995671,
+  "current_phase": null,
+  "seconds": 0.315,
+  "updated_at": 1793818496.3110187,
+  "counts": {
+    "completed": 0,
+    "reused": 0,
+    "revalidated": 0,
+    "failed": 0,
+    "running": 0,
+    "not_started": 0
+  },
+  "cumulative": {
+    "calls": 0,
+    "elapsed_seconds": 0.315,
+    "cli_seconds": 0
+  }
+}

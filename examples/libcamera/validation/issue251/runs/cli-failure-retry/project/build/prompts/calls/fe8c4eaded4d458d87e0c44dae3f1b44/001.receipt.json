@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "completion-demo_completion_completion-rule_0",
+  "completed_at": "2026-11-04T18:55:10.246879+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "6152a392147c78dc4cae1bfbf4dc13b3752f5d0134e8d48d8dea7fcbd9dfedd7",
+  "response_sha256": "c0b69dddce2bc67d3bb2d1dc8e37239fe8884eae8df4d51270eb7137a316db59",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 16384,
+    "max_output_tokens": 6000
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "0819e0da943f6910c98b0f23c0f1c000dc96184d9e7ddc0a59e61d9d2abc3fd2",
+    "prompt_sha256": "a5490c60a388cb75334e44f7966d036d5b16f6da900877099179ef9343ba67db",
+    "provider": {
+      "thread_id": "01a1a7ea-3042-7343-9f5d-9d1bf05f825a",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 12915,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 105,
+        "reasoning_output_tokens": 0
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-tctd064y.stdout.txt",
+    "native_schema_sha256": "5da52edf8e8acca7d56d801ecb45b3c772adcb4d521ebd9feebf3c1f9bd690fc"
+  },
+  "human_review": "pending"
+}

@@ -1,0 +1,54 @@
+sections:
+- design_generation: llm
+  design_requirements:
+  - id: completion-rule
+    question: RequestManager::onFrame에서 runPipes 반환값에 따른 sendResult 조건과 onFrameDone
+      호출을 설명하세요. if 블록 안팎을 구분하고 실패 시 정리도 설명하세요. 실행 스레드나 성공 보장을 추정하지 마세요.
+  design_topics:
+  - answer_contract: &id001
+      basis: implementation
+      reject_patterns:
+      - message: 이 함수 밖의 전체 오류 처리 상태를 추정하지 마세요.
+        pattern: 오류\s*처리[^.\n]*(?:정의되지|미정)
+      required_terms:
+      - - runPipes
+      - - sendResult
+      - - onFrameDone
+    covers:
+    - completion-rule
+    id: completion
+    parts:
+    - answer_contract: *id001
+      id: completion-rule
+      max_statements: 1
+      question: RequestManager::onFrame에서 runPipes 반환값에 따른 sendResult 조건과 onFrameDone
+        호출을 설명하세요. if 블록 안팎을 구분하고 실패 시 정리도 설명하세요. 실행 스레드나 성공 보장을 추정하지 마세요. 답변은 세 문장
+        이내로 작성하세요. runPipes와 sendResult의 현재 조건, 음수 반환 때의 호출 여부, if 블록 밖 onFrameDone의
+        무조건 호출을 각각 명시하세요. 전체 오류 처리가 미정이라고 추정하지 마세요. 현재 반환 조건을 다시 대조하세요.
+      sources:
+      - on-frame
+    question: RequestManager::onFrame에서 runPipes 반환값에 따른 sendResult 조건과 onFrameDone
+      호출을 설명하세요. if 블록 안팎을 구분하고 실패 시 정리도 설명하세요. 실행 스레드나 성공 보장을 추정하지 마세요. 답변은 세 문장
+      이내로 작성하세요. runPipes와 sendResult의 현재 조건, 음수 반환 때의 호출 여부, if 블록 밖 onFrameDone의
+      무조건 호출을 각각 명시하세요. 전체 오류 처리가 미정이라고 추정하지 마세요.
+    sources:
+    - end: '
+
+        void RequestManager::sendResult'
+      file: src/device/RequestManager.cpp
+      id: on-frame
+      start: void RequestManager::onFrame(Frame &frame)
+    title: 결과 전송과 프레임 정리
+  diagram:
+    enabled: false
+  id: completion-demo
+  kind: prose
+  lead: 파이프 반환 조건과 완료 정리를 소스와 함께 확인하세요.
+  next:
+    link: completion.md
+    title: 완료 분기
+  output: completion.md
+  show_evidence: true
+  title: 공개 mini HAL의 완료 분기
+  watch:
+  - src/device/RequestManager.cpp

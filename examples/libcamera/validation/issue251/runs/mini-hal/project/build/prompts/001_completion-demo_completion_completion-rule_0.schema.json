@@ -1,0 +1,66 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "statements"
+  ],
+  "properties": {
+    "statements": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "quote_id",
+          "evidence",
+          "covers",
+          "kind"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 600
+          },
+          "quote_id": {
+            "type": "string",
+            "enum": [
+              "on-frame:0"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "on-frame"
+              ]
+            }
+          },
+          "covers": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "completion-rule"
+              ]
+            }
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "behavior"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "source_commit": "0c92b75dd1f9fc2ac97d2ef08e246bc081faaf48",
+  "sections": {
+    "completion-demo_completion": {
+      "status": "ok",
+      "findings": [],
+      "facts_omitted": [],
+      "text": "runPipes의 반환값이 0 이상이면 if 블록에서 sendResult를 호출하며, 음수이면 sendResult를 호출하지 않습니다. onFrameDone은 if 블록 밖에서 반환값과 관계없이 호출되어 실패 시에도 프레임 완료 처리를 수행합니다. `src/device/RequestManager.cpp:37`",
+      "mode": "generated-prose",
+      "human_review": "pending",
+      "scope": "source-bound-contract: excerpt hash equality; extracted-structure: facts rendering; generated-prose: citation, manuscript and configured structural checks; no semantic approval"
+    }
+  }
+}

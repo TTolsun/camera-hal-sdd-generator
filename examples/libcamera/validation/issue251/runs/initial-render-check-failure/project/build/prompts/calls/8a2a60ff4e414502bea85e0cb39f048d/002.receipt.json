@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "visual_completion-demo_completion-branches_0",
+  "completed_at": "2026-11-04T18:47:41.186294+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "1799a798308127ee4156a62c6cdc7b3c24e77ba1810b1af56e904d64342c5f5d",
+  "response_sha256": "8860761d79cdba8c202d302f1a36b580b65336def6aab2b38deae39c6279bb24",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 16384,
+    "max_output_tokens": 6000
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "878156388d2e815b9ecf9ae8cd15c0b8a676d4d9d8f16973df2f16736220db63",
+    "prompt_sha256": "95b331ba7852d062155060d80c5b00592c6e15b6f0167433a548ffd20214d917",
+    "provider": {
+      "thread_id": "01a1a7e3-4c3a-7f81-87ed-daa34396b1e4",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 15876,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 264,
+        "reasoning_output_tokens": 0
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-dzw77f96.stdout.txt",
+    "native_schema_sha256": "f0af26b8bd02f0ba0598b2fb96b8e23efdc1ee1cd33d72dcef5a9be93887e54b"
+  },
+  "human_review": "pending"
+}

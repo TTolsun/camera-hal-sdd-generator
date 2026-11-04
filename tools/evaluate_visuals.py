@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import html
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -17,6 +18,55 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
+
+
+def assert_rendered_guard(diagram_text, guard):
+    """Compare literal guards using Mermaid's numeric escapes and generated breaks."""
+    from sdd.mermaid_text import label
+
+    labels = '\n'.join(line for line in diagram_text.splitlines()
+                       if not line.lstrip().startswith('%%'))
+    rendered = ''.join(html.unescape(labels.replace('<br/>', '')).split())
+    expected = ''.join(label(guard).split())
+    assert re.search(r'(?<!\w)' + re.escape(expected) + r'(?!\w)', rendered), \
+        f'Rendered diagram is missing guard: {guard}'
+
+
+def assert_fixture_branches(draft):
+    symbols = {node['id']: node['symbol'] for node in draft['nodes']}
+    edges = [(symbols[e['from']], symbols[e['to']], e['condition_ref']) for e in draft['edges']]
+    assert ('runPipes', 'sendResult', 'c0:true') in edges
+    assert not any(target == 'sendResult' and condition != 'c0:true' for _, target, condition in edges)
+    assert any(source == 'runPipes' and target == 'onFrameDone' and condition in ('always', 'c0:false')
+               for source, target, condition in edges), 'Missing cleanup outside the true guard'
+    assert any(source == 'sendResult' and target == 'onFrameDone' and condition in ('always', 'c0:true')
+               for source, target, condition in edges), 'Missing cleanup after sending the result'
+
+
+def assert_rendered_edges(diagram_text, graph):
+    from sdd.mermaid_text import label
+
+    actual = {}
+    for line in diagram_text.splitlines():
+        edge = re.fullmatch(r'\s*v_(\w+) -->\|"([^"]*)"\| v_(\w+)\s*', line)
+        if edge:
+            source, text, target = edge.groups()
+            actual.setdefault((source, target), []).append(''.join(text.replace('<br/>', '').split()))
+    expected = {}
+    for edge in graph['edges']:
+        expected.setdefault((edge['from'], edge['to']), []).append(''.join(label(edge['label']).split()))
+    assert {k: sorted(v) for k, v in actual.items()} == {k: sorted(v) for k, v in expected.items()}, \
+        'Rendered diagram edges differ from the source-bound graph'
+
+
+def assert_graph_guards(draft, graph, guard):
+    assert len(draft['edges']) == len(graph['edges'])
+    for proposed, materialized in zip(draft['edges'], graph['edges']):
+        assert (proposed['from'], proposed['to']) == (materialized['from'], materialized['to'])
+        if proposed['condition_ref'] != 'always':
+            branch = proposed['condition_ref'].split(':', 1)[1]
+            actual = ''.join(materialized['label'].rsplit('·', 1)[-1].split())
+            assert actual == guard + '[' + branch + ']', 'Graph guard differs from the current source condition'
 
 
 def main():
@@ -125,16 +175,13 @@ def main():
         meta, body = _split(manuscript.read_text(encoding='utf-8'))
         rec = meta['generated_visuals']['records']['completion-branches']
         draft = expand_draft({'required_symbols': ['runPipes', 'sendResult', 'onFrameDone']}, rec['draft'], 3)
-        symbols = {node['id']: node['symbol'] for node in draft['nodes']}
-        branches = {(symbols[edge['from']], symbols[edge['to']], edge['condition_ref']) for edge in draft['edges']}
-        assert ('runPipes', 'sendResult', 'c0:true') in branches
-        assert branches & {('runPipes', 'onFrameDone', 'always'), ('runPipes', 'onFrameDone', 'c0:false')}
-        assert not any(target == 'sendResult' and condition != 'c0:true' for _, target, condition in branches)
-        assert any(guard in ''.join(e['label'].split()) for e in rec['graph']['edges']), rec['graph']
+        assert_fixture_branches(draft)
+        assert_graph_guards(draft, rec['graph'], guard)
         assert len(rec['graph']['nodes']) >= 2 and len(rec['graph']['edges']) >= 1
         site = cfg.build_dir / 'site'
-        diagram_text = (site / 'completion.completion-branches.mmd').read_text(encoding='utf-8').replace('<br/>', '')
-        assert guard in ''.join(html.unescape(diagram_text).split())
+        diagram_text = (site / 'completion.completion-branches.mmd').read_text(encoding='utf-8')
+        assert_rendered_guard(diagram_text, guard)
+        assert_rendered_edges(diagram_text, rec['graph'])
         dest = out / name
         shutil.copytree(site, dest / 'site')
         shutil.copyfile(manuscript, dest / 'completion.md')
