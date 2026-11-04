@@ -21,13 +21,13 @@ def observed():
 
 
 @contextmanager
-def observe(cfg, phase):
+def observe(cfg, phase, model=None):
     execution = _observed.get()
     if execution is not None:
         with execution.phase(phase):
             yield execution
         return
-    execution = Execution(cfg, object())
+    execution = Execution(cfg, object(), model=model)
     token = _observed.set(execution)
     try:
         with execution.phase(phase):
@@ -68,7 +68,7 @@ def failure_kind(exc):
 
 
 class Execution:
-    def __init__(self, cfg, agent, *, clock=time.monotonic):
+    def __init__(self, cfg, agent, *, clock=time.monotonic, model=None):
         self.cfg, self.agent, self.clock = cfg, agent, clock
         self.limits = {key: getattr(cfg.review, key) for key in
                        ('max_calls', 'max_seconds', 'document_max_calls', 'document_max_seconds')}
@@ -79,6 +79,8 @@ class Execution:
         self.report = dict(schema=1, human_review='pending', calls=[], documents=[], limits=self.limits)
         self.path = cfg.build_dir / 'generation-runs' / (uuid.uuid4().hex + '.json')
         self.current = None
+        self.publication_contract = None
+        self.publication_model = model
         self._pending_decisions = {}
         self._mutex = threading.RLock()
         self.operation = cfg.publication.get('operation_id')
@@ -92,6 +94,9 @@ class Execution:
             raise ValueError('publication.operation_id must be a nonempty string')
         self.report.update(operation_id=self.operation, operation_limits=self.operation_limits,
                            phases=[], owner_pid=os.getpid(), started_at=time.time())
+        self.report['publication_plans'] = []
+        if cfg.publication.get('operation_file'):
+            self.report.update(publication=None, publication_attempt=None, publication_revision=None)
 
     def prior(self):
         if not self.operation:
@@ -152,17 +157,44 @@ class Execution:
         self.report['phases'].append(row)
         previous_phase = self.report.get('current_phase')
         self.report['current_phase'] = name
+        owns_contract = self.publication_contract is None and bool(self.cfg.publication.get('operation_file'))
+        previous_role = None
+        error = None
         try:
             with self.heartbeat():
+                if owns_contract:
+                    from .publication_operation import Contract
+                    self.publication_contract = Contract(self, name)
+                if self.publication_contract:
+                    previous_role = self.publication_contract.role
+                    self.publication_contract.enter_phase(name)
+                if self.publication_contract and name == 'export_site':
+                    self.publication_contract.final_gate()
                 yield
+                if self.publication_contract:
+                    if owns_contract:
+                        self.publication_contract.begin_output()
+                    else:
+                        self.publication_contract.verify()
             row['status'] = 'completed'
-        except BaseException as exc:
-            row.update(status='failed', failure_kind=failure_kind(exc), error=str(exc))
-            raise
-        finally:
             row['seconds'] = self.clock()-self.started-row['started_seconds']
             self.report['current_phase'] = previous_phase
             self.persist()
+        except BaseException as exc:
+            error = exc
+            row.update(status='failed', failure_kind=failure_kind(exc), error=str(exc))
+            if owns_contract and self.publication_contract is not None:
+                self.publication_contract.rollback()
+            row['seconds'] = self.clock()-self.started-row['started_seconds']
+            self.report['current_phase'] = previous_phase
+            self.persist()
+            raise
+        finally:
+            if self.publication_contract is not None:
+                self.publication_contract.role = previous_role
+            if owns_contract and self.publication_contract is not None:
+                self.publication_contract.close(error)
+                self.publication_contract = None
 
     @contextmanager
     def document(self, sid, units):
@@ -258,6 +290,9 @@ class Execution:
         return self._chat(transport, system, user, **kwargs)
 
     def _chat(self, transport, system, user, **kwargs):
+        if self.publication_contract:
+            self.publication_contract.verify()
+            self.publication_contract.verify_transport(transport)
         now = self.clock()
         calls = self.report['calls']
         remaining = []
@@ -288,6 +323,9 @@ class Execution:
         try:
             with self.heartbeat():
                 raw = transport(system, user, **kwargs)
+            if self.publication_contract:
+                self.publication_contract.verify()
+                self.publication_contract.verify_transport(transport)
             self.check_time()
             row['status'] = 'completed'
             return raw
