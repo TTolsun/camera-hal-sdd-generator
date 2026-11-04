@@ -185,7 +185,11 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
         else:
             destination.write_bytes(original)
     inputs.rollbacks.append(rollback)
-    save(destination, catalog)
+    def verify_commit():
+        inputs.verify()
+        if execution is not None and execution.publication_contract is not None:
+            execution.publication_contract.verify()
+    save(destination, catalog, before_replace=verify_commit)
     inputs.produced(destination, expected)
     return {'pages': len(pages), 'strings': len(units),
             'missing_translations': sum(not value for value in catalog['strings'].values()),
