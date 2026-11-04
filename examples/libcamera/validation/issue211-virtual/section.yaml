@@ -95,7 +95,9 @@ design_topics:
     question: 기록된 단일 스트림·출력 싱크 미요청 구성을 대상으로 한다는 범위를 먼저 밝히고, cam이 버퍼를 할당한 뒤 각 초기 요청을 생성하고 버퍼를 붙여 저장하며 모든
       요청이 준비된 다음에 카메라 시작 단계로 넘어간다는 순서를 두 짧은 문장으로 설명합니다. 할당·생성·연결 중 실패하면 오류를 반환한다는 짧은 문장을 덧붙여도 됩니다. 변수명·후속
       큐 호출·콜백은 나열하지 않습니다. 표시 본문에는 내부 변수·긴 함수명·오류 출력 문자열·뒤 항목 안내·관측되지 않은 내부 값 설명을 넣지 않습니다. 인용은 근거에서 제공하므로
-      쉬운 주어·동작·조건만 짧게 설명합니다.
+      쉬운 주어·동작·조건만 짧게 설명합니다. 이 본문 항목은 cam 외의 영문 코드 식별자를 쓰지 않는 한국어 평서문으로만 씁니다. 함수의 역할은 한국어 명사로 표현하고, 괄호
+      속 코드명 보충도 완전히 제거합니다. camera_->start, CameraSession::startCapture, startCapture, Camera::queueRequest
+      같은 실제 코드명은 인용 근거에만 남깁니다.
     sources:
     - cam-preparation
     max_statements: 1
@@ -109,6 +111,9 @@ design_topics:
       - pattern: ::|requests_|camera_|sink_|ConnectionType|Failed to|Can.t create|뒤 항목|관측되지|관찰되지
         message: Keep implementation identifiers, console strings, unobserved internal state and editorial
           navigation in evidence; retain only the requested concise behavior and consequential conditions.
+      - pattern: (?i)(?<![A-Za-z0-9_])(?!cam(?![A-Za-z0-9_]))[A-Za-z_][A-Za-z0-9_:]*
+        message: 본문에 cam 외 영문 코드 식별자가 남았습니다. 괄호 안의 camera_, CameraSession::, startCapture 등도 전부 제거하고 함수
+          역할을 한국어 명사로만 설명하세요. 코드 인용 근거는 그대로 유지합니다.
 - id: initial-submission
   title: 준비된 초기 요청을 한도 안에서 제출합니다
   question: 같은 기록 구성에서 카메라 시작 뒤 남은 초기 요청을 순회하며 제출 한도를 적용하고 큐 반환 오류와 정상 순회 종료를 어떻게 처리합니까?
@@ -132,7 +137,9 @@ design_topics:
     role: summary
     question: 기록된 단일 스트림·출력 옵션 미요청 범위를 먼저 밝히고, cam이 모든 초기 요청 준비를 마친 뒤 카메라 시작 함수를 호출한다는 첫 짧은 문장을 씁니다. 시작
       함수가 오류를 반환하면 초기 캡처 함수도 그 오류를 반환한다는 두 번째 짧은 문장으로 마칩니다. 이 분기에서 카메라를 중지한다고 쓰지 않습니다. 이후 한도 검사·큐 호출·내부
-      변수·미관측 경고·다음 항목 안내·오류 메시지 문자열을 쓰지 않습니다.
+      변수·미관측 경고·다음 항목 안내·오류 메시지 문자열을 쓰지 않습니다. 이 본문 항목은 cam 외의 영문 코드 식별자를 쓰지 않는 한국어 평서문으로만 씁니다. 함수의 역할은
+      한국어 명사로 표현하고, 괄호 속 코드명 보충도 완전히 제거합니다. camera_->start, CameraSession::startCapture, startCapture,
+      Camera::queueRequest 같은 실제 코드명은 인용 근거에만 남깁니다.
     sources:
     - cam-request-buffers
     max_statements: 1
@@ -142,10 +149,15 @@ design_topics:
       - pattern: ::|requests_|camera_|sink_|ConnectionType|Failed to|Can.t create|뒤 항목|관측되지|관찰되지
         message: Keep implementation identifiers, console strings, unobserved internal state and editorial
           navigation in evidence; retain only the requested concise behavior and consequential conditions.
+      - pattern: (?i)(?<![A-Za-z0-9_])(?!cam(?![A-Za-z0-9_]))[A-Za-z_][A-Za-z0-9_:]*
+        message: 본문에 cam 외 영문 코드 식별자가 남았습니다. 괄호 안의 camera_, CameraSession::, startCapture 등도 전부 제거하고 함수
+          역할을 한국어 명사로만 설명하세요. 코드 인용 근거는 그대로 유지합니다.
   - id: limit
     question: 설정된 제출 한도에 이미 도달했으면 도우미가 카메라 큐 호출 없이0을 반환해 현재 요청 제출을 생략한다고 짧게 설명합니다. 한도가 미설정이거나 아직 미달일 때만
       제출 시도 수를 늘리고 카메라 큐 호출로 진행한다는 다른 결과를 다음 짧은 문장으로 명시합니다. 변수명이나 이전 준비 단계를 반복하지 않습니다. 표시 본문에는 내부 변수·긴
-      함수명·오류 출력 문자열·뒤 항목 안내·관측되지 않은 내부 값 설명을 넣지 않습니다. 인용은 근거에서 제공하므로 쉬운 주어·동작·조건만 짧게 설명합니다.
+      함수명·오류 출력 문자열·뒤 항목 안내·관측되지 않은 내부 값 설명을 넣지 않습니다. 인용은 근거에서 제공하므로 쉬운 주어·동작·조건만 짧게 설명합니다. 이 본문 항목은 cam
+      외의 영문 코드 식별자를 쓰지 않는 한국어 평서문으로만 씁니다. 함수의 역할은 한국어 명사로 표현하고, 괄호 속 코드명 보충도 완전히 제거합니다. camera_->start,
+      CameraSession::startCapture, startCapture, Camera::queueRequest 같은 실제 코드명은 인용 근거에만 남깁니다.
     sources:
     - cam-request-buffers
     max_statements: 1
@@ -158,10 +170,15 @@ design_topics:
       - pattern: ::|requests_|camera_|sink_|ConnectionType|Failed to|Can.t create|뒤 항목|관측되지|관찰되지
         message: Keep implementation identifiers, console strings, unobserved internal state and editorial
           navigation in evidence; retain only the requested concise behavior and consequential conditions.
+      - pattern: (?i)(?<![A-Za-z0-9_])(?!cam(?![A-Za-z0-9_]))[A-Za-z_][A-Za-z0-9_:]*
+        message: 본문에 cam 외 영문 코드 식별자가 남았습니다. 괄호 안의 camera_, CameraSession::, startCapture 등도 전부 제거하고 함수
+          역할을 한국어 명사로만 설명하세요. 코드 인용 근거는 그대로 유지합니다.
   - id: queue-result
     question: 카메라 큐 호출은 카메라가 실행 중인지와 요청 유효성을 검사하며 실패하면 오류를 반환하고, 선행 검사를 모두 통과하면 요청을 비동기로 전달한 뒤0을 반환한다는
       관계를 짧은 문장으로 설명합니다. 카메라 실행 상태 검사를 빠뜨린 채 요청의 일부 속성만 열거하고 그것이 모든 성공 조건이라고 쓰지 마세요. 초기 제출 도우미가 음수 오류를
       반환하면 cam이 이미 시작한 카메라를 중지하고 오류를 반환한다는 두 번째 짧은 문장으로 마칩니다. 클래스·변수·enum·세부 검증 목록·콘솔 출력 문자열은 근거에 남깁니다.
+      이 본문 항목은 cam 외의 영문 코드 식별자를 쓰지 않는 한국어 평서문으로만 씁니다. 함수의 역할은 한국어 명사로 표현하고, 괄호 속 코드명 보충도 완전히 제거합니다. camera_->start,
+      CameraSession::startCapture, startCapture, Camera::queueRequest 같은 실제 코드명은 인용 근거에만 남깁니다.
     sources:
     - cam-request-buffers
     - camera-queue
@@ -172,6 +189,9 @@ design_topics:
       - pattern: ::|requests_|camera_|sink_|ConnectionType|Failed to|Can.t create|뒤 항목|관측되지|관찰되지
         message: Keep implementation identifiers, console strings, unobserved internal state and editorial
           navigation in evidence; retain only the requested concise behavior and consequential conditions.
+      - pattern: (?i)(?<![A-Za-z0-9_])(?!cam(?![A-Za-z0-9_]))[A-Za-z_][A-Za-z0-9_:]*
+        message: 본문에 cam 외 영문 코드 식별자가 남았습니다. 괄호 안의 camera_, CameraSession::, startCapture 등도 전부 제거하고 함수
+          역할을 한국어 명사로만 설명하세요. 코드 인용 근거는 그대로 유지합니다.
       required_terms:
       - - 실행 상태
         - 실행 중

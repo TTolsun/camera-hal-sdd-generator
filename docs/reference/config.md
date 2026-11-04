@@ -277,6 +277,19 @@ generation: llm
 require_connected: true
 ```
 
+## `whole_sources`
+
+`generation: llm` 그림에서 지정한 소스 창 전체를 하나의 인용 구절로 제공하는 선택 목록입니다. 기본값은 빈 목록이며 기존 문단별 인용과 Doxygen 반환값 묶음을 유지합니다.
+
+```yaml
+sources: [sync-call, sync-wrapper]
+whole_sources: [sync-call, sync-wrapper]
+```
+
+짧은 `return 0;`에 인용 ID가 없거나 같은 함수의 `erase(iter);`가 반복되어 구절 유일성 검사가 실패할 때 사용할 수 있습니다. 파일 전체를 자동으로 읽는 설정은 아니며, 예제의 소스 선택자로 고정한 함수 창 전체를 제공합니다. 값은 `sources`에서 선택한 ID의 중복 없는 목록이어야 합니다. 지정한 소스에는 문단별 인용을 함께 중복 제공하지 않습니다.
+
+계획을 바꾸면 입력 지문이 달라져 해당 그림을 다시 생성해야 합니다. 인용 유일성·원문 해시·소스 커밋·노드 한도와 입력 크기 검사는 유지하며 초과 입력을 자르지 않습니다. 함수 전체를 인용했다는 사실은 화살표의 의미나 제어 흐름을 승인하지 않으므로 별도 근거 검토가 필요합니다. focused 응답과 그림 응답의 JSON 필드는 바꾸지 않습니다.
+
 ## max_edge_label_chars
 
 **결론:** `generation: llm` 시각화 계획 항목에 두는 선택 키입니다. 생략하면 edge 전용 길이 제한이 없습니다. 값은 8 이상 240 이하의 정수만 허용하며, edge의 한국어 `label`과 영어 `label_en` 각각에 적용됩니다. node 라벨은 영향을 받지 않습니다.

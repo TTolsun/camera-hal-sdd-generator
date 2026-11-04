@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import html
 import re
 
 from .config import Config
 from .matching import matches_symbol
 from .facts.model import KnowledgeModel
+from .mermaid_text import label as mermaid_label
 
 POLICY_VERSION = 2
 
@@ -21,10 +21,10 @@ def scenario_call_map(messages: list, limit: int = 16) -> str:
     ids = {name: f"p{i}" for i, name in enumerate(names)}
     rows = ["flowchart LR"]
     for name, ident in ids.items():
-        rows.append(f'  {ident}["{html.escape(name, quote=True)}"]')
+        rows.append(f'  {ident}["{mermaid_label(name)}"]')
     edges = dict.fromkeys((m.src, m.dst, m.name, m.note) for m in messages)
     for source, target, name, note in edges:
-        label = html.escape(f"{name}()" + (f" · {note}" if note else ""), quote=True)
+        label = mermaid_label(f"{name}()" + (f" · {note}" if note else ""))
         arrow = "-.->" if note else "-->"
         rows.append(f'  {ids[source]} {arrow}|"{label}"| {ids[target]}')
     return "\n".join(rows)
@@ -45,7 +45,7 @@ def class_diagram(model: KnowledgeModel, patterns: list[str], limit: int = 16, d
     ids = {n: f"c{i}" for i, n in enumerate(sorted(names))}
     rows = [f"flowchart {direction}"]
     for name, ident in ids.items():
-        label = html.escape(name.removeprefix(strip_namespace), quote=True)
+        label = mermaid_label(name.removeprefix(strip_namespace))
         rows.append(f'  {ident}["{label}"]' + (":::context" if name not in selected else ""))
     edges = {(n, b, "inheritance") for n in selected for b in model.classes[n].bases}
     edges |= {(r.source, r.target, r.type) for r in model.relations

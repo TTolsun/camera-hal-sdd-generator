@@ -118,6 +118,11 @@ class Generator:
         self.narrator.agent = self.agent
         try:
             with self.agent.track('generation'):
+                from .visual_audit import policy
+                if policy(self.cfg).get('enabled', False):
+                    from .validation_stage import stage
+                    with stage():
+                        return self._run(section_ids, impact)
                 return self._run(section_ids, impact)
         finally:
             self.agent.persist()
@@ -694,6 +699,17 @@ class Generator:
         return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
 
     def _write(self, path, text):
+        from .visual_audit import manuscript_gate, policy
+        if policy(self.cfg).get('enabled', False):
+            from .validation_stage import current
+            manuscript_gate(self.cfg, self.model, path, text)
+            previous = path.read_bytes() if path.exists() else None
+            def rollback():
+                if previous is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    path.write_bytes(previous)
+            current().rollbacks.append(rollback)
         return self.writer._write(path, text)
 
 

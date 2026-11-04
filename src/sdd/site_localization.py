@@ -57,6 +57,17 @@ class DisplayText(HTMLParser):
                 if node.get('mermaid'):
                     return raw + html.escape(english_diagram(''.join(children)), quote=False) + node['end']
                 return raw + ''.join(render(c) for c in children) + node['end']
+            declared = dict(node['attrs']).get('data-sdd-label-en')
+            if declared is not None:
+                if (node.get('tag') != 'span' or any(not isinstance(c,str) for c in children)
+                        or not declared.strip() or KOREAN.search(declared)):
+                    raise ValueError('Invalid scoped diagram label translation')
+                source = ''.join(children)
+                if self.observe:
+                    self.observe(source.strip(),source.strip(),declared.strip())
+                # No global catalog unit or source-context cache is involved:
+                # the source-bound graph supplies this exact row's English.
+                return raw + html.escape(declared,quote=False) + node['end']
             for name, value in node['attrs']:
                 if name in ATTRIBUTES and value:
                     if self.context_observer and KOREAN.search(value):

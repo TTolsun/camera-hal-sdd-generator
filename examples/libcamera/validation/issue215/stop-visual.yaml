@@ -1,0 +1,66 @@
+- id: stop-waiting-requests
+  topic: shutdown
+  kind: flow
+  title: 정지할 때 대기 요청을 분리하고 완료하는 순서
+  question: 정지 함수는 지역 대기 큐의 요청을 어떤 순서로 취소·완료하고 마지막 큐 검사와 순번 초기화를 마칩니까?
+  generation: llm
+  max_nodes: 12
+  max_label_chars: 160
+  max_edge_label_chars: 64
+  while_conditions: true
+  condition_display: evidence
+  require_connected: true
+  answer_contract_en:
+    basis: implementation
+    reject_patterns:
+    - pattern: '(?mi)\b(?:a|an|the|to|of|from|with|without|after|before|and|or|is|are|be)$'
+      message: English labels must not stop at an unfinished prepositional phrase.
+    - pattern: '[가-힣]'
+      message: English labels must not contain untranslated Korean text.
+    required_terms:
+    - [submission order]
+    - [after this call returns]
+    - [no handler access, handler must not access the request]
+    - [no longer manages, outside handler management, no longer managed]
+    - [all running streams, all running-stream, all stream capture]
+  sources: [stop, completion, cancelled-dispatch]
+  prompt: >-
+    이 그림은 stop의 순차 처리와 지역 큐 반복에 집중합니다. stopDevice 내부의 선택적인 완료 호출·재진입은 별도 그림이 설명하므로
+    stopDevice에서 completeRequest로 가는 간선과 swap으로 돌아가는 간선을 넣지 않습니다. stopDevice는 장치에 이미 제출된 요청을
+    끝내는 구현 계약을 가진 하나의 단계입니다. waitingRequests_를 지역 waitingRequests로 swap하여 분리한 뒤 stopDevice를 호출합니다.
+    이미 장치에 제출된 요청을 끝내는 stopDevice의 의무와, 지역 큐에 분리한 대기 요청은 구분합니다. 반환 후 지역 큐가 비었는지
+    검사하여 참/거짓 양쪽과 종료를 보이고, 남은 요청은 앞에서 꺼내 cancel 후 doQueueRequest로 처리한 다음 다음 지역 요청을 검사합니다.
+    doQueueRequest는 queuedRequests_에 추가한 뒤 순번을 부여합니다. 취소된 요청은 completeRequest로 완료하고 장치 제출을 하지 않습니다.
+    completeRequest 반환 후 파이프라인이 그 요청에 접근하지 않는 소유권 경계와 앱에 제출 순서로 알린다는 사실은 짧은 완전한 문구로 보존합니다.
+    doQueueRequest에서 다음 지역 큐 검사로 곧바로 건너뛰는 간선은 쓰지 않습니다. completeRequest가 반환하고 doQueueRequest가 반환한
+    뒤에만 다음 지역 큐 검사를 한다는 화살표를 사용합니다. 종료 노드는 두 큐 ASSERT와 requestSequence_의 0 초기화를 모두 보존합니다.
+    한국어·영어 라벨은 짧은 행동구이며 영문에 한글을 섞거나 문장 끝을 자르지 않습니다. 재진입이 swap이나 stopDevice를 반복한다고 그리지 않습니다.
+    queue에서 complete로 가는 취소 분기의 영어 라벨은 Complete cancelled request; skip device submission.처럼 짧고 완전하게 씁니다.
+    completeRequest 노드의 영어는 제출 순서 통지와 after this call returns라는 경계, 핸들러가 더 이상 관리하지 않고 접근하지도 못한다는
+    두 사실을 160자 안에서 완전하게 표현합니다. stopDevice 노드는 모든 실행 중인 스트림의 캡처와 요청 처리를 즉시 중단하고 장치에
+    제출된 요청을 취소해 즉시 오류 완료해야 한다는 의무를 한영 모두 보존합니다. 이 의무들을 96자에 억지로 넣어 문장을 자르지 않도록
+    첫 그림의 노드 입력 상한만 160자로 조정했습니다. 화면의 줄바꿈은 생성기가 그대로 담당합니다. 필요한 설명이 더 길면 별도의 반환 뒤
+    접근 금지 노드로 나누되 전체 12개 노드 안에서 소스 구절과 실제 호출 반환 순서를 유지합니다.
+- id: stop-completion-reentry
+  topic: shutdown
+  kind: ownership
+  title: 완료 처리의 재진입은 분리한 대기 요청을 다시 제출하지 않습니다
+  question: 완료 처리의 재진입이 검사하는 공유 큐와 정지가 분리해 보유하는 지역 큐는 어떻게 다릅니까?
+  generation: llm
+  max_nodes: 10
+  max_label_chars: 96
+  max_edge_label_chars: 64
+  while_conditions: true
+  condition_display: evidence
+  require_connected: true
+  sources: [stop, completion, waiting-dispatch]
+  prompt: >-
+    이 그림은 함수 전체의 제어 흐름도가 아닌 큐 보유·조회 관계도입니다. 공유 waitingRequests_와 지역 waitingRequests를 서로 다른
+    큐 노드로 그리고, 공유 큐에서 지역 큐로 swap하여 기존 대기 요청이 이동한다는 관계를 표시합니다. stopDevice의 구현에서
+    completeRequest가 호출될 수 있는 관계는 가능한 호출임을 라벨에 쓰고, completeRequest가 끝에서 doQueueRequests를 호출하며
+    doQueueRequests는 공유 waitingRequests_를 읽는다는 관계를 연결합니다. 분리한 기존 요청은 지역 큐에 있으므로 이 조회에 포함되지
+    않는다는 핵심을 노드 라벨로 표현합니다. stopDevice·completeRequest·doQueueRequests·공유 큐·지역 큐의 다섯 노드로 충분합니다.
+    이 질문의 그림에 정상 큐 반복·장치 한도·준비 상태 분기나 반환 경로를 추가하지 않습니다. 그것은 함수 전체 제어 흐름의 범위이며
+    해당 그림이 보장하는 범위가 아닙니다. 재진입이 swap이나 stopDevice를 다시 실행한다고 그리지 않으며, 공유 큐가 미래에도 항상
+    비어 있다는 보장으로 확대하지 않습니다. 실제 if/while 조건을 나타내지 않는 관계는 condition_ref always를 쓰되 가능한 호출이라는
+    라벨은 유지합니다. 한국어·영어의 의미와 가능성을 보존하고 불완전한 영어 문장이나 한글이 섞인 영문 라벨은 쓰지 않습니다.

@@ -67,6 +67,8 @@ class SiteConfig:
     require_approval: bool = False
     intro: str | None = None
     overview_visual: dict | None = None
+    guide_visuals: str | None = None
+    guide_source: dict | None = None
     english_catalog: str | None = None
     manuscript_profiles: dict[str, str] = field(default_factory=dict)
     mermaid_dir: str | None = None
@@ -273,6 +275,10 @@ class Config:
     @property
     def site(self) -> SiteConfig:
         return _settings(SiteConfig, self._option('site') or {})
+
+    @property
+    def visual_audit(self):
+        return self._option('visual_audit', {})
 
     @property
     def update(self) -> UpdateConfig:

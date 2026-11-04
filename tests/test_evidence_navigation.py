@@ -82,6 +82,21 @@ def test_section_union_and_noninteractive_paragraph_mapping():
     assert compact_evidence(result, {'a.cpp:1', 'a.cpp:8'}) == result
 
 
+def test_previous_section_evidence_never_becomes_next_figure_evidence():
+    from sdd.visual_audit import inventory_page, policy
+    source = ('<h2 id="claim">Claim</h2><p>Previous claim. '
+              '<a class="citation" href="https://host/commit/a#L1"><code>a.cpp:1</code></a></p>\n'
+              '<!-- sdd:class-diagram -->\n<h2 id="classes">Class relationships</h2>'
+              '<pre class="mermaid">flowchart LR\n A --> B</pre>\n<!-- /sdd:class-diagram -->')
+    result = compact_evidence(source, {'a.cpp:1'})
+    assert result.index('evidence-section') < result.index('<!-- sdd:class-diagram -->')
+    assert 'https://host' not in result.split('<!-- sdd:class-diagram -->')[1]
+    rows = inventory_page('<html lang="en"><article>'+result+'</article></html>', 'a.html', policy())
+    caption = next(row for row in rows if row['anchor']=='classes')
+    assert caption['figures'][0]['evidence'] == []
+    assert compact_evidence(result, {'a.cpp:1'}) == result
+
+
 def test_offline_and_ambiguous_local_destinations_survive():
     source = ('<p>Claim. <code>a.cpp:1</code></p><p>근거 원문: '
               '<a href="#source-1111111111111111">a.cpp:1</a></p>')

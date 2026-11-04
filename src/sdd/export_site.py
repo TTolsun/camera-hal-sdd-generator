@@ -8,6 +8,7 @@ import json
 import posixpath
 import re
 import shutil
+from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 from urllib.parse import quote, urlsplit
 
@@ -19,6 +20,7 @@ from .document_metadata import generation_info, reader_label, split_frontmatter
 from .export_html import _nav_entries, _title_of_text
 from .site_markdown import SOURCE_LINK_TEMPLATES, _href, _html_path, _render
 from .facts.model import KnowledgeModel
+from .validation_stage import read_text
 
 MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.esm.min.mjs"
 MERMAID_ENTRY = "mermaid.esm.min.mjs"
@@ -51,6 +53,36 @@ def source_link_template(settings: SiteConfig | dict) -> str:
         raise RuntimeError("site.source_link_template 의 자리표시자는 {url} {commit} {file} {line} "
                            f"만 쓸 수 있습니다: {e}")
     return template
+
+
+def _class_diagram_markers(body, rel):
+    """Locate rendered comments, keeping inline pairs and ignoring code examples."""
+    matches = list(re.finditer(r'<!-- (/?)sdd:class-diagram -->', body))
+    if not matches:
+        return []
+    prefix = 'sdd-class-marker-probe-'+hashlib.sha256(body.encode()).hexdigest()+'-'
+    index = iter(range(len(matches)))
+    marked = re.sub(r'<!-- (/?)sdd:class-diagram -->',
+                    lambda _: '<!-- '+prefix+str(next(index))+' -->', body)
+    rendered, _, _ = _render(marked, rel, {rel}, None, '', '')
+
+    class Probes(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.code_depth, self.found = 0, set()
+        def handle_starttag(self, tag, attrs):
+            if tag in {'pre', 'code'}:
+                self.code_depth += 1
+        def handle_endtag(self, tag):
+            if tag in {'pre', 'code'}:
+                self.code_depth = max(0, self.code_depth-1)
+        def handle_comment(self, value):
+            value = value.strip()
+            if not self.code_depth and value.startswith(prefix) and value[len(prefix):].isdigit():
+                self.found.add(int(value[len(prefix):]))
+    probes = Probes()
+    probes.feed(rendered)
+    return [match for i, match in enumerate(matches) if i in probes.found]
 
 
 def _path(rel: str) -> str:
@@ -199,7 +231,7 @@ def _site_navigation(cfg, settings, retired):
 
 
 def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=True):
-    texts = {rel: (cfg.sdd_dir / rel).read_text(encoding="utf-8") for _, _, rel in entries}
+    texts = {rel: read_text(cfg.sdd_dir / rel) for _, _, rel in entries}
     # 사람 승인 장부. 표시가 검사 결과를 바꾸지는 않지만, 승인·미승인 상태를 구분해 보여 준다.
     from . import approvals as approvals_mod
     ledger = approvals_mod.load(cfg)
@@ -212,7 +244,7 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
     if "index.md" not in texts:
         intro = settings.intro
         if intro:
-            texts["index.md"] = (cfg.root / str(intro)).read_text(encoding="utf-8")
+            texts["index.md"] = read_text(cfg.root / str(intro))
         else:
             texts["index.md"] = "# 문서 안내\n\n코드에서 추출한 구조와 문장별 근거를 함께 확인하세요.\n"
         texts["index.md"] += "\n## 문서 검증 현황 {#문서-목록}\n\n"
@@ -299,12 +331,25 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
             raise RuntimeError(f"Facts and page source commits differ: {rel}")
         diagram = section_diagram(cfg, model, section) if model else ""
         block = diagram_block(diagram)
-        if "<!-- sdd:class-diagram -->" in body:
+        preserve_diagram_position = False
+        from .next_steps import _outside_fence
+        markers = _class_diagram_markers(body, rel)
+        if markers:
+            if len(markers) != 2 or markers[0][1] or not markers[1][1]:
+                raise ValueError('Class diagram needs exactly one complete owned marker pair')
+            source_heading = next((m for m in re.finditer(r'^## 소스 근거\s*$', body, re.M)
+                                   if _outside_fence(body[:m.start()])), None)
+            # Facts narration already places its relationship picture directly
+            # after the structural explanation. Keep that question/figure pair
+            # together instead of moving it past unrelated function/class tables.
+            preserve_diagram_position = (bool(diagram) and section.get('narration') == 'facts'
+                and (source_heading is None or markers[0].start() < source_heading.start()))
             # Keep the heading for existing route links, but never retain stale edges.
-            replacement = "" if diagram else "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다."
-            body = re.sub(r"<!-- sdd:class-diagram -->.*?<!-- /sdd:class-diagram -->", lambda _: replacement, body, flags=re.S)
+            replacement = block if preserve_diagram_position else ("" if diagram else "## 클래스 관계\n\n현재 설정에서 표시할 클래스 관계 그림이 없습니다.")
+            body = body[:markers[0].start()] + replacement + body[markers[1].end():]
         if diagram:
             diagram_source = diagram
+        if diagram and not preserve_diagram_position:
             before, marker, after = body.partition('??? note "근거와 검토 정보"')
             # Move intact generated sections into reading order; preserve their wording.
             parts = re.fullmatch(r"(.*?)^(## 관련 클래스\n.*?)(^## 구조 설명\n.*)", before, re.S | re.M)
@@ -323,6 +368,10 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
     artifact = from_manuscript(cfg, model, section, texts[rel]) if section else None
     visuals = render_visuals(cfg, model, section, artifact) if section else []
     body = place(body, visuals, section)
+    if rel == 'index.md':
+        from .guide_visuals import inject
+        body, guide_visuals = inject(cfg, body, {value[0]['id'] for value in visuals})
+        visuals += guide_visuals
     if rel == 'index.md' and cfg.site.overview_visual is not None:
         selection = cfg.site.overview_visual
         if (not isinstance(selection, dict) or set(selection) != {'section', 'visual'}
@@ -365,7 +414,7 @@ def _heading_search(items, page_title, rel):
         yield from _heading_search(item.get("children", []), page_title, rel)
 
 
-def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_template):
+def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_template, *, class_documents=None):
     known = set(texts)
     rendered_pages = {}
     search = []
@@ -389,8 +438,10 @@ def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_
 
         search.extend(_heading_search(tokens, page_title, rel))
     from .reading_cleanup import class_targets, link_related_classes
-    targets = class_targets({_html_path(rel): page[2] for rel, page in rendered_pages.items()
-                             if sections.get(rel, {}).get('kind') == 'per-package'})
+    declarations = dict(class_documents or {})
+    declarations.update({_html_path(rel): page[2] for rel, page in rendered_pages.items()
+                         if sections.get(rel, {}).get('kind') == 'per-package'})
+    targets = class_targets(declarations)
     for rel, (page_title, meta, content, toc) in rendered_pages.items():
         if sections.get(rel, {}).get('kind', 'prose') == 'prose':
             rendered_pages[rel] = (page_title, meta, link_related_classes(content, _html_path(rel), targets), toc)
@@ -505,8 +556,14 @@ def _pagination_html(entries, sections, index, rel, current):
 
 
 def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, ledger, diagram_sources,
-                 mermaid_src, *, title, asset_version, terms_version):
+                 mermaid_src, *, title, asset_version, terms_version, selected_pages=None):
+    if selected_pages is not None:
+        selected_pages = set(selected_pages)
+        if selected_pages - {entry[2] for entry in entries}:
+            raise ValueError('Selected page is outside the complete navigation')
     for index, (group, name, rel) in enumerate(entries):
+        if selected_pages is not None and rel not in selected_pages:
+            continue
         current = _html_path(rel)
         root = _href("index.html", current).removesuffix("index.html") or "./"
         page_title, meta, content, toc = rendered_pages[rel]
@@ -563,7 +620,7 @@ def _write_pages(cfg, out, entries, sections, rendered_pages, approval_states, l
         page_config = {"root": root, "mermaid": mermaid_src}
         if sections.get(rel, {}).get('kind') == 'per-package':
             page_config['index'] = True
-        if glossary.PAGE in rendered_pages and rel != glossary.PAGE:
+        if any(entry[2] == glossary.PAGE for entry in entries) and rel != glossary.PAGE:
             page_config["terms"] = terms_version  # 본문의 첫 용어에 밑줄과 뜻 상자를 붙인다(site.js)
         config_json = json.dumps(page_config, ensure_ascii=False).replace("<", "\\u003c")
         doc = f'''<!doctype html>

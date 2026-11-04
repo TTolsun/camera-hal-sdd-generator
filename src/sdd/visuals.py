@@ -12,6 +12,8 @@ import re
 import unicodedata
 from pathlib import PurePosixPath
 
+from .mermaid_text import wrapped_html_label
+
 import yaml
 
 from .config import section_output
@@ -161,8 +163,8 @@ def render_values(cfg, model, section, values):
                         and ''.join(match[2].split()) in quotes):
                     return match[1]+' ['+match[3]+']'
                 return value
-            ko = wrap_label(display(_text(item.get('label'), 'label')))
-            en = wrap_label(display(_text(item.get('label_en'), 'label_en')))
+            ko = wrapped_html_label(wrap_label(display(_text(item.get('label'), 'label'))))
+            en = wrapped_html_label(wrap_label(display(_text(item.get('label_en'), 'label_en'))))
             if ko in translations and translations[ko] != en:
                 raise ValueError('Conflicting visual label translations')
             translations[ko] = en
@@ -180,7 +182,13 @@ def render_values(cfg, model, section, values):
                 key = f"{record['file']}:{record['line']}:{record['sha256']}"
                 anchor = hashlib.sha256(key.encode()).hexdigest()[:16]
                 links.append(f"[{record['file']}:{record['line']}](#source-{anchor})")
-            proof.append(f"| {html.escape(name).replace('|', '&#124;')} | {' · '.join(dict.fromkeys(links))} |")
+            # The same short Korean label can have different meanings in
+            # different diagrams. Keep its verified English label with this
+            # exact proof row instead of forcing a site-wide dictionary value.
+            literal = re.sub(r'[`*_~\[\]()!\\|]',lambda m:'&#'+str(ord(m[0]))+';',html.escape(name))
+            label = ('<span data-sdd-label-en="'+html.escape(item['label_en'],quote=True).replace('|','&#124;')+'">'
+                     +literal+'</span>')
+            proof.append(f"| {label} | {' · '.join(dict.fromkeys(links))} |")
         for node in nodes:
             if set(node) - {'id', 'label', 'label_en', 'shape', 'evidence'}:
                 raise ValueError('Unknown visual node setting')

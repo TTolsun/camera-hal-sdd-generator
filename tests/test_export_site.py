@@ -80,6 +80,72 @@ def test_class_diagram_precedes_source_evidence_without_changing_manuscript(tmp_
     assert (site / 'site-manifest.json').read_bytes() == first
 
 
+@pytest.mark.parametrize('inline_markers', [False, True])
+def test_facts_relationship_picture_stays_next_to_its_explanation(tmp_cfg, sample_model, inline_markers):
+    import yaml
+    from sdd.evidence import fingerprint
+    prepare(tmp_cfg, sample_model)
+    sections = yaml.safe_load(tmp_cfg.sections_file.read_bytes())
+    sections['sections'][0]['narration'] = 'facts'
+    tmp_cfg.sections_file.write_text(yaml.safe_dump(sections), encoding='utf-8')
+    path = tmp_cfg.sdd_dir / 'device.md'
+    text = ('---\nsource_commit: ' + 'a' * 40 + '\nstatus: needs-review\n'
+            'evidence_fingerprint: ' + fingerprint(sample_model, sections['sections'][0]) + '\n---\n'
+            '# Device\n\n## 구조 설명\n\nCameraDevice의 추출 관계를 설명합니다.\n\n'
+            '<!-- sdd:class-diagram -->\n## 클래스 관계\n\nOLD EDGES\n<!-- /sdd:class-diagram -->\n\n'
+            '## 관련 자유 함수\n\n별도의 함수 목록입니다.\n\n## 관련 클래스\n\n선언 목록입니다.\n\n'
+            '## Evidence\n\n연결 대상 근거입니다.\n')
+    if inline_markers:
+        text = text.replace('<!-- sdd:class-diagram -->', 'BEFORE <!-- sdd:class-diagram -->')
+        text = text.replace('<!-- /sdd:class-diagram -->', '<!-- /sdd:class-diagram --> AFTER')
+    path.write_text(text, encoding='utf-8')
+    page = (export_site(tmp_cfg) / 'device.html').read_text(encoding='utf-8')
+    assert page.index('id="구조-설명"') < page.index('id="클래스-관계"') < page.index('id="관련-자유-함수"')
+    assert page.count('id="클래스-관계"') == 1
+    assert 'OLD EDGES' not in page and 'CameraDevice' in page
+    if inline_markers:
+        assert 'BEFORE' in page and 'AFTER' in page
+    assert path.read_text(encoding='utf-8') == text
+
+
+@pytest.mark.parametrize('malformed', [
+    '<!-- sdd:class-diagram -->\nSTALE',
+    '<!-- /sdd:class-diagram -->',
+    '<!-- /sdd:class-diagram -->\n<!-- sdd:class-diagram -->',
+    '<!-- sdd:class-diagram -->\n<!-- sdd:class-diagram -->\n<!-- /sdd:class-diagram -->',
+])
+def test_malformed_owned_class_diagram_preserves_previous_site(tmp_cfg, sample_model, malformed):
+    prepare(tmp_cfg, sample_model)
+    out = export_site(tmp_cfg)
+    before = {p.relative_to(out):p.read_bytes() for p in out.rglob('*') if p.is_file()}
+    path = tmp_cfg.sdd_dir / 'device.md'
+    path.write_text(path.read_text(encoding='utf-8')+'\n'+malformed, encoding='utf-8')
+    with pytest.raises(ValueError, match='complete owned marker pair'):
+        export_site(tmp_cfg)
+    assert before == {p.relative_to(out):p.read_bytes() for p in out.rglob('*') if p.is_file()}
+
+
+@pytest.mark.parametrize('fence', ['```text', '~~~~text'])
+def test_example_marker_pair_does_not_hide_the_real_diagram(tmp_cfg, sample_model, fence):
+    import yaml
+    from sdd.evidence import fingerprint
+    prepare(tmp_cfg, sample_model)
+    sections = yaml.safe_load(tmp_cfg.sections_file.read_bytes())
+    sections['sections'][0]['narration'] = 'facts'
+    tmp_cfg.sections_file.write_text(yaml.safe_dump(sections), encoding='utf-8')
+    path = tmp_cfg.sdd_dir / 'device.md'
+    text = path.read_text(encoding='utf-8').replace('status: needs-review',
+        'status: needs-review\nevidence_fingerprint: '+fingerprint(sample_model, sections['sections'][0]))
+    text += ('\n'+fence+'\n<!-- sdd:class-diagram -->\nEXAMPLE ONLY\n<!-- /sdd:class-diagram -->\n'
+             + fence.removesuffix('text')+'\n')
+    path.write_text(text, encoding='utf-8')
+    page = (export_site(tmp_cfg) / 'device.html').read_text(encoding='utf-8')
+    assert 'EXAMPLE ONLY' in page
+    assert page.count('id="클래스-관계"') == 1
+    assert 'class="mermaid"' in page
+    assert path.read_text(encoding='utf-8') == text
+
+
 def test_site_combines_review_records_without_rewriting_original_or_approval(tmp_cfg, sample_model):
     prepare(tmp_cfg, sample_model)
     path = tmp_cfg.sdd_dir / 'device.md'
@@ -652,3 +718,41 @@ def test_page_state_uses_plain_words_and_keeps_status_code_in_evidence(tmp_cfg, 
     index = (out / 'index.html').read_text(encoding='utf-8')
     assert '<code>ok</code>' not in index and '<code>needs-review</code>' not in index
     assert '>인용 검사 확인 필요</span>' in index
+def test_selected_page_write_keeps_complete_navigation_without_touching_other_pages(tmp_cfg,sample_model):
+    from sdd.export_site import (_site_navigation,_prepare_site_pages,_render_pages,
+                                 _write_pages,source_link_template)
+    prepare(tmp_cfg,sample_model)
+    sections,entries=_site_navigation(tmp_cfg,tmp_cfg.site,set())
+    texts,states,ledger,terms,model=_prepare_site_pages(tmp_cfg,tmp_cfg.site,sections,entries,check_consistency=False)
+    rendered,_,diagrams,_=_render_pages(tmp_cfg,entries,sections,texts,terms,model,
+                                      tmp_cfg.site.source_url,source_link_template(tmp_cfg.site))
+    entries.append(('For Developer','Glossary','glossary.md'))
+    out=tmp_cfg.root/'partial-write';out.mkdir()
+    other=out/'nested/detail.html';other.parent.mkdir();other.write_text('Prior other page',encoding='utf-8')
+    args=(tmp_cfg,out,entries,sections,{'device.md':rendered['device.md']},states,ledger,diagrams,'assets/mermaid.mjs')
+    settings=dict(title='Fixture',asset_version='fixture',terms_version='fixture')
+    with pytest.raises(ValueError,match='outside the complete navigation'):
+        _write_pages(*args,**settings,selected_pages={'unknown.md'})
+    assert not (out/'device.html').exists()
+    _write_pages(*args,**settings,selected_pages={'device.md'})
+    assert other.read_text(encoding='utf-8')=='Prior other page'
+    assert not (out/'index.html').exists()
+    assert 'nested/detail.html' in (out/'device.html').read_text(encoding='utf-8')
+    assert '"terms": "fixture"' in (out/'device.html').read_text(encoding='utf-8')
+
+
+def test_partial_render_uses_untouched_class_declarations(tmp_cfg,sample_model):
+    from sdd.export_site import _render_pages,source_link_template
+    from test_reading_cleanup import table,CLASS_HEADERS,ROW,related
+    prepare(tmp_cfg,sample_model)
+    sections={'guide.md':{'kind':'prose'},'reference.md':{'kind':'per-package'}}
+    entries=[('For Developer','Guide','guide.md'),('For Developer','Reference','reference.md')]
+    meta='---\nsource_commit: '+sample_model.meta['source_commit']+'\nstatus: needs-review\n---\n\n'
+    prose=related().replace('<div class="table-scroll stack" tabindex="0" role="region" aria-label="표">','').replace('</div>','')
+    texts={'guide.md':meta+'# Guide\n\n'+prose,'reference.md':meta+'# Reference\n\n'+table(CLASS_HEADERS,[ROW])}
+    args=(tmp_cfg,entries,sections,texts,[],sample_model,tmp_cfg.site.source_url,source_link_template(tmp_cfg.site))
+    full,_,_,_=_render_pages(*args)
+    assert 'reference.html#symbol-' in full['guide.md'][2],full['reference.md'][2]
+    partial,_,_,_=_render_pages(tmp_cfg,entries[:1],*args[2:],class_documents={'reference.html':full['reference.md'][2]})
+    assert partial['guide.md'][2]==full['guide.md'][2]
+    assert 'reference.md' not in partial

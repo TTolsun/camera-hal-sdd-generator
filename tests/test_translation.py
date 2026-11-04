@@ -127,7 +127,13 @@ def test_bilingual_diagram_labels_are_reused_without_retranslation(tmp_path):
     write('one.mmd', 'May have changed; <br/>must check')
     assert diagram_translations(tmp_path) == {'변경 가능, 확인 의무': 'May have changed; must check'}
     write('two.mmd', 'Now permitted')
-    with pytest.raises(ValueError, match='Conflicting'):
+    assert diagram_translations(tmp_path) == {}
+    from sdd.site_localization import english_diagram
+    assert 'May have changed' in english_diagram((tmp_path/'one.mmd').read_text(encoding='utf-8')+'\nx["변경 가능, <br/>확인 의무"]')
+    assert 'Now permitted' in english_diagram((tmp_path/'two.mmd').read_text(encoding='utf-8')+'\nx["변경 가능, <br/>확인 의무"]')
+    with (tmp_path/'two.mmd').open('a',encoding='utf-8') as f:
+        f.write('%% sdd:translations '+json.dumps({'변경 가능, 확인 의무':'Different within this graph'},ensure_ascii=False)+'\n')
+    with pytest.raises(ValueError, match='within the same diagram'):
         diagram_translations(tmp_path)
 
 
