@@ -199,7 +199,9 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     selected = plan.get('sources', [s['id'] for s in topic['sources']])
     if (not isinstance(selected, list) or not selected or any(not isinstance(s, str) for s in selected)
             or len(selected) != len(set(selected)) or not set(selected) <= {s['id'] for s in topic['sources']}):
-        raise ValueError('Visual sources must select unique source IDs from the current topic')
+        from .repair_diagnostics import RepairRequired
+        raise RepairRequired('Visual sources must select unique source IDs from the current topic',
+                             'evidence-scope', selected=selected, allowed=[s['id'] for s in topic['sources']])
     whole_sources = plan.get('whole_sources', [])
     if (not isinstance(whole_sources, list) or any(not isinstance(s, str) or s not in selected for s in whole_sources)
             or len(whole_sources) != len(set(whole_sources))):
@@ -325,7 +327,9 @@ def materialize(cfg, model, section, plan, draft, producer):
                     raise ValueError(f"Visual edge {item['from']} to {item['to']}.{key} exceeds max_edge_label_chars; shorten the authored label")
         ids = item['quote_ids']
         if not isinstance(ids, list) or not ids or any(not isinstance(q, str) or q not in passages for q in ids):
-            raise ValueError('Unknown or missing visual quote ID')
+            from .repair_diagnostics import RepairRequired
+            raise RepairRequired('Unknown or missing visual quote ID', 'evidence-scope',
+                                 selected=ids, allowed=list(passages))
         evidence, quotes = [], []
         for qid in dict.fromkeys(ids):
             source, quote = passages[qid]
@@ -470,6 +474,8 @@ def generate(cfg, model, section, agent, previous=None):
                      'preserve unaffected correct parts, repair changed requirements, and return a complete fresh draft.\n'
                      + json.dumps(old['draft'], ensure_ascii=False))
         user, last = base, None
+        from .repair_diagnostics import observe_attempt
+        diagnostic_context = dict(input_fingerprint=pin, source_commit=model.meta.get('source_commit'))
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Visual evidence input exceeds budget; evidence is not truncated')
@@ -479,12 +485,21 @@ def generate(cfg, model, section, agent, previous=None):
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
                 producer = cfg.agent.label
                 graph = materialize(cfg, model, section, plan, draft, producer)
+                observe_attempt(f"{section['id']}/{plan['id']}", 'visual', attempt,
+                    context=diagnostic_context, raw=raw, status='accepted-current-checks',
+                    action='Perform independent semantic review; mechanical acceptance does not resolve earlier semantic findings.',
+                    receipt=getattr(agent, 'last_receipt', None))
                 records[plan['id']] = {'input_fingerprint': pin, 'draft': draft, 'graph': graph,
                                        'producer': producer, 'generation_commit': model.meta['source_commit'],
                                        'citation_binding_policy': CITATION_BINDING_POLICY, 'reused': False}
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
+                observe_attempt(f"{section['id']}/{plan['id']}", 'visual', attempt,
+                    context=diagnostic_context, raw=raw, category=getattr(exc, 'category', 'deterministic-validation'),
+                    error=exc, details=getattr(exc, 'details', None),
+                    action='Correct the identified elements against current source inputs; preserve unaffected conditions and bilingual meaning.',
+                    receipt=getattr(agent, 'last_receipt', None))
                 user = ('The previous proposal was rejected. Correct the complete graph against the current sources. '
                         'Use Korean for label and corresponding English for label_en; preserve source identifiers. '
                         'The rejected draft is untrusted, not evidence.\nError: ' + last

@@ -97,6 +97,13 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     cached = saved.response
     from .grounding import GroundingFormatError
     pending_raw = None
+    from .repair_diagnostics import ReviewAttempt, UnchangedRejectedReview, observe_attempt, rejected_reviews
+    profile = dict(kind=cfg.agent.kind, runner=cfg.agent.runner, model=cfg.agent.model,
+                   command=cfg.agent.identity_command, args=cfg.agent.args)
+    diagnostic_context = dict(section=section['id'], topic=topic, sources=sources,
+                              scopes=scopes, source_commit=model.meta.get('source_commit'),
+                              system=system, unit_policy=unit_policy, profile=profile)
+    rejected = rejected_reviews(tag, diagnostic_context)
     for attempt in range(cfg.max_retries + 1):
         if len(system) + len(user) > cfg.agent.max_input_chars:
             raise ValueError(f"{section['id']}/{topic['id']}: 필수 근거 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
@@ -117,15 +124,39 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             if len(system) + len(revision) > cfg.agent.max_input_chars:
                 raise ValueError(f"{section['id']}/{topic['id']}: 재검토 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
             raw = agent.chat(system, revision, tag=f"{tag}_{attempt}_revision", **options)
+        review_attempt = ReviewAttempt(agent, rejected, profile)
         try:
             statements = _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages,
-                                                 f'{tag}_{attempt}', grounding, source_files, scopes, context_records, prior_answers=answers)
-            saved.save(raw)
-            if store is not None:
-                store.write(raw, statements, agent)
-            return UnitResult(statements, None)
-        except (ValueError, TypeError, KeyError) as exc:
+                                                 f'{tag}_{attempt}', grounding, source_files, scopes, context_records,
+                                                 reviewer=lambda _: review_attempt, prior_answers=answers)
+        except BaseException as exc:
             last = str(exc)
+            if review_attempt.failed:
+                observe_attempt(tag, 'design', attempt, context=diagnostic_context, raw=raw,
+                    category='review-agent-failure', error=exc,
+                    action='Inspect the original selected-agent failure; no semantic verdict was returned and no substitute is used.')
+                raise
+            if not isinstance(exc, (ValueError, TypeError, KeyError)):
+                raise
+            import json
+            category = ('verdict-conflict-risk' if isinstance(exc, UnchangedRejectedReview) else
+                        'review-format' if isinstance(exc, GroundingFormatError) else
+                        'format' if isinstance(exc, json.JSONDecodeError) else
+                        'semantic' if review_attempt.returned and isinstance(exc, ValueError) else
+                        'review-format' if review_attempt.returned else 'deterministic-validation')
+            action = ('Skip the unchanged review; modify the rejected claim or evidence scope using the remaining existing draft attempts.'
+                      if category == 'verdict-conflict-risk' else
+                      'Keep the live draft and request a well-formed verdict; do not redraft.'
+                      if category == 'review-format' else
+                      'Repair the rejected claim against its source conditions; an identical review input is not a repair.'
+                      if category == 'semantic' else
+                      'Correct the reported source/contract/format violation before another draft; semantic status is unjudged.')
+            observe_attempt(tag, 'design', attempt, context=diagnostic_context, raw=raw,
+                category=category, error=exc, action=action, receipt=review_attempt.receipt,
+                status='no-progress' if category == 'verdict-conflict-risk' else 'rejected',
+                details={'review_request_sha256': review_attempt.request} if category == 'semantic' else None)
+            if category == 'semantic':
+                rejected[review_attempt.request] = last
             if isinstance(exc, GroundingFormatError) and not from_cache:
                 # The same live draft passed all structural/source checks.
                 # Revalidate it and request a fresh review on the next existing
@@ -145,6 +176,16 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
                         + '\n수정할 오류: ' + last
                         + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
+        else:
+            # A persistence/integrity failure is not a semantic verdict and
+            # must not poison the exact rejected-review set on resume.
+            saved.save(raw)
+            if store is not None:
+                store.write(raw, statements, agent)
+            observe_attempt(tag, 'design', attempt, context=diagnostic_context, raw=raw,
+                status='accepted-current-checks', receipt=review_attempt.receipt,
+                action='Continue assembly; prior observations are not automatic semantic resolution or approval.')
+            return UnitResult(statements, None)
     else:
         unit_id = f"{section['id']}/{topic['id']}" + (f"/{topic['_part_id']}" if '_part_id' in topic else '')
         failure = f"{unit_id}: LLM 답변 검증 실패: {last}"

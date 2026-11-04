@@ -24,6 +24,19 @@ class StaleVisualEvidence(ValueError):
     """A well-formed authored diagram no longer matches current source text."""
 
 
+class VisualLabelConflict(ValueError):
+    """The same rendered Korean label has incompatible local English keys."""
+
+    category = 'format'
+    code = 'visual-label-translation-conflict'
+
+    def __init__(self, visual, first, second):
+        self.details = dict(code=self.code, visual=visual, first=first, second=second)
+        super().__init__('Conflicting visual label translations: ' + json.dumps(self.details, ensure_ascii=False)
+                         + '. For the same Korean label, use the same English translation at both locations; '
+                         'preserve the source conditions and meaning. If the meanings differ, clarify both labels.')
+
+
 def definitions(cfg, section):
     settings = cfg.visuals
     if not settings.file:
@@ -159,22 +172,36 @@ def render_values(cfg, model, section, values):
         if len(nodes) > limit:
             raise ValueError(f'Visual {ident} has {len(nodes)} nodes (limit {limit}); split the diagram')
         ids, translations, rows, proof = set(), {}, ['flowchart TB'], []
+        translation_locations = {}
         stale = []
         def label(item):
             def display(value):
                 # Only a source-verified, generator-added guard suffix may be
                 # shortened. Full conditions remain in the evidence table.
                 match = re.fullmatch(r'(.*) · (.+) \[(true|false)\]',value)
-                quotes=''.join(''.join(e.get('quote','').split()) for e in item.get('evidence',[]))
+                # Malformed proof is rejected by _records below. Display and
+                # diagnostics must not turn that ValueError into AttributeError.
+                refs = item.get('evidence', [])
+                quotes=''.join(''.join(e['quote'].split()) for e in (refs if isinstance(refs, list) else [])
+                               if isinstance(e, dict) and isinstance(e.get('quote'), str))
                 if (visual.get('condition_display')=='evidence' and match
                         and ''.join(match[2].split()) in quotes):
                     return match[1]+' ['+match[3]+']'
                 return value
             ko = wrapped_html_label(wrap_label(display(_text(item.get('label'), 'label'))))
             en = wrapped_html_label(wrap_label(display(_text(item.get('label_en'), 'label_en'))))
+            location = dict(target=('node:' + item['id'] if 'id' in item else
+                                    'edge:' + item['from'] + '->' + item['to']),
+                            label=item['label'], label_en=item['label_en'],
+                            evidence=[dict(source=e.get('source'), sha256=e.get('sha256'),
+                                           quote_sha256=(hashlib.sha256(e['quote'].encode()).hexdigest()
+                                                         if isinstance(e.get('quote'), str) else None))
+                                      if isinstance(e, dict) else dict(invalid_type=type(e).__name__)
+                                      for e in (item.get('evidence', []) if isinstance(item.get('evidence'), list) else [])])
             if ko in translations and translations[ko] != en:
-                raise ValueError('Conflicting visual label translations')
+                raise VisualLabelConflict(ident, translation_locations[ko], location)
             translations[ko] = en
+            translation_locations[ko] = location
             return ko
         def evidence(item, name):
             try:

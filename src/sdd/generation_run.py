@@ -42,11 +42,17 @@ class BudgetExceeded(AgentError):
 
 def failure_kind(exc):
     message = str(exc)
+    if getattr(exc, 'category', None) in ('format', 'evidence-scope'):
+        return exc.category
     if isinstance(exc, BudgetExceeded):
         return 'budget'
     if 'checkpoint' in message:
         return 'checkpoint-integrity'
     if isinstance(exc, AgentError):
+        if 'CLI 입력 한도' in message:
+            return 'cli-input-limit'
+        if '출력 토큰 한도' in message:
+            return 'model-output-limit'
         if any(term in message.lower() for term in ('usage limit', 'usage-limit', 'rate limit', 'quota', '사용량')):
             return 'cli-usage-limit'
         return 'cli-timeout' if '시간이 초과' in message else 'cli-failure'
