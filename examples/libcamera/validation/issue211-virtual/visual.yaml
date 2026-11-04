@@ -27,9 +27,9 @@ prompt: 앞 준비 그림에서 실제 Camera 큐 호출을 통과한 요청부�
   n8는 상태와 무관한 버퍼 완료 신호이며 다음 완료·순서 그림으로 이어집니다. n0/n1 source pipeline-register와 pipeline-dispatch, n2 request-status-completion
   및 pipeline-completion 근거를 함께 확인합니다. 준비 도우미/할당/Camera API/제출 카운터를 이 그림에 다시 넣지 않습니다. 노드 60자, authored
   간선 20자, 한국어·영어 모두 짧은 행동·질문으로 씁니다. 쓰기 방향 동기화는 매핑/변환/쓰기를 둘러싸는 범위이며 그 뒤 따로 시작한다고 쓰지 마세요. 취소 분기 true/false와
-  변환 오류 true/false는 실제 guard를 보존합니다. 현재 아홉 노드·모든 간선·실제 조건·인용·간결한 한영 표시를 그대로 보존하고 버퍼 완료 신호 노드의 한영 라벨만 고칩니다.
-  성공·오류 모두 버퍼 완료 신호를 발생시키며 요청 완료 및 순서 검사는 별도 단계라는 경계를 간결하게 나타냅니다. 버퍼 하나의 완료가 즉시 cam에 요청 완료를 통지한다는 뜻으로
-  쓰지 않으며 cam 통지는 다음 그림/cam notify next 같은 편집 안내를 쓰지 않습니다. 한영 최대72자를 유지하고 나머지 라벨과 구조는 바꾸지 않습니다.
+  변환 오류 true/false는 실제 guard를 보존합니다. 현재 아홉 노드·모든 간선·실제 조건·인용·짧은 한영 표시를 그대로 보존하고 요청 처리를 예약하는 노드의 한영 주체만
+  명확히 합니다. 요청과 목표 타임스탬프를 넘겨 요청 처리를 예약하는 호출 주체는 가상 파이프라인 핸들러이며 가상 장치 객체 자체라고 쓰지 않습니다. 양 언어에 파이프라인 핸들러를
+  명시하고 대상은 요청 처리이며 요청과 목표 시각을 전달한다는 관계를 보존합니다. 다른 동작·라벨·한도는 바꾸지 않습니다.
 sources:
 - pipeline-dispatch
 - pipeline-register
@@ -78,6 +78,9 @@ answer_contract:
   - pattern: cam.{0,12}통지|다음\s*그림
     message: Buffer completion is not immediate cam request notification; keep separate request-completion/order
       checks explicit.
+  - pattern: 가상 장치가.{0,35}예약
+    message: The virtual pipeline handler schedules request processing on the virtual camera data object;
+      identify the actual caller.
   required_terms:
   - - Virtual2
   - - NV12
@@ -122,6 +125,9 @@ answer_contract_en:
   - pattern: cam.{0,12}notif|next\s*(?:diagram|figure)
     message: Buffer completion is not immediate cam request notification; keep separate request-completion/order
       checks explicit.
+  - pattern: (?i)virtual device.{0,35}schedul
+    message: The virtual pipeline handler schedules request processing on the virtual camera data object;
+      identify the actual caller.
   required_terms:
   - - Virtual2
   - - NV12
