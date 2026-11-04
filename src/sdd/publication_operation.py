@@ -165,10 +165,12 @@ class Contract:
                 prefix = _git(cfg.source_root, 'rev-parse', '--show-prefix')
                 selected = {prefix+r['file'] for r in model.evidence.values()
                             if r.get('file') and not r['file'].startswith('@') and r.get('kind') != 'product'}
-                tracked = set(_git(cfg.source_root, 'ls-files', '--full-name', '-z').split('\0'))
+                tracked = {row[2:]: row[0] for row in
+                           _git(cfg.source_root, 'ls-files', '-v', '--full-name', '-z').split('\0') if row}
                 changed = set(_git(cfg.source_root, 'diff', '--name-only', '--no-renames', '-z',
                                    'HEAD', '--', '.').split('\0'))
-                if selected - tracked or selected & changed:
+                if (selected - tracked.keys() or selected & changed
+                        or any(tracked.get(path) != 'H' for path in selected)):
                     raise ValueError('Publication evidence files differ from the declared committed source')
             self.git_checks.append((cfg.source_root, 'HEAD', source_head))
         self.role = {'generation': 'generation', 'translation': 'translation',

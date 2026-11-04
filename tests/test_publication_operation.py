@@ -649,7 +649,8 @@ def test_guard_checks_the_bound_transport_actually_invoked(tmp_cfg, sample_model
     assert not execution.report['calls']
 
 
-def test_initial_dirty_evidence_cannot_claim_the_committed_source(tmp_cfg, sample_model):
+@pytest.mark.parametrize('flag', [None, '--assume-unchanged', '--skip-worktree'])
+def test_initial_dirty_evidence_cannot_claim_the_committed_source(tmp_cfg, sample_model, flag):
     source = tmp_cfg.source_root/'device.cpp'
     source.write_bytes(b'committed source')
     def git(*args):
@@ -659,6 +660,8 @@ def test_initial_dirty_evidence_cannot_claim_the_committed_source(tmp_cfg, sampl
     git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-m','source')
     sample_model.meta['source_commit'] = git('rev-parse','HEAD')
     configure(tmp_cfg, sample_model, ['device'])
+    if flag:
+        git('update-index', flag, 'device.cpp')
     sample_model.evidence = {'selected': dict(file='device.cpp', text='modified source')}
     source.write_bytes(b'modified source')
     with pytest.raises(ValueError, match='declared committed source'):
