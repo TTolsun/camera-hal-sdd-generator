@@ -1781,8 +1781,8 @@ sections:
       - *id008
     - from: head
       to: return
-      label: 'Pending 아님: ASSERT 뒤 제거·반환'
-      label_en: 'Not Pending: pop and return after ASSERT'
+      label: Pending 아님
+      label_en: Not Pending
       evidence:
       - *id008
       - *id009
@@ -1800,8 +1800,8 @@ sections:
       - *id011
     - from: return
       to: head
-      label: 큐가 남으면 다음 선두를 다시 검사
-      label_en: Recheck the next head if the queue is nonempty
+      label: 다음 선두
+      label_en: Next head
       evidence:
       - *id012
     - from: return

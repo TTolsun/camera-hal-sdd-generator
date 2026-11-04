@@ -5,6 +5,7 @@ This checks assembly and review scope, never causal truth or human approval.
 from __future__ import annotations
 
 import json
+import re
 
 STAGES = ('problem', 'principle', 'normal', 'conditions', 'change')
 
@@ -33,10 +34,10 @@ def configuration_errors(topic):
     if [s['id'] for s in stages] != list(STAGES):
         return ['explanation stages must be problem, principle, normal, conditions, change.']
     if any(not isinstance(s['title'], str) or not s['title'].strip()
-           or '\n' in s['title'] or '\r' in s['title']
+           or re.search(r'[<>\[\]`*_{}#\\\x00-\x1f\x7f]', s['title'])
            or not isinstance(s['parts'], list) or not s['parts']
            or any(not isinstance(p, str) for p in s['parts']) for s in stages):
-        return ['explanation requires nonempty single-line titles and part ID lists.']
+        return ['explanation requires nonempty single-line plain text titles without Markdown/HTML delimiters and part ID lists.']
     if len({s['title'] for s in stages}) != len(stages):
         return ['explanation stage titles must be unique.']
     if [p for s in stages for p in s['parts']] != [p.get('id') for p in parts]:

@@ -165,3 +165,35 @@ def test_generated_heading_cannot_hide_an_unsupported_statement(generated):
     statement['text'] = '### Problem'
     with pytest.raises(ValueError, match='구조·링크·HTML'):
         materialize(model, section, {'stop': [statement]})
+
+
+@pytest.mark.parametrize('title', ['<!--', '<script>bad</script>', '[hidden](https://example.test)',
+                                  '`code`', '*hidden*', 'Title {#other}', 'Title\x00hidden'])
+def test_markup_stage_title_fails_generation_before_any_model_call(generated, tmp_cfg, title):
+    from sdd.generate import Generator
+    section, model, save, agent = generated
+    topic = plan()
+    topic.update(covers=['shutdown'], sources=section['design_topics'][0]['sources'])
+    source = topic['sources'][0]['id']
+    for part in topic['parts']:
+        part['sources'] = [source]
+    topic['explanation'][0]['title'] = title
+    section['design_topics'] = [topic]
+    save()
+    with pytest.raises(ValueError, match='plain text titles'):
+        Generator(tmp_cfg, model, agent).run()
+    assert agent.calls == []
+    assert not list(tmp_cfg.sdd_dir.glob('*.md'))
+
+
+def test_markup_stage_title_cannot_pass_publishing_materialization(generated):
+    from sdd.evidence import contract_text
+    section, model, _, _ = generated
+    topic = plan()
+    topic.update(covers=['shutdown'], sources=section['design_topics'][0]['sources'])
+    topic['explanation'][0]['title'] = '<!--'
+    section['design_topics'] = [topic]
+    for part in topic['parts']:
+        part['sources'] = [topic['sources'][0]['id']]
+    with pytest.raises(ValueError, match='plain text titles'):
+        contract_text(model, section['id'], {**topic, 'statements': []})
