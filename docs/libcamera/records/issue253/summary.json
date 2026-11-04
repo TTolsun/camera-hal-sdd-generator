@@ -99,5 +99,8 @@
     "A_additional_correct": 2,
     "A_first_condition_correct": 4
   },
-  "grade_revision": "d1-consistency.json: E01/D1/A true to false under unchanged criterion"
+  "grade_revision": "d1-consistency.json: E01/D1/A true to false under unchanged criterion",
+  "confirmatory_trial_count": 0,
+  "exploratory_trial_count": 24,
+  "protocol_compliance": "deviations documented; no confirmatory benchmark claim"
 }
