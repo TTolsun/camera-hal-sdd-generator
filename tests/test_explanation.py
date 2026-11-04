@@ -8,6 +8,7 @@ from test_generated_design import generated
 
 def plan():
     return dict(id='lifetime', question='When can the resource be reused?',
+                sources=[dict(id='source', file='hal.cpp', start='start', end='end')],
                 parts=[dict(id=s, question=s, sources=['source']) for s in STAGES],
                 explanation=[dict(id=s, title=s.title(), parts=[s]) for s in STAGES])
 
@@ -28,11 +29,25 @@ def test_invalid_explanation_cannot_drop_or_reorder_required_questions(edit):
     assert configuration_errors(topic)
 
 
-@pytest.mark.parametrize('parts', [None, {}, [], ['invalid'], [dict(id=7)]])
+@pytest.mark.parametrize('parts', [None, {}, [], ['invalid'], [dict(id=7)], [dict(id='')],
+                                 [dict(id='same'),dict(id='same')]])
 def test_invalid_parts_fail_configuration_before_rendering(parts):
     topic = plan()
     topic['parts'] = parts
     assert configuration_errors(topic)
+
+
+@pytest.mark.parametrize('missing', ['question', 'sources'])
+def test_public_generation_rejects_invalid_explanation_before_unit_construction(generated, tmp_cfg, missing):
+    from sdd.generated_design import generate
+    section, model, _, agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id=s, question=s, sources=['stop']) for s in STAGES]
+    topic['explanation'] = [dict(id=s, title=s.title(), parts=[s]) for s in STAGES]
+    topic['parts'][2].pop(missing)
+    with pytest.raises(ValueError, match='explanation'):
+        generate(tmp_cfg, model, agent, section)
+    assert agent.calls == []
 
 
 def test_assembled_answers_keep_stage_boundaries_and_every_source_binding():

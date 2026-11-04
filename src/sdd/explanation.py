@@ -15,8 +15,14 @@ def configuration_errors(topic):
     stages = topic['explanation']
     parts = topic.get('parts', [])
     if (not isinstance(parts, list) or not parts
-            or any(not isinstance(p, dict) or not isinstance(p.get('id'), str) for p in parts)):
+            or any(not isinstance(p, dict) or not isinstance(p.get('id'), str) or not p['id'].strip() for p in parts)):
         return ['explanation requires nonempty source-bound parts with string IDs.']
+    source_ids = {s.get('id') for s in topic.get('sources', []) if isinstance(s, dict)}
+    if (len({p['id'] for p in parts}) != len(parts)
+            or any(not isinstance(p.get('question'), str) or not p['question'].strip()
+                   or not isinstance(p.get('sources'), list) or not p['sources']
+                   or any(not isinstance(s, str) or s not in source_ids for s in p['sources']) for p in parts)):
+        return ['explanation parts require unique IDs, questions and local source references.']
     if (not isinstance(stages, list) or len(stages) != len(STAGES)
             or any(not isinstance(s, dict) or set(s) != {'id', 'title', 'parts'} for s in stages)):
         return ['explanation requires five ordered stages with id, title and parts.']

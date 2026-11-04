@@ -5513,12 +5513,11 @@ sections:
     - resources
     parts:
     - id: problem
-      question: 요청 제출 함수의 성공 반환만으로 버퍼 회수 가능 여부를 판단할 수 있는가라는 문제를 한두 문장으로 설명하세요. Camera::queueRequest의 0은 ConnectionTypeQueued
-        invokeMethod 호출 뒤의 성공 반환값이고, 완료 여부는 별도의 requestCompleted 통지로 판단한다는 의미를 구분하세요. 반환 시점에 콜백이 아직 없다고 단정하거나 콜백이
-        반환 이후에만 발생한다고 쓰지 마세요. 소스는 성공 반환값과 완료 판정의 차이를 보여 주며 두 사건의 실제 시간 순서를 보장하지 않습니다.
+      question: 요청 제출의 성공 반환과 실제 완료를 혼동하면 수명 판단을 할 수 없다는 문제를 한두 문장으로 소개하세요. Camera::queueRequest의 0은 ConnectionTypeQueued
+        invokeMethod 호출 뒤 성공 반환이며, 요청 완료는 별도 requestCompleted로 통지한다는 차이를 설명하세요. 버퍼 유지 의무의 주체와 기한은 다음 항목이 소유하므로 여기서
+        반복하지 마세요. 0이 반환되는 순간에 콜백이 아직 없다고 단정하거나 콜백이 반드시 반환 뒤 발생한다고 쓰지 마세요.
       sources:
       - queue
-      - buffer-duty
       max_statements: 1
       answer_contract:
         basis: description
@@ -5552,38 +5551,20 @@ sections:
         - - completeRequest
         - - cancelRequest
         - - 파이프라인 핸들러
-    - id: fence-transfer
-      question: Request::addBuffer() 성공 시 유효한 Fence의 소유권이 buffer로 이동하는 경로와 실패 시 전달한 fence가 수정되지 않고 소유권도 넘어가지 않는 경로를
-        한 문장으로 함께 비교하세요. 동일한 조건을 인용·풀이·결론으로 되풀이하지 마세요.
-      sources:
-      - fence-move
-      answer_contract:
-        basis: description
-        required_terms:
-        - - addBuffer
-        - - Fence
-          - 펜스
-        - - 버퍼
-          - buffer
-        - - 성공
-        - - 실패
-        - - 수정
-          - 변경
-          - 그대로
-        reject_patterns:
-        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){1}
-          message: 1문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
-      max_statements: 1
+        - - reuse
     - id: normal
-      question: 정상 경로에서 completeBuffer는 bufferCompleted를 먼저 emit한 다음 요청의 내부 버퍼 추적을 갱신한다는 순서를 설명하세요. 마지막 버퍼가 끝나도 요청은
-        자동 완료되지 않고 핸들러가 필요한 추가 처리를 마친 뒤 completeRequest로 완료를 명시 통지해야 한다는 계약을 연결하세요. completeRequest는 상태를 완료로 갱신하고
-        제출 순서대로 반환하므로, 정상 반환 후 호출자는 삭제 또는 reuse로 상태 초기화 후 재요청할 수 있음을 설명하세요. CameraManager 호출 의무와 실제 콜백 스레드 미검증을 구별하세요.
-        각 문단에 관련 근거를 모두 연결하세요.
+      question: 정상 처리의 일반 호출 순서와 관측 시점의 판단을 구분해 세 문단 이내로 설명하세요. completeBuffer는 bufferCompleted를 emit한 뒤 요청 내부 버퍼
+        추적을 갱신하고, 마지막 버퍼만으로 요청이 자동 완료되지 않으므로 핸들러가 필요한 처리를 마친 뒤 completeRequest로 명시 통지해야 한다는 계약을 설명하세요. 두 API의 CameraManager
+        스레드 의무와 실제 콜백 실행 스레드의 미검증을 구별하세요. completeRequest가 호출하는 내부 complete의 실제 상태 선택은 cancelled_가 false이면 RequestComplete,
+        true이면 RequestCancelled입니다. 취소된 버퍼가 없다는 사실만으로 cancelled_가 false라고 바꾸지 마세요. 다음 문단은 마지막 버퍼 알림을 관찰했지만 요청 완료 콜백은
+        아직 관찰하지 못한 조건부 예입니다. 이 관측만으로 현재 내부 추적 갱신이나 completeRequest 호출이 아직 남았다고 단정하지 마세요. 앞의 수명 원리에서 정한 기한이 끝났다는 근거도
+        되지 않으며, 알림만으로 버퍼 해제나 다른 요청 연결의 안전성을 판정할 수 없다고 설명하세요. 유효성을 깨뜨리는 해제와 모든 재사용의 일괄 금지를 구별하고 다른 요청 연결 가능성은 API·동기화
+        계약과 유효성 유지를 별도로 대조해야 한다고 설명하세요. 공통 버퍼 유지 의무·핸들러 접근 금지·재사용 책임 문장은 반복하지 마세요. 다음 확인은 기존 completeBuffer 반환과 completeRequest,
+        제출 순서 지연 여부, 요청 완료 콜백을 관찰할 소스 기반 조사 계획으로 짧게 연결하세요. 실제 실행 결과나 두 사건의 관측되지 않은 시간 순서를 만들지 마세요.
       sources:
       - completion
-      - create
-      - reuse
       - internal-completion
+      - buffer-duty
       max_statements: 3
       answer_contract:
         basis: description
@@ -5592,23 +5573,9 @@ sections:
         - - bufferCompleted
         - - completeRequest
         - - CameraManager
-        - - reuse
-    - id: early-buffer
-      question: 조건 하나만 바꾼 예를 설명하세요. 마지막 bufferCompleted를 받았어도 요청 완료 콜백이 아직 없으면, addBuffer 호출자의 버퍼 유지 기한이 끝나지 않습니다.
-        알림 emit 뒤에 내부 completeBuffer 호출이 있다는 구현과 요청 자동 완료가 아니라는 계약 때문에 이 알림만으로 버퍼 해제나 다음 요청에 넘기는 결정을 해서는 안 된다는 조건부
-        판단을 설명하세요. 다음으로 completeBuffer의 반환과 명시 completeRequest 호출, 실제 요청 완료 콜백을 확인하도록 소스 기반 조사 계획임을 밝히세요. 존재하지 않는
-        로그나 기기 결과를 만들지 마세요.
-      sources:
-      - completion
-      - buffer-duty
-      max_statements: 2
-      answer_contract:
-        basis: description
-        required_terms:
-        - - bufferCompleted
-        - - completeBuffer
-        - - completeRequest
-        - - 콜백
+        - - cancelled_
+        - - RequestComplete
+        - - RequestCancelled
     - id: out-of-order
       question: 소스에서 유도한 조건부 예라고 명시하세요. A 다음 B를 제출했고 A가 RequestPending이며 B의 모든 버퍼와 추가 처리가 끝났다면 completeRequest(B)는
         B를 완료 상태로 바꾸어도 queuedRequests_ 선두 A에서 break하므로 B의 애플리케이션 반환은 아직 이뤄지지 않습니다. 그동안 addBuffer 호출자는 B의 버퍼를 요청 완료
@@ -5651,6 +5618,28 @@ sections:
         - - completeRequest
         - - RequestCancelled
         - - RequestPending
+    - id: fence-transfer
+      question: Request::addBuffer() 성공 시 유효한 Fence의 소유권이 buffer로 이동하는 경로와 실패 시 전달한 fence가 수정되지 않고 소유권도 넘어가지 않는 경로를
+        한 문장으로 함께 비교하세요. 동일한 조건을 인용·풀이·결론으로 되풀이하지 마세요.
+      sources:
+      - fence-move
+      answer_contract:
+        basis: description
+        required_terms:
+        - - addBuffer
+        - - Fence
+          - 펜스
+        - - 버퍼
+          - buffer
+        - - 성공
+        - - 실패
+        - - 수정
+          - 변경
+          - 그대로
+        reject_patterns:
+        - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){1}
+          message: 1문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
+      max_statements: 1
     - id: fence-timeout
       question: 펜스가 신호되지 않아 요청이 타임아웃할 때 요청·버퍼·펜스의 상태와, 다른 요청에 버퍼를 재사용하기 전에 호출자가 수행할 회수 동작을 한 문단으로 함께 설명하세요. 같은 조건을
         두 번 반복하지 마세요.
@@ -5718,14 +5707,13 @@ sections:
     - id: normal
       title: 정상 완료와 다음 요청 준비
       parts:
-      - fence-transfer
       - normal
     - id: conditions
       title: 알림 순서와 취소가 달라질 때
       parts:
-      - early-buffer
       - out-of-order
       - cancel
+      - fence-transfer
       - fence-timeout
       - reuse-fences
     - id: change

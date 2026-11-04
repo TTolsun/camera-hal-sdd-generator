@@ -167,6 +167,7 @@ def render_values(cfg, model, section, values):
                 s['id'] for s in topics[visual['topic']].get('explanation', [])}:
             raise ValueError('Visual stage must belong to its topic explanation')
         title, question = (_text(visual.get(k), k) for k in ('title', 'question'))
+        title_prefix = '#### ' if topics[visual['topic']].get('explanation') else '### '
         nodes, edges = visual.get('nodes'), visual.get('edges')
         if not isinstance(nodes, list) or not nodes or any(not isinstance(n, dict) for n in nodes):
             raise ValueError('Visual nodes must be a nonempty object list')
@@ -247,7 +248,7 @@ def render_values(cfg, model, section, values):
         if stale:
             # Validate all nodes and edges above, even after the first stale pin.
             # Do not emit the old interpretation, its links, or a Mermaid file.
-            block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n'
+            block = (f'<!-- sdd:visual:{ident} -->\n{title_prefix}{title}\n\n'
                      '소스 근거가 달라져 이 질문의 그림을 제외했습니다. 그림은 재검토가 필요합니다. '
                      '현재 설명과 소스 근거를 확인하세요.\n'
                      f'<!-- /sdd:visual:{ident} -->')
@@ -262,7 +263,7 @@ def render_values(cfg, model, section, values):
             metadata += ['', 'LLM 그림 초안 · 사람 검토 전', '', '작성 모델: `' + html.escape(producer) + '`']
         note = '??? note "그림 근거와 확인 범위"\n' + '\n'.join('    ' + line for line in [*metadata, '', *proof])
         download = PurePosixPath(section_output(section)).stem + '.' + ident + '.mmd'
-        block = (f'<!-- sdd:visual:{ident} -->\n### {title}\n\n'
+        block = (f'<!-- sdd:visual:{ident} -->\n{title_prefix}{title}\n\n'
                  f'```mermaid\n{source}\n```\n\n[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
         result.append((visual, block, source))
     return result
@@ -278,7 +279,9 @@ def place(body, rendered, section):
     topics = {t['id']: t for t in section.get('design_topics', [])}
     grouped = {}
     for visual, block, _ in rendered:
-        grouped.setdefault((visual['topic'], visual.get('stage')), []).append(block)
+        stages = topics[visual['topic']].get('explanation', [])
+        stage = visual.get('stage') or (stages[0]['id'] if stages else None)
+        grouped.setdefault((visual['topic'], stage), []).append(block)
     for (tid, stage), blocks in grouped.items():
         heading = '## ' + topics[tid]['title']
         matches = list(re.finditer(r'^' + re.escape(heading) + r'\n+', body, re.M))

@@ -38,10 +38,11 @@ def test_stage_visual_stays_inside_its_question_after_first_explanation(tmp_cfg,
     section, model, graph, write = visual
     topic = section['design_topics'][0]
     topic['explanation'] = [dict(id=s, title=s.title(), parts=[s]) for s in STAGES]
-    topic['parts'] = [dict(id=s) for s in STAGES]
+    topic['parts'] = [dict(id=s, question=s, sources=['stop']) for s in STAGES]
     graph['stage'] = 'conditions'
     write()
     rendered = render(tmp_cfg, model, section)
+    assert '#### '+graph['title'] in rendered[0][1]
     body = '## '+topic['title']+'\n\n'+'\n\n'.join('### '+s.title()+'\n\n'+s+' explanation.\n\n'+s+' details.' for s in STAGES)
     result = place(body, rendered, section)
     assert result.index('conditions explanation.') < result.index('<!-- sdd:visual:') < result.index('conditions details.')
@@ -53,6 +54,27 @@ def test_stage_visual_stays_inside_its_question_after_first_explanation(tmp_cfg,
     write()
     with pytest.raises(ValueError, match='stage must belong'):
         render(tmp_cfg, model, section)
+
+
+def test_unstaged_visual_uses_first_stage_and_title_collision_is_not_a_stage(tmp_cfg, visual):
+    from sdd.explanation import STAGES
+    section, model, graph, write = visual
+    topic = section['design_topics'][0]
+    topic['explanation'] = [dict(id=s, title=s.title(), parts=[s]) for s in STAGES]
+    topic['parts'] = [dict(id=s, question=s, sources=['stop']) for s in STAGES]
+    graph['title'] = 'Change'  # Same text as a later stage, at a different heading level.
+    write()
+    rendered = render(tmp_cfg, model, section)
+    second = copy.deepcopy(rendered[0])
+    definition, block, mermaid = second
+    definition.update(id='later', stage='change')
+    block = block.replace('stop-flow', 'later')
+    body = '## '+topic['title']+'\n\n'+'\n\n'.join('### '+s.title()+'\n\n'+s+' explanation.\n\n'+s+' details.' for s in STAGES)
+    result = place(body, [rendered[0], (definition, block, mermaid)], section)
+    assert result.index('problem explanation.') < result.index('<!-- sdd:visual:stop-flow') < result.index('problem details.')
+    assert result.index('change explanation.') < result.index('<!-- sdd:visual:later') < result.index('change details.')
+    assert result.splitlines().count('### Change') == 1
+    assert result.splitlines().count('#### Change') == 2
 
 
 def test_visual_provenance_and_question_remain_in_collapsed_evidence(tmp_cfg, visual):

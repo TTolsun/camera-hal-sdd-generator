@@ -1675,8 +1675,8 @@ sections:
       evidence:
       - *id006
     - id: wait
-      label: B는 완료 상태로 큐에 남음
-      label_en: B remains completed in queue
+      label: B는 RequestComplete 또는 RequestCancelled로 큐에 남음
+      label_en: B remains queued as RequestComplete or RequestCancelled
       evidence:
       - &id008
         source: resources/completion
