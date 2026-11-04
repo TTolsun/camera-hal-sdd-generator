@@ -75,6 +75,7 @@ class SiteConfig:
     mermaid: str = ''
     undefined_terms: str | None = None
     translation_batch_size: int = 1
+    coverage_question_edits: dict = field(default_factory=dict)
 
     @classmethod
     def from_mapping(cls, values):

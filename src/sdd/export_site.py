@@ -416,6 +416,9 @@ def _heading_search(items, page_title, rel):
 
 def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_template, *, class_documents=None):
     known = set(texts)
+    question_edits = cfg.site.coverage_question_edits
+    if not isinstance(question_edits, dict) or set(question_edits) - known:
+        raise ValueError('Coverage question edits must name current Markdown pages.')
     rendered_pages = {}
     search = []
     diagram_sources = {}
@@ -428,7 +431,7 @@ def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_
             if source:
                 visual_sources[str(PurePosixPath(rel).with_suffix('')) + '.' + visual['id'] + '.mmd'] = source
         content, toc, tokens = _render(body, rel, known, model, source_url, str(meta.get("source_commit", "")),
-                                       link_template)
+                                       link_template, coverage_question_edits=question_edits.get(rel))
         if sections.get(rel, {}).get('kind') == 'per-package':
             from .index_navigation import index_navigation
             content, symbols = index_navigation(content, _html_path(rel), page_title)
