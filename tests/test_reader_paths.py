@@ -180,3 +180,18 @@ def test_configuration_cannot_create_unverified_markdown_links_or_emphasis(tmp_c
     assert 'href="https://example.invalid"' not in page
     assert '**Approved**' in page
     assert '&lt;img src=x&gt;' in page
+def test_public_reader_fact_sources_select_existing_example_parts():
+    from pathlib import Path
+    import yaml
+    root = Path(__file__).resolve().parents[1]
+    sections = yaml.safe_load((root/'examples/libcamera/config/sections.yaml').read_text(encoding='utf-8'))['sections']
+    paths = yaml.safe_load((root/'examples/libcamera/reader-paths.yaml').read_text(encoding='utf-8'))
+    by_id = {section['id']: section for section in sections}
+    for claim in paths['claims']:
+        if claim['kind'] != 'fact':
+            continue
+        for ref in claim['sources']:
+            topic = next(t for t in by_id[ref['section']]['design_topics'] if t['id'] == ref['topic'])
+            assert ref['part'] in {p['id'] for p in topic.get('parts', [])}, ref
+
+
