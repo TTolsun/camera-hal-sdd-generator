@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import replace
 from pathlib import Path
 import re
 
@@ -379,8 +378,11 @@ def _review_config(cfg):
     profile = cfg.paths.get('consistency_profile')
     if profile is None:
         return cfg
+    from copy import copy
     from .config import load
-    return replace(cfg, agent=load(profile).agent)
+    selected = copy(cfg)
+    selected.agent = load(profile).agent
+    return selected
 
 
 @staged
