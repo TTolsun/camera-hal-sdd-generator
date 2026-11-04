@@ -8,15 +8,15 @@
   "effect_verdict": "judgment-unavailable",
   "conditions": {
     "A": {
-      "correct": 6,
+      "correct": 5,
       "denominator": 12,
       "common_correct": 4,
       "common_denominator": 6,
-      "additional_correct": 2,
+      "additional_correct": 1,
       "additional_denominator": 6,
       "elapsed_median_all_seconds": 46.5,
       "help_count": 0,
-      "first_exposure_correct": 4,
+      "first_exposure_correct": 3,
       "first_exposure_denominator": 6,
       "failed_trials": [
         "E01/T1",
@@ -24,7 +24,8 @@
         "E02/T2",
         "E02/D1",
         "E02/D2",
-        "E03/D2"
+        "E03/D2",
+        "E01/D1"
       ]
     },
     "B": {
@@ -87,6 +88,16 @@
     "Three model roles are not three human participants or independent model families.",
     "Second exposure is contaminated by task learning; first exposure is not a balanced difficulty/role sample.",
     "B index start is not documented in three E01 trials. E02 shell-reported wall times are not a pure environment-delay measure.",
-    "No new post-fix trial or human reading-ease measurement occurred."
-  ]
+    "No new post-fix trial or human reading-ease measurement occurred.",
+    "E01 skipped the specified starting point on six trials. All evaluators saw all task prompts in advance.",
+    "All timing boundaries differ from prompt-reveal/first-open/final-file-submit definitions. See procedure-audit.md.",
+    "Cross-task memory and E02 D1-to-D2 exposure contaminate conceptual first exposure."
+  ],
+  "historical_initial_counts": {
+    "A_correct": 6,
+    "B_correct": 8,
+    "A_additional_correct": 2,
+    "A_first_condition_correct": 4
+  },
+  "grade_revision": "d1-consistency.json: E01/D1/A true to false under unchanged criterion"
 }

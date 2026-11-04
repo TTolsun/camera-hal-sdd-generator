@@ -6,3 +6,4 @@ docs/inhouse/records/goal-138-140/inputs/** -text whitespace=cr-at-eol
 examples/libcamera/validation/issue211/runs/** -text -whitespace
 # Native issue253 review evidence must keep captured byte hashes.
 examples/libcamera/validation/issue253/runs/** -text -whitespace
+docs/libcamera/records/issue253/automated/** -text -whitespace
