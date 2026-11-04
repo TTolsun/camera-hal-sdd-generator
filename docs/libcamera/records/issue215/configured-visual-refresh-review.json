@@ -1,0 +1,40 @@
+{
+  "scope": "Independent native CLI code review and focused regression tests for deterministic configured-figure reassembly only; not whole-book figure acceptance, human approval, hardware validation or deployment.",
+  "native_review": "code-review-93/review.json",
+  "findings": [],
+  "test_command": "python -m pytest tests/test_visual_refresh.py tests/test_render_profiles.py tests/test_generated_visuals.py tests/test_visuals.py -q",
+  "test_result": "136 passed in 117.90s",
+  "source_files": {
+    "src/sdd/visual_refresh.py": {
+      "working_bytes_sha256": "9aca656120a50c6fa397ae51c454cd383fc988ac6178f1b1a6a7f3241329e41f",
+      "lf_view_sha256": "9aca656120a50c6fa397ae51c454cd383fc988ac6178f1b1a6a7f3241329e41f"
+    },
+    "tests/test_visual_refresh.py": {
+      "working_bytes_sha256": "f3f8b906834090e96f5da6c85e5b940357f0fbfbbab8c4de2ee1f847c3beda69",
+      "lf_view_sha256": "16bf35d040f018efe2a35a2e3b8d3700b72d8d9f297246ebab90ae0f4f31d7ff"
+    },
+    "docs/concepts/site.md": {
+      "working_bytes_sha256": "d1e39c8e8d91a4fe2d2d97392c0201d1219a2b3c306fd0ea7d064cbbfed2057d",
+      "lf_view_sha256": "d1e39c8e8d91a4fe2d2d97392c0201d1219a2b3c306fd0ea7d064cbbfed2057d"
+    }
+  },
+  "prior_finding_disposition": {
+    "record": "code-review-91/review.json",
+    "finding": "Derived frontmatter YAML formatting is not retained",
+    "disposition": "Documented intentional serialization boundary. Original pinned artifact is never mutated; unchanged metadata values and original byte identity are tested. Literal byte preservation applies to the body outside owned figure edit regions. New independent review93 has no findings."
+  },
+  "archive_sha256": "435b7cd9c393676ea7d8597825be030dacb168da9c4d289150d4b955ebc31054",
+  "archive_bytes": 296533,
+  "review_profile": {
+    "kind": "cli",
+    "runner": "codex",
+    "command": [],
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "cli_version": "0.166.0-alpha.5.1",
+  "human_review": "pending"
+}

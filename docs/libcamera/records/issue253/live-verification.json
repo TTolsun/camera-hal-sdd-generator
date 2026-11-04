@@ -1,0 +1,1983 @@
+{
+  "started_at": "2026-11-04T19:06:19.260864+00:00",
+  "ended_at": "2026-11-04T19:06:20.706738+00:00",
+  "elapsed_seconds": 1.4457448999164626,
+  "url": "https://ttolsun.github.io/libcamera-sdd/",
+  "build_id": "b5da5d8c424ca64f03fde9b9d730d143de5e4bcd3e25fba3aab05168c9ee9b05",
+  "manifest_sha256": "56aaf0667ac0052950075a4346f5efa94c062670866164ef47c40f11d12bd04a",
+  "fixed_build_equal": false,
+  "outputs": 328,
+  "passed": 328,
+  "files": [
+    {
+      "path": ".nojekyll",
+      "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actual": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ok": true
+    },
+    {
+      "path": "assets/glossary.json",
+      "expected": "cb2d1d35914420a8751dbe5d0b64de387d206544e2304663b96209a1d2b5e802",
+      "actual": "cb2d1d35914420a8751dbe5d0b64de387d206544e2304663b96209a1d2b5e802",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/architecture-U656AL7Q-3ZQKGQJL.mjs",
+      "expected": "956d2176d907e2f62c2b4ea794ff76f4be620b97f56ab21cb1b903b39b6d614b",
+      "actual": "956d2176d907e2f62c2b4ea794ff76f4be620b97f56ab21cb1b903b39b6d614b",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/architectureDiagram-4X3Z3J56.mjs",
+      "expected": "9e48ed3e4a5171b75d99272d0fc35d2ff44b5c3988e9d87bab2f69ab606d9631",
+      "actual": "9e48ed3e4a5171b75d99272d0fc35d2ff44b5c3988e9d87bab2f69ab606d9631",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/blockDiagram-BWRZOBD3.mjs",
+      "expected": "0053371e1dc19363f75f2ed230edae037f21897072141988e8602f259a669f01",
+      "actual": "0053371e1dc19363f75f2ed230edae037f21897072141988e8602f259a669f01",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/c4Diagram-Q5SP5FFD.mjs",
+      "expected": "adc54371d4ddf79f2780a73a25dc0387c17f064946150c23d0e085763987e0dc",
+      "actual": "adc54371d4ddf79f2780a73a25dc0387c17f064946150c23d0e085763987e0dc",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-2XYWPRAO.mjs",
+      "expected": "e41d24fa23710730f3fdbfa3431ce47654563d7e519f8d954d3f503697c07ccc",
+      "actual": "e41d24fa23710730f3fdbfa3431ce47654563d7e519f8d954d3f503697c07ccc",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-353K7GK5.mjs",
+      "expected": "230d2578f793cc82eb502db397f22955bbb7b1b1f6c30de6a3697fdd77045da0",
+      "actual": "230d2578f793cc82eb502db397f22955bbb7b1b1f6c30de6a3697fdd77045da0",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-4HFYJGYH.mjs",
+      "expected": "958a2169716ece8b4bfa97983d17752bc74fcf69e42b1774c6f1f543447aeebd",
+      "actual": "958a2169716ece8b4bfa97983d17752bc74fcf69e42b1774c6f1f543447aeebd",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-4KE642ED.mjs",
+      "expected": "7f389007a9669c112b8f1d6ba3cb67baec2ecb66c3589ef71a713668b230cb13",
+      "actual": "7f389007a9669c112b8f1d6ba3cb67baec2ecb66c3589ef71a713668b230cb13",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-5V7UUW6L.mjs",
+      "expected": "d0482e30f20b3f8c7e0c0a53926d77a1203385a8c8310c95a4edc70c2b8f97ac",
+      "actual": "d0482e30f20b3f8c7e0c0a53926d77a1203385a8c8310c95a4edc70c2b8f97ac",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-63GW7ZVL.mjs",
+      "expected": "0332fbf683938f88199ab9dfe64e8d855a309bf539e4dd626d5274cea3a3b8a6",
+      "actual": "0332fbf683938f88199ab9dfe64e8d855a309bf539e4dd626d5274cea3a3b8a6",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-6DHVG6KC.mjs",
+      "expected": "4e1c30322552a6168f0fbe87280b1e3a6a282ddf060744a1ab3fd6a151b62b18",
+      "actual": "4e1c30322552a6168f0fbe87280b1e3a6a282ddf060744a1ab3fd6a151b62b18",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-6EQESGSB.mjs",
+      "expected": "599534087b2727b42c86d5fab5d62159e5aaaf816ba21948c982cb83d6a357fc",
+      "actual": "599534087b2727b42c86d5fab5d62159e5aaaf816ba21948c982cb83d6a357fc",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-6XQQT3RD.mjs",
+      "expected": "a40ff3f3d2dd6b53351418403043b72985016f88f2b37454eb1670b42c1fe072",
+      "actual": "a40ff3f3d2dd6b53351418403043b72985016f88f2b37454eb1670b42c1fe072",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-7SRKK4IT.mjs",
+      "expected": "205fd7d73dafabd3afb13f774c4b87e8cf30e0bf5162a4a1701ba07ae7ba2fb7",
+      "actual": "205fd7d73dafabd3afb13f774c4b87e8cf30e0bf5162a4a1701ba07ae7ba2fb7",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-A4ITRWGT.mjs",
+      "expected": "48aaffdb803ba00dfad459d9da2a372d5bd4fcd3630d605aea457f7419373754",
+      "actual": "48aaffdb803ba00dfad459d9da2a372d5bd4fcd3630d605aea457f7419373754",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-AI4T2ZLM.mjs",
+      "expected": "48731bcd9fc2b630f33a2a9fbb303dacae4e87b38e0b79dae51f446d50662c8b",
+      "actual": "48731bcd9fc2b630f33a2a9fbb303dacae4e87b38e0b79dae51f446d50662c8b",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-ASAHGCDZ.mjs",
+      "expected": "ee61bfa0548d8adf2aabfdf4f92e93e6175937b5cc601d95c5c471c5ab6becb0",
+      "actual": "ee61bfa0548d8adf2aabfdf4f92e93e6175937b5cc601d95c5c471c5ab6becb0",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-CCU7O4O5.mjs",
+      "expected": "85914213427d4800267f33d6d5855aa0c022207d2513901973ec485422a7b3f4",
+      "actual": "85914213427d4800267f33d6d5855aa0c022207d2513901973ec485422a7b3f4",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-DY3L2I7V.mjs",
+      "expected": "a54b09f3c51f92ac77f4587dffb317df436c268332ea43ad10bbb54cbf8bc358",
+      "actual": "a54b09f3c51f92ac77f4587dffb317df436c268332ea43ad10bbb54cbf8bc358",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-EFRVIJHI.mjs",
+      "expected": "fb49ad12f054e7934f1e6d0ae135b619350827164b15ab8e858f7561a503333e",
+      "actual": "fb49ad12f054e7934f1e6d0ae135b619350827164b15ab8e858f7561a503333e",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-EOITJJC2.mjs",
+      "expected": "03320de61dbed2a878287eab45b4627320ee6e3a69fc1072ffbbdc5522b3efc2",
+      "actual": "03320de61dbed2a878287eab45b4627320ee6e3a69fc1072ffbbdc5522b3efc2",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-EQI6KKA3.mjs",
+      "expected": "30dfbbb90da7f1cd2dd76650fa8f3e657d11df10b3ff8c77ec8e45532bd84f5b",
+      "actual": "30dfbbb90da7f1cd2dd76650fa8f3e657d11df10b3ff8c77ec8e45532bd84f5b",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-EYG76IYJ.mjs",
+      "expected": "062a99e7e79406d8981d6a5e7108329b363a44986cb002a7be4a835f3b912b9f",
+      "actual": "062a99e7e79406d8981d6a5e7108329b363a44986cb002a7be4a835f3b912b9f",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-F3RBCZRS.mjs",
+      "expected": "4ba28b3d8537f773fb363cd5eda8a1b9f1c6bdb686a20ed7e201ef2580e58069",
+      "actual": "4ba28b3d8537f773fb363cd5eda8a1b9f1c6bdb686a20ed7e201ef2580e58069",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-GOL2OBWC.mjs",
+      "expected": "979d06b5dcc616f7ce5bf9faa43c83eb3c3d659d79b8d2a8b6cb03f7195451a5",
+      "actual": "979d06b5dcc616f7ce5bf9faa43c83eb3c3d659d79b8d2a8b6cb03f7195451a5",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-GTKDMUJJ.mjs",
+      "expected": "3a0a0d3d6036b6143c1641ecc8fad23d0e629b95845fbe9ad30da031e0a9d7b7",
+      "actual": "3a0a0d3d6036b6143c1641ecc8fad23d0e629b95845fbe9ad30da031e0a9d7b7",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-IQQE2MEC.mjs",
+      "expected": "78aeaddd6682b46cd2e88b9ceed5df76500ca0ac52b8914fb53973bc620fd21f",
+      "actual": "78aeaddd6682b46cd2e88b9ceed5df76500ca0ac52b8914fb53973bc620fd21f",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-JXEFGRG2.mjs",
+      "expected": "c39dc6da39796a82efdc663e87aa93e80c3a14227e97869709cd2ed257a29d1b",
+      "actual": "c39dc6da39796a82efdc663e87aa93e80c3a14227e97869709cd2ed257a29d1b",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-KXVH62NG.mjs",
+      "expected": "96bbc4fe2f344daabb9e39b6c0bdb07d697da730bf35ed8b68b9b7756702f70e",
+      "actual": "96bbc4fe2f344daabb9e39b6c0bdb07d697da730bf35ed8b68b9b7756702f70e",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-LM6QDVU5.mjs",
+      "expected": "3b7a4a076bc91fa816956adfc1adfcf5c4161573ce7d60188d48a8245cf91943",
+      "actual": "3b7a4a076bc91fa816956adfc1adfcf5c4161573ce7d60188d48a8245cf91943",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-OMTJKCYW.mjs",
+      "expected": "4badfc95ec9f295e212488521e761a6e3688e87806d985d42eb07f866c2dc618",
+      "actual": "4badfc95ec9f295e212488521e761a6e3688e87806d985d42eb07f866c2dc618",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-P7EU7REX.mjs",
+      "expected": "13eb80469cf3f89db75f8ef74044568ca141dde4de99a862cd63a5a34f35bae1",
+      "actual": "13eb80469cf3f89db75f8ef74044568ca141dde4de99a862cd63a5a34f35bae1",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-RV6DXAHM.mjs",
+      "expected": "d8df6a90c9be7c9e537bdc3a2495e13cb581d8bbddf38bc8a75034e0223d24b9",
+      "actual": "d8df6a90c9be7c9e537bdc3a2495e13cb581d8bbddf38bc8a75034e0223d24b9",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-T244DUNM.mjs",
+      "expected": "8b033ba19379d07f1431946723c28491f9cec448cb7267c462fdbb3d3babe64d",
+      "actual": "8b033ba19379d07f1431946723c28491f9cec448cb7267c462fdbb3d3babe64d",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-THXVA4DE.mjs",
+      "expected": "82a243ce1b7188955b5bd3556e5030288d5f65653a9f76fd8b34032d6d6aec01",
+      "actual": "82a243ce1b7188955b5bd3556e5030288d5f65653a9f76fd8b34032d6d6aec01",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-TLYDTAVK.mjs",
+      "expected": "9acbacba7fcfc58fbf5fa6bc210d5fc6092f3ccdb090753f6a8054a0d4fe1e05",
+      "actual": "9acbacba7fcfc58fbf5fa6bc210d5fc6092f3ccdb090753f6a8054a0d4fe1e05",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-TVVDRG3C.mjs",
+      "expected": "2be5591558026a751c310b118f6ae77ea8e30bd0ee1335db8623e765b23d163e",
+      "actual": "2be5591558026a751c310b118f6ae77ea8e30bd0ee1335db8623e765b23d163e",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-VSLJSFIP.mjs",
+      "expected": "f6c325b39e3945f0be8fe2450ac1430851753d7cb0d13dabb1e4ec284b9485f3",
+      "actual": "f6c325b39e3945f0be8fe2450ac1430851753d7cb0d13dabb1e4ec284b9485f3",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-W6CKT3PL.mjs",
+      "expected": "1f3eb6984f9cb525fc3063f997a7cc7bfba0eddd38475874497249396acfb7cd",
+      "actual": "1f3eb6984f9cb525fc3063f997a7cc7bfba0eddd38475874497249396acfb7cd",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-WONJCSFZ.mjs",
+      "expected": "de16fc6b7424433f4680e78bb7a7d14ad57514d8ec8ab131f668fd3299cd1f75",
+      "actual": "de16fc6b7424433f4680e78bb7a7d14ad57514d8ec8ab131f668fd3299cd1f75",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-XW6ABFJP.mjs",
+      "expected": "580b80f8c221fbf8946e4a441556b6b2fdfb035d8f246a5058d465b40a4bc62a",
+      "actual": "580b80f8c221fbf8946e4a441556b6b2fdfb035d8f246a5058d465b40a4bc62a",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/chunk-ZZTKAOFA.mjs",
+      "expected": "b4d99347dd9d449e6cfa60005c7d468467bc57940918f6178746c11397f3891f",
+      "actual": "b4d99347dd9d449e6cfa60005c7d468467bc57940918f6178746c11397f3891f",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/classDiagram-FKO7XAE5.mjs",
+      "expected": "6bbab6db1ac91079dbd1f19351d7e3633dfe1db9966f5d6ccbef60d223b56996",
+      "actual": "6bbab6db1ac91079dbd1f19351d7e3633dfe1db9966f5d6ccbef60d223b56996",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/classDiagram-v2-XZHHGUJO.mjs",
+      "expected": "6bbab6db1ac91079dbd1f19351d7e3633dfe1db9966f5d6ccbef60d223b56996",
+      "actual": "6bbab6db1ac91079dbd1f19351d7e3633dfe1db9966f5d6ccbef60d223b56996",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/cose-bilkent-AZ5BDB2T.mjs",
+      "expected": "8eaf27296f90be8f1bcf5d8c5cdd3b6d9d1ea23e691fd3ade3653256d7b206c8",
+      "actual": "8eaf27296f90be8f1bcf5d8c5cdd3b6d9d1ea23e691fd3ade3653256d7b206c8",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/dagre-X5LCLMGV.mjs",
+      "expected": "b2b6b37d0bb4d80d0ae0b50f9632d8e804a3a344479064187cdcf3965423acdf",
+      "actual": "b2b6b37d0bb4d80d0ae0b50f9632d8e804a3a344479064187cdcf3965423acdf",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/diagram-BZV4OSZQ.mjs",
+      "expected": "6fb500dbc6779d8615ad824d5ee4261d90c578be483bed501da815132ffa7492",
+      "actual": "6fb500dbc6779d8615ad824d5ee4261d90c578be483bed501da815132ffa7492",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/diagram-DKYQLJNW.mjs",
+      "expected": "4322b6db0c3d11ea11130754e30f037145ca5d83be287043d32e4d3aedc1da79",
+      "actual": "4322b6db0c3d11ea11130754e30f037145ca5d83be287043d32e4d3aedc1da79",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/diagram-LL6QPXA2.mjs",
+      "expected": "05a946850a993419da01c43b4dd0126d0bedb318bca01b9994d3c863e8399d5b",
+      "actual": "05a946850a993419da01c43b4dd0126d0bedb318bca01b9994d3c863e8399d5b",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/erDiagram-MBDK6S7D.mjs",
+      "expected": "0d63c1b41ee71514d1e9d764e8eedc99deb46bf1c487c095c3a83ac7c62f173b",
+      "actual": "0d63c1b41ee71514d1e9d764e8eedc99deb46bf1c487c095c3a83ac7c62f173b",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/flowDiagram-UML6HZQP.mjs",
+      "expected": "46133c00c31cd64e5b2987586e8fee68de2c42e39fb9148670fda96c12a395c4",
+      "actual": "46133c00c31cd64e5b2987586e8fee68de2c42e39fb9148670fda96c12a395c4",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/ganttDiagram-SAESIEWH.mjs",
+      "expected": "d2f7f0fc47805df2251bd936ff4b15a07330994791ad74a46871bf41fdf1b95a",
+      "actual": "d2f7f0fc47805df2251bd936ff4b15a07330994791ad74a46871bf41fdf1b95a",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/gitGraph-F6HP7TQM-F73VLA63.mjs",
+      "expected": "b9c3a6dc47fdecfb981b33a9283c0b9b928afe04ce9913f948fcffc04d0b7d91",
+      "actual": "b9c3a6dc47fdecfb981b33a9283c0b9b928afe04ce9913f948fcffc04d0b7d91",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/gitGraphDiagram-JCGM6PWI.mjs",
+      "expected": "eadfcd7e835763d4eb8be3c71a932459af4895afacd756cc03bc3b4076c4a2b3",
+      "actual": "eadfcd7e835763d4eb8be3c71a932459af4895afacd756cc03bc3b4076c4a2b3",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/info-NVLQJR56-7B66GPTN.mjs",
+      "expected": "efc26412b6ddbb46945cb1bd625b78ee6695fd00491f9c1e2bb03fd07ffb72c9",
+      "actual": "efc26412b6ddbb46945cb1bd625b78ee6695fd00491f9c1e2bb03fd07ffb72c9",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/infoDiagram-GKI3LBYJ.mjs",
+      "expected": "df4862c3fecac40c7fea871d523a77b38ab426a061cd0badbc7a25c066326ee6",
+      "actual": "df4862c3fecac40c7fea871d523a77b38ab426a061cd0badbc7a25c066326ee6",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/journeyDiagram-E42M6OD5.mjs",
+      "expected": "aaf31d9e0408a0f247cc62220b48128760337acc7fc28a965fb1529b79595b24",
+      "actual": "aaf31d9e0408a0f247cc62220b48128760337acc7fc28a965fb1529b79595b24",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/kanban-definition-D5DEDDHO.mjs",
+      "expected": "82d1dae652739e2665f48a7a5e937307139e6e041dc1e61662173d36c7e2ac05",
+      "actual": "82d1dae652739e2665f48a7a5e937307139e6e041dc1e61662173d36c7e2ac05",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/katex-RV2QPRKB.mjs",
+      "expected": "d336801a01bf67daaed469e72c9e12fc8573f379a9a13cd1b1f6e836cf05b485",
+      "actual": "d336801a01bf67daaed469e72c9e12fc8573f379a9a13cd1b1f6e836cf05b485",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/mindmap-definition-ZYHNXUZP.mjs",
+      "expected": "7b24595277596a6cded3307b855254439178a5f3e6ffc189719ecb2f27d5bb47",
+      "actual": "7b24595277596a6cded3307b855254439178a5f3e6ffc189719ecb2f27d5bb47",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/packet-BFZMPI3H-GN4PBP3H.mjs",
+      "expected": "79fcd0636c4f1861d9692e4b61cd3bcd23270e6cce593ca2494bcac4c0d95b53",
+      "actual": "79fcd0636c4f1861d9692e4b61cd3bcd23270e6cce593ca2494bcac4c0d95b53",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/pie-7BOR55EZ-EOOIGJLO.mjs",
+      "expected": "d8003f0044ec5cc281e5d455323a3def6f689fb0ed0925d60e79fbc20809dbac",
+      "actual": "d8003f0044ec5cc281e5d455323a3def6f689fb0ed0925d60e79fbc20809dbac",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/pieDiagram-QB62DFGK.mjs",
+      "expected": "d48ee2e2ab3438e2f81a00dbc63559cb94f14ebe59da2c7d1f81c01d087810ef",
+      "actual": "d48ee2e2ab3438e2f81a00dbc63559cb94f14ebe59da2c7d1f81c01d087810ef",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/quadrantDiagram-AGVETKZM.mjs",
+      "expected": "b7c363a470edd42d583a78ec3d871d3c75c7668e6d8eed9fd72b9e87df1d4e0d",
+      "actual": "b7c363a470edd42d583a78ec3d871d3c75c7668e6d8eed9fd72b9e87df1d4e0d",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/radar-NHE76QYJ-6YWZBFZN.mjs",
+      "expected": "4e4f6618dba4d2db04c10cbcd671b4b846951b12098b90d78eff738411405868",
+      "actual": "4e4f6618dba4d2db04c10cbcd671b4b846951b12098b90d78eff738411405868",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/requirementDiagram-BJFPASL3.mjs",
+      "expected": "80044ece214cc1c332598ee9014abece2bd71c331e12820c6479134e1fae4100",
+      "actual": "80044ece214cc1c332598ee9014abece2bd71c331e12820c6479134e1fae4100",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/sankeyDiagram-XSL23WO4.mjs",
+      "expected": "16f955f062a5d42eca7ba89f9997535b69823e6110adfcd8f4dc3244f8716309",
+      "actual": "16f955f062a5d42eca7ba89f9997535b69823e6110adfcd8f4dc3244f8716309",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/sequenceDiagram-W4XLKSBU.mjs",
+      "expected": "27d3509ce6be8f107822efad0209d228813ea94e49f99b457c8f261c7964026e",
+      "actual": "27d3509ce6be8f107822efad0209d228813ea94e49f99b457c8f261c7964026e",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/stateDiagram-ZFDIVMDF.mjs",
+      "expected": "c19b26c1a8ad5a6f0d3d03ba110bc0a989347328600b0fff8ff5dabef68f03e1",
+      "actual": "c19b26c1a8ad5a6f0d3d03ba110bc0a989347328600b0fff8ff5dabef68f03e1",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/stateDiagram-v2-GQU47BET.mjs",
+      "expected": "5fe20581b79fd10fc96b601bcfb5534caca07d0fe6b7dedb92aff2825f3c8938",
+      "actual": "5fe20581b79fd10fc96b601bcfb5534caca07d0fe6b7dedb92aff2825f3c8938",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/timeline-definition-DZOEFOHF.mjs",
+      "expected": "835cb1b5ccadfaf114214083edd0358951681c4636d08e1cac0b8e63a49722cc",
+      "actual": "835cb1b5ccadfaf114214083edd0358951681c4636d08e1cac0b8e63a49722cc",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/treemap-KMMF4GRG-7ORZ52ND.mjs",
+      "expected": "4d78473df73414d1645f9d27273f370222316e60dd4120add4507cb76f8ed309",
+      "actual": "4d78473df73414d1645f9d27273f370222316e60dd4120add4507cb76f8ed309",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/chunks/mermaid.esm.min/xychartDiagram-6J6QOAP6.mjs",
+      "expected": "db2462f9e19cc5ee0662afa5ac1e4aa408e1264e20c9307a51c5afe1a2fc19d2",
+      "actual": "db2462f9e19cc5ee0662afa5ac1e4aa408e1264e20c9307a51c5afe1a2fc19d2",
+      "ok": true
+    },
+    {
+      "path": "assets/mermaid/mermaid.esm.min.mjs",
+      "expected": "765a1231ff0dc5fa788644cc9f17f869c181e7a28ad4e563d24325b0dad93d13",
+      "actual": "765a1231ff0dc5fa788644cc9f17f869c181e7a28ad4e563d24325b0dad93d13",
+      "ok": true
+    },
+    {
+      "path": "assets/reader-tools.js",
+      "expected": "c97fa418bc3fa279589ca1e5968ce360d8c684ed4948de802a82369df6144ab0",
+      "actual": "c97fa418bc3fa279589ca1e5968ce360d8c684ed4948de802a82369df6144ab0",
+      "ok": true
+    },
+    {
+      "path": "assets/reading.css",
+      "expected": "34a4cf7f34f3b6404f02053299281b7adc54ab6600050e967076a90f2cdbd8bf",
+      "actual": "34a4cf7f34f3b6404f02053299281b7adc54ab6600050e967076a90f2cdbd8bf",
+      "ok": true
+    },
+    {
+      "path": "assets/search.json",
+      "expected": "7ac30d41df0d1b4d987a1e4389205f5dc055c288b57ff8bf027e2313d58948c0",
+      "actual": "7ac30d41df0d1b4d987a1e4389205f5dc055c288b57ff8bf027e2313d58948c0",
+      "ok": true
+    },
+    {
+      "path": "assets/site.js",
+      "expected": "1a50920986c1f951a77a0ede7b5799cac19460781d84eb1390e246a10c1df6ce",
+      "actual": "1a50920986c1f951a77a0ede7b5799cac19460781d84eb1390e246a10c1df6ce",
+      "ok": true
+    },
+    {
+      "path": "camera-model.camera-states.mmd",
+      "expected": "0f940a5525be15b6ed6bd1cd23ba89ab5f98fc0e465842031d9d059cb070a7ee",
+      "actual": "0f940a5525be15b6ed6bd1cd23ba89ab5f98fc0e465842031d9d059cb070a7ee",
+      "ok": true
+    },
+    {
+      "path": "camera-model.html",
+      "expected": "3bcc3954fa0ad29201b71bd6c2acf462cfaf33f7145f5738a4339ef89c9f81ff",
+      "actual": "3bcc3954fa0ad29201b71bd6c2acf462cfaf33f7145f5738a4339ef89c9f81ff",
+      "ok": true
+    },
+    {
+      "path": "camera-model.md",
+      "expected": "1812a67371d611cbdf62f88cf7185a68ca525433c8cf94c484ae34c8a0f3800c",
+      "actual": "1812a67371d611cbdf62f88cf7185a68ca525433c8cf94c484ae34c8a0f3800c",
+      "ok": true
+    },
+    {
+      "path": "camera-model.mmd",
+      "expected": "690ab03aa464e0ffe621eef21923985d37e72c0473694e8e52eca7098245bdd4",
+      "actual": "690ab03aa464e0ffe621eef21923985d37e72c0473694e8e52eca7098245bdd4",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.add-buffer-rejections.mmd",
+      "expected": "8a06e3190e17019bf6a98ba57f1983b38485e74ffd1a80137918d07105e4f182",
+      "actual": "8a06e3190e17019bf6a98ba57f1983b38485e74ffd1a80137918d07105e4f182",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.html",
+      "expected": "cc1e5085510a634b8ec85b422c4c31b1a6cc2cab9230db837275073ea47fdfdd",
+      "actual": "cc1e5085510a634b8ec85b422c4c31b1a6cc2cab9230db837275073ea47fdfdd",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.md",
+      "expected": "e86077648b7e9707951ccbac4170565ca98f2391bc8c89f5819057eb54f2921a",
+      "actual": "e86077648b7e9707951ccbac4170565ca98f2391bc8c89f5819057eb54f2921a",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.mmd",
+      "expected": "690ab03aa464e0ffe621eef21923985d37e72c0473694e8e52eca7098245bdd4",
+      "actual": "690ab03aa464e0ffe621eef21923985d37e72c0473694e8e52eca7098245bdd4",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.queue-return-completion.mmd",
+      "expected": "0a558caf4f013ea7b0cfccec7befa93ca6b0d715ef3fa2fcc7ebf305a104beb1",
+      "actual": "0a558caf4f013ea7b0cfccec7befa93ca6b0d715ef3fa2fcc7ebf305a104beb1",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.request-ownership.mmd",
+      "expected": "6ce57dd9dc050b2ba32482932f9c8b72aaeee5bfbfa034b9069ba4568d2f98dd",
+      "actual": "6ce57dd9dc050b2ba32482932f9c8b72aaeee5bfbfa034b9069ba4568d2f98dd",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.reuse-buffer-fence-distinction.mmd",
+      "expected": "e44b35b0355e1943b5ebe613d8ca8b1bcb05082d750c35ed1a58c25849870fe4",
+      "actual": "e44b35b0355e1943b5ebe613d8ca8b1bcb05082d750c35ed1a58c25849870fe4",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.reuse-buffer-relink.mmd",
+      "expected": "2907ef356586fd9cbdb6eba7a45aaa45fcbd2ef92998487fcbf705e8317e8cc2",
+      "actual": "2907ef356586fd9cbdb6eba7a45aaa45fcbd2ef92998487fcbf705e8317e8cc2",
+      "ok": true
+    },
+    {
+      "path": "camera-requests.timeout-fence-recovery.mmd",
+      "expected": "83cc44f45ae0d4727e09de49b9fa98538a6f945bc8d25231aa56037c5aed38be",
+      "actual": "83cc44f45ae0d4727e09de49b9fa98538a6f945bc8d25231aa56037c5aed38be",
+      "ok": true
+    },
+    {
+      "path": "component-index.html",
+      "expected": "64ec1dff65208b82d6d4fff687874c8d6c2f8a1c68dea1ea1eb25fa17e1800c3",
+      "actual": "64ec1dff65208b82d6d4fff687874c8d6c2f8a1c68dea1ea1eb25fa17e1800c3",
+      "ok": true
+    },
+    {
+      "path": "component-index.md",
+      "expected": "19e81ac984186a4012b6196ed8ebab6d6937d4c6ab0b39786013748ae2c38bda",
+      "actual": "19e81ac984186a4012b6196ed8ebab6d6937d4c6ab0b39786013748ae2c38bda",
+      "ok": true
+    },
+    {
+      "path": "contract-consistency.json",
+      "expected": "d4d6b4d8c0b4f1e90c571e7a90fb9d5cc8d261e742194707c94adbb014741ee1",
+      "actual": "d4d6b4d8c0b4f1e90c571e7a90fb9d5cc8d261e742194707c94adbb014741ee1",
+      "ok": true
+    },
+    {
+      "path": "en/assets/glossary.json",
+      "expected": "3111afe326901542f5e5b91c99111e71cbd3a62e0bf176d6f9fa210d3219ec85",
+      "actual": "3111afe326901542f5e5b91c99111e71cbd3a62e0bf176d6f9fa210d3219ec85",
+      "ok": true
+    },
+    {
+      "path": "en/assets/search.json",
+      "expected": "f7ec3fefaa23c9eaf2052bb84b5262d9a14d6e7d88b15aad82daa5fe5af6225f",
+      "actual": "f7ec3fefaa23c9eaf2052bb84b5262d9a14d6e7d88b15aad82daa5fe5af6225f",
+      "ok": true
+    },
+    {
+      "path": "en/camera-model.camera-states.mmd",
+      "expected": "11d8e03f51c5916b5081811f52aabe17061e46b89afff4d5561450aecb964327",
+      "actual": "11d8e03f51c5916b5081811f52aabe17061e46b89afff4d5561450aecb964327",
+      "ok": true
+    },
+    {
+      "path": "en/camera-model.html",
+      "expected": "2b9d3221c4fdc9bbb855468600959af9bdb9d12810ad2ee6d6e05263a665bc4a",
+      "actual": "2b9d3221c4fdc9bbb855468600959af9bdb9d12810ad2ee6d6e05263a665bc4a",
+      "ok": true
+    },
+    {
+      "path": "en/camera-model.mmd",
+      "expected": "1d7efe7fca9de028e001ee19359ace61e5d717f1be60a7b842ecae908ce184aa",
+      "actual": "1d7efe7fca9de028e001ee19359ace61e5d717f1be60a7b842ecae908ce184aa",
+      "ok": true
+    },
+    {
+      "path": "en/camera-requests.add-buffer-rejections.mmd",
+      "expected": "b7e1ff269d993ac9dd8340ef8895dbcc53eb46c6b0e06bc637d5104ffaf0aac5",
+      "actual": "b7e1ff269d993ac9dd8340ef8895dbcc53eb46c6b0e06bc637d5104ffaf0aac5",
+      "ok": true
+    },
+    {
+      "path": "en/camera-requests.html",
+      "expected": "b68fe5ce85cf95671ad9ad68072358b2eca6ccffdf15910b381bef8308c4684d",
+      "actual": "b68fe5ce85cf95671ad9ad68072358b2eca6ccffdf15910b381bef8308c4684d",
+      "ok": true
+    },
+    {
+      "path": "en/camera-requests.mmd",
+      "expected": "1d7efe7fca9de028e001ee19359ace61e5d717f1be60a7b842ecae908ce184aa",
+      "actual": "1d7efe7fca9de028e001ee19359ace61e5d717f1be60a7b842ecae908ce184aa",
+      "ok": true
+    },
+    {
+      "path": "en/camera-requests.queue-return-completion.mmd",
+      "expected": "dd4652520df0775cfc87aa1338c2a9018f978ea9d200a8286c7f1e2a75a6ed4b",
+      "actual": "dd4652520df0775cfc87aa1338c2a9018f978ea9d200a8286c7f1e2a75a6ed4b",
+      "ok": true
+    },
+    {
+      "path": "en/camera-requests.request-ownership.mmd",
+      "expected": "d4a7a5658e39212a9966b906c0d3b288c0b83286f635bd8d37d15505b36a8d40",
+      "actual": "d4a7a5658e39212a9966b906c0d3b288c0b83286f635bd8d37d15505b36a8d40",
+      "ok": true
+    },
+    {
+      "path": "en/camera-requests.reuse-buffer-fence-distinction.mmd",
+      "expected": "f98f0d88529e49f4143b85bd1e145fd79f61baab20c519a2a86e94df87feefd6",
+      "actual": "f98f0d88529e49f4143b85bd1e145fd79f61baab20c519a2a86e94df87feefd6",
+      "ok": true
+    },
+    {
+      "path": "en/camera-requests.reuse-buffer-relink.mmd",
+      "expected": "6a9b622f0b38af7896bf8cdaf838e956c5687a7de18fa5f6f123a58de4afc39c",
+      "actual": "6a9b622f0b38af7896bf8cdaf838e956c5687a7de18fa5f6f123a58de4afc39c",
+      "ok": true
+    },
+    {
+      "path": "en/camera-requests.timeout-fence-recovery.mmd",
+      "expected": "0396e8eaf2aa00612dafc75278d8b6ea7405495d32f2258af71320ef999e921e",
+      "actual": "0396e8eaf2aa00612dafc75278d8b6ea7405495d32f2258af71320ef999e921e",
+      "ok": true
+    },
+    {
+      "path": "en/component-index.html",
+      "expected": "639e7f3a8553b9486092b689521b27e88f02f67905507a94d4b9960b96969761",
+      "actual": "639e7f3a8553b9486092b689521b27e88f02f67905507a94d4b9960b96969761",
+      "ok": true
+    },
+    {
+      "path": "en/framebuffer-allocator.html",
+      "expected": "6da68bfccebdbf731c2ff26e2ee60f733a9a38ece94b9f556dab804bdab2fca2",
+      "actual": "6da68bfccebdbf731c2ff26e2ee60f733a9a38ece94b9f556dab804bdab2fca2",
+      "ok": true
+    },
+    {
+      "path": "en/glossary.html",
+      "expected": "fe2e78861a3fa692301e205b9698200a1290d54287c995f6a73d7cced97ca164",
+      "actual": "fe2e78861a3fa692301e205b9698200a1290d54287c995f6a73d7cced97ca164",
+      "ok": true
+    },
+    {
+      "path": "en/index.camera-stack.mmd",
+      "expected": "440e9813622d6d06a851aacac7bdb36e5dedf9f11673ab86b298eb1a7d7a0ab2",
+      "actual": "440e9813622d6d06a851aacac7bdb36e5dedf9f11673ab86b298eb1a7d7a0ab2",
+      "ok": true
+    },
+    {
+      "path": "en/index.html",
+      "expected": "a6e5e257d671593e9414791a23c7d075cc92753e6e61fdff70b1a725603c4a7d",
+      "actual": "a6e5e257d671593e9414791a23c7d075cc92753e6e61fdff70b1a725603c4a7d",
+      "ok": true
+    },
+    {
+      "path": "en/ipa-algorithms.html",
+      "expected": "44c7fa945ba2b9a4d18027cdfb5e8ef737d5c9aa635a58630392cf646d3bb5de",
+      "actual": "44c7fa945ba2b9a4d18027cdfb5e8ef737d5c9aa635a58630392cf646d3bb5de",
+      "ok": true
+    },
+    {
+      "path": "en/ipa-algorithms.mmd",
+      "expected": "24503ebbaf9f3036a6f9438051bdfc29c2293cbd6ca3a8af9bae7f3fa3cbca23",
+      "actual": "24503ebbaf9f3036a6f9438051bdfc29c2293cbd6ca3a8af9bae7f3fa3cbca23",
+      "ok": true
+    },
+    {
+      "path": "en/ipa-module-validation.html",
+      "expected": "9f410a497ef60963198dadc264c63c78cc634bf66aa8e5e254432e0bd71625b7",
+      "actual": "9f410a497ef60963198dadc264c63c78cc634bf66aa8e5e254432e0bd71625b7",
+      "ok": true
+    },
+    {
+      "path": "en/ipa.execution-boundaries.mmd",
+      "expected": "9184e1fb3ab0e60b61a206d0c003525d6a63b1bc574d279c02f3e74f03d35440",
+      "actual": "9184e1fb3ab0e60b61a206d0c003525d6a63b1bc574d279c02f3e74f03d35440",
+      "ok": true
+    },
+    {
+      "path": "en/ipa.html",
+      "expected": "7b7cc38caa2ca77c5c7fd436e7526a97b41e45835560d10e1b99b203afb56819",
+      "actual": "7b7cc38caa2ca77c5c7fd436e7526a97b41e45835560d10e1b99b203afb56819",
+      "ok": true
+    },
+    {
+      "path": "en/ipa.mmd",
+      "expected": "24503ebbaf9f3036a6f9438051bdfc29c2293cbd6ca3a8af9bae7f3fa3cbca23",
+      "actual": "24503ebbaf9f3036a6f9438051bdfc29c2293cbd6ca3a8af9bae7f3fa3cbca23",
+      "ok": true
+    },
+    {
+      "path": "en/ipa.proxy-selection.mmd",
+      "expected": "d8171ee391de72b5f25e02c16715f1c1bb7468028c218d6d995cdadd81dddb6c",
+      "actual": "d8171ee391de72b5f25e02c16715f1c1bb7468028c218d6d995cdadd81dddb6c",
+      "ok": true
+    },
+    {
+      "path": "en/ipu3-lsc-flow.html",
+      "expected": "c738c565020f6b1dadd3716c22f6e5adf9768764fe900be6b7aadf9797f000fd",
+      "actual": "c738c565020f6b1dadd3716c22f6e5adf9768764fe900be6b7aadf9797f000fd",
+      "ok": true
+    },
+    {
+      "path": "en/ipu3-lsc-flow.lsc-request-input.mmd",
+      "expected": "3dcabadc0b1af91b50e9027a8ed43f8d7090e490a1118bf753b350c820dd6a12",
+      "actual": "3dcabadc0b1af91b50e9027a8ed43f8d7090e490a1118bf753b350c820dd6a12",
+      "ok": true
+    },
+    {
+      "path": "en/ipu3-lsc-flow.mmd",
+      "expected": "dec53bc1593b832cc101f916d7c57c6546ba5565ac5cca1aac385818a03feff1",
+      "actual": "dec53bc1593b832cc101f916d7c57c6546ba5565ac5cca1aac385818a03feff1",
+      "ok": true
+    },
+    {
+      "path": "en/ipu3-lsc-prepare.html",
+      "expected": "41b8992f60bfd9ecaa6e2763b86ab33f697604809a67abf43f97f90d7051d3a0",
+      "actual": "41b8992f60bfd9ecaa6e2763b86ab33f697604809a67abf43f97f90d7051d3a0",
+      "ok": true
+    },
+    {
+      "path": "en/ipu3-lsc-prepare.lsc-update-gates.mmd",
+      "expected": "dcca199cb20aba744c79a82c68aecf9ab9a87e12a61863c1d3e43ed1ef7fdd85",
+      "actual": "dcca199cb20aba744c79a82c68aecf9ab9a87e12a61863c1d3e43ed1ef7fdd85",
+      "ok": true
+    },
+    {
+      "path": "en/ipu3-lsc-prepare.mmd",
+      "expected": "dec53bc1593b832cc101f916d7c57c6546ba5565ac5cca1aac385818a03feff1",
+      "actual": "dec53bc1593b832cc101f916d7c57c6546ba5565ac5cca1aac385818a03feff1",
+      "ok": true
+    },
+    {
+      "path": "en/ipu3-lsc.html",
+      "expected": "306ee2c0c5dcf46a00dcfb27c15bb2de137ec708e7913a940e4e2226992004ab",
+      "actual": "306ee2c0c5dcf46a00dcfb27c15bb2de137ec708e7913a940e4e2226992004ab",
+      "ok": true
+    },
+    {
+      "path": "en/ipu3-lsc.mmd",
+      "expected": "3fff97d9131e5648b1b5c4dc9d4b0e3703495280646079fb4d7078364f585ad1",
+      "actual": "3fff97d9131e5648b1b5c4dc9d4b0e3703495280646079fb4d7078364f585ad1",
+      "ok": true
+    },
+    {
+      "path": "en/official-cam-validation.completion-flow.mmd",
+      "expected": "aded67d89dd62816a87e4d404e8e50c1c7f7a8e952c3df6d7b7b76f550788fea",
+      "actual": "aded67d89dd62816a87e4d404e8e50c1c7f7a8e952c3df6d7b7b76f550788fea",
+      "ok": true
+    },
+    {
+      "path": "en/official-cam-validation.html",
+      "expected": "a94de881721f1b1b3f1d6dec9d1ad4c792c0d1068bee145f7cac98eb195a9ab3",
+      "actual": "a94de881721f1b1b3f1d6dec9d1ad4c792c0d1068bee145f7cac98eb195a9ab3",
+      "ok": true
+    },
+    {
+      "path": "en/official-cam-validation.initial-submission.mmd",
+      "expected": "4cf4a082a0504b38f9f279024aa73ad6ebc67ae474ccd246a988dbc358de2e5e",
+      "actual": "4cf4a082a0504b38f9f279024aa73ad6ebc67ae474ccd246a988dbc358de2e5e",
+      "ok": true
+    },
+    {
+      "path": "en/official-cam-validation.reproduction-flow.mmd",
+      "expected": "d092beafd52deb47f3d89e2c44405b02c9c4947f94a1fa1d0dd282375d27444e",
+      "actual": "d092beafd52deb47f3d89e2c44405b02c9c4947f94a1fa1d0dd282375d27444e",
+      "ok": true
+    },
+    {
+      "path": "en/official-cam-validation.request-completion-order.mmd",
+      "expected": "ff1239e342816e3516f31aa7d865cc3c34c542628ff84a7f9a9d0d244bbb01ae",
+      "actual": "ff1239e342816e3516f31aa7d865cc3c34c542628ff84a7f9a9d0d244bbb01ae",
+      "ok": true
+    },
+    {
+      "path": "en/official-cam-validation.submission-gate.mmd",
+      "expected": "a55fae1fa139d05f2d4017168c0b5e2769a54dc94849aa3f3206e113dd64ec79",
+      "actual": "a55fae1fa139d05f2d4017168c0b5e2769a54dc94849aa3f3206e113dd64ec79",
+      "ok": true
+    },
+    {
+      "path": "en/official-cam-validation.virtual-frame-path.mmd",
+      "expected": "6214f5e0e6e27840b25a3de6a5c83d8131b5618a05f5a72ff6caa1f9dfe1cadf",
+      "actual": "6214f5e0e6e27840b25a3de6a5c83d8131b5618a05f5a72ff6caa1f9dfe1cadf",
+      "ok": true
+    },
+    {
+      "path": "en/onboarding.html",
+      "expected": "3c18e00eeaed23d04ed2e7e3253c4c3cd99cac5affa5c736c7c04e0f8bc0d61a",
+      "actual": "3c18e00eeaed23d04ed2e7e3253c4c3cd99cac5affa5c736c7c04e0f8bc0d61a",
+      "ok": true
+    },
+    {
+      "path": "en/overview.discovery-map.mmd",
+      "expected": "2e6e5b9f17a20f63d45b24b0f3756cc3a4aa14c3e13a49fcff554ef3cdcb9a06",
+      "actual": "2e6e5b9f17a20f63d45b24b0f3756cc3a4aa14c3e13a49fcff554ef3cdcb9a06",
+      "ok": true
+    },
+    {
+      "path": "en/overview.html",
+      "expected": "92a0a969ec341f6c90aa848da493204fe9e05248aca4645751cffcca7135f445",
+      "actual": "92a0a969ec341f6c90aa848da493204fe9e05248aca4645751cffcca7135f445",
+      "ok": true
+    },
+    {
+      "path": "en/overview.mmd",
+      "expected": "e67062a0eaa7b20e35034d94af48044bbac03df281e42ec03d1441a9679d505d",
+      "actual": "e67062a0eaa7b20e35034d94af48044bbac03df281e42ec03d1441a9679d505d",
+      "ok": true
+    },
+    {
+      "path": "en/overview.submission-completion.mmd",
+      "expected": "f1ba7140f6c3c772355b44ba9d09d9d15b7bd3a825099c329ecaf61b8d1eccb2",
+      "actual": "f1ba7140f6c3c772355b44ba9d09d9d15b7bd3a825099c329ecaf61b8d1eccb2",
+      "ok": true
+    },
+    {
+      "path": "en/pipeline-handler.html",
+      "expected": "e95f41bd00011c892682dfc81f5de7179b4f906c02a08ef894242d5d731379cf",
+      "actual": "e95f41bd00011c892682dfc81f5de7179b4f906c02a08ef894242d5d731379cf",
+      "ok": true
+    },
+    {
+      "path": "en/pipeline-handler.mmd",
+      "expected": "0c61de4047c8b094a76248109bca026d99a7d453742d2f89d45d2db8e59b457a",
+      "actual": "0c61de4047c8b094a76248109bca026d99a7d453742d2f89d45d2db8e59b457a",
+      "ok": true
+    },
+    {
+      "path": "en/pipeline-requests.buffer-request-completion.mmd",
+      "expected": "6de97ff0f0e8c1ac06c2433366d8199595f0c1d3ba1e9c2142516b9f06e70b55",
+      "actual": "6de97ff0f0e8c1ac06c2433366d8199595f0c1d3ba1e9c2142516b9f06e70b55",
+      "ok": true
+    },
+    {
+      "path": "en/pipeline-requests.html",
+      "expected": "c22f94d2a49d134edb1f91e238bfb5e1e359d78aff04d144374666f23b9140f8",
+      "actual": "c22f94d2a49d134edb1f91e238bfb5e1e359d78aff04d144374666f23b9140f8",
+      "ok": true
+    },
+    {
+      "path": "en/pipeline-requests.mmd",
+      "expected": "0c61de4047c8b094a76248109bca026d99a7d453742d2f89d45d2db8e59b457a",
+      "actual": "0c61de4047c8b094a76248109bca026d99a7d453742d2f89d45d2db8e59b457a",
+      "ok": true
+    },
+    {
+      "path": "en/pipeline-requests.queue-gates.mmd",
+      "expected": "17235811797b5ddd1ae68b6e74e0b96896300546510badfeacb644171348eec3",
+      "actual": "17235811797b5ddd1ae68b6e74e0b96896300546510badfeacb644171348eec3",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.configuration-access-branches.mmd",
+      "expected": "aa7954765308abe784b2c797bda772f46123c8ff494098e62da3f0d80052966c",
+      "actual": "aa7954765308abe784b2c797bda772f46123c8ff494098e62da3f0d80052966c",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.configuration-implementation-observation.mmd",
+      "expected": "23b5ea5f8a44fc0c3a621a02d4a4cc309db15755d07de1a6cd607f6884378334",
+      "actual": "23b5ea5f8a44fc0c3a621a02d4a4cc309db15755d07de1a6cd607f6884378334",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.configuration-stream-link.mmd",
+      "expected": "d1c53e20d7773a5a5c599fe9940f05e5c29caa6b53d7249780a6a5d86f0d5f68",
+      "actual": "d1c53e20d7773a5a5c599fe9940f05e5c29caa6b53d7249780a6a5d86f0d5f68",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.configure-failures.mmd",
+      "expected": "5708af8ac49a2a08832eb9d39baf1a24aa4392fcecfb0b21073d8965d395ea27",
+      "actual": "5708af8ac49a2a08832eb9d39baf1a24aa4392fcecfb0b21073d8965d395ea27",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.diagnosis-add-buffer-rejections.mmd",
+      "expected": "b7e1ff269d993ac9dd8340ef8895dbcc53eb46c6b0e06bc637d5104ffaf0aac5",
+      "actual": "b7e1ff269d993ac9dd8340ef8895dbcc53eb46c6b0e06bc637d5104ffaf0aac5",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.diagnosis-buffer-and-request-completion.mmd",
+      "expected": "fe9ad1198cafae2a4ab901db6fa8361ea8434084047d065ab27d13c2d40b7a3f",
+      "actual": "fe9ad1198cafae2a4ab901db6fa8361ea8434084047d065ab27d13c2d40b7a3f",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.diagnosis-dispatch-cancel-or-device.mmd",
+      "expected": "a80b7e1d434fa5c71cc862d69bc804a5665a14bea15471e091c8b1a6a7f71d34",
+      "actual": "a80b7e1d434fa5c71cc862d69bc804a5665a14bea15471e091c8b1a6a7f71d34",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.diagnosis-submission-order-completion.mmd",
+      "expected": "0e821547eb717cf68ba9ceb5578ff8b6de5834fa8300da259d44a25ae399190a",
+      "actual": "0e821547eb717cf68ba9ceb5578ff8b6de5834fa8300da259d44a25ae399190a",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.html",
+      "expected": "0a8b6db71e778fb53b89b38d34d335dc97664da271efa584a09eb3103ffc5662",
+      "actual": "0a8b6db71e778fb53b89b38d34d335dc97664da271efa584a09eb3103ffc5662",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.queue-gates.mmd",
+      "expected": "a35d91987aa0e6eadf55b4275e2e53136e934fe9a0cd3da60759c73f75523405",
+      "actual": "a35d91987aa0e6eadf55b4275e2e53136e934fe9a0cd3da60759c73f75523405",
+      "ok": true
+    },
+    {
+      "path": "en/request-diagnosis.submission-checks.mmd",
+      "expected": "eeaf2aae422169def1f0a10460d625e9092b16a4ae17340271b20ac0b0b6bbfd",
+      "actual": "eeaf2aae422169def1f0a10460d625e9092b16a4ae17340271b20ac0b0b6bbfd",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.buffer-and-request-completion.mmd",
+      "expected": "fe9ad1198cafae2a4ab901db6fa8361ea8434084047d065ab27d13c2d40b7a3f",
+      "actual": "fe9ad1198cafae2a4ab901db6fa8361ea8434084047d065ab27d13c2d40b7a3f",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.camera-stop-branches.mmd",
+      "expected": "e387530e9068eb98f3f40b4ed09d7433a5870e7076c9271f6ca44712a8a6a83c",
+      "actual": "e387530e9068eb98f3f40b4ed09d7433a5870e7076c9271f6ca44712a8a6a83c",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.dispatch-cancel-or-device.mmd",
+      "expected": "a80b7e1d434fa5c71cc862d69bc804a5665a14bea15471e091c8b1a6a7f71d34",
+      "actual": "a80b7e1d434fa5c71cc862d69bc804a5665a14bea15471e091c8b1a6a7f71d34",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.html",
+      "expected": "34efe101b0240e634ed4d4f445972064c965cbd8d27bf690c798d3fc05d92dbd",
+      "actual": "34efe101b0240e634ed4d4f445972064c965cbd8d27bf690c798d3fc05d92dbd",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.lifecycle-queue-return-completion.mmd",
+      "expected": "3555256b25fac6e7652685e38c5dc5c858bc2a5c5d878477f4e28a46440ed37a",
+      "actual": "3555256b25fac6e7652685e38c5dc5c858bc2a5c5d878477f4e28a46440ed37a",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.lifecycle-reuse-buffer-fence-distinction.mmd",
+      "expected": "f98f0d88529e49f4143b85bd1e145fd79f61baab20c519a2a86e94df87feefd6",
+      "actual": "f98f0d88529e49f4143b85bd1e145fd79f61baab20c519a2a86e94df87feefd6",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.lifecycle-timeout-fence-recovery.mmd",
+      "expected": "196221ed1f9658233656c51f9b55696b5bb41f0c04b59db11a0553913f2f6c69",
+      "actual": "196221ed1f9658233656c51f9b55696b5bb41f0c04b59db11a0553913f2f6c69",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.near-return-marker-boundary.mmd",
+      "expected": "8f5ebeced3e778f56c7e6a586bc716a5c0b1c7a845bc16dcef293b0524bc797e",
+      "actual": "8f5ebeced3e778f56c7e6a586bc716a5c0b1c7a845bc16dcef293b0524bc797e",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.observed-stop-callback-timing.mmd",
+      "expected": "f731798494b9b7fdbf17ea142ccf005c8a289d4d6331e6ff95752dc5b0babad0",
+      "actual": "f731798494b9b7fdbf17ea142ccf005c8a289d4d6331e6ff95752dc5b0babad0",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.request-ownership.mmd",
+      "expected": "9ca6615e30e7bd357bd7fae4fc5d05e965cdecea0c86ab75ad67a499d0896f1b",
+      "actual": "9ca6615e30e7bd357bd7fae4fc5d05e965cdecea0c86ab75ad67a499d0896f1b",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.request-stages.mmd",
+      "expected": "1ef9ddc754404ec481fd710d1ee456cac2a3f71c0afedd4db3c6169a9ef0788b",
+      "actual": "1ef9ddc754404ec481fd710d1ee456cac2a3f71c0afedd4db3c6169a9ef0788b",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.stop-device-observation-plan.mmd",
+      "expected": "f3cfba19667788a9b3154c1024e494740421207e5a9bc1656c6cc1a040dd27dd",
+      "actual": "f3cfba19667788a9b3154c1024e494740421207e5a9bc1656c6cc1a040dd27dd",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.stop-disconnect-contract.mmd",
+      "expected": "dd4eed106276364cc3cb9a20cfbbf79118b55c2d20238c60e6633b02dad219ef",
+      "actual": "dd4eed106276364cc3cb9a20cfbbf79118b55c2d20238c60e6633b02dad219ef",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.stop-order.mmd",
+      "expected": "1c4c582a8dc1d16dd42c9c7d8b2ef08dd51e220473f3ad5e963afe2ec17faf96",
+      "actual": "1c4c582a8dc1d16dd42c9c7d8b2ef08dd51e220473f3ad5e963afe2ec17faf96",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.stopping-completion-contract.mmd",
+      "expected": "ce38cd0891db2154af41b00dbda068dd831302e040e95d938db8b2dad57a57ee",
+      "actual": "ce38cd0891db2154af41b00dbda068dd831302e040e95d938db8b2dad57a57ee",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.submission-order-completion.mmd",
+      "expected": "0e821547eb717cf68ba9ceb5578ff8b6de5834fa8300da259d44a25ae399190a",
+      "actual": "0e821547eb717cf68ba9ceb5578ff8b6de5834fa8300da259d44a25ae399190a",
+      "ok": true
+    },
+    {
+      "path": "en/request-lifecycle.waiting-queue-conditions.mmd",
+      "expected": "a35d91987aa0e6eadf55b4275e2e53136e934fe9a0cd3da60759c73f75523405",
+      "actual": "a35d91987aa0e6eadf55b4275e2e53136e934fe9a0cd3da60759c73f75523405",
+      "ok": true
+    },
+    {
+      "path": "en/rkisp1-dewarp.dewarp-input-branches.mmd",
+      "expected": "fc1fdf444a1c6eb336eae27cc0ee38e14e320aa45b3428d1e153292e18539989",
+      "actual": "fc1fdf444a1c6eb336eae27cc0ee38e14e320aa45b3428d1e153292e18539989",
+      "ok": true
+    },
+    {
+      "path": "en/rkisp1-dewarp.html",
+      "expected": "fc91dd253c3e77fcf3617d1d4ebc14413fad44b1ef13a19d6bf77808694c7349",
+      "actual": "fc91dd253c3e77fcf3617d1d4ebc14413fad44b1ef13a19d6bf77808694c7349",
+      "ok": true
+    },
+    {
+      "path": "en/rkisp1-dewarp.per-camera-parameters.mmd",
+      "expected": "5351d1a5773b86a53e3e53b0f775aaa0aef16b50b1a1b4b4dd474b10e81c5a2e",
+      "actual": "5351d1a5773b86a53e3e53b0f775aaa0aef16b50b1a1b4b4dd474b10e81c5a2e",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/camera_start.html",
+      "expected": "0f22e95e633d1d43788cf4f0141185ae322d3a37527d14b9e6605212efeb67f7",
+      "actual": "0f22e95e633d1d43788cf4f0141185ae322d3a37527d14b9e6605212efeb67f7",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/camera_start.mmd",
+      "expected": "529c2a904afb9d670912ff0a6b3e41f6ce2abf958180024fcac5d9387af3ac68",
+      "actual": "529c2a904afb9d670912ff0a6b3e41f6ce2abf958180024fcac5d9387af3ac68",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/camera_stop.html",
+      "expected": "5e33c9855415bfb6a899445ab56d61532cd066649b985154380042ea6b604582",
+      "actual": "5e33c9855415bfb6a899445ab56d61532cd066649b985154380042ea6b604582",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/camera_stop.mmd",
+      "expected": "51eb576526a3bbca1687bcc867407bcaeecadfecc1d6f17f2cd55b5c4ec50174",
+      "actual": "51eb576526a3bbca1687bcc867407bcaeecadfecc1d6f17f2cd55b5c4ec50174",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/complete_request.html",
+      "expected": "9e74ce7367b0c1953abdb308b3b254bee87559c5e9946aaa7abf0954adbc851c",
+      "actual": "9e74ce7367b0c1953abdb308b3b254bee87559c5e9946aaa7abf0954adbc851c",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/complete_request.mmd",
+      "expected": "3a7f551b77826c8f141508dfa2dac231a1b00efb999e5ba135c75782cfdb6378",
+      "actual": "3a7f551b77826c8f141508dfa2dac231a1b00efb999e5ba135c75782cfdb6378",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/configure.html",
+      "expected": "6f878094f863f274f388f6237900dd88b9e5d4db21441812a5db43f1626cea87",
+      "actual": "6f878094f863f274f388f6237900dd88b9e5d4db21441812a5db43f1626cea87",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/configure.mmd",
+      "expected": "451c12783a8e40618b45c8a710332bf206097fc9217e67a97a399f6134e83056",
+      "actual": "451c12783a8e40618b45c8a710332bf206097fc9217e67a97a399f6134e83056",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/index.html",
+      "expected": "3ad0cb780ff2db89c896daf5c36895da456f061680806185b93dd690797cfb5d",
+      "actual": "3ad0cb780ff2db89c896daf5c36895da456f061680806185b93dd690797cfb5d",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/manager_start.html",
+      "expected": "40f5e5fb6d5f4d612eac22e454f6b1730f0dfa6de7d07e7f06cbfee5517b6cfa",
+      "actual": "40f5e5fb6d5f4d612eac22e454f6b1730f0dfa6de7d07e7f06cbfee5517b6cfa",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/manager_start.mmd",
+      "expected": "82ae21d333c76811f1c80dcc377cc2cb11d516dcd28071046907022ada6f3d92",
+      "actual": "82ae21d333c76811f1c80dcc377cc2cb11d516dcd28071046907022ada6f3d92",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/queue_request.html",
+      "expected": "95100899caa80fdc971e6f08cfb04bdab3951674fa1a88a3741bd5cf8e3fee2a",
+      "actual": "95100899caa80fdc971e6f08cfb04bdab3951674fa1a88a3741bd5cf8e3fee2a",
+      "ok": true
+    },
+    {
+      "path": "en/scenarios/queue_request.mmd",
+      "expected": "91417d73ce71e86ffabe09f9620bf2bbaf599cdd6357657f4cc5e908b842ac1e",
+      "actual": "91417d73ce71e86ffabe09f9620bf2bbaf599cdd6357657f4cc5e908b842ac1e",
+      "ok": true
+    },
+    {
+      "path": "en/team-overview.camera-stack.mmd",
+      "expected": "72716b8d27bbd53dd4629de30a69022762e5a060c1e470266cff9a25c583fbaf",
+      "actual": "72716b8d27bbd53dd4629de30a69022762e5a060c1e470266cff9a25c583fbaf",
+      "ok": true
+    },
+    {
+      "path": "en/team-overview.html",
+      "expected": "0e8d972b2fbfef0fe7a73829f09784a513f6fc748c5e8b9ceaeb3c3fc4236f8f",
+      "actual": "0e8d972b2fbfef0fe7a73829f09784a513f6fc748c5e8b9ceaeb3c3fc4236f8f",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-assurance.html",
+      "expected": "8fa01103e08014b21bdd83c79042060e8f8b299db160193a06475058a5da713f",
+      "actual": "8fa01103e08014b21bdd83c79042060e8f8b299db160193a06475058a5da713f",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-assurance.mmd",
+      "expected": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+      "actual": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-assurance.validation-results.mmd",
+      "expected": "be79c49d1f9eb449b1e967e447fc60429db4b611acd8a4a97ef08b03fceb01cf",
+      "actual": "be79c49d1f9eb449b1e967e447fc60429db4b611acd8a4a97ef08b03fceb01cf",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-integration.html",
+      "expected": "c41eea3d75dbf0c9cdab11b25c728e18e3b0ebafd9b251c74155219d5c733f2d",
+      "actual": "c41eea3d75dbf0c9cdab11b25c728e18e3b0ebafd9b251c74155219d5c733f2d",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-integration.integration-stages.mmd",
+      "expected": "983fe490eb3c912fb72c8bb01437d1286f68695fd9328398ac06cf52189ce1a9",
+      "actual": "983fe490eb3c912fb72c8bb01437d1286f68695fd9328398ac06cf52189ce1a9",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-integration.mmd",
+      "expected": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+      "actual": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-overview.camera-stack.mmd",
+      "expected": "440e9813622d6d06a851aacac7bdb36e5dedf9f11673ab86b298eb1a7d7a0ab2",
+      "actual": "440e9813622d6d06a851aacac7bdb36e5dedf9f11673ab86b298eb1a7d7a0ab2",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-overview.hardware-boundary.mmd",
+      "expected": "aa2f38181369f97ef681e1647793914029e4d8bf42a4d23e2e23443423831aaa",
+      "actual": "aa2f38181369f97ef681e1647793914029e4d8bf42a4d23e2e23443423831aaa",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-overview.html",
+      "expected": "1b56d90639efc11308207be3d6cf1cfb5132d466073c96641a279e44f9a6b224",
+      "actual": "1b56d90639efc11308207be3d6cf1cfb5132d466073c96641a279e44f9a6b224",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-overview.mmd",
+      "expected": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+      "actual": "f5b6f89ec4dd5cb73cb42d2f80d78cd4776d2cf4ddecd751ba587ac5284b10cf",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-overview.vendor-buffer-and-request-completion.mmd",
+      "expected": "6c7718ae327120c50c79deed58626d1c34f14d318a2b82816307e5520cbccbb9",
+      "actual": "6c7718ae327120c50c79deed58626d1c34f14d318a2b82816307e5520cbccbb9",
+      "ok": true
+    },
+    {
+      "path": "en/vendor-overview.vendor-waiting-queue-conditions.mmd",
+      "expected": "916831aab305455d6158afd4a280cc737115e04b9537b76c70fc273b59a735fc",
+      "actual": "916831aab305455d6158afd4a280cc737115e04b9537b76c70fc273b59a735fc",
+      "ok": true
+    },
+    {
+      "path": "framebuffer-allocator.html",
+      "expected": "2fd18ce9cad1f2526f465affb9041b5fb0d3b2053d6f9f2627a4d7d6a25477f0",
+      "actual": "2fd18ce9cad1f2526f465affb9041b5fb0d3b2053d6f9f2627a4d7d6a25477f0",
+      "ok": true
+    },
+    {
+      "path": "framebuffer-allocator.md",
+      "expected": "3425d6707d4dc4ce7256ee30fe056b7c21345b7d4231750cb5c4564a8cbe1620",
+      "actual": "3425d6707d4dc4ce7256ee30fe056b7c21345b7d4231750cb5c4564a8cbe1620",
+      "ok": true
+    },
+    {
+      "path": "glossary.html",
+      "expected": "329b6f3def6e0d3fe058a316075cf327801344130595d5ce8d71c4c72683e1f5",
+      "actual": "329b6f3def6e0d3fe058a316075cf327801344130595d5ce8d71c4c72683e1f5",
+      "ok": true
+    },
+    {
+      "path": "index.camera-stack.mmd",
+      "expected": "8fe473c62b691e27f4892f1a8060307e7887cfd6e75f37da147966f59a395abe",
+      "actual": "8fe473c62b691e27f4892f1a8060307e7887cfd6e75f37da147966f59a395abe",
+      "ok": true
+    },
+    {
+      "path": "index.html",
+      "expected": "c837a436565300f29be0523ac2a737f40abea5f7e6c21bc293218b35ef45567d",
+      "actual": "c837a436565300f29be0523ac2a737f40abea5f7e6c21bc293218b35ef45567d",
+      "ok": true
+    },
+    {
+      "path": "ipa-algorithms.html",
+      "expected": "8b36173259523d6f72f904204525b0024f6cdf794cd16050b828497e29e42a3d",
+      "actual": "8b36173259523d6f72f904204525b0024f6cdf794cd16050b828497e29e42a3d",
+      "ok": true
+    },
+    {
+      "path": "ipa-algorithms.md",
+      "expected": "72a28a9fbacfbe3337a74ed42013238c8937c833fc15edc0f6f0f550e8fcb7f0",
+      "actual": "72a28a9fbacfbe3337a74ed42013238c8937c833fc15edc0f6f0f550e8fcb7f0",
+      "ok": true
+    },
+    {
+      "path": "ipa-algorithms.mmd",
+      "expected": "bf51b875e4fa2a65e5d522cc91bd5af00c30e28fc0589f6f24e91c460830210d",
+      "actual": "bf51b875e4fa2a65e5d522cc91bd5af00c30e28fc0589f6f24e91c460830210d",
+      "ok": true
+    },
+    {
+      "path": "ipa-module-validation.html",
+      "expected": "0d8802cba65653e2a8b91f5e8af3927887f096e7edd2de0edfc022b15097a6aa",
+      "actual": "0d8802cba65653e2a8b91f5e8af3927887f096e7edd2de0edfc022b15097a6aa",
+      "ok": true
+    },
+    {
+      "path": "ipa-module-validation.md",
+      "expected": "5c03573a182306cf789cee2b9b18bde3f3d5991ef1b0843b0201bbf6505c4606",
+      "actual": "5c03573a182306cf789cee2b9b18bde3f3d5991ef1b0843b0201bbf6505c4606",
+      "ok": true
+    },
+    {
+      "path": "ipa.execution-boundaries.mmd",
+      "expected": "7acf72ea2860c3b248e6533c00e52def2dfeee50f87fce40d00781181eddd34e",
+      "actual": "7acf72ea2860c3b248e6533c00e52def2dfeee50f87fce40d00781181eddd34e",
+      "ok": true
+    },
+    {
+      "path": "ipa.html",
+      "expected": "0edff006a6af34c34afa3d3d5895adbcf52e0182ec0d3d4c41164cdc12e88523",
+      "actual": "0edff006a6af34c34afa3d3d5895adbcf52e0182ec0d3d4c41164cdc12e88523",
+      "ok": true
+    },
+    {
+      "path": "ipa.md",
+      "expected": "f1287437d4fb34d75d5fb6d6afce3244dfc35f6a4d1dea61fd6e266aa35ce2f7",
+      "actual": "f1287437d4fb34d75d5fb6d6afce3244dfc35f6a4d1dea61fd6e266aa35ce2f7",
+      "ok": true
+    },
+    {
+      "path": "ipa.mmd",
+      "expected": "bf51b875e4fa2a65e5d522cc91bd5af00c30e28fc0589f6f24e91c460830210d",
+      "actual": "bf51b875e4fa2a65e5d522cc91bd5af00c30e28fc0589f6f24e91c460830210d",
+      "ok": true
+    },
+    {
+      "path": "ipa.proxy-selection.mmd",
+      "expected": "5a34bdba6244846b97c8e2d87addd5e0d09d43a07b7761c8c32275ff642c6627",
+      "actual": "5a34bdba6244846b97c8e2d87addd5e0d09d43a07b7761c8c32275ff642c6627",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc-flow.html",
+      "expected": "141367beb28a6c81552b7175328cd4ca3e572c5d9e6447bcd9ca5d0ab174dcc8",
+      "actual": "141367beb28a6c81552b7175328cd4ca3e572c5d9e6447bcd9ca5d0ab174dcc8",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc-flow.lsc-request-input.mmd",
+      "expected": "f163d8a8c6639c788b262312d1dca6054fbc0d01614be490a793fef477d6eb5e",
+      "actual": "f163d8a8c6639c788b262312d1dca6054fbc0d01614be490a793fef477d6eb5e",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc-flow.md",
+      "expected": "160ef95d92d91c4b55284fd566a3bdc77f2d49d4e264f9241034dbf39c891681",
+      "actual": "160ef95d92d91c4b55284fd566a3bdc77f2d49d4e264f9241034dbf39c891681",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc-flow.mmd",
+      "expected": "6a6e6b5f0ccbaa5968acf53a19759696d136d9cfe9ebd6ac4ad592f366336f57",
+      "actual": "6a6e6b5f0ccbaa5968acf53a19759696d136d9cfe9ebd6ac4ad592f366336f57",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc-prepare.html",
+      "expected": "7f59c4aaf0dd9ed9215a88fa474b6ebc257aedaabd11a3ef3f40371eae3cd17f",
+      "actual": "7f59c4aaf0dd9ed9215a88fa474b6ebc257aedaabd11a3ef3f40371eae3cd17f",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc-prepare.lsc-update-gates.mmd",
+      "expected": "627f2902146a834b71cabd0cf047759e1982f631aa15d4439b4f6911403868bb",
+      "actual": "627f2902146a834b71cabd0cf047759e1982f631aa15d4439b4f6911403868bb",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc-prepare.md",
+      "expected": "960e3925c21c38bfcfbefce3ecc48d05be0d8cbadd8f863985d565e1da56ff6f",
+      "actual": "960e3925c21c38bfcfbefce3ecc48d05be0d8cbadd8f863985d565e1da56ff6f",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc-prepare.mmd",
+      "expected": "6a6e6b5f0ccbaa5968acf53a19759696d136d9cfe9ebd6ac4ad592f366336f57",
+      "actual": "6a6e6b5f0ccbaa5968acf53a19759696d136d9cfe9ebd6ac4ad592f366336f57",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc.html",
+      "expected": "16d981b9a5458890f28324c0ee865c41c3c3dd9fd3a2304cf0deb4fcaded8743",
+      "actual": "16d981b9a5458890f28324c0ee865c41c3c3dd9fd3a2304cf0deb4fcaded8743",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc.md",
+      "expected": "15f000f4865d35d3a66aaaf56cf9cdf81c5c6be4c4e26415674672e1e41a9296",
+      "actual": "15f000f4865d35d3a66aaaf56cf9cdf81c5c6be4c4e26415674672e1e41a9296",
+      "ok": true
+    },
+    {
+      "path": "ipu3-lsc.mmd",
+      "expected": "59fcc049c77263468ebfc9fff3af8f63caa64d1675cb11fd89e660bdd190197f",
+      "actual": "59fcc049c77263468ebfc9fff3af8f63caa64d1675cb11fd89e660bdd190197f",
+      "ok": true
+    },
+    {
+      "path": "official-cam-validation.completion-flow.mmd",
+      "expected": "e2c7c9ecedd15abcc255cb31261e401447c7f910e2c002206429612f86b5ad5c",
+      "actual": "e2c7c9ecedd15abcc255cb31261e401447c7f910e2c002206429612f86b5ad5c",
+      "ok": true
+    },
+    {
+      "path": "official-cam-validation.html",
+      "expected": "d1e7311430baaa312eeec297d14ee3f41832073269444993864dc8437ba40189",
+      "actual": "d1e7311430baaa312eeec297d14ee3f41832073269444993864dc8437ba40189",
+      "ok": true
+    },
+    {
+      "path": "official-cam-validation.initial-submission.mmd",
+      "expected": "71ff88abf68fb846521d84bd14315027491d5eb9c9127e3b87031ef0a4bc4b51",
+      "actual": "71ff88abf68fb846521d84bd14315027491d5eb9c9127e3b87031ef0a4bc4b51",
+      "ok": true
+    },
+    {
+      "path": "official-cam-validation.md",
+      "expected": "3eaaebac549b21f76c1e213944e20da3694dd9fcd18c641e3d3c08ab57f1ef4b",
+      "actual": "3eaaebac549b21f76c1e213944e20da3694dd9fcd18c641e3d3c08ab57f1ef4b",
+      "ok": true
+    },
+    {
+      "path": "official-cam-validation.reproduction-flow.mmd",
+      "expected": "59a5aa23a41e5034d7c4f47df59b10ad0e4d461f62bd893acb0e7530762bb270",
+      "actual": "59a5aa23a41e5034d7c4f47df59b10ad0e4d461f62bd893acb0e7530762bb270",
+      "ok": true
+    },
+    {
+      "path": "official-cam-validation.request-completion-order.mmd",
+      "expected": "b4d77b640d5b173786a2a95b009f01f767d12364ad998720494b9baa5065691a",
+      "actual": "b4d77b640d5b173786a2a95b009f01f767d12364ad998720494b9baa5065691a",
+      "ok": true
+    },
+    {
+      "path": "official-cam-validation.submission-gate.mmd",
+      "expected": "ded705fc02a03d352584e9bbfb8b71681e100308ea79273bcde012e817f9c50f",
+      "actual": "ded705fc02a03d352584e9bbfb8b71681e100308ea79273bcde012e817f9c50f",
+      "ok": true
+    },
+    {
+      "path": "official-cam-validation.virtual-frame-path.mmd",
+      "expected": "99fa5f959fe73400e9b503cc837fc4d8a1cba3cbe54f02fc11416ba24a1fc1ff",
+      "actual": "99fa5f959fe73400e9b503cc837fc4d8a1cba3cbe54f02fc11416ba24a1fc1ff",
+      "ok": true
+    },
+    {
+      "path": "onboarding.html",
+      "expected": "368d8c5c7e1c3bf0aa9d6ec29944056e0fdfa2d837f4a2d141504a426e3adb94",
+      "actual": "368d8c5c7e1c3bf0aa9d6ec29944056e0fdfa2d837f4a2d141504a426e3adb94",
+      "ok": true
+    },
+    {
+      "path": "onboarding.md",
+      "expected": "98b1a437c40606a8a28cc66ec929562fac4848f0f8d8863d51cc8453f0f5b9fa",
+      "actual": "98b1a437c40606a8a28cc66ec929562fac4848f0f8d8863d51cc8453f0f5b9fa",
+      "ok": true
+    },
+    {
+      "path": "overview.discovery-map.mmd",
+      "expected": "f41e60bc4482430999046be5a6d417337df042923a024d61011930d7d6e1fc08",
+      "actual": "f41e60bc4482430999046be5a6d417337df042923a024d61011930d7d6e1fc08",
+      "ok": true
+    },
+    {
+      "path": "overview.html",
+      "expected": "98813eddb0d55a06faae55bd1cc80e5858767b65578aee7f67442dd8ca6abc74",
+      "actual": "98813eddb0d55a06faae55bd1cc80e5858767b65578aee7f67442dd8ca6abc74",
+      "ok": true
+    },
+    {
+      "path": "overview.md",
+      "expected": "66ac42dfaabeda14a35aaa110a5556412b3f7206b5d8d38ec9dad518d626a5a6",
+      "actual": "66ac42dfaabeda14a35aaa110a5556412b3f7206b5d8d38ec9dad518d626a5a6",
+      "ok": true
+    },
+    {
+      "path": "overview.mmd",
+      "expected": "3696b45c0a5ffe5c8347308c3a4c2071bc379567084d6ccfd42ae7e61f11f5d8",
+      "actual": "3696b45c0a5ffe5c8347308c3a4c2071bc379567084d6ccfd42ae7e61f11f5d8",
+      "ok": true
+    },
+    {
+      "path": "overview.submission-completion.mmd",
+      "expected": "e27d0d88221bd6fd4425e6eeb098c18d75dbc43f04687556c704727a5d609fac",
+      "actual": "e27d0d88221bd6fd4425e6eeb098c18d75dbc43f04687556c704727a5d609fac",
+      "ok": true
+    },
+    {
+      "path": "pipeline-handler.html",
+      "expected": "0b2dc04fc801e0df54a3173704ae0e1098558efa42721f47edcbebe540a7eede",
+      "actual": "0b2dc04fc801e0df54a3173704ae0e1098558efa42721f47edcbebe540a7eede",
+      "ok": true
+    },
+    {
+      "path": "pipeline-handler.md",
+      "expected": "96bc2c3d445a96a13f241568f482d8e1f62b7cdb18f017f200c007a1708f866a",
+      "actual": "96bc2c3d445a96a13f241568f482d8e1f62b7cdb18f017f200c007a1708f866a",
+      "ok": true
+    },
+    {
+      "path": "pipeline-handler.mmd",
+      "expected": "e6ddd71e861f0366f9870d2853559e6e669880d8475cef5d70b71d6732a28c36",
+      "actual": "e6ddd71e861f0366f9870d2853559e6e669880d8475cef5d70b71d6732a28c36",
+      "ok": true
+    },
+    {
+      "path": "pipeline-requests.buffer-request-completion.mmd",
+      "expected": "d02842f23d465c0bdedaa4aa363cd697c2fd8eaa235178d2af34a5e5ffaf13f8",
+      "actual": "d02842f23d465c0bdedaa4aa363cd697c2fd8eaa235178d2af34a5e5ffaf13f8",
+      "ok": true
+    },
+    {
+      "path": "pipeline-requests.html",
+      "expected": "f8097110bf80211751c063311f66cbacf73ee04bdb1b6a8a2fb8a3c7517171a0",
+      "actual": "f8097110bf80211751c063311f66cbacf73ee04bdb1b6a8a2fb8a3c7517171a0",
+      "ok": true
+    },
+    {
+      "path": "pipeline-requests.md",
+      "expected": "09ce42dc42d74756e0053e9817e218fde0f5b0351640055f9ef3e008cffcb4a4",
+      "actual": "09ce42dc42d74756e0053e9817e218fde0f5b0351640055f9ef3e008cffcb4a4",
+      "ok": true
+    },
+    {
+      "path": "pipeline-requests.mmd",
+      "expected": "e6ddd71e861f0366f9870d2853559e6e669880d8475cef5d70b71d6732a28c36",
+      "actual": "e6ddd71e861f0366f9870d2853559e6e669880d8475cef5d70b71d6732a28c36",
+      "ok": true
+    },
+    {
+      "path": "pipeline-requests.queue-gates.mmd",
+      "expected": "b8c7f5a7440b374fe1d77709e8381b038194946a60d2e9fcc93d6418b15a17ce",
+      "actual": "b8c7f5a7440b374fe1d77709e8381b038194946a60d2e9fcc93d6418b15a17ce",
+      "ok": true
+    },
+    {
+      "path": "product-context.json",
+      "expected": "3b29f5522621430921e0d1ab183c82012f8acd9b49f8c6c686e4cb1e0f17323d",
+      "actual": "3b29f5522621430921e0d1ab183c82012f8acd9b49f8c6c686e4cb1e0f17323d",
+      "ok": true
+    },
+    {
+      "path": "reader-scope.json",
+      "expected": "2f2d6be4ff0719407c8bc6899774db0e05a1cac481045730a0c1c1f5a0670e2d",
+      "actual": "2f2d6be4ff0719407c8bc6899774db0e05a1cac481045730a0c1c1f5a0670e2d",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.configuration-access-branches.mmd",
+      "expected": "7ddc66816b5c5657a2affa011c7bcb69e877251fd1dcde7191db0dda0fb4211b",
+      "actual": "7ddc66816b5c5657a2affa011c7bcb69e877251fd1dcde7191db0dda0fb4211b",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.configuration-implementation-observation.mmd",
+      "expected": "35c97d0d20bb19dc34a38bf3873a0b57192b5b41654fa5e0592ff598c7ce6680",
+      "actual": "35c97d0d20bb19dc34a38bf3873a0b57192b5b41654fa5e0592ff598c7ce6680",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.configuration-stream-link.mmd",
+      "expected": "ba7b0c4ee085dd889f5d8851e4c56d030617fb26731a264cb146cacf09f35fe3",
+      "actual": "ba7b0c4ee085dd889f5d8851e4c56d030617fb26731a264cb146cacf09f35fe3",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.configure-failures.mmd",
+      "expected": "4c29009a146273e8af7a348b33560f77c42398c6b8b9eb0127fde4eaef1e0bf8",
+      "actual": "4c29009a146273e8af7a348b33560f77c42398c6b8b9eb0127fde4eaef1e0bf8",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.diagnosis-add-buffer-rejections.mmd",
+      "expected": "8a06e3190e17019bf6a98ba57f1983b38485e74ffd1a80137918d07105e4f182",
+      "actual": "8a06e3190e17019bf6a98ba57f1983b38485e74ffd1a80137918d07105e4f182",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.diagnosis-buffer-and-request-completion.mmd",
+      "expected": "2ff1def4c4a1fa142b268556d87883b8daac4a7e76fe19ce1de8bfe03658bf90",
+      "actual": "2ff1def4c4a1fa142b268556d87883b8daac4a7e76fe19ce1de8bfe03658bf90",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.diagnosis-dispatch-cancel-or-device.mmd",
+      "expected": "52344399d8aa5e75a23f58f6ca748371d40e2df9f9c08a8dfdda56760c5a672c",
+      "actual": "52344399d8aa5e75a23f58f6ca748371d40e2df9f9c08a8dfdda56760c5a672c",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.diagnosis-submission-order-completion.mmd",
+      "expected": "25ab83aab9866c65544ab4a81efc766d4c2ade77934996ed0524e69a8984b9cd",
+      "actual": "25ab83aab9866c65544ab4a81efc766d4c2ade77934996ed0524e69a8984b9cd",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.html",
+      "expected": "a96611c035b9e7a159a4623b0346ac6bb06b74d8ede05328b396960d39eb8ac1",
+      "actual": "a96611c035b9e7a159a4623b0346ac6bb06b74d8ede05328b396960d39eb8ac1",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.md",
+      "expected": "9cf953fed5fe4b2a0826b394d6cc349fbd1da4e541966a3c9fe37bcdebb11299",
+      "actual": "9cf953fed5fe4b2a0826b394d6cc349fbd1da4e541966a3c9fe37bcdebb11299",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.queue-gates.mmd",
+      "expected": "6a2fb94dfd9cddb03bb3f8b5f7688e7464b35d5a7a3139a6cab15176ecf80489",
+      "actual": "6a2fb94dfd9cddb03bb3f8b5f7688e7464b35d5a7a3139a6cab15176ecf80489",
+      "ok": true
+    },
+    {
+      "path": "request-diagnosis.submission-checks.mmd",
+      "expected": "16700b1b7870da74ae28aacd2739227cb18cdebf301294051a5c840c56df00f4",
+      "actual": "16700b1b7870da74ae28aacd2739227cb18cdebf301294051a5c840c56df00f4",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.buffer-and-request-completion.mmd",
+      "expected": "2ff1def4c4a1fa142b268556d87883b8daac4a7e76fe19ce1de8bfe03658bf90",
+      "actual": "2ff1def4c4a1fa142b268556d87883b8daac4a7e76fe19ce1de8bfe03658bf90",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.camera-stop-branches.mmd",
+      "expected": "ce9e85e892711b774589a269d535ffee7c728db3335bea5eb9b62b1761c7824e",
+      "actual": "ce9e85e892711b774589a269d535ffee7c728db3335bea5eb9b62b1761c7824e",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.dispatch-cancel-or-device.mmd",
+      "expected": "52344399d8aa5e75a23f58f6ca748371d40e2df9f9c08a8dfdda56760c5a672c",
+      "actual": "52344399d8aa5e75a23f58f6ca748371d40e2df9f9c08a8dfdda56760c5a672c",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.html",
+      "expected": "12bb920448aa6465a0fb9cbb41367d013f031dca2e226e19a888a1305075e340",
+      "actual": "12bb920448aa6465a0fb9cbb41367d013f031dca2e226e19a888a1305075e340",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.lifecycle-queue-return-completion.mmd",
+      "expected": "c4420d9199a4be434ff39e53360839588e54d45f70595bd4a784376a3f189937",
+      "actual": "c4420d9199a4be434ff39e53360839588e54d45f70595bd4a784376a3f189937",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.lifecycle-reuse-buffer-fence-distinction.mmd",
+      "expected": "e44b35b0355e1943b5ebe613d8ca8b1bcb05082d750c35ed1a58c25849870fe4",
+      "actual": "e44b35b0355e1943b5ebe613d8ca8b1bcb05082d750c35ed1a58c25849870fe4",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.lifecycle-timeout-fence-recovery.mmd",
+      "expected": "d463487945338228bf7398562ce879e837c937c54ea7faa4713375bb0abdc1bd",
+      "actual": "d463487945338228bf7398562ce879e837c937c54ea7faa4713375bb0abdc1bd",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.md",
+      "expected": "f55ef6ebea7616e6793df976abaa8f60452d64989b2619f40cebaab0f53dbf09",
+      "actual": "f55ef6ebea7616e6793df976abaa8f60452d64989b2619f40cebaab0f53dbf09",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.near-return-marker-boundary.mmd",
+      "expected": "f485167b8bb9d7557c35ca98c8ab06772713186b99a360edd51adb5a9f91165d",
+      "actual": "f485167b8bb9d7557c35ca98c8ab06772713186b99a360edd51adb5a9f91165d",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.observed-stop-callback-timing.mmd",
+      "expected": "6e6ebd9df09893e5a8a20d5cde7bebf69af70ed6fcd0d94925390e0cb855fd7c",
+      "actual": "6e6ebd9df09893e5a8a20d5cde7bebf69af70ed6fcd0d94925390e0cb855fd7c",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.request-ownership.mmd",
+      "expected": "09861c088296eb5e9f870d79dc2a32efcb52aff4eef29093eab71c5ffbf71516",
+      "actual": "09861c088296eb5e9f870d79dc2a32efcb52aff4eef29093eab71c5ffbf71516",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.request-stages.mmd",
+      "expected": "d95fb96cc860c1483218ed77ffda706efbe2df519b2be4580abf97f8a4866bbf",
+      "actual": "d95fb96cc860c1483218ed77ffda706efbe2df519b2be4580abf97f8a4866bbf",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.stop-device-observation-plan.mmd",
+      "expected": "d9f4fa3e28fd5fff634b1e01a50d52f12c44d766585e6ace0b0c85415c0cbbc4",
+      "actual": "d9f4fa3e28fd5fff634b1e01a50d52f12c44d766585e6ace0b0c85415c0cbbc4",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.stop-disconnect-contract.mmd",
+      "expected": "3ccedf52697d0048b891e46a5933d3d9fe907b0770070159f4e069c78f565e3d",
+      "actual": "3ccedf52697d0048b891e46a5933d3d9fe907b0770070159f4e069c78f565e3d",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.stop-order.mmd",
+      "expected": "65d75079e25e95ff81e335275a889446969afcdd9aeb7da829f62066c00a75be",
+      "actual": "65d75079e25e95ff81e335275a889446969afcdd9aeb7da829f62066c00a75be",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.stopping-completion-contract.mmd",
+      "expected": "95ef54e26f97b102363689952a1be72a889c2868f8e3d7b4b48a559bcecd7ed0",
+      "actual": "95ef54e26f97b102363689952a1be72a889c2868f8e3d7b4b48a559bcecd7ed0",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.submission-order-completion.mmd",
+      "expected": "25ab83aab9866c65544ab4a81efc766d4c2ade77934996ed0524e69a8984b9cd",
+      "actual": "25ab83aab9866c65544ab4a81efc766d4c2ade77934996ed0524e69a8984b9cd",
+      "ok": true
+    },
+    {
+      "path": "request-lifecycle.waiting-queue-conditions.mmd",
+      "expected": "6a2fb94dfd9cddb03bb3f8b5f7688e7464b35d5a7a3139a6cab15176ecf80489",
+      "actual": "6a2fb94dfd9cddb03bb3f8b5f7688e7464b35d5a7a3139a6cab15176ecf80489",
+      "ok": true
+    },
+    {
+      "path": "rkisp1-dewarp.dewarp-input-branches.mmd",
+      "expected": "c76a7aa7bfa3466ad4b4fd62afdf6962e39c261d095fc287428245d89c5536ed",
+      "actual": "c76a7aa7bfa3466ad4b4fd62afdf6962e39c261d095fc287428245d89c5536ed",
+      "ok": true
+    },
+    {
+      "path": "rkisp1-dewarp.html",
+      "expected": "29b01234efef450e98e4d0d944f247d4b369a6f0eec81bbcca7a3e7b63ac4265",
+      "actual": "29b01234efef450e98e4d0d944f247d4b369a6f0eec81bbcca7a3e7b63ac4265",
+      "ok": true
+    },
+    {
+      "path": "rkisp1-dewarp.md",
+      "expected": "547293640d916d15aca71fcc8fd72400f5f521b2902c5a25b512c7d0aaeb76c0",
+      "actual": "547293640d916d15aca71fcc8fd72400f5f521b2902c5a25b512c7d0aaeb76c0",
+      "ok": true
+    },
+    {
+      "path": "rkisp1-dewarp.per-camera-parameters.mmd",
+      "expected": "7ec72ba607bd2b541272c9f2843db418c6d974dcee3072bd27d6076f81c68bb0",
+      "actual": "7ec72ba607bd2b541272c9f2843db418c6d974dcee3072bd27d6076f81c68bb0",
+      "ok": true
+    },
+    {
+      "path": "scenarios/camera_start.html",
+      "expected": "4902bb6a3b05715b9a4a9a9be6947830f3433e9660fbba4aa4bf11d62d2fe51c",
+      "actual": "4902bb6a3b05715b9a4a9a9be6947830f3433e9660fbba4aa4bf11d62d2fe51c",
+      "ok": true
+    },
+    {
+      "path": "scenarios/camera_start.md",
+      "expected": "ba93b1a36ca266a79ee0cbcc53e753e913d4cc90e48f8a93d735eebb9af02981",
+      "actual": "ba93b1a36ca266a79ee0cbcc53e753e913d4cc90e48f8a93d735eebb9af02981",
+      "ok": true
+    },
+    {
+      "path": "scenarios/camera_start.mmd",
+      "expected": "16f0f78d4bf56dddf46fa5e114735890eadf195e881ba56c98e7fe33354f6651",
+      "actual": "16f0f78d4bf56dddf46fa5e114735890eadf195e881ba56c98e7fe33354f6651",
+      "ok": true
+    },
+    {
+      "path": "scenarios/camera_stop.html",
+      "expected": "539916ca7052d255bb4dc4ebfa0fe4e9885addfc26d810944b76bd15796cf1ef",
+      "actual": "539916ca7052d255bb4dc4ebfa0fe4e9885addfc26d810944b76bd15796cf1ef",
+      "ok": true
+    },
+    {
+      "path": "scenarios/camera_stop.md",
+      "expected": "cef3e2f48b51fa9c760b69ac139048d5bdcfc126d1272fc0a7b38f3b6c437010",
+      "actual": "cef3e2f48b51fa9c760b69ac139048d5bdcfc126d1272fc0a7b38f3b6c437010",
+      "ok": true
+    },
+    {
+      "path": "scenarios/camera_stop.mmd",
+      "expected": "6702a59f60cf234aa7d4d19cdef9a51e1d952cab98108117138bff75d4b6610d",
+      "actual": "6702a59f60cf234aa7d4d19cdef9a51e1d952cab98108117138bff75d4b6610d",
+      "ok": true
+    },
+    {
+      "path": "scenarios/complete_request.html",
+      "expected": "e9d0a7849e49e5fb4741b71bb6edc9bf22a978d41a5ffe96267657d5e9cbfbf5",
+      "actual": "e9d0a7849e49e5fb4741b71bb6edc9bf22a978d41a5ffe96267657d5e9cbfbf5",
+      "ok": true
+    },
+    {
+      "path": "scenarios/complete_request.md",
+      "expected": "db57313342f0896f9e58a3985505f1389fb9d5d7384f8aa5c1dbb7520c44e32e",
+      "actual": "db57313342f0896f9e58a3985505f1389fb9d5d7384f8aa5c1dbb7520c44e32e",
+      "ok": true
+    },
+    {
+      "path": "scenarios/complete_request.mmd",
+      "expected": "4fb8838df3d3a5d31e34709ffa0fb4c899d99d96a2782cd754756cd59fa76831",
+      "actual": "4fb8838df3d3a5d31e34709ffa0fb4c899d99d96a2782cd754756cd59fa76831",
+      "ok": true
+    },
+    {
+      "path": "scenarios/configure.html",
+      "expected": "4d1844a232b9adc44ffc91d0ab0c356ca5207f362d1173aa145151b8a15dcfab",
+      "actual": "4d1844a232b9adc44ffc91d0ab0c356ca5207f362d1173aa145151b8a15dcfab",
+      "ok": true
+    },
+    {
+      "path": "scenarios/configure.md",
+      "expected": "495776d17c6580c1d488af2af9a76e777f2ac58001549afd25b1ce1db7e2b7ed",
+      "actual": "495776d17c6580c1d488af2af9a76e777f2ac58001549afd25b1ce1db7e2b7ed",
+      "ok": true
+    },
+    {
+      "path": "scenarios/configure.mmd",
+      "expected": "173f7a710f5583eb6e3f5710930f931b71cac859fa8b0a2841ea88fd16f4e8c1",
+      "actual": "173f7a710f5583eb6e3f5710930f931b71cac859fa8b0a2841ea88fd16f4e8c1",
+      "ok": true
+    },
+    {
+      "path": "scenarios/index.html",
+      "expected": "baae25a3721521a6b5bcad08c550135f5afaa8e1767a52c7da62e4bada85d74b",
+      "actual": "baae25a3721521a6b5bcad08c550135f5afaa8e1767a52c7da62e4bada85d74b",
+      "ok": true
+    },
+    {
+      "path": "scenarios/index.md",
+      "expected": "75d01eadf8b5ead60b68870a7342f9c42a2fcaa9f4161496726aa03e9eabbb68",
+      "actual": "75d01eadf8b5ead60b68870a7342f9c42a2fcaa9f4161496726aa03e9eabbb68",
+      "ok": true
+    },
+    {
+      "path": "scenarios/manager_start.html",
+      "expected": "950f8c4ae88f406ad9d7d1a49f0794222385b897eea8aa3aabf297a1804bc89b",
+      "actual": "950f8c4ae88f406ad9d7d1a49f0794222385b897eea8aa3aabf297a1804bc89b",
+      "ok": true
+    },
+    {
+      "path": "scenarios/manager_start.md",
+      "expected": "f731538eba819d743dc6e814163d4202e4a757c89d02dd37701f61c5bf6c0a65",
+      "actual": "f731538eba819d743dc6e814163d4202e4a757c89d02dd37701f61c5bf6c0a65",
+      "ok": true
+    },
+    {
+      "path": "scenarios/manager_start.mmd",
+      "expected": "82ae21d333c76811f1c80dcc377cc2cb11d516dcd28071046907022ada6f3d92",
+      "actual": "82ae21d333c76811f1c80dcc377cc2cb11d516dcd28071046907022ada6f3d92",
+      "ok": true
+    },
+    {
+      "path": "scenarios/queue_request.html",
+      "expected": "b0192dcc3087631e6246f394e26d8ed2e76731d5818d34a96d4ccd846869605e",
+      "actual": "b0192dcc3087631e6246f394e26d8ed2e76731d5818d34a96d4ccd846869605e",
+      "ok": true
+    },
+    {
+      "path": "scenarios/queue_request.md",
+      "expected": "32f142c44cf11b803c1d95a80480e775b7df174d7b26cb08d8405bafa476efc3",
+      "actual": "32f142c44cf11b803c1d95a80480e775b7df174d7b26cb08d8405bafa476efc3",
+      "ok": true
+    },
+    {
+      "path": "scenarios/queue_request.mmd",
+      "expected": "d196c62a740f6133885245bf8e2f9528c4f4043c07cabf9d34b70ac87ba59277",
+      "actual": "d196c62a740f6133885245bf8e2f9528c4f4043c07cabf9d34b70ac87ba59277",
+      "ok": true
+    },
+    {
+      "path": "team-overview.camera-stack.mmd",
+      "expected": "94097154df5490c7922e3958957a6cdcf7c53c6c53cda7fec09c55e4448b7f4e",
+      "actual": "94097154df5490c7922e3958957a6cdcf7c53c6c53cda7fec09c55e4448b7f4e",
+      "ok": true
+    },
+    {
+      "path": "team-overview.html",
+      "expected": "f9c35959138c4b6f7af000e61fe6d6abf951eded8623194200df94c923f55449",
+      "actual": "f9c35959138c4b6f7af000e61fe6d6abf951eded8623194200df94c923f55449",
+      "ok": true
+    },
+    {
+      "path": "team-overview.md",
+      "expected": "5e20d11e60a584ad94d8d5268258812c47d2632c45f4de873e2e01487654f201",
+      "actual": "5e20d11e60a584ad94d8d5268258812c47d2632c45f4de873e2e01487654f201",
+      "ok": true
+    },
+    {
+      "path": "vendor-assurance.html",
+      "expected": "3fcaab4a633f49fc94e2ac4c21c0e0387f0cf9500f591866c237efaf11a860c5",
+      "actual": "3fcaab4a633f49fc94e2ac4c21c0e0387f0cf9500f591866c237efaf11a860c5",
+      "ok": true
+    },
+    {
+      "path": "vendor-assurance.md",
+      "expected": "90cae865503e5d9dec452d181036dbed2328702f7ed34f16aea7415baf555dd5",
+      "actual": "90cae865503e5d9dec452d181036dbed2328702f7ed34f16aea7415baf555dd5",
+      "ok": true
+    },
+    {
+      "path": "vendor-assurance.mmd",
+      "expected": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+      "actual": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+      "ok": true
+    },
+    {
+      "path": "vendor-assurance.validation-results.mmd",
+      "expected": "95995464a9ab35e0d79aca5e5b63c26efc25018ab3d15d347a86b709a7fe981f",
+      "actual": "95995464a9ab35e0d79aca5e5b63c26efc25018ab3d15d347a86b709a7fe981f",
+      "ok": true
+    },
+    {
+      "path": "vendor-integration.html",
+      "expected": "a2fd17650b4445c5e3a4e13b60f3750ee12a24bbb3d79ea2fa5a260cbb8a3739",
+      "actual": "a2fd17650b4445c5e3a4e13b60f3750ee12a24bbb3d79ea2fa5a260cbb8a3739",
+      "ok": true
+    },
+    {
+      "path": "vendor-integration.integration-stages.mmd",
+      "expected": "c279ae797ea8c0d49cda3694757e5c9601d1048884545d067bc05a51b8f3293f",
+      "actual": "c279ae797ea8c0d49cda3694757e5c9601d1048884545d067bc05a51b8f3293f",
+      "ok": true
+    },
+    {
+      "path": "vendor-integration.md",
+      "expected": "ea1e72f198ef6d212e6626c292fa760db371f6aacf73a222de9e451d009489a4",
+      "actual": "ea1e72f198ef6d212e6626c292fa760db371f6aacf73a222de9e451d009489a4",
+      "ok": true
+    },
+    {
+      "path": "vendor-integration.mmd",
+      "expected": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+      "actual": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+      "ok": true
+    },
+    {
+      "path": "vendor-overview.camera-stack.mmd",
+      "expected": "8fe473c62b691e27f4892f1a8060307e7887cfd6e75f37da147966f59a395abe",
+      "actual": "8fe473c62b691e27f4892f1a8060307e7887cfd6e75f37da147966f59a395abe",
+      "ok": true
+    },
+    {
+      "path": "vendor-overview.hardware-boundary.mmd",
+      "expected": "e82c8ee3f61d208ae1d2560fd96efd87ed9c7caed5951768f1a94bdc5333de18",
+      "actual": "e82c8ee3f61d208ae1d2560fd96efd87ed9c7caed5951768f1a94bdc5333de18",
+      "ok": true
+    },
+    {
+      "path": "vendor-overview.html",
+      "expected": "40e3bec2d2ef219b7b75fe6db72ef5d365529dd39aafe698a5fda6bb83196e86",
+      "actual": "40e3bec2d2ef219b7b75fe6db72ef5d365529dd39aafe698a5fda6bb83196e86",
+      "ok": true
+    },
+    {
+      "path": "vendor-overview.md",
+      "expected": "0fb971f9c532ba4e57ea52a26d5eb9ee628d2b963fd9c273fd40ca9af64ef2af",
+      "actual": "0fb971f9c532ba4e57ea52a26d5eb9ee628d2b963fd9c273fd40ca9af64ef2af",
+      "ok": true
+    },
+    {
+      "path": "vendor-overview.mmd",
+      "expected": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+      "actual": "e9e6b864f47ce00114d2193dc521dfe6946ef04d6367c38ae28d52c90782e34e",
+      "ok": true
+    },
+    {
+      "path": "vendor-overview.vendor-buffer-and-request-completion.mmd",
+      "expected": "0f2355020e9daaea3421620aa63a360d566ce68109557939161db68a0994cf35",
+      "actual": "0f2355020e9daaea3421620aa63a360d566ce68109557939161db68a0994cf35",
+      "ok": true
+    },
+    {
+      "path": "vendor-overview.vendor-waiting-queue-conditions.mmd",
+      "expected": "b96449dbc9bd8e51ad1e1aa967f9ed309f6b8a6ce00031778fc2e5bc000db9b3",
+      "actual": "b96449dbc9bd8e51ad1e1aa967f9ed309f6b8a6ce00031778fc2e5bc000db9b3",
+      "ok": true
+    }
+  ],
+  "human_review": "pending",
+  "new_generation": false
+}
