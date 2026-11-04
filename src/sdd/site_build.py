@@ -144,6 +144,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "config.py", code_root / "render_profiles.py", code_root / "design_types.py",
                                             code_root / "validation_stage.py", code_root / "input_watch.py", code_root / "publication_plan.py",
                                             code_root / "publication_operation.py",
+                                            code_root / "publication_reports.py",
                                             code_root / "validation_execution.py", code_root / "visual_audit.py", code_root / "site_paths.py", code_root / "mermaid_text.py",
                                             code_root / "execution_lock.py", code_root / "generation_run.py", code_root / "guide_visuals.py",
                                             code_root / "consistency.py", code_root / "consistency_sources.py",
@@ -158,6 +159,10 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                 "dependencies": {name: version(name) for name in ("Markdown", "pymdown-extensions", "PyYAML")},
                 "outputs": outputs}
         data["build_id"] = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+        from .generation_run import observed
+        execution = observed()
+        if execution is not None and execution.publication_contract is not None:
+            execution.publication_contract.begin_output()
         previous_file = out / MANIFEST
         previous = json.loads(previous_file.read_text(encoding="utf-8")) if previous_file.exists() else {"schema": 1, "outputs": {}}
         if previous.get("schema") != 1:
@@ -181,9 +186,16 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         # inputs. Even an edit during destination copying rolls back the site.
         backups = {rel: owned_path(out, rel).read_bytes() if owned_path(out, rel).is_file() else None
                    for rel in previous['outputs'].keys() | outputs.keys() | {MANIFEST}}
+        produced = {}
         def rollback():
-            for rel, raw in backups.items():
+            for rel, expected in produced.items():
                 target = owned_path(out, rel)
+                actual = target.read_bytes() if target.is_file() else None
+                if actual != expected:
+                    if execution is not None:
+                        execution.report.setdefault('rollback_conflicts', []).append(str(target))
+                    continue
+                raw = backups[rel]
                 if raw is None:
                     target.unlink(missing_ok=True)
                 else:
@@ -194,10 +206,13 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         for rel in outputs:
             target = owned_path(out, rel)
             target.parent.mkdir(parents=True, exist_ok=True)
+            produced[rel] = (stage / rel).read_bytes()
             shutil.copyfile(stage / rel, target)
         for rel in previous["outputs"].keys() - outputs.keys():
             target = owned_path(out, rel)
             if target.is_file():
+                produced[rel] = None
                 target.unlink()  # Only files explicitly owned by the previous verified manifest.
-        (out / MANIFEST).write_text(json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
+        produced[MANIFEST] = (json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode('utf-8')
+        (out / MANIFEST).write_bytes(produced[MANIFEST])
     return out

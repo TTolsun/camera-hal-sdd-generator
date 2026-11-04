@@ -465,7 +465,7 @@ def test_live_immutable_history_damage_is_detected(tmp_cfg, sample_model, target
             else:
                 from sdd.publication_operation import archive_plan
                 report = dict(schema=1, source_commit=sample_model.meta['source_commit'], units=[])
-                archive_plan(tmp_cfg, report)
+                archive_plan(tmp_cfg, report, execution)
                 Path(execution.report['publication_plans'][-1]['path']).unlink()
 
 
@@ -486,7 +486,7 @@ def test_missing_previous_plan_is_not_silently_forgotten(tmp_cfg, sample_model):
     from sdd.publication_operation import archive_plan
     execution = Execution(tmp_cfg, object(), model=sample_model)
     with execution.track('generation'):
-        archive_plan(tmp_cfg, dict(schema=1, units=[]))
+        archive_plan(tmp_cfg, dict(schema=1, units=[]), execution)
     Path(execution.report['publication_plans'][0]['path']).unlink()
     with pytest.raises(ValueError, match='plan history'):
         with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
@@ -561,3 +561,89 @@ def test_progress_is_visible_before_operation_preparation(tmp_cfg, sample_model,
     monkeypatch.setattr(operations, 'Contract', inspect_progress)
     with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
         pass
+
+
+def test_revision_adoption_cannot_cross_output_commit(tmp_cfg, sample_model):
+    from sdd.execution_lock import AlreadyRunning
+    contract, write = configure(tmp_cfg, sample_model, ['device'])
+    newer = deepcopy(tmp_cfg)
+    newer.raw['publication']['operation_file'] = 'next-operation.json'
+    updated = deepcopy(contract)
+    bump(updated, kind='user-scope', affected=['device'])
+    (tmp_cfg.root/'next-operation.json').write_text(json.dumps(updated), encoding='utf-8')
+    execution = Execution(tmp_cfg, object(), model=sample_model)
+    with execution.track('generation'):
+        execution.publication_contract.begin_output()
+        with pytest.raises(AlreadyRunning):
+            with Execution(newer, object(), model=sample_model).track('generation'):
+                pytest.fail('revision adopted during output commit')
+        from sdd.publication_operation import archive_plan
+        archive_plan(tmp_cfg, dict(schema=1, units=[]), execution)
+    with Execution(newer, object(), model=sample_model).track('generation'):
+        pass
+    assert len(revisions(tmp_cfg)) == 2
+
+
+def test_changed_visual_input_needs_a_new_basis_and_live_edits_fail(tmp_cfg, sample_model):
+    tmp_cfg.raw['visuals'] = dict(file='visuals.json')
+    visual = tmp_cfg.root/'visuals.json'
+    visual.write_text('{}', encoding='utf-8')
+    contract, write = configure(tmp_cfg, sample_model, ['device'])
+    with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+        pass
+    visual.write_text('{"changed": true}', encoding='utf-8')
+    with pytest.raises(ValueError, match='new revision'):
+        with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+            pytest.fail('changed diagram policy accepted without revision')
+    bump(contract, kind='policy'); write()
+    with pytest.raises(InputChanged):
+        with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+            visual.write_text('{}', encoding='utf-8')
+
+
+def test_other_operation_cannot_commit_before_rollback_finishes(tmp_cfg, sample_model):
+    from sdd.execution_lock import AlreadyRunning
+    configure(tmp_cfg, sample_model, ['device'])
+    other = deepcopy(tmp_cfg)
+    other.raw['publication']['operation_id'] = 'other-publication'
+    first = Execution(tmp_cfg, object(), model=sample_model)
+    with first.track('generation'):
+        first.publication_contract.begin_output()
+        with pytest.raises(AlreadyRunning, match='publication-output-commit'):
+            with Execution(other, object(), model=sample_model).track('generation'):
+                pass
+    with Execution(other, object(), model=sample_model).track('generation'):
+        pass
+
+
+def test_failed_final_journal_save_rolls_back_output(tmp_cfg, sample_model, monkeypatch):
+    configure(tmp_cfg, sample_model, ['device'])
+    target = tmp_cfg.root/'owned.md'
+    target.write_bytes(b'previous')
+    execution = Execution(tmp_cfg, object(), model=sample_model)
+    original = execution.persist
+    def fail_completed():
+        if execution.report['phases'][-1]['status'] == 'completed':
+            raise OSError('journal unavailable')
+        original()
+    monkeypatch.setattr(execution, 'persist', fail_completed)
+    with pytest.raises(OSError, match='journal unavailable'):
+        with execution.track('generation'):
+            execution.publication_contract.preserve_output(target, 'new')
+            target.write_bytes(b'new\n')
+    assert target.read_bytes() == b'previous'
+    assert execution.report['phases'][-1]['status'] == 'failed'
+
+
+def test_guard_checks_the_bound_transport_actually_invoked(tmp_cfg, sample_model):
+    from sdd.llm import Agent
+    configure(tmp_cfg, sample_model, ['device'])
+    selected = Agent(tmp_cfg.agent, tmp_cfg.build_dir/'selected')
+    wrong = deepcopy(tmp_cfg.agent)
+    wrong.model = 'undeclared'
+    alternate = Agent(wrong, tmp_cfg.build_dir/'alternate')
+    execution = Execution(tmp_cfg, selected, model=sample_model)
+    with pytest.raises(ValueError, match='Actual publication transport'):
+        with execution.track('generation'):
+            execution._chat(alternate.chat, 'system', 'user')
+    assert not execution.report['calls']

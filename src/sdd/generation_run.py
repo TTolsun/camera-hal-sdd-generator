@@ -149,6 +149,7 @@ class Execution:
         self.report['current_phase'] = name
         owns_contract = self.publication_contract is None and bool(self.cfg.publication.get('operation_file'))
         previous_role = None
+        error = None
         try:
             with self.heartbeat():
                 if owns_contract:
@@ -161,22 +162,29 @@ class Execution:
                     self.publication_contract.final_gate()
                 yield
                 if self.publication_contract:
-                    self.publication_contract.verify()
+                    if owns_contract:
+                        self.publication_contract.begin_output()
+                    else:
+                        self.publication_contract.verify()
             row['status'] = 'completed'
+            row['seconds'] = self.clock()-self.started-row['started_seconds']
+            self.report['current_phase'] = previous_phase
+            self.persist()
         except BaseException as exc:
+            error = exc
+            row.update(status='failed', failure_kind=failure_kind(exc), error=str(exc))
             if owns_contract and self.publication_contract is not None:
                 self.publication_contract.rollback()
-            row.update(status='failed', failure_kind=failure_kind(exc), error=str(exc))
+            row['seconds'] = self.clock()-self.started-row['started_seconds']
+            self.report['current_phase'] = previous_phase
+            self.persist()
             raise
         finally:
             if self.publication_contract is not None:
                 self.publication_contract.role = previous_role
             if owns_contract and self.publication_contract is not None:
-                self.publication_contract.close()
+                self.publication_contract.close(error)
                 self.publication_contract = None
-            row['seconds'] = self.clock()-self.started-row['started_seconds']
-            self.report['current_phase'] = previous_phase
-            self.persist()
 
     @contextmanager
     def document(self, sid, units):
@@ -274,7 +282,7 @@ class Execution:
     def _chat(self, transport, system, user, **kwargs):
         if self.publication_contract:
             self.publication_contract.verify()
-            self.publication_contract.verify_transport()
+            self.publication_contract.verify_transport(transport)
         now = self.clock()
         calls = self.report['calls']
         remaining = []
@@ -307,7 +315,7 @@ class Execution:
                 raw = transport(system, user, **kwargs)
             if self.publication_contract:
                 self.publication_contract.verify()
-                self.publication_contract.verify_transport()
+                self.publication_contract.verify_transport(transport)
             self.check_time()
             row['status'] = 'completed'
             return raw

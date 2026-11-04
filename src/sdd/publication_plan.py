@@ -8,6 +8,7 @@ from .config import load, section_output
 from .state_io import save
 from .validation_stage import current, load_json, read_bytes, read_text
 from .validation_execution import staged
+from .publication_reports import check_reports
 
 
 def _requirements(sections):
@@ -81,23 +82,6 @@ def check_catalog(cfg):
             raise ValueError('Publication shared-label term missing: ' + source)
 
 
-def check_reports(cfg, gate, *, reports=None):
-    """Require declared reports at their producing boundary, before copying."""
-    checked = []
-    for row in cfg.publication.get('reports', []) if reports is None else reports:
-        if not all(row.get(key) for key in ('path', 'gate', 'producer', 'sha256', 'bindings')):
-            raise ValueError('Publication reports need path/gate/producer/sha256/bindings')
-        if row['gate'] != gate:
-            continue
-        path = cfg.root/row['path']
-        raw = read_bytes(path)
-        if hashlib.sha256(raw).hexdigest() != row['sha256']:
-            raise ValueError('Publication report hash mismatch: ' + row['path'])
-        data = load_json(path)
-        if any(data.get(key) != value for key, value in row['bindings'].items()):
-            raise ValueError('Publication report stage/input/status mismatch: ' + row['path'])
-        checked.append(dict(**row, verified=True))
-    return checked
 
 
 @staged
@@ -196,7 +180,7 @@ def prepare(cfg, model, section_ids=None, impact=None):
         sections=[s['id'] for s in selected], units=units, carryover=carryover,
         inputs=inputs.manifest(), human_review='pending')
     from .publication_operation import archive_plan
-    archive_plan(cfg, report)
+    archive_plan(cfg, report, execution)
     from .generation_run import observed
     execution = observed()
     if execution is not None:

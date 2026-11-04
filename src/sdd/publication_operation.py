@@ -1,5 +1,6 @@
 """Version a publication contract; retain existing reuse and failure decisions."""
 from copy import deepcopy
+from contextlib import nullcontext
 from dataclasses import asdict
 import hashlib
 import json
@@ -125,6 +126,8 @@ class Contract:
         self.rollbacks = []
         self.sealed_head = None
         self.git_checks = []
+        self.output_lease = None
+        self.commit_lease = None
         try:
             self._prepare(phase)
         except BaseException:
@@ -140,6 +143,7 @@ class Contract:
         # This operation resolves the selected source HEAD itself. The existing
         # stage/checkpoint guards retain their default Git-file observation.
         self.watch.pin(cfg, model, include_source_git=False)
+        self._pin_publication_inputs()
         # Execution can temporarily lower the transport timeout to an explicit
         # existing budget. Input files and the declared CLI identity stay fixed.
         self.watch.objects.pop(id(cfg), None)
@@ -161,7 +165,7 @@ class Contract:
                      'contract-audit': 'review'}.get(phase)
         if self.role and profile(cfg.agent) != self.contract['profiles'][self.role]:
             raise ValueError(f'Publication operation {self.role} CLI differs from its declared profile')
-        from .publication_plan import check_reports
+        from .publication_reports import check_reports
         check_reports(cfg, 'before-generation', reports=self.contract['prerequisites'])
         # Pin prerequisite bytes as well as the operation file before the first
         # call. A passing historical report cannot be replaced mid-execution.
@@ -285,6 +289,24 @@ class Contract:
         if commit != self.contract['source_commit']:
             raise ValueError('Publication source commit differs from the operation contract')
 
+    def _pin_publication_inputs(self):
+        from .product_context import input_paths
+        from .render_profiles import paths, for_page
+        for path in input_paths(self.cfg):
+            self.watch.read(path)
+        for name in (self.cfg.visuals.file, self.cfg.site.intro, self.cfg.site.guide_visuals):
+            if name:
+                self.watch.read(self.cfg.root/name)
+        directories = [(Path(__file__).parent/'site_assets', '*')]
+        for page, path in paths(self.cfg).items():
+            self.watch.read(path)
+            directories.append((for_page(self.cfg, page).style_dir, '*.md'))
+        for directory, pattern in directories:
+            files = tuple(sorted(p for p in directory.rglob(pattern) if p.is_file()))
+            self.watch.directories[(directory, pattern)] = files
+            for path in files:
+                self.watch.read(path)
+
     def select(self, model, sections):
         self.check_source(model.meta.get('source_commit'))
         if set(sections) - set(self.contract['sections']):
@@ -320,12 +342,12 @@ class Contract:
             self.role = role
         return previous
 
-    def verify_transport(self):
+    def verify_transport(self, transport):
         from .config import AgentConfig
         if self.role is None:
             raise ValueError('Publication model call requires a declared execution phase')
         expected = self.contract['profiles'][self.role]
-        actual = getattr(self.execution.agent, 'cfg', None)
+        actual = getattr(getattr(transport, '__self__', None), 'cfg', None)
         if not isinstance(actual, AgentConfig) or profile(actual) != expected:
             raise ValueError('Actual publication transport differs from the declared CLI profile')
 
@@ -342,7 +364,7 @@ class Contract:
             raise ValueError('Publication required findings remain unresolved: ' + ', '.join(pending))
 
     def preserve_output(self, path, text):
-        self.verify()
+        self.begin_output()
         self.outputs.append((path, path.read_bytes() if path.exists() else None,
                              (text.rstrip()+'\n').encode('utf-8')))
 
@@ -357,14 +379,38 @@ class Contract:
             else:
                 path.write_bytes(previous)
 
-    def close(self):
-        self.watch.changes.close()
+    def begin_output(self):
+        """Serialize this operation's commit/rollback with revision adoption."""
+        if self.commit_lease is None:
+            # Only the output transaction is serialized across operations in
+            # this workspace. Source review and native CLI work stay concurrent.
+            guard = lease(self.cfg, 'publication-output-commit')
+            guard.__enter__()
+            self.commit_lease = guard
+        if self.output_lease is None:
+            guard = lease(self.cfg, 'publication-history-'+directory(self.cfg).name)
+            guard.__enter__()
+            self.output_lease = guard
+        self.verify()
+
+    def close(self, error=None):
+        try:
+            if self.output_lease is not None:
+                self.output_lease.__exit__(type(error) if error else None, error,
+                                           error.__traceback__ if error else None)
+                self.output_lease = None
+        finally:
+            try:
+                if self.commit_lease is not None:
+                    self.commit_lease.__exit__(type(error) if error else None, error,
+                                               error.__traceback__ if error else None)
+                    self.commit_lease = None
+            finally:
+                self.watch.changes.close()
 
 
-def archive_plan(cfg, report):
+def archive_plan(cfg, report, execution=None):
     """Immutable plan snapshots; the legacy filename remains the latest view."""
-    from .generation_run import observed
-    execution = observed()
     contract = getattr(execution, 'publication_contract', None) if execution else None
     if contract:
         report['publication'] = contract.reference
@@ -373,7 +419,8 @@ def archive_plan(cfg, report):
     if report['operation_id']:
         base = directory(cfg)
         path = base/'plans'/(report['input_sha256'][:16]+'.json')
-        with lease(cfg, 'publication-history-'+base.name):
+        with (nullcontext() if contract and contract.output_lease is not None
+              else lease(cfg, 'publication-history-'+base.name)):
             _immutable(base/'identity.json', dict(operation_id=report['operation_id']))
             _immutable(path, report)
             if contract and json.loads(contract.watch.read(path)) != report:

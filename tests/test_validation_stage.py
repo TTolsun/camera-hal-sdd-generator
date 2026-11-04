@@ -261,3 +261,24 @@ def test_translation_profile_selects_only_transport_after_rendering(tmp_cfg, mon
     monkeypatch.setattr('sdd.translation.translate_missing', translate)
     prepare_catalog(tmp_cfg, tmp_cfg.root/'english.json', translate=True)
     assert seen == [('render', 'dry-run'), ('translate', 'claude', 'claude-haiku-5-5', tmp_cfg.root)]
+
+
+def test_site_rollback_preserves_user_edit_after_copy(tmp_cfg, tmp_path, monkeypatch):
+    import shutil
+    from sdd.site_build import build_site
+    out = tmp_path/'site'
+    def render(cfg, target, mermaid):
+        (target/'index.html').write_text('<p>previous</p>', encoding='utf-8')
+    build_site(tmp_cfg, out, render, None)
+    original = shutil.copyfile
+    def changed(cfg, target, mermaid):
+        (target/'index.html').write_text('<p>generated</p>', encoding='utf-8')
+    def copying(source, destination, *args, **kwargs):
+        result = original(source, destination, *args, **kwargs)
+        Path(destination).write_bytes(b'user edit after copy')
+        tmp_cfg.sections_file.write_text('sections: []', encoding='utf-8')
+        return result
+    monkeypatch.setattr('sdd.site_build.shutil.copyfile', copying)
+    with pytest.raises(InputChanged):
+        build_site(tmp_cfg, out, changed, None)
+    assert (out/'index.html').read_bytes() == b'user edit after copy'
