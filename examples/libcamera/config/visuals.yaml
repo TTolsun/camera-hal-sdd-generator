@@ -1388,8 +1388,15 @@ sections:
     topic: stopping
     kind: flow
     title: stopDevice 호출 구간의 관찰 계획
-    question: 분리 직후, 호출 직전, 실제 구현 진입과 복귀를 각각 관찰하는 조사 계획입니다. 호출 직전 표시만으로 구현 진입이나 멎은 원인을 확정하지 않습니다.
+    question: 대상 stopDevice 구현의 취소·완료 경로 검토와 분리 직후·호출 직전·실제 구현 진입·복귀의 관찰 계획입니다. 실제 검토·측정 결과가 아니며 호출 직전 표시만으로 구현 진입이나 멎은 원인을 확정하지 않습니다.
     nodes:
+    - id: review
+      label: '계획: 대상 stopDevice 구현의 취소·완료 경로 검토'
+      label_en: 'Plan: review cancellation and completion in the target stopDevice implementation'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: pending requests are cancelled and complete immediately in an error state.
     - id: detach
       label: '계획: waitingRequests.swap 직후 분리 상태 관찰'
       label_en: 'Plan: inspect separation immediately after waitingRequests.swap'
@@ -1433,6 +1440,14 @@ sections:
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: \fn PipelineHandler::stopDevice()
     edges:
+    - from: review
+      to: before
+      label: 구현별 경로를 검토해 관찰 지점 선정
+      label_en: Select observation points after reviewing implementation-specific paths
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: \fn PipelineHandler::stopDevice()
     - from: detach
       to: before
       label: 다음 stopDevice 호출 전 지점과 비교
@@ -1514,6 +1529,65 @@ sections:
       - source: stopping/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
+  - id: request-completion-audit-plan
+    topic: stopping
+    kind: flow
+    title: 제출 회차별 완료 기록의 비교 계획
+    question: 구현 검토 뒤 유효한 시점에 확보한 별도 기록으로 중복 완료와 반환 순서를 조사하는 계획입니다. 실행 결과나 중복 부재를 보장하지 않으며 완료 통지 뒤 요청 필드를 읽지 않습니다.
+    nodes:
+    - id: paths
+      label: '계획: 장치·대기 요청의 취소·완료 경로 구분'
+      label_en: 'Plan: distinguish device and waiting-request cancellation/completion paths'
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: after the device to keep them in order.
+    - id: identify
+      label: '계획: 유효한 때 논리적 제출 회차의 식별 기록 확보'
+      label_en: 'Plan: capture logical-submission identity while the request is valid'
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: Request *req = data->queuedRequests_.front();
+    - id: record
+      label: '계획: 완료 통지 호출마다 별도 기록 유지'
+      label_en: 'Plan: retain a separate record for each completion notification call'
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->requestComplete(req);
+    - id: compare
+      label: '계획: 보관 기록으로 중복 완료·반환 순서 비교'
+      label_en: 'Plan: compare retained records for duplicate completion and return order'
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: submission order, the pipeline handler may call it on any complete request
+    edges:
+    - from: paths
+      to: identify
+      label: 각 경로에서 관찰 지점 선정
+      label_en: Select observation points on each path
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: stopDevice(camera);
+    - from: identify
+      to: record
+      label: 재사용된 주소·cookie만으로 회차를 구분하지 않기
+      label_en: Do not identify submissions from a reused address or cookie alone
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->requestComplete(req);
+    - from: record
+      to: compare
+      label: 통지 뒤 요청 필드 대신 보관 기록만 비교
+      label_en: Compare only retained records after notification, without reading request fields
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: handler and shall not be accessed once this function returns.
   overview:
   - id: discovery-map
     topic: discovery
@@ -1920,7 +1994,7 @@ sections:
     topic: capabilities
     kind: flow
     title: 공통 Camera와 장치별 구현의 경계
-    question: 장치 지원은 해당 PipelineHandler 구현과 필요한 미디어 장치 확보에 달려 있습니다. 지원 기종이나 성능을 보장하는 그림은 아닙니다.
+    question: 공통 Camera와 장치별 PipelineHandler의 책임 연결입니다. 스트림 구성에 따른 하드웨어 구성과 장치 매칭·Camera 생성 책임을 구분하며 전체 실행 순서·지원 기종·성능을 보장하지 않습니다.
     nodes:
     - id: handler
       label: 장치별 PipelineHandler 구현
@@ -1943,7 +2017,22 @@ sections:
       - source: capabilities/camera
         sha256: 325c2af6569c185be1bc686e1fb6d161782dcbc8db34a0fbb719cff005ba7625
         quote: The Camera class models a camera capable of producing one or more image
+    - id: configure
+      label: 스트림 구성에 따른 하드웨어 파이프라인 구성
+      label_en: Configure hardware pipeline from stream configuration
+      evidence:
+      - source: capabilities/architecture
+        sha256: ebb7ebff27e91e71edc64f2b4e2399eb13abcbf5877787c922ba4f4146c85e7e
+        quote: "implements both pipeline configuration based on stream configuration, and"
     edges:
+    - from: handler
+      to: configure
+      label: 장치별 구성 책임
+      label_en: Device-specific configuration responsibility
+      evidence:
+      - source: capabilities/architecture
+        sha256: ebb7ebff27e91e71edc64f2b4e2399eb13abcbf5877787c922ba4f4146c85e7e
+        quote: "implements both pipeline configuration based on stream configuration, and"
     - from: handler
       to: media
       label: 필요 장치와 시스템 장치 매칭
