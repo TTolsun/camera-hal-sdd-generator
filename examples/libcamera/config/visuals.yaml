@@ -1648,6 +1648,45 @@ sections:
     - pending_
     - complete
     - hasPendingBuffers
+  - id: queued-lifetime-flow
+    topic: callback-depth
+    kind: ownership
+    generation: llm
+    max_nodes: 9
+    title: Queued 수신과 해제 시점의 책임
+    question: Signal 발신자의 포인터 수명 책임과 요청 소유자의 마지막 수신 사용 확인은 어떻게 연결됩니까?
+    prompt: 다른 스레드의 Object 슬롯으로 전달하는 범위입니다. Signal 발신자의 신호 발생 이후 포인터·참조 유효성 책임과 기존 요청 완료 콜백까지 버퍼 유지 계약을 구분하세요.
+      별도 Queued 수신자의 마지막 사용을 추적·동기화한 뒤 삭제·재사용을 결정하는 부분은 검증 계획으로 레이블에 명시하세요. 자동 잠금·참조 소유·수신 완료 대기나 stop 반환으로 모든
+      수신자가 끝났다는 런타임 보장을 만들지 마세요. 이미 자원 절에서 설명한 소유권 전체를 되풀이하지 말고 수명 협의 경계를 작은 그림으로 보여 주세요. 그림 범위는 Auto의 타스레드 Queued
+      선택 또는 명시적 Queued입니다. Signal 주석의 emit 반환 뒤라는 문구를 실제 구현의 선후 보장으로 쓰지 마세요. Queued postMessage는 기다리지 않고, 타스레드의
+      수신 처리는 emit 반환 전에 시작될 수도 있습니다. 반환과 수신 실행을 직렬로 연결하지 말고 순서 미보장·수명 협의의 검증 조건으로 표현하세요. 명시적 Direct를 비동기로 일반화하지
+      마세요.
+    sources:
+    - signals
+    - buffer-duty
+    - invocation
+    - notification
+    - signal-overloads
+    - connections
+    - thread-post
+    - thread-dispatch
+    - object-message
+    - invoke-message
+    whole_sources:
+    - signals
+    - buffer-duty
+    - invocation
+    - notification
+    - signal-overloads
+    - connections
+    - thread-post
+    - thread-dispatch
+    - object-message
+    - invoke-message
+    required_symbols:
+    - Signal
+    - Object
+    - Request
   overview:
   - id: discovery-map
     topic: discovery

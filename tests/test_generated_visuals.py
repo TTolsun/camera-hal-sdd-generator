@@ -1184,3 +1184,28 @@ def test_guard_tokens_do_not_absorb_korean_particles(tmp_cfg,automatic,label):
     draft=copy.deepcopy(agent.draft)
     draft['edges'][0].update(label=label,condition_ref='c0:true')
     materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')
+
+
+@pytest.mark.parametrize('mode',['label','condition_ref'])
+def test_cited_fragments_cannot_synthesize_a_balanced_guard(tmp_cfg,automatic,mode):
+    from sdd.generated_visuals import materialize,plans,inputs
+    section,model,_,agent=automatic
+    record=model.evidence['device/shutdown/stop']
+    record['text']=('void Device::stop() { if (ret ==\n\n0) { cancelPending(); } }'
+                    '\n\nvoid other() { if (ret == 0) { audit(); } }')
+    record['sha256']=hashlib.sha256(record['text'].encode()).hexdigest()
+    source=section['design_topics'][0]['sources'][0]
+    source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
+    plan=plans(tmp_cfg,section)[0]
+    passages=inputs(tmp_cfg,model,section,plan)[2]
+    stop=next(k for k,(_,q) in passages.items() if 'Device::stop' in q)
+    cancel=next(k for k,(_,q) in passages.items() if 'cancelPending' in q)
+    assert stop!=cancel
+    draft=copy.deepcopy(agent.draft)
+    draft['nodes'][0]['quote_ids']=[stop]
+    draft['nodes'][1]['quote_ids']=[cancel]
+    draft['edges'][0].update(quote_ids=[stop,cancel],condition_ref='always')
+    if mode=='label':draft['edges'][0]['label']='ret == 0'
+    else:draft['edges'][0]['condition_ref']='c0:true'
+    with pytest.raises(ValueError,match='cited source guards|absent from its cited source passages'):
+        materialize(tmp_cfg,model,section,plan,draft,'synthetic-unit-fixture')

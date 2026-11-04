@@ -12,6 +12,7 @@ from sdd.config import load
 from sdd.llm import Agent
 from sdd.generation_run import Execution
 
+HERE = Path(__file__).resolve().parent
 WORK = ROOT/'build/issue252'
 RUN = WORK/'run'
 
@@ -64,6 +65,10 @@ Return only JSON matching the schema. Findings must identify concrete erroneous/
     rules = {p.name:p.read_text(encoding='utf-8') for p in (ROOT/'style').glob('*.md')}
     payload = dict(phase=args.phase,purpose=purpose,scope=scope,writing_rules=rules,document=text,
                    complete_boundary_source_windows=windows)
+    probe=RUN/'signal-probe.json'
+    if probe.exists():
+        payload['separate_bounded_signal_probe']=json.loads(probe.read_bytes())
+        payload['signal_probe_source']=(HERE/'signal_before_return.cpp').read_text(encoding='utf-8')
     if args.peer:
         payload['english_document'] = args.peer.read_text(encoding='utf-8')
     def obj(properties):

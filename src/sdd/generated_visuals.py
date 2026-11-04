@@ -351,7 +351,7 @@ def materialize(cfg, model, section, plan, draft, producer):
             return re.findall(r"--|->\*?|==|!=|<=|>=|&&|\|\||(?:\d|\.\d)(?:[eEpP][+-]|[A-Za-z_0-9.'])*|[A-Za-z_][A-Za-z_0-9]*|[^\s]", value)
         for key in ('label', 'label_en'):
             remaining = comparison_tokens(item[key])
-            for guard in sorted(conditions({'cited': ('cited', quote)}, include_while=plan.get('while_conditions', False)), key=len, reverse=True):
+            for guard in sorted(conditions({str(i): ('cited', value) for i, value in enumerate(quotes)}, include_while=plan.get('while_conditions', False)), key=len, reverse=True):
                 if guard:
                     expected = comparison_tokens(guard)
                     offset = 0
@@ -417,7 +417,7 @@ def materialize(cfg, model, section, plan, draft, producer):
         if not isinstance(choice, str) or choice not in allowed:
             raise ValueError('Unknown source condition ID')
         condition, branch = allowed[choice]
-        if condition not in conditions({'edge': ('edge', quote)}, include_while=plan.get('while_conditions', False)):
+        if condition not in conditions({str(i): ('edge', ref['quote']) for i, ref in enumerate(evidence)}, include_while=plan.get('while_conditions', False)):
             raise ValueError('Edge condition ID is absent from its cited source passages')
         edge = {k: item[k] for k in ('from', 'to', 'label', 'label_en')} | {'evidence': evidence}
         if condition:

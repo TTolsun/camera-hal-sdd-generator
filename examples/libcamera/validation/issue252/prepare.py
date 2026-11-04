@@ -46,6 +46,8 @@ def main():
     RUN.mkdir(parents=True)
     git = lambda *args: subprocess.check_output(['git', '-C', str(SOURCE), *args])
     assert git('rev-parse', 'HEAD').decode().strip() == COMMIT
+    assert not git('status','--porcelain=v1','--untracked-files=all'), 'Generation checkout must be clean.'
+    assert not any(line[:1].islower() or line[:1]=='S' for line in git('ls-files','-v').decode().splitlines()), 'Suppressed Git change detection is not allowed in this public fixture.'
     topics = yaml.safe_load((HERE/'topics.yaml').read_bytes())['topics']
     # Add source questions to the real example; do not replace old contracts.
     section_path = ROOT/'examples/libcamera/config/sections.yaml'
@@ -79,13 +81,13 @@ def main():
         'callback-order': '버퍼 신호와 내부 pending_ 갱신, 요청 완료 통지 사이의 순서는 무엇입니까?',
         'callback-depth': 'Auto가 현재·수신 스레드를 비교해 Direct 즉시 호출과 Queued 메시지 전달을 고르는 분기는 무엇입니까?',
     }
-    existing = {v['topic']:v for v in visuals['sections'].get('request-lifecycle',[]) if v.get('generation')=='llm' and v['topic'] in questions}
+    existing = {tid:[deepcopy(v) for v in visuals['sections'].get('request-lifecycle',[]) if v.get('generation')=='llm' and v['topic']==tid] for tid in questions}
     visuals['sections']['request-lifecycle'] = [v for v in visuals['sections'].get('request-lifecycle',[]) if v['topic'] not in questions]
     for topic in topics:
-        visual = deepcopy(existing.get(topic['id'])) or dict(id=topic['id']+'-flow',topic=topic['id'],kind='flow',title=topic['title']+' 그림',
+        additions = deepcopy(existing.get(topic['id'])) or [dict(id=topic['id']+'-flow',topic=topic['id'],kind='flow',title=topic['title']+' 그림',
                       question=questions[topic['id']],generation='llm',max_nodes=9,
-                      prompt='핵심 조건과 반환 경계를 소스 구절이 지지하는 작은 그림으로 답하세요. 노드에 전체 본문을 옮기지 마세요.')
-        visuals['sections'].setdefault('request-lifecycle',[]).append(visual)
+                      prompt='핵심 조건과 반환 경계를 소스 구절이 지지하는 작은 그림으로 답하세요. 노드에 전체 본문을 옮기지 마세요.')]
+        visuals['sections'].setdefault('request-lifecycle',[]).extend(additions)
     visual_path = ROOT/'examples/libcamera/config/visuals.yaml'
     visual_text = visual_path.read_text(encoding='utf-8')
     if 'id: preparation-depth-flow' not in visual_text:
@@ -133,6 +135,8 @@ def main():
         'include/libcamera/internal/camera.h','include/libcamera/internal/request.h',
         'include/libcamera/internal/framebuffer.h','include/libcamera/internal/pipeline_handler.h',
         'include/libcamera/internal/v4l2_videodevice.h','Documentation/thread-safety.dox',
+        'src/libcamera/base/thread.cpp','src/libcamera/base/message.cpp','src/libcamera/base/event_dispatcher_poll.cpp',
+        'include/libcamera/base/thread.h','include/libcamera/base/message.h',
     ]
     windows = []
     for file in files:

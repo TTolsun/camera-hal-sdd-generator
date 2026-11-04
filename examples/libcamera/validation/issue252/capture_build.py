@@ -84,7 +84,9 @@ def main():
         target.parent.mkdir(parents=True,exist_ok=True)
         target.write_bytes((build/rel).read_bytes())
         assert digest(target)==sha
-    record = dict(schema=1,status='passed',source_commit=COMMIT,source=str(source.resolve()),build=str(build.resolve()),
+    library=build/'src/libcamera/base/libcamera-base.so'
+    outputs=dict(libcamera_base=dict(path=str(library.resolve()),sha256=digest(library)))
+    record = dict(outputs=outputs,schema=1,status='passed',source_commit=COMMIT,source=str(source.resolve()),build=str(build.resolve()),
                   required_options=REQUIRED,inputs=bindings,generated_inputs=generated,command=command,exit_code=result.returncode,
                   source_clean_before_and_after=True,captured_at=datetime.now(timezone.utc).isoformat(),
                   setup_command=setup,setup_exit_code=configured.returncode,fresh_configuration=True,full_rebuild=True,
