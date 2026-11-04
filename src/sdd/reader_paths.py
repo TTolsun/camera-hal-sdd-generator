@@ -59,7 +59,8 @@ def _id(value):
 
 def _plain(value):
     # Configuration is display text, never raw HTML, links or Markdown headings.
-    return html.escape(value).replace('\n', ' ').replace('|', '&#124;')
+    escaped = html.escape(value).replace('\n', ' ').replace('|', '&#124;')
+    return re.sub(r'([\\`*_{}\[\]()#!~])', r'\\\1', escaped)
 
 
 def assemble(cfg, texts, sections, entries, approval_states, model, validate):
@@ -103,7 +104,8 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
             return link
         part = _id(ref.get('part'))
         from .generated_design import verify
-        verify(model, section, texts[rel], cfg=cfg)
+        from .render_profiles import for_page
+        verify(model, section, texts[rel], cfg=for_page(cfg, rel))
         answers = meta.get('generated_design', {}).get('answers', {}).get(topic_id, [])
         selected = [a for a in answers if a.get('part_id') == part]
         if not selected or any(a.get('kind') != 'behavior' or not a.get('evidence') for a in selected):

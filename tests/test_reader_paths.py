@@ -110,7 +110,7 @@ def test_injected_index_is_not_shown_as_an_approved_manuscript(tmp_cfg, paths):
     sections = yaml.safe_load(tmp_cfg.sections_file.read_text(encoding='utf-8'))
     sections['sections'].append(dict(id='index', title='Home', kind='manual', output='index.md'))
     tmp_cfg.sections_file.write_text(yaml.safe_dump(sections, allow_unicode=True), encoding='utf-8')
-    text = '---\ngeneration_method: manual\nstatus: ok\n---\n# Original home\n\nApproved before new navigation.\n'
+    text = '---\ngeneration_method: manual\nstatus: ok\n---\n# Original home\n\nApproved before new navigation.\n\n## Existing section\n\nRead here.\n'
     (tmp_cfg.sdd_dir/'index.md').write_text(text, encoding='utf-8')
     ledger = approvals.load(tmp_cfg)
     approvals.approve_page(ledger, 'index.md', text, 'synthetic reviewer')
@@ -119,6 +119,9 @@ def test_injected_index_is_not_shown_as_an_approved_manuscript(tmp_cfg, paths):
     assert '사람 검토 전' in (site/'index.html').read_text(encoding='utf-8')
     assert approvals.page_status(approvals.load(tmp_cfg), 'index.md', text) == 'approved'
     assert (tmp_cfg.sdd_dir/'index.md').read_text(encoding='utf-8') == text
+    page = (site/'index.html').read_text(encoding='utf-8')
+    assert '<title>Original home · ' in page
+    assert page.index('id="같은-근거에서-작업과-결정-찾기"') < page.index('id="existing-section"')
 
 
 def test_required_approval_does_not_skip_deterministic_role_metadata(tmp_cfg, paths):
@@ -133,3 +136,47 @@ def test_required_approval_does_not_skip_deterministic_role_metadata(tmp_cfg, pa
     with pytest.raises(RuntimeError, match='역할별 판단'):
         export_site(tmp_cfg)
     assert (site/'site-manifest.json').read_bytes() == before
+
+
+def test_role_text_also_obeys_glossary_publication_policy(tmp_cfg, paths):
+    data, write, *_ = paths
+    tmp_cfg.raw['site']['undefined_terms'] = 'fail'
+    # The canonical synthetic document contains the familiar LLM abbreviation.
+    (tmp_cfg.config_dir/'glossary.yaml').write_text('terms: []\ncommon: [LLM, HAL]\n', encoding='utf-8')
+    site = export_site(tmp_cfg)
+    before = (site/'site-manifest.json').read_bytes()
+    data['roles'][0]['title'] = 'UNDEFINEDABC'
+    write()
+    with pytest.raises(RuntimeError, match='UNDEFINEDABC'):
+        export_site(tmp_cfg)
+    assert (site/'site-manifest.json').read_bytes() == before
+
+
+def test_fact_source_without_profile_cannot_bypass_generated_answer_verification(tmp_cfg, paths):
+    from sdd.document_metadata import split_frontmatter
+    from sdd.evidence import fingerprint
+    _, _, section, model, save, _ = paths
+    site = export_site(tmp_cfg)
+    before = (site/'site-manifest.json').read_bytes()
+    section.pop('design_requirements')
+    section['design_topics'][0].pop('covers')
+    save()
+    path = tmp_cfg.sdd_dir/'device.md'
+    meta, body = split_frontmatter(path.read_text(encoding='utf-8'))
+    meta['evidence_fingerprint'] = fingerprint(model, section)
+    meta['generated_design']['answers']['stop'][0]['text'] = 'Fabricated projection while canonical body stays unchanged.'
+    path.write_text('---\n'+yaml.safe_dump(meta, allow_unicode=True)+'---\n'+body, encoding='utf-8')
+    with pytest.raises(ValueError):
+        export_site(tmp_cfg)
+    assert (site/'site-manifest.json').read_bytes() == before
+
+
+def test_configuration_cannot_create_unverified_markdown_links_or_emphasis(tmp_cfg, paths):
+    data, write, *_ = paths
+    data['claims'][1]['text'] = '[external proof](https://example.invalid) **Approved** <img src=x>'
+    write()
+    site = export_site(tmp_cfg)
+    page = (site/'reader-work.html').read_text(encoding='utf-8')
+    assert 'href="https://example.invalid"' not in page
+    assert '**Approved**' in page
+    assert '&lt;img src=x&gt;' in page

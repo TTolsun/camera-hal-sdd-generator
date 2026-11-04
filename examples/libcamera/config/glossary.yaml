@@ -208,6 +208,11 @@ terms:
   definition: TID는 gettid 시스템 호출이 반환하는 Linux 스레드 ID입니다.
   aliases: []
 
+# Definition authored with the issue250 native Codex CLI/Terra High profile.
+- term: ROI
+  full: Return on Investment
+  definition: ROI(투자 수익률)는 수익을 투자 비용과 비교하는 개념이며, 이 공개 libcamera 문서의 예시에서는 측정하지 않습니다.
+
 common:
 # Log severity word, not an acronym.
 - ERROR
