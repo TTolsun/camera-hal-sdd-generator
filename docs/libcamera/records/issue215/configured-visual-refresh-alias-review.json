@@ -1,0 +1,32 @@
+{
+  "scope": "Follow-up alias-preservation fix for PR245. Final review103 checks this configuration-only variant and a separately unmerged native-record extension. It has no findings. Prior extension-only findings are preserved but are not features or defects of this PR245 variant.",
+  "original_record": "configured-visual-refresh-review.json",
+  "native_review": "code-review-103/review.json",
+  "findings": [],
+  "test_command": "python -m pytest tests/test_visual_refresh.py tests/test_render_profiles.py tests/test_generated_visuals.py tests/test_visuals.py -q",
+  "test_result": "137 passed in 70.30s",
+  "source_files": {
+    "src/sdd/visual_refresh.py": {
+      "working_bytes_sha256": "676f971e2eb6d024f7b85c22fd674f8bb2c43c0309211878ce26206fca967f06",
+      "lf_view_sha256": "e197225f4ad53d903fc9273d1a4079ca822ed70ecdae1b593b241f9995778219"
+    },
+    "tests/test_visual_refresh.py": {
+      "working_bytes_sha256": "0f81179a9375bbcb8b0b3e007f404aadb82c105641140a1ebdb33c762c2f25dd",
+      "lf_view_sha256": "41ab7bcba9ab46ebc13212cf32076ba6d1232b76b53a37c261b4c718164637aa"
+    }
+  },
+  "archive_sha256": "320a6bbe6f54c5810dc7aad52bd43c632341fa46580c3d47b16fc3525adf2871",
+  "archive_bytes": 692318,
+  "review_profile": {
+    "kind": "cli",
+    "runner": "codex",
+    "command": [],
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "cli_version": "0.166.0-alpha.5.1",
+  "human_review": "pending"
+}
