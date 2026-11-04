@@ -1,0 +1,6 @@
+{
+  "status": "pass",
+  "findings": [],
+  "reviewed_scope": "제공된 공개 mini HAL 소스와 변경 전후 문서·그림의 반환 조건 및 완료 분기, Mermaid 조건 비교 검증 코드와 테스트, 사내 파일럿 안내와 인수인계 양식을 대조했습니다. 변경 전에는 ret == 0, 변경 후에는 ret >= 0일 때 sendResult를 호출하며, 두 경우 모두 onFrameDone은 if 밖에 있습니다.",
+  "unverified_scope": "제공된 자료만 검토했으며 검증 코드와 테스트의 실제 실행, Mermaid 렌더링, 독립 CLI 실행 영수증, 사람 승인, 사내 적용 및 실기기 동작은 확인하지 못했습니다."
+}
