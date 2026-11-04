@@ -33,13 +33,13 @@
   "other_session": {
     "generator_pr": 231,
     "public_pr": 78,
-    "state": "Read-only recheck: PR231 draft/open and mergeable false; PR78 open/unmerged and mergeable false. Other chat unchanged/inactive after model-capacity failure. No messages, resume, interruption or worktree changes.",
+    "state": "Read-only recheck: PR231 remains draft/open/unmerged, currently mergeable true; PR78 remains open/unmerged with conflicts. No messages, resume, interruption or worktree changes.",
     "scope": [
       "official-cam-validation",
       "require_guard_branches",
       "identifier wrapping"
     ],
-    "checked_at": "2026-11-04T00:30:46.725340+00:00",
+    "checked_at": "2026-11-04T02:51:01.899305+00:00",
     "generator_head": "559fe43dd812ab34fa964a066de29d4b874fd50e",
     "public_head": "fb7bfd6d8ed2e06d80374a9da5e27cd6f38c80d2",
     "deferred_items": 14
@@ -389,5 +389,39 @@
     "human_review": "pending",
     "compression": "XZ preset9; every original member path and byte SHA verified unchanged; unpublished preset6 archive retained in own build directory",
     "entry_count": 16455
-  }
+  },
+  "citation_vocabulary_checkpoint": "citation-vocabulary-checkpoint.json",
+  "native_archive_08": {
+    "schema": 1,
+    "scope": "Terminal generation packs18..27, materialized reviews15..20 and real failed-generation preservation proof. Active28..33 and review21 excluded. No final full-site item approval, public release or human approval.",
+    "archive": "native-evidence-08.tar.xz",
+    "archive_sha256": "6a94dfbdda4d40ef63079d9ed60ecec58c67c63ad12a76dc47a451f4f32a08c5",
+    "bytes": 2507908,
+    "unique_archived_cli_receipts": 438,
+    "receipt_hashes_not_in_archives02_07": 114,
+    "count_note": "Unique receipt SHA counts; copied checkpoints are not new calls and completed transport is not semantic acceptance.",
+    "generator_checkpoint": "770124b",
+    "runtime_code_baseline": "ff9161a0e057b9524c099fd3e1e4da9247a3c2aa",
+    "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+    "human_review": "pending"
+  },
+  "native_archive_09": {
+    "schema": 1,
+    "scope": "Terminal generation packs28..36, selected materialized reviews21..23, independent code reviews59..76 (including failed protocol65), code-review71 disposition and regression logs. Active pack37 and review24 excluded. Generation success and completed CLI proof are not semantic approval. No final full-site item approval, public release or human approval.",
+    "archive": "native-evidence-09.tar.xz",
+    "archive_sha256": "b5c5804e04340ac7e7d7803a831dfba3c51d0caaf603e478c1e3eec32e86c4ca",
+    "bytes": 2417752,
+    "unique_archived_cli_receipts": 549,
+    "receipt_hashes_not_in_archives02_08": 70,
+    "count_note": "Unique receipt SHA counts; copied checkpoints are not new calls and completed transport is not semantic acceptance.",
+    "generator_checkpoint": "770124b",
+    "runtime_code_baseline": "ff9161a0e057b9524c099fd3e1e4da9247a3c2aa",
+    "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+    "human_review": "pending"
+  },
+  "native_profile_verifications": [
+    "native-profile-verification-07.json",
+    "native-profile-verification-08.json",
+    "native-profile-verification-09.json"
+  ]
 }
