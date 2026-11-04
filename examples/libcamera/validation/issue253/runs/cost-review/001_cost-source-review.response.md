@@ -1,0 +1,17 @@
+{
+  "verdict": "The measurement is a partial historical baseline, not a completed change-cost assessment or a no-impact determination. Coverage remains needs-review, and the independent review recorded in the cost data failed.",
+  "findings": [
+    "The diff fixes qcam's debayer rendering path: it obtains the `awb` uniform location and sets it to unity gains. The commit says the previously unset uniform produced zero gains and a black picture. It does not establish a change to request completion or pipeline shutdown contracts, nor does the diff show dynamic AWB gain calculation.",
+    "Both changed files match overview and component-index watch rules, but neither has an extracted entity. These file-level hits do not establish changed-line coverage or that either document is accurate. The absent baseline facts also leave removed entities in surviving files unassessed.",
+    "The overview claims that readers can find the classes and functions of all built pipelines, IPAs and apps in the component index. The supplied cost record says qcam is absent from parsed files, so that breadth of coverage is unsupported and potentially misleading. Check the index and its configured build scope, then correct the claim through the generation path if necessary.",
+    "Reused head facts are not a new extraction or a comparison against the parent. Determine whether qcam is intentionally outside the configured extraction and documentation scope; record that decision and review the changed lines and related shader behavior before deciding whether documentation changes are needed.",
+    "The two impact attempts exited with codes 1 and 2, and the independent CLI source review failed after approximately 0.003 seconds. Preserve both attempts and investigate their outcomes; neither constitutes a successful impact analysis or completed independent review.",
+    "The recorded zero generation and translation calls mean those stages were not performed, not that they were unnecessary or cost-free. Complete the extraction and base-facts comparison, assess whether generation and translation are needed, and record validation, independent review and site checks or their explicit unstarted status. If public documentation needs correction, follow the stated generation and publication workflow.",
+    "Keep measured elapsed times, retries and failures separate from unmeasured human active review and waiting time. No comparable earlier human review exists, so a savings percentage or completed total cost cannot be calculated."
+  ],
+  "scope_limitations": [
+    "This review uses only the supplied diff, impact data, cost record and overview excerpt. The full component index, extraction configuration, facts contents, shader source and command diagnostics were not supplied.",
+    "The supplied material does not establish runtime behavior on a device, generated prose accuracy across the site, or completion of a human review. This review is automatic and makes no claim of human approval.",
+    "The partial cost record does not support claims about general user success, causal productivity gains or cost savings."
+  ]
+}

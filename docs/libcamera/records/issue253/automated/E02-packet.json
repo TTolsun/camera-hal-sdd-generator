@@ -1,0 +1,76 @@
+{
+  "evaluator_id": "E02",
+  "kind": "automated_subagent",
+  "conditions": {
+    "A": {
+      "root": "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\build\\issue253\\source",
+      "start": "Documentation/index.rst",
+      "allowed": [
+        "Documentation/**",
+        "include/**",
+        "src/**",
+        "test/**"
+      ]
+    },
+    "B": {
+      "root": "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\build\\issue253\\public\\docs",
+      "start": "index.html",
+      "allowed": [
+        "*.html",
+        "scenarios/*.html",
+        "en/*.html",
+        "assets/*",
+        "*.mmd"
+      ]
+    }
+  },
+  "tasks": [
+    {
+      "id": "T2",
+      "prompt": "공통 프레임워크와 장치별 구현의 책임을 구분하고, 실제 장치 지원을 보장할 수 있는 범위를 근거와 함께 설명하세요.",
+      "order": "BA"
+    },
+    {
+      "id": "T3",
+      "prompt": "내장 SoftwareISP 벤치마크가 포함하는 처리와 제외하는 처리를 찾으세요. 전체 촬영 지연으로 해석할 수 있나요?",
+      "order": "AB"
+    },
+    {
+      "id": "D1",
+      "prompt": "제출 성공을 관찰했지만 완료 콜백이 없습니다. 준비 대기·큐 제한·장치 전달·버퍼/요청 완료를 구분하여 처음 확인할 함수·값·분기와 다음 관측 계획을 제시하세요. 상태 변경 함수를 관측 목적으로 재호출하지 마세요.",
+      "order": "BA"
+    },
+    {
+      "id": "D2",
+      "prompt": "정지 중 대기 요청이 다시 장치로 넘어가지 않게 종료 경로를 바꾸려 합니다. 수정 위치, 대기/진행 큐 처리 순서, 함께 확인할 호출자·스레드·수명과 검증 경로를 정하세요. 실제 실행한 결과와 실행 계획을 구분하세요.",
+      "order": "AB"
+    }
+  ],
+  "rules": [
+    "정답표·설정·기록·외부 지식·웹·다른 평가 결과를 읽지 마세요.",
+    "과업마다 지정된 첫 조건에서 탐색·답 제출을 끝낸 뒤 두 번째 조건을 읽으세요. 다른 조건의 근거를 이 조건의 답에 사용하지 마세요.",
+    "B는 HTML의 main 본문·그림 원문·발췌를 읽고 검색할 수 있지만 Markdown frontmatter와 생성 설정은 읽지 마세요.",
+    "시작/첫 근거/제출 시각을 도구로 측정하고 600초 제한을 지키세요. 시간을 추정하지 마세요.",
+    "답과 경로·검색어·실제 근거 파일/줄·누락·환경 지연·도움 요청을 기록하세요. 실패도 보고하세요.",
+    "사람 읽기 부담·사람 검토 시간은 null입니다. 스스로 정답 채점하지 마세요.",
+    "입력은 읽기 전용이며 이 참가자 폴더의 results.json에만 결과를 쓰세요."
+  ],
+  "result_fields": [
+    "evaluator_id",
+    "task_id",
+    "condition",
+    "exposure",
+    "started_at",
+    "first_evidence_at",
+    "ended_at",
+    "elapsed_seconds",
+    "answer",
+    "evidence",
+    "visited",
+    "queries",
+    "help_count",
+    "missing",
+    "reading_ease_1_to_5",
+    "environment_delay_seconds"
+  ]
+}

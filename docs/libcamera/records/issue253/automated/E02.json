@@ -1,0 +1,379 @@
+[
+  {
+    "evaluator_id": "E02",
+    "task_id": "T2",
+    "condition": "B",
+    "exposure": 1,
+    "started_at": "2026-11-04 18:51:39 UTC",
+    "first_evidence_at": "2026-11-04 18:51:59 UTC",
+    "ended_at": "2026-11-04 18:52:44 UTC",
+    "elapsed_seconds": 65,
+    "answer": "공통 프레임워크는 카메라 제어와 네이티브 C++ API를 제공하며, Camera는 획득·구성·시작·요청·정지·해제 계약을 제공합니다. 커널은 V4L2 계열 저수준 제어를 맡습니다. 장치별 PipelineHandler는 필요한 미디어 장치를 매칭·확보하고 Camera를 만들며 등록되어야 합니다. 상위 프레임워크 연결은 adaptation의 역할입니다. 플랫폼 지원 목록과 빌드 대상 선택은 실제 제품의 모든 센서·기능·성능을 보장하지 않습니다. 해당 핸들러와 필요한 장치를 확보해야 하며, 구성 validate의 Adjusted는 스트림 변경·삭제까지 재확인해야 합니다. 문서 그림의 자동 연결 검사는 실제 기기 실행 검증이나 의미 승인이 아니므로 실제 장치의 지원 보장은 별도 실행 검증 없이는 할 수 없습니다.",
+    "evidence": [
+      {
+        "file": "vendor-overview.html",
+        "lines": "112-123,171",
+        "finding": "계층 책임, 지원 목록과 빌드 선택, Camera 계약과 장치 매칭 책임입니다."
+      },
+      {
+        "file": "vendor-assurance.html",
+        "lines": "51-54,65-78",
+        "finding": "구성 검증 상태와 기기 실행 검증의 한계입니다."
+      }
+    ],
+    "visited": [
+      "index.html",
+      "vendor-overview.html",
+      "vendor-assurance.html",
+      "vendor-integration.html"
+    ],
+    "queries": [
+      "index의 지원 범위와 검증·제품 개요 링크",
+      "책임|보장|지원|공통|구현|검증|파이프라인|프레임워크"
+    ],
+    "help_count": 0,
+    "missing": [
+      "특정 실제 장치의 실행 결과와 지원 보증은 발견하지 못했습니다."
+    ],
+    "reading_ease_1_to_5": null,
+    "human_review_seconds": null,
+    "environment_delay_seconds": 18.79,
+    "measurement_limitations": [
+      "시각은 도구의 UTC 초 해상도입니다. 환경 지연은 읽기 명령의 보고된 wall_time_seconds 합이며 전체 도구·모델 지연을 분리하지 못합니다.",
+      "첫 검색은 main 밖 내비게이션도 반환했습니다. 이후에는 main 본문만 읽었습니다.",
+      "Python 출력 인코딩 문제로 일부 출력을 UTF-8로 다시 읽었습니다.",
+      "자동 독자 시행입니다. 사람 읽기 부담과 사람 검토 시간은 null이며 자체 정답 채점은 하지 않았습니다. UTC 도구 시각은 초 해상도이고 elapsed_seconds는 시작·끝 차입니다. environment_delay_seconds는 자료 읽기 셸 호출의 보고된 wall_time_seconds 합으로 도구·모델·세션 전체 대기와 사람 시간은 측정하지 않습니다."
+    ]
+  },
+  {
+    "evaluator_id": "E02",
+    "task_id": "T2",
+    "condition": "A",
+    "exposure": 2,
+    "started_at": "2026-11-04 18:52:54 UTC",
+    "first_evidence_at": "2026-11-04 18:53:09 UTC",
+    "ended_at": "2026-11-04 18:53:43 UTC",
+    "elapsed_seconds": 49,
+    "answer": "공통 프레임워크는 커널 API를 통한 장치 구성·이미지 제어를 공통 C++ 인터페이스로 추상화합니다. 커널은 저수준 하드웨어 제어, adaptation은 다른 프레임워크와의 접속, 상위 애플리케이션은 프로젝트 밖의 사용을 맡습니다. 각 파이프라인에는 별도 PipelineHandler 구현이 필요하며, 이 구현은 장치를 매칭하고 전부 확보한 뒤 Camera를 만들고 등록합니다. match는 필요한 장치를 모두 찾지 못하면 부분 확보도 해제하고 false를 반환합니다. 공개 문서의 플랫폼 목록은 전용·범용 지원 대상을 구분합니다. 센서는 Linux 커널 지원, 플랫폼 지원, 물리 연결과 필요한 통합 노력을 전제로 연결할 수 있다고 설명합니다. 따라서 지원 목록만으로 임의 제품의 모든 기능·화질·성능을 보장할 수 없으며 해당 장치 조합의 통합과 실행 확인이 필요합니다.",
+    "evidence": [
+      {
+        "file": "Documentation/introduction.rst",
+        "lines": "35-48,137-165",
+        "finding": "공통화 목적과 소프트웨어 계층 책임입니다."
+      },
+      {
+        "file": "Documentation/platform_support.rst",
+        "lines": "6-19",
+        "finding": "전용·범용 지원 플랫폼 목록입니다."
+      },
+      {
+        "file": "Documentation/sensor-support.rst",
+        "lines": "6-12",
+        "finding": "커널 지원·물리 연결·통합 노력의 전제입니다."
+      },
+      {
+        "file": "src/libcamera/pipeline_handler.cpp",
+        "lines": "33-40,91-112",
+        "finding": "핸들러 등록, 매칭·확보·Camera 생성과 실패 처리 계약입니다."
+      }
+    ],
+    "visited": [
+      "Documentation/index.rst",
+      "Documentation/introduction.rst",
+      "Documentation/platform_support.rst",
+      "Documentation/sensor-support.rst",
+      "src/libcamera/pipeline_handler.cpp"
+    ],
+    "queries": [
+      "pipeline|framework|support|vendor|device",
+      "match\\(|MediaDevice::acquire|register|thread|configuration"
+    ],
+    "help_count": 0,
+    "missing": [
+      "특정 실제 장치의 실행 검증 결과는 탐색하지 못했습니다."
+    ],
+    "reading_ease_1_to_5": null,
+    "human_review_seconds": null,
+    "environment_delay_seconds": 14.525037,
+    "measurement_limitations": [
+      "제출 기록 갱신에서 같은 경로 Delete/Add apply_patch가 거절되어 Set-Content로 재기록했습니다. 답과 종료 시각은 유지했습니다.",
+      "자동 독자 시행입니다. 사람 읽기 부담과 사람 검토 시간은 null이며 자체 정답 채점은 하지 않았습니다. UTC 도구 시각은 초 해상도이고 elapsed_seconds는 시작·끝 차입니다. environment_delay_seconds는 자료 읽기 셸 호출의 보고된 wall_time_seconds 합으로 도구·모델·세션 전체 대기와 사람 시간은 측정하지 않습니다."
+    ]
+  },
+  {
+    "evaluator_id": "E02",
+    "task_id": "T3",
+    "condition": "A",
+    "exposure": 1,
+    "started_at": "2026-11-04 18:53:57 UTC",
+    "first_evidence_at": "2026-11-04 18:54:05 UTC",
+    "ended_at": "2026-11-04 18:54:21 UTC",
+    "elapsed_seconds": 24,
+    "answer": "DebayerCpu의 내장 벤치마크는 통계 수집과 debayering 처리 시간만 포함하며 프레임 캡처와 출력 시간을 제외합니다. 따라서 전체 촬영 지연으로 해석할 수 없습니다. Software ISP 파이프라인으로 cam 또는 qcam을 실행하면 항상 동작합니다. 초기 30프레임은 캐시·CPU 온도 준비를 위해 측정에서 제외하며 그 다음 측정 구간의 총 처리 시간과 프레임당 시간을 info 로그에 표시합니다. 문서의 특정 노트북 수치는 해당 CPU 설정과 입력 해상도·포맷 조건의 예이며 보편 성능 보증이 아닙니다. 실제 실행은 하지 않았습니다.",
+    "evidence": [
+      {
+        "file": "Documentation/software-isp-benchmarking.rst",
+        "lines": "15-24,28-44",
+        "finding": "측정 포함·제외, 워밍업, 로그와 조건별 예제입니다."
+      }
+    ],
+    "visited": [
+      "Documentation/index.rst",
+      "Documentation/software-isp-benchmarking.rst"
+    ],
+    "queries": [
+      "index의 SoftwareISP Benchmarking 항목을 따라 전체 문서를 읽었습니다."
+    ],
+    "help_count": 0,
+    "missing": [],
+    "reading_ease_1_to_5": null,
+    "human_review_seconds": null,
+    "environment_delay_seconds": 4.1296136,
+    "measurement_limitations": [
+      "자동 독자 시행입니다. 사람 읽기 부담과 사람 검토 시간은 null이며 자체 정답 채점은 하지 않았습니다. UTC 도구 시각은 초 해상도이고 elapsed_seconds는 시작·끝 차입니다. environment_delay_seconds는 자료 읽기 셸 호출의 보고된 wall_time_seconds 합으로 도구·모델·세션 전체 대기와 사람 시간은 측정하지 않습니다."
+    ]
+  },
+  {
+    "evaluator_id": "E02",
+    "task_id": "T3",
+    "condition": "B",
+    "exposure": 2,
+    "started_at": "2026-11-04 18:54:24 UTC",
+    "first_evidence_at": "2026-11-04 18:54:32 UTC",
+    "ended_at": "2026-11-04 18:54:54 UTC",
+    "elapsed_seconds": 30,
+    "answer": "내장 DebayerCpu 벤치마크는 통계 수집과 디베이어링 처리 시간만 측정합니다. 프레임 캡처와 출력 시간은 제외하므로 전체 촬영 지연으로 해석할 수 없습니다. Software ISP를 사용하는 파이프라인에서 cam 또는 qcam을 실행하면 사용할 수 있으며, 발췌는 항상 동작한다고 설명합니다. 실제 실행은 하지 않았습니다.",
+    "evidence": [
+      {
+        "file": "vendor-assurance.html",
+        "lines": "100,226-234",
+        "finding": "처리 범위와 제외 범위, 사용 방법을 본문과 원문 발췌로 확인했습니다."
+      }
+    ],
+    "visited": [
+      "index.html",
+      "vendor-assurance.html",
+      "ipa-algorithms.html"
+    ],
+    "queries": [
+      "Software|Debayer|벤치|통계|지연|캡처|처리 시간"
+    ],
+    "help_count": 0,
+    "missing": [],
+    "reading_ease_1_to_5": null,
+    "human_review_seconds": null,
+    "environment_delay_seconds": 9.9473097,
+    "measurement_limitations": [
+      "자동 독자 시행입니다. 사람 읽기 부담과 사람 검토 시간은 null이며 자체 정답 채점은 하지 않았습니다. UTC 도구 시각은 초 해상도이고 elapsed_seconds는 시작·끝 차입니다. environment_delay_seconds는 자료 읽기 셸 호출의 보고된 wall_time_seconds 합으로 도구·모델·세션 전체 대기와 사람 시간은 측정하지 않습니다."
+    ]
+  },
+  {
+    "evaluator_id": "E02",
+    "task_id": "D1",
+    "condition": "B",
+    "exposure": 1,
+    "started_at": "2026-11-04 18:54:59 UTC",
+    "first_evidence_at": "2026-11-04 18:55:10 UTC",
+    "ended_at": "2026-11-04 18:55:37 UTC",
+    "elapsed_seconds": 38,
+    "answer": "먼저 Camera::queueRequest의 0은 비동기 호출 예약 성공이라는 점을 확인합니다. request_queue와 request_device_queue 경계에서 같은 요청 식별자로 추적합니다. 준비 단계는 registerRequest의 prepared 연결, queueRequest의 waitingRequests_ 삽입과 prepare(300ms), Request::Private::prepare의 notifiers_·펜스 fd·타이머를 확인합니다. doQueueRequests에서는 waitingRequests_의 유무, queuedRequests_.size()==maxQueuedRequestsDevice_ 분기, 선두 prepared_를 순서대로 관찰합니다. 뒤 요청도 선두 미준비에 막힐 수 있습니다. queuedRequests_는 취소 요청까지 포함하는 소프트웨어 큐이므로 실제 장치 전달 수로 간주하지 않습니다. doQueueRequest는 void이며 큐 추가·sequence 부여 뒤 cancelled_이면 장치 호출 없이 completeRequest로 갑니다. 그렇지 않으면 queueRequestDevice의 실제 ret을 기록하고 0이 아니면 cancelRequest 경로를 확인합니다. 장치 전달 후에는 CameraManager 스레드에서 completeBuffer의 버퍼 신호·추적 갱신과 명시적 completeRequest를 구분합니다. 마지막 버퍼 완료만으로 요청은 자동 완료되지 않습니다. completeRequest에서 앞 요청의 status()==RequestPending이면 뒤 완료 요청의 반환도 막힙니다. 다음에는 각 경계의 수동 호출 대신 기존 실행에 로그·중단점을 붙여 요청 식별자, 시각, 스레드, 큐 크기, prepared_·cancelled_·status, 장치 ret, 버퍼 완료와 requestCompleted를 기록하겠습니다. prepare·doQueueRequests·completeBuffer·completeRequest를 관찰 목적으로 재호출하지 않으며 완료 뒤 요청을 접근하지 않겠습니다. 이 시행에서는 문서만 읽었고 실행 진단은 하지 않았습니다.",
+    "evidence": [
+      {
+        "file": "request-lifecycle.html",
+        "lines": "69,554-561",
+        "finding": "제출 성공 의미, 소프트웨어 큐 의미와 완료 계약·수명입니다."
+      },
+      {
+        "file": "pipeline-requests.html",
+        "lines": "39,127-130,133,191-195,250-263,289-346,404-435,624-643",
+        "finding": "준비·큐 한도·취소·장치 반환·완료·순서 분기의 본문과 발췌입니다."
+      }
+    ],
+    "visited": [
+      "index.html",
+      "request-lifecycle.html",
+      "pipeline-requests.html"
+    ],
+    "queries": [
+      "queueRequest|waitingRequests|inFlight|ready|prepared|completeBuffer|completeRequest|hasPending|fence|재호출|성공|제한",
+      "준비·전달·완료의 발췌 범위를 읽었습니다."
+    ],
+    "help_count": 0,
+    "missing": [
+      "특정 장치의 queueRequestDevice 구현과 실제 관측 로그는 확인하지 않았습니다."
+    ],
+    "reading_ease_1_to_5": null,
+    "human_review_seconds": null,
+    "environment_delay_seconds": 9.0264764,
+    "measurement_limitations": [
+      "자동 독자 시행입니다. 사람 읽기 부담과 사람 검토 시간은 null이며 자체 정답 채점은 하지 않았습니다. UTC 도구 시각은 초 해상도이고 elapsed_seconds는 시작·끝 차입니다. environment_delay_seconds는 자료 읽기 셸 호출의 보고된 wall_time_seconds 합으로 도구·모델·세션 전체 대기와 사람 시간은 측정하지 않습니다."
+    ]
+  },
+  {
+    "evaluator_id": "E02",
+    "task_id": "D1",
+    "condition": "A",
+    "exposure": 2,
+    "started_at": "2026-11-04 18:55:42 UTC",
+    "first_evidence_at": "2026-11-04 18:55:50 UTC",
+    "ended_at": "2026-11-04 18:56:33 UTC",
+    "elapsed_seconds": 51,
+    "answer": "Camera::queueRequest가 ConnectionTypeQueued 호출을 예약하고 0을 반환하는 지점과 실제 파이프라인 진입을 먼저 구분합니다. 준비는 PipelineHandler::registerRequest의 prepared 연결과 queueRequest의 waitingRequests_ 삽입·prepare(300ms), Request::Private::prepare에서 기다리는 펜스와 notifiers_·timer_를 확인합니다. 펜스가 없으면 즉시 prepared_가 true가 되며, 신호 또는 timeout도 prepared를 발생시키지만 timeout은 먼저 cancel합니다. doQueueRequests의 queuedRequests_.size()==maxQueuedRequestsDevice_와 선두 prepared_가 전달을 막는 분기입니다. queuedRequests_는 실제 장치 호출 전에 추가되고 취소된 요청도 추가되므로 하드웨어 진행 수와 같다고 단정할 수 없습니다. doQueueRequest는 void이며 cancelled_이면 completeRequest 후 반환하므로 request_device_queue trace만으로 장치 제출을 보장할 수 없습니다. 실제 queueRequestDevice의 호출 유무와 ret를 기록하며 ret!=0이면 cancelRequest를 추적합니다. 그 뒤 completeBuffer는 버퍼 통지·pending_ 제거이고 모든 버퍼를 정확히 한 번 완료해야 합니다. 요청은 별도 completeRequest가 필요하며 queuedRequests_ 앞 status가 RequestPending이면 뒤 요청 반환은 대기합니다. 다음 관측은 동일 cookie·sequence·버퍼 식별자를 사용한 기존 실행의 로그와 중단점으로 각 경계 시각, 스레드, 큐 크기, prepared_·cancelled_·status·남은 버퍼·실제 장치 ret를 수집하는 것입니다. 이 상태 변경 함수들을 관측 목적으로 재호출하지 않습니다. completeRequest 반환 후 요청 접근도 금합니다. 현재 수행한 것은 소스 읽기이며 실제 콜백 문제를 재현하지 않았습니다.",
+    "evidence": [
+      {
+        "file": "src/libcamera/camera.cpp",
+        "lines": "1308-1327,1330-1380",
+        "finding": "제출 유효성 검사와 비동기 예약·0 반환입니다."
+      },
+      {
+        "file": "src/libcamera/pipeline_handler.cpp",
+        "lines": "435-525,530-617",
+        "finding": "준비·큐 분기·실제 장치 호출·완료 순서와 수명입니다."
+      },
+      {
+        "file": "src/libcamera/request.cpp",
+        "lines": "90-115,192-260,275-311",
+        "finding": "버퍼 추적과 펜스 신호·타임아웃 준비 분기입니다."
+      }
+    ],
+    "visited": [
+      "Documentation/index.rst",
+      "src/libcamera/camera.cpp",
+      "src/libcamera/pipeline_handler.cpp",
+      "src/libcamera/request.cpp"
+    ],
+    "queries": [
+      "queueRequest\\(|doQueueRequest|completeBuffer|completeRequest|prepare\\(|notifierActivated|emitPrepareCompleted|timeout\\(",
+      "해당 함수의 줄 범위를 읽었습니다."
+    ],
+    "help_count": 0,
+    "missing": [
+      "실제 장치 구현과 실행 로그는 확인하지 않았습니다.",
+      "camera.cpp의 1530-1575 범위 읽기는 파일 길이를 벗어나 결과가 없었습니다."
+    ],
+    "reading_ease_1_to_5": null,
+    "human_review_seconds": null,
+    "environment_delay_seconds": 16.1160981,
+    "measurement_limitations": [
+      "자동 독자 시행입니다. 사람 읽기 부담과 사람 검토 시간은 null이며 자체 정답 채점은 하지 않았습니다. UTC 도구 시각은 초 해상도이고 elapsed_seconds는 시작·끝 차입니다. environment_delay_seconds는 자료 읽기 셸 호출의 보고된 wall_time_seconds 합으로 도구·모델·세션 전체 대기와 사람 시간은 측정하지 않습니다."
+    ]
+  },
+  {
+    "evaluator_id": "E02",
+    "task_id": "D2",
+    "condition": "A",
+    "exposure": 1,
+    "started_at": "2026-11-04 18:56:43 UTC",
+    "first_evidence_at": "2026-11-04 18:57:04 UTC",
+    "ended_at": "2026-11-04 18:58:38 UTC",
+    "elapsed_seconds": 115,
+    "answer": "공통 수정 위치는 src/libcamera/pipeline_handler.cpp의 PipelineHandler::stop이며 현재 코드에 이미 필요한 방어 순서가 있습니다. 먼저 waitingRequests_를 지역 큐로 swap해 분리하고 stopDevice를 호출합니다. stopDevice 내부의 completeRequest가 마지막에 doQueueRequests를 재진입하므로 이 분리 전에 장치를 정지하면 대기 요청이 다시 전달될 수 있습니다. 장치의 진행 요청을 먼저 끝낸 뒤 지역 대기 큐를 FIFO로 꺼내 cancel하고 doQueueRequest로 넘깁니다. 단순 cancelRequest로 치환하면 sequence 부여와 queuedRequests_ 편입 경로를 건너뜁니다. doQueueRequest는 cancelled_ 분기로 장치 호출을 생략하고 completeRequest로 완료합니다. 마지막에 두 큐가 비었는지 확인하고 requestSequence_를 0으로 초기화합니다. 호출자 Camera::stop은 호출자 동기화가 필요하고 CameraStopping으로 바꾼 뒤 CameraManager 스레드에 Blocking 호출을 하며, 복귀 후 hasPendingRequests 검사와 Configured 전이를 합니다. hasPendingRequests는 queuedRequests_만 보므로 waiting 큐의 직접 검사도 유지합니다. completeRequest 반환 뒤 요청에 접근하면 안 되고 버퍼·요청은 콜백까지 유효해야 합니다. 취소는 pending 버퍼를 취소·통지하고 notifiers_·timer_를 지웁니다. 가상 장치 stopDevice도 worker exit·wait·메시지 제거·완료 신호 소진·연결 해제 뒤 장치 큐를 취소하는 순서를 함께 검토해야 합니다. 검증 계획은 test/camera/capture.cpp와 statemachine.cpp를 출발점으로 진행 요청·준비 대기·미신호 펜스·큐 한도·역순 장치 완료를 섞어 stop 진입 뒤 실제 queueRequestDevice 호출이 늘지 않는지, 콜백이 정확히 한 번 제출 순서대로 오는지, 타이머와 두 큐가 남지 않는지, 재시작 sequence가 초기화되는지 확인하는 것입니다. 일반 capture 테스트는 성공 프레임만 세므로 취소 완료를 세는 검사를 보완해야 합니다. 이번 시행에서는 소스 읽기만 수행했고 코드를 수정하거나 테스트·카메라 실행을 하지 않았습니다.",
+    "evidence": [
+      {
+        "file": "src/libcamera/pipeline_handler.cpp",
+        "lines": "359-424,483-525,571-617",
+        "finding": "대기 큐 분리·장치 정지·대기 취소 순서와 완료 재진입·수명입니다."
+      },
+      {
+        "file": "src/libcamera/camera.cpp",
+        "lines": "1431-1488",
+        "finding": "호출자 동기화·상태·Blocking 스레드 호출·콜백입니다."
+      },
+      {
+        "file": "src/libcamera/request.cpp",
+        "lines": "125-151,154-170",
+        "finding": "완료 assertion과 취소의 버퍼·notifier·timer 정리입니다."
+      },
+      {
+        "file": "src/libcamera/pipeline/virtual/virtual.cpp",
+        "lines": "395-435",
+        "finding": "가상 장치 worker 정지·신호 처리·취소와 실제 장치 전달 경로입니다."
+      },
+      {
+        "file": "test/camera/capture.cpp",
+        "lines": "37-56,119-159",
+        "finding": "성공 콜백 계수와 재큐잉·정지 테스트를 확인했습니다."
+      },
+      {
+        "file": "test/camera/statemachine.cpp",
+        "lines": "49,76,107,160",
+        "finding": "검색에서 stop 호출 위치만 확인했습니다."
+      }
+    ],
+    "visited": [
+      "Documentation/index.rst",
+      "src/libcamera/pipeline_handler.cpp",
+      "src/libcamera/camera.cpp",
+      "src/libcamera/request.cpp",
+      "src/libcamera/pipeline/virtual/virtual.cpp",
+      "test/camera/capture.cpp",
+      "test/camera/statemachine.cpp"
+    ],
+    "queries": [
+      "void PipelineHandler::stop|stopDevice\\(|int Camera::stop|hasPendingRequests|requestComplete\\(",
+      "stop|cancel|fence (test/camera/*.cpp 경로 검색은 Windows glob 오류로 실패하여 -g '*.cpp'로 다시 검색했습니다.)",
+      "stopDevice\\(|PipelineHandler::stop|ConnectionTypeBlocking"
+    ],
+    "help_count": 0,
+    "missing": [
+      "특정 물리 장치 stopDevice와 실제 실행 결과는 미확인입니다.",
+      "statemachine.cpp 본문과 펜스 종료 전용 테스트는 읽지 못했습니다."
+    ],
+    "reading_ease_1_to_5": null,
+    "human_review_seconds": null,
+    "environment_delay_seconds": 37.7649944,
+    "measurement_limitations": [
+      "셸 검색 일부가 실행 세션으로 반환되어 후속 poll로 종료를 확인했습니다. 환경 지연은 각 호출이 보고한 wall_time_seconds 합이며 세션의 전체 실행 기간을 분리한 값이 아닙니다.",
+      "자동 독자 시행입니다. 사람 읽기 부담과 사람 검토 시간은 null이며 자체 정답 채점은 하지 않았습니다. UTC 도구 시각은 초 해상도이고 elapsed_seconds는 시작·끝 차입니다. environment_delay_seconds는 자료 읽기 셸 호출의 보고된 wall_time_seconds 합으로 도구·모델·세션 전체 대기와 사람 시간은 측정하지 않습니다."
+    ]
+  },
+  {
+    "evaluator_id": "E02",
+    "task_id": "D2",
+    "condition": "B",
+    "exposure": 2,
+    "started_at": "2026-11-04 18:58:43 UTC",
+    "first_evidence_at": "2026-11-04 18:58:59 UTC",
+    "ended_at": "2026-11-04 19:00:00 UTC",
+    "elapsed_seconds": 77,
+    "answer": "수정의 공통 진입점은 PipelineHandler::stop입니다. 문서의 현재 경로는 이미 waitingRequests_를 지역 waitingRequests로 먼저 swap한 뒤 stopDevice를 호출하도록 되어 있습니다. completeRequest의 마지막 doQueueRequests 재진입 때문에 이 분리 순서를 보존해야 합니다. 장치의 진행 요청을 먼저 오류·취소 상태로 끝낸 다음 지역 대기 요청을 FIFO로 꺼내 cancel하고 doQueueRequest로 넘깁니다. 이 경로는 sequence 부여와 queuedRequests_ 임시 편입을 보존하고 cancelled_ 분기에서 queueRequestDevice를 생략하므로 단순 cancelRequest로 바꾸지 않습니다. 끝의 두 큐 검사와 requestSequence_=0도 보존합니다. Camera::stop 호출자의 상태 변경 동기화, CameraStopping 전환, Blocking 호출과 CameraManager 스레드 실행, 복귀 후 Configured 전이를 함께 확인합니다. ASSERT는 NDEBUG 조건에서 생성되지 않을 수 있으므로 실행 검증을 대신하지 않습니다. 요청 소유자는 콜백까지 버퍼를 유지해야 하고 완료 핸들러에서 요청을 삭제할 수 있으므로 camera->requestComplete 이후 요청 필드를 읽지 않습니다. 애플리케이션 콜백의 연결 위치·방식·수신 객체 스레드와 취소 중 notifier·timer 정리도 확인합니다. 검증은 swap 직후·stopDevice 호출 직전·실제 구현 진입·복귀를 별도 관측하고, 준비 대기와 진행 요청이 섞인 상태에서 stop 후 실제 장치 제출이 없는지, 취소·버퍼·요청 통지가 정확히 한 번 순서대로 오는지, 두 큐와 타이머가 정리되고 재시작하는지 확인하는 계획입니다. 상태 변경 함수를 관찰용으로 재호출하지 않습니다. 문서에는 가상 CPU 프로브 3회에서 실행당 정상 4개·취소 4개, 연결 3종 합 24콜백을 관찰했다고 적혀 있습니다. Auto·Queued의 취소 표식은 stop-return 뒤, Direct는 stop 표식 사이였으나 실제 함수 반환 완료나 연결 간 고정 순서·DMA·물리 장치 성공을 증명하지 않습니다. 이것은 기존 문서의 관찰이며 이번 시행에서 실행한 결과가 아닙니다. 이번에는 문서와 발췌만 읽었고 수정·테스트는 실행하지 않았습니다.",
+    "evidence": [
+      {
+        "file": "pipeline-handler.html",
+        "lines": "45-49,399-434",
+        "finding": "정지 수정 위치와 대기 큐 분리·정지·취소·sequence·빈 큐 순서입니다."
+      },
+      {
+        "file": "scenarios/camera_stop.html",
+        "lines": "27-34",
+        "finding": "호출자 동기화·상태·스레드와 취소 정리 경로입니다."
+      },
+      {
+        "file": "request-lifecycle.html",
+        "lines": "554-561,768,1040-1166,1177,1287-1289",
+        "finding": "완료 재진입·수명·관측 계획·콜백 스레드와 기존 가상 프로브 결과의 한계입니다."
+      }
+    ],
+    "visited": [
+      "index.html",
+      "pipeline-handler.html",
+      "request-lifecycle.html",
+      "scenarios/camera_stop.html"
+    ],
+    "queries": [
+      "stop\\(|stopDevice|waitingRequests.swap|doQueueRequest|Blocking|수명|취소|콜백|테스트|검증",
+      "request-lifecycle의 stopDevice 관찰 계획·공개 콜백 관찰과 수명 본문을 읽었습니다."
+    ],
+    "help_count": 0,
+    "missing": [
+      "특정 장치의 stopDevice 실제 구현과 대상 애플리케이션 연결은 미확인입니다.",
+      "실행 가능한 테스트 명령과 시험 환경 구성은 찾지 못했습니다."
+    ],
+    "reading_ease_1_to_5": null,
+    "human_review_seconds": null,
+    "environment_delay_seconds": 18.4561937,
+    "measurement_limitations": [
+      "자동 독자 시행입니다. 사람 읽기 부담과 사람 검토 시간은 null이며 자체 정답 채점은 하지 않았습니다. UTC 도구 시각은 초 해상도이고 elapsed_seconds는 시작·끝 차입니다. environment_delay_seconds는 자료 읽기 셸 호출의 보고된 wall_time_seconds 합으로 도구·모델·세션 전체 대기와 사람 시간은 측정하지 않습니다."
+    ]
+  }
+]
