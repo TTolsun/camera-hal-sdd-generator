@@ -250,6 +250,12 @@ def refresh(cfg, model, section_id, manuscript: bytes, *, expected_sha256: str) 
         return manuscript
     updated, _ = _normalized(updated_raw)
     result = copy.deepcopy(metadata)
+    # deepcopy preserves YAML alias sharing; detach each field we modify from
+    # historical mirrors elsewhere in the metadata before changing its value.
+    result['generated_design'] = copy.deepcopy(result['generated_design'])
+    result['managed_visual_refresh'] = copy.deepcopy(result.get('managed_visual_refresh', []))
+    if 'generated_visuals' in result:
+        result['generated_visuals'] = copy.deepcopy(result['generated_visuals'])
     result['generated_design']['body_sha256'] = _body_digest(updated)
     if 'generated_visuals' in result:
         result['generated_visuals']['body_sha256'] = _body_digest(updated)

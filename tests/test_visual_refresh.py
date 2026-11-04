@@ -285,3 +285,22 @@ def test_noop_still_verifies_the_scenario_appendix(tmp_cfg, scenario_prose, chan
         raw = ('---\n'+yaml.safe_dump(metadata, allow_unicode=True)+'---\n'+body).encode()
     with pytest.raises(ValueError, match='Scenario evidence|Scenario appendix|LLM 설계 입력'):
         refresh(tmp_cfg, model, section['id'], raw, expected_sha256=digest(raw))
+
+
+def test_derived_hash_and_history_do_not_mutate_yaml_alias_mirrors(tmp_cfg, assembled):
+    _, model, _, path, raw, _, _ = assembled
+    meta, body = split_frontmatter(raw.decode())
+    meta['historical_design'] = meta['generated_design']
+    history = []
+    meta['managed_visual_refresh'] = history
+    meta['historical_history'] = history
+    fixture = ('---\n'+yaml.safe_dump(meta, allow_unicode=True)+'---\n'+body).encode()
+    assert b'&id' in fixture and b'*id' in fixture
+    before, _ = split_frontmatter(fixture.decode())
+    result = refresh(tmp_cfg, model, 'device', fixture, expected_sha256=digest(fixture))
+    after, _ = split_frontmatter(result.decode())
+    assert after['historical_design'] == before['generated_design']
+    assert after['historical_design']['body_sha256'] != after['generated_design']['body_sha256']
+    assert after['historical_history'] == []
+    assert len(after['managed_visual_refresh']) == 1
+    assert path.read_bytes() == raw
