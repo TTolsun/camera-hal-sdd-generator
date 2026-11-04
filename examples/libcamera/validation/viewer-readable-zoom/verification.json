@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "date_kst": "2026-11-05",
+  "generator_base": "83c83158dfd1ff876a4c52ae3db8e56fdc1aaae5",
+  "implementation_commit": "f5f78df4bd87f50e5ea85bf1c86af453e4841e18",
+  "source_baseline": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "observed_upstream": "be7e83e91348250c015aad6d6f59f1468555bae8",
+  "upstream_since_prior": {
+    "prior": "25cb6cd274d3112d03d9a825e47eb2c15c70da24",
+    "path": "src/py/libcamera/py_main.cpp",
+    "added_lines": 2,
+    "scope": "Python CameraConfiguration binding; separate from immutable official-cam baseline, no new runtime claim"
+  },
+  "focused_regression": {
+    "command": "python -X utf8 -m pytest tests/test_diagram_zoom.py tests/test_sidebar_state.py tests/test_export_site.py tests/test_site_localization.py --basetemp=build/zoom-test-v5 -q",
+    "passed": 66,
+    "seconds": 64.4
+  },
+  "human_review": "pending",
+  "native_archive": {
+    "file": "native-cli-evidence.tar.gz",
+    "sha256": "f843a3beee1b9c7094b7f544bf79e05234e87e22423424500afb526d92014d63",
+    "files": 75,
+    "verified_calls": 8
+  },
+  "preserved_user_files": 87,
+  "prior_review_dispositions": {
+    "v1": "HTML transforms, actor/class highlights and fit floor fixed",
+    "v2": "Declaration truncation was review-payload error; node path/ellipse highlights fixed",
+    "v3": "100% coordinate scale clarified by native Claude; text/HTML highlights added; existing focus contract returns to diagram trigger",
+    "v4": "textPath and no-viewBox intrinsic dimensions handled",
+    "v5": "pass, no findings"
+  },
+  "browser_scope": "Local and public browser acceptance is separate evidence; native review does not claim browser execution."
+}
