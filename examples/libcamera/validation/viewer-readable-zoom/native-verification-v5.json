@@ -1,0 +1,98 @@
+[
+  {
+    "folder": "writer",
+    "receipt": "writer\\calls\\38f9bd9cfad3416ba754d19035d5236e\\001.receipt.json",
+    "result": {
+      "runner": "claude",
+      "model": "claude-haiku-5-5",
+      "model_selection": "explicit",
+      "producer": "cli/claude/claude-haiku-5-5",
+      "stdout_sha256": "cbaddd6b841ebbd56a0f731f330ebb84d8792487b7f0057e4066d63b705bbd0c",
+      "arguments_verified": true
+    }
+  },
+  {
+    "folder": "writer-v2",
+    "receipt": "writer-v2\\calls\\e3a64b598ee74446a1c3294afea37cf8\\001.receipt.json",
+    "result": {
+      "runner": "claude",
+      "model": "claude-haiku-5-5",
+      "model_selection": "explicit",
+      "producer": "cli/claude/claude-haiku-5-5",
+      "stdout_sha256": "3156308f0dc8594dd88bd692fa75054e73744daac78aa9da40d30436d7416053",
+      "arguments_verified": true
+    }
+  },
+  {
+    "folder": "writer-v3",
+    "receipt": "writer-v3\\calls\\431986cbe6554d07950d4181813e1231\\001.receipt.json",
+    "result": {
+      "runner": "claude",
+      "model": "claude-haiku-5-5",
+      "model_selection": "explicit",
+      "producer": "cli/claude/claude-haiku-5-5",
+      "stdout_sha256": "0e6e2b870ee09e9633243545680b56647a04946fedfc42a214ba2f1c515222e1",
+      "arguments_verified": true
+    }
+  },
+  {
+    "folder": "review",
+    "receipt": "review\\calls\\6adbd5bb5bd149b887f9467605135d95\\001.receipt.json",
+    "result": {
+      "runner": "codex",
+      "model": "gpt-6.1-terra",
+      "model_selection": "explicit",
+      "producer": "cli/codex/gpt-6.1-terra",
+      "stdout_sha256": "599c3af7caf09d1b8c6f65c6705587c7a38cba3169d7ff426654264849ea9f04",
+      "arguments_verified": true
+    }
+  },
+  {
+    "folder": "review-v2",
+    "receipt": "review-v2\\calls\\809a56b14a254941a706ad70e42db712\\001.receipt.json",
+    "result": {
+      "runner": "codex",
+      "model": "gpt-6.1-terra",
+      "model_selection": "explicit",
+      "producer": "cli/codex/gpt-6.1-terra",
+      "stdout_sha256": "83cd9dc49e73a1de12f677a2534fa2fdeed136db126ae3d724cecb2c1eaefc92",
+      "arguments_verified": true
+    }
+  },
+  {
+    "folder": "review-v3",
+    "receipt": "review-v3\\calls\\1e9a2b5c02a94de0b33630aaff7129eb\\001.receipt.json",
+    "result": {
+      "runner": "codex",
+      "model": "gpt-6.1-terra",
+      "model_selection": "explicit",
+      "producer": "cli/codex/gpt-6.1-terra",
+      "stdout_sha256": "0e75f0ac4f3bb464b3f9bb5c5f3b9c3f59c09c43e32ee71f38ace7d279308d9a",
+      "arguments_verified": true
+    }
+  },
+  {
+    "folder": "review-v4",
+    "receipt": "review-v4\\calls\\8d1b8fce4d1844de9f07340cc5757724\\001.receipt.json",
+    "result": {
+      "runner": "codex",
+      "model": "gpt-6.1-terra",
+      "model_selection": "explicit",
+      "producer": "cli/codex/gpt-6.1-terra",
+      "stdout_sha256": "c4d168ccc6a3ee1988522a51d20384eb2187c2d2958cc84377a979a7c5348d40",
+      "arguments_verified": true
+    }
+  },
+  {
+    "folder": "review-v5",
+    "receipt": "review-v5\\calls\\87c34b550e6f47c5b796345076d0f0ec\\001.receipt.json",
+    "result": {
+      "runner": "codex",
+      "model": "gpt-6.1-terra",
+      "model_selection": "explicit",
+      "producer": "cli/codex/gpt-6.1-terra",
+      "stdout_sha256": "3e67b2cb7a419ebe8f6c4e1bf9edbb072c5e3b5e65378712b7ae0978e19d5e67",
+      "arguments_verified": true
+    }
+  }
+]
