@@ -568,8 +568,9 @@ design_topics:
       required_terms:
       - - NV12
   - id: capture-limit-check
-    question: statement.text를 11. 로 시작하고 공식 cam의 실제 캡처 한도가 `--capture=3`으로 적용되는지 확인하라는 직접 지시 한 문장만 씁니다.
-      옵션의 존재만 확인한다는 뜻이 아니며, 도우미 내부 전달·기록 필드·확인 방법은 연결된 실행 절차가 설명하므로 반복하지 않습니다.
+    question: statement.text를 11. 로 시작하고, 실행할 공식 cam 명령이 `--capture=3`으로 3프레임을 요청하도록 지정되었는지 확인하라는 직접 지시
+      한 문장만 씁니다. 실행 전에는 계획한 명령 인자를 확인하는 단계입니다. 실제 설정 적용이나 프레임 완료는 실행 후 13번과 연결된 실행 절차의 새 증거로 검증하므로 11번에서
+      이미 실제로 적용되었다고 말하거나 실행 전에 적용 여부를 확인하라고 하지 않습니다. 도우미 내부 전달·기록 필드·확인 방법은 연결된 실행 절차가 설명합니다.
     sources: []
     max_statements: 1
     prompt: 지정한 단계의 직접 확인 행동만 짧게 쓰고 다른 단계·과거 기록의 부족·실행 뒤 결과를 덧붙이지 않습니다. 과거 결과나 아직 미검증이라는 상태 문장을 지시문에 덧붙이지
@@ -578,6 +579,10 @@ design_topics:
       basis: measurement
       required_terms:
       - - --capture=3
+      reject_patterns:
+      - pattern: 실제 캡처 한도.{0,12}적용|적용되는지|적용되었는지
+        message: Step 11 is a planned-argument inspection; actual application and completed frames are
+          verified after execution.
   - id: execution
     question: statement.text를 12. 로 시작하고 **실행·검증 (12–13)**라는 굵은 묶음 제목 뒤에 연결된 실행 절차를 따라 수정하지 않은 공식 cam을
       세 독립 프로세스로 실행하라는 한 가지 행동만 지시합니다. 새 증거 디렉터리·실행별 저장·명령의 세부사항은 연결된 절차에 있으므로 이 문장에 나열하지 않습니다.

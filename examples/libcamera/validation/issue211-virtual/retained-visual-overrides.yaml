@@ -155,11 +155,11 @@
   - virtual-start
   - request-status-completion
   question: 가상 버퍼 완료 경로의 모든 버퍼 완료 판정과, 완료 표시 뒤 제출 순서 큐의 연속 통지 및 반복 종료는 어떻게 연결됩니까?
-  prompt: 현재 그래프 구조·노드 수·간선·심볼·실제 조건 양쪽·인용을 보존하고 지정한 라벨만 수정합니다. 다른 라벨은 유지합니다. n6 라벨은 뒤 요청 통지 보류와 반복 중단이라는
-    결과만 적습니다. n6에 RequestPending, Pending, 맨 앞, Front 등 앞 결정 노드의 조건을 반복하지 않습니다. n4→n6 및 n4→n5 간선 라벨에는
-    보류·통지·hold·notify 동작을 쓰지 않고 상태 분기만 짧게 둡니다. n8은 통지 검사 종료 결과만 표시하고 빈 큐/Pending 조건을 반복하지 않습니다. n3의 정상/취소
-    상태 구분과 n5의 공백으로 구분한 식별자는 보존합니다. 처음 생성할 때 아홉 노드는 가상 버퍼 완료 수신, 모든 요청 버퍼 완료 판정, 나머지 버퍼 대기, 해당 요청 완료 표시,
-    큐 맨 앞 Pending 판정, 맨 앞 요청 하나의 순서 통지, Pending 앞에서 뒤 요청 통지 보류, 통지할 큐 요청 존재 판정, 이번 통지 검사 종료입니다. 큐 존재 판정의
+  prompt: 현재 아홉 노드·간선·심볼·조건 양쪽·인용·나머지 한영 라벨을 모두 보존하고, n2(나머지 요청 버퍼를 기다리는 결과 노드)의 한영 라벨만 수정합니다. 앞 결정은 FrameBuffer
+    자체의 판정이 아니라 completeBuffer의 반환값입니다. 반환 false는 아직 모든 요청 버퍼가 완료되지 않았으므로 completeRequest를 호출하지 않고 나머지
+    버퍼를 기다린다는 뜻입니다. FrameBuffer 판정, FrameBuffer check라고 쓰지 않습니다. 내부 symbol FrameBuffer와 소스 인용은 그대로 보존하되
+    화면 라벨은 실제 판정과 결과를 짧게 나타냅니다. 처음 생성할 때 아홉 노드는 가상 버퍼 완료 수신, 모든 요청 버퍼 완료 판정, 나머지 버퍼 대기, 해당 요청 완료 표시, 큐
+    맨 앞 Pending 판정, 맨 앞 요청 하나의 순서 통지, Pending 앞에서 뒤 요청 통지 보류, 통지할 큐 요청 존재 판정, 이번 통지 검사 종료입니다. 큐 존재 판정의
     true는 Pending 판정으로, false는 이번 검사 종료로 갑니다. Pending이면 보류하고, 아니면 맨 앞 요청을 꺼내 requestCompleted로 cam requestComplete에
     통지한 뒤 큐 존재 판정으로 되돌아갑니다. 모든 실제 guard의 true/false 양쪽을 유지하고 빈 큐 또는 Pending에서 반복을 멈춥니다. 이후 doQueueRequests는
     이 통지 검사 범위 밖이며 표시에는 내부 큐 변수명을 쓰지 않습니다.
@@ -183,6 +183,9 @@
         notify'
       message: Keep the Pending test in the decision, its state on the branch, and hold/notification actions
         only in their result nodes.
+    - pattern: FrameBuffer 판정|FrameBuffer check
+      message: The decision checks completeBuffer return, not the FrameBuffer type itself; false waits
+        for remaining request buffers.
     required_terms:
     - - requestCompleted
     - - requestComplete
@@ -206,6 +209,9 @@
         notify'
       message: Keep the Pending test in the decision, its state on the branch, and hold/notification actions
         only in their result nodes.
+    - pattern: FrameBuffer 판정|FrameBuffer check
+      message: The decision checks completeBuffer return, not the FrameBuffer type itself; false waits
+        for remaining request buffers.
     required_terms:
     - - requestCompleted
     - - requestComplete
