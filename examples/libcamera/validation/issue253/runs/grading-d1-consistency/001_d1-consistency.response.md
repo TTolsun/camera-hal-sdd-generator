@@ -1,0 +1,47 @@
+{
+  "grades": [
+    {
+      "evaluator_id": "E01",
+      "condition": "A",
+      "correct": false,
+      "reason": "Changed from true. The plan covers the 300 ms preparation timer, queue and device branches, buffer completion, and ordered request completion, but it does not explicitly observe Camera completion notification or application callback receipt. Independent: true."
+    },
+    {
+      "evaluator_id": "E01",
+      "condition": "B",
+      "correct": false,
+      "reason": "Unchanged. The plan covers fences and callback connection details but omits observation of the preparation timeout and its cancellation/readiness path. Independent: true."
+    },
+    {
+      "evaluator_id": "E02",
+      "condition": "B",
+      "correct": true,
+      "reason": "Unchanged. The plan checks preparation, including the 300 ms timer, and records requestCompleted alongside the queue, device, buffer and ordered completion boundaries. It avoids diagnostic state-changing calls. Independent: true."
+    },
+    {
+      "evaluator_id": "E02",
+      "condition": "A",
+      "correct": false,
+      "reason": "Unchanged. The plan covers preparation timeout and the principal queue and completion branches, but does not explicitly observe Camera completion notification or application callback receipt. Independent: true."
+    },
+    {
+      "evaluator_id": "E03",
+      "condition": "A",
+      "correct": true,
+      "reason": "Unchanged. The plan covers preparation and timeout, queue and device branches, buffer and ordered request completion, and explicitly observes Camera::requestComplete, requestCompleted emission and callback entry. Independent: true."
+    },
+    {
+      "evaluator_id": "E03",
+      "condition": "B",
+      "correct": true,
+      "reason": "Unchanged. The plan records preparation timeout, queue and device branches, buffer and ordered request completion, camera->requestComplete and application callback entry and return. Independent: true."
+    }
+  ],
+  "consistency_findings": [
+    "Historical correctness grades, preserved in trial order, were E01 A true, E01 B false, E02 B true, E02 A false, E03 A true and E03 B true. All historical independence grades were true.",
+    "E01 A changes to false under the same notification-observation threshold applied to E02 A. Its reference to delayed completion notification does not explicitly plan to observe the Camera notification or application callback.",
+    "The preparation timeout is assessed separately from fence readiness and pending-buffer completion. E01 B lacks a timeout observation; the other rows identify a timer or timeout in their preparation checks.",
+    "E02 B explicitly plans to record requestCompleted; this satisfies the Camera notification observation requirement even though it does not separately specify application callback entry. The frozen rubric is unchanged.",
+    "These are automatic evidence-based grades, not human evaluations. No runtime execution is inferred from the proposed observation plans."
+  ]
+}
