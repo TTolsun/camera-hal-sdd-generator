@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 
-def save(path, data, *, indent=2, sort_keys=False, newline=None):
+def save(path, data, *, indent=2, sort_keys=False, newline=None, before_replace=None):
     """Replace one complete JSON file; callers own read/modify/write locking."""
     text = json.dumps(data, ensure_ascii=False, indent=indent, sort_keys=sort_keys) + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -25,6 +25,8 @@ def save(path, data, *, indent=2, sort_keys=False, newline=None):
             if delay:
                 time.sleep(delay)
             try:
+                if before_replace is not None:
+                    before_replace()
                 temporary.replace(path)
                 return
             except PermissionError as exc:

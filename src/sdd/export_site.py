@@ -284,6 +284,7 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
 
 def _prepare_page_body(cfg, rel, texts, sections, terms, model):
     from .render_profiles import for_page
+    publication_cfg = cfg
     cfg = for_page(cfg,rel)
     diagram_source = None
     meta, body = split_frontmatter(texts[rel])
@@ -382,7 +383,7 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
         if len(targets) != 1:
             raise ValueError('Overview visual source section is missing or ambiguous')
         target, original = targets[0]
-        _, _, _, _, available = _prepare_page_body(cfg, target, texts, sections, terms, model)
+        _, _, _, _, available = _prepare_page_body(publication_cfg, target, texts, sections, terms, model)
         selected = [value for value in available if value[0]['id'] == selection['visual']]
         if len(selected) != 1 or not selected[0][2]:
             raise ValueError('Overview visual is missing or its source evidence changed')
@@ -416,6 +417,9 @@ def _heading_search(items, page_title, rel):
 
 def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_template, *, class_documents=None):
     known = set(texts)
+    question_edits = cfg.site.coverage_question_edits
+    if not isinstance(question_edits, dict) or set(question_edits) - known:
+        raise ValueError('Coverage question edits must name current Markdown pages.')
     rendered_pages = {}
     search = []
     diagram_sources = {}
@@ -428,7 +432,7 @@ def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_
             if source:
                 visual_sources[str(PurePosixPath(rel).with_suffix('')) + '.' + visual['id'] + '.mmd'] = source
         content, toc, tokens = _render(body, rel, known, model, source_url, str(meta.get("source_commit", "")),
-                                       link_template)
+                                       link_template, coverage_question_edits=question_edits.get(rel))
         if sections.get(rel, {}).get('kind') == 'per-package':
             from .index_navigation import index_navigation
             content, symbols = index_navigation(content, _html_path(rel), page_title)

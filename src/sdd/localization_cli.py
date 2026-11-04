@@ -148,30 +148,48 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
                 catalog.pop('source_carryover',None)
     translation_agent = None
     if translate:
+        # Removing English is only a private rendering view. Actual translation
+        # keeps the publication basis declared by the caller across resumes.
+        call_cfg = copy.deepcopy(config)
         # Rendering can retain the original figure-generation profile while
         # new translations use an independently selected CLI transport.
-        profile = config.paths.get('translation_profile')
+        profile = call_cfg.paths.get('translation_profile')
         if profile is not None:
             from dataclasses import replace
             from .config import load
-            cfg = replace(cfg, agent=load(profile).agent)
+            call_cfg = replace(call_cfg, agent=load(profile).agent)
         from .translation import translate_missing
         if replay_http:
             from .llm import Agent
             from .design_replay import Archive
-            directory = cfg.build_dir / 'translation-prompts'
-            translation_agent = Archive(directory / 'calls', cfg.agent).reviewer(Agent(cfg.agent, directory))
-        catalog = translate_missing(cfg, catalog, translation_agent)
+            directory = call_cfg.build_dir / 'translation-prompts'
+            translation_agent = Archive(directory / 'calls', call_cfg.agent).reviewer(Agent(call_cfg.agent, directory))
+        catalog = translate_missing(call_cfg, catalog, translation_agent)
     inputs = current()
+    from .generation_run import observed
+    execution = observed()
+    if execution is not None and execution.publication_contract is not None:
+        execution.publication_contract.begin_output()
     inputs.verify()
+    expected = (json.dumps(catalog, ensure_ascii=False, indent=2)+'\n').replace('\n', os.linesep).encode('utf-8')
     def rollback():
+        actual = destination.read_bytes() if destination.is_file() else None
+        if actual == original:
+            return
+        if actual != expected:
+            if execution is not None:
+                execution.report.setdefault('rollback_conflicts', []).append(str(destination))
+            return
         if original is None:
             destination.unlink(missing_ok=True)
         else:
             destination.write_bytes(original)
     inputs.rollbacks.append(rollback)
-    save(destination, catalog)
-    expected = (json.dumps(catalog, ensure_ascii=False, indent=2)+'\n').replace('\n', os.linesep).encode('utf-8')
+    def verify_commit():
+        inputs.verify()
+        if execution is not None and execution.publication_contract is not None:
+            execution.publication_contract.verify()
+    save(destination, catalog, before_replace=verify_commit)
     inputs.produced(destination, expected)
     return {'pages': len(pages), 'strings': len(units),
             'missing_translations': sum(not value for value in catalog['strings'].values()),

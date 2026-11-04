@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "grades": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "evaluator_id": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string"
+          },
+          "correct": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "evaluator_id",
+          "condition",
+          "correct",
+          "reason"
+        ]
+      }
+    },
+    "consistency_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "grades",
+    "consistency_findings"
+  ]
+}

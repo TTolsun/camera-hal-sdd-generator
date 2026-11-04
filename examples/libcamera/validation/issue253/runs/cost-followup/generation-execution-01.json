@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "kind": "supplementary-real-update-stages",
+  "status": "failed",
+  "input_lock_sha256": "1d87957b87e945b694d0c8df98df483dbb2d5c51ad4e6b0554971fb715c30a3d",
+  "stages": [
+    {
+      "stage": "base-reverse-impact",
+      "argv": [
+        "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\tools\\run_sdd.py",
+        "--config",
+        "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\build\\issue253\\cost-followup\\generation-run-01\\base\\generate.yaml",
+        "impact",
+        "--base",
+        "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+        "--head",
+        "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+        "--base-facts",
+        "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\build\\issue253\\cost-followup\\linux-run-02\\head-facts.json",
+        "--fail-on-coverage-gap"
+      ],
+      "started_at": "2026-11-04T20:09:55.304474+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "elapsed_seconds": 4.113839500001632,
+      "ended_at": "2026-11-04T20:09:59.417697+00:00"
+    },
+    {
+      "stage": "base-structural-construction",
+      "argv": [
+        "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\tools\\run_sdd.py",
+        "--config",
+        "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\build\\issue253\\cost-followup\\generation-run-01\\base\\generate.yaml",
+        "generate",
+        "--sections",
+        "component-index"
+      ],
+      "started_at": "2026-11-04T20:09:59.834900+00:00",
+      "status": "failed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 1,
+      "elapsed_seconds": 50.574651200091466,
+      "ended_at": "2026-11-04T20:10:50.407687+00:00"
+    }
+  ],
+  "human_active_review_seconds": null,
+  "error": "RuntimeError('base-structural-construction failed; original outputs and logs remain')"
+}

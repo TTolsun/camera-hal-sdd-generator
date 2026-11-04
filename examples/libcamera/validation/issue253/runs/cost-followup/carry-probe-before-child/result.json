@@ -1,0 +1,197 @@
+{
+  "kind": "automatic-published-manuscript-revalidation",
+  "recorded_at": "2026-11-04T20:43:42.421147+00:00",
+  "runtime": "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\build\\issue253\\reader-improvement\\generator\\src\\sdd\\carryover.py",
+  "source_commit": "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+  "document_input": "4d656cd88c2a366dec7894e87301bf5205e98b36",
+  "adaptation": "Relocate exact published configuration and historical style paths. Explicit readonly profiles preserve retained manuscript identity/style while the global profile uses current style. Source/contracts/validation gates remain unchanged; model calls are zero. This is not the original public config or a full generation benchmark.",
+  "collection_seconds": 51.03236419998575,
+  "carry_seconds": 31.071050300030038,
+  "promoted": [
+    "ipu3-lsc.md",
+    "official-cam-validation.md",
+    "request-diagnosis.md",
+    "scenarios/index.md"
+  ],
+  "stale": [
+    {
+      "page": "camera-model.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "camera-requests.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "component-index.md",
+      "findings": [
+        "설계 질문·구조·소스 근거가 변경됐거나 이전 지문이 없습니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "framebuffer-allocator.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "ipa-algorithms.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "ipa-module-validation.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "ipa.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "ipu3-lsc-flow.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "ipu3-lsc-prepare.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "onboarding.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "overview.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "pipeline-handler.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "pipeline-requests.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "request-lifecycle.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "rkisp1-dewarp.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "scenarios/camera_start.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "scenarios/camera_stop.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "scenarios/complete_request.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "scenarios/configure.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "scenarios/manager_start.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "scenarios/queue_request.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "team-overview.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "vendor-assurance.md",
+      "findings": [
+        "Visual source or question changed; regenerate before publishing",
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "vendor-integration.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    },
+    {
+      "page": "vendor-overview.md",
+      "findings": [
+        "집필 규칙 정책이 바뀌었습니다. 관련 원고를 다시 검토·생성해야 합니다."
+      ],
+      "bytes_preserved": true
+    }
+  ],
+  "evidence_unavailable": [],
+  "human_active_review_seconds": null,
+  "model_calls": 0
+}

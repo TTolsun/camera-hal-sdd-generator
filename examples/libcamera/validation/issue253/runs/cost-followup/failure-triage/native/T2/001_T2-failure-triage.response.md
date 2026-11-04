@@ -1,0 +1,25 @@
+{
+  "task_id": "T2",
+  "findings": [
+    {
+      "condition": "장치별 PipelineHandler의 하드웨어 파이프라인 구성 책임",
+      "status": "missing",
+      "page_anchor": "vendor-overview#제공-기능과-지원-범위; vendor-integration#구현할-설정-인터페이스",
+      "evidence": "overview 본문과 그림은 공통 Camera 인터페이스와 장치별 PipelineHandler를 구분하고 미디어 장치 매칭·확보 및 Camera 생성 책임을 설명하지만, 스트림 구성에 따라 장치별 하드웨어 파이프라인을 구성하는 책임은 명시하지 않습니다. integration 본문은 PipelineHandler::configure()의 검증된 설정과 스트림 연결 계약을 설명하고, 같은 페이지 #요청을-장치에-전달하고-반환하기는 요청 파라미터를 적용하도록 장치를 설정할 책임을 설명합니다. 그러나 이것만으로 source293 Documentation/libcamera_architecture.rst의 Pipeline Handler 절에 있는 ‘스트림 구성에 기반한 파이프라인 구성’ 책임 전체가 직접 설명되지는 않습니다. overview의 경계 그림도 텍스트 흐름상 매칭과 Camera 생성에 초점이 있어 그 책임을 보여 주지 않습니다.",
+      "action": "overview의 공통 Camera와 장치별 구현 경계에 ‘장치별 PipelineHandler는 스트림 구성에 따라 하드웨어 파이프라인을 구성한다’는 한 문장을 source293 아키텍처 문서에 연결해 추가합니다. 기존 매칭·요청 처리 설명은 중복하지 않습니다."
+    },
+    {
+      "condition": "공통 API·제어와 장치별 구현 및 지원 범위의 구분",
+      "status": "documented-in-body",
+      "page_anchor": "vendor-overview#무엇이며-누구의-어떤-문제를-푸는가; vendor-overview#제공-기능과-지원-범위; vendor-overview#지원하는-하드웨어와-빌드-선택",
+      "evidence": "본문은 프레임워크의 카메라 제어와 네이티브 C++ API, 장치별 핸들러의 매칭·Camera 생성, 플랫폼 목록과 빌드 선택을 설명합니다. 경계 그림의 설명은 지원이 해당 구현과 미디어 장치 확보에 달려 있으며 지원 기종이나 성능을 보장하지 않는다고 밝힙니다. 이는 source293 Documentation/libcamera_architecture.rst의 공통 API와 장치별 구성 요소 구분 및 Documentation/platform_support.rst의 열거된 지원 범위와 부합합니다. 그림은 이 제한된 매칭 흐름에 관련이 있지만 파이프라인 구성 책임의 증거로는 불충분합니다.",
+      "action": "기존 설명과 지원 범위 경고를 중복 생성하지 않습니다."
+    }
+  ],
+  "confirmed_document_blocker": true,
+  "limitations": [
+    "판정은 제공된 고정 B 페이지 텍스트와 source293 발췌에 한정합니다. rubric에 언급된 Pipeline Handler Writers Guide의 본문은 제공되지 않았습니다.",
+    "자동 독자의 누락 자체를 문서 결함으로 판정하지 않았습니다. 실제 브라우저·기기 실행, 성능 또는 특정 장치의 지원은 검증되지 않았습니다.",
+    "그림은 제공된 텍스트 흐름과 근거만 검토했으며 화면의 픽셀 가독성은 평가하지 않았습니다."
+  ]
+}

@@ -1,6 +1,7 @@
 """Stage isolation is about checked bytes, not inheriting a previous pass."""
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -261,3 +262,74 @@ def test_translation_profile_selects_only_transport_after_rendering(tmp_cfg, mon
     monkeypatch.setattr('sdd.translation.translate_missing', translate)
     prepare_catalog(tmp_cfg, tmp_cfg.root/'english.json', translate=True)
     assert seen == [('render', 'dry-run'), ('translate', 'claude', 'claude-haiku-5-5', tmp_cfg.root)]
+
+
+def test_site_rollback_preserves_user_edit_after_copy(tmp_cfg, tmp_path, monkeypatch):
+    from sdd.site_build import build_site
+    out = tmp_path/'site'
+    def render(cfg, target, mermaid):
+        (target/'index.html').write_text('<p>previous</p>', encoding='utf-8')
+    build_site(tmp_cfg, out, render, None)
+    original = Path.replace
+    def changed(cfg, target, mermaid):
+        (target/'index.html').write_text('<p>generated</p>', encoding='utf-8')
+    def replacing(source, destination):
+        result = original(source, destination)
+        if Path(destination) == out/'index.html':
+            Path(destination).write_bytes(b'user edit after copy')
+            tmp_cfg.sections_file.write_text('sections: []', encoding='utf-8')
+        return result
+    monkeypatch.setattr(Path, 'replace', replacing)
+    with pytest.raises(InputChanged):
+        build_site(tmp_cfg, out, changed, None)
+    assert (out/'index.html').read_bytes() == b'user edit after copy'
+
+
+def test_partial_copy_failure_does_not_truncate_published_site(tmp_cfg, tmp_path, monkeypatch):
+    from sdd.site_build import build_site
+    out = tmp_path/'site'
+    def render(cfg, target, mermaid):
+        (target/'index.html').write_text('<p>previous</p>', encoding='utf-8')
+    build_site(tmp_cfg, out, render, None)
+    before = {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()}
+    def partial(source, destination):
+        Path(destination).write_bytes(b'truncated')
+        raise OSError('copy failed')
+    monkeypatch.setattr('sdd.site_build.shutil.copyfile', partial)
+    with pytest.raises(OSError, match='copy failed'):
+        build_site(tmp_cfg, out, render, None)
+    assert {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()} == before
+
+
+def test_catalog_edit_during_prepared_write_is_preserved(tmp_cfg, monkeypatch):
+    from contextlib import contextmanager
+    from sdd import state_io
+    from sdd.facts.model import KnowledgeModel
+    from sdd.localization_cli import prepare_catalog
+    KnowledgeModel(meta={'source_commit': 'a'*40}).save(tmp_cfg.facts_path)
+    target = tmp_cfg.root/'english.json'
+    target.write_bytes(b'{"strings": {"old": "original"}}')
+    def render(cfg, out, **kwargs):
+        (out/'index.html').write_text('<p>설명입니다.</p>', encoding='utf-8')
+        (out/'assets').mkdir()
+        (out/'assets/search.json').write_text('[]', encoding='utf-8')
+        return out
+    create = state_io.tempfile.NamedTemporaryFile
+    @contextmanager
+    def changed_while_writing(**kwargs):
+        with create(**kwargs) as stream:
+            if kwargs.get('prefix') != '.english.json.':
+                yield stream
+                return
+            class Writer:
+                name = stream.name
+                def write(self, text):
+                    result = stream.write(text)
+                    target.write_bytes(b'user edit during temporary write')
+                    return result
+            yield Writer()
+    monkeypatch.setattr('sdd.export_site._render_site', render)
+    monkeypatch.setattr(state_io.tempfile, 'NamedTemporaryFile', changed_while_writing)
+    with pytest.raises(InputChanged):
+        prepare_catalog(tmp_cfg, target)
+    assert target.read_bytes() == b'user edit during temporary write'

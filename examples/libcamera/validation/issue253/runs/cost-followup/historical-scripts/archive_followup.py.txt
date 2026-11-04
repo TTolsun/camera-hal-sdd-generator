@@ -1,0 +1,24 @@
+"""Archive public-only evidence once; not a reusable generation runner."""
+import hashlib,json,pathlib,shutil
+root=pathlib.Path(__file__).resolve().parents[3];work=root/'build/issue253/cost-followup'
+child=root/'build/issue253/reader-improvement/generator'
+dest=child/'examples/libcamera/validation/issue253/runs/cost-followup'
+if dest.exists():raise SystemExit('Archive already exists; no overwrite')
+dest.mkdir(parents=True)
+def copy(src,rel):
+    target=dest/rel;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,target)
+for name in ['qt-install.log','qt-install.json','generation-input-lock.json','generation-execution-01.json']:
+    copy(work/name,name)
+for folder in ['linux-run-01','linux-run-02','carry-review','carry-review-02','carry-review-03','failure-triage']:
+    for p in (work/folder).rglob('*'):
+        if p.is_file():copy(p,pathlib.Path(folder)/p.relative_to(work/folder))
+for folder in ['carry-probe-before','carry-probe-after']:
+    for name in ['result.json','probe.yaml','default-authentication.yaml','reader-authentication.yaml','vendor-authentication.yaml','diagnosis-authentication.yaml']:
+        copy(work/folder/name,folder+'/'+name)
+for p in (work/'generation-run-01').glob('*.log'):copy(p,'generation-run-01/'+p.name)
+for name in ['run_linux.py','run_generation.py','lock_generation_inputs.py','prepare_failure_triage.py','triage_failures.py','probe_published_carry.py','review_carry.py','archive_followup.py']:
+    copy(work/name,'historical-scripts/'+name+'.txt')
+shutil.copyfile(root/'docs/libcamera/records/issue253/cost-qt-plan.md',child/'docs/libcamera/records/issue253/cost-qt-plan.md')
+manifest={p.relative_to(dest).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in dest.rglob('*') if p.is_file()}
+(dest/'archive-manifest.json').write_text(json.dumps({'schema':1,'kind':'public-libcamera-only-automatic-evidence','files':manifest,'human_review':'pending','notes':['One-off scripts are retained as historical text, not shipped as runnable tools.','Facts are true separate parent/head extraction outputs; scripts and logs include preparation failures.','T2/D1/D2 review is semantic triage, not new reader trials.','D2 first oversized payload failed the preparation assertion before a CLI call; no duration was measured.','carry-review and carry-review-02 requested changes; carry-review-03 passed the final source diff.']},indent=2),encoding='utf-8')
+print(json.dumps({'files':len(manifest),'bytes':sum(p.stat().st_size for p in dest.rglob('*') if p.is_file())}))

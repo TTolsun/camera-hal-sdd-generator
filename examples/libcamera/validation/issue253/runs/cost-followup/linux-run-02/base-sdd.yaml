@@ -1,0 +1,123 @@
+source:
+  root: /home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source
+  compile_commands: /home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/base/compile_commands.json
+  exclude:
+  - subprojects/**
+  - test/**
+  - build/**
+  ndk_build:
+    enabled: false
+output:
+  facts_dir: /home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/base/facts
+  sdd_dir: /home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/base/sdd
+  diagrams_dir: /home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/base/diagrams
+paths:
+  sections_file: /mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/examples/libcamera/config/sections.yaml
+  consistency_file: /mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/examples/libcamera/config/contracts.yaml
+  scenarios_file: /mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/examples/libcamera/config/scenarios.yaml
+  prompts: /mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/examples/libcamera/prompts
+  templates: /mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/templates
+  style: /mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/style
+  products_file: /mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/examples/libcamera/config/products.yaml
+products:
+  file: config/products.yaml
+facts:
+  package_depth: 3
+tools:
+  clang_uml: none
+agent:
+  kind: cli
+  runner: codex
+  model: gpt-6.1-terra
+  args:
+  - -c
+  - model_reasoning_effort="high"
+  max_input_chars: 48000
+  timeout_sec: 600
+  full_style_guides: false
+review:
+  require_citations: true
+  max_retries: 1
+  design_revision: false
+  design_grounding: true
+  cli_checkpoint: true
+  max_calls: 1600
+  max_seconds: 14400
+  document_max_calls: 160
+  document_max_seconds: 7200
+documentation:
+  enabled: true
+  features:
+  - id: request-lifecycle
+    primary: request-lifecycle.md
+    sections:
+    - camera-model
+    - camera-requests
+    - pipeline-handler
+    - pipeline-requests
+    - request-diagnosis
+    scenarios:
+    - queue_request
+    - complete_request
+    - camera_stop
+    symbols:
+    - libcamera::Camera
+    - libcamera::Request
+    - libcamera::PipelineHandler
+  - id: ipu3-lsc
+    primary: ipu3-lsc-flow.md
+    sections:
+    - ipu3-lsc
+    symbols:
+    - libcamera::ipa::ipu3::algorithms::Lsc
+  - id: rkisp1-dewarp
+    primary: rkisp1-dewarp.md
+    sections:
+    - pipeline-handler
+    symbols:
+    - libcamera::RkISP1CameraData
+    - libcamera::ConverterDW100Module
+    - libcamera::Dw100VertexMap
+  - id: pipeline-reader
+    primary: pipeline-handler.md
+    sections:
+    - pipeline-requests
+    reader_profile: vendor
+  - id: request-reader
+    primary: request-lifecycle.md
+    sections:
+    - request-diagnosis
+    reader_profile: vendor
+  - id: ipa-algorithms
+    primary: ipa.md
+    sections:
+    - ipa-algorithms
+  - id: ipu3-lsc-prepare
+    primary: ipu3-lsc-flow.md
+    sections:
+    - ipu3-lsc-prepare
+site:
+  overview_visual:
+    section: vendor-overview
+    visual: camera-stack
+  enabled: true
+  title: libcamera 설계 문서
+  intro: site-intro.md
+  guide_visuals: site-guide-visuals.json
+  guide_source:
+    root: ../..
+    file: examples/libcamera/site-intro.md
+  english_catalog: english.json
+  source_url: https://github.com/TTolsun/libcamera-sdd
+  nav_groups:
+  - For Vendor
+  - For Developer
+diagrams:
+  enabled: true
+  max_nodes: 16
+  direction: LR
+  strip_namespace: 'libcamera::'
+visuals:
+  on_stale: omit
+  file: config/visuals.yaml
+  max_nodes: 12

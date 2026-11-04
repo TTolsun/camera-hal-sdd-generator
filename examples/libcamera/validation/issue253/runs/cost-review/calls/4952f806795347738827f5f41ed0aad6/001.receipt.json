@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "cost-source-review",
+  "completed_at": "2026-11-04T18:58:37.530080+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "715497ae012353af7111fe02fb6487d44a81fef5f407547d034e4cbe93ed0ec0",
+  "response_sha256": "e7456674dba8a16e87cf5e5d1b89df5dd62da10decc4e831735a06bbafb62347",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "5d44b038e0f56b6a8d251cc7d23ad60441d55099bdb859ef4186f84685d5dfbe",
+    "prompt_sha256": "4fbe40af3a9f343ea3aae4e9ca5933dfa8393a61e3761f18bf9992f354703052",
+    "provider": {
+      "thread_id": "01a1a7ed-35bd-7840-bfc0-e05497290522",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 28275,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 629,
+        "reasoning_output_tokens": 50
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-166i7agj.stdout.txt",
+    "native_schema_sha256": "0844261f812dbc73d0909b623d6170bcad0063a06e591aad0902ebf5df5d98de"
+  },
+  "human_review": "pending"
+}

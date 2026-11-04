@@ -139,7 +139,9 @@ def test_checkpoint_execution_identity_keeps_legacy_fingerprint(generated, tmp_c
     class CapturedIdentity(Exception):
         pass
 
-    def capture(cfg, identity):
+    def capture(cfg, identity, *, comparison_scope=None):
+        assert comparison_scope == ('design','device','stop',None,None)
+        assert 'comparison_scope' not in identity  # Diagnostic metadata must not change the legacy key.
         captured.append(identity['execution'])
         raise CapturedIdentity
 

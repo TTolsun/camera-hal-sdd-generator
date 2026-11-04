@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import html
+import hashlib
 import posixpath
 import re
+from html.parser import HTMLParser
 from urllib.parse import quote
 
 
@@ -68,16 +70,116 @@ def simple_table(table: str, *, labeled: bool = False) -> bool:
     return all(re.findall(cell, row, re.S) and not re.sub(cell, '', row, flags=re.S).strip() for row in rows)
 
 
-def compact_tables(document: str) -> str:
+def compact_tables(document: str, *, question_edits=None) -> str:
     """Only recognized coverage blocks and one-row call tables change form."""
     intro = '질문별 답변과 근거 연결을 검사했습니다. 의미와 실행 결과는 사람 검토가 필요합니다.'
     common = '코드 근거와 설명 연결'
 
+    # Project-specific, reviewed removals bind the COMPLETE original question.
+    # There is no default phrase classifier: the same sentence may be a real
+    # requirement in another question. Historical manuscripts remain intact.
+    specifications = question_edits if question_edits is not None else {}
+    def valid_edit(value):
+        if isinstance(value, dict):
+            label = value.get('label')
+            return (set(value) == {'label'} and isinstance(label, str)
+                    and any(char.isalnum() for char in label))
+        return (isinstance(value, list) and bool(value)
+                and all(isinstance(item, str) and item.strip() for item in value)
+                and len(value) == len(set(value)))
+    if not isinstance(specifications, dict) or any(
+            not isinstance(key, str) or not re.fullmatch(r'[0-9a-f]{64}', key) or not valid_edit(value)
+            for key, value in specifications.items()):
+        raise ValueError('Question edits require complete-question SHA-256 keys and a reader label or unique nonempty sentences.')
+    seen = set()
+
+    def reader_question(question):
+        key = hashlib.sha256(question.encode('utf-8')).hexdigest()
+        if key not in specifications:
+            return question
+        if key in seen:
+            raise ValueError('Configured question edit matches more than one requirement.')
+        seen.add(key)
+        if isinstance(specifications[key], dict):
+            # A navigation question is authored separately from the complete
+            # generation requirement; never render configured HTML or Markdown.
+            return html.escape(specifications[key]['label'].strip(), quote=False)
+        editorial_directions = specifications[key]
+        if any(question.count(direction) != 1 for direction in editorial_directions):
+            raise ValueError('Configured editorial sentence is missing or ambiguous.')
+        # Match whole plain sentences only; code and linked text stay intact.
+        offsets, total = [], 0
+        for line in question.splitlines(keepends=True):
+            offsets.append(total)
+            total += len(line)
+        edits = []
+        visible = []
+
+        class Text(HTMLParser):
+            void = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
+
+            def __init__(self):
+                super().__init__(convert_charrefs=False)
+                self.stack = []
+                self.invisible = set()
+
+            def handle_starttag(self, tag, attrs):
+                if tag not in self.void:
+                    self.stack.append(tag)
+                    attributes = dict(attrs)
+                    if (tag in ('script', 'style', 'template', 'noscript', 'head', 'title') or 'hidden' in attributes
+                            or re.search(r'(?:display\s*:\s*none|visibility\s*:\s*hidden)', attributes.get('style') or '', re.I)):
+                        self.invisible.add(len(self.stack))
+
+            def handle_endtag(self, tag):
+                if tag not in self.void and tag in self.stack:
+                    index = len(self.stack) - 1 - self.stack[::-1].index(tag)
+                    del self.stack[index:]
+                    self.invisible = {depth for depth in self.invisible if depth <= index}
+
+            def handle_entityref(self, name):
+                if not self.invisible:
+                    visible.append(html.unescape('&' + name + ';'))
+
+            def handle_charref(self, name):
+                if not self.invisible:
+                    visible.append(html.unescape('&#' + name + ';'))
+
+            def handle_data(self, data):
+                # Quoted text can itself be a requirement or example. Prefer
+                # retaining a direction over deleting any quoted content.
+                if self.stack or any(mark in data for mark in ('"', "'", '“', '”', '‘', '’', '«', '»')):
+                    if not self.invisible:
+                        visible.append(data)
+                    return
+                updated = data
+                for direction in editorial_directions:
+                    updated = re.sub(r'(^\s*|(?<=[.!?])\s+)' + re.escape(direction) + r'(?=\s|$)',
+                                     lambda match: match[1], updated)
+                visible.append(updated)
+                if updated != data:
+                    line, column = self.getpos()
+                    edits.append((offsets[line - 1] + column, len(data), updated))
+
+        Text().feed(question)
+        for start, length, updated in reversed(edits):
+            question = question[:start] + updated + question[start + length:]
+        if any(direction in question for direction in editorial_directions) or not any(char.isalnum() for char in ''.join(visible)):
+            raise ValueError('Configured edit would change protected content or empty a question.')
+        return question.strip()
+
     def coverage(match):
         prefix, table, suffix = match.groups()
-        if not simple_table(table):
+        if not simple_table(table) or re.search(r'\bid=', table):
             return match[0]
         if cells(table, 'th') != ('설계 질문', '설명 위치', '확인 범위'):
+            return match[0]
+        # Validate the whole table before applying/acknowledging any edit.
+        # A later custom row must not roll back an earlier configured edit
+        # while leaving its fingerprint marked as successfully applied.
+        rows = [cells(row) for row in re.findall(r'<tr>(.*?)</tr>', table, re.S)]
+        if any(len(row) != 3 or row[2] not in (common, common + ' · 실행 확인 항목 별도')
+               for row in rows if row):
             return match[0]
         items = []
         for row in re.findall(r'<tr>(.*?)</tr>', table, re.S):
@@ -87,6 +189,11 @@ def compact_tables(document: str) -> str:
             if len(values) != 3 or values[2] not in (common, common + ' · 실행 확인 항목 별도'):
                 return match[0]
             question, links, scope = values
+            question = reader_question(question)
+            if not question:
+                # No reader-facing question remains; retain the original rather
+                # than silently dropping a requirement or inventing a label.
+                return match[0]
             qualifier = '<p>실행 확인 항목 별도</p>' if scope != common else ''
             items.append('<li><p>' + question + '</p><p>' + links + '</p>' + qualifier + '</li>')
         if not items or re.search(r'\bid=', table):
@@ -125,6 +232,8 @@ def compact_tables(document: str) -> str:
         if '호출 지점' in converted:
             chunks[i] = chunks[i].replace('추적 범위와 경계 표에서 후보를 구분한 뒤',
                                           '추적 범위와 경계 항목에서 후보를 구분한 뒤')
+    if set(specifications) != seen:
+        raise ValueError('Configured question changed or is absent; review the complete question again.')
     return ''.join(chunks)
 
 

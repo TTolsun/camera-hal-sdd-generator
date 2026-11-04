@@ -1,0 +1,39 @@
+{
+  "task_id": "D1",
+  "findings": [
+    {
+      "condition": "Preparation timeout and fence failure",
+      "status": "only-in-source",
+      "page_anchor": "request-diagnosis#소스-근거",
+      "evidence": "The raw pipeline_handler.cpp:428 excerpt shows waitingRequests_ insertion followed by prepare(300ms). The raw request.cpp:442 excerpt says an unsignalled fence causes timeout failure and remains on the buffer. The source293 Request::Private::timeout implementation cancels the request and emits the prepared signal. The explanatory body at request-diagnosis#실패-위치별-확인-순서 discusses prepared_ and retained fences but does not explain this timeout path or propose observing it.",
+      "action": "Add a short observation step to the existing failure-triage section: inspect the original preparation timeout and fence state, cancellation, and prepared signal; cite the existing excerpts and request.cpp timeout implementation. Do not re-invoke state-changing functions."
+    },
+    {
+      "condition": "Camera-side request completion and submission-order observation",
+      "status": "documented-in-body",
+      "page_anchor": "request-diagnosis#실패-위치별-확인-순서",
+      "evidence": "The body instructs readers to observe the front request's RequestPending condition and, when it is no longer pending, the assertion, pop_front(), and requestComplete(req) call. Its completion flow also depicts the CameraManager thread and application return order. This matches source293 PipelineHandler::completeRequest; the textual flow is relevant to the diagnosis.",
+      "action": "Do not duplicate the existing queue-order or Camera-side call explanation."
+    },
+    {
+      "condition": "Application requestCompleted signal and callback observation",
+      "status": "only-in-source",
+      "page_anchor": "request-diagnosis#소스-근거",
+      "evidence": "The raw camera.cpp:1308 excerpt states that Camera notifies completion through requestCompleted. Source293 camera.cpp:1475–1489 shows Camera::requestComplete emitting that signal. The explanatory body asks readers to observe requestComplete(req), but does not explicitly name the application signal or ask them to observe its callback.",
+      "action": "Extend the existing completion observation sentence to name requestCompleted and propose recording the application's signal connection and callback receipt alongside requestComplete, without asserting a particular callback thread or an observed execution."
+    },
+    {
+      "condition": "Other B pages cited by automatic readers",
+      "status": "cannot-assess",
+      "page_anchor": "request-lifecycle.html; pipeline-requests.html",
+      "evidence": "E01–E03 cite these pages, and E02 and E03 describe preparation and callback observations, but the frozen HTML text for those pages is not supplied here. Their references alone do not establish their explanatory body or link destinations.",
+      "action": "Assess those exact frozen page sections before proposing cross-page navigation changes or treating a reader omission as a document defect."
+    }
+  ],
+  "confirmed_document_blocker": false,
+  "limitations": [
+    "Findings are bounded to the supplied request-diagnosis HTML and source293 excerpts; they do not establish a blocker across all B pages.",
+    "The timeout and application-signal details are present in raw source, while their diagnostic explanation or observation step is absent from the supplied page body.",
+    "No browser, device, callback, log, or runtime behavior was executed or measured. Visualization assessment is limited to the supplied textual flow and evidence."
+  ]
+}

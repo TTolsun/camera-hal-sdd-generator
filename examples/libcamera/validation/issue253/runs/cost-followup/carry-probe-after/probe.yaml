@@ -1,0 +1,155 @@
+source:
+  root: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\base-source
+  compile_commands: ../../../libcamera/build/compile_commands.json
+  exclude:
+  - subprojects/**
+  - test/**
+  - build/**
+  ndk_build:
+    enabled: false
+output:
+  facts_dir: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\facts
+  sdd_dir: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\sdd
+  diagrams_dir: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\sdd\diagrams
+paths:
+  sections_file: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\config\sections.yaml
+  consistency_file: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\config\contracts.yaml
+  scenarios_file: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\config\scenarios.yaml
+  prompts: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\examples\libcamera\prompts
+  templates: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\templates
+  style: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\style
+  config: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\config
+  products_file: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\config\products.yaml
+  glossary_file: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\config\glossary.yaml
+products:
+  file: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\config\products.yaml
+facts:
+  package_depth: 3
+tools:
+  clang_uml: none
+agent:
+  kind: cli
+  runner: codex
+  model: gpt-6.1-terra
+  args:
+  - -c
+  - model_reasoning_effort="high"
+  max_input_chars: 48000
+  timeout_sec: 600
+  full_style_guides: false
+review:
+  require_citations: true
+  max_retries: 1
+  design_revision: false
+  design_grounding: true
+  cli_checkpoint: true
+  max_calls: 1600
+  max_seconds: 14400
+  document_max_calls: 160
+  document_max_seconds: 7200
+documentation:
+  enabled: true
+  features:
+  - id: request-lifecycle
+    primary: request-lifecycle.md
+    sections:
+    - camera-model
+    - camera-requests
+    - pipeline-handler
+    - pipeline-requests
+    - request-diagnosis
+    scenarios:
+    - queue_request
+    - complete_request
+    - camera_stop
+    symbols:
+    - libcamera::Camera
+    - libcamera::Request
+    - libcamera::PipelineHandler
+  - id: ipu3-lsc
+    primary: ipu3-lsc-flow.md
+    sections:
+    - ipu3-lsc
+    symbols:
+    - libcamera::ipa::ipu3::algorithms::Lsc
+  - id: rkisp1-dewarp
+    primary: rkisp1-dewarp.md
+    sections:
+    - pipeline-handler
+    symbols:
+    - libcamera::RkISP1CameraData
+    - libcamera::ConverterDW100Module
+    - libcamera::Dw100VertexMap
+  - id: pipeline-reader
+    primary: pipeline-handler.md
+    sections:
+    - pipeline-requests
+    reader_profile: vendor
+  - id: request-reader
+    primary: request-lifecycle.md
+    sections:
+    - request-diagnosis
+    reader_profile: vendor
+  - id: ipa-algorithms
+    primary: ipa.md
+    sections:
+    - ipa-algorithms
+  - id: ipu3-lsc-prepare
+    primary: ipu3-lsc-flow.md
+    sections:
+    - ipu3-lsc-prepare
+site:
+  overview_visual:
+    section: vendor-overview
+    visual: camera-stack
+  enabled: false
+  title: libcamera 설계 문서
+  intro: site-intro.md
+  guide_visuals: site-guide-visuals.json
+  guide_source:
+    root: ../..
+    file: examples/libcamera/site-intro.md
+  english_catalog: english.json
+  source_url: https://github.com/TTolsun/libcamera-sdd
+  nav_groups:
+  - For Vendor
+  - For Developer
+  manuscript_profiles:
+    camera-model.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    camera-requests.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    component-index.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    framebuffer-allocator.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    ipa-algorithms.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    ipa-module-validation.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    ipa.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    ipu3-lsc-flow.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    ipu3-lsc-prepare.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    ipu3-lsc.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    official-cam-validation.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\reader-authentication.yaml
+    onboarding.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    overview.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    pipeline-handler.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    pipeline-requests.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    request-diagnosis.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\diagnosis-authentication.yaml
+    request-lifecycle.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    rkisp1-dewarp.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    team-overview.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    vendor-assurance.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    vendor-integration.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    vendor-overview.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\vendor-authentication.yaml
+    scenarios/camera_start.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    scenarios/camera_stop.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    scenarios/complete_request.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    scenarios/configure.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    scenarios/index.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    scenarios/manager_start.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+    scenarios/queue_request.md: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\carry-probe-after\default-authentication.yaml
+diagrams:
+  enabled: true
+  max_nodes: 16
+  direction: LR
+  strip_namespace: 'libcamera::'
+visuals:
+  on_stale: omit
+  file: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\config\visuals.final.yaml
+  max_nodes: 12

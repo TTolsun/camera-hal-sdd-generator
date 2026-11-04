@@ -1,0 +1,4 @@
+변경 파일 2 개, 영향 섹션 ['component-index', 'overview'], 시나리오 []
+-> C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost\build\impact.json
+문서 범위: needs-review, 검토 항목 2개 -> C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost\build\impact-review.md
+이전 facts 미제공: 삭제된 심볼의 범위 검사는 제한됩니다. --base-facts를 사용할 수 있습니다.

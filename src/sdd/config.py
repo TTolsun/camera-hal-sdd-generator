@@ -75,6 +75,7 @@ class SiteConfig:
     mermaid: str = ''
     undefined_terms: str | None = None
     translation_batch_size: int = 1
+    coverage_question_edits: dict = field(default_factory=dict)
 
     @classmethod
     def from_mapping(cls, values):
@@ -308,9 +309,12 @@ class Config:
     @property
     def publication(self) -> dict:
         options = self._option('publication') or {}
-        allowed = {'baseline_config', 'operation_id', 'budget', 'allowed_contract_changes', 'shared_labels', 'reports'}
+        allowed = {'baseline_config', 'operation_id', 'operation_file', 'budget', 'allowed_contract_changes', 'shared_labels', 'reports'}
         if not isinstance(options, dict) or set(options) - allowed:
-            raise ValueError('Invalid publication settings; use baseline_config, operation_id, budget, allowed_contract_changes, shared_labels or reports')
+            raise ValueError('Invalid publication settings; use baseline_config, operation_id, operation_file, budget, allowed_contract_changes, shared_labels or reports')
+        if 'operation_file' in options and (not isinstance(options['operation_file'], str)
+                or not options['operation_file'].strip() or not options.get('operation_id')):
+            raise ValueError('publication.operation_file requires a path and operation_id')
         return options
 
     def diagram_policy(self, section):

@@ -1,0 +1,14 @@
+agent:
+  kind: cli
+  runner: claude
+  model: claude-haiku-5-5
+  args:
+  - --effort
+  - high
+  - --setting-sources
+  - project,local
+  max_input_chars: 64000
+  timeout_sec: 600
+  full_style_guides: true
+paths:
+  style: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\reader-preserved-style

@@ -1171,6 +1171,94 @@ def test_changed_source_regenerates_and_selects_overview_without_watch(tmp_cfg, 
     assert verify(model, section, path.read_text(encoding='utf-8'))['status'] == 'documented'
 
 
+@pytest.mark.parametrize('changed_source', [False, True])
+def test_carry_uses_explicit_historical_style_without_reusing_changed_source(cli_units, tmp_cfg, changed_source):
+    """Publication and source promotion must authenticate the same historical page."""
+    import shutil
+    from dataclasses import asdict
+    from sdd.render_profiles import for_page
+    section, model, save, calls, state, agent = cli_units
+    state['interrupt'] = False
+    path = Generator(tmp_cfg, model, agent()).run()[0]
+    original = path.read_bytes()
+    old_style = tmp_cfg.root / 'historical-style'
+    shutil.copytree(tmp_cfg.style_dir, old_style)
+    profile = tmp_cfg.root / 'historical.yaml'
+    profile.write_text(yaml.safe_dump({'agent': asdict(tmp_cfg.agent),
+                                      'paths': {'style': str(old_style)}}), encoding='utf-8')
+    tmp_cfg.raw['site'] = {'manuscript_profiles': {'device.md': str(profile)}}
+    tmp_cfg.agent.runner = 'codex'
+    tmp_cfg.agent.model = 'different-current-model'
+    style = tmp_cfg.style_dir / 'README.md'
+    style.write_text(style.read_text(encoding='utf-8') + '\nNew editorial policy.\n', encoding='utf-8')
+    # Export exercises the publication path with a distinct historical identity.
+    export_site(tmp_cfg)
+    profiles = tmp_cfg.raw['site'].pop('manuscript_profiles')
+    with pytest.raises((ValueError, RuntimeError), match='집필 규칙'):
+        export_site(tmp_cfg)
+    tmp_cfg.raw['site']['manuscript_profiles'] = profiles
+    model.meta['source_commit'] = 'b' * 40
+    for record in model.evidence.values():
+        record['commit'] = 'b' * 40
+    tmp_cfg.raw['site'].pop('manuscript_profiles')
+    assert not carry_forward(tmp_cfg, model, [])[0]
+    assert path.read_bytes() == original
+    tmp_cfg.raw['site']['manuscript_profiles'] = profiles
+    if changed_source:
+        record = model.evidence['device/stop/stop']
+        record['text'] = 'void stop() { drain(); }'
+        record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    else:
+        # The existing publication verifier already accepts this explicit profile.
+        assert verify(model, section, path.read_text(encoding='utf-8'),
+                      cfg=for_page(tmp_cfg, 'device.md'))['human_review'] == 'pending'
+    call_count = len(calls)
+    promoted, stale = carry_forward(tmp_cfg, model, [])
+    assert len(calls) == call_count  # Authentication never executes the historical CLI.
+    if changed_source:
+        assert not promoted and any(p == path for p, _ in stale)
+        assert path.read_bytes() == original
+    else:
+        assert promoted == [path] and not stale
+        assert 'source_commit: ' + 'b' * 40 in path.read_text(encoding='utf-8')
+        save()
+        export_site(tmp_cfg)
+        assert len(calls) == call_count
+
+
+def test_overview_target_uses_publication_default_instead_of_index_profile(cli_units, tmp_cfg):
+    import shutil
+    from dataclasses import asdict
+    from sdd.export_site import _prepare_page_body
+    section, model, _, calls, state, agent = cli_units
+    state['interrupt'] = False
+    path = Generator(tmp_cfg, model, agent()).run()[0]
+    other_style = tmp_cfg.root / 'index-style'
+    shutil.copytree(tmp_cfg.style_dir, other_style)
+    (other_style / 'README.md').write_text('Different index editorial policy.', encoding='utf-8')
+    profile = tmp_cfg.root / 'index-profile.yaml'
+    profile.write_text(yaml.safe_dump({'agent': asdict(tmp_cfg.agent),
+                                      'paths': {'style': str(other_style)}}), encoding='utf-8')
+    tmp_cfg.raw['site'] = {'manuscript_profiles': {'index.md': str(profile)},
+                          'overview_visual': {'section': 'device', 'visual': 'stop-flow'}}
+    evidence = {'source': 'stop/stop', 'sha256': model.evidence['device/stop/stop']['sha256'],
+                'quote': 'cancelPending();'}
+    graph = {'id': 'stop-flow', 'topic': 'stop', 'kind': 'flow', 'title': '종료 책임',
+             'question': '종료 처리는 어디서 시작합니까?',
+             'nodes': [{'id': 'stop', 'label': '종료 진입', 'label_en': 'Stop entry', 'evidence': [evidence]},
+                       {'id': 'cancel', 'label': '취소 호출', 'label_en': 'Cancel call', 'evidence': [evidence]}],
+             'edges': [{'from': 'stop', 'to': 'cancel', 'label': '호출', 'label_en': 'calls', 'evidence': [evidence]}]}
+    tmp_cfg.raw['visuals'] = {'file': 'overview-visual.yaml'}
+    (tmp_cfg.root / 'overview-visual.yaml').write_text(yaml.safe_dump(
+        {'schema': 1, 'sections': {'device': [graph]}}, allow_unicode=True), encoding='utf-8')
+    texts = {'device.md': path.read_text(encoding='utf-8'), 'index.md': '# 안내\n'}
+    sections = {'device.md': section, 'index.md': {'id': 'index', 'kind': 'manual'}}
+    call_count = len(calls)
+    result = _prepare_page_body(tmp_cfg, 'index.md', texts, sections, [], model)
+    assert any(value[0]['id'] == 'stop-flow' for value in result[4])
+    assert len(calls) == call_count
+
+
 @pytest.mark.parametrize('change', ['dry-run', 'budget', 'duplicate_mapping', 'stale_evidence'])
 def test_fail_closed_before_model_or_manuscript(tmp_cfg, generated, change):
     section, model, save, agent = generated
@@ -1235,12 +1323,16 @@ def test_grounding_rejection_retries_the_model_without_replacing_prose(tmp_cfg, 
                 self.checks += 1
                 return json.dumps({'reviews': [dict(index=0, supported=self.checks > 1,
                                                     reason='Unsupported guarantee in the first draft')]})
-            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+            statement = dict(base.statement)
+            if self.checks:
+                statement['text'] = '`stop()`은 `cancelPending()`을 호출해 대기 요청의 취소 처리를 시작합니다.'
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
     agent = Agent()
     path = Generator(tmp_cfg, model, agent).run()[0]
     assert len(agent.calls) == 4
     assert 'Unsupported guarantee' in agent.calls[2][1]
     assert 'cancelPending' in agent.calls[1][1]
+    assert '대기 요청의 취소 처리를 시작합니다.' in path.read_text(encoding='utf-8')
     assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
 
 

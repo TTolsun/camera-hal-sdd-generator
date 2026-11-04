@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "scope": "Public mini HAL only; no internal HAL evidence or human approval",
+  "archive": "runs/native-evidence.zip",
+  "sha256": "9a0711be9b34a890c73ef630f142727cd7e8a981abca97483adff2df92f81b22",
+  "original_files": 275,
+  "manifest": "ARCHIVE-MANIFEST.json inside ZIP; paths relative to runs/",
+  "verified_cli_record_copies_with_native_stdout": 19,
+  "unique_cli_receipts": 15
+}
