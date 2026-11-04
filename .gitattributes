@@ -9,3 +9,4 @@ examples/libcamera/validation/issue251/runs/** -text -whitespace
 # Native issue253 review evidence must keep captured byte hashes.
 examples/libcamera/validation/issue253/runs/** -text -whitespace
 docs/libcamera/records/issue253/automated/** -text -whitespace
+docs/libcamera/records/issue241/** -text -whitespace
