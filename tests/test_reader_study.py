@@ -1,4 +1,8 @@
 import copy
+import csv
+import hashlib
+import json
+from pathlib import Path
 
 import pytest
 
@@ -164,3 +168,17 @@ def test_repeated_success_cannot_cover_failure_of_other_fixed_questions(study):
     assert result['unassisted_base_successes'] == 8
     assert result['distinct_base_tasks_succeeded'] == 2
     assert result['status'] == 'needs-improvement'
+
+
+def test_published_blank_packet_has_valid_fingerprints_and_no_human_results():
+    packet=Path(__file__).parents[1]/'docs/libcamera/records/issue-248'
+    raw=(packet/'protocol.json').read_bytes()
+    protocol=json.loads(raw)
+    hashes={key:hashlib.sha256((packet/entry['path']).read_bytes()).hexdigest()
+            for key,entry in protocol['artifacts'].items()}
+    with (packet/'human-results.csv').open(encoding='utf-8',newline='') as source:
+        rows=list(csv.DictReader(source))
+    assert len(rows)==15 and all(not row['answer'] for row in rows)
+    result=summarize(protocol,rows,protocol_sha256=hashlib.sha256(raw).hexdigest(),
+                     artifact_hashes=hashes,manifest_observations={})
+    assert result['status']=='pending' and result['unassisted_base_successes']==0
