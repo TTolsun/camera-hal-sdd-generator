@@ -1396,7 +1396,7 @@ sections:
       evidence:
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
-        quote: pending requests are cancelled and complete immediately in an error state.
+        quote: \fn PipelineHandler::stopDevice()
     - id: detach
       label: '계획: waitingRequests.swap 직후 분리 상태 관찰'
       label_en: 'Plan: inspect separation immediately after waitingRequests.swap'
