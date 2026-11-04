@@ -1,0 +1,159 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-11-04T03:45:13.094767+00:00",
+  "scope": "Diagnostic-only source membership error improvement. New source/unknown endpoint data is returned to the same selected CLI retry. Validation, source pinning, JSON response fields and publication acceptance do not change.",
+  "base_main": "e104b6ec6369ee485a33ce8a7c199a545b73b141",
+  "source_sha256": {
+    "src/sdd/generated_visuals.py": "41dcd478b57a880cd3381710ff77a5f6ed549ff3b440b9fb6b34dfebfe88df8c",
+    "tests/test_generated_visuals.py": "03e42cf9b2ea06e543b30a07e65574a5c038092e8773826c58548b17241dc1c3"
+  },
+  "tests": {
+    "passed": 160,
+    "skipped": 1,
+    "log": "build/issue215/pytest-131.log",
+    "synthetic_cases": [
+      "node identity and evidence absence",
+      "unknown destination",
+      "same-agent retry receives missing symbol and quote ID then validates a repaired graph"
+    ],
+    "note": "Unit fixtures are not native calls."
+  },
+  "independent_review": {
+    "profile": "examples/libcamera/validation/issue215/independent-review-profile.yaml",
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "reasoning": "high",
+    "findings": 0,
+    "receipts": [
+      {
+        "path": "build/issue215/code-review-77/prompts/calls/997e1f3177204021b70264a16729f389/001.receipt.json",
+        "sha256": "1c5257b6deb9f83f449faec9db2cac7fa834bfeddb4301d20c95b4adb7c4d00c",
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "cli_version": "codex-cli 0.166.0-alpha.5.1",
+        "arguments": [
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "read-only",
+          "--disable",
+          "shell_tool",
+          "--disable",
+          "multi_agent",
+          "--disable",
+          "plugins",
+          "--disable",
+          "apps",
+          "--disable",
+          "shell_snapshot",
+          "--disable",
+          "skill_search",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "web_search=\"disabled\"",
+          "--json",
+          "--output-schema",
+          "response-schema.json",
+          "--model",
+          "gpt-6.1-terra",
+          "-c",
+          "model_reasoning_effort=\"high\""
+        ],
+        "completion": "verified actual native CLI turn; no human approval"
+      }
+    ]
+  },
+  "archive": "citation-diagnostics-review.tar.xz",
+  "archive_sha256": "c2437944eab26fda6bf3e3d41b25e5789d3209d4e8e8b65ea4cae88b26a8f0f5",
+  "bytes": 28284,
+  "entries": [
+    {
+      "path": "build/issue215/code-review-77/build/generation-runs/a9e866a70c264305baa8a2b92a7f3cb6.json",
+      "sha256": "9b79a953e94d5d0535d97f9c762862e3e06892d33a3f200db35dd384ab1ff87a",
+      "bytes": 968
+    },
+    {
+      "path": "build/issue215/code-review-77/execution-profile.json",
+      "sha256": "a891bb07d7ac655e9e9602764277337df034fcdc2a29951b5702718589d4d1c6",
+      "bytes": 1309
+    },
+    {
+      "path": "build/issue215/code-review-77/inputs.json",
+      "sha256": "5408dfec25a215daa3f6133064c5dc9e14bd9ad56df9b2cbc4c32e2bd5736ab5",
+      "bytes": 96472
+    },
+    {
+      "path": "build/issue215/code-review-77/prompts/001_code-review.md",
+      "sha256": "615b91dcba329a5434897c5f025d060584bdf997a4764de8b82031a758a42de6",
+      "bytes": 96624
+    },
+    {
+      "path": "build/issue215/code-review-77/prompts/001_code-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "build/issue215/code-review-77/prompts/001_code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-77/prompts/calls/997e1f3177204021b70264a16729f389/001.receipt.json",
+      "sha256": "1c5257b6deb9f83f449faec9db2cac7fa834bfeddb4301d20c95b4adb7c4d00c",
+      "bytes": 2190
+    },
+    {
+      "path": "build/issue215/code-review-77/prompts/calls/997e1f3177204021b70264a16729f389/001.request.json",
+      "sha256": "000a27fb810bde8305e312d68e7c8d114816e613546f26cbbdc7728ea655f1fd",
+      "bytes": 99529
+    },
+    {
+      "path": "build/issue215/code-review-77/prompts/calls/997e1f3177204021b70264a16729f389/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-77/prompts/cli/call-2b174v9_.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-77/prompts/cli/call-2b174v9_.stdout.txt",
+      "sha256": "948b5bb5823e8f25a9dd2e14d3a44f35173b72eb4ffcb1b990878010afed6aea",
+      "bytes": 360
+    },
+    {
+      "path": "build/issue215/code-review-77/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-77.log",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "build/issue215/code-review-77.py",
+      "sha256": "b8fb60d71f88df3723a7c413dd63dd7d5cd05fea4198ae0cd03ebf44e05ae1fb",
+      "bytes": 3382
+    },
+    {
+      "path": "build/issue215/pytest-130.log",
+      "sha256": "08a93b4a745169bb94de039bd399fb347cf4a681fff82f7358cf359599ccc9e3",
+      "bytes": 116
+    },
+    {
+      "path": "build/issue215/pytest-131.log",
+      "sha256": "f53de8ee6fc24b1f04837fd85053d50d248984cc330fa64854ce4bf8b788f315",
+      "bytes": 286
+    }
+  ],
+  "human_review": "pending",
+  "issue215": "in-progress; whole-site current bilingual item judgments, owner integration and public release remain unfinished"
+}

@@ -345,7 +345,8 @@ def materialize(cfg, model, section, plan, draft, producer):
         evidence, quote = refs(item)
         if (ident in symbols or not any(cites_symbol(symbol, ref['quote']) for ref in evidence)
                 or symbol not in source_symbols(passages)):
-            raise ValueError('Duplicate node or node symbol absent from evidence')
+            raise ValueError('Duplicate node or node symbol absent from evidence: '
+                             f'node={ident!r}, symbol={symbol!r}, quote_ids={item["quote_ids"]!r}')
         symbols[ident] = symbol
         node = {k: item[k] for k in ('id', 'label', 'label_en', 'shape')} | {'evidence': evidence}
         if node['shape'] == 'process':
@@ -355,9 +356,14 @@ def materialize(cfg, model, section, plan, draft, producer):
         if not isinstance(item, dict) or set(item) != {'from', 'to', 'label', 'label_en', 'condition_ref', 'quote_ids'}:
             raise ValueError('Invalid visual edge fields')
         evidence, quote = refs(item)
-        if any(item[k] not in symbols or not any(cites_symbol(symbols[item[k]], ref['quote'])
-               for ref in evidence) for k in ('from', 'to')):
-            raise ValueError('Edge evidence must contain both endpoint symbols')
+        unknown = [item[k] for k in ('from', 'to') if item[k] not in symbols]
+        uncited = {item[k]: symbols[item[k]] for k in ('from', 'to') if item[k] in symbols
+                   and not any(cites_symbol(symbols[item[k]], ref['quote']) for ref in evidence)}
+        if unknown or uncited:
+            raise ValueError('Edge evidence must contain both endpoint symbols: '
+                             f'{item["from"]!r} -> {item["to"]!r}; unknown_nodes={unknown!r}; '
+                             f'uncited_symbols={uncited!r}; quote_ids={item["quote_ids"]!r}. '
+                             'Cite whole identifiers with their original case and spelling.')
         choice = item['condition_ref']
         allowed = {'always': ('', 'always')} | {f'{key}:{branch}': (text, branch)
                     for key, text in condition_catalog(passages, include_while=plan.get('while_conditions', False)).items() for branch in ('true', 'false')}

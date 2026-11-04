@@ -449,6 +449,47 @@ def test_automatic_graph_generation_reuse_export_and_carryover(tmp_cfg, automati
     assert _split(path.read_text(encoding='utf-8'))[0]['generated_visuals']['records']['stop-flow']['generation_commit']=='a'*40
 
 
+def test_citation_failure_identifies_the_node_and_unknown_edge_endpoint(tmp_cfg, automatic):
+    from sdd.generated_visuals import materialize, plans
+    section, model, _, agent = automatic
+    plan = plans(tmp_cfg, section)[0]
+    bad = copy.deepcopy(agent.draft)
+    bad['nodes'][1]['symbol'] = 'not_in_evidence'
+    with pytest.raises(ValueError, match='symbol absent') as error:
+        materialize(tmp_cfg, model, section, plan, bad, 'synthetic-diagnostic-fixture')
+    assert all(value in str(error.value) for value in ('cancel', 'not_in_evidence', 'stop:0'))
+    bad = copy.deepcopy(agent.draft)
+    bad['edges'][0]['to'] = 'unknown_destination'
+    with pytest.raises(ValueError, match='both endpoint symbols') as error:
+        materialize(tmp_cfg, model, section, plan, bad, 'synthetic-diagnostic-fixture')
+    assert all(value in str(error.value) for value in ('stop', 'unknown_destination', 'unknown_nodes', 'stop:0'))
+    assert not agent.calls
+
+
+def test_citation_retry_receives_the_missing_endpoint_symbol_and_quote(tmp_cfg, automatic):
+    from sdd.generated_visuals import generate
+    section, model, _, agent = automatic
+    text = 'void stop() { cancelPending(); }\n\nvoid stop() { /* no cancellation here */ }'
+    source = section['design_topics'][0]['sources'][0]
+    source.update(end='void stop() { /* no cancellation here */ }', sha256=hashlib.sha256(text.encode()).hexdigest())
+    model.evidence['device/shutdown/stop'].update(
+        text=text, sha256=source['sha256'], selector=copy.deepcopy(source), end_line=12)
+    valid = copy.deepcopy(agent.draft)
+    invalid = copy.deepcopy(valid)
+    invalid['edges'][0]['quote_ids'] = ['stop:1']
+    seen = []
+    def reply(system, user, **kwargs):
+        seen.append(user)
+        if len(seen) == 1:
+            return json.dumps(invalid)
+        assert all(value in user for value in ('stop', 'cancel', 'cancelPending', 'stop:1', 'uncited_symbols'))
+        return json.dumps(valid)
+    agent.chat = reply
+    result = generate(tmp_cfg, model, section, agent)
+    assert len(seen) == 2
+    assert result['records']['stop-flow']['draft'] == valid
+
+
 def test_edge_label_cap_preserves_long_nodes_and_prior_valid_manuscript(tmp_cfg, automatic):
     from sdd.generated_visuals import materialize, plans, schema
     section, model, _, agent = automatic
