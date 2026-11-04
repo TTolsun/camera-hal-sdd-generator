@@ -5290,24 +5290,6 @@ sections:
           message: 입력 연결과 오류 조건을 두 문장 이내로 설명하고 같은 제약을 일반론과 오류 조건으로 반복하지 마세요.
         - pattern: nullptr|스트림당.{0,12}(?:하나|한 개|1개)|(?:하나|한 개|1개).{0,12}버퍼만
           message: 발췌의 유효한 Stream 조건을 쓰고 nullptr나 스트림당 하나 일반론을 별도로 도입하지 마세요. 오류 조건은 유지합니다.
-    - id: submission
-      question: Camera::queueRequest()가 ConnectionTypeQueued 방식을 지정한 invokeMethod 호출 뒤 0을 반환한다는 구현을 먼저 설명하세요. 요청 완료는
-        별도의 requestCompleted 신호로 통지된다는 API 설명을 한 문장으로 이어서 구분하세요. 두 문장 이내로 답하세요.
-      sources:
-      - queue
-      - request-notice
-      - queued-connection
-      max_statements: 1
-      answer_contract:
-        basis: implementation
-        required_terms:
-        - - ConnectionTypeQueued
-        - - invokeMethod
-        - - '0'
-        - - requestCompleted
-        reject_patterns:
-        - pattern: 큐잉.{0,8}성공|큐에.{0,12}성공
-          message: 0 반환은 queued invokeMethod 호출 뒤의 반환입니다. 장치 큐잉 성공으로 읽힐 표현 대신 해당 호출 단계를 명시하세요.
     - id: submission-errors
       question: Camera::queueRequest()가 queued 호출 전에 동기적으로 거절하는 조건을 네 문장 이내로 설명하세요. isAccessAllowed 검사의 음수 ret을 그대로
         반환하는 경로, 다른 카메라가 만든 요청의 -EXDEV, RequestPending이 아님·controls().infoMap()이 &controls()와 다름·버퍼가 없음·비활성 Stream의

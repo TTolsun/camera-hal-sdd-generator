@@ -17,7 +17,11 @@ def configuration_errors(topic):
     if (not isinstance(parts, list) or not parts
             or any(not isinstance(p, dict) or not isinstance(p.get('id'), str) or not p['id'].strip() for p in parts)):
         return ['explanation requires nonempty source-bound parts with string IDs.']
-    source_ids = {s.get('id') for s in topic.get('sources', []) if isinstance(s, dict)}
+    sources = topic.get('sources', [])
+    if (not isinstance(sources, list)
+            or any(not isinstance(s, dict) or not isinstance(s.get('id'), str) or not s['id'].strip() for s in sources)):
+        return ['explanation requires a source list with nonempty string IDs.']
+    source_ids = {s['id'] for s in sources}
     if (len({p['id'] for p in parts}) != len(parts)
             or any(not isinstance(p.get('question'), str) or not p['question'].strip()
                    or not isinstance(p.get('sources'), list) or not p['sources']

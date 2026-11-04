@@ -163,8 +163,8 @@ def render_values(cfg, model, section, values):
             raise ValueError('Visual kind or topic is invalid')
         if titles.count(topics[visual['topic']].get('title')) != 1:
             raise ValueError('Visual target heading must be unique')
-        if 'stage' in visual and visual['stage'] not in {
-                s['id'] for s in topics[visual['topic']].get('explanation', [])}:
+        if 'stage' in visual and (not isinstance(visual['stage'], str) or visual['stage'] not in {
+                s['id'] for s in topics[visual['topic']].get('explanation', [])}):
             raise ValueError('Visual stage must belong to its topic explanation')
         title, question = (_text(visual.get(k), k) for k in ('title', 'question'))
         title_prefix = '#### ' if topics[visual['topic']].get('explanation') else '### '

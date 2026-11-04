@@ -77,6 +77,15 @@ def test_unstaged_visual_uses_first_stage_and_title_collision_is_not_a_stage(tmp
     assert result.splitlines().count('#### Change') == 2
 
 
+@pytest.mark.parametrize('stage', [None, [], {}, 1, False])
+def test_malformed_visual_stage_is_a_configuration_error(tmp_cfg, visual, stage):
+    section, model, graph, write = visual
+    graph['stage'] = stage
+    write()
+    with pytest.raises(ValueError, match='stage must belong'):
+        render(tmp_cfg, model, section)
+
+
 def test_visual_provenance_and_question_remain_in_collapsed_evidence(tmp_cfg, visual):
     section, model, graph, write = visual
     graph['producer']='cli/claude/test-model'

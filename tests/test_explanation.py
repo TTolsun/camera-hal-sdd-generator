@@ -50,6 +50,19 @@ def test_public_generation_rejects_invalid_explanation_before_unit_construction(
     assert agent.calls == []
 
 
+@pytest.mark.parametrize('sources', [None, {}, [None], [dict(id=[])], [dict(id='')]])
+def test_malformed_source_bindings_rejected_by_public_preflight(generated, tmp_cfg, sources):
+    from sdd.generated_design import generate
+    section, model, _, agent = generated
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id=s, question=s, sources=['stop']) for s in STAGES]
+    topic['explanation'] = [dict(id=s, title=s.title(), parts=[s]) for s in STAGES]
+    topic['sources'] = sources
+    with pytest.raises(ValueError):
+        generate(tmp_cfg, model, agent, section)
+    assert agent.calls == []
+
+
 def test_assembled_answers_keep_stage_boundaries_and_every_source_binding():
     topic = plan()
     answers = [dict(part_id=s, text=s, evidence=[s+'-source']) for s in STAGES]
