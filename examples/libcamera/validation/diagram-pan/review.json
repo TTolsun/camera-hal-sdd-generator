@@ -1,0 +1,8 @@
+{
+  "review": {
+    "verdict": "pass",
+    "findings": [],
+    "scope": "Reviewed the supplied mouse-drag implementation, CSS, regression source, and Korean and English contract and hint text. Browser execution and device testing were not performed."
+  },
+  "human_review": "pending"
+}

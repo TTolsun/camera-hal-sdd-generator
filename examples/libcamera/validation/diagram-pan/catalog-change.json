@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "new_native_pair": {
+    "korean": "마우스로 끌거나 터치로 밀어서 그림을 이동합니다. '화면에 맞춤'은 그림 전체를 보는 개요 보기입니다.",
+    "english": "Drag with a mouse or swipe with touch to move the diagram. \"Fit to screen\" shows an overview of the whole diagram."
+  },
+  "delta": {
+    "마우스로 끌거나 터치로 밀어서 그림을 이동합니다. '화면에 맞춤'은 그림 전체를 보는 개요 보기입니다.": "Drag with a mouse or swipe with touch to move the diagram. \"Fit to screen\" shows an overview of the whole diagram."
+  },
+  "writer_receipt_verification_sha256": "3bfc0731035fcb547f24f82b7c1cbe8838fe8b7c382198cfb1aadb44c5d85ad4",
+  "inference": "Fresh independent Claude CLI bilingual UI authoring; existing literal translations retained",
+  "human_review": "pending"
+}
