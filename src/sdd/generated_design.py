@@ -70,6 +70,9 @@ def _generate(cfg, model, agent, section, previous=None, *, replay_http=False, a
     for unit in _design_units(section, {}):
         if unit['id'] in answers:
             agent.unit(_unit_tag(section, unit), 'manuscript-reused')
+            from .reuse_decision import record
+            record(agent, _unit_tag(section, unit), 'reuse-manuscript',
+                   dict(reason_codes=['identical-manuscript-inputs-current-checks-passed']), stage='validated')
     units = _design_units(section, answers)
     replayed, resumed, failures = [], [], []
     archive = open_archive(cfg, replay_http)
