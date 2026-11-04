@@ -138,14 +138,19 @@ def prepare(cfg, model, section_ids=None, impact=None):
         for tid in duplicates.repeated_topics(model, section, retained):
             retained.pop(tid)
         answers = {tid: list(values) for tid, values in retained.items()}
+        pending = []
         for unit in _design_units(section, {}):
+            key = _unit_tag(section, unit)
+            dependencies = list(pending)
             reused = unit['id'] in retained
             action, reason, receipts = 'reuse-manuscript', 'source/request/model/style identical; current checks passed', []
+            explanation = dict(reason_codes=['identical-manuscript-inputs-current-checks-passed'])
             if not reused:
                 store, identity = store_for(cfg, model, section, unit, plan.prompts[unit['id']],
                                              plan.policy['design_grounding'], answers)
                 cached = store.read() if store is not None else None
                 action, reason = 'generate', 'no exact completed checkpoint or reusable manuscript'
+                explanation = store.explain(cached) if store is not None else dict(reason_codes=['checkpoint-unavailable'])
                 if cached is not None:
                     saved, reviewer = cached
                     request = _unit_request(model, section, unit, plan.prompts[unit['id']][0])
@@ -165,9 +170,22 @@ def prepare(cfg, model, section_ids=None, impact=None):
                         action = 'review-existing' if grounding_changed else 'revalidate-checkpoint' if changed else 'reuse-checkpoint'
                         reason = ('grounding policy changed; new automatic review required' if grounding_changed else
                                   'completed receipt-bound draft passes current checks; original provenance retained')
+                # A checkpoint's final outcome still belongs to execution.
+                # Even a forecast hit can be rejected under current checks.
+                pending.append(key)
+            forecast = action
+            if dependencies:
+                # Earlier checkpoint/generation outcomes are not final yet.
+                # Their duplicate/contract checks can reject an otherwise exact
+                # later draft. Never publish a guessed final reuse verdict.
+                action = 'resolve-after-dependencies'
+                reason = 'earlier answers/reviews are pending; runtime must resolve current checks'
             units.append(dict(section=section['id'], topic=unit['id'], part=unit.get('_part_id'),
+                subpart=unit.get('_subpart_id'), unit=key,
                 question=unit['question'], input_sha256=plan.inputs[unit['id']],
-                action=action, reason=reason, receipts=receipts))
+                action=action, forecast=forecast, certainty='conditional' if dependencies else 'input-bound',
+                depends_on=dependencies,
+                reason=reason, receipts=receipts, explanation=explanation))
     inputs = current()
     inputs.verify()
     report = dict(schema=1, source_commit=model.meta.get('source_commit'),
@@ -179,4 +197,18 @@ def prepare(cfg, model, section_ids=None, impact=None):
         inputs=inputs.manifest(), human_review='pending')
     from .publication_operation import archive_plan
     archive_plan(cfg, report)
+    from .generation_run import observed
+    execution = observed()
+    if execution is not None:
+        references = execution.report.get('publication_plans', [])
+        execution.report['publication_plan'] = dict(
+            path=references[-1]['path'] if references else str(cfg.build_dir/'publication-plan.json'),
+            input_sha256=report['input_sha256'])
+        for unit in units:
+            execution.decision(unit['unit'], dict(action=unit['action'], stage='forecast',
+                forecast=unit['forecast'], certainty=unit['certainty'], depends_on=unit['depends_on'],
+                **unit['explanation']))
+    from collections import Counter
+    print('Publication plan: ' + str(cfg.build_dir/'publication-plan.json') + '; ' +
+          ', '.join(f'{action}={count}' for action, count in sorted(Counter(u['action'] for u in units).items())))
     return report
