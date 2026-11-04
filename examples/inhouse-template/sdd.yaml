@@ -67,6 +67,7 @@ visuals:
   max_nodes: 8
 
 site:
+  # reader_paths: config/reader-paths.yaml # 실제 입력·공통 근거·역할별 질문을 채운 뒤 활성화합니다.
   enabled: false              # 첫 실행에서는 생성과 사이트 빌드를 나눠 확인한다
   title: Camera HAL 설계 문서
   source_url: <사내 코드 열람 주소>
