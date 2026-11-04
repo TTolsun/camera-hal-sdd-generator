@@ -97,6 +97,18 @@ documentation:
     - ipu3-lsc-prepare
 site:
   reader_paths: reader-paths.yaml
+  topic_links:
+    request-diagnosis.md:
+      diagnosis:
+      - section: pipeline-requests
+        topic: queue
+        label: 준비 대기와 타임아웃 확인
+      - section: request-lifecycle
+        topic: journey
+        label: 요청 접수와 완료 통지 구분
+      - section: request-lifecycle
+        topic: stopping
+        label: 앱 콜백 연결·스레드의 관찰 계획
   coverage_question_edits:
     scenarios/camera_start.md:
       ca76a601ba35d124ae6ea8d501b931cf47bc636d61797d77775ae3d847a22a9b:

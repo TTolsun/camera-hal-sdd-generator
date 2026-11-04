@@ -1533,7 +1533,7 @@ sections:
     topic: stopping
     kind: flow
     title: 제출 회차별 완료 기록의 비교 계획
-    question: 구현 검토 뒤 유효한 시점에 확보한 별도 기록으로 중복 완료와 반환 순서를 조사하는 계획입니다. 실행 결과나 중복 부재를 보장하지 않으며 완료 통지 뒤 요청 필드를 읽지 않습니다.
+    question: completeRequest 진입과 requestComplete 통지 호출은 별도 기록으로 조사합니다. 유효한 때 확보한 제출 회차별 기록을 비교하는 계획이며 두 호출을 일대일로 가정하거나 통지 뒤 요청 필드를 읽지 않습니다. 실제 검사 결과는 아닙니다.
     nodes:
     - id: paths
       label: '계획: 장치·대기 요청의 취소·완료 경로 구분'
@@ -1549,16 +1549,23 @@ sections:
       - source: stopping/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: Request *req = data->queuedRequests_.front();
+    - id: entry
+      label: '계획: completeRequest(request) 진입마다 기록'
+      label_en: 'Plan: record each completeRequest(request) entry'
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: void PipelineHandler::completeRequest(Request *request)
     - id: record
-      label: '계획: 완료 통지 호출마다 별도 기록 유지'
-      label_en: 'Plan: retain a separate record for each completion notification call'
+      label: '계획: requestComplete(req) 통지 호출마다 별도 기록'
+      label_en: 'Plan: separately record each requestComplete(req) notification call'
       evidence:
       - source: stopping/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: camera->requestComplete(req);
     - id: compare
-      label: '계획: 보관 기록으로 중복 완료·반환 순서 비교'
-      label_en: 'Plan: compare retained records for duplicate completion and return order'
+      label: '계획: 제출 회차별 두 기록의 횟수·순서 비교'
+      label_en: 'Plan: compare both record counts and order per submission'
       evidence:
       - source: stopping/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
@@ -1573,6 +1580,14 @@ sections:
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: stopDevice(camera);
     - from: identify
+      to: entry
+      label: 식별 기록과 진입 관찰을 연결
+      label_en: Associate captured identity with entry observations
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: void PipelineHandler::completeRequest(Request *request)
+    - from: identify
       to: record
       label: 재사용된 주소·cookie만으로 회차를 구분하지 않기
       label_en: Do not identify submissions from a reused address or cookie alone
@@ -1580,6 +1595,14 @@ sections:
       - source: stopping/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: camera->requestComplete(req);
+    - from: entry
+      to: compare
+      label: 진입 기록을 통지와 일대일로 가정하지 않기
+      label_en: Do not assume entry records correspond one-to-one with notifications
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty())
     - from: record
       to: compare
       label: 통지 뒤 요청 필드 대신 보관 기록만 비교

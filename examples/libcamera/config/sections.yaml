@@ -5856,7 +5856,7 @@ sections:
           message: 이 문단은 전달할 request의 관찰 기록만 설명합니다. 장치 큐 삽입·시퀀스 설명은 앞 절이 담당합니다.
       max_statements: 1
     - id: completion-check
-      question: 조사 계획으로 정지의 장치 처리·대기 요청 경로에서 완료 통지 호출 기록을 논리적 제출 회차별로 비교하여 중복 완료와 반환 순서를 확인하도록 두 짧은 문장 이내로 제안하세요. 식별 기록은 요청이 유효한 때 확보하며 재사용된 Request 주소나 cookie만으로 제출 회차가 유일하다고 가정하지 마세요. camera->requestComplete(req) 호출 뒤 요청 필드를 읽는 계획이나 검사를 실행했다는 주장은 금지합니다.
+      question: 조사 계획으로 PipelineHandler::completeRequest(request) 진입과 camera->requestComplete(req) 통지 호출을 구분해 기록하고, 유효할 때 확보한 논리적 제출 회차의 기록으로 중복 완료와 반환 순서를 비교하도록 두 짧은 문장 이내로 제안하세요. 한 진입이 통지 한 번과 일대일이라고 추정하지 마세요. 재사용된 주소나 cookie만으로 제출 회차가 유일하다고 가정하거나 통지 뒤 요청 필드를 읽거나 검사를 실행했다고 쓰지 마세요.
       sources:
       - device-stop
       - completion
@@ -5866,6 +5866,8 @@ sections:
         - - 중복
         - - 제출
         - - 기록
+        - - completeRequest
+        - - requestComplete
       max_statements: 2
     - id: queue-assertions
       question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를 해당 검사 지점에서
