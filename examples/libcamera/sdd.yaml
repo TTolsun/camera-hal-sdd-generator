@@ -39,8 +39,9 @@ agent:
   model: gpt-6.1-terra
   args: [-c, 'model_reasoning_effort="high"']
   # 문서 간 계약 대조는 대상 주장 하나에도 주 문서의 주장 전체와 근거 발췌를 함께 보낸다. 요청 수명 문서에
-  # 절 요약을 넣은 뒤 request-completion 계약의 최소 요청이 41,351자가 되어 한도를 올린다. 근거를 줄이지 않는다.
-  max_input_chars: 48000
+  # #249의 조건별 설명을 포함한 실제 대조 요청에서 65,038자를 확인했다. 근거를 줄이지 않고
+  # 입력 한도에 여유를 둔다. 사내 환경의 승인된 입력 한도는 별도 설정으로 관리한다.
+  max_input_chars: 96000
   timeout_sec: 600
   full_style_guides: false
 
@@ -96,6 +97,7 @@ documentation:
     sections:
     - ipu3-lsc-prepare
 site:
+  reader_paths: reader-paths.yaml
   coverage_question_edits:
     scenarios/camera_start.md:
       ca76a601ba35d124ae6ea8d501b931cf47bc636d61797d77775ae3d847a22a9b:

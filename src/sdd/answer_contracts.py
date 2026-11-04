@@ -90,6 +90,11 @@ def check(rule, statements, label):
 def validate(topic, statements):
     """Reapply checks to saved answers, including part coverage and evidence scope."""
     check(topic.get('answer_contract'), statements, topic['id'])
+    # Unit calls validate their own subset; the complete topic enforces order
+    # again at assembly and publication, including retained answers.
+    if 'explanation' in topic and '_part_id' not in topic:
+        from .explanation import validate as validate_explanation
+        validate_explanation(topic, statements)
     parts = topic.get('parts', [])
     if not parts:
         if any('part_id' in st and st['part_id'] != topic.get('_part_id') for st in statements):

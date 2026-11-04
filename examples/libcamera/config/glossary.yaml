@@ -209,11 +209,18 @@ terms:
   definition: TID는 gettid 시스템 호출이 반환하는 Linux 스레드 ID입니다.
   aliases: []
 
+# Definition authored with the issue250 native Codex CLI/Terra High profile.
+- term: ROI
+  full: Return on Investment
+  definition: ROI(투자 수익률)는 수익을 투자 비용과 비교하는 개념이며, 이 공개 libcamera 문서의 예시에서는 측정하지 않습니다.
+
 - term: QBUF
-  aliases: [VIDIOC_QBUF]
+  aliases:
+  - VIDIOC_QBUF
   definition: V4L2 장치의 큐에 버퍼를 추가하도록 요청하는 ioctl입니다.
 - term: STREAMOFF
-  aliases: [VIDIOC_STREAMOFF]
+  aliases:
+  - VIDIOC_STREAMOFF
   definition: V4L2 장치의 지정된 버퍼 유형에 대한 스트리밍을 중지하도록 요청하는 ioctl입니다.
 - term: DQBUF
   aliases:

@@ -1,0 +1,8 @@
+agent:
+  kind: cli
+  runner: codex
+  command: []
+  model: gpt-6.1-terra
+  args: [-c, 'model_reasoning_effort="high"']
+  max_input_chars: 200000
+  timeout_sec: 600

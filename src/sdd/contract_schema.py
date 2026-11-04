@@ -17,6 +17,8 @@ def configuration_errors(section: dict) -> list[str]:
         if any(not isinstance(v.get('id'), str) or not v['id'].strip() for v in values):
             return [f'{field}의 id는 비어 있지 않은 문자열이어야 합니다.']
     for topic in section.get('design_topics', []):
+        from .explanation import configuration_errors as explanation_errors
+        errors.extend(explanation_errors(topic))
         if 'prompt' in topic and (not isinstance(topic['prompt'], str) or not topic['prompt'].strip()):
             errors.append(f"{topic['id']}: prompt는 비어 있지 않은 문자열이어야 합니다.")
         if topic.get('narration') == 'facts' and (section.get('design_requirements') or section.get('reader_profile')):

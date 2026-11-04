@@ -696,12 +696,18 @@ def test_publication_policy_changes_require_an_explicit_revision(tmp_cfg, sample
 
 
 @pytest.mark.parametrize('external_edit', [False, True])
-def test_catalog_keeps_declared_basis_and_guards_commit_and_rollback(tmp_cfg, sample_model, monkeypatch, external_edit):
+@pytest.mark.parametrize('use_profile', [False, True])
+def test_catalog_keeps_declared_basis_and_guards_commit_and_rollback(tmp_cfg, sample_model, monkeypatch, external_edit, use_profile):
     from sdd.localization_cli import prepare_catalog
     from sdd.generation_run import observed
     import sdd.localization_cli as catalogs
     sample_model.save(tmp_cfg.facts_path)
     tmp_cfg.raw['site'] = dict(english_catalog='english.json')
+    if use_profile:
+        from dataclasses import asdict
+        selected = tmp_cfg.root/'translation-profile.yaml'
+        selected.write_text(json.dumps(dict(agent=asdict(tmp_cfg.agent))), encoding='utf-8')
+        tmp_cfg.paths['translation_profile'] = selected
     contract, write = configure(tmp_cfg, sample_model, ['device'])
     target = tmp_cfg.root/'english.json'
     original = b'{"strings": {"old": "original"}}'
@@ -730,3 +736,32 @@ def test_catalog_keeps_declared_basis_and_guards_commit_and_rollback(tmp_cfg, sa
     with pytest.raises(InputChanged):
         prepare_catalog(tmp_cfg, target, translate=True)
     assert target.read_bytes() == (b'user catalog edit' if external_edit else original)
+
+
+@pytest.mark.parametrize('edit_original', [False, True])
+def test_independent_audit_keeps_original_config_snapshot_under_same_revision(tmp_cfg, sample_model, monkeypatch, edit_original):
+    import sdd.consistency as checks
+    from dataclasses import asdict
+    sample_model.save(tmp_cfg.facts_path)
+    selected = tmp_cfg.root/'review-profile.yaml'
+    selected.write_text(json.dumps(dict(agent=asdict(tmp_cfg.agent))), encoding='utf-8')
+    tmp_cfg.paths['consistency_profile'] = selected
+    groups = tmp_cfg.root/'contracts.yaml'
+    groups.write_text(json.dumps(dict(contracts=[dict(id='fixed',question='Fixed task?',primary='device.md',documents=['device.md'],match='device')])), encoding='utf-8')
+    tmp_cfg.paths['consistency_file'] = groups
+    configure(tmp_cfg, sample_model, ['device'])
+    with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+        pass
+    def audit(cfg, model, execution, configured):
+        assert cfg._loaded_inputs == tmp_cfg._loaded_inputs
+        assert execution.report['publication']['revision'] == 1
+        if edit_original:
+            original = tmp_cfg.root/'sdd.yaml'
+            original.write_bytes(original.read_bytes()+b'\n# changed during independent review\n')
+        return dict(status='passed', revision=execution.report['publication']['revision'])
+    monkeypatch.setattr(checks, '_audit', audit)
+    if edit_original:
+        with pytest.raises(InputChanged):
+            checks.audit(tmp_cfg, sample_model, object())
+    else:
+        assert checks.audit(tmp_cfg, sample_model, object())['revision'] == 1
