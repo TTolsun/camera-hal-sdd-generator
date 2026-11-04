@@ -33,6 +33,10 @@ def _validate_unit_response(cfg, model, agent, section, topic, raw, sources, pas
 class _UnitRejected(ValueError):
     """Exhausted response validation, eligible for all-design-units collection."""
 
+    def __init__(self, message, *, category=None):
+        self.category = category
+        super().__init__(message)
+
 
 def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive, answers):
     focused_system, system, unit_policy = TopicPrompt(*prompt)
@@ -42,6 +46,16 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     passages, base_user = request.passages, request.user
     tag = _unit_tag(section, topic)
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
+    from .grounding import GroundingFormatError, policy_hash
+    from .repair_diagnostics import ReviewAttempt, UnchangedRejectedReview, observe_attempt, rejected_reviews
+    profile = dict(kind=cfg.agent.kind, runner=cfg.agent.runner, model=cfg.agent.model,
+                   command=cfg.agent.identity_command, args=cfg.agent.args,
+                   grounding_policy=policy_hash() if grounding else None)
+    diagnostic_context = dict(section=section['id'], topic=topic, sources=sources,
+                              scopes=scopes, source_commit=model.meta.get('source_commit'),
+                              system=system, unit_policy=unit_policy, profile=profile)
+    rejected = rejected_reviews(tag, diagnostic_context)
+    pending_checkpoint_raw, carried_receipts = None, []
     store = None
     if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
         from .cli_checkpoint import Capture
@@ -55,11 +69,32 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             from .design_checkpoint import changes
             grounding_changed, validation_changed = changes(saved['identity'], identity)
             review_agent = Capture(agent) if grounding_changed else reviewer
+            checkpoint_review = ReviewAttempt(review_agent, rejected, profile) if grounding_changed else None
             try:
                 statements = _validate_unit_response(cfg, model, review_agent, section, topic,
                     saved['raw'], sources, passages, tag, grounding, source_files, scopes,
-                    context_records, prior_answers=answers)
-            except (ValueError, TypeError, KeyError) as exc:
+                    context_records, prior_answers=answers,
+                    reviewer=(lambda _: checkpoint_review) if checkpoint_review else None)
+            except BaseException as exc:
+                if checkpoint_review is not None:
+                    category = ('review-agent-failure' if checkpoint_review.failed else
+                                'review-format' if isinstance(exc, GroundingFormatError) else
+                                'verdict-conflict-risk' if isinstance(exc, UnchangedRejectedReview) else
+                                'semantic' if checkpoint_review.returned and isinstance(exc, ValueError) else
+                                'deterministic-validation')
+                    observe_attempt(tag, 'design', 'checkpoint-revalidation', context=diagnostic_context,
+                        raw=saved['raw'], category=category, error=exc, receipt=checkpoint_review.receipt,
+                        action='Keep a structurally valid checkpoint for a malformed-verdict-only retry; otherwise repair the identified claim/source before another review.',
+                        details={'review_request_sha256': checkpoint_review.request} if category == 'semantic' else None)
+                    if category == 'semantic':
+                        rejected[checkpoint_review.request] = str(exc)
+                    if checkpoint_review.failed:
+                        raise
+                    if isinstance(exc, GroundingFormatError):
+                        pending_checkpoint_raw = saved['raw']
+                        carried_receipts = [store.calls/name for name in saved['receipts']] + review_agent.receipts
+                if not isinstance(exc, (ValueError, TypeError, KeyError)):
+                    raise
                 if not (grounding_changed or validation_changed):
                     raise
                 # A changed policy never inherits an obsolete pass. Only this
@@ -78,12 +113,17 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                     store.write(saved['raw'], statements, capture)
                     receipt_names = [path.resolve().relative_to(store.calls.resolve()).as_posix()
                                      for path in capture.receipts]
+                if checkpoint_review is not None:
+                    observe_attempt(tag, 'design', 'checkpoint-revalidation', context=diagnostic_context,
+                        raw=saved['raw'], receipt=checkpoint_review.receipt, status='accepted-current-checks',
+                        action='Current checkpoint revalidation passed; preserve its original generation provenance.')
                 return UnitResult(statements, dict(checkpoint=store.path.name, topic=topic['id'],
                                         part=topic.get('_part_id'), subpart=topic.get('_subpart_id'),
                                         revalidated=grounding_changed or validation_changed,
                                         new_grounding_review=grounding_changed,
                                         receipts=receipt_names))
         agent = Capture(agent)
+        agent.receipts = carried_receipts
     replayed = replay_unit(archive, system, base_user, schema, tag, topic,
         lambda raw, reviewer: _validate_unit_response(cfg, model, agent,
             section, topic, raw, sources, passages, tag + '_replay',
@@ -91,19 +131,12 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     if replayed is not None:
         return replayed
     user = base_user
-    last = None
+    last, last_category = None, None
     options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in SCHEMA_KINDS else {}
     saved = checkpoint(cfg, model, system, base_user, options, focused_system, unit_policy)
     cached = saved.response
-    from .grounding import GroundingFormatError
-    pending_raw = None
-    from .repair_diagnostics import ReviewAttempt, UnchangedRejectedReview, observe_attempt, rejected_reviews
-    profile = dict(kind=cfg.agent.kind, runner=cfg.agent.runner, model=cfg.agent.model,
-                   command=cfg.agent.identity_command, args=cfg.agent.args)
-    diagnostic_context = dict(section=section['id'], topic=topic, sources=sources,
-                              scopes=scopes, source_commit=model.meta.get('source_commit'),
-                              system=system, unit_policy=unit_policy, profile=profile)
-    rejected = rejected_reviews(tag, diagnostic_context)
+    pending_raw = pending_checkpoint_raw
+    drafted_live = False
     for attempt in range(cfg.max_retries + 1):
         if len(system) + len(user) > cfg.agent.max_input_chars:
             raise ValueError(f"{section['id']}/{topic['id']}: 필수 근거 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
@@ -113,6 +146,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
         from_cache = not review_retry and cached is not None and attempt == 0
         raw = pending_raw if review_retry else cached if from_cache else agent.chat(
             system, user, tag=f"{tag}_{attempt}", **options)
+        drafted_live |= not review_retry and not from_cache
         if not review_retry and not from_cache and cfg.review.design_revision:
             revision = user + '\nDraft to check (untrusted, not evidence):\n' + raw + (
                 '\nRevise this draft against the sources and the complete question. '
@@ -144,6 +178,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                         'format' if isinstance(exc, json.JSONDecodeError) else
                         'semantic' if review_attempt.returned and isinstance(exc, ValueError) else
                         'review-format' if review_attempt.returned else 'deterministic-validation')
+            last_category = category
             action = ('Skip the unchanged review; modify the rejected claim or evidence scope using the remaining existing draft attempts.'
                       if category == 'verdict-conflict-risk' else
                       'Keep the live draft and request a well-formed verdict; do not redraft.'
@@ -185,9 +220,14 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             observe_attempt(tag, 'design', attempt, context=diagnostic_context, raw=raw,
                 status='accepted-current-checks', receipt=review_attempt.receipt,
                 action='Continue assembly; prior observations are not automatic semantic resolution or approval.')
+            if pending_checkpoint_raw is not None and not drafted_live:
+                return UnitResult(statements, dict(checkpoint=store.path.name, topic=topic['id'],
+                    part=topic.get('_part_id'), subpart=topic.get('_subpart_id'), revalidated=True,
+                    new_grounding_review=True, receipts=[path.resolve().relative_to(store.calls.resolve()).as_posix()
+                                                        for path in agent.receipts]))
             return UnitResult(statements, None)
     else:
         unit_id = f"{section['id']}/{topic['id']}" + (f"/{topic['_part_id']}" if '_part_id' in topic else '')
         failure = f"{unit_id}: LLM 답변 검증 실패: {last}"
-        raise _UnitRejected(failure)
+        raise _UnitRejected(failure, category=last_category)
 

@@ -21,7 +21,7 @@ class UnchangedRejectedReview(ValueError):
 class RepairRequired(ValueError):
     def __init__(self, message, category, **details):
         self.category, self.details = category, details
-        super().__init__(message + ': ' + json.dumps(details, ensure_ascii=False, default=repr))
+        super().__init__(message + (': ' + json.dumps(details, ensure_ascii=False, default=repr) if details else ''))
 
 
 class ReviewAttempt:

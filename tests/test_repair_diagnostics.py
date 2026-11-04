@@ -96,12 +96,57 @@ def test_checkpoint_failure_after_acceptance_is_not_a_semantic_rejection(unit_ca
     assert not execution.report.get('repair_attempts')
 
 
+def checkpoint_case(unit_case, monkeypatch):
+    from types import SimpleNamespace
+    cfg = unit_case[0]
+    cfg.raw.setdefault('review', {})['cli_checkpoint'] = True
+    saved = dict(identity={}, raw=unit_case[-1], receipts=[], statements=json.loads(unit_case[-1])['statements'])
+    writes = []
+    store = SimpleNamespace(path=cfg.build_dir/'cli-checkpoints/example.json', calls=cfg.build_dir/'prompts/calls',
+        read=lambda: (saved, object()), write=lambda *args: writes.append(args))
+    monkeypatch.setattr('sdd.design_checkpoint.store_for', lambda *args, **kwargs: (store, {}))
+    monkeypatch.setattr('sdd.design_checkpoint.changes', lambda *args: (True, False))
+    return saved, writes
+
+
+def test_checkpoint_format_retry_keeps_the_receipted_draft(unit_case, monkeypatch):
+    unit_case[0].max_retries = 0
+    saved, writes = checkpoint_case(unit_case, monkeypatch)
+    agent = ScriptedAgent([('review', 'not JSON'), ('review', PASS)])
+    agent.unit = lambda *args, **kwargs: None
+    statements, provenance = request(unit_case, agent)
+    assert counts(agent) == (0, 2) and statements == saved['statements']
+    assert provenance['revalidated'] and provenance['new_grounding_review']
+    assert len(writes) == 1 and writes[0][0] == saved['raw']
+
+
+def test_checkpoint_semantic_rejection_prevents_identical_lucky_review(unit_case, monkeypatch):
+    unit_case[0].max_retries = 0
+    saved, writes = checkpoint_case(unit_case, monkeypatch)
+    agent = ScriptedAgent([('review', UNSUPPORTED), ('draft', unit_case[-1]), ('review', PASS)])
+    agent.unit = lambda *args, **kwargs: None
+    with observe(unit_case[0], 'checkpoint-semantic-rejection') as execution:
+        with pytest.raises(generated_design._UnitRejected):
+            request(unit_case, agent)
+    assert counts(agent) == (1, 1) and not writes
+    assert [r['category'] for r in execution.report['repair_attempts']] == ['semantic', 'verdict-conflict-risk']
+    assert saved['raw'] == unit_case[-1]
+
+
 def test_execution_limits_are_distinct_from_cli_and_semantic_failures():
     from sdd.generation_run import failure_kind
     from sdd.llm import AgentError
     assert failure_kind(AgentError('CLI 입력 한도를 초과했습니다.')) == 'cli-input-limit'
     assert failure_kind(AgentError('모델이 출력 토큰 한도에 도달했습니다.')) == 'model-output-limit'
     assert failure_kind(AgentError('CLI가 실패했습니다.')) == 'cli-failure'
+
+
+@pytest.mark.parametrize('category,expected', [('review-format', 'review-format'),
+    ('semantic', 'grounding-rejected'), ('verdict-conflict-risk', 'no-progress')])
+def test_terminal_failure_retains_its_category_without_matching_model_wording(category, expected):
+    from sdd.generation_run import failure_kind
+    error = generated_design._UnitRejected('model reason happens to mention checkpoint', category=category)
+    assert failure_kind(error) == expected
 
 
 def test_rejected_candidate_is_remembered_across_operation_resume(unit_case):
@@ -219,3 +264,14 @@ def test_malformed_evidence_is_not_an_attribute_error_from_diagnostics(tmp_cfg, 
         edges=[dict(**{'from': 'a', 'to': 'b'}, label='edge', label_en='edge', evidence=evidence)])
     with pytest.raises(ValueError):
         render_values(tmp_cfg, model, section, [graph])
+
+
+def test_terminal_visual_error_retains_the_failure_classification(tmp_cfg, automatic):
+    from sdd.generated_visuals import generate
+    from sdd.generation_run import failure_kind
+    section, model, _, agent = automatic
+    tmp_cfg.max_retries = 0
+    agent.draft['edges'][0].update(label=agent.draft['nodes'][1]['label'], label_en='Different translation')
+    with pytest.raises(ValueError) as error:
+        generate(tmp_cfg, model, section, agent)
+    assert failure_kind(error.value) == 'format'

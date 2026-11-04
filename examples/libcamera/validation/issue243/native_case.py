@@ -130,8 +130,13 @@ def validate_fixed_inputs(destination):
 
 
 def fixed_config():
-    return dict(agent=yaml.safe_load((ROOT/'examples/libcamera/validation/issue215/generation-profile.yaml').read_bytes())['agent'],
-        review=dict(max_retries=1), publication=dict(operation_id='issue243-fixed-label-collision'),
+    path = ROOT/'docs/libcamera/records/issue215/native-evidence-07.tar.xz'
+    if hashlib.sha256(path.read_bytes()).hexdigest() != ARCHIVES['07']:
+        raise ValueError('Historical profile archive checksum mismatch')
+    with tarfile.open(path) as archive:
+        original = yaml.safe_load(archive.extractfile('build/issue215/refinement-runs-15/vendor-assurance/step-01/generation.yaml'))
+    return dict(agent=original['agent'],
+        review=dict(max_retries=original['review']['max_retries']), publication=dict(operation_id='issue243-fixed-label-collision'),
         paths=dict(sections_file='sections.yaml', style=str(ROOT/'style')),
         visuals=dict(file='visuals.yaml', max_nodes=12, on_stale='error'))
 
@@ -291,6 +296,8 @@ def review(destination, review_name='independent-review'):
         value = json.loads(raw)
         from sdd.cli_schema import validate_original
         validate_original(raw, rules)
+        review_stage = 'receipt-verification'
+        review_provenance = verify_calls(directory, cfg.agent)
     except BaseException as exc:
         from sdd.generation_run import failure_kind
         save(directory/'failure.json', dict(status='incomplete',
@@ -300,7 +307,7 @@ def review(destination, review_name='independent-review'):
             human_review='pending'))
         raise
     save(directory/'review.json', value)
-    provenance['independent_review'] = verify_calls(directory, cfg.agent)
+    provenance['independent_review'] = review_provenance
     save(directory/'provenance.json', provenance)
     save(directory/'scope.json', dict(draft_hashes=hashes, checks=CHECKS,
         new_cli_calls=len(agent.report['calls']), wall_seconds=time.monotonic()-started,
@@ -312,9 +319,10 @@ def summarize(destination, review_name='independent-review'):
     from sdd.repair_diagnostics import compare_checks
     validate_fixed_inputs(destination)
     cfg = load(destination/'sdd.yaml')
-    incomplete = incomplete_comparison(destination, cfg)
+    incomplete = incomplete_comparison(destination, cfg, review_name)
     if incomplete is not None:
-        save_immutable(destination/('comparison-'+review_name+'.json'), incomplete)
+        snapshot = hashlib.sha256(json.dumps(incomplete, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        save_immutable(destination/('comparison-'+review_name+'-incomplete-'+snapshot+'.json'), incomplete)
         print(json.dumps(incomplete, ensure_ascii=False, indent=2))
         return incomplete
     review_dir = destination/review_name
@@ -420,13 +428,19 @@ def summarize(destination, review_name='independent-review'):
     return report
 
 
-def incomplete_comparison(destination, cfg):
+def incomplete_comparison(destination, cfg, review_name='independent-review'):
     """Report transport/validation failures without inventing a reviewed graph."""
     results = {}
     for variant in ['baseline', 'diagnostic']:
         path = destination/variant/'result.json'
         results[variant] = json.loads(path.read_bytes()) if path.exists() else None
-    if all(value and value['mechanical_status'] == 'passed' for value in results.values()):
+    review_failure_path = destination/review_name/'failure.json'
+    review_failure = json.loads(review_failure_path.read_bytes()) if review_failure_path.exists() else None
+    review_dir = destination/review_name
+    review_complete = (all((review_dir/name).is_file() for name in ['review.json', 'scope.json', 'provenance.json'])
+                       and any((review_dir/'prompts/calls').rglob('*.receipt.json')))
+    if (all(value and value['mechanical_status'] == 'passed' for value in results.values())
+            and review_failure is None and review_complete):
         return None
     variants = {}
     for variant, result in results.items():
@@ -440,7 +454,8 @@ def incomplete_comparison(destination, cfg):
             validation_errors=result.get('errors', []) if result else [],
             terminal_failure=result.get('failure') if result else None,
             semantic_status='unjudged', successful_repair=False, human_review='pending')
-    return dict(mode='incomplete-native-comparison', variants=variants, status='incomplete',
+    return dict(mode='incomplete-native-comparison', variants=variants, status='incomplete', review_failure=review_failure,
+        review_state='failed' if review_failure else 'not-finished',
         successful_repair=False, note='No graph or semantic verdict is substituted for a failed/not-finished variant. '
         'Journal dispatch attempts are distinct from completed CLI receipts.', human_review='pending')
 

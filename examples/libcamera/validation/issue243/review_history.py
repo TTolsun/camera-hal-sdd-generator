@@ -53,8 +53,8 @@ def historical_cases():
     return result
 
 
-def main(run=True):
-    output = ROOT/'build/issue243/historical-semantic-review'
+def main(run=True, output=None):
+    output = output or ROOT/'build/issue243/historical-semantic-review'
     if run and output.exists():
         raise ValueError('Historical review already started; preserve it')
     cases = historical_cases()
@@ -148,4 +148,6 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--collate-only', action='store_true')
-    main(run=not parser.parse_args().collate_only)
+    parser.add_argument('--output', type=Path)
+    args = parser.parse_args()
+    main(run=not args.collate_only, output=args.output)

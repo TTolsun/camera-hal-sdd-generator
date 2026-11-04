@@ -30,11 +30,23 @@ def review(scope, output):
     files = {'runtime': RUNTIME, 'evidence': EVIDENCE, 'history': HISTORY, 'publication': PUBLICATION}[scope]
     # Send changed hunks plus the complete new helper and existing retry owner.
     # Unchanged rendering/source internals retain their existing regression suite.
-    diff = subprocess.run(['git', 'diff', '--no-ext-diff', 'HEAD', '--', *files],
-                          cwd=ROOT, capture_output=True, check=True).stdout.decode('utf-8')
     complete = RUNTIME[:2] if scope == 'runtime' else files
+    diff_files = [path for path in files if path not in complete]
+    diff = (subprocess.run(['git', 'diff', '--no-ext-diff', 'origin/main', '--', *diff_files],
+                          cwd=ROOT, capture_output=True, check=True).stdout.decode('utf-8') if diff_files else '')
     snapshots = {path: (ROOT/path).read_text(encoding='utf-8') for path in complete}
+    dependencies = {}
+    import inspect
+    if scope == 'publication':
+        from sdd.evidence import collect, select_span
+        dependencies = {'sdd.evidence.collect': inspect.getsource(collect),
+                        'sdd.evidence.select_span': inspect.getsource(select_span)}
+    elif scope == 'runtime':
+        from sdd.cli_checkpoint import UnitStore, Capture, Reviewer
+        dependencies = {'checkpoint-write': inspect.getsource(UnitStore.write),
+                        'Capture': inspect.getsource(Capture), 'Reviewer': inspect.getsource(Reviewer)}
     payload = dict(scope=scope, diff=diff, complete_files=snapshots,
+        dependency_windows=dependencies,
         requirements='Issue243: preserve original failures/checkpoints/output; no arbitrary new limits or approval gates; '
         'reuse existing retry budget and generation_run; distinguish review-format, source selection, meaning, '
         'verdict conflict, transient/CLI failure; do not count error replacement as successful repair; '
@@ -53,7 +65,9 @@ def review(scope, output):
     if output.exists():
         raise ValueError('Review directory already exists; preserve original run')
     output.mkdir(parents=True)
-    save(output/'inputs.json', dict(scope=scope, hashes={p: hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in files}))
+    base = subprocess.run(['git', 'rev-parse', 'origin/main'], cwd=ROOT, capture_output=True, check=True).stdout.decode().strip()
+    save(output/'inputs.json', dict(scope=scope, base_sha=base,
+        hashes={p: hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in files}))
     text = dict(type='string', minLength=1)
     props = dict(file=text, line=dict(type='integer', minimum=1), severity=dict(type='string', enum=['P1', 'P2', 'P3']),
                  problem=text, reproduction=text, fix=text)

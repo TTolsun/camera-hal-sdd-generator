@@ -27,6 +27,8 @@ def sha(raw):
 
 
 def inspect(destination):
+    if destination.exists() and any(destination.iterdir()):
+        raise ValueError('Inspection destination already initialized; preserve it and use a new destination')
     destination.mkdir(parents=True, exist_ok=True)
     report = dict(schema=1, source_commit='293d751a814e0d4c34e85ad457ccd9d5eefd1a61',
                   mode='historical-inspection', new_cli_calls=0, human_review='pending',
@@ -70,7 +72,11 @@ def inspect(destination):
                     call_dir = destination / 'originals' / sha(read(name))
                     call_dir.mkdir(parents=True, exist_ok=True)
                     for suffix in ['receipt.json', 'request.json', 'response.txt']:
-                        (call_dir/suffix).write_bytes(read(stem+'.'+suffix))
+                        target, raw = call_dir/suffix, read(stem+'.'+suffix)
+                        if target.exists() and target.read_bytes() != raw:
+                            raise ValueError('Copied historical receipt differs from existing immutable original')
+                        if not target.exists():
+                            target.write_bytes(raw)
                     nodes = response['nodes']
                     nodes = list(nodes.values()) if isinstance(nodes, dict) else nodes
                     labels = defaultdict(list)

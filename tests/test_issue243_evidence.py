@@ -73,3 +73,33 @@ def test_comparison_checkpoint_cannot_be_overwritten(native_case, tmp_path):
     with pytest.raises(ValueError, match='Existing evidence differs'):
         native_case.save_immutable(path, dict(status='completed'))
     assert path.read_bytes() == original
+
+
+def test_missing_review_stays_incomplete_after_successful_mechanical_trials(native_case, tmp_path):
+    import json
+    from types import SimpleNamespace
+    for variant in ['baseline', 'diagnostic']:
+        directory = tmp_path/variant
+        directory.mkdir()
+        (directory/'result.json').write_text(json.dumps(dict(mechanical_status='passed')))
+    report = native_case.incomplete_comparison(tmp_path, SimpleNamespace(agent=None))
+    assert report['review_state'] == 'not-finished' and not report['successful_repair']
+
+
+def test_public_preparation_resumes_verified_files_and_preserves_conflicts(native_case, tmp_path):
+    import json
+    import os
+    from prepare_public import write_exact
+    from public_gap import transition
+    path = tmp_path/'input.json'
+    write_exact(path, b'{"state": "baseline"}')
+    transition(path, {'state': 'baseline'}, {'state': 'prepared'}, json.loads, b'{"state": "prepared"}')
+    os.utime(path, ns=(1000000000, 1000000000))
+    transition(path, {'state': 'baseline'}, {'state': 'prepared'}, json.loads, b'{"state": "prepared"}')
+    assert path.stat().st_mtime_ns == 1000000000
+    path.write_bytes(b'{"state": "user-edit"}')
+    with pytest.raises(ValueError, match='conflicts'):
+        transition(path, {'state': 'baseline'}, {'state': 'prepared'}, json.loads, b'{"state": "prepared"}')
+    with pytest.raises(ValueError, match='conflicts'):
+        write_exact(path, b'baseline')
+    assert path.read_bytes() == b'{"state": "user-edit"}'

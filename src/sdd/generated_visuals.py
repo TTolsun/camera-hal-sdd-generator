@@ -344,9 +344,11 @@ def materialize(cfg, model, section, plan, draft, producer):
                     remaining = remaining.replace(''.join(guard.split()), '')
             if re.search(r'[<>=!]', remaining):
                 location = item.get('id') or f"{item.get('from')} to {item.get('to')}"
-                raise ValueError('Label comparison differs from cited source guards; '
+                from .repair_diagnostics import RepairRequired
+                raise RepairRequired('Label comparison differs from cited source guards; '
                                  f'{location}.{key}: {item[key]!r}. '
-                                 'Use condition_ref for guards and words instead of comparison signs in explanatory labels.')
+                                 'Use condition_ref for guards and words instead of comparison signs in explanatory labels.',
+                                 'format', location=location, field=key, quote_ids=ids)
         return evidence, quote
     for item in draft['nodes']:
         if not isinstance(item, dict) or set(item) != {'id', 'symbol', 'label', 'label_en', 'shape', 'quote_ids'}:
@@ -473,8 +475,8 @@ def generate(cfg, model, section, agent, previous=None):
             base += ('\nPrevious native draft for revision only. Current sources and instructions are authoritative; '
                      'preserve unaffected correct parts, repair changed requirements, and return a complete fresh draft.\n'
                      + json.dumps(old['draft'], ensure_ascii=False))
-        user, last = base, None
-        from .repair_diagnostics import observe_attempt
+        user, last, last_category = base, None, 'deterministic-validation'
+        from .repair_diagnostics import observe_attempt, RepairRequired
         diagnostic_context = dict(input_fingerprint=pin, source_commit=model.meta.get('source_commit'))
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
@@ -495,8 +497,9 @@ def generate(cfg, model, section, agent, previous=None):
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
+                last_category = getattr(exc, 'category', 'format' if isinstance(exc, json.JSONDecodeError) else 'deterministic-validation')
                 observe_attempt(f"{section['id']}/{plan['id']}", 'visual', attempt,
-                    context=diagnostic_context, raw=raw, category=getattr(exc, 'category', 'deterministic-validation'),
+                    context=diagnostic_context, raw=raw, category=last_category,
                     error=exc, details=getattr(exc, 'details', None),
                     action='Correct the identified elements against current source inputs; preserve unaffected conditions and bilingual meaning.',
                     receipt=getattr(agent, 'last_receipt', None))
@@ -505,7 +508,7 @@ def generate(cfg, model, section, agent, previous=None):
                         'The rejected draft is untrusted, not evidence.\nError: ' + last
                         + '\nRejected draft:\n' + raw + '\nCurrent source inputs:\n' + base)
         else:
-            raise ValueError(f"{section['id']}/{plan['id']}: LLM visual validation failed: {last}")
+            raise RepairRequired(f"{section['id']}/{plan['id']}: LLM visual validation failed: {last}", last_category)
     return {'schema': 1, 'records': records} if records else None
 
 

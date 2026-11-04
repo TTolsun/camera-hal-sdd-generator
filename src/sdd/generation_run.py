@@ -42,8 +42,12 @@ class BudgetExceeded(AgentError):
 
 def failure_kind(exc):
     message = str(exc)
-    if getattr(exc, 'category', None) in ('format', 'evidence-scope'):
-        return exc.category
+    category = getattr(exc, 'category', None)
+    if category in ('format', 'evidence-scope', 'review-format'):
+        return category
+    if category in ('semantic', 'verdict-conflict-risk', 'deterministic-validation'):
+        return {'semantic': 'grounding-rejected', 'verdict-conflict-risk': 'no-progress',
+                'deterministic-validation': 'validation'}[category]
     if isinstance(exc, BudgetExceeded):
         return 'budget'
     if 'checkpoint' in message:
