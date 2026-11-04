@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "frozen-task-grading",
+  "completed_at": "2026-11-04T19:02:02.261437+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "89fcb69550646da3fda3e54b5088c4f3c067c5c048a317531bdf372b148cb9de",
+  "response_sha256": "78087dcdf340e1a2cc5fef16d9c3fa62bec67ae998c1b784af905c6b008e0d42",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "e277000e224c6f2cd5cd673f47b35de0ddb870164535b4415211388709cfedcd",
+    "prompt_sha256": "213b068965cebc18ea64a911b635e0e8a4ea489c4625abde27a71c530dc0598d",
+    "provider": {
+      "thread_id": "01a1a7ef-9c37-7e03-8a97-614c408e8292",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 45027,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3268,
+        "reasoning_output_tokens": 753
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-uhos325g.stdout.txt",
+    "native_schema_sha256": "76828db51723b7e97f0794c8ffe53d0e05986966f44bb12c4af248e042b8bb3d"
+  },
+  "human_review": "pending"
+}

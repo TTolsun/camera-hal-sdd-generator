@@ -1,0 +1,65 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "grades": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "evaluator_id": {
+            "type": "string"
+          },
+          "task_id": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string"
+          },
+          "correct": {
+            "type": "boolean"
+          },
+          "independent": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "missing_conditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "evaluator_id",
+          "task_id",
+          "condition",
+          "correct",
+          "independent",
+          "reason",
+          "missing_conditions"
+        ]
+      }
+    },
+    "protocol_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "grades",
+    "protocol_findings",
+    "limitations"
+  ]
+}

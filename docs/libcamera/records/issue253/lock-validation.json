@@ -1,0 +1,15 @@
+{
+  "verified_at": "2026-11-04T19:14:48.076896+00:00",
+  "source_actual": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "publication_actual": "178aa978890a22df5e984bc5efe18a1a3756aa1b",
+  "protocol_matches": true,
+  "rubric_matches": true,
+  "packet_matches": {
+    "E01": true,
+    "E02": true,
+    "E03": true
+  },
+  "source_file_mismatches": [],
+  "site_output_mismatches": [],
+  "human_trials": 0
+}

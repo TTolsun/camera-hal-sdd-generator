@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "status": "preliminary-automatic-results-human-effect-unmeasured",
+  "trials": 24,
+  "humans": 0,
+  "human_trials": 0,
+  "reading_ease_median": null,
+  "effect_verdict": "judgment-unavailable",
+  "conditions": {
+    "A": {
+      "correct": 5,
+      "denominator": 12,
+      "common_correct": 4,
+      "common_denominator": 6,
+      "additional_correct": 1,
+      "additional_denominator": 6,
+      "elapsed_median_all_seconds": 46.5,
+      "help_count": 0,
+      "first_exposure_correct": 3,
+      "first_exposure_denominator": 6,
+      "failed_trials": [
+        "E01/T1",
+        "E01/D2",
+        "E02/T2",
+        "E02/D1",
+        "E02/D2",
+        "E03/D2",
+        "E01/D1"
+      ]
+    },
+    "B": {
+      "correct": 8,
+      "denominator": 12,
+      "common_correct": 5,
+      "common_denominator": 6,
+      "additional_correct": 3,
+      "additional_denominator": 6,
+      "elapsed_median_all_seconds": 37.5,
+      "help_count": 0,
+      "first_exposure_correct": 3,
+      "first_exposure_denominator": 6,
+      "failed_trials": [
+        "E01/D1",
+        "E01/D2",
+        "E02/T2",
+        "E03/D2"
+      ]
+    }
+  },
+  "both_correct_pairs": [
+    {
+      "evaluator_id": "E01",
+      "task_id": "T4",
+      "A": 21,
+      "B": 30
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "T3",
+      "A": 24,
+      "B": 30
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "D1",
+      "A": 37,
+      "B": 31
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "T5",
+      "A": 34,
+      "B": 39
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "T6",
+      "A": 39,
+      "B": 27
+    }
+  ],
+  "both_correct_medians": {
+    "A": 34,
+    "B": 30
+  },
+  "limits": [
+    "Automatic grades are provisional: precise attribution to every cited HTML and device/test source was not independently re-opened. See grades.json limitations.",
+    "Three model roles are not three human participants or independent model families.",
+    "Second exposure is contaminated by task learning; first exposure is not a balanced difficulty/role sample.",
+    "B index start is not documented in three E01 trials. E02 shell-reported wall times are not a pure environment-delay measure.",
+    "No new post-fix trial or human reading-ease measurement occurred.",
+    "E01 skipped the specified starting point on six trials. All evaluators saw all task prompts in advance.",
+    "All timing boundaries differ from prompt-reveal/first-open/final-file-submit definitions. See procedure-audit.md.",
+    "Cross-task memory and E02 D1-to-D2 exposure contaminate conceptual first exposure."
+  ],
+  "historical_initial_counts": {
+    "A_correct": 6,
+    "B_correct": 8,
+    "A_additional_correct": 2,
+    "A_first_condition_correct": 4
+  },
+  "grade_revision": "d1-consistency.json: E01/D1/A true to false under unchanged criterion",
+  "confirmatory_trial_count": 0,
+  "exploratory_trial_count": 24,
+  "protocol_compliance": "deviations documented; no confirmatory benchmark claim"
+}
