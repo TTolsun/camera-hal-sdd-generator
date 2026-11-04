@@ -206,13 +206,21 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         for rel in outputs:
             target = owned_path(out, rel)
             target.parent.mkdir(parents=True, exist_ok=True)
-            produced[rel] = (stage / rel).read_bytes()
-            shutil.copyfile(stage / rel, target)
+            # A failed copy must not truncate the currently published file.
+            with tempfile.NamedTemporaryFile(dir=target.parent, prefix='.sdd-', delete=False) as stream:
+                temporary = Path(stream.name)
+            try:
+                shutil.copyfile(stage / rel, temporary)
+                temporary.replace(target)
+                produced[rel] = (stage / rel).read_bytes()
+            finally:
+                temporary.unlink(missing_ok=True)
         for rel in previous["outputs"].keys() - outputs.keys():
             target = owned_path(out, rel)
             if target.is_file():
                 produced[rel] = None
                 target.unlink()  # Only files explicitly owned by the previous verified manifest.
         produced[MANIFEST] = (json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode('utf-8')
-        (out / MANIFEST).write_bytes(produced[MANIFEST])
+        from .state_io import save
+        save(out / MANIFEST, data, sort_keys=True, newline='\n')
     return out

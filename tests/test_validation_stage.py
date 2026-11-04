@@ -1,6 +1,7 @@
 """Stage isolation is about checked bytes, not inheriting a previous pass."""
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -264,21 +265,37 @@ def test_translation_profile_selects_only_transport_after_rendering(tmp_cfg, mon
 
 
 def test_site_rollback_preserves_user_edit_after_copy(tmp_cfg, tmp_path, monkeypatch):
-    import shutil
     from sdd.site_build import build_site
     out = tmp_path/'site'
     def render(cfg, target, mermaid):
         (target/'index.html').write_text('<p>previous</p>', encoding='utf-8')
     build_site(tmp_cfg, out, render, None)
-    original = shutil.copyfile
+    original = Path.replace
     def changed(cfg, target, mermaid):
         (target/'index.html').write_text('<p>generated</p>', encoding='utf-8')
-    def copying(source, destination, *args, **kwargs):
-        result = original(source, destination, *args, **kwargs)
-        Path(destination).write_bytes(b'user edit after copy')
-        tmp_cfg.sections_file.write_text('sections: []', encoding='utf-8')
+    def replacing(source, destination):
+        result = original(source, destination)
+        if Path(destination) == out/'index.html':
+            Path(destination).write_bytes(b'user edit after copy')
+            tmp_cfg.sections_file.write_text('sections: []', encoding='utf-8')
         return result
-    monkeypatch.setattr('sdd.site_build.shutil.copyfile', copying)
+    monkeypatch.setattr(Path, 'replace', replacing)
     with pytest.raises(InputChanged):
         build_site(tmp_cfg, out, changed, None)
     assert (out/'index.html').read_bytes() == b'user edit after copy'
+
+
+def test_partial_copy_failure_does_not_truncate_published_site(tmp_cfg, tmp_path, monkeypatch):
+    from sdd.site_build import build_site
+    out = tmp_path/'site'
+    def render(cfg, target, mermaid):
+        (target/'index.html').write_text('<p>previous</p>', encoding='utf-8')
+    build_site(tmp_cfg, out, render, None)
+    before = {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()}
+    def partial(source, destination):
+        Path(destination).write_bytes(b'truncated')
+        raise OSError('copy failed')
+    monkeypatch.setattr('sdd.site_build.shutil.copyfile', partial)
+    with pytest.raises(OSError, match='copy failed'):
+        build_site(tmp_cfg, out, render, None)
+    assert {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()} == before
