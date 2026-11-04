@@ -5495,9 +5495,10 @@ sections:
     - resources
     parts:
     - id: problem
-      question: 요청 제출의 성공 반환과 실제 완료를 혼동하면 수명 판단을 할 수 없다는 문제를 한두 문장으로 소개하세요. Camera::queueRequest의 0은 ConnectionTypeQueued
-        invokeMethod 호출 뒤 성공 반환이며, 요청 완료는 별도 requestCompleted로 통지한다는 차이를 설명하세요. 버퍼 유지 의무의 주체와 기한은 다음 항목이 소유하므로 여기서
-        반복하지 마세요. 0이 반환되는 순간에 콜백이 아직 없다고 단정하거나 콜백이 반드시 반환 뒤 발생한다고 쓰지 마세요.
+      question: 요청 제출의 성공 반환과 실제 완료를 혼동하는 문제를 두 문장 이내로 소개하세요. 설명의 적용 범위는 Camera::queueRequest가 입력 검사를 통과해 0을 반환하는
+        성공 경로로 명시적으로 한정합니다. 이 성공 경로에서는 ConnectionTypeQueued invokeMethod 호출 뒤 0을 반환하며, 요청 완료는 별도 requestCompleted로
+        통지된다는 차이만 설명하세요. 여러 검증 실패에서 음수를 반환할 수 있으므로 모든 호출이 invokeMethod까지 도달하거나 항상 0을 반환하는 것처럼 쓰지 마세요. 버퍼 유지 의무의 주체·기한은
+        다음 항목이 소유하므로 반복하지 마세요. 성공 반환 순간의 실제 콜백 진행 상태나 콜백이 반드시 반환 뒤 발생한다는 시간 보장을 만들지 마세요. 첫 문장에 성공 경로라는 조건을 포함하세요.
       sources:
       - queue
       max_statements: 1
@@ -5507,6 +5508,7 @@ sections:
         - - queueRequest
         - - '0'
         - - 완료
+        - - 성공 경로
         reject_patterns:
         - pattern: 콜백이?\s*아직|아직[^.]{0,25}콜백|반환[^.]{0,15}(?:후에만|이후에만)
           message: 0 반환만으로 완료 여부를 판단할 수 없다고 쓰고 반환·콜백의 실제 시간 순서를 단정하지 마세요.
@@ -5559,11 +5561,13 @@ sections:
         - - RequestComplete
         - - RequestCancelled
     - id: out-of-order
-      question: 소스에서 유도한 조건부 예라고 명시하세요. A 다음 B를 제출했고 A가 RequestPending이며 B의 모든 버퍼와 추가 처리가 끝났다면 completeRequest(B)는
-        B를 완료 상태로 바꾸어도 queuedRequests_ 선두 A에서 break하므로 B의 애플리케이션 반환은 아직 이뤄지지 않습니다. 그동안 addBuffer 호출자는 B의 버퍼를 요청 완료
-        콜백까지 유지해야 하지만 파이프라인 핸들러는 completeRequest(B) 반환 뒤 B에 접근해서는 안 됩니다. 이후 A가 완료되어 completeRequest가 실행되고 나머지 선두도
-        완료 상태이면 A, B 순으로 반환된다는 조건과 다음 확인할 큐 선두·상태·pending 버퍼·콜백을 연결하세요. 하드웨어 처리 순서 보장이나 실제 실험 결과로 쓰지 마세요. 정상 B의 상태는
-        cancelled_가 false일 때 RequestComplete가 된다는 구현 조건을 명시하세요.
+      question: 소스에서 유도한 조건부 예라고 명시하세요. A 다음 B를 제출했고 A는 선두 RequestPending이며 B의 모든 버퍼와 추가 처리가 끝나 completeRequest(B)를
+        호출한 조건입니다. 이 조건만으로 B의 cancelled_ 값이 false라고 가정하지 마세요. 상태 대입은 cancelled_가 false이면 RequestComplete, true이면 RequestCancelled이므로
+        값이 주어지지 않으면 두 상태 분기를 함께 설명해야 합니다. 버퍼 처리가 끝났다는 사실만으로 비취소를 뜻하지 않는다는 점을 간단히 구별하세요. 두 상태 모두 queuedRequests_ 선두
+        A가 Pending이면 애플리케이션 반환이 지연됩니다. 그동안 addBuffer 호출자의 B 버퍼 유효성 기한은 요청 완료 콜백이고, 파이프라인 핸들러는 completeRequest(B) 반환
+        뒤 B에 접근해서는 안 됩니다. A가 완료되고 이어지는 선두들이 완료 상태이면 A, B 순으로 반환된다는 조건을 연결하세요. 다음 확인은 Private::complete의 상태 대입 지점에서
+        cancelled_와 상태를 대조하고, 제출 큐의 선두·pending 버퍼·완료 콜백을 관찰하는 조사 계획으로만 제시하세요. 핸들러가 completeRequest 반환 뒤 B를 읽도록 제안하지
+        마세요. 실제 기기 결과나 하드웨어 처리 순서를 보장하지 마세요.
       sources:
       - completion
       - buffer-duty
@@ -5580,6 +5584,8 @@ sections:
         - - B
         - - 콜백
         - - RequestComplete
+        - - RequestCancelled
+        - - cancelled_
     - id: cancel
       question: 앞의 정상 완료 예와 분리된 대안 조건부 경로입니다. A가 선두에서 RequestPending이고 B도 아직 RequestPending인 시점에 정상 completeRequest(B)
         대신 cancelRequest(B)를 선택한 경우만 설명하세요. 이미 완료한 B를 다시 취소하는 예로 이어 쓰지 마세요. Request::Private::doCancelRequest는 pending_
