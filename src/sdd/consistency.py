@@ -396,7 +396,7 @@ def audit(cfg, model, agent):
         # Never reuse that transport for an explicitly independent review.
         from .llm import Agent
         agent = Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts')
-    agent = agent if isinstance(agent, Execution) else Execution(cfg, agent)
+    agent = agent if isinstance(agent, Execution) else Execution(cfg, agent, model=model)
     with agent.track('contract-audit'):
         return _audit(cfg, model, agent, configured)
 

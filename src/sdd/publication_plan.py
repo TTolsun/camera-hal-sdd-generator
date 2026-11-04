@@ -81,10 +81,10 @@ def check_catalog(cfg):
             raise ValueError('Publication shared-label term missing: ' + source)
 
 
-def check_reports(cfg, gate):
+def check_reports(cfg, gate, *, reports=None):
     """Require declared reports at their producing boundary, before copying."""
     checked = []
-    for row in cfg.publication.get('reports', []):
+    for row in cfg.publication.get('reports', []) if reports is None else reports:
         if not all(row.get(key) for key in ('path', 'gate', 'producer', 'sha256', 'bindings')):
             raise ValueError('Publication reports need path/gate/producer/sha256/bindings')
         if row['gate'] != gate:
@@ -111,6 +111,12 @@ def prepare(cfg, model, section_ids=None, impact=None):
     from .design_request import _unit_request, _unit_tag
     from . import duplicates
     baseline = check_baseline(cfg)
+    from .generation_run import observed
+    execution = observed()
+    contract = getattr(execution, 'publication_contract', None) if execution else None
+    if contract:
+        contract.select(model, [s['id'] for s in cfg.sections()
+            if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)])
     check_catalog(cfg)
     check_reports(cfg, 'before-generation')
     selected, units, carryover = [], [], []
@@ -171,6 +177,6 @@ def prepare(cfg, model, section_ids=None, impact=None):
                 ('max_calls', 'max_seconds', 'document_max_calls', 'document_max_seconds')},
         sections=[s['id'] for s in selected], units=units, carryover=carryover,
         inputs=inputs.manifest(), human_review='pending')
-    report['input_sha256'] = hashlib.sha256(json.dumps(report, sort_keys=True).encode()).hexdigest()
-    save(cfg.build_dir/'publication-plan.json', report, newline='\n')
+    from .publication_operation import archive_plan
+    archive_plan(cfg, report)
     return report
