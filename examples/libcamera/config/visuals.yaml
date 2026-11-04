@@ -185,7 +185,8 @@ sections:
       evidence:
       - source: resources/complete-access
         sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
     edges:
     - from: buffer
       to: callback
@@ -210,7 +211,8 @@ sections:
       evidence:
       - source: resources/complete-access
         sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
     - from: cancel
       to: ban
       label: 동일한 규칙 적용
@@ -218,18 +220,21 @@ sections:
       evidence:
       - source: resources/cancel-rules
         sha256: 048bc649f307f0f41b7702b59be24a5fba9f7a48ff6a266bfbe458df4a5bdc8d
-        quote: "This function cancels and completes the request. The same rules as for\n * completeRequest() apply."
+        quote: "This function cancels and completes the request. The same rules as for\n * completeRequest()\
+          \ apply."
       - source: resources/complete-access
         sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
-    - from: caller
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
+    - from: callback
       to: reuse
-      label: 소유자가 상태 초기화 후 재사용을 선택
-      label_en: Owner may reuse after resetting state
+      label: 완료 핸들러에서 상태를 초기화한 뒤 요청을 재사용할 수 있음
+      label_en: May reuse the request after resetting its state in the completion handler
       evidence:
       - source: resources/create
         sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: or reused after resetting its state with Request::reuse().
+        quote: " * responsible for deleting it. The request may be deleted in the completion\n * handler, or\
+          \ reused after resetting its state with Request::reuse()."
     - from: caller
       to: delete
       label: 소유자가 삭제 책임을 짐
@@ -238,6 +243,7 @@ sections:
       - source: resources/create
         sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
         quote: responsible for deleting it.
+
   - id: request-stages
     topic: journey
     kind: flow
@@ -1426,8 +1432,8 @@ sections:
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
         quote: stopDevice(camera);
     - id: implementation-return
-      label: '계획: 실제 stopDevice 구현 복귀 이벤트 관찰 (구현 미검토, 측정 결과 아님)'
-      label_en: 'Plan: observe the actual stopDevice implementation return event (implementation not reviewed, not a measured result)'
+      label: '계획: 실제 stopDevice 구현 복귀 이벤트 관찰 (선택한 UVC 구현은 별도 정적 분석, 측정 결과 아님)'
+      label_en: 'Plan: observe the actual stopDevice implementation return event (selected UVC implementation statically analysed separately; not a measured result)'
       evidence: &id001
       - source: stopping/device-stop
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
@@ -1514,6 +1520,134 @@ sections:
       - source: stopping/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
         quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this function returns."
+  - id: preparation-depth-flow
+    topic: preparation-depth
+    kind: flow
+    title: 준비 대기와 재진입을 좁히기 그림
+    question: fence 신호 또는 타임아웃에서 prepared_가 설정된 뒤 선두 준비·큐 한도를 검사하고, 재진입 전 pop하여 전달하는 흐름은 무엇입니까?
+    generation: llm
+    max_nodes: 9
+    prompt: 조건·실패·반환 경계를 지지하는 작은 그림으로 답하세요. 본문 전체를 노드로 옮기지 마세요.
+    sources:
+    - dispatch
+    - prepare
+    - completion
+    whole_sources:
+    - dispatch
+    - prepare
+    - completion
+  - id: uvc-depth-flow
+    topic: uvc-depth
+    kind: flow
+    title: UVC의 장치 제출과 완료를 추적하기 그림
+    question: UVC 제출 실패의 취소와 장치 버퍼 알림의 명시적 요청 완료는 어떻게 구분됩니까?
+    generation: llm
+    max_nodes: 9
+    prompt: 조건·실패·반환 경계를 지지하는 작은 그림으로 답하세요. 본문 전체를 노드로 옮기지 마세요.
+    sources:
+    - submit
+    - dispatch
+    - complete
+    - uvc-ready
+    - dequeue
+    - uvc-wiring
+    whole_sources:
+    - submit
+    - dispatch
+    - complete
+    - uvc-ready
+    - dequeue
+    - uvc-wiring
+  - id: stop-depth-flow
+    topic: stop-depth
+    kind: flow
+    title: UVC 정지의 정상 경로와 실패 경계 그림
+    question: UVC STREAMOFF의 실패는 어느 반환 루프를 건너뛰며 정상 정지는 어느 순서로 버퍼를 반환합니까?
+    generation: llm
+    max_nodes: 9
+    prompt: 조건·실패·반환 경계를 지지하는 작은 그림으로 답하세요. 본문 전체를 노드로 옮기지 마세요.
+    sources:
+    - common-stop
+    - uvc-stop
+    - streamoff
+    - release
+    - dequeue
+    whole_sources:
+    - common-stop
+    - uvc-stop
+    - streamoff
+    - release
+    - dequeue
+  - id: callback-order-flow
+    topic: callback-order
+    kind: flow
+    title: 버퍼 알림과 요청 반환의 내부 경계 그림
+    question: 상태 검사를 통과하는 정상 완료에서 PipelineHandler::completeBuffer 진입, bufferCompleted 신호, Request::Private::completeBuffer와
+      pending 제거, 명시적 요청 완료와 선두 검사 뒤 통지 순서를 구분하세요.
+    generation: llm
+    max_nodes: 11
+    prompt: 호출 중인 PipelineHandler::completeBuffer와 나중에 호출하는 Request::Private::completeBuffer를 별도 노드로 그리고 레이블에
+      한정된 이름을 표시하세요. 두 노드의 소스 심볼은 completeBuffer로 같아도 되며 고유 id를 사용하세요. Request 상태 갱신 뒤 선두를 검사하고 Pending이면 멈추며,
+      그렇지 않을 때에만 pop_front 후 camera에 알립니다. 연결 해제 시 무조건 완료 가능하다는 레이블은 넣지 마세요. 이 그림은 Camera::requestComplete 상태
+      검사를 통과한 선택 UVC 경로입니다. Private completeBuffer에서 요청 완료로 병렬 분기하지 마세요. PH completeBuffer 진입→bufferCompleted→Private
+      completeBuffer→pending 제거·연결 해제→PH completeBuffer 반환→UVC 명시적 completeRequest→complete→선두 상태 검사→pop→통지 순서입니다.
+      completeBuffer 반환 노드도 별도로 그리고 pending 제거 뒤에만 연결하세요.
+    sources:
+    - completion
+    - status
+    - notification
+    - uvc-return
+    whole_sources:
+    - completion
+    - status
+    - notification
+    - uvc-return
+    required_symbols:
+    - completeBuffer
+    - bufferCompleted
+    - pending_
+    - complete
+    - RequestPending
+    - pop_front
+    - requestComplete
+    - requestCompleted
+  - id: callback-depth-flow
+    topic: callback-depth
+    kind: flow
+    title: 콜백의 스레드와 재진입을 구분하기 그림
+    question: Auto가 현재·수신 스레드를 비교해 Direct 즉시 호출과 Queued 메시지 전달을 고르는 분기는 무엇입니까?
+    generation: llm
+    max_nodes: 9
+    prompt: Auto의 실제 비교, Direct의 invokePack, Queued의 postMessage와 비동기 false 반환을 보여주세요. Queued 경로는 postMessage·false
+      반환에서 끝내고 수신자 실행 노드를 그리지 마세요. 이벤트 루프 복귀만으로 반드시 실행된다는 보장을 넣지 마세요. 수신 객체 유효성과 실제 메시지 처리 조건은 본문에서 설명합니다.
+    sources:
+    - connections
+    whole_sources:
+    - connections
+  - id: change-verification-flow
+    topic: review
+    kind: flow
+    title: 정상 완료와 bulk 취소의 검증 위치
+    generation: llm
+    max_nodes: 9
+    question: 정상 버퍼 완료와 bulk 취소에서 서로 다른 pending_ 정리 및 요청 완료의 검증 위치는 어디입니까?
+    prompt: 실행 순서 전체가 아닌 소스 기반 검증 위치 그림입니다. 정상 Request::Private::completeBuffer의 erase와 doCancelRequest의 직접 버퍼
+      신호·pending clear를 구분하세요. complete()의 pending 부재 ASSERT도 별도 검사 위치로 표시하세요. pending을 비웠다고 요청을 자동 완료하는 화살표를
+      만들지 마세요. 필요하면 독립된 작은 경로로 배치하고 본문 시험 계획을 실행 결과로 표시하지 마세요.
+    sources:
+    - request-invariant
+    - cancellation-flow
+    - completion-flow
+    whole_sources:
+    - request-invariant
+    - cancellation-flow
+    - completion-flow
+    required_symbols:
+    - completeBuffer
+    - doCancelRequest
+    - pending_
+    - complete
+    - hasPendingBuffers
   overview:
   - id: discovery-map
     topic: discovery

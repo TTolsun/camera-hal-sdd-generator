@@ -1,0 +1,467 @@
+topics:
+- id: preparation-depth
+  title: 준비 대기와 재진입을 좁히기
+  question: 준비 대기의 생산자·소비자와 중첩 재진입을 연결하여 완료 누락의 조사 위치와 변경 불변조건을 설명하세요.
+  covers:
+  - preparation-depth
+  sources:
+  - id: dispatch
+    file: src/libcamera/pipeline_handler.cpp
+    start: void PipelineHandler::registerRequest(Request *request)
+    end: \fn PipelineHandler::queueRequestDevice()
+  - id: prepare
+    file: src/libcamera/request.cpp
+    start: void Request::Private::emitPrepareCompleted()
+    end: '#endif /* __DOXYGEN_PUBLIC__ */'
+  - id: cancel
+    file: src/libcamera/request.cpp
+    start: void Request::Private::doCancelRequest()
+    end: \brief Reset the request internal data
+  - id: completion
+    file: src/libcamera/pipeline_handler.cpp
+    start: \brief Complete a buffer for a request
+    end: \brief Retrieve the absolute path to a platform configuration file
+  - id: submit-message
+    file: src/libcamera/camera.cpp
+    start: \brief Queue a request to the camera
+    end: \brief Start capture from camera
+  - id: invocation
+    file: src/libcamera/base/object.cpp
+    start: \fn R Object::invokeMethod()
+    end: \fn Object::thread()
+  - id: stop-entry
+    file: src/libcamera/camera.cpp
+    start: \brief Stop capture from camera
+    end: \brief Handle request completion and notify application
+  - id: common-stop
+    file: src/libcamera/pipeline_handler.cpp
+    start: \brief Stop capturing from all running streams and cancel pending requests
+    end: \brief Determine if the camera has any requests pending
+  - id: camera-notice
+    file: src/libcamera/camera.cpp
+    start: \brief Handle request completion and notify application
+    end: '} /* namespace libcamera */'
+  parts:
+  - id: message
+    question: queueRequest가 0을 반환했지만 PipelineHandler::queueRequest 진입 자체가 없는 경우를 waitingRequests_ 준비 대기보다 먼저
+      구분하는 조사 경로를 두 문장 이내로 설명하세요. queued 메시지의 대상 스레드·이벤트 루프 진행과 메서드 진입을 관찰하고, Request 포인터는 값 복사로 소유되지 않으므로
+      실제 메서드 호출까지 유효해야 하며 Queued 호출은 스레드가 멈추기 전에 실행된다는 보장이 없다는 계약을 연결하세요. 메시지가 버려지면 요청이나 버퍼를 즉시 해제해도 된다는 결론은
+      내리지 마세요.
+    sources:
+    - submit-message
+    - invocation
+    - dispatch
+    max_statements: 1
+  - id: fence
+    question: 완료 누락을 조사할 때 waitingRequests_ 선두의 prepared_와 각 fence의 notifiers_, prepare(300ms), notifierActivated
+      및 timeout을 연결하세요. fence가 없으면 동기 prepared 신호를 내고, 모두 신호되거나 타임아웃되면 prepared_를 참으로 바꾼 뒤 신호를 냅니다. 타임아웃은 취소
+      후 준비 완료 신호를 내므로 prepared_가 촬영 준비 성공을 뜻하지 않음을 설명하세요. 300ms를 촬영·정지 완료 시간 보장으로 확대하지 마세요. 조사 계획과 구현 사실을 구분하여
+      세 문장 이내로 답하세요.
+    sources:
+    - dispatch
+    - prepare
+    - cancel
+    max_statements: 2
+  - id: recursive
+    question: doQueueRequests의 선두 미준비와 queuedRequests_.size()==maxQueuedRequestsDevice_ 중단 조건, 준비된 선두를 pop한
+      뒤 doQueueRequest를 호출하는 재진입 방어를 연결하세요. 준비 취소 또는 장치 제출 실패는 완료 처리 중 다시 doQueueRequests를 호출할 수 있으므로 pop 순서
+      변경 전에 중복 처리·순서·대기 큐 관찰을 검사하도록 설명하세요. 후속 준비 요청이 앞선 미준비 요청을 추월한다고 쓰지 마세요. 세 문장 이내로 설명하세요.
+    sources:
+    - dispatch
+    - completion
+    max_statements: 2
+  - id: stop-crossing
+    question: Camera 상태 변경 호출의 호출자 동기화 의무를 전제로, queueRequest의 상태 검사와 실제 queued 메서드 실행 사이에 정지가 교차하는 경우의 조사 분기를
+      세 문장 이내로 설명하세요. Camera::queueRequest가 실행 도중 상태 변화가 가능하다고 명시하는 계약과, PipelineHandler::queueRequest는 CameraStopping을
+      재검사하지 않고 waitingRequests_ 추가·prepare를 실행한다는 구현을 연결하세요. 메시지가 stop의 대기 큐 분리 뒤에 실행된다는 조건이 실제로 성립하는지는 게시·실행·CameraStopping·stopDevice·준비·장치
+      제출·Camera::requestComplete 상태 검사의 순서를 기록해 확인해야 하며 정상 지원 동작·발생 보장·복구 성공으로 단정하지 마세요. 이미 제출된 요청과 새로운 상태
+      변경 호출을 호출자가 동기화해야 하는 의무를 제거하지 마세요.
+    sources:
+    - submit-message
+    - invocation
+    - dispatch
+    - completion
+    - stop-entry
+    - common-stop
+    - camera-notice
+    max_statements: 3
+- id: uvc-depth
+  title: UVC의 장치 제출과 완료를 추적하기
+  question: 선택한 UVC 구체 경로의 실패·장치 큐잉·버퍼 및 요청 완료를 연결하세요. 다른 파이프라인이나 실제 장치 관찰로 확대하지 마세요.
+  covers:
+  - uvc-depth
+  sources:
+  - id: submit
+    file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+    start: int PipelineHandlerUVC::queueRequestDevice(Camera *camera, Request *request)
+    end: bool PipelineHandlerUVC::match(DeviceEnumerator *enumerator)
+  - id: controls
+    file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+    start: int PipelineHandlerUVC::processControls(
+    end: int PipelineHandlerUVC::queueRequestDevice(
+  - id: control-conversion
+    file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+    start: int PipelineHandlerUVC::processControl(
+    end: int PipelineHandlerUVC::processControls(
+  - id: set-controls
+    file: src/libcamera/v4l2_device.cpp
+    start: int V4L2Device::setControls(
+    end: \brief Retrieve the v4l2_query_ext_ctrl information
+  - id: qbuf
+    file: src/libcamera/v4l2_videodevice.cpp
+    start: int V4L2VideoDevice::queueBuffer(
+    end: void V4L2VideoDevice::bufferAvailable()
+  - id: dequeue
+    file: src/libcamera/v4l2_videodevice.cpp
+    start: void V4L2VideoDevice::bufferAvailable()
+    end: \brief Start the video stream
+  - id: uvc-ready
+    file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+    start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
+    end: REGISTER_PIPELINE_HANDLER
+  - id: uvc-wiring
+    file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+    start: video_->bufferReady.connect(this, &UVCCameraData::imageBufferReady);
+    end: /* Generate the camera ID. */
+    scope:
+      start: int UVCCameraData::init(std::shared_ptr<MediaDevice> media)
+      end: '
+
+        }'
+  - id: complete
+    file: src/libcamera/pipeline_handler.cpp
+    start: \brief Complete a buffer for a request
+    end: \brief Retrieve the absolute path to a platform configuration file
+  - id: status
+    file: src/libcamera/request.cpp
+    start: bool Request::Private::completeBuffer(FrameBuffer *buffer)
+    end: void Request::Private::doCancelRequest()
+  - id: dispatch
+    file: src/libcamera/pipeline_handler.cpp
+    start: void PipelineHandler::doQueueRequest(Request *request)
+    end: \brief Queue prepared requests to the device
+  parts:
+  - id: control-errors
+    question: processControls는 각 processControl의 반환값을 검사하지 않으며, 구성한 ControlList를 setControls에 전달합니다. setControls의
+      빈 목록 0, 미등록 제어 또는 일반 검증 -EINVAL, 특정 제어 실패 -EIO와 실패 인덱스 앞의 updateControls 범위를 구분하세요. setControls 쓰기 오류
+      자체에서도 일부 제어가 이미 적용됐을 수 있다는 API 계약을 명시하고 error_idx 앞의 제어 상태를 조사하도록 연결하세요. 개별 변환 오류가 항상 요청 취소로 전달되거나 controls
+      설정이 원자적으로 롤백된다고 보장하지 말고 원래 호출의 반환값과 error_idx를 관찰하는 소스 기반 조사로 세 문장 이내에 설명하세요.
+    sources:
+    - controls
+    - control-conversion
+    - set-controls
+    max_statements: 2
+  - id: failure
+    question: UVC는 findBuffer가 비면 -ENOENT, processControls가 음수면 장치 제출 전 반환, queueBuffer가 음수면 그 값을 반환합니다. 공통
+      doQueueRequest가 sequence와 queuedRequests_ 등록 뒤 비0 반환을 cancelRequest로 보내므로 Camera::queueRequest의 앞선 0과
+      별도로 취소가 발생함을 설명하세요. processControls 성공 뒤 QBUF가 실패하더라도 이 경로는 제어 변경 롤백을 보장하지 않음을 세 문장 이내로 연결하세요.
+    sources:
+    - submit
+    - controls
+    - dispatch
+    - complete
+    max_statements: 2
+  - id: device
+    question: V4L2VideoDevice::queueBuffer에서 Stopping의 -ESHUTDOWN, 캐시·플레인 검증, VIDIOC_QBUF 실패와 성공 후 queuedBuffers_
+      등록을 조사 분기로 연결하세요. Camera 제출 0·장치 QBUF 성공·프레임 완료를 구분하고 실제 반환 ret와 큐 인덱스를 관찰하되 없는 로그나 지연 기준은 만들지 마세요. 세
+      문장 이내로 답하세요. cache_ 부재는 LOG(V4L2, Fatal) 뒤에 -ENOENT 반환문이 있는 별도 분기이므로 정상 반환이나 공통 취소 도달을 보장하지 마세요. 반환 가능한
+      입력 오류와 Fatal 경계를 구별하세요.
+    sources:
+    - qbuf
+    - submit
+    max_statements: 2
+  - id: completion
+    question: bufferAvailable의 dequeueBuffer 실패 또는 예상 밖 인덱스는 nullptr로 알림을 내지 않으며, 정상 반환은 bufferReady→UVC imageBufferReady→completeBuffer→completeRequest로
+      이어지는 점을 설명하세요. V4L2_BUF_FLAG_ERROR는 FrameError로 남지만 Request::Private::complete는 cancelled_만으로 RequestComplete/RequestCancelled를
+      정하므로 RequestComplete를 FrameSuccess나 촬영 성공 보장으로 쓰지 마세요. 완료 누락은 pending_와 queuedRequests_ 선두 status를 함께
+      확인하고 후속 완료가 제출 순서 때문에 지연될 수 있음을 세 문장 이내로 연결하세요. FrameError는 오류 플래그 외에 유효하지 않은 플레인 수 또는 분할에 부족한 bytesused에서도
+      발생하므로 해당 값을 조사하도록 간결히 추가하세요.
+    sources:
+    - dequeue
+    - uvc-ready
+    - uvc-wiring
+    - complete
+    - status
+    max_statements: 2
+- id: stop-depth
+  title: UVC 정지의 정상 경로와 실패 경계
+  question: 정상 정지의 대기 격리·장치 반환·호출자 복귀와 STREAMOFF 실패 반례를 구분하고 변경 후 검사 조건을 제시하세요.
+  covers:
+  - stop-depth
+  sources:
+  - id: common-stop
+    file: src/libcamera/pipeline_handler.cpp
+    start: \brief Stop capturing from all running streams and cancel pending requests
+    end: \brief Determine if the camera has any requests pending
+  - id: uvc-stop
+    file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+    start: void PipelineHandlerUVC::stopDevice(Camera *camera)
+    end: int PipelineHandlerUVC::processControl(
+  - id: streamoff
+    file: src/libcamera/v4l2_videodevice.cpp
+    start: int V4L2VideoDevice::streamOff()
+    end: \brief Set the dequeue timeout value
+  - id: release
+    file: src/libcamera/v4l2_videodevice.cpp
+    start: int V4L2VideoDevice::releaseBuffers()
+    end: \brief Queue a buffer to the video device
+  - id: camera-stop
+    file: src/libcamera/camera.cpp
+    start: \brief Stop capture from camera
+    end: \brief Handle request completion and notify application
+  - id: dispatch
+    file: src/libcamera/pipeline_handler.cpp
+    start: void PipelineHandler::doQueueRequest(Request *request)
+    end: \brief Queue prepared requests to the device
+  - id: uvc-ready
+    file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+    start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
+    end: REGISTER_PIPELINE_HANDLER
+  - id: dequeue
+    file: src/libcamera/v4l2_videodevice.cpp
+    start: void V4L2VideoDevice::bufferAvailable()
+    end: \brief Start the video stream
+  parts:
+  - id: order
+    question: PipelineHandler::stop가 waitingRequests_를 지역 큐로 swap해 stopDevice 내부 완료에서 재투입되지 않게 하고, 장치 정지 후
+      지역 대기를 cancel→doQueueRequest로 순번을 부여해 완료시키는 이유를 소스 주석 범위 안에서 설명하세요. 정상 UVC streamOff는 Stopping 상태에서 각
+      장치 버퍼를 취소하고 bufferReady를 내므로 같은 imageBufferReady가 요청을 완료합니다. 공통 ASSERT와 CameraStopping→Blocking stop→CameraConfigured를
+      연결하되 ASSERT를 복구·실행 보장으로 쓰지 마세요. 세 문장 이내로 답하세요.
+    sources:
+    - common-stop
+    - uvc-stop
+    - streamoff
+    - camera-stop
+    - dispatch
+    - uvc-ready
+    max_statements: 2
+  - id: failure
+    question: streamOff의 비스트리밍·빈 큐 0 단축 반환과 VIDIOC_STREAMOFF 실패 시 ret를 반환하며 Stopping/버퍼 반환 루프 이전에 빠지는 예외를 설명하세요.
+      UVC stopDevice는 이 ret와 releaseBuffers ret를 확인하지 않습니다. releaseBuffers는 cache_를 먼저 reset한 뒤 requestBuffers(0)의
+      결과를 반환하므로 STREAMOFF 실패 뒤에도 이 해제 호출로 진행하는 사실과 큐·알림 잔존 확인을 연결하세요. 공통 stop은 void이고 Camera::stop은 ASSERT
+      등을 지나 정상 경로 끝에 도달한 경우 0을 반환하며, 장치 오류를 그 반환값으로 전달하지 않습니다. ASSERT 실패 시에도 Camera::stop이 실제로 반환한다고 보장하지 말고
+      stop 0을 모든 장치 버퍼의 반환·콜백 처리 완료 보장으로 확대하지 마세요. 원래 호출의 ret·state_·queuedBuffers_·queuedRequests_·cache_와
+      ASSERT 도달 여부를 관찰하는 조사 계획으로 세 문단 이내에 답하세요. 실제 장치에서 이 오류를 관찰했다고 쓰지 마세요.
+    sources:
+    - streamoff
+    - uvc-stop
+    - release
+    - common-stop
+    - camera-stop
+    max_statements: 3
+  - id: verification
+    question: 선택 경로를 바꾼 뒤 필요한 실패 주입 검증을 조사 계획으로 제시하세요. 준비 대기와 장치 대기를 섞은 정지, STREAMOFF 실패·releaseBuffers 실패,
+      취소 콜백 재진입에서 요청별 1회 완료·제출 순서·큐 잔존·정지 후 재투입을 각각 기록하도록 하세요. 이 소스 기반 계획을 실행 완료나 오류 복구 보장으로 쓰지 말고 두 문장 이내로
+      답하세요.
+    sources:
+    - common-stop
+    - uvc-stop
+    - streamoff
+    - release
+    - dispatch
+    max_statements: 2
+  - id: residual-event
+    question: STREAMOFF 실패로 queuedBuffers_ 정리·notifier 비활성화 전에 반환한 뒤 UVC가 releaseBuffers를 호출하여 cache_를 reset하는
+      경계를 설명하세요. 잔존 알림에서 DQBUF가 알려진 인덱스를 실제 반환하는 조건이면 dequeueBuffer의 cache_->put이 null cache_에 접근할 가능성을 조사해야
+      한다는 소스 기반 반례를 세 문장 이내로 연결하세요. 오류 주입 후 이벤트 실행 여부·인덱스·cache_·큐·notifier 상태와 정지·재구성의 안전한 후속 처리 조건을 검증하는
+      계획이며 실제 이벤트 발생·오류 복구·Camera::stop의 정상 반환을 보장하지 마세요.
+    sources:
+    - streamoff
+    - uvc-stop
+    - release
+    - dequeue
+    - common-stop
+    - camera-stop
+    max_statements: 2
+- id: callback-order
+  title: 버퍼 알림과 요청 반환의 내부 경계
+  question: 버퍼 신호와 내부 추적 갱신 및 요청 완료 통지의 순서를 구분하여 재사용 시점을 판단하세요.
+  covers:
+  - callback-order
+  sources:
+  - id: completion
+    file: src/libcamera/pipeline_handler.cpp
+    start: \brief Complete a buffer for a request
+    end: \brief Retrieve the absolute path to a platform configuration file
+  - id: status
+    file: src/libcamera/request.cpp
+    start: bool Request::Private::completeBuffer(FrameBuffer *buffer)
+    end: void Request::Private::doCancelRequest()
+  - id: connections
+    file: src/libcamera/base/bound_method.cpp
+    start: \enum ConnectionType
+    end: '} /* namespace libcamera */'
+  - id: lifetime
+    file: src/libcamera/request.cpp
+    start: \brief Add a FrameBuffer with its associated Stream to the Request
+    end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+  - id: notification
+    file: src/libcamera/camera.cpp
+    start: \brief Handle request completion and notify application
+    end: '} /* namespace libcamera */'
+  - id: add-code
+    file: src/libcamera/request.cpp
+    start: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    end: '
+
+      }'
+  - id: bulk
+    file: src/libcamera/request.cpp
+    start: void Request::Private::doCancelRequest()
+    end: \brief Reset the request internal data
+  - id: buffer-request
+    file: src/libcamera/framebuffer.cpp
+    start: \brief Retrieve the request this buffer belongs to
+    end: '
+
+      }'
+  - id: invocation
+    file: src/libcamera/base/object.cpp
+    start: \fn R Object::invokeMethod()
+    end: \fn Object::thread()
+  - id: uvc-return
+    file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+    start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
+    end: REGISTER_PIPELINE_HANDLER
+  parts:
+  - id: bookkeeping
+    question: completeBuffer는 bufferCompleted.emit 뒤에 Request 내부 pending_를 지우고 buffer의 request 연결을 해제합니다. 직접
+      콜백은 이 내부 갱신보다 먼저 실행될 수 있으므로 버퍼 신호에서 요청이 완료됐다고 판단하거나 요청을 파괴·재사용하지 말고 addBuffer의 요청 완료 콜백까지 버퍼 유지 계약을 지키도록
+      설명하세요. completeRequest가 모든 pending 버퍼 처리 뒤 상태를 갱신하고 제출 순서로 requestCompleted를 내며 반환 뒤 핸들러가 요청에 접근하면 안
+      되는 경계를 세 문장 이내로 연결하세요. 선택한 UVC는 PipelineHandler::completeBuffer 반환 뒤 명시적으로 completeRequest를 호출하므로 pending
+      제거·연결 해제보다 먼저 요청 완료로 병렬 진행한다고 쓰지 마세요.
+    sources:
+    - completion
+    - status
+    - connections
+    - lifetime
+    - notification
+    - uvc-return
+    max_statements: 2
+  - id: early-reuse
+    question: 직접 bufferCompleted 콜백에서는 아직 Request::Private::completeBuffer의 pending_ 제거와 buffer의 Request 연결
+      해제가 끝나지 않았다는 조건을 설명하세요. 이 콜백에서 다른 Request::addBuffer로 같은 버퍼의 연결을 바꾸면 뒤따르는 이전 내부 완료가 그 연결을 nullptr로 바꿀
+      수 있다는 구현상 반례를 제시하고, 신호만으로 재초기화·재연결이 안전하다고 판단하지 않도록 하세요. 기존 요청 완료 콜백까지 버퍼를 유지하는 계약과 지연된 다른 수신자의 포인터 수명도
+      구분하여 세 문장 이내로 설명하세요. 버퍼 데이터 읽기를 금지하는 새로운 API 의무나 실제 장애 관찰을 만들지 마세요.
+    sources:
+    - completion
+    - status
+    - connections
+    - lifetime
+    - add-code
+    max_statements: 1
+  - id: bulk-pointer
+    question: 정상 completeBuffer는 setRequest(nullptr)을 호출하지만 doCancelRequest의 bulk 취소는 직접 신호와 pending_.clear만
+      하고 같은 연결 해제를 하지 않는 차이를 두 문장 이내로 설명하세요. FrameBuffer::request 계약상 반환 포인터의 유효 구간은 addBuffer 연결부터 버퍼 완료까지이므로,
+      취소 뒤 저장된 비null 연결 값이 남아 있어도 유효한 Request 포인터나 소유권·수명 연장으로 읽지 말아야 함을 연결하세요. 요청·버퍼의 기존 유지 계약과 지연 수신자 수명을
+      지키며 두 경로별 재사용을 검증하도록 하세요.
+    sources:
+    - status
+    - bulk
+    - buffer-request
+    - lifetime
+    - invocation
+    max_statements: 2
+- id: callback-depth
+  title: 콜백의 스레드와 재진입을 구분하기
+  question: 연결 방식별 실제 수신 문맥과 포인터 수명을 구분하여 정지·재구성 변경의 안전 조건을 설명하세요.
+  covers:
+  - callback-depth
+  sources:
+  - id: completion
+    file: src/libcamera/pipeline_handler.cpp
+    start: \brief Complete a buffer for a request
+    end: \brief Retrieve the absolute path to a platform configuration file
+  - id: status
+    file: src/libcamera/request.cpp
+    start: bool Request::Private::completeBuffer(FrameBuffer *buffer)
+    end: void Request::Private::doCancelRequest()
+  - id: connections
+    file: src/libcamera/base/bound_method.cpp
+    start: \enum ConnectionType
+    end: '} /* namespace libcamera */'
+  - id: signals
+    file: src/libcamera/base/signal.cpp
+    start: \class Signal
+    end: \fn Signal::connect
+  - id: sync
+    file: src/libcamera/camera.cpp
+    start: \section camera_operation Operating the Camera
+    end: \subsection Camera States
+  - id: notification
+    file: src/libcamera/camera.cpp
+    start: \brief Handle request completion and notify application
+    end: '} /* namespace libcamera */'
+  - id: thread-rules
+    file: Documentation/thread-safety.dox
+    start: '// SPDX-License-Identifier: CC-BY-SA-4.0'
+    end: ' */'
+  - id: signal-overloads
+    file: include/libcamera/base/signal.h
+    start: 'class Signal : public SignalBase'
+    end: '} /* namespace libcamera */'
+  - id: bound-overloads
+    file: include/libcamera/base/bound_method.h
+    start: class BoundMethodBase
+    end: '} /* namespace libcamera */'
+  - id: invocation
+    file: src/libcamera/base/object.cpp
+    start: \fn R Object::invokeMethod()
+    end: \fn Object::thread()
+  - id: receiver-lifetime
+    file: src/libcamera/base/object.cpp
+    start: Object::~Object()
+    end: \brief Schedule deletion of the instance in the thread it belongs to
+  parts:
+  - id: delivery
+    question: CameraManager 문맥에서 완료 신호를 내는 위치와 Object 슬롯의 수신 문맥을 두 문장 이내로 구분하세요. Auto의 현재·수신 스레드 비교와 Direct
+      즉시 호출·Queued 수신 이벤트 루프 실행을 연결하고, 다른 스레드의 Object에도 Direct를 명시하면 송신 문맥에서 즉시 실행함을 포함하세요. 인자 수명과 Object 외
+      수신자는 다음 항목에서 설명하므로 반복하지 마세요. Queued의 수신 실행은 수신 객체가 유효하고 이벤트 루프가 실제 메시지를 처리하는 경우에만 비동기로 이루어진다고 조건을 명시하세요.
+      스레드 정지 전 실행 보장이 없으며 Object 소멸 시 대기 메시지가 제거될 수 있으므로 단순 이벤트 루프 복귀나 stop 반환을 실행·처리 완료 보장으로 쓰지 마세요.
+    sources:
+    - connections
+    - notification
+    - completion
+    - invocation
+    - receiver-lifetime
+    max_statements: 1
+  - id: non-object-delivery
+    question: Signal의 Object 외 멤버·functor 수신자와 정적 함수 연결이 각각의 activate에서 호출 문맥상 즉시 함수를 실행하는 동작을 한 문장으로 묶어 설명하세요.
+      세 주체마다 같은 즉시 호출을 따로 반복하지 마세요. Object Auto의 스레드 비교와 인자 수명은 다른 항목이 담당하므로 추가하지 마세요.
+    sources:
+    - signal-overloads
+    - bound-overloads
+    max_statements: 1
+  - id: queued-lifetime
+    question: Queued 전달에서 인자를 복사해도 포인터가 가리키는 객체의 수명을 연장하지 않는다는 조건, Camera 상태 변경 함수의 호출자 동기화 책임, stop의 Blocking
+      반환이 별도 Queued 콜백 처리 완료나 잠금 보호를 보장하지 않는다는 경계를 세 문장 이내의 한 문단으로 연결하세요. 이 인자 복사 설명을 모든 타스레드 슬롯이나 명시적 Direct까지
+      확대하지 말고, 서로 다른 두 의무에 근거 없는 인과관계를 만들지 마세요. Queued의 수신 실행은 수신 객체가 유효하고 이벤트 루프가 실제 메시지를 처리하는 경우에만 비동기로 이루어진다고
+      조건을 명시하세요. 스레드 정지 전 실행 보장이 없으며 Object 소멸 시 대기 메시지가 제거될 수 있으므로 단순 이벤트 루프 복귀나 stop 반환을 실행·처리 완료 보장으로 쓰지
+      마세요.
+    sources:
+    - connections
+    - signals
+    - sync
+    - invocation
+    - receiver-lifetime
+    max_statements: 1
+  - id: validation
+    question: 안전한 변경을 위한 소스 기반 검증 계획을 두 문장 이내로 쓰세요. 수신자 Object 유무·연결 종류·현재/수신 TID·이벤트 루프·요청 cookie/sequence/status·버퍼
+      status·콜백 진입/복귀와 stop 앞뒤를 함께 기록하고 Direct 재진입과 Queued 지연에서 수명·중복 완료·정지 후 제출을 확인하도록 하세요. 애플리케이션 표식을 정확한
+      C++ 반환 명령 관측이나 실제 새 실행 결과로 표시하지 마세요.
+    sources:
+    - connections
+    - signals
+    - sync
+    - completion
+    - status
+    max_statements: 2
+  - id: reentrancy
+    question: libcamera의 thread-safe와 reentrant 정의는 같은 스레드의 콜백에서 동일 함수로 중첩 진입할 수 있다는 허용이 아니며, 별도 문서화가 없으면 허용되지
+      않고 교착될 수 있음을 두 문장 이내로 설명하세요. doQueueRequests의 특정 재진입 방어를 모든 Camera API의 콜백 재진입 허용으로 확대하지 말고 정지·재구성 호출은
+      호출자 동기화와 수신 이벤트 루프 진행을 검토하도록 하세요.
+    sources:
+    - thread-rules
+    - sync
+    - connections
+    max_statements: 2

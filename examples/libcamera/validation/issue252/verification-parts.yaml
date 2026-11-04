@@ -1,0 +1,96 @@
+question: 기존 호출의 기록과 함께 준비·제출·완료·정지의 실패 주입별 예상 분기와 변경 불변조건을 연결하는 검증 계획을 제시하세요. 실행 결과를 만들지 마세요. 완료 횟수는 신호 발생
+  또는 특정 수신 연결을 기준으로 구분하고 여러 연결의 콜백을 중복 완료로 세지 마세요.
+parts:
+- id: completion-invariants
+  question: 정상 내부 버퍼 완료에서는 Request::Private::completeBuffer의 pending_.erase 결과가 1이어야 하지만, bulk 취소의 doCancelRequest는
+    pending 버퍼에 취소와 bufferCompleted를 직접 발생시킨 뒤 pending_를 clear하며 각 버퍼에 completeBuffer를 호출하지 않는 예외를 먼저 구분하세요.
+    두 경로의 버퍼·요청 중복 완료 부재, 요청 완료 전 pending 없음, completeRequest 반환 뒤 핸들러 접근 금지와 ASSERT를 연결하고 cookie·sequence·status·버퍼
+    status·pending_·신호 발생 또는 특정 연결별 알림 횟수를 기록하는 검증 계획을 세 문장 이내로 제시하세요. 여러 수신 연결을 중복 완료로 세지 마세요. bulk 취소는 정상
+    경로의 setRequest(nullptr)을 실행하지 않더라도 FrameBuffer::request의 포인터 유효 구간은 버퍼 완료까지라는 계약을 적용하고 저장된 비null 값으로 수명을
+    추정하지 않도록 두 경로별 재사용·지연 콜백 검증을 연결하세요.
+  sources:
+  - request-invariant
+  - cancellation-flow
+  - completion-flow
+  - buffer-request
+  max_statements: 2
+- id: preparation-case
+  question: '준비 취소 시험 계획: fence가 신호되지 않는 입력에서 timeout의 cancel→prepared 발행과 cancelled_·prepared_를 기록하고, 준비 취소도
+    순번 등록·공통 완료 경로로 전달되는지 확인하도록 하세요. 미준비 선두·장치 큐 한도와 앞선 Pending 요청 때문에 실제 통지가 지연될 수 있으므로 300ms를 촬영 또는 정지 완료
+    시간 보장으로 쓰지 마세요. 기대 분기와 중복 처리·반환 순서·pending 잔존 검사를 두 문장 이내로 연결하세요.'
+  sources:
+  - prepare-flow
+  - dispatch-flow
+  - completion-flow
+  max_statements: 2
+- id: control-qbuf-case
+  question: '제출 실패 시험 계획: 개별 processControl 오류가 무시되는 경우와 setControls 오류가 UVC의 음수 반환을 통해 취소로 이어지는 경우를 구분하세요.
+    제어 적용 뒤 QBUF가 실패하는 경우에는 ret·error_idx·queuedBuffers_ 등록 여부·순번과 취소 완료를 확인하고 제어 변경 롤백을 기대하지 않도록 하세요. 준비 성공·장치
+    제출·요청 통지를 구별하여 각 경우의 기대 분기를 두 문장 이내로 제시하세요. cache_ 부재의 Fatal 로그는 별도 경계로 기록하고 실제 -ENOENT 반환이나 cancelRequest
+    도달을 기대하지 마세요.'
+  sources:
+  - uvc-submit
+  - uvc-controls
+  - control-result
+  - qbuf-flow
+  - dispatch-flow
+  - completion-flow
+  max_statements: 2
+- id: dequeue-case
+  question: 'DQBUF 실패 시험 계획: ioctl 오류와 예상 밖 인덱스를 각각 주입·관찰할 경우 그 dequeueBuffer 호출은 nullptr을 반환하므로 bufferAvailable이
+    bufferReady를 내지 않는 기대 분기를 설명하세요. 해당 시점의 ret·index·queuedBuffers_와 요청 pending·큐 선두 status를 기록하고, 이 한 번의
+    알림 부재를 영구 정지·자동 취소·하드웨어 롤백 보장으로 확대하지 않는 계획을 두 문장 이내로 제시하세요.'
+  sources:
+  - dequeue-flow
+  - request-invariant
+  - completion-flow
+  max_statements: 2
+- id: frame-error-case
+  question: '프레임 오류 시험 계획: 유효한 dequeued 버퍼에 V4L2_BUF_FLAG_ERROR가 설정되면 FrameError를 유지하면서 UVC가 completeBuffer와
+    completeRequest를 호출하는 경로를 확인하도록 하세요. 다른 취소 원인이 없으면 RequestComplete가 가능하므로 FrameError·RequestComplete를 별도로
+    기록하고 pending 제거 1회·제출 순서 통지·요청 완료 전 버퍼 유지 조건을 확인하는 계획을 두 문장 이내로 제시하세요. 실제 촬영 성공으로 표시하지 마세요.'
+  sources:
+  - dequeue-flow
+  - uvc-ready
+  - request-invariant
+  - completion-flow
+  - owner-duty
+  max_statements: 2
+- id: stop-case
+  question: '정지 시험 계획: 준비 대기 요청과 장치에 들어간 요청이 섞인 정상 정지에서는 waitingRequests_ 분리·장치 취소 완료·분리한 대기 요청의 순번 등록과 반환
+    순서, 각 요청·버퍼 완료 횟수와 큐 잔존을 확인하도록 하세요. STREAMOFF 실패와 releaseBuffers 실패는 별도 사례로 두고 ret·state_·cache_·queuedBuffers_·queuedRequests_·ASSERT
+    도달 여부와 정지 중 재투입 여부를 관찰하되, 실패 시 실제 0 반환이나 모든 버퍼 반환을 기대하지 않는 계획을 두 문장 이내로 제시하세요. STREAMOFF 실패 뒤 cache_ reset과
+    잔존 notifier·큐가 겹치는 경우 알려진 인덱스의 후속 DQBUF에서 cache_->put 접근을 안전하게 처리하는지 확인하도록 명시하세요.'
+  sources:
+  - common-stop
+  - streamoff-flow
+  - uvc-stop
+  - release-buffers
+  - dispatch-flow
+  - completion-flow
+  - dequeue-flow
+  max_statements: 2
+- id: delivery-case
+  question: '콜백 시험 계획: 허용된 내부 doQueueRequests 재진입에서는 pop이 먼저 이루어져 중복 투입하지 않는지 확인하고, Direct와 지연된 Queued 수신에서는
+    현재·수신 스레드, cookie·sequence·콜백 진입/복귀·stop 앞뒤와 객체 수명을 기록하도록 하세요. 같은 함수의 콜백 중첩 진입은 별도 허용 문서 없이 하지 말고, stop의
+    Blocking 반환과 별도 Queued 수신자 처리 완료를 구분해 확인하는 계획을 두 문장 이내로 제시하세요. 표식을 정확한 C++ 반환 명령의 관찰이나 실제 실행 결과로 표시하지 마세요.'
+  sources:
+  - connection-rules
+  - signal-lifetime
+  - thread-contract
+  - dispatch-flow
+  - owner-duty
+  max_statements: 2
+- id: stop-crossing-case
+  question: 제출과 정지의 교차 시험 계획에서 queued 메시지의 게시·메서드 실행, CameraStopping 설정, 공통 stop의 대기 분리와 stopDevice, 준비·장치
+    재투입, Camera::requestComplete 상태 검사까지의 상대 순서를 기록하도록 하세요. 호출자 동기화 의무를 유지하고, 정지 뒤 실제 메서드가 실행되는 조건이 성립하는 경우를
+    분리하여 요청·버퍼 수명과 중복 완료·재투입·ASSERT 조건을 검증하도록 두 문장 이내로 설명하세요. 경쟁 발생·지원·복구 성공을 관측한 것으로 쓰지 마세요.
+  sources:
+  - submit-message
+  - stop-entry
+  - dispatch-flow
+  - common-stop
+  - completion-flow
+  - owner-duty
+  - camera-notice
+  max_statements: 2

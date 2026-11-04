@@ -894,6 +894,131 @@ def test_exact_source_guard_labels_allowed_but_old_guard_rejected(tmp_cfg, autom
         Generator(tmp_cfg, model, agent).run()
 
 
+@pytest.mark.parametrize('field', ['label', 'label_en'])
+def test_cited_cpp_member_access_is_not_a_label_comparison(tmp_cfg, automatic, field):
+    from sdd.generated_visuals import materialize, plans
+    section, model, _, agent = automatic
+    record = model.evidence['device/shutdown/stop']
+    record['text'] = 'void Device::stop() { cache_->put(id); data_->request()->complete(); data_->*member; value--->member; cancelPending(); }'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    source = section['design_topics'][0]['sources'][0]
+    source['sha256'] = record['sha256']
+    record['selector'] = copy.deepcopy(source)
+    plan = plans(tmp_cfg, section)[0]
+    for label in ['cache_->put(id)', 'data_->request()->complete()',
+                  'Call cache_->put(id) before cancelling', 'cache_->put(id) 이후 취소',
+                  'data_->*member', 'value--->member']:
+        draft = copy.deepcopy(agent.draft)
+        draft['edges'][0][field] = label
+        graph = materialize(tmp_cfg, model, section, plan, draft, 'synthetic-unit-fixture')
+        assert graph['edges'][0][field] == label
+    # A sourced member access must not conceal a new or changed comparison.
+    for label in ['cache_->put(id) > 0', 'cache_->put(id) != 0',
+                  'value-->0', 'value-- > 0', 'value - > 0']:
+        draft = copy.deepcopy(agent.draft)
+        draft['edges'][0][field] = label
+        with pytest.raises(ValueError, match='differs from cited source guards'):
+            materialize(tmp_cfg, model, section, plan, draft, 'synthetic-unit-fixture')
+
+
+@pytest.mark.parametrize('field', ['label', 'label_en'])
+def test_member_access_in_source_guard_keeps_receiver_and_arguments(tmp_cfg, automatic, field):
+    from sdd.generated_visuals import materialize, plans
+    section, model, _, agent = automatic
+    record = model.evidence['device/shutdown/stop']
+    record['text'] = 'void Device::stop() { if (cache_->put(id) > 0) { cancelPending(); } }'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    source = section['design_topics'][0]['sources'][0]
+    source['sha256'] = record['sha256']
+    record['selector'] = copy.deepcopy(source)
+    draft = copy.deepcopy(agent.draft)
+    draft['edges'][0][field] = 'cache_->put(id) > 0'
+    draft['edges'][0]['condition_ref'] = 'c0:true'
+    plan = plans(tmp_cfg, section)[0]
+    materialize(tmp_cfg, model, section, plan, draft, 'synthetic-unit-fixture')
+    for label in ['other_->put(id) > 0', 'other_cache_->put(id) > 0', 'cache_.put(id) > 0',
+                  'other_->cache_->put(id) > 0','cache_->put(id) > 0 + 1',
+                  '(cache_->put(id) > 0) + 1','cache_->put(id) > 0 && ready()',
+                  'cache_->put(other) > 0', 'cache_->put(id) >= 0']:
+        draft['edges'][0][field] = label
+        with pytest.raises(ValueError, match='differs from cited source guards'):
+            materialize(tmp_cfg, model, section, plan, draft, 'synthetic-unit-fixture')
+
+
+@pytest.mark.parametrize('operand', ['0x10','00','0u','0.','0.0','0e+2',"0'1"])
+def test_cited_guard_does_not_authorize_a_prefix_of_another_numeric_operand(tmp_cfg, automatic, operand):
+    from sdd.generated_visuals import materialize, plans
+    section, model, _, agent = automatic
+    record = model.evidence['device/shutdown/stop']
+    record['text'] = 'void Device::stop() { if (ret == 0) { cancelPending(); } }'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    source = section['design_topics'][0]['sources'][0]
+    source['sha256'] = record['sha256']
+    record['selector'] = copy.deepcopy(source)
+    draft = copy.deepcopy(agent.draft)
+    draft['edges'][0].update(label='ret == '+operand,condition_ref='c0:true')
+    with pytest.raises(ValueError,match='differs from cited source guards'):
+        materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')
+
+
+@pytest.mark.parametrize('guard,label', [('ret == 0','ret = = 0'),('ret >= 0','ret > = 0'),
+                                       ('ret <= 0','ret < = 0'),('ret != 0','ret ! = 0'),
+                                       ('ret == 0','ret == 0 and ready()'),('ret == 0','ret == 0 or ready()'),
+                                       ('ret == 0','ret == 0 bitand value'),('ret == 0','not (ret == 0)'),
+                                       ('ret == 0','check(ret == 0)'),('ret == 0','check((ret == 0))')])
+def test_guard_comparison_operator_keeps_lexical_boundaries(tmp_cfg,automatic,guard,label):
+    from sdd.generated_visuals import materialize,plans
+    section,model,_,agent=automatic
+    record=model.evidence['device/shutdown/stop']
+    record['text']=f'void Device::stop() {{ if ({guard}) {{ cancelPending(); }} }}'
+    record['sha256']=hashlib.sha256(record['text'].encode()).hexdigest()
+    source=section['design_topics'][0]['sources'][0]
+    source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
+    draft=copy.deepcopy(agent.draft)
+    draft['edges'][0].update(label=label,condition_ref='c0:true')
+    with pytest.raises(ValueError,match='differs from cited source guards'):
+        materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')
+
+
+def test_edge_cannot_assemble_endpoint_symbols_from_unrelated_passages(tmp_cfg,automatic):
+    from sdd.generated_visuals import materialize,plans
+    section,model,_,agent=automatic
+    record=model.evidence['device/shutdown/stop']
+    source=section['design_topics'][0]['sources'][0]
+    def update(text):
+        record.update(text=text,sha256=hashlib.sha256(text.encode()).hexdigest())
+        source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
+    update('void Device::stop() { int first = 1; }\n\nvoid cancelPending() { int unrelated = 2; }')
+    draft=copy.deepcopy(agent.draft)
+    draft['nodes'][1]['quote_ids']=['stop:1']
+    draft['edges'][0]['quote_ids']=['stop:0','stop:1']
+    with pytest.raises(ValueError,match='individual passage containing both'):
+        materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')
+    update('void Device::stop() { cancelPending(); }')
+    materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],agent.draft,'synthetic-unit-fixture')
+
+
+def test_identifier_v1_record_reuses_only_after_current_policy_revalidation(tmp_cfg,automatic):
+    from sdd.generated_visuals import inputs,materialize,plans,generate,resolve,CITATION_BINDING_POLICY
+    section,model,_,agent=automatic
+    plan=plans(tmp_cfg,section)[0]
+    old_pin=inputs(tmp_cfg,model,section,plan,_binding_policy='identifier-boundaries-v1')[0]
+    current_pin=inputs(tmp_cfg,model,section,plan)[0]
+    assert old_pin!=current_pin
+    graph=materialize(tmp_cfg,model,section,plan,agent.draft,'synthetic-v1-fixture')
+    record=dict(input_fingerprint=old_pin,draft=copy.deepcopy(agent.draft),graph=graph,
+                producer='synthetic-v1-fixture',generation_commit='a'*40,citation_binding_policy='identifier-boundaries-v1')
+    previous=_synthetic_legacy_visual_document(record)
+    with pytest.raises(ValueError,match='recorded citation revalidation'):
+        resolve(tmp_cfg,model,section,{'schema':1,'records':{'stop-flow':record}})
+    artifact=generate(tmp_cfg,model,section,agent,previous)
+    rec=artifact['records']['stop-flow']
+    assert not agent.calls and rec['input_fingerprint']==old_pin
+    assert rec['citation_binding_policy']=='identifier-boundaries-v1'
+    assert rec['citation_binding_revalidation']==dict(policy=CITATION_BINDING_POLICY,original_input_fingerprint=old_pin,new_inference=False)
+    resolve(tmp_cfg,model,section,artifact)
+
+
 def test_compact_guard_display_preserves_exact_guard_and_proof(tmp_cfg, automatic):
     from sdd.generated_visuals import materialize
     from sdd.visuals import render_values
@@ -1041,3 +1166,17 @@ def test_exact_legacy_cli_visual_proof_is_verified_without_rewriting_its_history
         for key in ('input_fingerprint','producer','draft','graph','generation_commit'):
             assert updated['records']['stop-flow'][key] == original['records']['stop-flow'][key]
         assert len(agent.calls) == 1
+
+
+@pytest.mark.parametrize('label',['ret == 0이면','(ret == 0)이면','if (ret == 0)'])
+def test_guard_tokens_do_not_absorb_korean_particles(tmp_cfg,automatic,label):
+    from sdd.generated_visuals import materialize,plans
+    section,model,_,agent=automatic
+    record=model.evidence['device/shutdown/stop']
+    record['text']='void Device::stop() { if (ret == 0) { cancelPending(); } }'
+    record['sha256']=hashlib.sha256(record['text'].encode()).hexdigest()
+    source=section['design_topics'][0]['sources'][0]
+    source['sha256']=record['sha256'];record['selector']=copy.deepcopy(source)
+    draft=copy.deepcopy(agent.draft)
+    draft['edges'][0].update(label=label,condition_ref='c0:true')
+    materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],draft,'synthetic-unit-fixture')
