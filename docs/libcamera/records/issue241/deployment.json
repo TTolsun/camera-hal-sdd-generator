@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "generator_runtime_commit": "1365ccb54a7b1bb42d1d5f9ae038e817b97debc3",
+  "public_pr": "https://github.com/TTolsun/libcamera-sdd/pull/90",
+  "public_merge_commit": "9056546f920c78a28b9992484008a79871752a00",
+  "pages_run": "https://github.com/TTolsun/libcamera-sdd/actions/runs/41923061001",
+  "pages_status": "success",
+  "public_url": "https://ttolsun.github.io/libcamera-sdd/validation/issue241/",
+  "site_build_id": "55d3c07a23b9a1870a24cd47bdbe87f51d9b4674cf8d732acfabddb273079b20",
+  "verified_manifest_outputs": 88,
+  "verification_command": "python -m sdd.cli verify-publication --url https://ttolsun.github.io/libcamera-sdd/validation/issue241/ --site build/issue241/public-case-02/site",
+  "verification_exit_code": 0,
+  "verification": "Existing verifier compares complete remote/local manifest objects and every output SHA-256.",
+  "browser": "Actual public Korean page rendered seven-node graph; enlarge, fit and fence search worked (2 matches). Local bilingual render, source disclosure, language and document search also checked.",
+  "human_review": "pending",
+  "root_handbook": "Preserved against public base866f3007; new bounded validation subsite only.",
+  "evidence_url": "https://github.com/TTolsun/libcamera-sdd/tree/9056546f920c78a28b9992484008a79871752a00/publication/issue241",
+  "evidence_files": {
+    "pages-build.json": "e8616cf31309ccd677e7fec441816a5354f9b60d4b9182af693eaf37cf25ff14",
+    "pages-run.json": "466ebcbda9948a3405b37dc39fac8d5fddfe2693b62d64d96c4cef97e3dda758",
+    "verify-publication.log": "75f24333cce21d8c47002b14b720e02e5c0f6ce27a4b6cf565960bdaa7e8be7a"
+  }
+}
