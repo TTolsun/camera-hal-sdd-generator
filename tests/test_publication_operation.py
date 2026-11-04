@@ -16,6 +16,13 @@ from sdd.publication_operation import directory, profile
 from sdd.validation_stage import InputChanged
 
 
+@pytest.fixture(autouse=True)
+def isolate_synthetic_source_from_the_generator_repository(tmp_cfg, monkeypatch):
+    # The synthetic hal/ directory is not a checkout of this generator. Real
+    # source repositories created below remain discoverable above their subdirs.
+    monkeypatch.setenv('GIT_CEILING_DIRECTORIES', str(tmp_cfg.root))
+
+
 def configure(cfg, model, sections):
     cfg.raw['publication'] = dict(operation_id='one-publication', operation_file='operation.json')
     declaration = dict(schema=1, revision=1, reason='Complete the fixed reader task.',
@@ -73,6 +80,8 @@ def test_pending_prerequisite_blocks_all_calls_then_allows_first_execution(cli_u
     with pytest.raises(FileNotFoundError):
         Generator(tmp_cfg, model, agent()).run()
     assert not calls and not revisions(tmp_cfg)
+    failed = [json.loads(p.read_bytes()) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
+    assert failed[0]['publication_attempt']['contract'] == contract
     (tmp_cfg.root/'policy-test.json').write_bytes(raw)
     state['interrupt'] = False
     Generator(tmp_cfg, model, agent()).run()
@@ -516,3 +525,39 @@ def test_source_ref_packing_does_not_change_operation_basis(tmp_cfg, sample_mode
         git('branch', 'unrelated')
         git('pack-refs', '--all')
         execution.publication_contract.verify()
+
+
+def test_source_root_below_repository_root_is_not_a_commit_check_bypass(tmp_cfg, sample_model):
+    upstream = tmp_cfg.root/'upstream'
+    upstream.mkdir()
+    module = upstream/'hal'
+    module.mkdir()
+    def git(*args):
+        return subprocess.run(['git', '-C', str(upstream), *args], check=True,
+                              capture_output=True, text=True).stdout.strip()
+    git('init')
+    git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','--allow-empty','-m','source')
+    tmp_cfg.source_root = module
+    contract, write = configure(tmp_cfg, sample_model, [tmp_cfg.sections()[0]['id']])
+    with pytest.raises(ValueError, match='source commit differs'):
+        with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+            pytest.fail('mismatched ancestor checkout accepted')
+    contract['source_commit'] = sample_model.meta['source_commit'] = git('rev-parse','HEAD')
+    write()
+    with pytest.raises(InputChanged, match='ref changed'):
+        with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+            git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','--allow-empty','-m','changed source')
+
+
+def test_progress_is_visible_before_operation_preparation(tmp_cfg, sample_model, monkeypatch):
+    configure(tmp_cfg, sample_model, [tmp_cfg.sections()[0]['id']])
+    import sdd.publication_operation as operations
+    original = operations.Contract
+    def inspect_progress(execution, phase):
+        saved = json.loads(execution.path.read_bytes())
+        assert saved['current_phase'] == 'generation'
+        assert saved['phases'][-1]['status'] == 'running'
+        return original(execution, phase)
+    monkeypatch.setattr(operations, 'Contract', inspect_progress)
+    with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+        pass

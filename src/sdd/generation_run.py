@@ -83,6 +83,9 @@ class Execution:
             raise ValueError('publication.operation_id must be a nonempty string')
         self.report.update(operation_id=self.operation, operation_limits=self.operation_limits,
                            phases=[], owner_pid=os.getpid(), started_at=time.time())
+        self.report['publication_plans'] = []
+        if cfg.publication.get('operation_file'):
+            self.report.update(publication=None, publication_attempt=None, publication_revision=None)
 
     def prior(self):
         if not self.operation:
@@ -146,15 +149,15 @@ class Execution:
         owns_contract = self.publication_contract is None and bool(self.cfg.publication.get('operation_file'))
         previous_role = None
         try:
-            if owns_contract:
-                from .publication_operation import Contract
-                self.publication_contract = Contract(self, name)
-            if self.publication_contract:
-                previous_role = self.publication_contract.role
-                self.publication_contract.enter_phase(name)
-            if self.publication_contract and name == 'export_site':
-                self.publication_contract.final_gate()
             with self.heartbeat():
+                if owns_contract:
+                    from .publication_operation import Contract
+                    self.publication_contract = Contract(self, name)
+                if self.publication_contract:
+                    previous_role = self.publication_contract.role
+                    self.publication_contract.enter_phase(name)
+                if self.publication_contract and name == 'export_site':
+                    self.publication_contract.final_gate()
                 yield
                 if self.publication_contract:
                     self.publication_contract.verify()

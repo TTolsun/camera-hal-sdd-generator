@@ -3,6 +3,7 @@ from copy import deepcopy
 from dataclasses import asdict
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -98,6 +99,25 @@ def _git(root, *args):
     return result.stdout.strip()
 
 
+def _source_head(root):
+    if not root.is_dir():
+        return None
+    try:
+        result = subprocess.run(['git', '-C', str(root), 'rev-parse', '--is-inside-work-tree'],
+            capture_output=True, text=True, encoding='utf-8', env={**os.environ, 'LC_ALL': 'C'})
+    except FileNotFoundError:
+        if any((p/'.git').exists() for p in (root, *root.parents)):
+            raise ValueError('Git is required to verify the configured source checkout') from None
+        return None  # An unpacked non-Git source snapshot is still supported.
+    if result.returncode:
+        if 'not a git repository' in result.stderr.lower():
+            return None
+        raise ValueError('Cannot identify the publication source checkout: ' + result.stderr.strip())
+    if result.stdout.strip() != 'true':
+        raise ValueError('Publication source must be a working tree, not a bare Git repository')
+    return _git(root, 'rev-parse', '--verify', 'HEAD')
+
+
 class Contract:
     def __init__(self, execution, phase):
         self.execution, self.cfg, self.watch = execution, execution.cfg, Inputs()
@@ -128,15 +148,15 @@ class Contract:
         self.contract = json.loads(self.watch.read(path))
         _validate(self.contract)
         self.contract_sha256 = checksum(self.contract)
+        self.execution.report['publication_attempt'] = dict(
+            revision=self.contract['revision'], contract_sha256=self.contract_sha256, path=str(path),
+            contract=deepcopy(self.contract))
         if model is not None:
             self.check_source(model.meta.get('source_commit'))
-        source_head = None
-        if (cfg.source_root/'.git').exists():
-            source_head = _git(cfg.source_root, 'rev-parse', '--verify', 'HEAD')
+        source_head = _source_head(cfg.source_root)
+        if source_head is not None:
             self.check_source(source_head)
             self.git_checks.append((cfg.source_root, 'HEAD', source_head))
-        self.execution.report['publication_attempt'] = dict(
-            revision=self.contract['revision'], contract_sha256=self.contract_sha256, path=str(path))
         self.role = {'generation': 'generation', 'translation': 'translation',
                      'contract-audit': 'review'}.get(phase)
         if self.role and profile(cfg.agent) != self.contract['profiles'][self.role]:
