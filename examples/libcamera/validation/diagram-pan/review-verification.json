@@ -1,0 +1,10 @@
+[
+  {
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "model_selection": "explicit",
+    "producer": "cli/codex/gpt-6.1-terra",
+    "stdout_sha256": "67bfad329218c235bc4bb4c03d956eb9f8c4fe20051526528d94273a3267a361",
+    "arguments_verified": true
+  }
+]

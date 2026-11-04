@@ -288,8 +288,50 @@
   const canvas = document.querySelector('#diagram-canvas');
   const nodeInput = document.querySelector('#node-search');
   let active = null;
+  let pan = null;
+  function panCursor() {
+    viewport.classList.toggle('can-pan', !!active &&
+      (viewport.scrollWidth > viewport.clientWidth || viewport.scrollHeight > viewport.clientHeight));
+  }
+  function endPan() {
+    const pointer = pan?.id;
+    pan = null;
+    viewport.classList.remove('is-panning');
+    if (pointer !== undefined && viewport.hasPointerCapture(pointer)) viewport.releasePointerCapture(pointer);
+  }
+  // Touch keeps the browser's native overflow pan, inertia and pinch zoom.
+  // Capture only the primary mouse button on the drawing, never its links or
+  // scrollbars. Capture also delivers release when the mouse leaves the pane.
+  viewport.addEventListener('pointerdown', event => {
+    if (!active || pan || event.pointerType !== 'mouse' || event.button !== 0 ||
+        event.ctrlKey || event.metaKey || event.altKey ||
+        event.target.closest('a, button, input, select, textarea, [role="button"], .clickable')) return;
+    const box = viewport.getBoundingClientRect();
+    const x = event.clientX - box.left - viewport.clientLeft;
+    const y = event.clientY - box.top - viewport.clientTop;
+    if (x < 0 || y < 0 || x >= viewport.clientWidth || y >= viewport.clientHeight ||
+        (viewport.scrollWidth <= viewport.clientWidth && viewport.scrollHeight <= viewport.clientHeight)) return;
+    pan = {id: event.pointerId, x: event.clientX, y: event.clientY,
+      left: viewport.scrollLeft, top: viewport.scrollTop};
+    viewport.setPointerCapture(event.pointerId);
+    viewport.classList.add('is-panning');
+    viewport.focus({preventScroll: true});
+    event.preventDefault();
+  });
+  viewport.addEventListener('pointermove', event => {
+    if (!pan || event.pointerId !== pan.id) return;
+    if (!(event.buttons & 1)) { endPan(); return; }
+    viewport.scrollLeft = pan.left - (event.clientX - pan.x);
+    viewport.scrollTop = pan.top - (event.clientY - pan.y);
+    event.preventDefault();
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    viewport.addEventListener(type, event => { if (pan?.id === event.pointerId) endPan(); });
+  }
+  window.addEventListener('blur', endPan);
   function scale(value, center = true, mode = 'manual') {
     if (!active) return;
+    endPan();
     const old = active.scale;
     const x = (viewport.scrollLeft + viewport.clientWidth / 2) / old;
     const y = (viewport.scrollTop + viewport.clientHeight / 2) / old;
@@ -302,6 +344,7 @@
       viewport.scrollLeft = x * active.scale - viewport.clientWidth / 2;
       viewport.scrollTop = y * active.scale - viewport.clientHeight / 2;
     }
+    panCursor();
   }
   function fit() {
     if (!active) return;
@@ -375,12 +418,14 @@
   }
   diagramDialog.addEventListener('close', () => {
     if (!active) return;
+    endPan();
     active.svg.querySelectorAll('.is-match').forEach(node => node.classList.remove('is-match'));
     if (active.style === null) active.svg.removeAttribute('style');
     else active.svg.setAttribute('style', active.style);
     active.placeholder.replaceWith(active.svg);
     active.trigger.focus({preventScroll: true});
     active = null;
+    panCursor();
   });
   nodeInput.addEventListener('input', searchNodes);
   document.querySelector('#zoom-in').addEventListener('click', () => active && scale(active.scale * 1.25));
@@ -389,7 +434,11 @@
   document.querySelector('#zoom-fit').addEventListener('click', fit);
   // Only an explicitly selected overview follows the viewport size. Resizing
   // must not turn reading, manual zoom or a search result into a tiny overview.
-  window.addEventListener('resize', () => { if (active?.mode === 'fit') fit(); });
+  window.addEventListener('resize', () => {
+    endPan();
+    if (active?.mode === 'fit') fit();
+    else panCursor();
+  });
 
   const diagrams = [...document.querySelectorAll('.mermaid')];
   if (diagrams.length) {

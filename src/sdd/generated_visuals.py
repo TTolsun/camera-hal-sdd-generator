@@ -453,6 +453,12 @@ def generate(cfg, model, section, agent, previous=None):
     for plan in plans(cfg, section):
         pin, _, passages, system, request = inputs(cfg, model, section, plan)
         old = prior.get(plan['id'], {})
+        from .reuse_decision import record
+        key = f"visual_{section['id']}_{plan['id']}"
+        explanation = dict(current_identity_sha256=pin,
+            previous_identity_sha256=old.get('input_fingerprint'),
+            reason_codes=['identical-visual-inputs-current-checks-required'] if old.get('input_fingerprint') == pin else
+                         ['visual-inputs-changed-or-legacy-dependencies-unavailable'] if old else ['no-comparable-provenance'])
         if _record_input_mode(cfg, model, section, plan, old.get('input_fingerprint'), pin) is not None:
             try:
                 graph = materialize(cfg, model, section, plan, old['draft'], old['producer'])
@@ -465,11 +471,14 @@ def generate(cfg, model, section, agent, previous=None):
                         'original_input_fingerprint': old['input_fingerprint'],
                         'new_inference': False,
                     }
+                record(agent, key, 'revalidate-visual', explanation, stage='validated',
+                       generation_commit=old.get('generation_commit'))
                 continue
             except (ValueError, KeyError, TypeError):
-                pass
+                explanation['reason_codes'].append('current-visual-validation-rejected')
         if cfg.agent.kind == 'dry-run':
             raise ValueError('LLM visual generation requires an actual model, not dry-run')
+        record(agent, key, 'generate-visual', explanation)
         base = json.dumps(request, ensure_ascii=False)
         if isinstance(old.get('draft'), dict):
             base += ('\nPrevious native draft for revision only. Current sources and instructions are authoritative; '
@@ -494,6 +503,8 @@ def generate(cfg, model, section, agent, previous=None):
                 records[plan['id']] = {'input_fingerprint': pin, 'draft': draft, 'graph': graph,
                                        'producer': producer, 'generation_commit': model.meta['source_commit'],
                                        'citation_binding_policy': CITATION_BINDING_POLICY, 'reused': False}
+                record(agent, key, 'generate-visual', explanation, stage='validated',
+                       receipt=str(getattr(agent, 'last_receipt', '') or ''))
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)

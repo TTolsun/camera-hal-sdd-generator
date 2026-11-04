@@ -20,7 +20,8 @@ def store_for(cfg, model, section, topic, prompt, grounding, answers, *, schema=
         validation_policy=checkpoints.validation_policy(), validation_model=checkpoints.validation_model(model),
         validation_answers=checkpoints.checksum(answers), style_policy=checkpoints.style_policy(cfg),
         grounding_policy=policy_hash() if grounding else None, revision=cfg.review.design_revision)
-    return checkpoints.UnitStore(cfg, identity), identity
+    return checkpoints.UnitStore(cfg, identity, comparison_scope=(
+        'design', section['id'], topic['id'], topic.get('_part_id'), topic.get('_subpart_id'))), identity
 
 
 def changes(previous, current):

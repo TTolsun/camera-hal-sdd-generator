@@ -235,6 +235,11 @@ def test_audit_requires_real_archives_and_rejects_stale_or_tampered_report(tmp_c
             enforce(tmp_cfg, model)
     audit(tmp_cfg, model, agent())
     assert len(calls)==1  # Repeat build/review reuses verified exact receipts.
+    runs = [json.loads(p.read_bytes()) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
+    decisions = [d for run in runs for d in run.get('decisions', [])]
+    assert any(d['action'] == 'review-new' and d['stage'] == 'validated'
+               and d['receipts'] and d['current_receipts_verified'] for d in decisions)
+    assert any(d['action'] == 'revalidate-review' and d['stage'] == 'validated' for d in decisions)
     report['contracts'][0]['findings'][0]['reason']='manually changed verdict'
     report_path=tmp_cfg.build_dir/'consistency-review.json'
     report_path.write_text(json.dumps(report),encoding='utf-8')
