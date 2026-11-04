@@ -29,3 +29,24 @@ def test_virtual_callback_wraps_at_namespace_boundary_before_mermaid_layout():
         rendered = wrap_label(name + suffix)
         assert 'VirtualCameraData::<br/>processRequest' in rendered
         assert html.unescape(rendered.replace('<br/>', '')) == name + suffix
+
+
+def test_guard_expression_wraps_between_fitting_identifier_tokens():
+    expression = 'activeStreams_.find(stream) == activeStreams_.end()'
+    for prefix in ['검사 조건: ', 'Check condition: ']:
+        for width in range(14, 36):
+            text = prefix + expression
+            rendered = wrap_label(text, width)
+            visible = html.unescape(rendered)
+            for token in ['activeStreams_', 'find', 'stream', 'end']:
+                assert visible.count(token) == text.count(token)
+            assert html.unescape(rendered.replace('<br/>', '')) == text
+
+
+def test_fitting_identifier_survives_adjacent_html_sensitive_operators():
+    text = '조건 requestCount < bufferCount && stream != nullptr'
+    rendered = wrap_label(text, 14)
+    assert '&lt;' in rendered and '&amp;&amp;' in rendered
+    for token in ['requestCount', 'bufferCount', 'stream', 'nullptr']:
+        assert token in rendered
+    assert html.unescape(rendered.replace('<br/>', '')) == text
