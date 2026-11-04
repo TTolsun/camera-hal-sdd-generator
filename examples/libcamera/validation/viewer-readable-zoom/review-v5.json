@@ -1,0 +1,8 @@
+{
+  "review": {
+    "verdict": "pass",
+    "findings": [],
+    "scope": "Reviewed the supplied implementation, CSS, regression code, and bilingual contract. No browser tests were performed."
+  },
+  "human_review": "pending"
+}

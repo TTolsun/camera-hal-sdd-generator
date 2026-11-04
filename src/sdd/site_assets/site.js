@@ -288,12 +288,13 @@
   const canvas = document.querySelector('#diagram-canvas');
   const nodeInput = document.querySelector('#node-search');
   let active = null;
-  function scale(value, center = true) {
+  function scale(value, center = true, mode = 'manual') {
     if (!active) return;
     const old = active.scale;
     const x = (viewport.scrollLeft + viewport.clientWidth / 2) / old;
     const y = (viewport.scrollTop + viewport.clientHeight / 2) / old;
-    active.scale = Math.max(.05, Math.min(8, value));
+    active.scale = Math.max(mode === 'fit' ? Number.EPSILON : .05, Math.min(8, value));
+    active.mode = mode;
     active.svg.style.width = `${active.width * active.scale}px`;
     active.svg.style.height = `${active.height * active.scale}px`;
     document.querySelector('#zoom-value').textContent = `${Math.round(active.scale * 100)}%`;
@@ -304,7 +305,42 @@
   }
   function fit() {
     if (!active) return;
-    scale(Math.min((viewport.clientWidth - 60) / active.width, (viewport.clientHeight - 60) / active.height, 1), false);
+    scale(Math.min((viewport.clientWidth - 60) / active.width, (viewport.clientHeight - 60) / active.height, 1), false, 'fit');
+    viewport.scrollTo(0, 0);
+  }
+  function readDiagram() {
+    // Measure after moving the SVG into the open dialog, at intrinsic scale.
+    // Include edge labels and nested SVG/HTML labels, not just node boxes.
+    scale(1, false, 'reading');
+    const sizes = [];
+    active.svg.querySelectorAll('text, tspan, textPath, foreignObject *').forEach(label => {
+      if (![...label.childNodes].some(node => node.nodeType === 3 && node.textContent.trim())) return;
+      const style = getComputedStyle(label);
+      const rect = label.getBoundingClientRect();
+      if (style.visibility !== 'visible' || style.display === 'none' || !rect.width || !rect.height) return;
+      const owner = typeof label.getScreenCTM === 'function' ? label : label.closest('foreignObject');
+      let matrix = owner?.getScreenCTM();
+      if (matrix && owner !== label) {
+        // foreignObject's SVG matrix stops at its HTML boundary. Compose the
+        // HTML transforms too; origins translate but do not change font size.
+        let local = new DOMMatrix();
+        for (let element = label; element && element !== owner; element = element.parentElement) {
+          const css = getComputedStyle(element);
+          const transform = css.transform === 'none' ? new DOMMatrix() : new DOMMatrix(css.transform);
+          const zoom = parseFloat(css.zoom) || 1;
+          local = transform.scale(zoom).multiply(local);
+        }
+        // Some engines still return legacy SVGMatrix here; its multiply()
+        // rejects DOMMatrix, so normalize the six affine components first.
+        matrix = new DOMMatrix([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f]).multiply(local);
+      }
+      const unit = matrix ? Math.hypot(matrix.c, matrix.d) : active.svg.getBoundingClientRect().height / active.height;
+      const size = parseFloat(style.fontSize) * unit;
+      if (Number.isFinite(size) && size > 0) sizes.push(size);
+    });
+    const target = parseFloat(getComputedStyle(document.body).fontSize) || 16;
+    // An unmeasurable diagram keeps its intrinsic size instead of shrinking.
+    scale(sizes.length ? Math.max(1, target / Math.min(...sizes)) : 1, false, 'reading');
     viewport.scrollTo(0, 0);
   }
   function searchNodes() {
@@ -327,18 +363,14 @@
     const placeholder = document.createComment('diagram position');
     svg.before(placeholder);
     active = {svg, trigger, placeholder, style: svg.getAttribute('style'), scale: 1,
-      width: box.width || svg.getBoundingClientRect().width,
-      height: box.height || svg.getBoundingClientRect().height};
+      width: box.width || (svg.width.baseVal.unitType !== 2 && svg.width.baseVal.value) || svg.getBoundingClientRect().width,
+      height: box.height || (svg.height.baseVal.unitType !== 2 && svg.height.baseVal.value) || svg.getBoundingClientRect().height};
     canvas.append(svg);
     nodeInput.value = '';
     document.querySelector('#node-count').textContent = '';
     document.querySelector('#diagram-title').textContent = trigger.getAttribute('data-title') || t('다이어그램', 'Diagram');
     diagramDialog.showModal();
-    fit();
-    if (window.matchMedia('(max-width: 760px)').matches && active.scale < .85) {
-      scale(.85, false);
-      viewport.scrollTo(0, 0);
-    }
+    readDiagram();
     nodeInput.focus();
   }
   diagramDialog.addEventListener('close', () => {
@@ -355,7 +387,9 @@
   document.querySelector('#zoom-out').addEventListener('click', () => active && scale(active.scale / 1.25));
   document.querySelector('#zoom-reset').addEventListener('click', () => scale(1));
   document.querySelector('#zoom-fit').addEventListener('click', fit);
-  window.addEventListener('resize', () => { if (active) fit(); });
+  // Only an explicitly selected overview follows the viewport size. Resizing
+  // must not turn reading, manual zoom or a search result into a tiny overview.
+  window.addEventListener('resize', () => { if (active?.mode === 'fit') fit(); });
 
   const diagrams = [...document.querySelectorAll('.mermaid')];
   if (diagrams.length) {
