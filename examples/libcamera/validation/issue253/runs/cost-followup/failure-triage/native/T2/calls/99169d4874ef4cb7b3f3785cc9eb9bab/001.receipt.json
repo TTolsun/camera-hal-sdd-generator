@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "T2-failure-triage",
+  "completed_at": "2026-11-04T19:56:20.643234+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "f0d12d9c5d5fd0f5f02f945081c3258bcc1c5afddbf2563a5d6f6cb9b6c88615",
+  "response_sha256": "fe707ba674ff424b12558cc13e1e835b479edaf865c88e3a056ce296ba63efc5",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "133d337562f774d7b9bd3290104776a206069cd00fc8918ac1b9ff5a8c518880",
+    "prompt_sha256": "a078a415a2ae81eec12874bd10ce849806b19cfdbb199e70d3e68853d38059b4",
+    "provider": {
+      "thread_id": "01a1a821-fa1f-7212-8335-4bcded5fa399",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 47028,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 858,
+        "reasoning_output_tokens": 68
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-foz26d8v.stdout.txt",
+    "native_schema_sha256": "858c638e2fb0bcbb4417de9b6a9197cf48107e10bca5ffd6f50c1f9e44e488e2"
+  },
+  "human_review": "pending"
+}

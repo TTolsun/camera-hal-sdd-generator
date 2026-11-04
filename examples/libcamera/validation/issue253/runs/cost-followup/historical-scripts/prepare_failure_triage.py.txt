@@ -1,0 +1,22 @@
+import json,pathlib
+from html.parser import HTMLParser
+root=pathlib.Path(__file__).resolve().parents[3];out=root/'build/issue253/cost-followup/failure-triage';out.mkdir(exist_ok=False)
+class Main(HTMLParser):
+    def __init__(self):super().__init__();self.inside=False;self.skip=0;self.sections=[{'id':'main-start','text':''}]
+    def handle_starttag(self,tag,attrs):
+        if tag=='main':self.inside=True
+        if not self.inside:return
+        a=dict(attrs)
+        if tag in ['script','style']:self.skip+=1
+        if tag=='h2':self.sections.append({'id':a.get('id',''),'text':''})
+    def handle_endtag(self,tag):
+        if tag=='main':self.inside=False
+        if self.inside and tag in ['script','style']:self.skip-=1
+        if self.inside and tag in ['p','h1','h2','h3','li','tr','pre']:self.sections[-1]['text']+='\n'
+    def handle_data(self,text):
+        if self.inside and not self.skip:self.sections[-1]['text']+=text
+pages={}
+for name in ['vendor-overview','vendor-integration','request-diagnosis','request-lifecycle','official-cam-validation']:
+    p=Main();p.feed((root/f'build/issue253/public/docs/{name}.html').read_text(encoding='utf-8'));pages[name]=p.sections
+    (out/(name+'.json')).write_text(json.dumps(p.sections,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({k:{'chars':sum(len(s['text']) for s in v),'headings':[s['id'] for s in v]} for k,v in pages.items()},ensure_ascii=False))

@@ -1,0 +1,50 @@
+"""One-off automatic revalidation probe; no manuscript generation or model call."""
+import datetime,hashlib,json,pathlib,shutil,subprocess,sys,time,types,yaml
+from sdd.config import load
+from sdd.evidence import collect
+from sdd.carryover import carry_forward
+from sdd.facts.model import KnowledgeModel
+from sdd.document_metadata import split_frontmatter
+root=pathlib.Path(__file__).resolve().parents[3];work=root/'build/issue253/cost-followup'
+label=sys.argv[1];out=work/('carry-probe-'+label);out.mkdir(exist_ok=False)
+if label == 'before-child':
+    baseline='da0ca3769c2198fbfb76e3808bdd61ff034a580a'
+    code=subprocess.check_output(['git','show',baseline+':src/sdd/carryover.py'],cwd=root/'build/issue253/reader-improvement/generator',text=True,encoding='utf-8')
+    module=types.ModuleType('sdd._baseline_carry');module.__package__='sdd'
+    exec(compile(code,'git:'+baseline+':src/sdd/carryover.py','exec'),module.__dict__)
+    carry_forward=module.carry_forward
+published=work/'document-baseline';historical=published/'publication/issue211-virtual/integration'
+cfg=yaml.safe_load((root/'examples/libcamera/sdd.yaml').read_text(encoding='utf-8'))
+cfg['source']['root']=str(work/'base-source')
+cfg['output']={'facts_dir':str(out/'facts'),'sdd_dir':str(out/'sdd'),'diagrams_dir':str(out/'sdd/diagrams')}
+cfg['paths']={k:str((root/'examples/libcamera'/v).resolve()) for k,v in cfg['paths'].items()}
+cfg['paths'].update(config=str(historical/'config'),sections_file=str(historical/'config/sections.yaml'),scenarios_file=str(historical/'config/scenarios.yaml'),consistency_file=str(historical/'config/contracts.yaml'),products_file=str(historical/'config/products.yaml'),glossary_file=str(historical/'config/glossary.yaml'),style=str(root/'style'))
+cfg['products']={'file':str(historical/'config/products.yaml')}
+cfg['visuals']['file']=str(historical/'config/visuals.final.yaml')
+cfg['site']['enabled']=False
+profiles={}
+for name,style in [('default','historical-style'),('reader','reader-preserved-style'),('vendor','historical-style'),('diagnosis','current-style')]:
+    source='publication' if name=='default' else {'reader':'reader-authentication','vendor':'vendor-authentication','diagnosis':'diagnosis-authentication'}[name]
+    original=yaml.safe_load((historical/'profiles'/(source+'.yaml')).read_text(encoding='utf-8'))
+    p=out/(name+'-authentication.yaml')
+    p.write_text(yaml.safe_dump({'agent':original['agent'],'paths':{'style':str(historical/style)}},sort_keys=False),encoding='utf-8')
+    profiles[name]=str(p)
+manuscripts=out/'sdd';manuscripts.mkdir()
+mapping={}
+for p in (published/'docs').rglob('*.md'):
+    rel=p.relative_to(published/'docs');dest=manuscripts/rel;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,dest)
+    meta,_=split_frontmatter(p.read_text(encoding='utf-8'))
+    if 'source_commit' in meta:
+        name={'official-cam-validation.md':'reader','vendor-overview.md':'vendor','request-diagnosis.md':'diagnosis'}.get(rel.as_posix(),'default')
+        mapping[rel.as_posix()]=profiles[name]
+for p in (published/'docs').rglob('*.mmd'):
+    dest=manuscripts/p.relative_to(published/'docs');dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,dest)
+cfg['site']['manuscript_profiles']=mapping
+path=out/'probe.yaml';path.write_text(yaml.safe_dump(cfg,allow_unicode=True,sort_keys=False),encoding='utf-8')
+c=load(path);model=KnowledgeModel.load(work/'linux-run-02/base-facts.json')
+tick=time.perf_counter();collect(c,model);collection=time.perf_counter()-tick
+before={p.relative_to(manuscripts).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in manuscripts.rglob('*.md')}
+tick=time.perf_counter();promoted,stale=carry_forward(c,model,[]);elapsed=time.perf_counter()-tick
+result={'kind':'automatic-published-manuscript-revalidation','recorded_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'runtime':str(pathlib.Path(__import__('sdd.carryover',fromlist=['']).__file__)),'source_commit':model.meta['source_commit'],'document_input':'4d656cd88c2a366dec7894e87301bf5205e98b36','adaptation':'Relocate exact published configuration and historical style paths. Explicit readonly profiles preserve retained manuscript identity/style while the global profile uses current style. Source/contracts/validation gates remain unchanged; model calls are zero. This is not the original public config or a full generation benchmark.','collection_seconds':collection,'carry_seconds':elapsed,'promoted':[p.relative_to(manuscripts).as_posix() for p in promoted],'stale':[{'page':p.relative_to(manuscripts).as_posix(),'findings':f,'bytes_preserved':before[p.relative_to(manuscripts).as_posix()]==hashlib.sha256(p.read_bytes()).hexdigest()} for p,f in stale],'evidence_unavailable':[k for k,v in model.evidence.items() if v['status']!='available'],'human_active_review_seconds':None,'model_calls':0}
+(out/'result.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({'promoted':len(promoted),'stale':len(stale),'evidence_unavailable':len(result['evidence_unavailable']),'result':str(out/'result.json')}))

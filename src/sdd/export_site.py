@@ -284,6 +284,7 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
 
 def _prepare_page_body(cfg, rel, texts, sections, terms, model):
     from .render_profiles import for_page
+    publication_cfg = cfg
     cfg = for_page(cfg,rel)
     diagram_source = None
     meta, body = split_frontmatter(texts[rel])
@@ -382,7 +383,7 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
         if len(targets) != 1:
             raise ValueError('Overview visual source section is missing or ambiguous')
         target, original = targets[0]
-        _, _, _, _, available = _prepare_page_body(cfg, target, texts, sections, terms, model)
+        _, _, _, _, available = _prepare_page_body(publication_cfg, target, texts, sections, terms, model)
         selected = [value for value in available if value[0]['id'] == selection['visual']]
         if len(selected) != 1 or not selected[0][2]:
             raise ValueError('Overview visual is missing or its source evidence changed')

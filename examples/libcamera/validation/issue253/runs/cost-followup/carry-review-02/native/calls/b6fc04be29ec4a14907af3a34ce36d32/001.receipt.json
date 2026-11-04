@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "carry-profile-review",
+  "completed_at": "2026-11-04T20:35:07.771665+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "d7dbc5b6441a61f9ce7066c899024e8d9da4eff78f13fa12342beaedd0e99dfa",
+  "response_sha256": "a561e02c7554f3e2eedc1d07a017b706c1d54fb1c41c071f8963013aa64e6edb",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "e9330cd1060afd128588374c2177df839c276bec25bd55b1cb223e2e3e5a3867",
+    "prompt_sha256": "19f199e024787b207af11f3f405fc0831fa3b2c04c67a184eb0fcac93780ed94",
+    "provider": {
+      "thread_id": "01a1a845-a2ce-7463-8547-a3d7fb8105a7",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 39146,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 373,
+        "reasoning_output_tokens": 215
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-h8zbuqjp.stdout.txt",
+    "native_schema_sha256": "a9d721893f9be6ebde09da047d01cca984e2fca4dcde319e180e2638b870fa93"
+  },
+  "human_review": "pending"
+}

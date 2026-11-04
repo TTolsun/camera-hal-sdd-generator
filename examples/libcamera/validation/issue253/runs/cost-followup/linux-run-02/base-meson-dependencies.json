@@ -1,0 +1,284 @@
+[
+  {
+    "name": "threads",
+    "type": "system",
+    "version": "unknown",
+    "compile_args": [
+      "-pthread"
+    ],
+    "link_args": [
+      "-pthread"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libthreads"
+    ]
+  },
+  {
+    "name": "egl",
+    "type": "pkgconfig",
+    "version": "1.5",
+    "compile_args": [],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libEGL.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libegl"
+    ]
+  },
+  {
+    "name": "glesv2",
+    "type": "pkgconfig",
+    "version": "3.2",
+    "compile_args": [],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libGLESv2.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libglesv2"
+    ]
+  },
+  {
+    "name": "dl",
+    "type": "builtin",
+    "version": "unknown",
+    "compile_args": [],
+    "link_args": [],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libdl"
+    ]
+  },
+  {
+    "name": "libudev",
+    "type": "pkgconfig",
+    "version": "259",
+    "compile_args": [],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libudev.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libudev"
+    ]
+  },
+  {
+    "name": "yaml-0.1",
+    "type": "pkgconfig",
+    "version": "0.2.5",
+    "compile_args": [],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libyaml.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libyaml"
+    ]
+  },
+  {
+    "name": "gnutls",
+    "type": "pkgconfig",
+    "version": "3.8.12",
+    "compile_args": [
+      "-I/usr/include/p11-kit-1"
+    ],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libgnutls.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libcrypto"
+    ]
+  },
+  {
+    "name": "libevent_pthreads",
+    "type": "pkgconfig",
+    "version": "2.1.12-stable",
+    "compile_args": [],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libevent_pthreads.so",
+      "/usr/lib/x86_64-linux-gnu/libevent.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libevent"
+    ]
+  },
+  {
+    "name": "libdrm",
+    "type": "pkgconfig",
+    "version": "2.4.131",
+    "compile_args": [
+      "-I/usr/include/libdrm"
+    ],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libdrm.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libdrm"
+    ]
+  },
+  {
+    "name": "libjpeg",
+    "type": "pkgconfig",
+    "version": "2.1.5",
+    "compile_args": [],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libjpeg.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "libjpeg"
+    ]
+  },
+  {
+    "name": "Qt6Core",
+    "type": "pkgconfig",
+    "version": "6.10.2",
+    "compile_args": [
+      "-I/usr/include/x86_64-linux-gnu/qt6/QtCore",
+      "-I/usr/include/x86_64-linux-gnu/qt6",
+      "-DQT_CORE_LIB",
+      "-I/usr/lib/x86_64-linux-gnu/qt6/mkspecs/linux-g++"
+    ],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libQt6Core.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [
+      "Qt6Core",
+      "Qt6Gui",
+      "Qt6OpenGL",
+      "Qt6OpenGLWidgets",
+      "Qt6Widgets"
+    ],
+    "depends": [],
+    "meson_variables": [
+      "qt6_dep"
+    ]
+  },
+  {
+    "name": "glib-2.0",
+    "type": "pkgconfig",
+    "version": "2.88.0",
+    "compile_args": [
+      "-I/usr/include/glib-2.0",
+      "-I/usr/lib/x86_64-linux-gnu/glib-2.0/include",
+      "-I/usr/include/sysprof-6",
+      "-pthread"
+    ],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libglib-2.0.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "glib_dep"
+    ]
+  },
+  {
+    "name": "gstreamer-video-1.0",
+    "type": "pkgconfig",
+    "version": "1.28.2",
+    "compile_args": [
+      "-I/usr/include/gstreamer-1.0",
+      "-I/usr/include/libdrm",
+      "-I/usr/include/glib-2.0",
+      "-I/usr/lib/x86_64-linux-gnu/glib-2.0/include",
+      "-I/usr/include/sysprof-6",
+      "-pthread",
+      "-I/usr/include/orc-0.4"
+    ],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libgstvideo-1.0.so",
+      "/usr/lib/x86_64-linux-gnu/libgstbase-1.0.so",
+      "/usr/lib/x86_64-linux-gnu/libgstreamer-1.0.so",
+      "/usr/lib/x86_64-linux-gnu/libgobject-2.0.so",
+      "/usr/lib/x86_64-linux-gnu/libglib-2.0.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "gstvideo_dep"
+    ]
+  },
+  {
+    "name": "gstreamer-allocators-1.0",
+    "type": "pkgconfig",
+    "version": "1.28.2",
+    "compile_args": [
+      "-I/usr/include/gstreamer-1.0",
+      "-I/usr/include/libdrm",
+      "-I/usr/include/glib-2.0",
+      "-I/usr/lib/x86_64-linux-gnu/glib-2.0/include",
+      "-I/usr/include/sysprof-6",
+      "-pthread"
+    ],
+    "link_args": [
+      "/usr/lib/x86_64-linux-gnu/libgstallocators-1.0.so",
+      "/usr/lib/x86_64-linux-gnu/libdrm.so",
+      "/usr/lib/x86_64-linux-gnu/libgstreamer-1.0.so",
+      "/usr/lib/x86_64-linux-gnu/libgobject-2.0.so",
+      "/usr/lib/x86_64-linux-gnu/libglib-2.0.so"
+    ],
+    "include_directories": [],
+    "sources": [],
+    "extra_files": [],
+    "dependencies": [],
+    "depends": [],
+    "meson_variables": [
+      "gstallocator_dep"
+    ]
+  }
+]

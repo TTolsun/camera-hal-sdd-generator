@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "carry-profile-review",
+  "completed_at": "2026-11-04T20:33:33.951432+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "b390da5e780156f06e393d1e919351a142a6d378aaf686e37948f7addc161d9b",
+  "response_sha256": "c961f5838939098543922b61de8c01f138fdf26f8a6be3a5317c93859fa2e62e",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "660b5b327a26e2523446568fad764f68258db352698790d9ae1728291241a882",
+    "prompt_sha256": "368a0122c7791091492f0a480f04dc92c036bb6ad2bf18601311d5d3dc3651e6",
+    "provider": {
+      "thread_id": "01a1a844-3b71-78a3-b77b-5dad4001175d",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 27225,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 271,
+        "reasoning_output_tokens": 132
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-kinm4i3c.stdout.txt",
+    "native_schema_sha256": "a9d721893f9be6ebde09da047d01cca984e2fca4dcde319e180e2638b870fa93"
+  },
+  "human_review": "pending"
+}
