@@ -27,10 +27,9 @@ prompt: 앞 준비 그림에서 실제 Camera 큐 호출을 통과한 요청부�
   n8는 상태와 무관한 버퍼 완료 신호이며 다음 완료·순서 그림으로 이어집니다. n0/n1 source pipeline-register와 pipeline-dispatch, n2 request-status-completion
   및 pipeline-completion 근거를 함께 확인합니다. 준비 도우미/할당/Camera API/제출 카운터를 이 그림에 다시 넣지 않습니다. 노드 60자, authored
   간선 20자, 한국어·영어 모두 짧은 행동·질문으로 씁니다. 쓰기 방향 동기화는 매핑/변환/쓰기를 둘러싸는 범위이며 그 뒤 따로 시작한다고 쓰지 마세요. 취소 분기 true/false와
-  변환 오류 true/false는 실제 guard를 보존합니다. 현재 아홉 노드와 모든 간선·조건·소스 인용을 보존하고 n0의 한영 라벨만 명확히 고칩니다. cam의 동작은 DMA-BUF
-  버퍼를 요청에 붙이는 것입니다. 그 다음 PipelineHandler가 그 요청을 준비합니다. 버퍼 요청/buffer request라는 합성어를 쓰거나 cam이 요청 자체를 붙인다고
-  쓰지 않습니다. 두 주어와 목적어를 각각 명확히 표현하고 앞 그림 참조를 쓰지 않습니다. 다른 표시나 실제 source symbol·분기는 변경하지 않습니다. 한영72자·간선20자
-  한도입니다.
+  변환 오류 true/false는 실제 guard를 보존합니다. 현재 아홉 노드·모든 간선·실제 조건·소스 인용·다른 표시를 정확히 보존하고 queued 처리를 예약하는 노드의 한영
+  라벨만 고칩니다. 가상 파이프라인이 예약하는 대상은 요청 처리이며, 요청과 목표 타임스탬프를 전달한다는 관계를 양쪽 언어에서 명확히 표시합니다. 단순히 프레임을 예약한다거나 가상
+  장치가 알아서 프레임을 만드는 것처럼 쓰지 않습니다. 긴 함수명·내부 필드 이름은 근거로 두고 72자 이내 동작문으로 나타냅니다.
 sources:
 - pipeline-dispatch
 - pipeline-register
@@ -73,6 +72,9 @@ answer_contract:
   - pattern: (?i)버퍼\s*요청|\bbuffer requests?\b|\brequests? cam attaches\b
     message: cam attaches DMA-BUF buffers TO a request; PipelineHandler prepares that request. Do not
       call the request a buffer request or say cam attaches the request.
+  - pattern: 프레임 처리를 예약
+    message: The queued action processes a request with its target timestamp; make the actual request-processing
+      action explicit.
   required_terms:
   - - Virtual2
   - - NV12
@@ -112,6 +114,8 @@ answer_contract_en:
   - pattern: (?i)버퍼\s*요청|\bbuffer requests?\b|\brequests? cam attaches\b
     message: cam attaches DMA-BUF buffers TO a request; PipelineHandler prepares that request. Do not
       call the request a buffer request or say cam attaches the request.
+  - pattern: '[Ss]chedules? frames'
+    message: The queued action is request processing, not an unspecified frame scheduling action.
   required_terms:
   - - Virtual2
   - - NV12
