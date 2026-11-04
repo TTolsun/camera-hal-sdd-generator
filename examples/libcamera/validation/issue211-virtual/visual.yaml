@@ -27,12 +27,12 @@ prompt: 앞 준비 그림에서 실제 Camera 큐 호출을 통과한 요청부�
   n8는 상태와 무관한 버퍼 완료 신호이며 다음 완료·순서 그림으로 이어집니다. n0/n1 source pipeline-register와 pipeline-dispatch, n2 request-status-completion
   및 pipeline-completion 근거를 함께 확인합니다. 준비 도우미/할당/Camera API/제출 카운터를 이 그림에 다시 넣지 않습니다. 노드 60자, authored
   간선 20자, 한국어·영어 모두 짧은 행동·질문으로 씁니다. 쓰기 방향 동기화는 매핑/변환/쓰기를 둘러싸는 범위이며 그 뒤 따로 시작한다고 쓰지 마세요. 취소 분기 true/false와
-  변환 오류 true/false는 실제 guard를 보존합니다. 현재 노드 수·간선·실제 guard 양쪽·인용·현재 올바른 한영 의미를 보존하고 아래 독립 Terra 지적을 해당 그림에
-  적용합니다. 소스가 권위이며 검토는 수정 방향입니다. 판정은 결정 노드에서, 결과 동작은 도착 노드에서 한 번만 설명하며 간선은 짧은 분기 결과로 제한합니다. 식별자는 다른 식별자에
-  화살표로 붙이지 말고 공백으로 구분하여 단어 중간 줄바꿈을 피합니다. 오류 guard의 true 간선에는 FrameError 설정, false 간선에는 FrameSuccess 설정을
-  명시하고 두 간선은 공통 버퍼 완료 노드로 합칩니다. 공통 노드는 버퍼 완료와 별도 요청 완료의 차이를 유지하되 상태 설정을 반복하지 않습니다. 취소 노드는 해당 요청의 취소 완료
-  처리 후 큐 앞에서부터 통지하며, 통지 대상 전체가 취소 요청이라는 뜻이 아니어야 합니다. 앞 RequestPending에서 뒤 요청은 보류하고 검사는 중단합니다. 목표 시각은 queued
-  호출 인수이며 대기는 수신 측에서 한다는 뜻, CPU 쓰기 동기화·매핑·NV12 lines 패턴 변환과 쓰기 시도를 보존합니다.
+  변환 오류 true/false는 실제 guard를 보존합니다. 현재 그래프 구조·노드 수·간선·심볼·실제 조건 양쪽·인용을 보존하고 지정한 라벨만 수정합니다. 다른 라벨은 유지합니다.
+  현재 n5에서 프레임 생성 호출 전 FrameSuccess 초기화가 먼저 있고, 그 뒤 CPU 쓰기 동기화 범위 안에서 쓰기용 DMA-BUF 매핑을 시도함을 한영으로 명시합니다.
+  초기화는 CPU 동기화 범위보다 먼저이며 매핑·변환은 동기화 범위 안입니다. 필요하면 virtual-frame의 초기화 구절을 n5 quote_ids에 추가합니다. n7 오류 true
+  간선은 FrameError로 변경, false 간선은 이미 초기화된 FrameSuccess 유지로 표현합니다. 성공 상태를 결과 판정 뒤 새로 설정한다고 쓰지 않습니다. n2 영어에도
+  RequestCancelled와 큐 앞부터 통지 및 앞 RequestPending에서 중단하는 관계를 최대64자로 명시합니다. 취소 상태가 해당 요청의 상태이고 큐 통지 전체가 취소
+  요청만을 뜻하지 않게 합니다.
 sources:
 - pipeline-dispatch
 - pipeline-register
@@ -84,6 +84,9 @@ answer_contract:
   - pattern: 가상 장치가.{0,35}예약
     message: The virtual pipeline handler schedules request processing on the virtual camera data object;
       identify the actual caller.
+  - pattern: '정상: FrameSuccess 설정|Sets FrameSuccess'
+    message: FrameSuccess is initialized before generation; successful generation preserves it instead
+      of setting it afterward.
   required_terms:
   - - Virtual2
   - - NV12
@@ -134,6 +137,9 @@ answer_contract_en:
   - pattern: (?i)schedul.{0,45}at (?:the )?target
     message: Target time is an argument to the queued processing call; waiting happens in the receiver,
       not at scheduling time.
+  - pattern: '정상: FrameSuccess 설정|Sets FrameSuccess'
+    message: FrameSuccess is initialized before generation; successful generation preserves it instead
+      of setting it afterward.
   required_terms:
   - - Virtual2
   - - NV12
@@ -151,6 +157,7 @@ answer_contract_en:
   - - PipelineHandler
   - - Cancelled completion
     - Complete cancelled
+    - RequestCancelled
   - - DMA-BUF
 require_connected: true
 max_edge_label_chars: 20
