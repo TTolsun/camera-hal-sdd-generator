@@ -2011,7 +2011,7 @@ sections:
     kind: ownership
     title: 핸들러 생성과 장치 획득·반납의 책임
     question: 팩토리 생성·참조 수명과 match 계약은 어떻게 이어지며, acquireMediaDevice로 확보한 장치는 어디에 보관하고 핸들러 소멸 시 어떻게 해제합니까? acquire·release의 잠금 조건은 별도 그림에서 확인하세요.
-    prompt: 노드 레이블에 PipelineHandlerFactoryBase::create()와 acquireMediaDevice()를 실제 이름으로 쓰고 이 팩토리 함수 같은 대명사로 대체하지 마세요. acquireMediaDevice가 장치를 mediaDevices_에 보관하고 핸들러 소멸자가 MediaDevice::release()로 해제함을 구분하세요. match의 생성·등록·해제는 구현 의무입니다. 함수들을 하나의 실제 실행 순서로 직렬 연결하지 마세요. 잠금 분기는 이 그림에 넣지 마세요.
+    prompt: 노드 레이블에 PipelineHandlerFactoryBase::create()와 acquireMediaDevice()를 실제 이름으로 쓰고 이 팩토리 함수 같은 대명사로 대체하지 마세요. acquireMediaDevice가 장치를 mediaDevices_에 보관하고 핸들러 소멸자가 MediaDevice::release()로 해제함을 구분하세요. match의 생성·등록·해제는 구현 의무입니다. 카메라 매니저의 match 호출과 참 반환 뒤 새 인스턴스가 생성된다는 계약을 구분하고, 다음 인스턴스의 생성 주체는 확정하지 마세요. match가 acquireMediaDevice를 반드시 호출한다고 그리지 마세요. 핸들러의 장치 보관·소유 관계로 헬퍼와 소멸자 해제를 연결하되, 실패한 match 뒤의 파괴 시각은 확정하지 마세요. 함수들을 하나의 실제 실행 순서로 직렬 연결하지 마세요. 잠금 분기는 이 그림에 넣지 마세요.
     generation: llm
     sources: [handler, acquisition]
     max_nodes: 8
