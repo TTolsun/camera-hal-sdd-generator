@@ -1,0 +1,14 @@
+{
+  "scope": "Post-merge verification of unchanged reviewed implementation against current main reuse-decision and diagram-pan changes; not whole-book publication acceptance.",
+  "main_commit": "da0ca3769c2198fbfb76e3808bdd61ff034a580a",
+  "integration_head": "0f4bf5499d932d39101fe5fe092b0ad765b7aa3a",
+  "reviewed_implementation_lf_hashes_unchanged": true,
+  "test_result": "259 passed in 192.30s",
+  "test_log_sha256": "1e56b801d44b2dfca6c46fb605c51df2b85caaab2286ef25c199dc0e9ce6589a",
+  "additional_modules": [
+    "test_issue242_decisions",
+    "test_diagram_zoom"
+  ],
+  "original_report": "native-graph-refresh-review.json",
+  "human_review": "pending"
+}
