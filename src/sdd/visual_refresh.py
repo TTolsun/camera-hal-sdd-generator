@@ -22,7 +22,7 @@ import yaml
 from .config import section_output
 from .document_metadata import split_frontmatter
 from .generated_design import enabled, verify as verify_design
-from .generated_visuals import from_manuscript, plans, render
+from .generated_visuals import from_manuscript, plans, render, resolve
 from .render_profiles import for_page
 from .validation_stage import staged
 from .visuals import place
@@ -199,12 +199,17 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
 
 
 @staged
-def refresh(cfg, model, section_id, manuscript: bytes, *, expected_sha256: str) -> bytes:
+def refresh(cfg, model, section_id, manuscript: bytes, *, expected_sha256: str,
+            original_cfg=None, visual_artifact=None) -> bytes:
     """Return current source figures inside an authenticated, unchanged prose page.
 
     Use a prior publication/native-generation digest, not an unchecked modified
     input. A historical profile is used only for artifact verification; this API
     cannot execute that runner or substitute stored responses for new inference.
+    For separately generated native graph records, supply both original_cfg and
+    the unassembled visual_artifact returned by generated_visuals.generate().
+    The old profile verifies the original only; current records must independently
+    resolve under the current page profile. Prose and its authorship stay intact.
     """
     if (not isinstance(manuscript, bytes) or not isinstance(expected_sha256, str)
             or not re.fullmatch(r'[0-9a-f]{64}', expected_sha256 or '')
@@ -215,6 +220,9 @@ def refresh(cfg, model, section_id, manuscript: bytes, *, expected_sha256: str) 
         raise ValueError('Visual refresh requires one source-bound generated-prose section')
     section = sections[0]
     selected = for_page(cfg, section_output(section))
+    replacing = original_cfg is not None or visual_artifact is not None
+    if replacing and (original_cfg is None or visual_artifact is None):
+        raise ValueError('Native graph replacement requires original config and new artifact together')
     # Match production read_text's universal newline handling while retaining
     # the original byte identity and returning exact input bytes for a no-op.
     raw_text = manuscript.decode('utf-8')
@@ -234,7 +242,27 @@ def refresh(cfg, model, section_id, manuscript: bytes, *, expected_sha256: str) 
     planned_ids = {plan['id'] for plan in plans(selected, section)}
     if saved_ids != planned_ids:
         raise ValueError('Saved LLM visual records must match current plans; refresh cannot remove or convert them')
-    artifact = from_manuscript(selected, model, section, text)
+    if replacing:
+        originals = [value for value in original_cfg.sections() if value['id'] == section_id]
+        if len(originals) != 1:
+            raise ValueError('Original configuration requires the same source-bound section')
+        origin = for_page(original_cfg, section_output(originals[0]))
+        verify_design(model, originals[0], text, cfg=origin)
+        if saved_ids != {plan['id'] for plan in plans(origin, originals[0])}:
+            raise ValueError('Original native graph plans must match the original saved records')
+        from_manuscript(origin, model, originals[0], text)
+        if (not planned_ids or not isinstance(visual_artifact, dict) or set(visual_artifact) != {'schema', 'records'}
+                or visual_artifact.get('schema') != 1 or not isinstance(visual_artifact['records'], dict)
+                or set(visual_artifact['records']) != planned_ids):
+            raise ValueError('Replacement must be a complete unassembled native graph artifact')
+        artifact = copy.deepcopy(visual_artifact)
+        if any(not isinstance(record, dict) or record.get('generation_commit') != commit
+               or record.get('producer') != selected.agent.label
+               for record in artifact['records'].values()):
+            raise ValueError('Replacement graph commit or producer differs from current profile')
+        resolve(selected, model, section, artifact)
+    else:
+        artifact = from_manuscript(selected, model, section, text)
     rendered = render(selected, model, section, artifact)
     if any(not source for _, _, source in rendered):
         raise ValueError('A current visual is missing/stale; refresh cannot omit it')
@@ -246,14 +274,22 @@ def refresh(cfg, model, section_id, manuscript: bytes, *, expected_sha256: str) 
         return offset + bisect_right(crlf_ends, offset) - raw_body_start
     updated_raw, old_ids, outside_digest, regions = _reassemble(body, raw_body, to_raw, rendered, section)
     current_ids = {visual['id'] for visual, _, _ in rendered}
-    if updated_raw == raw_body:
+    if updated_raw == raw_body and (not replacing or artifact['records'] == saved['records']):
         return manuscript
     updated, _ = _normalized(updated_raw)
     result = copy.deepcopy(metadata)
+    # deepcopy preserves YAML alias sharing; detach each field we modify from
+    # historical mirrors elsewhere in the metadata before changing its value.
+    result['generated_design'] = copy.deepcopy(result['generated_design'])
+    result['managed_visual_refresh'] = copy.deepcopy(result.get('managed_visual_refresh', []))
+    if 'generated_visuals' in result:
+        result['generated_visuals'] = copy.deepcopy(result['generated_visuals'])
     result['generated_design']['body_sha256'] = _body_digest(updated)
+    if replacing:
+        result['generated_visuals']['records'] = artifact['records']
     if 'generated_visuals' in result:
         result['generated_visuals']['body_sha256'] = _body_digest(updated)
-    result.setdefault('managed_visual_refresh', []).append(dict(
+    event = dict(
         schema=1, source_commit=commit, original_manuscript_sha256=expected_sha256,
         previous_body_sha256=_body_digest(body), body_sha256=_body_digest(updated),
         visual_definitions_sha256=_json_digest([v for v, _, _ in rendered]),
@@ -261,7 +297,14 @@ def refresh(cfg, model, section_id, manuscript: bytes, *, expected_sha256: str) 
         preserved_outside_body_sha256=outside_digest, owned_edit_regions=regions,
         added_visuals=sorted(current_ids - old_ids),
         scope='Configured figure reassembly only; figure authorship remains per visual',
-        new_inference=False, semantic_approval=False, human_review='unchanged'))
+        new_inference=False, semantic_approval=False, human_review='unchanged')
+    if replacing:
+        event.pop('unchanged_native_records_sha256')
+        event.update(schema=2, scope='Separately generated native graph replacement; original prose/authorship retained',
+                     graph_records_replaced=True,
+                     previous_native_records_sha256=_json_digest((saved or {}).get('records', {})),
+                     current_native_records_sha256=_json_digest(artifact['records']))
+    result.setdefault('managed_visual_refresh', []).append(event)
     ending = re.search(r'\r\n|\r|\n', raw_text)
     eol = ending[0] if ending else '\n'
     header = '---\n' + yaml.safe_dump(result, allow_unicode=True, sort_keys=False) + '---\n'

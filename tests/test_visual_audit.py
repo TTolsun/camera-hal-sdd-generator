@@ -47,6 +47,62 @@ def test_candidates_are_disjoint_and_never_automatic_acceptance():
     enforce(apply_reviews(accepted, ledger(accepted)))
 
 
+def test_generated_legacy_route_labels_are_not_explanation():
+    from sdd.site_markdown import _remove_route_tables
+    html = '<p>Actual explanation.</p><table><thead><tr><th>지금 확인할 내용</th><th>이동할 절</th></tr></thead><tbody>'
+    html += ''.join('<tr><td><a id="old-'+str(i)+'"></a>Actual explanation.</td>'
+                    '<td><a href="target.html">'+('Destination '*70)+'</a></td></tr>' for i in range(3))
+    html += '</tbody></table>'
+    rendered = _remove_route_tables(html)
+    assert rendered.count('class="previous-route"') == 3
+    row = report(rendered)['items'][0]
+    assert row['paragraphs'] == ['Actual explanation.']
+    assert row['body_chars'] == len('Actual explanation.') and row['paragraph_count'] == 1
+    assert not row['candidate_reasons']
+    english = rendered.replace('이전 링크의 목적지', 'Destination of the previous link')
+    assert report(english)['items'][0]['body'] == row['body']
+    formatted = html.replace('Destination '*70,
+        '<b><i><small><sub><sup>'+('Destination '*70)+'</sup></sub></small></i></b>')
+    formatted = _remove_route_tables(formatted)
+    assert formatted.count('class="previous-route"') == 3
+    assert report(formatted)['items'][0]['body'] == row['body']
+
+
+@pytest.mark.parametrize('body', [
+    '<p>'+('long explanation '*50)+'</p><a href="target.html">Target</a>',
+    '<p>이전 링크의 목적지</p><p>first</p><p>second</p><p>third</p><a href="target.html">Target</a>',
+    '<p>이전 링크의 목적지</p><a href="target.html"><h3 id="hidden-question">Independent question</h3><p>Actual answer</p></a>',
+])
+def test_route_class_cannot_hide_real_explanation_or_questions(body):
+    result = report('<h2 id="one">Question</h2><div class="previous-route" id="custom">'+body+'</div>')
+    assert any(row['body_chars'] >= 600 or row['paragraph_count'] >= 3
+               or row['anchor'] == 'hidden-question' for row in result['items'])
+
+
+def test_route_citations_and_ui_changes_remain_in_review_bindings():
+    control = ('<div class="previous-route" id="legacy"><p>이전 링크의 목적지</p>'
+               '<a class="citation" href="#code-ref">Original destination</a></div>')
+    text = '<h2 id="one">Question</h2><p>Actual explanation.</p>'+control+'<pre id="code-ref">source</pre>'
+    before = report(text)['items'][1]
+    after = report(text.replace('Original destination', 'Updated destination'))['items'][1]
+    assert '#code-ref' in before['available_source_windows']
+    assert before['body'] == after['body'] == 'Actual explanation.'
+    assert before['fingerprint'] != after['fingerprint']
+    assert any(entry['kind'] == 'navigation' for entry in before['excluded'])
+
+
+def test_route_control_inside_source_window_is_not_fingerprint_hidden():
+    from sdd.visual_audit import Document, source_window
+    body = ('<h2 id="one">Question</h2><details id="panel" class="source-excerpts">'
+            '<summary>Source</summary><div class="previous-route" id="legacy">'
+            '<p>이전 링크의 목적지</p><a href="target.html">Original destination</a></div></details>')
+    before = source_window(Document(document(body)), 'panel', page='guide.html')
+    after = source_window(Document(document(body.replace('Original destination', 'Updated destination'))),
+                          'panel', page='guide.html')
+    assert 'Original destination' in before and 'Updated destination' in after
+    assert before != after
+
+
 def test_folded_sources_logs_and_visual_headings_are_not_explanation():
     result = report('<h2 id="one">Question</h2><p>one</p>'+FIGURE+
                     '<p>two</p><details class="source-excerpts"><summary>Source</summary>'
