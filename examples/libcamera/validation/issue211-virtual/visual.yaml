@@ -4,7 +4,7 @@ kind: flow
 title: Virtual2 줄 패턴 NV12 변환·기록 시도 흐름
 generation: llm
 max_nodes: 9
-max_label_chars: 72
+max_label_chars: 64
 condition_display: evidence
 required_symbols:
 - PipelineHandler::queueRequest
@@ -27,10 +27,12 @@ prompt: 앞 준비 그림에서 실제 Camera 큐 호출을 통과한 요청부�
   n8는 상태와 무관한 버퍼 완료 신호이며 다음 완료·순서 그림으로 이어집니다. n0/n1 source pipeline-register와 pipeline-dispatch, n2 request-status-completion
   및 pipeline-completion 근거를 함께 확인합니다. 준비 도우미/할당/Camera API/제출 카운터를 이 그림에 다시 넣지 않습니다. 노드 60자, authored
   간선 20자, 한국어·영어 모두 짧은 행동·질문으로 씁니다. 쓰기 방향 동기화는 매핑/변환/쓰기를 둘러싸는 범위이며 그 뒤 따로 시작한다고 쓰지 마세요. 취소 분기 true/false와
-  변환 오류 true/false는 실제 guard를 보존합니다. 현재 아홉 노드·모든 간선·실제 조건·인용·모든 한국어 라벨·다른 영어 라벨을 그대로 보존하고 요청 처리를 예약하는
-  노드의 영어 라벨만 수정합니다. 가상 파이프라인 핸들러는 요청과 목표 시각을 처리 함수에 인수로 넘기며 queued 호출을 예약합니다. 목표 시각은 예약 동작의 실행 시점이 아닙니다.
-  영어에서 with 또는 passing으로 인수 관계를 명확히 하고 schedules at target time처럼 쓰지 않습니다. 별도 대기 노드의 목표 시각까지 기다리는 동작은
-  유지합니다. 최대72자를 유지합니다.
+  변환 오류 true/false는 실제 guard를 보존합니다. 현재 아홉 노드·모든 간선·실제 조건 양쪽·인용·의미를 정확히 보존하고 한영 표시만 짧은 행동구·판정 질문으로 줄입니다.
+  동작과 조건을 노드와 간선에서 반복하지 않습니다. 가상 프레임 경로의 최대 라벨64자, 완료 순서의 최대48자를 지킵니다. 성공·오류 모두의 버퍼 완료 신호는 짧게 표시하고 요청
+  완료 및 순서 검사는 별도라는 설명은 이미 본문과 이어지는 그림에 있으므로 노드에 긴 편집 안내를 넣지 않습니다. 버퍼 완료를 곧바로 cam 요청 통지라고 쓰지 않습니다. 예약 주체인
+  가상 파이프라인 핸들러와 요청·목표 시각 인수 전달 관계는 보존하고 예약 시점과 목표 시각을 혼동하지 않습니다. 완료 순서 그림의 큐 존재 판정은 큐에 요청이 남아 있는지 묻는 것이며
+  이미 통지할 수 있는 요청이 있는지 묻는 것이 아닙니다. 그 다음 맨 앞 요청의 Pending 상태 검사로 이어지는 기존 true/false·반복·종료 구조를 보존합니다. 실제 소스의
+  모든 guard는 그대로 두고 간선은 결과·행동을 짧게 나타냅니다.
 sources:
 - pipeline-dispatch
 - pipeline-register
