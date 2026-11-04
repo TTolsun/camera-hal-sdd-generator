@@ -16,7 +16,7 @@
 | Q6 | Direct·Queued·Blocking의 스레드 분기, 메인 스레드의 이벤트 루프 기본 조건과 수신 종료 경계를 확인합니다. |
 | Q7 | 정상 erase와 bulk 취소 clear, 실패별 ret·index·큐·상태·횟수를 변경 검증 계획으로 연결합니다. |
 
-분석 커밋은 `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`입니다. 확인한 공식 upstream과 공개 mirror는 `be7e83e91348250c015aad6d6f59f1468555bae8`이며, 사이의 세 변경 파일과 선택한 25개 전체 소스 파일은 겹치지 않습니다. 최초 20개 창 이후 Thread·Message·기본 dispatcher까지 확장한 시점과 원래 창의 검토 결과를 따로 보존합니다. 과거 검토를 25개 창의 새 검토로 바꾸지 않습니다.
+분석 커밋은 `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`입니다. 확인한 공식 upstream과 공개 mirror는 `be7e83e91348250c015aad6d6f59f1468555bae8`이며, 사이의 세 변경 파일과 선택한 25개 전체 소스 파일은 겹치지 않습니다. 초기 19개 창에서 V4L2Device를 더한 20개를 거쳐 Thread·Message·기본 dispatcher까지 확장한 시점과 원래 창의 검토 결과를 따로 보존합니다. 과거 검토를 25개 창의 새 검토로 바꾸지 않습니다.
 
 범위는 공통 Camera·Request·PipelineHandler와 UVC의 제출·장치 알림·취소·정지, 기본 Thread/Signal 전달입니다. 다른 파이프라인·IPA·커널·물리 DMA·장치 성능·사용자 dispatcher·동시 연결 파괴·사내 HAL은 검증하지 않습니다. 실제 비작성자 평가와 #215 전체 보완도 포함하지 않습니다.
 
@@ -37,3 +37,5 @@
 코드 검토 25의 통과 뒤 바뀐 계획 upsert와 발췌 보완은 원래 검토 파일의 해시에 결합한 별도 delta 검토 27에서 확인했습니다. 최초 CI에서 발견한 주제 개수와 역할별 소유권 연결도 수정했습니다. 최종 로컬 그림·설정·역할 연결·검토 펜스 회귀 200개가 통과했습니다. 전체 CI와 병합 상태는 PR에서 별도로 확인합니다.
 
 [코드·소스 원본 archive](../libcamera/records/issue252/code-and-source-evidence.zip), [항목별 해시](../libcamera/records/issue252/code-and-source-index.json), [패키지 범위](../libcamera/records/issue252/code-and-source-package.json)에서 실제 요청·응답·native stdout·영수증·실패 시도·빌드·추출·프로브를 확인할 수 있습니다. 최종 원고의 질문별 전후 답변 가능성과 한영·화면·배포 결과는 공개 기록에서 구분합니다. 분량·그림 수·검토 반복 수를 개선 성과로 세지 않습니다.
+
+코드 archive의 질문 설정은 코드 검토 당시 snapshot입니다. 이후 명시적·재귀 메시지 소비의 설명 보완을 포함한 최종 설정·원고·별도 검토는 공개 기록에 보존합니다.
