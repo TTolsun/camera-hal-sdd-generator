@@ -235,23 +235,27 @@ def validate_answers(model, section, answers, allow_limited=False, enforce_repea
     report = enforce(pinned, resolved, allow_limited)
     for topic in resolved['design_topics']:
         text, _ = contract_text(pinned, section['id'], topic)
+        # Validate source-bound answers before adding editor-owned stage labels.
+        # Never remove matching lines from generated statement text.
+        validation_text, _ = contract_text(pinned, section['id'], {
+            key: value for key, value in topic.items() if key != 'explanation'})
         blocks, _ = topic_blocks(pinned, section['id'], topic)
         allowed = set(extract_citations('\n'.join(b.text for b in blocks)))
         # Structured answers already require nonempty text, source and coverage.
         # A narrow question may have one short complete answer; do not pad it.
-        findings = check(text, allowed, require=True, min_chars=1).notes
+        findings = check(validation_text, allowed, require=True, min_chars=1).notes
         names = source_names(model, [b.text for b in blocks])
         # materialize has already checked repeated statements with their exact
         # source records. Do not discard that evidence by applying the weaker
         # citation-only heuristic again; all other manuscript rules still apply.
-        findings += describe(lint(text, names, check_duplicates=False))
+        findings += describe(lint(validation_text, names, check_duplicates=False))
         # Excerpts can contain standard-library types and aliases absent from
         # extracted ClassInfo. Accept only exact identifiers in this topic's
         # verified source; this does not add inheritance/relationship facts.
         identifiers = set(re.findall(r'[A-Za-z_]\w*(?:::[A-Za-z_]\w*)+', '\n'.join(
             pinned.evidence[f"{section['id']}/{topic['id']}/{source['id']}"]['text']
             for source in topic['sources'])))
-        findings += semantic_review(text, model, allowed, source_identifiers=identifiers)
+        findings += semantic_review(validation_text, model, allowed, source_identifiers=identifiers)
         if findings:
             raise ValueError(' / '.join(findings))
     report['scope'] = 'LLM answer coverage, current source bindings and structural checks; not semantic or runtime approval.'

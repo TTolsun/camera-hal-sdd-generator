@@ -56,6 +56,7 @@ def _assemble_generation(cfg, model, section, answers, inputs, reused, replayed,
 
 def generate(cfg, model, agent, section, previous=None, *, replay_http=False, all_design_units=False):
     from .generation_run import Execution
+    preflight(model, section)
     execution = agent if isinstance(agent, Execution) else Execution(cfg, agent)
     keys = [_unit_tag(section, unit) for unit in _design_units(section, {})]
     with execution.document(section['id'], keys):
