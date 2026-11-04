@@ -58,6 +58,30 @@ def test_site_preserves_verdicts_and_links_nested_pages(tmp_cfg, sample_model):
     assert (out / 'device.md').read_bytes() == originals[tmp_cfg.sdd_dir / 'device.md']
 
 
+def test_configured_editorial_removal_is_source_bound_and_preserves_previous_site(tmp_cfg, sample_model):
+    import hashlib
+    prepare(tmp_cfg, sample_model)
+    path = tmp_cfg.sdd_dir/'device.md'
+    question = '완료 통지를 구분하세요. 세 문단 이내로 작성하세요.'
+    guide = ('\n??? note "설계 질문과 검증 범위"\n'
+             '    질문별 답변과 근거 연결을 검사했습니다. 의미와 실행 결과는 사람 검토가 필요합니다.\n\n'
+             '    | 설계 질문 | 설명 위치 | 확인 범위 |\n    |---|---|---|\n'
+             f'    | {question} | [근거](#evidence) | 코드 근거와 설명 연결 |\n')
+    path.write_text(path.read_text(encoding='utf-8')+guide,encoding='utf-8')
+    original = path.read_bytes()
+    tmp_cfg.raw['site']['coverage_question_edits'] = {'device.md': {
+        hashlib.sha256(question.encode()).hexdigest(): ['세 문단 이내로 작성하세요.']}}
+    out = export_site(tmp_cfg)
+    doc = (out/'device.html').read_text(encoding='utf-8')
+    assert '완료 통지를 구분하세요.' in doc and '세 문단 이내로 작성하세요.' not in doc
+    assert path.read_bytes() == original
+    snapshot = {p.relative_to(out): p.read_bytes() for p in out.rglob('*') if p.is_file()}
+    path.write_text(path.read_text(encoding='utf-8').replace('완료 통지를 구분하세요.', '상태를 다시 확인하세요.'),encoding='utf-8')
+    with pytest.raises(ValueError, match='question changed or is absent'):
+        export_site(tmp_cfg)
+    assert snapshot == {p.relative_to(out): p.read_bytes() for p in out.rglob('*') if p.is_file()}
+
+
 @pytest.mark.parametrize('existing_diagram', [False, True])
 def test_class_diagram_precedes_source_evidence_without_changing_manuscript(tmp_cfg, sample_model, existing_diagram):
     prepare(tmp_cfg, sample_model)
