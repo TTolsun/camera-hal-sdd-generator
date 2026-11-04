@@ -1,0 +1,405 @@
+{
+  "schema": 1,
+  "generator": "d392d7520b74f2c5a462daaba5c1b72a31f46269",
+  "base": "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+  "head": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "native": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+  "stages": [
+    {
+      "stage": "source-clone",
+      "argv": [
+        "git",
+        "clone",
+        "--no-hardlinks",
+        "--no-checkout",
+        "/home/baboess/.cache/camera-hal-sdd-issue193-293/source",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+      "started_at": "2026-11-04T19:41:38.965044+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:41:39.084757+00:00",
+      "elapsed_seconds": 0.11970344100018337
+    },
+    {
+      "stage": "source-history-fetch",
+      "argv": [
+        "git",
+        "fetch",
+        "--depth=2",
+        "https://github.com/libcamera-org/libcamera.git",
+        "293d751a814e0d4c34e85ad457ccd9d5eefd1a61"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source",
+      "started_at": "2026-11-04T19:41:39.088295+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:41:39.811821+00:00",
+      "elapsed_seconds": 0.7235309490001782
+    },
+    {
+      "stage": "source-base",
+      "argv": [
+        "git",
+        "checkout",
+        "--detach",
+        "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source",
+      "started_at": "2026-11-04T19:41:39.815652+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:41:39.935800+00:00",
+      "elapsed_seconds": 0.12015634399995179
+    },
+    {
+      "stage": "libpisp-source-clone",
+      "argv": [
+        "git",
+        "clone",
+        "--no-hardlinks",
+        "/home/baboess/.cache/camera-hal-sdd-issue193-293/source/subprojects/libpisp",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/subprojects/libpisp"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+      "started_at": "2026-11-04T19:41:39.940225+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:41:40.012552+00:00",
+      "elapsed_seconds": 0.0723383049999029
+    },
+    {
+      "stage": "libpisp-pin",
+      "argv": [
+        "git",
+        "checkout",
+        "--detach",
+        "v1.5.0"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/subprojects/libpisp",
+      "started_at": "2026-11-04T19:41:40.017163+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:41:40.031997+00:00",
+      "elapsed_seconds": 0.014839238000149635
+    },
+    {
+      "stage": "tool-versions",
+      "argv": [
+        "/home/baboess/work/camera-hal-sdd-generator/.venv/bin/python",
+        "-c",
+        "import subprocess,sys; print(sys.version); [subprocess.run(c,check=True) for c in [[\"clang++\",\"--version\"],[\"meson\",\"--version\"],[\"pkg-config\",\"--modversion\",\"Qt6Core\",\"Qt6Gui\",\"Qt6OpenGL\",\"Qt6OpenGLWidgets\",\"Qt6Widgets\"],[\"git\",\"-C\",\"/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/subprojects/libpisp\",\"rev-parse\",\"HEAD\"]]]"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+      "started_at": "2026-11-04T19:41:40.035791+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:41:40.559830+00:00",
+      "elapsed_seconds": 0.5240427089997866
+    },
+    {
+      "stage": "base-meson",
+      "argv": [
+        "meson",
+        "setup",
+        "build",
+        "-Dpipelines=all",
+        "-Dipas=ipu3,mali-c55,rkisp1,rpi/pisp,rpi/vc4,softisp,vimc",
+        "-Dcam=enabled",
+        "-Dgstreamer=enabled",
+        "-Dqcam=enabled",
+        "-Ddocumentation=disabled",
+        "-Dtest=false"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source",
+      "started_at": "2026-11-04T19:41:40.563844+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:41:56.883103+00:00",
+      "elapsed_seconds": 16.319268215000193
+    },
+    {
+      "stage": "base-build",
+      "argv": [
+        "ninja",
+        "-C",
+        "build",
+        "-j",
+        "3"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source",
+      "started_at": "2026-11-04T19:41:56.885537+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:44:39.354672+00:00",
+      "elapsed_seconds": 162.46914772499986
+    },
+    {
+      "stage": "base-compdb",
+      "argv": [
+        "/home/baboess/work/camera-hal-sdd-generator/.venv/bin/python",
+        "/mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/examples/libcamera/prepare_compdb.py",
+        "--build-dir",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/build",
+        "--out",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/base/compile_commands.json"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+      "started_at": "2026-11-04T19:44:39.380936+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:44:39.651663+00:00",
+      "elapsed_seconds": 0.2707312539996565
+    },
+    {
+      "stage": "base-extract",
+      "argv": [
+        "/home/baboess/work/camera-hal-sdd-generator/.venv/bin/python",
+        "/mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/tools/run_sdd.py",
+        "--config",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/base/sdd.yaml",
+        "extract"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+      "started_at": "2026-11-04T19:44:39.654875+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:55:04.361738+00:00",
+      "elapsed_seconds": 624.7068685160002
+    },
+    {
+      "stage": "source-head",
+      "argv": [
+        "git",
+        "checkout",
+        "--detach",
+        "293d751a814e0d4c34e85ad457ccd9d5eefd1a61"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source",
+      "started_at": "2026-11-04T19:55:04.450539+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:55:04.462923+00:00",
+      "elapsed_seconds": 0.012384617999941838
+    },
+    {
+      "stage": "head-incremental-build",
+      "argv": [
+        "ninja",
+        "-C",
+        "build",
+        "-j",
+        "3"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source",
+      "started_at": "2026-11-04T19:55:04.465032+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:55:08.900435+00:00",
+      "elapsed_seconds": 4.4354147719996035
+    },
+    {
+      "stage": "head-compdb",
+      "argv": [
+        "/home/baboess/work/camera-hal-sdd-generator/.venv/bin/python",
+        "/mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/examples/libcamera/prepare_compdb.py",
+        "--build-dir",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source/build",
+        "--out",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/head/compile_commands.json"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+      "started_at": "2026-11-04T19:55:08.932629+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T19:55:09.206251+00:00",
+      "elapsed_seconds": 0.27362806100018133
+    },
+    {
+      "stage": "head-extract",
+      "argv": [
+        "/home/baboess/work/camera-hal-sdd-generator/.venv/bin/python",
+        "/mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/tools/run_sdd.py",
+        "--config",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/head/sdd.yaml",
+        "extract"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+      "started_at": "2026-11-04T19:55:09.211913+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T20:05:32.108239+00:00",
+      "elapsed_seconds": 622.8963348490001
+    },
+    {
+      "stage": "head-impact",
+      "argv": [
+        "/home/baboess/work/camera-hal-sdd-generator/.venv/bin/python",
+        "/mnt/c/Users/baboe/.codex/worktrees/5565/camera-hal-sdd-generator/tools/run_sdd.py",
+        "--config",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/head/sdd.yaml",
+        "impact",
+        "--base",
+        "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+        "--head",
+        "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+        "--base-facts",
+        "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/base/facts/facts.json",
+        "--fail-on-coverage-gap"
+      ],
+      "cwd": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2",
+      "started_at": "2026-11-04T20:05:32.188526+00:00",
+      "status": "completed",
+      "human_active_review_seconds": null,
+      "wait_seconds": null,
+      "returncode": 0,
+      "ended_at": "2026-11-04T20:05:33.263280+00:00",
+      "elapsed_seconds": 1.0747582529997999
+    }
+  ],
+  "human_active_review_seconds": null,
+  "status": "completed",
+  "base_facts": {
+    "sha256": "52674221455b4ccff0774d8648394f377753455eb96b3bc693aa11694417f075",
+    "meta": {
+      "generated_at": "2026-11-04T19:44:40+00:00",
+      "source_root": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source",
+      "source_commit": "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+      "compile_commands": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/base/compile_commands.json",
+      "translation_units": 313,
+      "build_config": "simple_compdb",
+      "structure_backend": "libclang",
+      "comments": {
+        "tus": 313,
+        "errors": 0,
+        "classes": 1653,
+        "methods": 6962,
+        "functions": 842
+      },
+      "docblocks": {
+        "files": 549,
+        "blocks": 281,
+        "filled": 259,
+        "ambiguous": 6,
+        "unknown": 7
+      },
+      "callgraph": {
+        "functions": 4292,
+        "scenarios": 6,
+        "missing_entries": 0
+      },
+      "classes": 1428,
+      "functions": 571,
+      "scenarios": 6,
+      "defines": 15
+    },
+    "qcam_parsed_files": [
+      "build/src/apps/qcam/qcam.p/moc_cam_select_dialog.cpp",
+      "build/src/apps/qcam/qcam.p/moc_main_window.cpp",
+      "build/src/apps/qcam/qcam.p/moc_viewfinder_gl.cpp",
+      "build/src/apps/qcam/qcam.p/moc_viewfinder_qt.cpp",
+      "build/src/apps/qcam/qt6-feathericons_qrc.cpp",
+      "build/src/apps/qcam/qt6-shaders_qrc.cpp",
+      "src/apps/qcam/cam_select_dialog.cpp",
+      "src/apps/qcam/cam_select_dialog.h",
+      "src/apps/qcam/format_converter.cpp",
+      "src/apps/qcam/format_converter.h",
+      "src/apps/qcam/main.cpp",
+      "src/apps/qcam/main_window.cpp",
+      "src/apps/qcam/main_window.h",
+      "src/apps/qcam/message_handler.cpp",
+      "src/apps/qcam/message_handler.h",
+      "src/apps/qcam/viewfinder.h",
+      "src/apps/qcam/viewfinder_gl.cpp",
+      "src/apps/qcam/viewfinder_gl.h",
+      "src/apps/qcam/viewfinder_qt.cpp",
+      "src/apps/qcam/viewfinder_qt.h"
+    ]
+  },
+  "head_facts": {
+    "sha256": "d209dd52da3058566588deb0c5ba1571ab6dd22044ed13d5ab635946736969ca",
+    "meta": {
+      "generated_at": "2026-11-04T19:55:09+00:00",
+      "source_root": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/source",
+      "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+      "compile_commands": "/home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/head/compile_commands.json",
+      "translation_units": 313,
+      "build_config": "simple_compdb",
+      "structure_backend": "libclang",
+      "comments": {
+        "tus": 313,
+        "errors": 0,
+        "classes": 1653,
+        "methods": 6962,
+        "functions": 842
+      },
+      "docblocks": {
+        "files": 549,
+        "blocks": 281,
+        "filled": 259,
+        "ambiguous": 6,
+        "unknown": 7
+      },
+      "callgraph": {
+        "functions": 4292,
+        "scenarios": 6,
+        "missing_entries": 0
+      },
+      "classes": 1428,
+      "functions": 571,
+      "scenarios": 6,
+      "defines": 15
+    },
+    "qcam_parsed_files": [
+      "build/src/apps/qcam/qcam.p/moc_cam_select_dialog.cpp",
+      "build/src/apps/qcam/qcam.p/moc_main_window.cpp",
+      "build/src/apps/qcam/qcam.p/moc_viewfinder_gl.cpp",
+      "build/src/apps/qcam/qcam.p/moc_viewfinder_qt.cpp",
+      "build/src/apps/qcam/qt6-feathericons_qrc.cpp",
+      "build/src/apps/qcam/qt6-shaders_qrc.cpp",
+      "src/apps/qcam/cam_select_dialog.cpp",
+      "src/apps/qcam/cam_select_dialog.h",
+      "src/apps/qcam/format_converter.cpp",
+      "src/apps/qcam/format_converter.h",
+      "src/apps/qcam/main.cpp",
+      "src/apps/qcam/main_window.cpp",
+      "src/apps/qcam/main_window.h",
+      "src/apps/qcam/message_handler.cpp",
+      "src/apps/qcam/message_handler.h",
+      "src/apps/qcam/viewfinder.h",
+      "src/apps/qcam/viewfinder_gl.cpp",
+      "src/apps/qcam/viewfinder_gl.h",
+      "src/apps/qcam/viewfinder_qt.cpp",
+      "src/apps/qcam/viewfinder_qt.h"
+    ]
+  }
+}

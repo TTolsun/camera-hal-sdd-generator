@@ -1,0 +1,52 @@
+{
+  "kind": "automatic-published-manuscript-revalidation",
+  "recorded_at": "2026-11-04T20:38:47.760718+00:00",
+  "runtime": "C:\\Users\\baboe\\.codex\\worktrees\\5565\\camera-hal-sdd-generator\\build\\issue253\\reader-improvement\\generator\\src\\sdd\\carryover.py",
+  "source_commit": "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+  "document_input": "4d656cd88c2a366dec7894e87301bf5205e98b36",
+  "adaptation": "Relocate exact published configuration and historical style paths. Explicit readonly profiles preserve retained manuscript identity/style while the global profile uses current style. Source/contracts/validation gates remain unchanged; model calls are zero. This is not the original public config or a full generation benchmark.",
+  "collection_seconds": 38.80674159992486,
+  "carry_seconds": 33.12925859994721,
+  "promoted": [
+    "camera-model.md",
+    "camera-requests.md",
+    "framebuffer-allocator.md",
+    "ipa-algorithms.md",
+    "ipa-module-validation.md",
+    "ipa.md",
+    "ipu3-lsc-flow.md",
+    "ipu3-lsc-prepare.md",
+    "ipu3-lsc.md",
+    "official-cam-validation.md",
+    "onboarding.md",
+    "overview.md",
+    "pipeline-handler.md",
+    "pipeline-requests.md",
+    "request-diagnosis.md",
+    "request-lifecycle.md",
+    "rkisp1-dewarp.md",
+    "scenarios/camera_start.md",
+    "scenarios/camera_stop.md",
+    "scenarios/complete_request.md",
+    "scenarios/configure.md",
+    "scenarios/index.md",
+    "scenarios/manager_start.md",
+    "scenarios/queue_request.md",
+    "team-overview.md",
+    "vendor-assurance.md",
+    "vendor-integration.md",
+    "vendor-overview.md"
+  ],
+  "stale": [
+    {
+      "page": "component-index.md",
+      "findings": [
+        "설계 질문·구조·소스 근거가 변경됐거나 이전 지문이 없습니다."
+      ],
+      "bytes_preserved": true
+    }
+  ],
+  "evidence_unavailable": [],
+  "human_active_review_seconds": null,
+  "model_calls": 0
+}

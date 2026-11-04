@@ -1,0 +1,22 @@
+agent:
+  allow_direct_api: false
+  api_key_env: SDD_AGENT_API_KEY
+  args:
+  - -c
+  - model_reasoning_effort="high"
+  base_url: http://localhost:11434
+  command:
+  - C:\Users\baboe\AppData\Local\OpenAI\Codex\bin\0ab0e7a8f3779036\codex.EXE
+  full_style_guides: false
+  kind: cli
+  max_input_chars: 40000
+  max_output_tokens: 1500
+  model: gpt-6.1-terra
+  num_ctx: 0
+  response_dir: ''
+  runner: codex
+  temperature: 0.1
+  think: false
+  timeout_sec: 600
+paths:
+  style: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\historical-style

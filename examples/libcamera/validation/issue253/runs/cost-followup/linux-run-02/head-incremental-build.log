@@ -1,0 +1,14 @@
+ninja: Entering directory `build'
+[1/38] Generating src/libcamera/version.cpp with a custom command
+[2/38] Generating subprojects/libpisp/src/version.cpp with a custom command
+[3/38] Generating 'src/apps/qcam/qcam.p/moc_viewfinder_gl.cpp'
+[4/38] Compiling C++ object subprojects/libpisp/src/libpisp.so.1.5.0.p/meson-generated_.._version.cpp.o
+[5/38] Linking target subprojects/libpisp/src/libpisp.so.1.5.0
+[6/38] Compiling C++ object src/libcamera/libcamera.so.0.7.2.p/meson-generated_.._version.cpp.o
+[7/38] Generating symbol file subprojects/libpisp/src/libpisp.so.1.5.0.p/libpisp.so.1.5.0.symbols
+[8/38] Linking target src/libcamera/libcamera.so.0.7.2
+[9/38] Generating symbol file src/libcamera/libcamera.so.0.7.2.p/libcamera.so.0.7.2.symbols
+[10/13] Compiling C++ object src/apps/qcam/qcam.p/meson-generated_moc_viewfinder_gl.cpp.o
+[11/13] Compiling C++ object src/apps/qcam/qcam.p/main_window.cpp.o
+[12/13] Compiling C++ object src/apps/qcam/qcam.p/viewfinder_gl.cpp.o
+[13/13] Linking target src/apps/qcam/qcam

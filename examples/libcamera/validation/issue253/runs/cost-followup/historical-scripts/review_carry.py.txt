@@ -1,0 +1,18 @@
+import datetime,json,pathlib,subprocess,time
+from sdd.config import load
+from sdd.llm import Agent
+root=pathlib.Path(__file__).resolve().parents[3]
+child=root/'build/issue253/reader-improvement/generator'
+out=root/'build/issue253/cost-followup/carry-review-03'
+out.mkdir(exist_ok=False)
+read=lambda p:p.read_text(encoding='utf-8')
+diff=subprocess.check_output(['git','-c','core.longpaths=true','diff','--','src/sdd/carryover.py','src/sdd/export_site.py','tests/test_generated_design.py'],cwd=child,text=True,encoding='utf-8')
+payload={'instruction':'Independently review source-promotion and overview-target fixes against existing publication policy. Check explicit historical CLI/style selection for site export and carry-forward, without running historical CLI or weakening source/evidence/style/contracts. Prior recursive target-profile leak is now fixed by retaining publication_cfg and covered by a real source/style diagram test; assess remaining concrete bugs in the change. Regressions export and carry a synthetic historical Claude page under a different current Codex profile, verify removing the profile blocks changed style, and changed source remains blocked. Identity alone is not claimed to be a cryptographic rejection condition; use actual existing gates. Synthetic tests are not inference evidence or human approval.','previous_review':json.loads(read(root/'build/issue253/cost-followup/carry-review-02/review.json')),'diff':diff,'files':{p:read(child/p) for p in ['src/sdd/carryover.py','src/sdd/render_profiles.py','src/sdd/generated_design.py','src/sdd/generated_visuals.py','src/sdd/export_site.py','tests/test_render_profiles.py']}}
+schema={'type':'object','additionalProperties':False,'properties':{'status':{'type':'string','enum':['passed','changes-required']},'findings':{'type':'array','items':{'type':'string'}},'limitations':{'type':'array','items':{'type':'string'}}},'required':['status','findings','limitations']}
+start=datetime.datetime.now(datetime.timezone.utc).isoformat();tick=time.perf_counter()
+try:
+    raw=Agent(load(root/'docs/libcamera/records/issue253/review.yaml').agent,dump_dir=out/'native').chat('Review independently against exact source. Report bounded automatic findings.',json.dumps(payload,ensure_ascii=False),tag='carry-profile-review',response_schema=schema)
+    (out/'review.json').write_text(raw,encoding='utf-8')
+finally:
+    (out/'execution.json').write_text(json.dumps({'started_at':start,'ended_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'elapsed_seconds':time.perf_counter()-tick,'human_active_review_seconds':None},indent=2),encoding='utf-8')
+print(raw)

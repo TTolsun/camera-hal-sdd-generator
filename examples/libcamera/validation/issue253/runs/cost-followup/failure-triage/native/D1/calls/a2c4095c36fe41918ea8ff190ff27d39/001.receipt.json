@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "D1-failure-triage",
+  "completed_at": "2026-11-04T19:56:41.126287+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "a2ac9afd0d01c0eb222c625962493cd0bdc9ee9a902702963b1511bde643d544",
+  "response_sha256": "7273e7fbd521922e70675535183d7bd7c901ce184f45426869bd4fc5179bfa13",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "f42a2328e00511ac8ca1f40c2067e7e0a44a9f29ae7095e27fc9175ea44d9a3f",
+    "prompt_sha256": "17b9277a48250d1a033309cb92b8ac3e739c4764a573cdd90ae7fc71de2f0882",
+    "provider": {
+      "thread_id": "01a1a822-4c2d-7b81-a373-ef3c03e997f9",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 51032,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 857,
+        "reasoning_output_tokens": 99
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-hho_yrfj.stdout.txt",
+    "native_schema_sha256": "858c638e2fb0bcbb4417de9b6a9197cf48107e10bca5ffd6f50c1f9e44e488e2"
+  },
+  "human_review": "pending"
+}

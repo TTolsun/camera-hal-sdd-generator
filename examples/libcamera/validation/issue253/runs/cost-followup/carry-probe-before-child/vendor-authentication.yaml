@@ -1,0 +1,23 @@
+agent:
+  allow_direct_api: false
+  api_key_env: SDD_AGENT_API_KEY
+  args:
+  - --effort
+  - high
+  - --setting-sources
+  - project,local
+  base_url: http://localhost:11434
+  command: []
+  full_style_guides: false
+  kind: cli
+  max_input_chars: 40000
+  max_output_tokens: 1500
+  model: claude-haiku-5-5
+  num_ctx: 0
+  response_dir: ''
+  runner: claude
+  temperature: 0.1
+  think: false
+  timeout_sec: 600
+paths:
+  style: C:\Users\baboe\.codex\worktrees\5565\camera-hal-sdd-generator\build\issue253\cost-followup\document-baseline\publication\issue211-virtual\integration\historical-style

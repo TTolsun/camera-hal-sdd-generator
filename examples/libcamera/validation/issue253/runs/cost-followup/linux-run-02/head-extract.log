@@ -1,0 +1,4 @@
+[comments] TU 313 개, 파싱 오류 0 개, 클래스 1653, 메서드 6962, 함수 842
+[docblocks] 문서 주석 블록 281 개에서 설명 259 개를 채웠습니다. 이름이 모호해 건너뜀 6 개, 사실에 없는 이름 7 개
+[callgraph] clang-uml 없이 libclang 으로 추적: 함수 정의 4292 개, 시나리오 6 개, 진입점 못 찾음 0 개
+facts: /home/baboess/.cache/camera-hal-sdd-issue253-cost-v2/head/facts/facts.json (클래스 1428, 시나리오 6, 플래그 15)

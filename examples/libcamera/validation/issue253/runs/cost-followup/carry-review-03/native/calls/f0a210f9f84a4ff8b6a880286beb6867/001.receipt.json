@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "carry-profile-review",
+  "completed_at": "2026-11-04T20:38:32.630519+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "e04abef45f1a398971dfab973fac10e2e1570b3db62285bf0592fabaaf056d9a",
+  "response_sha256": "5eff3c11337bfc7a48455a51feeec9ef587b714e03d2d1e208868e17d25eefc9",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "57897a9946de43f38a37c8f2adae3b5cb06314b437a94127f20d0d8859772eeb",
+    "prompt_sha256": "f86bf75d15b3d38ac1960534b8df2be71337f844b02cc60a8d0f1e7dc8771a93",
+    "provider": {
+      "thread_id": "01a1a848-c69d-7842-83d0-1be08ad78c8e",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 40163,
+        "cached_input_tokens": 11008,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 193,
+        "reasoning_output_tokens": 135
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-5gonhezm.stdout.txt",
+    "native_schema_sha256": "a9d721893f9be6ebde09da047d01cca984e2fca4dcde319e180e2638b870fa93"
+  },
+  "human_review": "pending"
+}

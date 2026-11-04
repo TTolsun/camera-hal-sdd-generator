@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "files": {
+    "carry-review-final/execution.json": "399321ce4358e2355826207e0edf8e6af1a27aa64c39e1ec8023fc6bef8acbf8",
+    "carry-review-final/review.json": "138cf5db02dfec041cb305c812726a6f5a248bac89ce4139c6be43c833183a72",
+    "carry-review-final/native/001_carry-profile-review.md": "374ef8e2d6c1bea83b21da6411d76e52f24addc99a3c7cc7f92fe281637d5d15",
+    "carry-review-final/native/001_carry-profile-review.response.md": "0f278f0e7d6e407f929504816745337203f20916c8391f26373ac07f3e42f34b",
+    "carry-review-final/native/001_carry-profile-review.schema.json": "529c21f523c6dcbcd1b30f0be2041456d11fa64c372cb4394f7b397da8bfdf77",
+    "carry-review-final/native/cli/call-6swphflt.stderr.txt": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+    "carry-review-final/native/cli/call-6swphflt.stdout.txt": "c5e9524ad3c501e1ceed97b0c25f117cadaa375a01382ff1ef03132f8cd60353",
+    "carry-review-final/native/calls/758f8c8322774053a196838871148e01/001.receipt.json": "347f51e6a9c241e9707bcd9333ab27ee2e3c38a90c881ea5af58ca35d04b29a7",
+    "carry-review-final/native/calls/758f8c8322774053a196838871148e01/001.request.json": "18bef33d1f7a4162dc87c60c67809529e7cc78297bb2eee8de8079cf96ce4c0a",
+    "carry-review-final/native/calls/758f8c8322774053a196838871148e01/001.response.txt": "138cf5db02dfec041cb305c812726a6f5a248bac89ce4139c6be43c833183a72",
+    "carry-probe-before-child/result.json": "cb922ffeb3c940959ec07aafb656a94508a1bce9ff168ad88614ba80d5821e44",
+    "carry-probe-before-child/probe.yaml": "db4d93851f987a52ff62a9b92e13227c268feb1a643cdb0cd19538ab92d7cb73",
+    "carry-probe-before-child/default-authentication.yaml": "160064f2fc73ed395c40787f889420110e31592e1ce8ab8bc768a911ddd1d298",
+    "carry-probe-before-child/reader-authentication.yaml": "33a430dbba2a60fad3d8674533c7a3deccb85e17b7ea4c238d37d90a47bd8e88",
+    "carry-probe-before-child/vendor-authentication.yaml": "b549e5a115374ce0e562acfc7a4048debb150a546584f07deda1cd1a58e8b698",
+    "carry-probe-before-child/diagnosis-authentication.yaml": "328c2bb3403277a77917ab5dbd8befd062e19d4b24e3f8eda3f01a3aa24abf97",
+    "historical-scripts/final-probe_published_carry.py.txt": "7e1c73f6435e07db394cb7f67245471fe9e9401ee2258ee9645957c604134313",
+    "historical-scripts/final-review_carry.py.txt": "c0f878bceb03e591261c3879cb7f61d77869f066be3e5dc7d2dd9e43578d7908",
+    "historical-scripts/final-archive_additions.py.txt": "20d2779b5a2727d5d0478f542c5a41c507ccc1cd7eaa2a034cf0884296fd6389",
+    "carry-suite-corrected.log": "b20cf91deedff6a429d62df2ec7d85b6442fcec0bae265c45eb44b3fc9216c12"
+  },
+  "human_review": "pending",
+  "baseline_note": "before-child loaded only da0ca376:src/sdd/carryover.py into the same child runtime used after the fix, without replacing source files. result.runtime names the environment module path, not that loaded function.",
+  "test_note": "A prior expanded suite had one assertion mistakenly inserted into an existing test. It was moved to the new regression. The corrected final suite log is authoritative; synthetic replies are not inference evidence."
+}
