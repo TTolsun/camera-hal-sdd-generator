@@ -647,3 +647,20 @@ def test_guard_checks_the_bound_transport_actually_invoked(tmp_cfg, sample_model
         with execution.track('generation'):
             execution._chat(alternate.chat, 'system', 'user')
     assert not execution.report['calls']
+
+
+def test_initial_dirty_evidence_cannot_claim_the_committed_source(tmp_cfg, sample_model):
+    source = tmp_cfg.source_root/'device.cpp'
+    source.write_bytes(b'committed source')
+    def git(*args):
+        return subprocess.run(['git', '-C', str(tmp_cfg.source_root), *args], check=True,
+            capture_output=True, text=True).stdout.strip()
+    git('init'); git('add', 'device.cpp')
+    git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-m','source')
+    sample_model.meta['source_commit'] = git('rev-parse','HEAD')
+    configure(tmp_cfg, sample_model, ['device'])
+    sample_model.evidence = {'selected': dict(file='device.cpp', text='modified source')}
+    source.write_bytes(b'modified source')
+    with pytest.raises(ValueError, match='declared committed source'):
+        with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+            pytest.fail('dirty source accepted as committed input')

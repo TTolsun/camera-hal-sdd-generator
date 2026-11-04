@@ -160,6 +160,15 @@ class Contract:
         source_head = _source_head(cfg.source_root)
         if source_head is not None:
             self.check_source(source_head)
+            if model is not None:
+                prefix = _git(cfg.source_root, 'rev-parse', '--show-prefix')
+                selected = {prefix+r['file'] for r in model.evidence.values()
+                            if r.get('file') and not r['file'].startswith('@') and r.get('kind') != 'product'}
+                tracked = set(_git(cfg.source_root, 'ls-files', '--full-name', '-z').split('\0'))
+                changed = set(_git(cfg.source_root, 'diff', '--name-only', '--no-renames', '-z',
+                                   'HEAD', '--', '.').split('\0'))
+                if selected - tracked or selected & changed:
+                    raise ValueError('Publication evidence files differ from the declared committed source')
             self.git_checks.append((cfg.source_root, 'HEAD', source_head))
         self.role = {'generation': 'generation', 'translation': 'translation',
                      'contract-audit': 'review'}.get(phase)
