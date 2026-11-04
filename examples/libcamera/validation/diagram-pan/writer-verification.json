@@ -1,0 +1,24 @@
+[
+  {
+    "receipt": "writer\\calls\\b8b8f9562f1c41e387af5e2683967fab\\001.receipt.json",
+    "verified": {
+      "runner": "claude",
+      "model": "claude-haiku-5-5",
+      "model_selection": "explicit",
+      "producer": "cli/claude/claude-haiku-5-5",
+      "stdout_sha256": "23e9dde8cb7118eb9e535e9cef68431429896254366a1b351bb33e4f26b2cace",
+      "arguments_verified": true
+    }
+  },
+  {
+    "receipt": "writer-v2\\calls\\fb3db2eb37a0462ba25dce6b62faea5f\\001.receipt.json",
+    "verified": {
+      "runner": "claude",
+      "model": "claude-haiku-5-5",
+      "model_selection": "explicit",
+      "producer": "cli/claude/claude-haiku-5-5",
+      "stdout_sha256": "31a60046d9e76e8c3b7076c11e06ff0e74d215fd31ee23d050bafc0df5d96638",
+      "arguments_verified": true
+    }
+  }
+]
