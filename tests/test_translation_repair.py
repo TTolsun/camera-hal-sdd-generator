@@ -6,10 +6,10 @@ from sdd.translation_repair import repair
 
 
 class Writer:
-    def __init__(self,value):self.value=value;self.request=None
+    def __init__(self,value):self.value=value;self.request=None;self.calls=[]
     def chat(self,system,user,**kwargs):
-        self.request=json.loads(user)
-        return json.dumps(self.value)
+        self.request=json.JSONDecoder().raw_decode(user)[0];self.calls.append(user)
+        return json.dumps(self.value.pop(0) if isinstance(self.value,list) else self.value)
 
 
 def cfg(kind='cli'):
@@ -38,3 +38,9 @@ def test_repair_rejects_non_cli_and_unknown_feedback_before_call():
     for configuration,findings in [(cfg('response-bundle'),{'s':'Reason'}),(cfg(),{'unknown':'Reason'}),(cfg(),{'s':''}),(cfg(),{})]:
         with pytest.raises(ValueError):repair(configuration,{'strings':{'s':'old'}},findings,writer)
     assert writer.request is None
+
+
+def test_validation_retry_is_a_new_call_and_preserves_failure_feedback():
+    writer=Writer([{'translations':{'0':'Inspect {{0}} and {{0}}.'}}, {'translations':{'0':'Inspect {{0}}.'}}])
+    assert repair(cfg(),{'strings':{'{{0}}를 확인하세요.':'Check {{0}}.'}},{'{{0}}를 확인하세요.':'Keep instruction'},writer)=={'{{0}}를 확인하세요.':'Inspect {{0}}.'}
+    assert len(writer.calls)==2 and 'unexpected or repeated' in writer.calls[1]
