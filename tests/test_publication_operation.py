@@ -693,3 +693,40 @@ def test_publication_policy_changes_require_an_explicit_revision(tmp_cfg, sample
     bump(contract, kind='policy'); write()
     with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
         pass
+
+
+@pytest.mark.parametrize('external_edit', [False, True])
+def test_catalog_keeps_declared_basis_and_guards_commit_and_rollback(tmp_cfg, sample_model, monkeypatch, external_edit):
+    from sdd.localization_cli import prepare_catalog
+    from sdd.generation_run import observed
+    import sdd.localization_cli as catalogs
+    sample_model.save(tmp_cfg.facts_path)
+    tmp_cfg.raw['site'] = dict(english_catalog='english.json')
+    contract, write = configure(tmp_cfg, sample_model, ['device'])
+    target = tmp_cfg.root/'english.json'
+    original = b'{"strings": {"old": "original"}}'
+    target.write_bytes(original)
+    def render(cfg, out, **kwargs):
+        assert cfg.site.english_catalog is None
+        (out/'index.html').write_text('<p>설명입니다.</p>', encoding='utf-8')
+        (out/'assets').mkdir()
+        (out/'assets/search.json').write_text('[]', encoding='utf-8')
+        return out
+    def translate(cfg, catalog, agent):
+        assert cfg.site.english_catalog == 'english.json'
+        with Execution(cfg, object(), model=sample_model).track('translation'):
+            pass
+        return catalog
+    saved = catalogs.save
+    def save_and_invalidate(path, data, **kwargs):
+        assert observed().publication_contract.output_lease is not None
+        saved(path, data, **kwargs)
+        if external_edit:
+            path.write_bytes(b'user catalog edit')
+        contract['reason'] = 'Changed after catalog replacement.'; write()
+    monkeypatch.setattr('sdd.export_site._render_site', render)
+    monkeypatch.setattr('sdd.translation.translate_missing', translate)
+    monkeypatch.setattr(catalogs, 'save', save_and_invalidate)
+    with pytest.raises(InputChanged):
+        prepare_catalog(tmp_cfg, target, translate=True)
+    assert target.read_bytes() == (b'user catalog edit' if external_edit else original)

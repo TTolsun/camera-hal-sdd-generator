@@ -299,3 +299,37 @@ def test_partial_copy_failure_does_not_truncate_published_site(tmp_cfg, tmp_path
     with pytest.raises(OSError, match='copy failed'):
         build_site(tmp_cfg, out, render, None)
     assert {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()} == before
+
+
+def test_catalog_edit_during_prepared_write_is_preserved(tmp_cfg, monkeypatch):
+    from contextlib import contextmanager
+    from sdd import state_io
+    from sdd.facts.model import KnowledgeModel
+    from sdd.localization_cli import prepare_catalog
+    KnowledgeModel(meta={'source_commit': 'a'*40}).save(tmp_cfg.facts_path)
+    target = tmp_cfg.root/'english.json'
+    target.write_bytes(b'{"strings": {"old": "original"}}')
+    def render(cfg, out, **kwargs):
+        (out/'index.html').write_text('<p>설명입니다.</p>', encoding='utf-8')
+        (out/'assets').mkdir()
+        (out/'assets/search.json').write_text('[]', encoding='utf-8')
+        return out
+    create = state_io.tempfile.NamedTemporaryFile
+    @contextmanager
+    def changed_while_writing(**kwargs):
+        with create(**kwargs) as stream:
+            if kwargs.get('prefix') != '.english.json.':
+                yield stream
+                return
+            class Writer:
+                name = stream.name
+                def write(self, text):
+                    result = stream.write(text)
+                    target.write_bytes(b'user edit during temporary write')
+                    return result
+            yield Writer()
+    monkeypatch.setattr('sdd.export_site._render_site', render)
+    monkeypatch.setattr(state_io.tempfile, 'NamedTemporaryFile', changed_while_writing)
+    with pytest.raises(InputChanged):
+        prepare_catalog(tmp_cfg, target)
+    assert target.read_bytes() == b'user edit during temporary write'

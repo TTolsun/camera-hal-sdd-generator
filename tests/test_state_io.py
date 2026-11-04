@@ -198,3 +198,18 @@ def test_persistent_or_other_permission_failure_is_not_hidden(tmp_path, monkeypa
     assert len(calls) == attempts
     assert json.loads(path.read_text()) == {'old': True}
     assert list(tmp_path.glob('.state.json.*.tmp')) == []
+
+
+def test_before_replace_guard_preserves_external_edit_and_removes_prepared_file(tmp_path):
+    path = tmp_path/'state.json'
+    state_io.save(path, {'old': True})
+    def reject():
+        prepared = [p for p in tmp_path.iterdir() if p != path]
+        assert len(prepared) == 1
+        assert json.loads(prepared[0].read_text(encoding='utf-8')) == {'new': True}
+        path.write_bytes(b'external edit')
+        raise RuntimeError('input changed before replacement')
+    with pytest.raises(RuntimeError, match='input changed'):
+        state_io.save(path, {'new': True}, before_replace=reject)
+    assert path.read_bytes() == b'external edit'
+    assert list(tmp_path.iterdir()) == [path]
