@@ -382,7 +382,11 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
         if active is not None:
             active['markup_bindings'].append(digest(node_window(node, root, page)))
             if re.fullmatch(r'h[1-6]', node.tag):
-                if node.tag not in {'h2', 'h3'} or active['heading_count']:
+                # Explanation stages are H3 questions; their generated figure
+                # titles are H4. Keep that title inventoried, and continue to
+                # reject extra headings or an H4 without its H3 owner.
+                stage_title = node.tag == 'h4' and visual_owner['level'] == 3
+                if (node.tag not in {'h2', 'h3'} and not stage_title) or active['heading_count']:
                     raise ValueError('Ordinary section inside visualization marker: '+page)
                 active['heading_count'] += 1
                 # Inventory the title too. A marker must never make a real
