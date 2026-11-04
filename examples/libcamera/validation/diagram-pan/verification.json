@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "base": "25f65afa160878db732e9739db5043d753ba3bfb",
+  "date_kst": "2026-11-05",
+  "source_baseline": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "observed_upstream": "be7e83e91348250c015aad6d6f59f1468555bae8",
+  "focused_tests": {
+    "passed": 66,
+    "seconds": 31.7,
+    "command": "python -X utf8 -m pytest tests/test_diagram_zoom.py tests/test_sidebar_state.py tests/test_export_site.py tests/test_site_localization.py --basetemp=build/pan-focus -q"
+  },
+  "native_calls": 3,
+  "human_review": "pending",
+  "archive": {
+    "path": "native-and-browser-evidence.tar.gz",
+    "sha256": "f56e18d444916e6ea1582a728810fef90e0bdf10fb11bd0a83abd0d6222d35e3",
+    "files": 48
+  },
+  "browser": {
+    "schema": 1,
+    "base": "http://127.0.0.1:60502/",
+    "startedAt": "2026-11-04T18:26:20.838Z",
+    "engine": "156.0.8078.80",
+    "playwright": "1.64.1",
+    "isolation": "Fresh nonpersistent contexts; no user Chrome profile or Windows UI access",
+    "scope": "Chromium mouse and mobile touch emulation, not a physical phone or camera test",
+    "runs": [
+      {
+        "lang": "ko",
+        "mobile": false,
+        "figures": 6,
+        "script": {
+          "url": "http://127.0.0.1:60502/assets/site.js?v=f85b002ed1",
+          "sha256": "1a50920986c1f951a77a0ede7b5799cac19460781d84eb1390e246a10c1df6ce"
+        },
+        "exceptions": 0
+      },
+      {
+        "lang": "en",
+        "mobile": false,
+        "figures": 6,
+        "script": {
+          "url": "http://127.0.0.1:60502/assets/site.js?v=f85b002ed1",
+          "sha256": "1a50920986c1f951a77a0ede7b5799cac19460781d84eb1390e246a10c1df6ce"
+        },
+        "exceptions": 0
+      },
+      {
+        "lang": "ko",
+        "mobile": true,
+        "figures": 6,
+        "script": {
+          "url": "http://127.0.0.1:60502/assets/site.js?v=f85b002ed1",
+          "sha256": "1a50920986c1f951a77a0ede7b5799cac19460781d84eb1390e246a10c1df6ce"
+        },
+        "exceptions": 0
+      },
+      {
+        "lang": "en",
+        "mobile": true,
+        "figures": 6,
+        "script": {
+          "url": "http://127.0.0.1:60502/assets/site.js?v=f85b002ed1",
+          "sha256": "1a50920986c1f951a77a0ede7b5799cac19460781d84eb1390e246a10c1df6ce"
+        },
+        "exceptions": 0
+      }
+    ],
+    "status": "passed",
+    "completedAt": "2026-11-04T18:26:46.710Z"
+  },
+  "browser_reproduction": {
+    "package": "playwright@1.64.1",
+    "channel": "chrome",
+    "node_module_resolution": "Install the package in a task-local directory; expose its node_modules using NODE_PATH for browser_test.cjs",
+    "arguments": [
+      "<exact local/public base URL>",
+      "<fresh evidence directory>"
+    ]
+  },
+  "attempt_dispositions": {
+    "browser-local-01": "Assertion ran before asynchronous dialog close restored SVG; harness now waits for actual restoration",
+    "browser-local-02": "Local favicon HTTP404 was classified separately; all console messages are retained, application exceptions still fail",
+    "browser-local-03": "All 24 real-input pan checks passed"
+  },
+  "preserved_original_files": 87,
+  "physical_device_test": false,
+  "new_camera_runtime": false
+}
