@@ -155,9 +155,8 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
         # new translations use an independently selected CLI transport.
         profile = call_cfg.paths.get('translation_profile')
         if profile is not None:
-            from dataclasses import replace
             from .config import load
-            call_cfg = replace(call_cfg, agent=load(profile).agent)
+            call_cfg.agent = load(profile).agent
         from .translation import translate_missing
         if replay_http:
             from .llm import Agent
