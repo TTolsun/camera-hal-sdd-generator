@@ -279,6 +279,12 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
                             and cfg.diagram_policy(s).get("enabled", False)
                             for s in sections.values()):
         raise RuntimeError("facts.json is required to generate configured class diagrams")
+    if settings.reader_paths:
+        from .reader_paths import assemble
+        # Validate canonical manuscripts through the normal publication path before
+        # projecting their answers. No source prose is authored or stored twice.
+        assemble(cfg, texts, sections, entries, approval_states, model,
+                 lambda rel: _prepare_page_body(cfg, rel, texts, sections, terms, model))
     return texts, approval_states, ledger, terms, model
 
 
