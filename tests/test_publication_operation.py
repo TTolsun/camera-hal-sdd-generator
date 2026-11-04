@@ -676,3 +676,20 @@ def test_model_cannot_be_added_after_sealing_an_empty_basis(tmp_cfg, sample_mode
     with execution.track('generation'):
         with pytest.raises(ValueError, match='sealed publication basis'):
             execution.publication_contract.select(sample_model, ['device'])
+
+
+@pytest.mark.parametrize('setting,value', [
+    ('budget', {'max_calls': 1}),
+    ('reports', [dict(path='final.json', gate='before-export', producer='final-review', sha256='0'*64, bindings={'status':'passed'})]),
+])
+def test_publication_policy_changes_require_an_explicit_revision(tmp_cfg, sample_model, setting, value):
+    contract, write = configure(tmp_cfg, sample_model, ['device'])
+    with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+        pass
+    tmp_cfg.raw['publication'][setting] = value
+    with pytest.raises(ValueError, match='new revision'):
+        with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+            pytest.fail('publication policy changed without a revision')
+    bump(contract, kind='policy'); write()
+    with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
+        pass

@@ -207,6 +207,8 @@ class Contract:
         # Content fingerprints work in installed/offline environments too; Git
         # hosting and an origin/main convention are not mandatory dependencies.
         basis = dict(configuration={k: v for k, v in cfg.raw.items() if k != 'publication'},
+                     publication={k: v for k, v in cfg.publication.items()
+                                  if k not in ('operation_id', 'operation_file')},
                      source_commit=self.contract['source_commit'], source_head=source_head,
                      generator_commit=generator_commit,
                      integration_commit=resolved,
