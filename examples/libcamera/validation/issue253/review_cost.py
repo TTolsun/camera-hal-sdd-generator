@@ -24,4 +24,3 @@ ledger['new_review_calls']=sum(1 for p in (root/'examples/libcamera/validation/i
 if status=='completed':ledger['unfinished'].remove('independent-review')
 (record/'cost.json').write_text(json.dumps(ledger,ensure_ascii=False,indent=2),encoding='utf-8')
 print(json.dumps({'status':status,'elapsed_seconds':elapsed}))
-
