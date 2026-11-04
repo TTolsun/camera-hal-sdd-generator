@@ -69,6 +69,7 @@ class Execution:
         self.report = dict(schema=1, human_review='pending', calls=[], documents=[], limits=self.limits)
         self.path = cfg.build_dir / 'generation-runs' / (uuid.uuid4().hex + '.json')
         self.current = None
+        self._pending_decisions = {}
         self._mutex = threading.RLock()
         self.operation = cfg.publication.get('operation_id')
         self.operation_limits = cfg.publication.get('budget', {})
@@ -181,11 +182,27 @@ class Execution:
             self.current['units'][key] = status
             if details:
                 self.current.setdefault('details', {})[key] = details
+            if status in ('completed', 'checkpoint-reused', 'checkpoint-revalidated', 'failed'):
+                for value in self._pending_decisions.pop(key, []):
+                    self.decision(key, {**value, 'stage': 'failed' if status == 'failed' else 'validated',
+                                        'resolve_on_status': False, 'resolution_status': status})
             self.persist()
 
     def unit_if_pending(self, key, status):
         if self.current is not None and self.current['units'].get(key) == 'not-started':
             self.unit(key, status)
+
+    def decision(self, key, value):
+        """Append forecasts/resolutions without replacing statuses or provenance."""
+        with self._mutex:
+            self.report.setdefault('decisions', []).append(dict(unit=key,
+                section=self.current['section'] if self.current else None,
+                elapsed_seconds=self.clock()-self.started, **value))
+            if value.get('resolve_on_status'):
+                self._pending_decisions.setdefault(key, []).append(value)
+            elif value.get('stage') in ('validated', 'failed'):
+                self._pending_decisions.pop(key, None)
+            self.persist()
 
     def units(self, states):
         """Persist a deterministic classification pass as one progress update."""

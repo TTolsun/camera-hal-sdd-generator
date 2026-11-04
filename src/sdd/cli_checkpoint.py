@@ -16,7 +16,7 @@ from .cli_provenance import verify_cli_receipt
 from .state_io import save
 from .trial_workspace import contained_path, reject_symlinks
 from .llm import AgentError
-from .validation_stage import current, load_json
+from .validation_stage import current, load_json, InputChanged
 
 
 def checksum(value):
@@ -103,8 +103,10 @@ class Capture:
 class UnitStore:
     _indexes = {}
 
-    def __init__(self, cfg, identity, *, calls=None):
+    def __init__(self, cfg, identity, *, calls=None, comparison_scope=None):
         self.cfg, self.identity = cfg, identity
+        self.comparison_scope = comparison_scope
+        self._diagnostic_records = None
         self.path = cfg.build_dir / 'cli-checkpoints' / (checksum(self.draft_identity(identity)) + '.json')
         self.canonical_path = self.path
         self.calls = calls if calls is not None else cfg.build_dir / 'prompts' / 'calls'
@@ -114,6 +116,7 @@ class UnitStore:
             directory = reject_symlinks(self.path.parent).resolve()
             if directory not in indexes:
                 index = {}
+                comparisons = []
                 for candidate in directory.glob('*.json'):
                     reject_symlinks(candidate)
                     try:
@@ -123,9 +126,14 @@ class UnitStore:
                             raise ValueError('checkpoint checksum mismatch')
                         key = checksum(self.compatible_identity(payload['identity']))
                         index.setdefault(key, candidate)
+                        comparisons.append((candidate, dict(identity=payload['identity'],
+                            receipts=payload.get('receipts'), comparison_scope=payload.get('comparison_scope'))))
                     except (ValueError, KeyError, TypeError, OSError) as exc:
                         raise ValueError(f'CLI checkpoint is damaged: {candidate}: {exc}') from exc
                 indexes[directory] = index
+                self._diagnostic_records = comparisons
+                if inputs is not None:
+                    inputs.values[('checkpoint-diagnostic-inputs', directory)] = comparisons
             compatible = indexes[directory].get(checksum(self.compatible_identity(identity)))
             if compatible is not None:
                 self.path = compatible
@@ -168,6 +176,7 @@ class UnitStore:
 
     def read(self):
         if not self.path.exists():
+            self._observe_read(None)
             return None
         try:
             reject_symlinks(self.path)
@@ -183,9 +192,85 @@ class UnitStore:
                        and same_request_context(request['user'], row.request['user'])
                        and row.request.get('response_schema') == request['response_schema'] for row in records):
                 raise ValueError('validated response has no completed CLI receipt')
-            return payload, Reviewer(records)
+            cached = payload, Reviewer(records)
+            self._observe_read(cached)
+            return cached
         except (ValueError, OSError, KeyError, TypeError) as exc:
             raise ValueError(f'CLI checkpoint is damaged; previous output preserved: {self.path}: {exc}') from exc
+
+    def explain(self, cached=None):
+        """Describe a verified hit or comparable misses, without changing read()."""
+        from .reuse_decision import explain
+        if cached is not None:
+            return explain(self.identity, [(self.path, cached[0])], verified=True)
+        try:
+            return self._explain_comparisons()
+        except InputChanged:
+            raise  # Input mutation is a real integrity failure, not a diagnostic.
+        except (ValueError, TypeError, KeyError, AttributeError, OSError) as exc:
+            result = explain(self.identity)
+            result['reason_codes'].append('diagnostic-unavailable-current-gates-required')
+            result['diagnostic_error'] = type(exc).__name__
+            return result
+
+    def _explain_comparisons(self):
+        from .reuse_decision import explain, scope
+        unit = self.comparison_scope or scope(self.identity)
+        if unit is None or not self.path.parent.exists():
+            return explain(self.identity)
+        directory = reject_symlinks(self.path.parent).resolve()
+        inputs = current()
+        unavailable = []
+        # Reuse ONLY inputs that the existing compatibility lookup already read.
+        # Diagnostics must not enlist an unrelated archive in stage validation.
+        rows = (inputs.values.get(('checkpoint-diagnostic-inputs', directory), [])
+                if inputs is not None else self._diagnostic_records)
+        if rows is None:
+            rows = []
+            for path in sorted(directory.glob('*.json')):
+                try:
+                    reject_symlinks(path)
+                    # Standalone, non-authorizing comparison snapshot. Never
+                    # use the staged loader or feed this into read()/reuse.
+                    data = json.loads(path.read_bytes())
+                    payload = data['payload']
+                    if data['sha256'] != checksum(payload):
+                        raise ValueError('checksum mismatch')
+                    rows.append((path,payload))
+                except (ValueError, TypeError, KeyError, AttributeError, OSError):
+                    unavailable.append(path.name)
+        candidates = []
+        for path, payload in rows:
+            try:
+                if (not isinstance(payload.get('identity'), dict)
+                        or not isinstance(payload.get('receipts'), list)
+                        or any(not isinstance(name,str) for name in payload['receipts'])):
+                    raise ValueError('comparison metadata unavailable')
+                candidate_scope = payload.get('comparison_scope') or scope(payload['identity'])
+                if candidate_scope is not None and tuple(candidate_scope) == tuple(unit):
+                    candidates.append((path,payload))
+            except (ValueError, TypeError, KeyError, AttributeError):
+                unavailable.append(path.name)
+        result = explain(self.identity, candidates)
+        if unavailable:
+            result['unavailable_comparisons'] = unavailable
+        return result
+
+    def _observe_read(self, cached):
+        # Observe the receipt boundary without changing consistency's semantic
+        # policy or wire payload. Its existing validator/status still decides
+        # success. This hook neither authorizes a hit nor catches read failures.
+        if self.identity.get('purpose') != 'cross-document-consistency':
+            return
+        from .generation_run import observed
+        execution = observed()
+        if execution is not None and execution.current is not None:
+            key = execution.report.get('current_task')
+            if key:
+                self._observed_explanation = self.explain(cached)
+                execution.decision(key, dict(action='revalidate-review' if cached else 'review-new',
+                    stage='before-work', resolve_on_status=True, **self._observed_explanation,
+                    receipts=cached[0]['receipts'] if cached else []))
 
     def write(self, raw, statements, capture):
         if not capture.receipts:
@@ -196,6 +281,8 @@ class UnitStore:
             paths = [path.resolve().relative_to(self.calls.resolve()).as_posix() for path in capture.receipts]
             self._records(paths)
             payload = dict(identity=self.identity, raw=raw, statements=statements, receipts=paths)
+            if self.comparison_scope is not None:
+                payload['comparison_scope'] = list(self.comparison_scope)
             data = dict(schema=1, payload=payload, sha256=checksum(payload))
             if current() is not None:
                 current().verify()
@@ -207,6 +294,14 @@ class UnitStore:
             indexes = current().values.get(('checkpoint-indexes',), {}) if current() is not None else {}
             if directory in indexes:
                 indexes[directory][checksum(self.compatible_identity(self.identity))] = self.path
+            if self.identity.get('purpose') == 'cross-document-consistency':
+                from .generation_run import observed
+                execution = observed()
+                key = execution.report.get('current_task') if execution is not None else None
+                if key:
+                    execution.decision(key, dict(action='review-new', stage='validated',
+                        **getattr(self, '_observed_explanation', self.explain((payload, None))),
+                        receipts=paths, current_receipts_verified=True))
         except (ValueError, OSError) as exc:
             raise AgentError(f'CLI checkpoint persistence failed; previous output preserved: {exc}') from exc
 

@@ -43,6 +43,8 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     tag = _unit_tag(section, topic)
     schema = response_schema(topic, passages) if cfg.agent.kind in SCHEMA_KINDS else None
     store = None
+    from .reuse_decision import record as decision
+    explanation = dict(reason_codes=['checkpoint-unavailable'])
     if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
         from .cli_checkpoint import Capture
         from .design_checkpoint import store_for
@@ -50,10 +52,13 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
         agent.unit(tag, 'running', input_sha256=store.path.stem,
                    dependencies={key: value for key, value in identity.items() if key not in ('request', 'topic')})
         cached_unit = store.read()
+        explanation = store.explain(cached_unit)
         if cached_unit is not None:
             saved, reviewer = cached_unit
             from .design_checkpoint import changes
             grounding_changed, validation_changed = changes(saved['identity'], identity)
+            action = 'review-existing' if grounding_changed else 'revalidate-checkpoint' if validation_changed else 'reuse-checkpoint'
+            decision(agent, tag, action, explanation)
             review_agent = Capture(agent) if grounding_changed else reviewer
             try:
                 statements = _validate_unit_response(cfg, model, review_agent, section, topic,
@@ -66,6 +71,8 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 # rejected unit is drafted again, within the same run budget.
                 statements = None
                 agent.unit(tag, 'revalidation-rejected', error=str(exc))
+                explanation = {**explanation, 'reason_codes': [*explanation['reason_codes'], 'current-validation-rejected'],
+                               'rejection': str(exc)}
             if statements is not None:
                 if statements != saved['statements'] and not (grounding_changed or validation_changed):
                     raise ValueError('CLI checkpoint validated statements mismatch')
@@ -78,6 +85,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                     store.write(saved['raw'], statements, capture)
                     receipt_names = [path.resolve().relative_to(store.calls.resolve()).as_posix()
                                      for path in capture.receipts]
+                decision(agent, tag, action, explanation, stage='validated', receipts=receipt_names)
                 return UnitResult(statements, dict(checkpoint=store.path.name, topic=topic['id'],
                                         part=topic.get('_part_id'), subpart=topic.get('_subpart_id'),
                                         revalidated=grounding_changed or validation_changed,
@@ -89,7 +97,10 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             section, topic, raw, sources, passages, tag + '_replay',
             grounding, source_files, scopes, context_records, reviewer=reviewer, prior_answers=answers))
     if replayed is not None:
+        decision(agent, tag, 'replay-archive', dict(reason_codes=['historical-archive-passes-current-checks']),
+                 stage='validated', origin=replayed.replayed)
         return replayed
+    decision(agent, tag, 'generate', explanation)
     user = base_user
     last = None
     options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in SCHEMA_KINDS else {}
@@ -123,6 +134,10 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             saved.save(raw)
             if store is not None:
                 store.write(raw, statements, agent)
+            receipts = ([path.resolve().relative_to(store.calls.resolve()).as_posix() for path in agent.receipts]
+                        if store is not None else [str(getattr(agent, 'last_receipt', '') or '')])
+            decision(agent, tag, 'revalidate-answer-cache' if from_cache else 'generate', explanation,
+                     stage='validated', receipts=receipts)
             return UnitResult(statements, None)
         except (ValueError, TypeError, KeyError) as exc:
             last = str(exc)
