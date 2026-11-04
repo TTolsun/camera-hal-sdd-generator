@@ -4,6 +4,7 @@
   "archive": "runs/native-evidence.zip",
   "sha256": "9a0711be9b34a890c73ef630f142727cd7e8a981abca97483adff2df92f81b22",
   "original_files": 275,
-  "verified_cli_calls_with_native_stdout": 19,
-  "manifest": "ARCHIVE-MANIFEST.json inside ZIP; paths relative to runs/"
+  "manifest": "ARCHIVE-MANIFEST.json inside ZIP; paths relative to runs/",
+  "verified_cli_record_copies_with_native_stdout": 19,
+  "unique_cli_receipts": 15
 }
