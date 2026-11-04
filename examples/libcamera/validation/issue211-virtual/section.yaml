@@ -325,8 +325,8 @@ design_topics:
         - 아래
         - 적으면
   - id: submission-limit
-    question: 처리 수와 제출 시도 수는 같은 캡처 한도 값과 서로 다른 위치·시점에서 비교된다는 관계만 한 짧은 문장으로 설명합니다. 처리 수의 검사 위치는 현재 그림에,
-      제출 시도 수의 검사 위치는 앞 초기 제출 그림에 있으므로 조건·분기·도우미의 제출 생략을 다시 설명하지 않습니다. 한도 값이 두 개라고 쓰지 않습니다.
+    question: 처리 수와 제출 시도 수는 같은 캡처 한도 값과 비교되지만, 처리 수 검사는 처리 함수에서, 제출 시도 수 검사는 제출 도우미에서 이뤄져 시점이 다르다는 사실만
+      짧은 한 문장으로 설명합니다. 그림·항목의 위치 안내, 편집 안내, 내부 필드 이름, 이미 설명한 제출 생략 조건은 쓰지 않습니다. 한도 값 자체가 둘이라고 쓰지 않습니다.
     sources:
     - submission-limit
     - callback-and-processing
@@ -345,6 +345,8 @@ design_topics:
       - pattern: 별개.{0,10}한도|서로 다른.{0,10}한도|별도.{0,10}한도 값
         message: Both counters compare against the same capture limit value. Distinguish counters and
           check points, not two limit values.
+      - pattern: 그림|앞 항목|현재 항목
+        message: Explain actual counter-check timing; omit editorial figure or item location directions.
       required_terms:
       - - queueCount_
         - 제출 시도 수
