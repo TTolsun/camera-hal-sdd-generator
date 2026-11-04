@@ -1,0 +1,57 @@
+{
+  "record_kind": "summary; complete original is immutable inside ZIP",
+  "original_path": "cli-failure-retry/repeat-diagnosis.json",
+  "original_sha256": "e26d6fa7ae3a2de0faf42ee5b01f76dbc421fa687b75a796a7b512f5a4ce1404",
+  "status": "not-identical",
+  "stages": [
+    {
+      "command": "generate",
+      "exit_code": 0,
+      "stdout": "-> sdd/completion.md\n",
+      "stderr": ""
+    },
+    {
+      "command": "export-site",
+      "exit_code": 0,
+      "stdout": "경고: 뜻을 적지 않은 약어가 2개 있습니다. glossary.yaml 의 terms 에 뜻을 적거나, 설명이 필요 없는 일반 약어면 common 에 추가하세요.\n  HAL: completion.md, index.md\n  LLM: completion.md\n-> C:\\Users\\baboe\\.codex\\worktrees\\a874\\camera-hal-sdd-generator\\build\\issue251-extra\\failure-project\\build\\site\n",
+      "stderr": ""
+    },
+    {
+      "command": "verify-site",
+      "exit_code": 0,
+      "stdout": "{'html_pages': 2, 'broken_links': 0, 'manifest_verified': True}\n",
+      "stderr": ""
+    }
+  ],
+  "changes": {
+    "sdd/completion.md": {
+      "before": "70d74f31d9d0625ee84729f1712220f74c8fdf936e06085fc36b8e3da306603d",
+      "after": "2d53c6eedb2de29607357cfb168297b4c358b66d5ee0bf8b23d7648f4cd60f91"
+    },
+    "build/site/completion.html": {
+      "before": "fda11310dadefdc7e3419f2a098a8b02f24bd917b8d7aac83e63e8077133231b",
+      "after": "80b26bc431cb6845e6a8439a77273e07ac3215dec7ab75fb18144bd21e3df003"
+    },
+    "build/site/completion.md": {
+      "before": "70d74f31d9d0625ee84729f1712220f74c8fdf936e06085fc36b8e3da306603d",
+      "after": "2d53c6eedb2de29607357cfb168297b4c358b66d5ee0bf8b23d7648f4cd60f91"
+    },
+    "build/site/site-manifest.json": {
+      "before": "c16985bff2111762a70c5324fb2a12477ce2bb9ff78a8fab40ca7f048ff08769",
+      "after": "041f810f94660fbc18cead72e97c4ad3654234b9c00383388b01319d823cdaf0"
+    }
+  },
+  "body_identical": false,
+  "changed_metadata_fields": {
+    "generated_design": [
+      "answers",
+      "body_sha256"
+    ],
+    "generated_visuals": [
+      "body_sha256"
+    ],
+    "generated_at": [
+      "value"
+    ]
+  }
+}

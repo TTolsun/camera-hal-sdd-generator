@@ -12,6 +12,7 @@ class TranslationCall:
         self.agent, self.system, self.user, self.schema, self.fresh = agent, system, user, schema, fresh
         self.options = dict(response_schema=schema) if schema is not None else {}
         self.units = units
+        self.explanation = dict(reason_codes=['checkpoint-unavailable'])
         self.mark('running')
         self.store, self.saved, self.capture, self.response_text = None, None, None, None
         if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
@@ -25,10 +26,15 @@ class TranslationCall:
             identity['receipt_directory'] = str(archive/'calls')
             self.store = UnitStore(cfg, identity, calls=archive/'calls')
             cached = self.store.read()
+            self.explanation = self.store.explain(cached)
             if cached is not None:
                 self.saved = cached[0]
 
     def chat(self, tag):
+        from .reuse_decision import record
+        self.tag = tag
+        for unit in self.units:
+            record(self.agent, unit, 'revalidate-translation' if self.saved is not None else 'translate', self.explanation)
         if self.saved is not None:
             self.response_text = self.saved['raw']
             return self.response_text
@@ -48,6 +54,13 @@ class TranslationCall:
                 raise AgentError('CLI translation checkpoint validated values mismatch; previous catalog preserved')
         elif self.store is not None:
             self.store.write(self.response_text, values, self.capture)
+        from .reuse_decision import record
+        for unit in self.units:
+            record(self.agent, unit, 'revalidate-translation' if self.saved is not None else 'translate',
+                   self.explanation, stage='validated',
+                   receipts=self.saved['receipts'] if self.saved is not None else
+                   [path.resolve().relative_to(self.store.calls.resolve()).as_posix() for path in self.capture.receipts]
+                   if self.store is not None else [])
         self.mark('checkpoint-revalidated' if self.saved is not None else 'completed')
 
     def mark(self, status):

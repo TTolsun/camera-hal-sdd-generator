@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "tag": "d1-consistency",
+  "completed_at": "2026-11-04T19:12:10.558429+00:00",
+  "transport": "cli",
+  "model": "gpt-6.1-terra",
+  "http_call": false,
+  "cli_call": true,
+  "request_sha256": "b407f22ce15dccbbc2ae5ab9bf0b03a33ca0e75b1f2a5ea7d8b183ece798a4f9",
+  "response_sha256": "67bbab835a9bf0f4c5ae4f6f10c720274d74f08f366b6d56ac469188b77af71e",
+  "settings": {
+    "temperature": 0.1,
+    "think": false,
+    "num_ctx": 0,
+    "max_output_tokens": 1500
+  },
+  "provider": {
+    "runner": "codex",
+    "executable": "codex.EXE",
+    "workspace_cleanup": {
+      "status": "removed"
+    },
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "model_selection": "explicit",
+    "exit_code": 0,
+    "stdout_sha256": "41e13f58cc2cea9de9547279c613bbeccef3026e5b90c9e3a6bbe4d948a0f467",
+    "prompt_sha256": "9aec4b91337408102653db49ea5b6489950c77807011f486012756d20c1bbbb3",
+    "provider": {
+      "thread_id": "01a1a7f9-97b9-7363-ae3f-a67984949c7a",
+      "completion_event": "turn.completed",
+      "usage": {
+        "input_tokens": 45015,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 704,
+        "reasoning_output_tokens": 70
+      }
+    },
+    "cli_version": "codex-cli 0.166.0-alpha.5.1",
+    "stdout_path": "cli/call-yajlbgo3.stdout.txt",
+    "native_schema_sha256": "50b8b9ca6f49044319abc3d71936a57bcc7b1fd42fedb4dc2a000e319e5befd8"
+  },
+  "human_review": "pending"
+}

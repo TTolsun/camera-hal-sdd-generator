@@ -288,12 +288,55 @@
   const canvas = document.querySelector('#diagram-canvas');
   const nodeInput = document.querySelector('#node-search');
   let active = null;
-  function scale(value, center = true) {
+  let pan = null;
+  function panCursor() {
+    viewport.classList.toggle('can-pan', !!active &&
+      (viewport.scrollWidth > viewport.clientWidth || viewport.scrollHeight > viewport.clientHeight));
+  }
+  function endPan() {
+    const pointer = pan?.id;
+    pan = null;
+    viewport.classList.remove('is-panning');
+    if (pointer !== undefined && viewport.hasPointerCapture(pointer)) viewport.releasePointerCapture(pointer);
+  }
+  // Touch keeps the browser's native overflow pan, inertia and pinch zoom.
+  // Capture only the primary mouse button on the drawing, never its links or
+  // scrollbars. Capture also delivers release when the mouse leaves the pane.
+  viewport.addEventListener('pointerdown', event => {
+    if (!active || pan || event.pointerType !== 'mouse' || event.button !== 0 ||
+        event.ctrlKey || event.metaKey || event.altKey ||
+        event.target.closest('a, button, input, select, textarea, [role="button"], .clickable')) return;
+    const box = viewport.getBoundingClientRect();
+    const x = event.clientX - box.left - viewport.clientLeft;
+    const y = event.clientY - box.top - viewport.clientTop;
+    if (x < 0 || y < 0 || x >= viewport.clientWidth || y >= viewport.clientHeight ||
+        (viewport.scrollWidth <= viewport.clientWidth && viewport.scrollHeight <= viewport.clientHeight)) return;
+    pan = {id: event.pointerId, x: event.clientX, y: event.clientY,
+      left: viewport.scrollLeft, top: viewport.scrollTop};
+    viewport.setPointerCapture(event.pointerId);
+    viewport.classList.add('is-panning');
+    viewport.focus({preventScroll: true});
+    event.preventDefault();
+  });
+  viewport.addEventListener('pointermove', event => {
+    if (!pan || event.pointerId !== pan.id) return;
+    if (!(event.buttons & 1)) { endPan(); return; }
+    viewport.scrollLeft = pan.left - (event.clientX - pan.x);
+    viewport.scrollTop = pan.top - (event.clientY - pan.y);
+    event.preventDefault();
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    viewport.addEventListener(type, event => { if (pan?.id === event.pointerId) endPan(); });
+  }
+  window.addEventListener('blur', endPan);
+  function scale(value, center = true, mode = 'manual') {
     if (!active) return;
+    endPan();
     const old = active.scale;
     const x = (viewport.scrollLeft + viewport.clientWidth / 2) / old;
     const y = (viewport.scrollTop + viewport.clientHeight / 2) / old;
-    active.scale = Math.max(.05, Math.min(8, value));
+    active.scale = Math.max(mode === 'fit' ? Number.EPSILON : .05, Math.min(8, value));
+    active.mode = mode;
     active.svg.style.width = `${active.width * active.scale}px`;
     active.svg.style.height = `${active.height * active.scale}px`;
     document.querySelector('#zoom-value').textContent = `${Math.round(active.scale * 100)}%`;
@@ -301,10 +344,46 @@
       viewport.scrollLeft = x * active.scale - viewport.clientWidth / 2;
       viewport.scrollTop = y * active.scale - viewport.clientHeight / 2;
     }
+    panCursor();
   }
   function fit() {
     if (!active) return;
-    scale(Math.min((viewport.clientWidth - 60) / active.width, (viewport.clientHeight - 60) / active.height, 1), false);
+    scale(Math.min((viewport.clientWidth - 60) / active.width, (viewport.clientHeight - 60) / active.height, 1), false, 'fit');
+    viewport.scrollTo(0, 0);
+  }
+  function readDiagram() {
+    // Measure after moving the SVG into the open dialog, at intrinsic scale.
+    // Include edge labels and nested SVG/HTML labels, not just node boxes.
+    scale(1, false, 'reading');
+    const sizes = [];
+    active.svg.querySelectorAll('text, tspan, textPath, foreignObject *').forEach(label => {
+      if (![...label.childNodes].some(node => node.nodeType === 3 && node.textContent.trim())) return;
+      const style = getComputedStyle(label);
+      const rect = label.getBoundingClientRect();
+      if (style.visibility !== 'visible' || style.display === 'none' || !rect.width || !rect.height) return;
+      const owner = typeof label.getScreenCTM === 'function' ? label : label.closest('foreignObject');
+      let matrix = owner?.getScreenCTM();
+      if (matrix && owner !== label) {
+        // foreignObject's SVG matrix stops at its HTML boundary. Compose the
+        // HTML transforms too; origins translate but do not change font size.
+        let local = new DOMMatrix();
+        for (let element = label; element && element !== owner; element = element.parentElement) {
+          const css = getComputedStyle(element);
+          const transform = css.transform === 'none' ? new DOMMatrix() : new DOMMatrix(css.transform);
+          const zoom = parseFloat(css.zoom) || 1;
+          local = transform.scale(zoom).multiply(local);
+        }
+        // Some engines still return legacy SVGMatrix here; its multiply()
+        // rejects DOMMatrix, so normalize the six affine components first.
+        matrix = new DOMMatrix([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f]).multiply(local);
+      }
+      const unit = matrix ? Math.hypot(matrix.c, matrix.d) : active.svg.getBoundingClientRect().height / active.height;
+      const size = parseFloat(style.fontSize) * unit;
+      if (Number.isFinite(size) && size > 0) sizes.push(size);
+    });
+    const target = parseFloat(getComputedStyle(document.body).fontSize) || 16;
+    // An unmeasurable diagram keeps its intrinsic size instead of shrinking.
+    scale(sizes.length ? Math.max(1, target / Math.min(...sizes)) : 1, false, 'reading');
     viewport.scrollTo(0, 0);
   }
   function searchNodes() {
@@ -327,35 +406,39 @@
     const placeholder = document.createComment('diagram position');
     svg.before(placeholder);
     active = {svg, trigger, placeholder, style: svg.getAttribute('style'), scale: 1,
-      width: box.width || svg.getBoundingClientRect().width,
-      height: box.height || svg.getBoundingClientRect().height};
+      width: box.width || (svg.width.baseVal.unitType !== 2 && svg.width.baseVal.value) || svg.getBoundingClientRect().width,
+      height: box.height || (svg.height.baseVal.unitType !== 2 && svg.height.baseVal.value) || svg.getBoundingClientRect().height};
     canvas.append(svg);
     nodeInput.value = '';
     document.querySelector('#node-count').textContent = '';
     document.querySelector('#diagram-title').textContent = trigger.getAttribute('data-title') || t('다이어그램', 'Diagram');
     diagramDialog.showModal();
-    fit();
-    if (window.matchMedia('(max-width: 760px)').matches && active.scale < .85) {
-      scale(.85, false);
-      viewport.scrollTo(0, 0);
-    }
+    readDiagram();
     nodeInput.focus();
   }
   diagramDialog.addEventListener('close', () => {
     if (!active) return;
+    endPan();
     active.svg.querySelectorAll('.is-match').forEach(node => node.classList.remove('is-match'));
     if (active.style === null) active.svg.removeAttribute('style');
     else active.svg.setAttribute('style', active.style);
     active.placeholder.replaceWith(active.svg);
     active.trigger.focus({preventScroll: true});
     active = null;
+    panCursor();
   });
   nodeInput.addEventListener('input', searchNodes);
   document.querySelector('#zoom-in').addEventListener('click', () => active && scale(active.scale * 1.25));
   document.querySelector('#zoom-out').addEventListener('click', () => active && scale(active.scale / 1.25));
   document.querySelector('#zoom-reset').addEventListener('click', () => scale(1));
   document.querySelector('#zoom-fit').addEventListener('click', fit);
-  window.addEventListener('resize', () => { if (active) fit(); });
+  // Only an explicitly selected overview follows the viewport size. Resizing
+  // must not turn reading, manual zoom or a search result into a tiny overview.
+  window.addEventListener('resize', () => {
+    endPan();
+    if (active?.mode === 'fit') fit();
+    else panCursor();
+  });
 
   const diagrams = [...document.querySelectorAll('.mermaid')];
   if (diagrams.length) {
