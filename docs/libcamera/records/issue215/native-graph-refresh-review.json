@@ -1,0 +1,58 @@
+{
+  "scope": "Graph-only replacement of authenticated historical prose and correct explanatory-length counting. Not whole-book model/figure acceptance, human approval, runtime verification or publication.",
+  "native_api_review": "code-review-103/review.json",
+  "navigation_review": "code-review-108/review.json",
+  "final_findings": [],
+  "test_result": "239 passed in 144.41s",
+  "test_modules": [
+    "test_visual_refresh_native",
+    "test_visual_refresh",
+    "test_render_profiles",
+    "test_generated_visuals",
+    "test_visuals",
+    "test_visual_audit",
+    "test_visual_audit_windows",
+    "test_visual_audit_retention"
+  ],
+  "source_files": {
+    "src/sdd/visual_refresh.py": {
+      "working_bytes_sha256": "5754f006dfb49ac4ee76f5fe58043ac75d9ecb158771907a10d587f3184b9e60",
+      "lf_view_sha256": "808f362f24405bbf701ad84ced60c406a57768905403736aa45cd4e634f34c13"
+    },
+    "src/sdd/visual_audit.py": {
+      "working_bytes_sha256": "c35f039fcf849cd830622d1786bfa7cec16b6a71cfd8fe908c0f180f2c8ddb15",
+      "lf_view_sha256": "c35f039fcf849cd830622d1786bfa7cec16b6a71cfd8fe908c0f180f2c8ddb15"
+    },
+    "tests/test_visual_refresh_native.py": {
+      "working_bytes_sha256": "f2c886fa03b8e2e37f1393489086ac2f0b97945a2b4e3ddf8d8246cc4fb53b58",
+      "lf_view_sha256": "f2c886fa03b8e2e37f1393489086ac2f0b97945a2b4e3ddf8d8246cc4fb53b58"
+    },
+    "tests/test_visual_audit.py": {
+      "working_bytes_sha256": "464ce826ab74ada148cf8ea0b46afebfe44d4efc0f1d5e619c6a2007b2c20b8f",
+      "lf_view_sha256": "464ce826ab74ada148cf8ea0b46afebfe44d4efc0f1d5e619c6a2007b2c20b8f"
+    },
+    "docs/concepts/site.md": {
+      "working_bytes_sha256": "172a0fb5317af86e072a588ad34aafa88b2797812bf091753cc6f2ed19542f6b",
+      "lf_view_sha256": "172a0fb5317af86e072a588ad34aafa88b2797812bf091753cc6f2ed19542f6b"
+    },
+    "docs/reference/visual-audit.md": {
+      "working_bytes_sha256": "3285b318c55cdd0fa75cd6b8b41c6584c31dba5952e6cbed7e52c9f87e2450b0",
+      "lf_view_sha256": "3285b318c55cdd0fa75cd6b8b41c6584c31dba5952e6cbed7e52c9f87e2450b0"
+    }
+  },
+  "archive_sha256": "778bc5adbd1ccdc6d9b11469ad9a711857c2b4eec06ab34b4abb48647611b8ab",
+  "archive_bytes": 389167,
+  "native_call_deduplication": "Code review103 is the same actual call already archived for PR245 alias-fix validation; it inspected both variants. Do not count this copy as a new inference.",
+  "profile": {
+    "kind": "cli",
+    "runner": "codex",
+    "command": [],
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "cli_version": "0.166.0-alpha.5.1",
+  "human_review": "pending"
+}

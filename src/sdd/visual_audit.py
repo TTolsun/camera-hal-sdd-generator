@@ -178,6 +178,26 @@ def window_bundle(text, structure, nodes, root, page, *, heading_context=None):
     return text+WINDOW_BINDING+json.dumps(binding, ensure_ascii=False, sort_keys=True)
 
 
+def _generated_route_alias(node):
+    """Recognize only the renderer's legacy-link control, never hidden prose."""
+    if (node.tag != 'div' or node.attrs.get('class') != 'previous-route'
+            or not node.attrs.get('id')):
+        return False
+    nodes = [child for child in node.children if isinstance(child, Node)]
+    if (len(nodes) < 2 or nodes[0].tag != 'p'
+            or any(not isinstance(child, str) for child in nodes[0].children)
+            or plain(nodes[0]) not in {'이전 링크의 목적지', 'Destination of the previous link'}
+            or any(node.tag != 'a' or not node.attrs.get('href') for node in nodes[1:])):
+        return False
+    if any(child.strip() not in {'', '·'} for child in node.children if isinstance(child, str)):
+        return False
+    phrasing = {'a', 'abbr', 'b', 'bdi', 'bdo', 'br', 'cite', 'code', 'data', 'del', 'dfn',
+                'em', 'i', 'ins', 'kbd', 'mark', 'q', 'rp', 'rt', 'ruby', 's', 'samp',
+                'small', 'span', 'strong', 'sub', 'sup', 'time', 'u', 'var', 'wbr'}
+    return all(child.tag in phrasing
+               for link in nodes[1:] for child in all_nodes(link))
+
+
 def without_navigation(current):
     if isinstance(current,str):
         return current
@@ -406,6 +426,16 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                     current['available_source_windows'].append(href)
             if node.tag == 'pre' and 'mermaid' in node.attrs.get('class', '').split():
                 current['figures'].append(dict(id='mermaid-'+str(len(current['figures'])), source=node.text(), evidence=[], text=[]))
+            return
+        if _generated_route_alias(node):
+            # Exclude only explanation counting. Keep the full control in
+            # source windows and fingerprints, and retain explicit citations.
+            binding = digest(node_window(node, root, page))
+            current['excluded'].append(dict(kind='navigation', chars=len(plain(node)), sha256=binding))
+            current['content_blocks'].append(binding)
+            current['available_source_windows'].extend(
+                link.attrs.get('href', '') for link in node.all('a')
+                if 'citation' in link.attrs.get('class', '').split())
             return
         if node.tag == 'summary':
             current['summaries'].append(plain(node))
