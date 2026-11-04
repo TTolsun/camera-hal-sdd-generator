@@ -8,6 +8,7 @@ import hashlib
 import json
 import subprocess
 import time
+import re
 from dataclasses import asdict
 
 import pytest
@@ -149,6 +150,26 @@ def exercise_fixed_input(cli_units, tmp_cfg, monkeypatch, change, expected):
               sum(c[0] == 'visual' for c in extra), sum(c[0] == 'translation' for c in extra))
     assert actual == expected
     assert all(path.read_bytes() == raw for path, raw in archives.items())
+    outputs = {p.relative_to(site).as_posix(): p.read_bytes() for p in site.rglob('*') if p.is_file()}
+    assert outputs.keys() == original_outputs.keys()  # No unaffected page/asset disappears.
+    for name in ('assets/reading.css','assets/site.js'):
+        assert outputs[name] == original_outputs[name]
+    def article(raw):
+        values = re.findall(r'<article>(.*?)</article>',raw.decode('utf-8'),re.S)
+        assert len(values) == 1
+        return values[0]
+    old_article,new_article = article(original_outputs['device.html']),article(outputs['device.html'])
+    prepare_marker = '<h2 id="시작-준비">'
+    assert old_article.count(prepare_marker) == new_article.count(prepare_marker) == 1
+    def prepare_html(value):
+        return value.split(prepare_marker,1)[1].split('<h2 ',1)[0]
+    assert prepare_html(new_article) == prepare_html(old_article)
+    if change not in ('question','evidence','visual'):
+        # DESIGN.md places mutable generation/checkpoint metadata outside the
+        # article. Compare the complete original visible article and sources.
+        assert new_article == old_article
+    else:
+        assert new_article != old_article
     meta,body = split_frontmatter((tmp_cfg.sdd_dir/'device.md').read_text(encoding='utf-8'))
     old_design,new_design = original_meta['generated_design'],meta['generated_design']
     assert new_design['answers']['prepare'] == old_design['answers']['prepare']
@@ -364,3 +385,26 @@ def test_decision_journal_serializes_concurrent_updates(tmp_cfg):
     saved = json.loads(execution.path.read_bytes())
     assert {row['unit'] for row in saved['decisions']} == {str(i) for i in range(32)}
     assert len(saved['decisions']) == len(execution.report['decisions']) == 32
+
+
+def test_relabelled_checkpoint_cannot_hide_an_unknown_dependency_type_change(cli_units, tmp_cfg):
+    from sdd.cli_checkpoint import UnitStore, checksum
+    _, model, _, _, state, factory = cli_units
+    state['interrupt'] = False
+    Generator(tmp_cfg, model, factory()).run()
+    original = next((tmp_cfg.build_dir/'cli-checkpoints').glob('*.json'))
+    saved = json.loads(original.read_bytes())
+    old = copy.deepcopy(saved['payload']['identity'])
+    old['unknown-policy'] = 1
+    current = copy.deepcopy(old)
+    current['unknown-policy'] = True  # Python equality hides this JSON type change.
+    saved['payload']['identity'] = old
+    saved['sha256'] = checksum(saved['payload'])
+    store = UnitStore(tmp_cfg,current)
+    # A checksum-valid archive cannot become current by moving it to the new
+    # expected filename. The receipt is valid, but its policy input is stale.
+    store.path.write_text(json.dumps(saved),encoding='utf-8')
+    with pytest.raises(ValueError,match='identity'):
+        store.read()
+    from sdd.reuse_decision import differences
+    assert differences({'unknown-policy':1},{'unknown-policy':True})[0]['path'] == 'unknown-policy'

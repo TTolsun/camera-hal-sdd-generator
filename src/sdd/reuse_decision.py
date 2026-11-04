@@ -20,7 +20,7 @@ def differences(previous, current, prefix=''):
             else:
                 result.extend(differences(previous[key], current[key], path))
         return result
-    if previous == current:
+    if canonical_request_hash(previous) == canonical_request_hash(current):
         return []
     return [dict(path=prefix, previous_sha256=canonical_request_hash(previous),
                  current_sha256=canonical_request_hash(current))]

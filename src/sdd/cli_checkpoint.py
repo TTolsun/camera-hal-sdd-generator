@@ -183,7 +183,7 @@ class UnitStore:
             data = load_json(self.path)
             payload = data['payload']
             if (data['sha256'] != checksum(payload)
-                    or self.compatible_identity(payload['identity']) != self.compatible_identity(self.identity)
+                    or checksum(self.compatible_identity(payload['identity'])) != checksum(self.compatible_identity(self.identity))
                     or not isinstance(payload['receipts'], list) or not payload['receipts']):
                 raise ValueError('checkpoint identity or checksum mismatch')
             records = self._records(payload['receipts'])
