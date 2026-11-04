@@ -140,6 +140,7 @@ class Contract:
         if model is None and cfg.facts_path.is_file():
             from .facts.model import KnowledgeModel
             model = KnowledgeModel.from_dict(json.loads(self.watch.read(cfg.facts_path)))
+        self.model_input = deepcopy(asdict(model)) if model is not None else None
         # This operation resolves the selected source HEAD itself. The existing
         # stage/checkpoint guards retain their default Git-file observation.
         self.watch.pin(cfg, model, include_source_git=False)
@@ -317,6 +318,8 @@ class Contract:
                 self.watch.read(path)
 
     def select(self, model, sections):
+        if self.model_input is None or asdict(model) != self.model_input:
+            raise ValueError('Selection model differs from the sealed publication basis; start with current facts/model')
         self.check_source(model.meta.get('source_commit'))
         if set(sections) - set(self.contract['sections']):
             raise ValueError('Publication selection exceeds operation scope; record the scope change first')

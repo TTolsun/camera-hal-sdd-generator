@@ -664,3 +664,12 @@ def test_initial_dirty_evidence_cannot_claim_the_committed_source(tmp_cfg, sampl
     with pytest.raises(ValueError, match='declared committed source'):
         with Execution(tmp_cfg, object(), model=sample_model).track('generation'):
             pytest.fail('dirty source accepted as committed input')
+
+
+def test_model_cannot_be_added_after_sealing_an_empty_basis(tmp_cfg, sample_model):
+    configure(tmp_cfg, sample_model, ['device'])
+    tmp_cfg.facts_path.unlink(missing_ok=True)
+    execution = Execution(tmp_cfg, object())
+    with execution.track('generation'):
+        with pytest.raises(ValueError, match='sealed publication basis'):
+            execution.publication_contract.select(sample_model, ['device'])
