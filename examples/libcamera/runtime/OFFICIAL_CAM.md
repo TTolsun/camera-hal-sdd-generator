@@ -28,6 +28,46 @@ GDB 중단점은 타이밍에 영향을 주므로 콜백 반환이나 타이밍�
 2. 기존 WSL·Docker에 영향을 주지 않는 시험 환경을 먼저 검토합니다. 공유 커널 모듈 변경, 공유 커널 재부팅, `.wslconfig` 변경, 배포판 또는 VM 종료, Docker 중지가 필요하면 영향, 정확한 백업 경로, 부팅할 커널과 이미지 SHA-256, 부팅 절차, 복구 절차를 포함한 호스트 변경 계획을 작성합니다. 복구 기준은 이번 시험 복구 후 확인된 기본 커널 `6.18.33.2-microsoft-standard-WSL2`와 `.wslconfig` 부재 상태입니다. 이 계획은 PR 병합·Pages 배포 승인으로 대신하지 않으며, 실행 직전에 별도 호스트 승인을 받습니다. 승인 전에는 Docker를 중지하거나 WSL을 종료하지 않습니다.
 3. 호스트 승인 후 승인된 계획의 각 단계를 하나씩 수행합니다. 계획이 Docker 중지를 요구하는 환경이면 승인 후 Docker를 중지하고, 그 다음에 공유 커널을 재부팅합니다. Docker 중지가 필요 없으면 이 단계를 생략합니다. 커널 준비는 영향 없는 단계부터 진행하며, 준비 절차는 1단계 예시와 2단계 계획을 따릅니다. 선택한 커널과 할당기가 실제로 요구하는 모듈은 1단계에서 확인해 계획에 포함합니다. 이번 기록된 시험에서 일치하는 모듈을 설치하지 않은 것은 그 시험의 사실이며, 이후 모든 준비를 금지하지 않습니다. `kernel_trial.py`는 자동으로 실행하지 않습니다.
 4. 실행 중인 커널이 `6.18.33.2-microsoft-standard-WSL2-issue211`인지, root가 `/dev/udmabuf`을 열 수 있는지 확인합니다. 하나라도 다르면 캡처하지 않습니다.
+4-1. 실행 계획을 읽기 전용으로 먼저 확인합니다.
+
+아래 명령은 cam을 실행하지 않고 호스트 상태를 바꾸지 않습니다. 결과는 표준 출력에만 JSON으로 나오며, `--build` 경로나 `cam` 파일의 존재는 확인하지 않습니다.
+
+```
+python3 <generator>/examples/libcamera/runtime/preview_cam.py --build <its-debug-meson-build>
+```
+
+출력의 `cam_argv`는 `<its-debug-meson-build>`의 절대 경로 뒤에 `src/apps/cam/cam`을 붙인 실행 파일과 다음 인자로 구성됩니다.
+
+```
+--camera Virtual2 --capture=3 --stream role=video,width=400,height=300,pixelformat=NV12
+```
+
+출력의 `executed: false`는 계획만 만들었다는 뜻입니다. 설정이 적용되었다는 뜻도, 캡처가 성공했다는 뜻도 아닙니다. 실제 적용과 결과는 5단계 실행 기록으로 확인합니다.
+
+5단계 실행 후 `<new-evidence-directory>/cam-1`, `cam-2`, `cam-3`을 각각 확인합니다.
+
+1. `record.json`의 `argv`에서 `--args` 뒤 여섯 항목(실행 파일과 인자 다섯 개)이 위 `cam_argv`와 같은지 확인합니다.
+2. `stdout`에 `Using camera Virtual2 as cam0`이 있고, `stderr`의 `configuring streams:` 줄이 정확히 하나이며 값이 `(0) 400x300-NV12/SMPTE170M`인지 확인합니다.
+3. `events.jsonl`에서 콜백 3회와 처리 프레임 3회가 정상 완료 상태(status 1)로 기록되었는지 확인합니다.
+4. `inferior-exit.json`이 `exit_code` 0과 빈 `observation_failures`인지 확인합니다.
+
+위 네 가지만으로는 캡처 성공을 판단할 수 없습니다. 아래 5번의 `observation.json` 검사까지 모두 통과해야 합니다.
+
+5. 세 실행이 끝난 뒤 `<new-evidence-directory>/observation.json`을 확인합니다.
+- `status`가 `observed-wsl-virtual-only`이고, `failure` 키가 없으며, `results`가 3개이고 PID 3개가 서로 달라야 합니다.
+- `human_review`는 `pending`으로 남습니다. 이는 사람 승인이 아직 없다는 뜻이며, 자동 관측 기록을 막지 않습니다. 자동 측정 결과와 사람 승인은 별개이므로 `observed-wsl-virtual-only`를 사람 승인으로 읽지 않습니다.
+
+`status`가 `observed-wsl-virtual-only`로 기록되려면 다음 검증이 모두 통과해야 합니다.
+
+- 빌드와 소스: `ninja` 빌드가 성공하고, `meson-info`의 소스·build 디렉터리가 일치하며, 소스 HEAD가 `293d751a`이고 추적 파일이 변경되지 않았습니다.
+- DMA 프로브: `validate_dma`가 프로브 출력을 통과시킵니다. 프로브 해시는 `observation.json`의 `binaries`에 기록만 되며, `loaded.json`과 비교하지 않습니다.
+- 로드된 바이너리: `loaded.json`의 실행 파일 경로가 cam 빌드 경로와 같고, cam 실행 파일과 `libcamera.so`, `libcamera-base.so`의 해시가 빌드 파일과 일치합니다.
+- DMA 할당: 모든 할당 결과가 0 이상이고, 결과 값과 backing fd가 다르며, 제공자가 있고 fdinfo에 `udmabuf`이 있습니다.
+- 프레임과 버퍼: 콜백 3회와 처리 프레임 3회가 정상 완료 상태이고, `buffers.jsonl` 항목 3개가 처리 프레임과 일치하며 `buffer_status` 0, `status` 1, `buffer_sequence`가 `sequence`와 같습니다.
+- 실행 기록: 각 실행의 `require_success` 검사, 카메라 이름, 스트림 설정 한 개, 종료 코드 0, 로드된 바이너리 해시가 모두 통과합니다.
+
+물리 DMA, 물리 카메라, 제품 앱, 사내 HAL은 이 관측의 대상이 아니며 `observation.json`에 `not-validated` 또는 `not-run`으로 남습니다.
+
 5. WSL root 자식 컨텍스트에서 아래 명령을 실행합니다. `<new-evidence-directory>`는 존재하지 않는 경로여야 하며, 명령이 이 경로를 새로 만듭니다. 미리 빈 디렉터리를 만들지 않습니다. `<private-extracted-tools-prefix>`는 `usr/bin/gdb`와 `usr/share/gdb`를 포함하는 디렉터리입니다. `<compiled-dmabuf-probe>`는 `dmabuf_probe.c`를 `gcc -std=c11 -Wall -Wextra -Werror -O0 -g`로 컴파일한 결과입니다. `<unmodified-source-at-293d751a>`, `<its-debug-meson-build>`, `<private-extracted-tools-prefix>`, `<compiled-dmabuf-probe>`의 실제 경로는 현재 환경에서 확인해 채웁니다. [prepare_runtime.sh](../validation/issue211/prepare_runtime.sh) 예시가 가리키는 산출 위치는 참고만 하며, 실행 전 실제 존재와 293d751a 고정 여부를 확인합니다.
 
 ```

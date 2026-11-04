@@ -51,6 +51,20 @@ def context(bound, index=0):
     return bound[index]['design_topics'][0]['_product_context']
 
 
+@pytest.mark.parametrize('explicit', [False, True])
+def test_product_material_is_bound_once_when_a_part_names_it(products, explicit):
+    cfg, _, sections, _ = products
+    refs = ['code', 'product-spec-a'] if explicit else ['code']
+    sections[0]['design_topics'][0]['parts'] = [
+        {'id': 'usage', 'question': 'What can this fixture do?', 'sources': refs}
+    ]
+    original = copy.deepcopy(sections)
+    topic = bind(cfg, sections)[0]['design_topics'][0]
+    assert topic['parts'][0]['sources'] == ['code', 'product-spec-a']
+    assert [s['id'] for s in topic['sources']].count('product-spec-a') == 1
+    assert sections == original
+
+
 def test_two_fictional_configurations_same_source_different_offering(products):
     cfg, _, sections, _ = products
     result = bind(cfg, sections)

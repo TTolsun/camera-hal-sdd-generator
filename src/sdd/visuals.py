@@ -63,7 +63,15 @@ def wrap_label(value, width=28):
             lines.append(line)
             line = ''
         if re.search(r'[A-Za-z_]\w*(?:::\w+)+', word, re.ASCII):
-            line += word
+            # Mermaid also wraps long HTML labels. Offer namespace boundaries
+            # so its fixed-width label box need not split a method name.
+            parts = word.split('::')
+            for index, part in enumerate(parts):
+                chunk = part + ('::' if index < len(parts) - 1 else '')
+                if line and size(line + chunk) > width:
+                    lines.append(line)
+                    line = ''
+                line += chunk
             continue
         for char in word:
             if line and size(line + char) > width:

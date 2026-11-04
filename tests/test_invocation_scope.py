@@ -73,7 +73,10 @@ def test_shipped_virtual_visuals_resolve_against_attached_topic_sources(tmp_cfg)
     topics = {topic['id']: topic for topic in bound['design_topics']}
     plans = [yaml.safe_load((DIRECTORY/'visual.yaml').read_bytes())]
     plans += yaml.safe_load((DIRECTORY/'retained-visual-overrides.yaml').read_bytes())
-    assert len(plans) == 5
+    expected = {'virtual-frame-path', 'request-completion-order', 'submission-gate',
+                'initial-submission', 'completion-flow', 'reproduction-flow'}
+    assert len(plans) == len(expected)
+    assert {plan['id'] for plan in plans} == expected
     for plan in plans:
         available = {source['id'] for source in topics[plan['topic']]['sources']}
         assert set(plan['sources']) <= available, (plan['id'], sorted(set(plan['sources']) - available))

@@ -449,6 +449,60 @@ def test_automatic_graph_generation_reuse_export_and_carryover(tmp_cfg, automati
     assert _split(path.read_text(encoding='utf-8'))[0]['generated_visuals']['records']['stop-flow']['generation_commit']=='a'*40
 
 
+def test_guard_branch_check_is_optional_and_preserves_source_conditions(tmp_cfg, automatic):
+    from sdd.generated_visuals import inputs, materialize, plans
+    section, model, save, agent = automatic
+    record = model.evidence['device/shutdown/stop']
+    record['text'] = 'void Device::stop() { if (ready()) { cancelPending(); } else { keepPending(); } }'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    section['design_topics'][0]['sources'][0]['sha256'] = record['sha256']
+    record['selector'] = copy.deepcopy(section['design_topics'][0]['sources'][0])
+    save()
+    plan = plans(tmp_cfg, section)[0]
+    draft = copy.deepcopy(agent.draft)
+    draft['edges'][0]['condition_ref'] = 'c0:true'
+    # Existing diagrams retain their prior interpretation unless opted in.
+    legacy = materialize(tmp_cfg, model, section, plan, draft, 'test')
+    assert 'ready() [true]' in legacy['edges'][0]['label']
+    restricted = {**plan, 'require_guard_branches': True}
+    with pytest.raises(ValueError, match='non-decision node stop'):
+        materialize(tmp_cfg, model, section, restricted, draft, 'test')
+    draft['nodes'][0]['shape'] = 'decision'
+    with pytest.raises(ValueError, match='true and false outcomes'):
+        materialize(tmp_cfg, model, section, restricted, draft, 'test')
+    draft['nodes'].append(dict(id='keep', symbol='keepPending', label='대기 유지',
+                               label_en='Keep pending', shape='box', quote_ids=['stop:0']))
+    draft['edges'].append(dict(**{'from': 'stop', 'to': 'keep'}, label='대기',
+                              label_en='Wait', condition_ref='c0:false', quote_ids=['stop:0']))
+    graph = materialize(tmp_cfg, model, section, restricted, draft, 'test')
+    assert 'require_guard_branches' not in graph
+    assert 'ready() [true]' in graph['edges'][0]['label']
+    assert 'ready() [false]' in graph['edges'][1]['label']
+    for invalid in ['true', 1, None]:
+        with pytest.raises(ValueError, match='require_guard_branches must be boolean'):
+            inputs(tmp_cfg, model, section, {**plan, 'require_guard_branches': invalid})
+
+
+def test_incomplete_guard_branch_preserves_prior_manuscript(tmp_cfg, automatic):
+    section, model, save, agent = automatic
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    previous = path.read_bytes()
+    record = model.evidence['device/shutdown/stop']
+    record['text'] = 'void Device::stop() { if (ready()) { cancelPending(); } }'
+    record['sha256'] = hashlib.sha256(record['text'].encode()).hexdigest()
+    section['design_topics'][0]['sources'][0]['sha256'] = record['sha256']
+    record['selector'] = copy.deepcopy(section['design_topics'][0]['sources'][0])
+    save()
+    p = tmp_cfg.root/'visuals.yaml'
+    data = yaml.safe_load(p.read_text(encoding='utf-8'))
+    data['sections']['device'][0]['require_guard_branches'] = True
+    p.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    agent.draft['nodes'][0]['shape'] = 'decision'
+    agent.draft['edges'][0]['condition_ref'] = 'c0:true'
+    tmp_cfg.max_retries = 0
+    with pytest.raises(ValueError, match='true and false outcomes'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == previous
 def test_citation_failure_identifies_the_node_and_unknown_edge_endpoint(tmp_cfg, automatic):
     from sdd.generated_visuals import materialize, plans
     section, model, _, agent = automatic

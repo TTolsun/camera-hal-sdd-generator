@@ -1,11 +1,141 @@
+- id: submission-gate
+  topic: initial-preparation
+  kind: decision
+  title: 초기 요청들의 준비 반복과 준비 완료
+  generation: llm
+  max_nodes: 7
+  required_symbols:
+  - allocate
+  - createRequest
+  - addBuffer
+  - requests_
+  - nbuffers
+  question: 기록된 단일 스트림·출력 싱크 미요청 구성에서 모든 초기 요청·버퍼는 카메라 시작 전에 어떻게 준비되며 준비 실패는 어떻게 처리됩니까?
+  sources:
+  - cam-preparation
+  max_label_chars: 64
+  condition_display: evidence
+  require_connected: true
+  prompt: 현재 그래프 구조·노드 수·간선·심볼·실제 조건 양쪽·인용을 보존하고 지정한 라벨만 수정합니다. 다른 라벨은 유지합니다. err_return은 오류 값 반환과 카메라
+    시작 전 종료라는 결과만 명시합니다. err_return의 라벨에 할당·생성·연결 실패 조건을 반복하지 않습니다. 그 조건들은 각각 앞 결정 노드에서 설명합니다. 나머지 노드와
+    간선은 모두 유지합니다. 처음 생성할 때는 할당 실패 판정, 공통 오류 반환, 남은 초기 요청 판정, 요청 생성 실패 판정, 버퍼 연결 실패 판정, 현재 요청 보관, 모든 초기
+    요청 준비 완료라는 일곱 역할로 소스의 준비 반복을 설명합니다. 할당·생성·연결의 오류는 반환으로, 성공한 단일 스트림 연결은 현재 요청 보관과 남은 요청 재확인으로 이어집니다.
+    카메라 시작은 다음 그림의 범위입니다. 모든 실제 조건 양쪽과 소스 인용을 유지합니다.
+  answer_contract_en:
+    basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+      message: Use concise preparation actions and decisions in authored labels. Keep function/counter
+        identifiers in symbol bindings and evidence.
+    - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+      message: The allocation gate tests the actual cam allocate() return, not allocator validity. Keep
+        comparisons and raw calls in source evidence.
+    - pattern: (?m)^[^·\n]*(?:reservation|예약)
+      message: Express queuing/dispatching request work asynchronously inside the validated camera call,
+        not resource reservation.
+    - pattern: (?m)^[^·\n]*(?:카메라 세션|camera session)
+      message: This gate checks camera_->start(), not all of CameraSession::startCapture.
+    - pattern: 할당·생성·연결 실패|Alloc, create or attach fails
+      message: The shared error-return node states the result; preceding decisions already identify allocation,
+        creation and attachment failures.
+  max_edge_label_chars: 20
+  answer_contract:
+    basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+      message: Use concise preparation actions and decisions in authored labels. Keep function/counter
+        identifiers in symbol bindings and evidence.
+    - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+      message: The allocation gate tests the actual cam allocate() return, not allocator validity. Keep
+        comparisons and raw calls in source evidence.
+    - pattern: (?m)^[^·\n]*(?:reservation|예약)
+      message: Express queuing/dispatching request work asynchronously inside the validated camera call,
+        not resource reservation.
+    - pattern: (?m)^[^·\n]*(?:카메라 세션|camera session)
+      message: This gate checks camera_->start(), not all of CameraSession::startCapture.
+    - pattern: 할당·생성·연결 실패|Alloc, create or attach fails
+      message: The shared error-return node states the result; preceding decisions already identify allocation,
+        creation and attachment failures.
+  require_guard_branches: true
+  while_conditions: true
+- id: initial-submission
+  topic: initial-submission
+  kind: decision
+  title: 초기 요청 제출 반복과 오류 반환
+  generation: llm
+  max_nodes: 9
+  required_symbols:
+  - Camera::start
+  - requests_
+  - CameraSession::queueRequest
+  - Camera::queueRequest
+  - stop
+  question: 같은 기록 구성에서 카메라 시작 뒤 남은 초기 요청을 순회하며 제출 한도를 적용하고 큐 반환 오류와 정상 순회 종료를 어떻게 처리합니까?
+  sources:
+  - cam-request-buffers
+  - camera-queue
+  max_label_chars: 48
+  condition_display: evidence
+  require_connected: true
+  prompt: '이 그림은 초기 제출의 독자용 개요이며 내부 카운터 증가·세부 API 검증은 본문과 전체 소스 근거에 남깁니다. 아홉 역할만 둡니다: 시작 실패 판정, 시작 오류
+    반환, 남은 초기 요청 판정, 제출 한도 판정, 실제 카메라 큐 호출 시도, 호출 결과의 음수 오류 판정, 이미 시작한 카메라 중지 후 제출 오류 반환, 성공한 실제 호출의 예약됨·0반환
+    결과, 초기 제출 순회 완료. 기존 카운터 증가와 API 검증 노드를 호출 시도로 묶고 별도 API 오류 반환 노드는 결과 판정에 묶습니다. 모든 실제 cam guard와 그
+    양쪽·소스 인용은 보존합니다. 한도 도달은 실제 큐 호출 없이0을 반환하고 남은 요청으로 반복합니다. 한도 미설정·미달이면 실제 호출을 하며 음수이면 중지·오류 반환, 아니면
+    해당 API 호출이 예약됐고0을 반환했다는 결과를 거쳐 남은 요청을 확인합니다. 성공 결과 상자는 이미 확인된 호출 결과의 설명이며 결과 판정 뒤에 새 예약이나 실행을 하는 동작이
+    아닙니다. 시작 자체 실패에는 카메라 중지를 추가하지 않습니다. 예약·반환·다른 스레드 실행 사이에 없는 순서를 추가하지 않습니다. 메인 그림에서 내부 변수·필드 이름이나queueRequest
+    반환값 음수 판정 같은 긴 구현 문장을 쓰지 않습니다. 한영48자 이내 짧은 행동구·결과·판정 질문을 사용합니다. 처음 생성할 때 아홉 역할은 카메라 시작 실패 판정, 시작 오류
+    반환, 남은 초기 요청 판정, 제출 한도 판정, 실제 카메라 큐 호출 시도, 호출 결과의 음수 오류 판정, 이미 시작한 카메라 중지 후 제출 오류 반환, 성공한 실제 호출의 예약됨·0반환
+    결과, 초기 제출 순회 완료입니다. 한도 도달은 호출 없이0을 반환하고 남은 요청을 확인합니다. 한도 미설정·미달이면 실제 호출을 하고, 음수이면 중지·오류 반환하며 아니면 성공한
+    호출 결과를 확인하고 반복합니다. 성공 결과 상자는 결과 상태를 설명하며 그 위치에서 새 예약이나 실행을 수행한다는 뜻이 아닙니다. 모든 실제 조건의 양쪽·인용·시작 실패와 제출
+    실패의 차이를 보존합니다.'
+  answer_contract_en:
+    basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+      message: Use concise preparation actions and decisions in authored labels. Keep function/counter
+        identifiers in symbol bindings and evidence.
+    - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+      message: The allocation gate tests the actual cam allocate() return, not allocator validity. Keep
+        comparisons and raw calls in source evidence.
+    - pattern: (?m)^[^·\n]*(?:reservation|예약)
+      message: Express queuing/dispatching request work asynchronously inside the validated camera call,
+        not resource reservation.
+    - pattern: (?m)^[^·\n]*(?:카메라 세션|camera session)
+      message: This gate checks camera_->start(), not all of CameraSession::startCapture.
+    - pattern: already performed|delivery.{0,15}completed
+      message: A queued invocation is scheduled before return, not completed delivery or execution.
+    - pattern: (?i)before running|after running|before execution|after execution
+      message: Queued execution can race the caller return; state scheduling and zero return only.
+    required_terms:
+    - - running
+      - Running
+  max_edge_label_chars: 20
+  answer_contract:
+    basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+      message: Use concise preparation actions and decisions in authored labels. Keep function/counter
+        identifiers in symbol bindings and evidence.
+    - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+      message: The allocation gate tests the actual cam allocate() return, not allocator validity. Keep
+        comparisons and raw calls in source evidence.
+    - pattern: (?m)^[^·\n]*(?:reservation|예약)
+      message: Express queuing/dispatching request work asynchronously inside the validated camera call,
+        not resource reservation.
+    - pattern: (?m)^[^·\n]*(?:카메라 세션|camera session)
+      message: This gate checks camera_->start(), not all of CameraSession::startCapture.
+    - pattern: 실행 전.{0,8}반환|반환.{0,8}실행 후
+      message: Do not order execution on the other thread relative to the caller return.
+  require_guard_branches: true
+  while_conditions: true
 - id: request-completion-order
   topic: virtual-principle
   kind: flow
   title: 버퍼 완료와 요청 완료·순서 통지는 별개입니다
   generation: llm
-  max_nodes: 8
-  max_label_chars: 72
-  max_edge_label_chars: 40
+  max_nodes: 9
+  max_label_chars: 48
+  max_edge_label_chars: 20
   condition_display: evidence
   while_conditions: true
   require_connected: true
@@ -14,38 +144,78 @@
   - completeBuffer
   - FrameBuffer
   - completeRequest
-  - queuedRequests_
   - RequestPending
   - requestCompleted
-  - doQueueRequests
+  - queuedRequests_
   sources:
   - virtual-completion
   - pipeline-completion
   - camera-notification
   - cam-signal-connection
   - virtual-start
-  question: 버퍼 완료 뒤 요청 완료와 제출 순서 통지는 어떻게 구분되며 Pending을 만나면 어떤 작업이 이어집니까?
-  prompt: '고정된 8개 노드를 사용합니다. n0은 가상 핸들러가 버퍼 완료 신호를 받는 단계, n1은 completeBuffer가 모든 요청
-    버퍼 완료인지 반환하는 결정입니다. 거짓은 n2 남은 버퍼 대기(요청 완료 표시 전)라는 별도 결과로 갑니다. 참은 n3 PipelineHandler가
-    현재 요청을 완료로 표시하는 단계로 갑니다. n3→n4는 제출 큐가 비어 있지 않은가라는 while 조건 검사입니다. n4 참이면 n5 제출
-    큐 맨 앞 요청이 아직 RequestPending인가를 검사합니다. n4 거짓이면 n7 후속 대기 요청 큐 처리(doQueueRequests)로
-    갑니다. n5 참이면 그 Pending 요청과 뒤 요청들의 통지를 보류하고 n7 후속 큐 처리로 갑니다. n5 거짓이면 n6 완료된 맨 앞
-    요청을 꺼내 Camera의 requestCompleted 신호로 cam에 통지한 뒤 n4로 돌아가 다음 맨 앞을 검사합니다. 이 반복은 제출
-    순서를 보장합니다. 큐 선두는 현재 완료 표시한 요청과 같을 수도 다를 수도 있습니다. 앞의 완료 요청들을 이미 통지한 뒤 Pending에서
-    멈출 수도 있으므로 Pending 분기를 이번 호출의 통지 0건으로 표현하지 않습니다. n2와 n7은 서로 다른 결과이며 합치지 않습니다.
-    n7은 함수 종료나 반환이 아니라 통지 반복 뒤에도 계속되는 doQueueRequests 작업입니다. 실제 while 및 Pending guard의
-    참/거짓과 completeBuffer 반환 조건을 source condition_ref로 인용합니다. 모든 간선에 양 끝 symbol과 해당
-    guard의 구절을 포함합니다. n6→n4는 반복 관계를 명시합니다. 함수 이름 목록 대신 짧은 동작·판정을 쓰되 PipelineHandler의
-    완료 표시, Camera/requestCompleted 통지 주체와 후속 큐 처리의 차이는 유지합니다. authored true/false를
-    시스템 표시와 중복하지 않습니다. 각 노드는 72자, authored 간선은 40자 이내이며 영어는 자연스러운 짧은 문장을 우선합니다. 최종
-    가독성 보완: 실제 큐 반복·세 결정·서로 다른 두 결과와 source 인용은 보존하고 n4의 queuedRequests_, n7의 doQueueRequests,
-    함수 종료 아님 같은 내부 이름·부정 주석은 한영 화면 라벨에서 빼세요. n4는 제출 큐에 요청이 남았는지, n5는 맨 앞 요청이 아직 미완료인지,
-    n6는 완료된 맨 앞을 꺼내 cam에 순서대로 알림, n7은 다음 대기 요청 처리라는 짧은 동작이면 됩니다. 근거의 함수·변수 식별자와 고정
-    symbol은 그대로 보존합니다. n2 남은 버퍼 대기와 n7 후속 요청 처리는 별도 노드로 유지합니다. 종료·반환을 새로 주장하지 마세요.'
+  - request-status-completion
+  question: 가상 버퍼 완료 경로의 모든 버퍼 완료 판정과, 완료 표시 뒤 제출 순서 큐의 연속 통지 및 반복 종료는 어떻게 연결됩니까?
+  prompt: 현재 아홉 노드·간선·심볼·조건 양쪽·인용·나머지 한영 라벨을 모두 보존하고, n2(나머지 요청 버퍼를 기다리는 결과 노드)의 한영 라벨만 수정합니다. 앞 결정은 FrameBuffer
+    자체의 판정이 아니라 completeBuffer의 반환값입니다. 반환 false는 아직 모든 요청 버퍼가 완료되지 않았으므로 completeRequest를 호출하지 않고 나머지
+    버퍼를 기다린다는 뜻입니다. FrameBuffer 판정, FrameBuffer check라고 쓰지 않습니다. 내부 symbol FrameBuffer와 소스 인용은 그대로 보존하되
+    화면 라벨은 실제 판정과 결과를 짧게 나타냅니다. 처음 생성할 때 아홉 노드는 가상 버퍼 완료 수신, 모든 요청 버퍼 완료 판정, 나머지 버퍼 대기, 해당 요청 완료 표시, 큐
+    맨 앞 Pending 판정, 맨 앞 요청 하나의 순서 통지, Pending 앞에서 뒤 요청 통지 보류, 통지할 큐 요청 존재 판정, 이번 통지 검사 종료입니다. 큐 존재 판정의
+    true는 Pending 판정으로, false는 이번 검사 종료로 갑니다. Pending이면 보류하고, 아니면 맨 앞 요청을 꺼내 requestCompleted로 cam requestComplete에
+    통지한 뒤 큐 존재 판정으로 되돌아갑니다. 모든 실제 guard의 true/false 양쪽을 유지하고 빈 큐 또는 Pending에서 반복을 멈춥니다. 이후 doQueueRequests는
+    이 통지 검사 범위 밖이며 표시에는 내부 큐 변수명을 쓰지 않습니다.
   answer_contract:
     basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:::|queuedRequests_|doQueueRequests|complete\(\)|call order|호출 순서)
+      message: Only authored visible labels must omit qualified functions, queuedRequests_, doQueueRequests,
+        complete() and internal call-order detail. Preserve the source guards in evidence; their automatic
+        suffix is intentionally excluded from this readability rule.
+    - pattern: must notify|알려야|통지해야
+      message: n3 only marks the request complete; notifications occur later at the ordered queue-head
+        notification node, not as an obligation or immediate action at n3.
+    - pattern: (?i)\bonly\b|표시만|표시만\s*함|순서 제약|call order
+      message: A node describes a completion-marking step, not the entirety of completeRequest. Do not
+        claim only/sole behavior or add an internal call-order aside; later nodes show ordered notification
+        and waiting work.
+    - pattern: 통지할 요청이 남
+      message: This checks nonempty queue, not requests already eligible for notification.
+    - pattern: '맨 앞 RequestPending:|Front Pending:|Pending: 보류|Pending: hold|Pending 아님: 통지|Not Pending:
+        notify'
+      message: Keep the Pending test in the decision, its state on the branch, and hold/notification actions
+        only in their result nodes.
+    - pattern: FrameBuffer 판정|FrameBuffer check
+      message: The decision checks completeBuffer return, not the FrameBuffer type itself; false waits
+        for remaining request buffers.
+    required_terms:
+    - - requestCompleted
+    - - requestComplete
   answer_contract_en:
     basis: implementation
+    reject_patterns:
+    - pattern: (?m)^[^·\n]*(?:::|queuedRequests_|doQueueRequests|complete\(\)|call order|호출 순서)
+      message: Only authored visible labels must omit qualified functions, queuedRequests_, doQueueRequests,
+        complete() and internal call-order detail. Preserve the source guards in evidence; their automatic
+        suffix is intentionally excluded from this readability rule.
+    - pattern: must notify|알려야|통지해야
+      message: n3 only marks the request complete; notifications occur later at the ordered queue-head
+        notification node, not as an obligation or immediate action at n3.
+    - pattern: (?i)\bonly\b|표시만|표시만\s*함|순서 제약|call order
+      message: A node describes a completion-marking step, not the entirety of completeRequest. Do not
+        claim only/sole behavior or add an internal call-order aside; later nodes show ordered notification
+        and waiting work.
+    - pattern: (?i)requests left to notify
+      message: Check queue existence before the separate Pending-head test; do not imply eligibility.
+    - pattern: '맨 앞 RequestPending:|Front Pending:|Pending: 보류|Pending: hold|Pending 아님: 통지|Not Pending:
+        notify'
+      message: Keep the Pending test in the decision, its state on the branch, and hold/notification actions
+        only in their result nodes.
+    - pattern: FrameBuffer 판정|FrameBuffer check
+      message: The decision checks completeBuffer return, not the FrameBuffer type itself; false waits
+        for remaining request buffers.
+    required_terms:
+    - - requestCompleted
+    - - requestComplete
+  require_guard_branches: true
 - id: completion-flow
   topic: flow
   kind: decision
@@ -64,21 +234,14 @@
   - captureDone
   - Request::ReuseBuffers
   question: 기록된 출력 싱크 미요청 경로에서 완료 콜백은 어떤 처리와 종료로 이어집니까?
-  prompt: 기록된 출력 싱크 미요청 경로의 고정 10개 노드를 유지하세요. 기존 취소·진입 한도·증가 후 한도 분기와 출처를 보존하며 한영
-    라벨만 줄입니다. n0 CameraSession::requestComplete 진입, n1 RequestCancelled인가, n2 requestComplete
-    반환, n3 callLater로 이벤트 루프에 위임, n4 processRequest 진입에서 한도 설정 AND 처리 수 도달인가, n5 processRequest
-    반환(captureDone 재발행 없음), n6 프레임 정보 출력과 처리 수 증가, n7 증가 후 한도 설정 AND 도달인가, n8 captureDone
-    후 processRequest 반환, n9 버퍼 유지 재사용 후 제출 도우미 호출입니다. n0→n1, 취소면 n2, 아니면 n3→n4, 진입
-    한도면 n5, 그 밖에는 n6→n7, 증가 후 한도면 n8, 그 밖에는 n9입니다. 반환 주체는 각각 명시하고 서로 합치지 않습니다. 두 캡처
-    한도 검사와 신호의 차이는 유지하되 긴 함수 호출식·같은 스레드 이유·출력 범위·제출 도우미 내부를 각 노드에 반복하지 마세요. 제출 도우미는
-    다음 별도 그림이 설명합니다. 간선에는 짧은 조건만, 노드에는 짧은 행동만 씁니다. 한도 거짓은 미설정 OR 미도달입니다. source condition_ref와
-    모든 양 끝 symbol 인용을 보존합니다. authored true/false는 시스템 표시와 중복하지 않습니다. 노드·화살표에 같은 동작
-    전체를 반복하지 않습니다. 취소는 소스 분기이며 이번 실행에서 동적 시험한 것은 아닙니다.
+  prompt: n6의 한영 라벨만 보완합니다. 한도가 미설정 또는 미도달인 경로에서 프레임 정보를 출력한 뒤 처리 카운터를 하나 증가시킨다는 실제 순서를 둘 다 표시합니다. 카운터
+    증가만 쓰고 프레임 정보 출력을 빠뜨리지 않습니다. 다른 모든 올바른 라벨·노드·간선·취소/진입 한도/증가 뒤 한도 조건과 인용은 그대로 보존합니다. 한영 노드 64자, authored
+    간선 20자 이내의 짧고 분명한 동작구를 씁니다. 실제 조건과 현재 올바른 라벨은 보존합니다.
   sources:
   - callback-and-processing
   - app-start
   - session-state
-  max_label_chars: 72
+  max_label_chars: 52
   condition_display: evidence
   answer_contract_en:
     basis: implementation
@@ -90,50 +253,13 @@
   require_connected: true
   answer_contract:
     basis: implementation
-  max_edge_label_chars: 40
-- id: submission-gate
-  topic: flow
-  kind: decision
-  title: 제출 도우미는 별도 카운터로 제출을 제한합니다
-  generation: llm
-  max_nodes: 3
-  required_symbols:
-  - queueCount_
-  - return
-  - camera_
-  question: 제출 도우미의 별도 카운터 한도에 따라 제출하지 않거나 제출을 시도하는 조건은 무엇입니까?
-  sources:
-  - submission-limit
-  max_label_chars: 72
-  condition_display: evidence
-  require_connected: true
-  prompt: 앞 그림이 이미 재사용과 도우미 호출을 설명하므로 이 그림은 도우미 내부의 세 노드만 사용합니다. n0은 한도가 설정되고 제출 카운터
-    queueCount_가 이미 도달했는가라는 결정입니다. 참이면 n1 제출 없이 도우미에서 반환, 거짓(한도 미설정 OR 미도달)이면 n2 카운터
-    증가 후 카메라 제출 시도입니다. 세 노드와 두 조건 간선만 연결합니다. 실제 조건의 두 branch를 source condition_ref로
-    인용하고 화살표는 설정·도달 또는 미설정·미도달만 짧게 표시합니다. 카운터는 실제 제출 시도 전에 증가하며 성공 접수를 세는 것이 아닙니다.
-    n2는 시도이며 제출 성공 보장이 아닙니다. 재사용 노드·도우미 호출 노드를 반복하지 마세요. true/false는 시스템 표시와 중복하지
-    않고 한영 동작·조건을 간결하게 씁니다. source guard와 양 끝 symbol 인용을 보존합니다.
-  answer_contract_en:
-    basis: implementation
-    reject_patterns:
-    - pattern: \bretry\b
-      message: Resubmission is not retry after a failure.
-    - pattern: requeue
-      message: This figure starts after reuse; do not move its earlier requeue guard
-        after reuse.
-  max_edge_label_chars: 40
-  answer_contract:
-    basis: implementation
-    reject_patterns:
-    - pattern: requeue
-      message: This figure starts after reuse; do not move its earlier requeue guard
-        after reuse.
+  max_edge_label_chars: 20
 - id: reproduction-flow
   topic: reproduce
   kind: flow
   title: 환경 확인에서 재현 실행까지
   generation: llm
-  max_nodes: 10
+  max_nodes: 12
   required_symbols:
   - Kconfig
   - WSL
@@ -141,34 +267,14 @@
   - udmabuf
   - run_cam
   - completed_frames
-  question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam
-    재현 실행은 어떤 준비 순서로 이어집니까?
-  prompt: 이 그림은 기본 커널로 원복한 후 기록된 특정 시험 조건을 다시 준비하는 경로입니다. 조사·무영향 준비 → 호스트 변경 계획·별도
-    승인 → Docker 중지 필요 여부 결정 → 필요시 중지 → 승인된 시험 커널 설치·부팅 → 조건 일치 결정 → cam 실행 순서입니다.
-    이 기록된 재현 경로에서는 실제 호스트 변경인 커널 설치·부팅 전에 별도 호스트 승인이 필수입니다. 무영향 준비는 승인 전에도 합니다. Docker
-    중지 여부만 승인 계획에 따른 조건부 분기입니다. 조건 일치 결정은 기록된 커널·장치 접근·Virtual2 400 x 300 NV12 모두를
-    포함하며, 불일치하면 캡처 중단하는 별도 노드로 연결하세요. 접근 하나만 맞으면 실행하는 것으로 그리지 마세요. Docker 결정과 중지는
-    별도 노드이며 같은 Docker 식별자를 쓸 수 있습니다. 시험 커널 설치·부팅과 조건 확인은 중지 여부와 별개로 필요합니다. 노드 한국어
-    24자·영어 48자, 간선 한국어 12자·영어 28자 이내의 짧은 구절을 쓰세요. 전체 문장과 중복 조건을 쓰지 마세요. 이 시험의 root
-    접근 조건은 근거에 남기고 일반 권한 변경 지침을 쓰지 마세요. 이전 네이티브 초안이 있으면 나머지 올바른 부분을 보존하고 조건 일치 노드의
-    udmabuf를 root의 /dev/udmabuf 접근 가능으로 한영 모두 명확히 하세요. 커널과 Virtual2 400 x 300 NV12
-    일치 조건도 유지하세요. 이번 수정에서는 이전 초안의 나머지 구조를 보존하세요. 영향 없는 커널 준비는 조사와 함께 승인 전에 가능하며, 승인
-    후 커널 노드는 실제 호스트 변경인 설치·부팅으로 표시하세요. 승인 간선은 한영 모두 호스트 변경 실행 직전이라는 시점을 분명히 하며, cam
-    실행 직전이라는 의미의 run을 쓰지 마세요. 같은 한국어 레이블에는 같은 영어 레이블을 쓰세요. 조건 일치 결정 노드는 반드시 한영 모두
-    '기록된 시험 커널'이라는 대상과 root의 /dev/udmabuf 접근 가능, Virtual2 400 x 300 NV12를 함께 명시하세요.
-    이전 초안의 다른 올바른 구조는 보존하세요. 이번 수정은 올바른 기존 흐름·분기·조건을 보존하며 한영 라벨만 짧게 정리합니다. 라벨에 전체
-    문장·중복 해명·번호를 쓰지 말고 행동이나 판정만 씁니다. 한글 노드 24자·영문 48자 안팎, 간선은 더 짧게 쓰되 재현 조건 판정 노드에
-    필요한 기록된 시험 커널·root의 /dev/udmabuf 접근·Virtual2 400 x 300 NV12 조건은 한영 모두 유지합니다. 긴
-    식별자 중간 줄바꿈을 피하고 개별 영문 토큰은 28자 이내로 씁니다. 해상도는 한영 모두 반드시 숫자를 공백으로 분리한 400 x 300으로
-    표기하세요. 400x300처럼 붙이면 기존 필수 용어 검사에서 400과 300의 개별 토큰이 없어 거부됩니다. 숫자 자체를 생략하지 마세요.
-    공식 cam 실행 노드는 세 번의 독립 실행과 각 새 증거 생성을 뜻한다고 한영 라벨에 표시하세요. 기존 마지막 실행 노드 뒤에 새 증거의
-    카메라·적용 구성·3프레임·정상 종료를 확인하는 결과 검증 노드를 하나 추가하세요. 이 노드는 completed_frames 원문이 포함된
-    측정 근거와 재현 절차를 인용합니다. 현재 9개 노드를 10개로 늘리되 기존 max_nodes 10을 넘기지 않습니다. 결과 노드의 상세 필드명과
-    수치는 근거에서 확인하며 짧고 분명한 검증 동작만 표시하세요. 화살표는 짧은 조건·이벤트만 씁니다. 노드에 있는 동작을 문장으로 반복하지 말고
-    무조건 간선은 두세 단어의 짧은 연결어만 씁니다. 상세 조건은 본문과 근거에서 확인합니다. 조건 일치 결정에 Virtual2 YAML의 400x300
-    크기·lines 패턴과 cam 명령의 Virtual2 선택·400x300 NV12 요청을 구분해 포함합니다. root udmabuf 접근과
-    기록된 시험 커널 일치도 유지합니다. 조건 노드의 한영 라벨은 최대 72자를 쓰되 이 네 조건을 짧게 표시하고 상세 버전·필드명은 본문과 근거로
-    남깁니다. 나머지 기존 10개 노드와 연결·인용·승인 시점은 그대로 보존합니다.
+  - Virtual2
+  - cam
+  question: 기록된 재현 절차에서 현재 환경 조사, 필요한 공유 호스트 변경의 별도 승인, 지원 커널 부팅과 장치 접근 확인, 공식 cam 재현 실행은 어떤 준비 순서로 이어집니까?
+  prompt: 현재 열두 노드와 모든 간선·실제 조건·인용·검사 순서를 그대로 보존하고 한영 표시 라벨만 짧은 동작구/질문으로 줄입니다. 재현 본문에 이미 있는 도우미 사용시 인자
+    전달 설명은 긴 cam 검사 노드에서 반복하지 않습니다. cam 노드는 Virtual2, 400×300, NV12, cam 캡처 한도 3 / cam capture limit 3의
+    검사만 간결하게 나타내세요. 커널/장치 노드도 6–7, 기록된 커널/recorded kernel, root, /dev/udmabuf만 짧게 연결합니다. YAML 노드는 Virtual2
+    400×300 lines를 검사합니다. 호스트 승인은 실행 직전/immediately의 별도 승인임을 보존합니다. 한영 노드72자, 간선20자 이내입니다. 400과300은 ×
+    또는 공백으로 구분해야 하며 x로 붙이지 않습니다. 값들을 무관한 노드로 옮기거나 의미 없는 키워드 목록을 쓰지 말고 실제 각 검사의 질문으로 표현합니다.
   sources:
   - product-invocation-execution-contract
   - product-invocation-reproduction-procedure
@@ -187,6 +293,14 @@
     - - '300'
     - - NV12
     - - 기록
+    - - YAML
+    - - lines
+    - - 6–7
+      - 6-7
+      - 6~7
+      - 6 through 7
+      - 6 to 7
+    - - cam 캡처 한도 3
     reject_patterns:
     - pattern: completed_frames
       message: Keep evidence field names in evidence; show normal frames to the reader.
@@ -201,7 +315,16 @@
     - - NV12
     - - recorded
       - Recorded
+    - - YAML
+    - - lines
+    - - immediately
+    - - 6–7
+      - 6-7
+      - 6~7
+      - 6 through 7
+      - 6 to 7
+    - - cam capture limit 3
     reject_patterns:
     - pattern: completed_frames
       message: Keep evidence field names in evidence; show normal frames to the reader.
-  max_edge_label_chars: 40
+  max_edge_label_chars: 20

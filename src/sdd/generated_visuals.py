@@ -164,7 +164,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected'}:
+    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -184,6 +184,8 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
         raise ValueError('Visual while_conditions must be boolean')
     if type(plan.get('require_connected', False)) is not bool:
         raise ValueError('Visual require_connected must be boolean')
+    if type(plan.get('require_guard_branches', False)) is not bool:
+        raise ValueError('Visual require_guard_branches must be boolean')
     for key in ('title', 'question'):
         _text(plan[key], key)
     if 'prompt' in plan:
@@ -219,6 +221,11 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     from .prompting import style_rules
     style = cfg.style_dir / 'README.md'
     system = POLICY + ('\n' + style_rules(style.read_text(encoding='utf-8')) if style.exists() else '')
+    if plan.get('require_guard_branches', False):
+        system += ('\nEvery non-always condition_ref must leave a decision-shaped node. '
+                   'For each source guard used at that node, include both true and false outcomes. '
+                   'Do not attach a boolean guard to an action node or omit its other outcome. '
+                   'Unconditional call relationships use always and still require supporting source evidence.')
     limit = node_limit(cfg, plan)
     if len(required_symbols) > limit:
         raise ValueError('Visual required_symbols exceed the node limit')
@@ -305,7 +312,7 @@ def materialize(cfg, model, section, plan, draft, producer):
     limit = node_limit(cfg, plan)
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected')} | {'nodes': [], 'edges': [], 'producer': producer}
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):
@@ -377,6 +384,19 @@ def materialize(cfg, model, section, plan, draft, producer):
             for key in ('label', 'label_en'):
                 edge[key] += ' · ' + condition + ' [' + branch + ']'
         graph['edges'].append(edge)
+    if plan.get('require_guard_branches', False):
+        shapes = {node['id']: node['shape'] for node in draft['nodes']}
+        branches = {}
+        for edge in draft['edges']:
+            if edge['condition_ref'] == 'always':
+                continue
+            guard, branch = edge['condition_ref'].rsplit(':', 1)
+            if shapes[edge['from']] != 'decision':
+                raise ValueError(f"Source guard {guard} leaves non-decision node {edge['from']}; use a decision with both outcomes")
+            branches.setdefault((edge['from'], guard), set()).add(branch)
+        for (ident, guard), outcomes in branches.items():
+            if outcomes != {'true', 'false'}:
+                raise ValueError(f"Decision {ident} must include true and false outcomes for source guard {guard}")
     if plan.get('require_connected', False):
         neighbors = {node['id']: set() for node in graph['nodes']}
         for edge in graph['edges']:

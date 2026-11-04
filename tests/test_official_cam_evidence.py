@@ -2,8 +2,11 @@
 import importlib.util
 import json
 from pathlib import Path
+import sys
 
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'examples/libcamera/runtime'))
 
 spec = importlib.util.spec_from_file_location('official_cam', Path(__file__).resolve().parents[1] /
                                             'examples/libcamera/runtime/run_cam.py')

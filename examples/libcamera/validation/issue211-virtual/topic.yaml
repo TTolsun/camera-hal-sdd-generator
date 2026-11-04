@@ -1,10 +1,9 @@
 id: virtual-principle
 title: 가상 파이프라인이 영상을 만들고 요청 완료를 알립니다
-question: 센서 없이 가상 캡처가 가능한 이유와, Virtual2의 줄무늬 영상이 실제 DMA-BUF·요청·완료 알림 경로를 거쳐 cam에
-  전달되는 원리는 무엇입니까?
-prompt: 기존 결론·콜백 후속 처리·재현 조건은 다른 절에 있으므로 반복하지 마세요. 소스에서 확인한 구현 원리를 새 실행 관찰로 표현하지 마세요.
-  먼저 쉬운 말로 설명하고 필요한 함수 이름만 backtick으로 연결하세요. PID·JSON·해시·40자리 SHA·중복 경고는 본문에 쓰지 마세요.
-  가상 영상과 실제 소프트웨어 요청 처리를 구분하며 물리 센서·ISP·하드웨어 DMA 검증을 주장하지 마세요.
+question: 센서 없이 가상 캡처가 가능한 이유와, Virtual2의 줄무늬 영상이 실제 DMA-BUF·요청·완료 알림 경로를 거쳐 cam에 전달되는 원리는 무엇입니까?
+prompt: 기존 결론·콜백 후속 처리·재현 조건은 다른 절에 있으므로 반복하지 마세요. 소스에서 확인한 구현 원리를 새 실행 관찰로 표현하지 마세요. 먼저 쉬운 말로 설명하고 필요한
+  함수 이름만 backtick으로 연결하세요. PID·JSON·해시·40자리 SHA·중복 경고는 본문에 쓰지 마세요. 가상 영상과 실제 소프트웨어 요청 처리를 구분하며 물리 센서·ISP·하드웨어
+  DMA 검증을 주장하지 마세요.
 covers:
 - virtual-principle
 sources:
@@ -76,6 +75,10 @@ sources:
   file: src/libcamera/pipeline_handler.cpp
   start: void PipelineHandler::registerRequest(
   end: void PipelineHandler::queueRequest(
+- id: request-status-completion
+  file: src/libcamera/request.cpp
+  start: void Request::Private::complete()
+  end: void Request::Private::doCancelRequest()
 design_prompt: focused
 answer_contract:
   basis: implementation
@@ -88,11 +91,11 @@ answer_contract:
 parts:
 - id: purpose
   role: summary
-  question: libcamera의 virtual(가상) 파이프라인이라는 기능 이름을 첫 문장에 명시하세요. 그림 바로 앞에 놓이는 이 첫 문단에서,
-    고정한 libcamera 소스를 분석해 설명하는 구현 흐름임을 분명히 하세요. 선택된 Virtual2가 센서 대신 400x300 lines
-    줄무늬 패턴을 공급한다는 개요와, cam의 실제 DMA-BUF 확보·버퍼가 붙은 요청 제출 → CPU의 NV12 패턴 쓰기 시도 → 버퍼·요청
-    완료 조건을 거친 cam 통지라는 핵심 흐름을 쉬운 말로 세 짧은 문장 이내로 설명하세요. 상세 분기와 예외는 그림 뒤 항목이 설명하므로 이
-    문단에는 함수·클래스 이름, 관측한 내부 실행이라는 단정, 다른 영상 입력 옵션이나 경고 목록을 추가하지 않습니다.
+  question: 고정 libcamera 소스에서 분석한 virtual 파이프라인의 개요를 네 짧은 문장으로 설명합니다. 첫 문장은 고정 소스 분석이라는 범위와, 실제 센서 대신
+    소프트웨어 테스트 패턴이나 이미지 입력을 지원하는 virtual 기능의 일반 설명입니다. 둘째 문장은 이번에 선택한 Virtual2 구성이 400x300 lines 패턴을 공급한다는
+    구체 사례입니다. 기능 전체가 이 설정 하나로 고정됐다고 정의하지 마세요. 셋째 문장은 할당이 성공한 뒤 cam이 실제 DMA-BUF 버퍼를 붙인 요청의 전달을 준비하는 관계입니다.
+    넷째 문장은 CPU가 NV12 변환과 매핑된 버퍼 쓰기를 모두 시도한다는 뜻입니다. 완료 조건과 구현 식별자는 뒤 항목·근거가 맡으므로 반복하지 않습니다. 세 번째 문장에서 버퍼
+    종류는 실제 DMA-BUF임을 반드시 명시합니다.
   sources:
   - virtual-purpose
   - virtual2-config
@@ -117,6 +120,12 @@ parts:
     required_terms:
     - - 소스
     - - virtual
+    - - CPU
+    - - NV12
+    - - 매핑
+    - - 시도
+    - - Virtual2
+    - - DMA-BUF
     reject_patterns:
     - pattern: 그림.{0,12}없
       message: 소개 단위에서 다른 단위의 근거나 그림 상태를 부정하지 말고 제공된 기능·설정만 설명하세요.
@@ -124,12 +133,16 @@ parts:
       message: 소개 단위에서 다른 단위의 근거나 그림 상태를 부정하지 말고 제공된 기능·설정만 설명하세요.
     - pattern: 미확인
       message: 소개 단위에서 다른 단위의 근거나 그림 상태를 부정하지 말고 제공된 기능·설정만 설명하세요.
-  prompt: 질문에 필요한 핵심 소스 흐름을 먼저 짧게 설명하세요. 해시·PID·TID·JSON 키와 긴 코드 식별자는 근거에 둡니다. 소스의
-    처리 조건을 성공 보장으로 바꾸지 않습니다.
+    - pattern: ::|CameraSession|TestPatternGenerator|변환하고|변환하여|변환한
+      message: Use plain overview prose. Both NV12 conversion and the mapped-buffer write are attempts;
+        do not assert conversion success before an attempted write.
+  prompt: 직접적인 주어와 짧은 동사로 설명하세요. CPU의 변환과 쓰기는 함께 시도되는 경로입니다. 구체적 구현 식별자와 다른 항목의 동작을 반복하지 마세요.
 - id: buffer
-  question: 그림 뒤의 이 항목은 CPU 접근 조건만 설명하세요. 소스의 패턴 생성기는 쓰기 방향 동기화 범위 안에서 버퍼를 쓰기용으로 매핑하고,
-    CPU가 패턴을 NV12로 변환하여 매핑된 버퍼에 쓰기를 시도한다는 두 동작을 두 짧은 문장 이내로 씁니다. 앞 요약의 전체 흐름을 반복하거나
-    함수·클래스 이름과 범위 경고를 나열하지 않습니다.
+  question: '패턴 생성기가 쓰기 방향 동기화 범위 안에서 버퍼를 쓰기용으로 매핑한다는 조건 한 가지만 한 짧은 문장으로 설명하세요. CPU의 NV12 변환·매핑 버퍼 쓰기
+    시도는 개요가 이미 설명했으므로 이 단위에서는 반복하지 않습니다. 구현 클래스·함수·enum 이름은 쓰지 않습니다. DmaSyncer, MappedFrameBuffer, SyncType,
+    MapFlag, fd, 평면 번호와 :: 식별자는 모두 근거에 남기고 이 문장에는 넣지 마세요. 패턴 생성기, 쓰기 동기화 범위, 쓰기용 버퍼 매핑이라는 개념만 쉬운 한국어로
+    표현합니다. 쓰기 방향 동기화와 쓰기용 매핑은 모두 시도로 표현합니다. 동기화가 성공적으로 열렸거나 범위를 확보했다고 단정하지 말고, 패턴 생성기가 쓰기 방향 동기화를 시도한
+    뒤 버퍼의 쓰기용 매핑을 시도하는 순서만 한 짧은 문장으로 설명합니다. 이 조건은 영어 번역에서도 보존합니다.'
   sources:
   - virtual-buffer-allocation
   - cam-request-buffers
@@ -143,22 +156,25 @@ parts:
     - - 시도
     reject_patterns:
     - pattern: 물리|하드웨어|ISP|성능|검증 범위
-      message: Keep the execution limits at the end of the page, without repeating
-        them in this implementation explanation.
-  prompt: ' 이 항목에는 물리 센서·ISP·하드웨어 DMA·성능의 범위 경고를 덧붙이지 마세요. 페이지 끝의 검증 범위가 이미 설명합니다.
-    질문에 명시된 버퍼·변환·완료 조건만 유지하세요.'
+      message: Keep the execution limits at the end of the page, without repeating them in this implementation
+        explanation.
+    - pattern: ::|exportFrameBuffers|startCapture|addBuffer|ARGBToNV12|MappedFrameBuffer|DmaSyncer|generateFrame
+      message: 'Do not name DmaSyncer, MappedFrameBuffer, enums, functions, :: identifiers or file descriptors
+        in this sentence. Describe the pattern generator mapping for writing inside the write synchronization
+        scope in plain Korean only.'
+  prompt: 패턴 생성기를 주어로 쓰기 동기화 범위와 쓰기용 매핑 조건만 한 문장으로 설명합니다.
 - id: completion
   question: 기준 소스에서 확인한 가상 요청 처리를 네 짧은 문장 400자 이내로 설명하세요. 가상 요청은 비동기 전달되고 VirtualCameraData::processRequest가
-    목표 시각까지 기다린 뒤 패턴 작성을 시도합니다. 생성 실패는 FrameError로 표시되며 버퍼 완료 신호만으로 성공을 단정하지 않습니다.
-    completeBuffer가 모든 버퍼 완료를 반환할 때만 completeRequest로 이어지고, 통지할 순서가 된 완료 요청은 requestCompleted
-    신호에 연결된 cam 콜백으로 전달됩니다. 앞선 요청이 아직 미완료이면 뒤 요청의 통지는 보류됩니다. sleep_until·RequestPending·supported_formats
-    같은 내부 식별자와 cam 후속 처리의 반복 설명은 쓰지 마세요. VirtualCameraData::processRequest는 cam의 처리
-    함수와 구분할 수 있도록 클래스 이름을 유지하되 다른 긴 함수 이름은 나열하지 마세요. 정확한 실행 시각이나 성능을 보장하지 마세요. 생성
-    실패의 FrameError는 요청 상태가 아니라 버퍼의 프레임 메타데이터 상태에 기록됩니다. 반드시 버퍼 메타데이터를 주어로 명시하고 요청이
-    FrameError 상태가 된다고 쓰지 마세요. completeBuffer의 반환값은 요청의 모든 버퍼가 완료됐는지를 나타내는 불리언입니다.
-    값이 true일 때만 completeRequest를 호출한다고 명시하고, 버퍼 완료들을 반환한다는 표현은 쓰지 마세요. 버퍼 완료 신호 자체를
-    성공을 가정하거나 판단하는 주어로 삼지 마세요. 신호를 받았다는 사실만으로 프레임 생성이 성공했다고 판단할 수 없다는 관계를 명확히 하세요.
-    이 관계는 영어 번역에서도 보존되어야 합니다.
+    목표 시각까지 기다린 뒤 패턴 작성을 시도합니다. 생성 실패는 FrameError로 표시되며 버퍼 완료 신호만으로 성공을 단정하지 않습니다. completeBuffer가 모든
+    버퍼 완료를 반환할 때만 completeRequest로 이어지고, 통지할 순서가 된 완료 요청은 requestCompleted 신호에 연결된 cam 콜백으로 전달됩니다. 앞선
+    요청이 아직 미완료이면 뒤 요청의 통지는 보류됩니다. sleep_until·RequestPending·supported_formats 같은 내부 식별자와 cam 후속 처리의 반복
+    설명은 쓰지 마세요. VirtualCameraData::processRequest는 cam의 처리 함수와 구분할 수 있도록 클래스 이름을 유지하되 다른 긴 함수 이름은 나열하지
+    마세요. 정확한 실행 시각이나 성능을 보장하지 마세요. 생성 실패의 FrameError는 요청 상태가 아니라 버퍼의 프레임 메타데이터 상태에 기록됩니다. 반드시 버퍼 메타데이터를
+    주어로 명시하고 요청이 FrameError 상태가 된다고 쓰지 마세요. completeBuffer의 반환값은 요청의 모든 버퍼가 완료됐는지를 나타내는 불리언입니다. 값이 true일
+    때만 completeRequest를 호출한다고 명시하고, 버퍼 완료들을 반환한다는 표현은 쓰지 마세요. 버퍼 완료 신호 자체를 성공을 가정하거나 판단하는 주어로 삼지 마세요.
+    신호를 받았다는 사실만으로 프레임 생성이 성공했다고 판단할 수 없다는 관계를 명확히 하세요. 이 관계는 영어 번역에서도 보존되어야 합니다. completeBuffer가 true일
+    때 completeRequest를 호출한다는 문장의 한정 범위는 반드시 가상 파이프라인의 버퍼 완료 처리 경로라고 명시합니다. 취소 등 다른 호출 경로까지 이 조건이 적용된다는
+    일반 규칙으로 쓰지 마세요. 다른 기존 내용과 간결한 분량은 유지합니다.
   sources:
   - virtual-queue
   - virtual-frame
@@ -170,12 +186,13 @@ parts:
   - camera-queue
   - virtual-start
   - pipeline-register
+  - request-status-completion
   max_statements: 1
   answer_contract:
     basis: implementation
     reject_patterns:
     - pattern: 물리|하드웨어|ISP|성능|검증 범위
-      message: Keep the execution limits at the end of the page, without repeating
-        them in this implementation explanation.
-  prompt: ' 이 항목에는 물리 센서·ISP·하드웨어 DMA·성능의 범위 경고를 덧붙이지 마세요. 페이지 끝의 검증 범위가 이미 설명합니다.
-    질문에 명시된 버퍼·변환·완료 조건만 유지하세요.'
+      message: Keep the execution limits at the end of the page, without repeating them in this implementation
+        explanation.
+  prompt: ' 이 항목에는 물리 센서·ISP·하드웨어 DMA·성능의 범위 경고를 덧붙이지 마세요. 페이지 끝의 검증 범위가 이미 설명합니다. 질문에 명시된 버퍼·변환·완료 조건만
+    유지하세요.'

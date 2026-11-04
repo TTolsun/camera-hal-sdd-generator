@@ -6,6 +6,7 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
+from cam_invocation import capture_argv
 
 from sdd.runtime_evidence import run_recorded, require_success, sha256, validate_dma, validate_frames
 
@@ -87,7 +88,7 @@ def main():
         raise ValueError('Loader injection is not allowed')
     record = dict(schema=1, source_commit=commit, source_tracked_clean=True, kernel=platform.release(), results=[],
                   uid=os.getuid(), gid=os.getgid(),
-                  observer_inputs={str(p): sha256(p) for p in [Path(__file__), Path(__file__).with_name('observe_cam.gdb.py')]},
+                  observer_inputs={str(p): sha256(p) for p in [Path(__file__), Path(__file__).with_name('observe_cam.gdb.py'), Path(__file__).with_name('cam_invocation.py')]},
                   meson_provenance_sha256=sha256(build / 'meson-info/meson-info.json'),
                   inherited_runtime_environment={key: value for key, value in os.environ.items()
                                                  if key.startswith(('LD_', 'LIBCAMERA_'))},
@@ -106,8 +107,7 @@ def main():
                     '--batch', '--nx', '--nh', '-q', '-iex', 'set auto-load off',
                     '-ex', 'set debuginfod enabled off', '-ex', 'set pagination off',
                     '-ex', 'set startup-with-shell off', '-x', str(Path(__file__).with_name('observe_cam.gdb.py').resolve()),
-                    '--args', str(executable), '--camera', 'Virtual2', '--capture=3',
-                    '--stream', 'role=video,width=400,height=300,pixelformat=NV12']
+                    '--args', *capture_argv(executable)]
             run_recorded(directory, argv, timeout=45, environment=env)
             result = validate_run(directory, camera='Virtual2', configuration='(0) 400x300-NV12/SMPTE170M',
                                   executable=executable, libraries=libraries)

@@ -30,11 +30,12 @@ for name in ['generation.yaml', 'publication.yaml', 'reader-verification.yaml',
     (work/name).write_text(text, encoding='utf-8')
 # Full source windows, diagram schema and the prior draft exceed the earlier
 # reader run's character boundary. This is execution-local; no model arguments
-# or public/global defaults change, and evidence is never truncated.
+# or public/global defaults change, and evidence is never truncated. The final
+# five-topic bilingual review also includes the separate upstream snapshot.
 for name in ['generation.yaml', 'reader-verification.yaml', 'new-document-review.yaml']:
     path = work/name
     profile = yaml.safe_load(path.read_text(encoding='utf-8'))
-    profile['agent']['max_input_chars'] = 128000
+    profile['agent']['max_input_chars'] = 160000 if name == 'new-document-review.yaml' else 128000
     path.write_text(yaml.safe_dump(profile, allow_unicode=True, sort_keys=False), encoding='utf-8')
 # Exact copies are historical provenance, never fresh model calls.
 from sdd.runtime_evidence import sha256
@@ -52,7 +53,10 @@ p.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=120
 visual = yaml.safe_load((base/'visual.yaml').read_text(encoding='utf-8'))
 p=work/'config/visuals.yaml'; data=yaml.safe_load(p.read_text(encoding='utf-8'))
 overrides = {v['id']: v for v in yaml.safe_load((base/'retained-visual-overrides.yaml').read_text(encoding='utf-8'))}
-data['sections'][section['id']] = [visual] + [overrides.get(v['id'], v) for v in data['sections'][section['id']]]
+# Preparation precedes pattern generation; then retain the callback and
+# reproduction figures without duplicating an overridden historical plan.
+preparation = overrides.pop('submission-gate')
+data['sections'][section['id']] = [preparation, visual] + [overrides.get(v['id'], v) for v in data['sections'][section['id']] if v['id'] != preparation['id']]
 present = {v['id'] for v in data['sections'][section['id']]}
 data['sections'][section['id']].extend(v for key, v in overrides.items() if key not in present)
 p.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=120), encoding='utf-8')
