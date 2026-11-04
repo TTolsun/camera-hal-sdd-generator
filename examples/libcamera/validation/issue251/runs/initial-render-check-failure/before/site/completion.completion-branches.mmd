@@ -1,8 +1,0 @@
-flowchart TB
-%% sdd:translations {"frame 처리를 마칩니다. · <br/>ret == 0 #91;false#93;": "Finish processing frame. · <br/>ret == 0 #91;false#93;", "frame 처리를 마칩니다. · <br/>ret == 0 #91;true#93;": "Finish processing frame. · <br/>ret == 0 #91;true#93;", "onFrameDone이 frame 처리를 <br/>마칩니다.": "onFrameDone finishes <br/>processing frame.", "runPipes가 frame을 <br/>처리합니다.": "runPipes processes frame.", "sendResult가 frame의 결과를 <br/>전송합니다.": "sendResult sends the result <br/>for frame.", "결과를 전송합니다. · ret == <br/>0 #91;true#93;": "Send the result. · ret == 0 <br/>#91;true#93;"}
-  v_n0["runPipes가 frame을 <br/>처리합니다."]
-  v_n1["sendResult가 frame의 결과를 <br/>전송합니다."]
-  v_n2["onFrameDone이 frame 처리를 <br/>마칩니다."]
-  v_n0 -->|"결과를 전송합니다. · ret == <br/>0 #91;true#93;"| v_n1
-  v_n1 -->|"frame 처리를 마칩니다. · <br/>ret == 0 #91;true#93;"| v_n2
-  v_n0 -->|"frame 처리를 마칩니다. · <br/>ret == 0 #91;false#93;"| v_n2

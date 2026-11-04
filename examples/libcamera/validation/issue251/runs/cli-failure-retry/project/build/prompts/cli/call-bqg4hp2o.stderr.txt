@@ -1,8 +1,0 @@
-error: unexpected argument '--sdd-intentional-invalid-option' found
-
-  tip: to pass '--sdd-intentional-invalid-option' as a value, use '-- --sdd-intentional-invalid-option'
-
-Usage: codex exec [OPTIONS] [PROMPT]
-       codex exec [OPTIONS] <COMMAND> [ARGS]
-
-For more information, try '--help'.

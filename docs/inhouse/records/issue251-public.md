@@ -30,6 +30,8 @@
 
 최신 main 통합 후 관련 회귀 480개가 통과했습니다. 보존한 CLI 기록 19개는 요청·응답 해시뿐 아니라 실행 인자·완료 이벤트·native stdout 해시도 재검증했습니다. 원본 파일 275개의 커밋 바이트가 작업 공간의 기록과 같음을 Git archive로 대조했습니다. 해당 커밋 `b043a37`의 반입 ZIP은 파일 777개의 무결성을 통과했습니다. 이 반입 시험은 설치·사내 실행 시험이 아닙니다. 느린 로컬 전체 회귀는 중단하고 PR #256의 전체 CI와 구분해 확인합니다.
 
+리뷰할 코드와 안내가 원본 로그에 묻히지 않도록 최종 변경에서는 원본 275개를 [해시가 있는 ZIP](../../../examples/libcamera/validation/issue251/native-evidence.json)으로 묶었습니다. ZIP을 다시 풀어 원본별 해시와 native CLI provenance를 검사하며, 위 링크의 판정·실패 요약은 직접 읽을 수 있게 유지합니다.
+
 ## 공개 libcamera와 배포 범위
 
 공식 `https://gitlab.freedesktop.org/camera/libcamera.git` master와 공개 `upstream/master`를 조회해 모두 `be7e83e91348250c015aad6d6f59f1468555bae8`임을 확인했습니다. 추가 동기화 커밋은 필요하지 않았습니다. 공개 main `178aa978890a22df5e984bc5efe18a1a3756aa1b`의 사이트는 62개 HTML·링크 오류 0·manifest 일치를 로컬에서 확인했습니다.
