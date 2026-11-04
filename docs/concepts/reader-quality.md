@@ -98,6 +98,8 @@ Vendor 문서는 제품 개요(`vendor-overview`), 연동 가이드(`vendor`), �
 
 공개 mini HAL에서 새 에이전트가 실제로 작성한 결과와 가이드 보완 내역은 [독립 작성 시험 기록](../inhouse/records/mini-hal-forward-test.md)에 있습니다. 이 기록은 자동 검사 통과와 독립 내용 평가가 달랐던 사례를 포함합니다.
 
+기존 자료와의 고정 과업 비교, 실제 사람 평가의 미완료 상태와 변경 한 건의 부분 비용은 [#253 평가 기록](../libcamera/records/issue253/README.md)에 있습니다. 자동 에이전트의 과업 정답·경과 시간을 사람의 이해도·읽기 부담·검토 시간으로 환산하지 않습니다.
+
 신입·타팀 Developer 기준으로 바꾼 내용과 현재 작성 에이전트의 공개 소스 대조 결과는 [독자 기준 수정 기록](../inhouse/records/developer-reader-correction.md)에 있습니다.
 
 배포 문서만 읽은 새 에이전트의 장애와 개선은 [독립 읽기 시험 기록](../inhouse/records/deployed-reader-evaluation.md)에 있습니다.

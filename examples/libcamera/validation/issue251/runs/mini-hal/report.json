@@ -1,0 +1,722 @@
+{
+  "schema": 1,
+  "runner": "codex",
+  "model": "gpt-6.1-terra",
+  "scope": "Public mini HAL source/excerpt replay; no camera execution or internal HAL validation",
+  "human_review": "pending",
+  "stages": [
+    {
+      "command": [
+        "generate"
+      ],
+      "exit_code": 0,
+      "stdout": "-> sdd/completion.md\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "export-site"
+      ],
+      "exit_code": 0,
+      "stdout": "경고: 뜻을 적지 않은 약어가 2개 있습니다. glossary.yaml 의 terms 에 뜻을 적거나, 설명이 필요 없는 일반 약어면 common 에 추가하세요.\n  HAL: completion.md, index.md\n  LLM: completion.md\n-> C:\\Users\\baboe\\.codex\\worktrees\\a874\\camera-hal-sdd-generator\\build\\issue251-cli-replay-fixed\\project\\build\\site\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "verify-site"
+      ],
+      "exit_code": 0,
+      "stdout": "{'html_pages': 2, 'broken_links': 0, 'manifest_verified': True}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "export-site"
+      ],
+      "exit_code": 0,
+      "stdout": "경고: 뜻을 적지 않은 약어가 2개 있습니다. glossary.yaml 의 terms 에 뜻을 적거나, 설명이 필요 없는 일반 약어면 common 에 추가하세요.\n  HAL: completion.md, index.md\n  LLM: completion.md\n-> C:\\Users\\baboe\\.codex\\worktrees\\a874\\camera-hal-sdd-generator\\build\\issue251-cli-replay-fixed\\project\\build\\site\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "export-site"
+      ],
+      "exit_code": 1,
+      "stdout": "경고: 뜻을 적지 않은 약어가 2개 있습니다. glossary.yaml 의 terms 에 뜻을 적거나, 설명이 필요 없는 일반 약어면 common 에 추가하세요.\n  HAL: completion.md, index.md\n  LLM: completion.md\n",
+      "stderr": "오류: Facts and page source commits differ: completion.md\n"
+    },
+    {
+      "command": [
+        "impact",
+        "--base",
+        "16f6cb06d425cf390706a9c6b918fce003bcf44e",
+        "--head",
+        "0c92b75dd1f9fc2ac97d2ef08e246bc081faaf48"
+      ],
+      "exit_code": 0,
+      "stdout": "변경 파일 1 개, 영향 섹션 ['completion-demo'], 시나리오 []\n-> C:\\Users\\baboe\\.codex\\worktrees\\a874\\camera-hal-sdd-generator\\build\\issue251-cli-replay-fixed\\project\\build\\impact.json\n문서 범위: needs-review, 검토 항목 1개 -> C:\\Users\\baboe\\.codex\\worktrees\\a874\\camera-hal-sdd-generator\\build\\issue251-cli-replay-fixed\\project\\build\\impact-review.md\n이전 facts 미제공: 삭제된 심볼의 범위 검사는 제한됩니다. --base-facts를 사용할 수 있습니다.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "generate",
+        "--from-impact"
+      ],
+      "exit_code": 0,
+      "stdout": "문서 범위 검토 1개가 남아 있습니다. build/impact-review.md를 확인하세요.\n-> sdd/completion.md\n-> build/change_impact.md (리뷰어용 변경 요약)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "export-site"
+      ],
+      "exit_code": 0,
+      "stdout": "경고: 뜻을 적지 않은 약어가 2개 있습니다. glossary.yaml 의 terms 에 뜻을 적거나, 설명이 필요 없는 일반 약어면 common 에 추가하세요.\n  HAL: completion.md, index.md\n  LLM: completion.md\n-> C:\\Users\\baboe\\.codex\\worktrees\\a874\\camera-hal-sdd-generator\\build\\issue251-cli-replay-fixed\\project\\build\\site\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "verify-site"
+      ],
+      "exit_code": 0,
+      "stdout": "{'html_pages': 2, 'broken_links': 0, 'manifest_verified': True}\n",
+      "stderr": ""
+    }
+  ],
+  "generator": {
+    "mode": "workspace",
+    "source_commit": null
+  },
+  "prose_mode": "CLI-generated source-bound answer; not human approval",
+  "runtime": "codex CLI 설치 확인 (모델 호출 검사는 아님)",
+  "before": {
+    "source_commit": "16f6cb06d425cf390706a9c6b918fce003bcf44e",
+    "input_fingerprint": "3a2d58eb50ed24ac203ebcf7ba51af63986839802f18629f544d8291e458302e",
+    "source_sha256": "bc2aef32fa08c445f8467f484be522c12f70777d4728d4c366bebdd7a44e86f1",
+    "draft": {
+      "nodes": {
+        "n0": {
+          "label": "runPipes가 frame을 처리합니다.",
+          "label_en": "runPipes processes frame.",
+          "shape": "process",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        },
+        "n1": {
+          "label": "sendResult가 frame의 결과를 전송합니다.",
+          "label_en": "sendResult sends the result for frame.",
+          "shape": "process",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        },
+        "n2": {
+          "label": "onFrameDone이 frame의 완료를 처리합니다.",
+          "label_en": "onFrameDone handles completion of frame.",
+          "shape": "process",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        }
+      },
+      "edges": [
+        {
+          "from": "n0",
+          "to": "n1",
+          "label": "sendResult를 호출합니다.",
+          "label_en": "Calls sendResult.",
+          "condition_ref": "c0:true",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        },
+        {
+          "from": "n1",
+          "to": "n2",
+          "label": "onFrameDone을 호출합니다.",
+          "label_en": "Calls onFrameDone.",
+          "condition_ref": "c0:true",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        },
+        {
+          "from": "n0",
+          "to": "n2",
+          "label": "onFrameDone을 호출합니다.",
+          "label_en": "Calls onFrameDone.",
+          "condition_ref": "c0:false",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        }
+      ]
+    },
+    "graph": {
+      "id": "completion-branches",
+      "topic": "completion",
+      "kind": "decision",
+      "title": "파이프 결과와 완료 처리의 분기",
+      "question": "RequestManager::onFrame에서 runPipes, sendResult, onFrameDone의 연결을 그리세요. 결과 전송 조건의 condition_ref를 원문 조건 ID의 참·거짓으로 선택하고 성공·실패 경로를 구분하세요. onFrameDone이 성공·실패 양쪽에서 호출되는 것을 보존하세요. 기기 동작이나 스레드 보장은 추정하지 마세요. 세 호출을 각각 한 노드로 표현하며 진입점·변수·성공실패별 가상 상태 노드는 추가하지 마세요. label과 label_en에는 함수의 역할만 적으세요. 비교식·숫자·성공실패 판정은 레이블에 쓰지 말고 분기는 현재 원문 조건의 condition_ref로만 지정하세요.",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "runPipes가 frame을 처리합니다.",
+          "label_en": "runPipes processes frame.",
+          "shape": "box",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "207bd08eabba156d28fafe463a18834d905b775ae2d0ac5c529857c7dcb7027b",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret == 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        },
+        {
+          "id": "n1",
+          "label": "sendResult가 frame의 결과를 전송합니다.",
+          "label_en": "sendResult sends the result for frame.",
+          "shape": "box",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "207bd08eabba156d28fafe463a18834d905b775ae2d0ac5c529857c7dcb7027b",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret == 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        },
+        {
+          "id": "n2",
+          "label": "onFrameDone이 frame의 완료를 처리합니다.",
+          "label_en": "onFrameDone handles completion of frame.",
+          "shape": "box",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "207bd08eabba156d28fafe463a18834d905b775ae2d0ac5c529857c7dcb7027b",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret == 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "n0",
+          "to": "n1",
+          "label": "sendResult를 호출합니다. · ret == 0 [true]",
+          "label_en": "Calls sendResult. · ret == 0 [true]",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "207bd08eabba156d28fafe463a18834d905b775ae2d0ac5c529857c7dcb7027b",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret == 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        },
+        {
+          "from": "n1",
+          "to": "n2",
+          "label": "onFrameDone을 호출합니다. · ret == 0 [true]",
+          "label_en": "Calls onFrameDone. · ret == 0 [true]",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "207bd08eabba156d28fafe463a18834d905b775ae2d0ac5c529857c7dcb7027b",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret == 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        },
+        {
+          "from": "n0",
+          "to": "n2",
+          "label": "onFrameDone을 호출합니다. · ret == 0 [false]",
+          "label_en": "Calls onFrameDone. · ret == 0 [false]",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "207bd08eabba156d28fafe463a18834d905b775ae2d0ac5c529857c7dcb7027b",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret == 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        }
+      ],
+      "producer": "cli/codex/gpt-6.1-terra"
+    },
+    "producer": "cli/codex/gpt-6.1-terra",
+    "reused": false
+  },
+  "after": {
+    "source_commit": "0c92b75dd1f9fc2ac97d2ef08e246bc081faaf48",
+    "input_fingerprint": "79bf1e6721a303370e43a78c6058c8789f2b46bf0236ef2590b375cd07272df9",
+    "source_sha256": "b5f365e6cf7915a8ac6e2ecc52625bbc857d9a8a3f5e4dd96ecfb24f14d47ae3",
+    "draft": {
+      "nodes": {
+        "n0": {
+          "label": "runPipes가 frame을 처리합니다.",
+          "label_en": "runPipes processes frame.",
+          "shape": "process",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        },
+        "n1": {
+          "label": "sendResult가 frame의 결과를 전송합니다.",
+          "label_en": "sendResult sends the result for frame.",
+          "shape": "process",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        },
+        "n2": {
+          "label": "onFrameDone이 frame의 완료를 처리합니다.",
+          "label_en": "onFrameDone handles completion of frame.",
+          "shape": "process",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        }
+      },
+      "edges": [
+        {
+          "from": "n0",
+          "to": "n1",
+          "label": "sendResult를 호출합니다.",
+          "label_en": "Calls sendResult.",
+          "condition_ref": "c0:true",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        },
+        {
+          "from": "n1",
+          "to": "n2",
+          "label": "onFrameDone을 호출합니다.",
+          "label_en": "Calls onFrameDone.",
+          "condition_ref": "c0:true",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        },
+        {
+          "from": "n0",
+          "to": "n2",
+          "label": "onFrameDone을 호출합니다.",
+          "label_en": "Calls onFrameDone.",
+          "condition_ref": "c0:false",
+          "quote_ids": [
+            "on-frame:0"
+          ]
+        }
+      ]
+    },
+    "graph": {
+      "id": "completion-branches",
+      "topic": "completion",
+      "kind": "decision",
+      "title": "파이프 결과와 완료 처리의 분기",
+      "question": "RequestManager::onFrame에서 runPipes, sendResult, onFrameDone의 연결을 그리세요. 결과 전송 조건의 condition_ref를 원문 조건 ID의 참·거짓으로 선택하고 성공·실패 경로를 구분하세요. onFrameDone이 성공·실패 양쪽에서 호출되는 것을 보존하세요. 기기 동작이나 스레드 보장은 추정하지 마세요. 세 호출을 각각 한 노드로 표현하며 진입점·변수·성공실패별 가상 상태 노드는 추가하지 마세요. label과 label_en에는 함수의 역할만 적으세요. 비교식·숫자·성공실패 판정은 레이블에 쓰지 말고 분기는 현재 원문 조건의 condition_ref로만 지정하세요.",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "runPipes가 frame을 처리합니다.",
+          "label_en": "runPipes processes frame.",
+          "shape": "box",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "64ce50dbc9085701f44bbba8bc5573bc9ed24bb9eedbc15e7676446eb4f629fe",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret >= 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        },
+        {
+          "id": "n1",
+          "label": "sendResult가 frame의 결과를 전송합니다.",
+          "label_en": "sendResult sends the result for frame.",
+          "shape": "box",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "64ce50dbc9085701f44bbba8bc5573bc9ed24bb9eedbc15e7676446eb4f629fe",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret >= 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        },
+        {
+          "id": "n2",
+          "label": "onFrameDone이 frame의 완료를 처리합니다.",
+          "label_en": "onFrameDone handles completion of frame.",
+          "shape": "box",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "64ce50dbc9085701f44bbba8bc5573bc9ed24bb9eedbc15e7676446eb4f629fe",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret >= 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "n0",
+          "to": "n1",
+          "label": "sendResult를 호출합니다. · ret >= 0 [true]",
+          "label_en": "Calls sendResult. · ret >= 0 [true]",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "64ce50dbc9085701f44bbba8bc5573bc9ed24bb9eedbc15e7676446eb4f629fe",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret >= 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        },
+        {
+          "from": "n1",
+          "to": "n2",
+          "label": "onFrameDone을 호출합니다. · ret >= 0 [true]",
+          "label_en": "Calls onFrameDone. · ret >= 0 [true]",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "64ce50dbc9085701f44bbba8bc5573bc9ed24bb9eedbc15e7676446eb4f629fe",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret >= 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        },
+        {
+          "from": "n0",
+          "to": "n2",
+          "label": "onFrameDone을 호출합니다. · ret >= 0 [false]",
+          "label_en": "Calls onFrameDone. · ret >= 0 [false]",
+          "evidence": [
+            {
+              "source": "completion/on-frame",
+              "sha256": "64ce50dbc9085701f44bbba8bc5573bc9ed24bb9eedbc15e7676446eb4f629fe",
+              "quote": "void RequestManager::onFrame(Frame &frame) {\n    FrameFactory &factory = frame.isPreview ? static_cast<FrameFactory &>(previewFactory_)\n                                            : static_cast<FrameFactory &>(captureFactory_);\n    int ret = factory.runPipes(frame);\n    if (ret >= 0) {\n        sendResult(frame);\n    }\n    onFrameDone(frame);\n}"
+            }
+          ]
+        }
+      ],
+      "producer": "cli/codex/gpt-6.1-terra"
+    },
+    "producer": "cli/codex/gpt-6.1-terra",
+    "reused": false
+  },
+  "status": "passed",
+  "graph_cli_calls": 2,
+  "total_cli_calls": 4,
+  "repeat_build_identical": true,
+  "stale_export_preserved": true,
+  "fixture_branch_checks": "Result send requires true guard; frame cleanup also reached outside true guard",
+  "receipts": [
+    {
+      "schema": 1,
+      "tag": "completion-demo_completion_completion-rule_0",
+      "completed_at": "2026-11-04T18:50:53.496427+00:00",
+      "transport": "cli",
+      "model": "gpt-6.1-terra",
+      "http_call": false,
+      "cli_call": true,
+      "request_sha256": "27d832d34ad6c73d00856702e2f692085a136b9a7593e2b5e3700f163f27e318",
+      "response_sha256": "04803fba8f81c1619a9cbd1d51a3bfede77a2d5d7ab38445f12bd13c2c8de37d",
+      "settings": {
+        "temperature": 0.1,
+        "think": false,
+        "num_ctx": 16384,
+        "max_output_tokens": 6000
+      },
+      "provider": {
+        "runner": "codex",
+        "executable": "codex.EXE",
+        "workspace_cleanup": {
+          "status": "removed"
+        },
+        "arguments": [
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "read-only",
+          "--disable",
+          "shell_tool",
+          "--disable",
+          "multi_agent",
+          "--disable",
+          "plugins",
+          "--disable",
+          "apps",
+          "--disable",
+          "shell_snapshot",
+          "--disable",
+          "skill_search",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "web_search=\"disabled\"",
+          "--json",
+          "--output-schema",
+          "response-schema.json",
+          "--model",
+          "gpt-6.1-terra",
+          "-c",
+          "model_reasoning_effort=\"high\""
+        ],
+        "model_selection": "explicit",
+        "exit_code": 0,
+        "stdout_sha256": "5c5e450f5fd2e9b17c8f2e7ae79c1a362a10980818ec934b30526094cc5acd25",
+        "prompt_sha256": "d82ab1a570a68d709244cbf84e23757ab303ab4e107143aa12af455a4fb425ea",
+        "provider": {
+          "thread_id": "01a1a7e6-4387-7350-98e5-4985783cd0dd",
+          "completion_event": "turn.completed",
+          "usage": {
+            "input_tokens": 12912,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 102,
+            "reasoning_output_tokens": 0
+          }
+        },
+        "cli_version": "codex-cli 0.166.0-alpha.5.1",
+        "stdout_path": "cli/call-wmvgf5rn.stdout.txt",
+        "native_schema_sha256": "5da52edf8e8acca7d56d801ecb45b3c772adcb4d521ebd9feebf3c1f9bd690fc"
+      },
+      "human_review": "pending"
+    },
+    {
+      "schema": 1,
+      "tag": "visual_completion-demo_completion-branches_0",
+      "completed_at": "2026-11-04T18:51:02.995169+00:00",
+      "transport": "cli",
+      "model": "gpt-6.1-terra",
+      "http_call": false,
+      "cli_call": true,
+      "request_sha256": "78a6b9a52393650c076ecc5a05b4226e1d091811b3c20f16ac345289a7d9733c",
+      "response_sha256": "66b6e796e74427dd1e8763e3dee7c4b24c76879011cb7659b9c5b48427b31dc1",
+      "settings": {
+        "temperature": 0.1,
+        "think": false,
+        "num_ctx": 16384,
+        "max_output_tokens": 6000
+      },
+      "provider": {
+        "runner": "codex",
+        "executable": "codex.EXE",
+        "workspace_cleanup": {
+          "status": "removed"
+        },
+        "arguments": [
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "read-only",
+          "--disable",
+          "shell_tool",
+          "--disable",
+          "multi_agent",
+          "--disable",
+          "plugins",
+          "--disable",
+          "apps",
+          "--disable",
+          "shell_snapshot",
+          "--disable",
+          "skill_search",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "web_search=\"disabled\"",
+          "--json",
+          "--output-schema",
+          "response-schema.json",
+          "--model",
+          "gpt-6.1-terra",
+          "-c",
+          "model_reasoning_effort=\"high\""
+        ],
+        "model_selection": "explicit",
+        "exit_code": 0,
+        "stdout_sha256": "059f6c62e1565fdaafd251c571828314423919158297d7757a73d029212f126c",
+        "prompt_sha256": "a265125eaa79d2d420306bded7959b1aff6698d9ca5ab016760ed9267dcd6546",
+        "provider": {
+          "thread_id": "01a1a7e6-600e-7b61-aea2-c85c3e3af2da",
+          "completion_event": "turn.completed",
+          "usage": {
+            "input_tokens": 15878,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 261,
+            "reasoning_output_tokens": 0
+          }
+        },
+        "cli_version": "codex-cli 0.166.0-alpha.5.1",
+        "stdout_path": "cli/call-i531dpak.stdout.txt",
+        "native_schema_sha256": "f0af26b8bd02f0ba0598b2fb96b8e23efdc1ee1cd33d72dcef5a9be93887e54b"
+      },
+      "human_review": "pending"
+    },
+    {
+      "schema": 1,
+      "tag": "completion-demo_completion_completion-rule_0",
+      "completed_at": "2026-11-04T18:50:05.312277+00:00",
+      "transport": "cli",
+      "model": "gpt-6.1-terra",
+      "http_call": false,
+      "cli_call": true,
+      "request_sha256": "16887f72661acdbd236d1652dc51cdc05289ed3cc900472d4023b708504e35a8",
+      "response_sha256": "4efb459e7c1202f58055613b149301ea3ff863a9e5dba2f05a24e3ed500fe4c4",
+      "settings": {
+        "temperature": 0.1,
+        "think": false,
+        "num_ctx": 16384,
+        "max_output_tokens": 6000
+      },
+      "provider": {
+        "runner": "codex",
+        "executable": "codex.EXE",
+        "workspace_cleanup": {
+          "status": "removed"
+        },
+        "arguments": [
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "read-only",
+          "--disable",
+          "shell_tool",
+          "--disable",
+          "multi_agent",
+          "--disable",
+          "plugins",
+          "--disable",
+          "apps",
+          "--disable",
+          "shell_snapshot",
+          "--disable",
+          "skill_search",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "web_search=\"disabled\"",
+          "--json",
+          "--output-schema",
+          "response-schema.json",
+          "--model",
+          "gpt-6.1-terra",
+          "-c",
+          "model_reasoning_effort=\"high\""
+        ],
+        "model_selection": "explicit",
+        "exit_code": 0,
+        "stdout_sha256": "ec4fb0421c6db0c021f3f6b46b053f813fb23212dbbfe4bbba602c1ba2875a6c",
+        "prompt_sha256": "5e8d9c0a444fd9be911bb71037820c79bb7d54f570279834a4626dbff8e6cb69",
+        "provider": {
+          "thread_id": "01a1a7e5-8a47-7840-9879-6658719bde72",
+          "completion_event": "turn.completed",
+          "usage": {
+            "input_tokens": 12914,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 101,
+            "reasoning_output_tokens": 0
+          }
+        },
+        "cli_version": "codex-cli 0.166.0-alpha.5.1",
+        "stdout_path": "cli/call-yv75a_2k.stdout.txt",
+        "native_schema_sha256": "5da52edf8e8acca7d56d801ecb45b3c772adcb4d521ebd9feebf3c1f9bd690fc"
+      },
+      "human_review": "pending"
+    },
+    {
+      "schema": 1,
+      "tag": "visual_completion-demo_completion-branches_0",
+      "completed_at": "2026-11-04T18:50:13.517580+00:00",
+      "transport": "cli",
+      "model": "gpt-6.1-terra",
+      "http_call": false,
+      "cli_call": true,
+      "request_sha256": "0a06fcd3f8faa8bb57c65b23c496c08bef6fe6acdbd622be596ddff053e2a410",
+      "response_sha256": "66b6e796e74427dd1e8763e3dee7c4b24c76879011cb7659b9c5b48427b31dc1",
+      "settings": {
+        "temperature": 0.1,
+        "think": false,
+        "num_ctx": 16384,
+        "max_output_tokens": 6000
+      },
+      "provider": {
+        "runner": "codex",
+        "executable": "codex.EXE",
+        "workspace_cleanup": {
+          "status": "removed"
+        },
+        "arguments": [
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "read-only",
+          "--disable",
+          "shell_tool",
+          "--disable",
+          "multi_agent",
+          "--disable",
+          "plugins",
+          "--disable",
+          "apps",
+          "--disable",
+          "shell_snapshot",
+          "--disable",
+          "skill_search",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "web_search=\"disabled\"",
+          "--json",
+          "--output-schema",
+          "response-schema.json",
+          "--model",
+          "gpt-6.1-terra",
+          "-c",
+          "model_reasoning_effort=\"high\""
+        ],
+        "model_selection": "explicit",
+        "exit_code": 0,
+        "stdout_sha256": "dff3b77d460b89c0ff3c044be5e3ecf0f4feec65fd8ff645d47592016678bf6f",
+        "prompt_sha256": "fff71d399e687de8db2ba81423e3fa83b33dc8892529f94498505c278b2ad67f",
+        "provider": {
+          "thread_id": "01a1a7e5-9ea6-7163-b6ce-89f0086020e5",
+          "completion_event": "turn.completed",
+          "usage": {
+            "input_tokens": 15537,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 261,
+            "reasoning_output_tokens": 0
+          }
+        },
+        "cli_version": "codex-cli 0.166.0-alpha.5.1",
+        "stdout_path": "cli/call-ln6gjer4.stdout.txt",
+        "native_schema_sha256": "f0af26b8bd02f0ba0598b2fb96b8e23efdc1ee1cd33d72dcef5a9be93887e54b"
+      },
+      "human_review": "pending"
+    }
+  ]
+}

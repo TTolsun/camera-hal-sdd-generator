@@ -1,4 +1,5 @@
 import re
+import hashlib
 
 import pytest
 
@@ -37,6 +38,90 @@ def test_custom_coverage_scope_and_example_html_stay_intact():
     assert compact_tables(source) == source
     source = '<pre>' + coverage() + '</pre>'
     assert compact_tables(source) == source
+
+
+def test_observed_writer_directions_are_not_reader_questions():
+    technical = ('Running 상태와 -ENODEV/-EACCES를 설명하세요. '
+                 '반환값 0과 requestCompleted를 구분하세요.')
+    directions = ('세 문단 이내로 작성하세요. '
+                  '각 문단은 한 가지 독자 과업을 설명하고, 같은 결과나 반환값을 다시 풀어 쓰지 마세요. '
+                  '소스 한 줄마다 문단을 만들지 마세요. '
+                  '아래 절에서 설명하는 내부 구현을 미확인 한계로 반복하지 마세요.')
+    source = coverage().replace('<code>Request</code>의 수명은?', technical + ' ' + directions)
+    spec = {hashlib.sha256((technical + ' ' + directions).encode()).hexdigest(): [
+        '세 문단 이내로 작성하세요.',
+        '각 문단은 한 가지 독자 과업을 설명하고, 같은 결과나 반환값을 다시 풀어 쓰지 마세요.',
+        '소스 한 줄마다 문단을 만들지 마세요.',
+        '아래 절에서 설명하는 내부 구현을 미확인 한계로 반복하지 마세요.']}
+    result = compact_tables(source, question_edits=spec)
+    assert technical in result
+    assert '세 문단' not in result and '소스 한 줄마다' not in result
+    assert re.findall(r'href="([^"]+)"', source) == re.findall(r'href="([^"]+)"', result)
+    assert compact_tables(result) == result
+    with pytest.raises(ValueError, match='changed or is absent'):
+        compact_tables(source.replace('Running', 'Stopped'), question_edits=spec)
+    with pytest.raises(ValueError, match='changed or is absent'):
+        compact_tables(source.replace('코드 근거와 설명 연결 · 실행 확인 항목 별도', '사용자 정의 조건'), question_edits=spec)
+    # Contract imperatives, code literals, custom notes and empty-only rows
+    # must never be generalized into the editorial-removal rule.
+    assert directions in compact_tables(source.replace(technical + ' ' + directions, directions))
+    code = source.replace(technical + ' ' + directions, '<code>세 문단 이내로 작성하세요.</code> 호출 의무를 유지하세요.')
+    assert '<code>세 문단 이내로 작성하세요.</code> 호출 의무를 유지하세요.' in compact_tables(code)
+    for protected in ['<code> 세 문단 이내로 작성하세요. </code>', '<a href="#life"> 세 문단 이내로 작성하세요. </a>',
+                      '<samp> 세 문단 이내로 작성하세요. </samp>', '<em> 세 문단 이내로 작성하세요. </em>']:
+        example = coverage().replace('<code>Request</code>의 수명은?', protected + ' 계약을 확인하세요.')
+        assert protected in compact_tables(example)
+    markup = '<span title=" 세 문단 이내로 작성하세요. > ">기술 조건</span>'
+    assert markup in compact_tables(coverage().replace('<code>Request</code>의 수명은?', markup + ' 세 문단 이내로 작성하세요.'))
+    example = '<code><br></br> 세 문단 이내로 작성하세요. </unmatched></code>'
+    assert example in compact_tables(coverage().replace('<code>Request</code>의 수명은?', example))
+    for quoted in ['인용문: " 세 문단 이내로 작성하세요. "는 기존 요구사항입니다.',
+                   '“앞 문장. 세 문단 이내로 작성하세요.”를 그대로 보존하세요.',
+                   '계약의 일부로 세 문단 이내로 작성하세요. 조건을 인용합니다.',
+                   '계약 조건은 다음과 같습니다. 세 문단 이내로 작성하세요. 이 조건은 필수입니다.']:
+        assert quoted in compact_tables(coverage().replace('<code>Request</code>의 수명은?', quoted))
+
+
+@pytest.mark.parametrize('remaining', ['<br>', '<!-- empty -->', '<span></span>',
+                                    '<script>ignored</script>', '<style>ignored</style>',
+                                    '<template>ignored</template>', '<span hidden>ignored</span>',
+                                    '<span style="display:none">ignored</span>', '&nbsp;',
+                                    '<span>&#8203;</span>', '&#xfeff;', '???'])
+def test_configured_removal_cannot_leave_only_markup(remaining):
+    question = '세 문단 이내로 작성하세요. ' + remaining
+    source = coverage().replace('<code>Request</code>의 수명은?', question)
+    edits = {hashlib.sha256(question.encode()).hexdigest(): ['세 문단 이내로 작성하세요.']}
+    with pytest.raises(ValueError, match='empty a question'):
+        compact_tables(source, question_edits=edits)
+
+
+def test_configured_removal_preserves_visible_entity_text():
+    question = '세 문단 이내로 작성하세요. &#65;'
+    source = coverage().replace('<code>Request</code>의 수명은?', question)
+    edits = {hashlib.sha256(question.encode()).hexdigest(): ['세 문단 이내로 작성하세요.']}
+    assert '&#65;' in compact_tables(source, question_edits=edits)
+
+
+def test_reader_label_keeps_full_original_requirement_bound_without_rendering_markup():
+    original = '<code>Request</code>의 수명은?'
+    key = hashlib.sha256(original.encode()).hexdigest()
+    source = coverage()
+    label = '요청을 언제 다시 사용할 수 있습니까? <script>alert(1)</script>'
+    result = compact_tables(source, question_edits={key: {'label': label}})
+    assert '요청을 언제 다시 사용할 수 있습니까?' in result
+    assert '&lt;script&gt;' in result and '<script>' not in result
+    assert original in source and original not in result
+    assert re.findall(r'href="([^"]+)"', source) == re.findall(r'href="([^"]+)"', result)
+    assert '실행 확인 항목 별도' in result
+    with pytest.raises(ValueError, match='question changed or is absent'):
+        compact_tables(source.replace('수명은?', '생성은?'), question_edits={key: {'label': label}})
+
+
+@pytest.mark.parametrize('value', [{'label':''},{'label':'???'},{'label':'질문','extra':True},{'label':None}])
+def test_reader_label_rejects_incomplete_or_unknown_shapes(value):
+    key=hashlib.sha256('<code>Request</code>의 수명은?'.encode()).hexdigest()
+    with pytest.raises(ValueError):
+        compact_tables(coverage(),question_edits={key:value})
 
 
 def test_question_guide_follows_lead_before_terms_with_content_and_links_intact():

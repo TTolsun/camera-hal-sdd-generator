@@ -86,7 +86,8 @@ def test_raw_configuration_access_stays_at_documented_boundaries():
     limits = {'config': 7, 'trial_workspace': 6, 'localization_cli': 1,
               'automation': 2, 'idle_review': 1, 'site_build': 1,
               'evaluate_pipeline': 2, 'evaluate_reader': 2, 'compdb': 2,
-              'product_context': 2}  # Local product schema and asset-path boundary.
+              'product_context': 2,  # Local product schema and asset-path boundary.
+              'publication_operation': 1}  # Lossless operation input snapshot; no policy interpretation.
     receipt_text = {'design_replay': {'loaded'}, 'provenance': {'record'},
                     'reader_loop': {'record'}, 'repair_reader': {'record'},
                     'cli_checkpoint': {'row', 'record'},

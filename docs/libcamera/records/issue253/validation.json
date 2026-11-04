@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "local_validation": {
+    "documentation_links": {
+      "passed": 466,
+      "seconds": 1.29
+    },
+    "python_compile": "historical helper copies compiled before being archived as non-runnable text; no reusable runner shipped",
+    "diff_check": "passed"
+  },
+  "earlier_attempts": [
+    "Initial docs link run: 443 passed and 2 sandbox temporary-directory setup errors; rerun with workspace basetemp passed 445.",
+    "Expanded evidence run: 49 broken relative-link findings inside archived CLI prompt Markdown, 461 passed; immutable native files were moved unchanged to the existing validation/runs archive convention, then 461 passed.",
+    "Initial copied summarize.py failed compilation due to replacing its own source-template string; the example copy no longer rewrites scripts and compilation passed."
+  ],
+  "human_evaluation": "pending",
+  "human_review": "pending",
+  "full_change_update_cost": "incomplete",
+  "rendered_product_changed": false,
+  "source_policy_changed": false
+}

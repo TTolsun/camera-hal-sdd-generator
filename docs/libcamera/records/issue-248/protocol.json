@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "build_id": "10b23c926b880b542f12e88ef22352f75b5cb7271cdb52f3bb5020eb4e0e4a93",
+  "manifest_sha256": "1434f1fd6b3672157d927ae4631df5a08b39e0fabd73a5d2b040118d98f9783e",
+  "protocol_text_sha256": "6c51d1b367aea0a36a99b99a605a6dc073d0228650868e674b4c78b07006e015",
+  "baseline_sha256": "92064a14cdc0420acb52ffa3a2f6dbf5603af7c3d2fcb1c347fb3c87eca8b881",
+  "base_tasks": [
+    "index",
+    "overview",
+    "vendor_overview",
+    "vendor_assurance",
+    "vendor_integration",
+    "queue_request"
+  ],
+  "participants": [
+    {
+      "id": "P01",
+      "perspective": "new_developer",
+      "tasks": [
+        "index",
+        "overview",
+        "S",
+        "R",
+        "X"
+      ]
+    },
+    {
+      "id": "P02",
+      "perspective": "other_team",
+      "tasks": [
+        "vendor_overview",
+        "vendor_assurance",
+        "S",
+        "R",
+        "X"
+      ]
+    },
+    {
+      "id": "P03",
+      "perspective": "non_author",
+      "tasks": [
+        "vendor_integration",
+        "queue_request",
+        "S",
+        "R",
+        "X"
+      ]
+    }
+  ],
+  "minimum_base_successes": 5,
+  "minimum_ease_median": 4,
+  "task_timeout_seconds": 600,
+  "interruption_seconds": 300,
+  "artifacts": {
+    "instructions": {
+      "path": "protocol.md",
+      "sha256": "6c51d1b367aea0a36a99b99a605a6dc073d0228650868e674b4c78b07006e015"
+    },
+    "participant": {
+      "path": "participant.md",
+      "sha256": "137b1ad00f1ed973293079fe843d2a068135d56d8a96c502fb207c80c1c666eb"
+    },
+    "rubric": {
+      "path": "facilitator.md",
+      "sha256": "7270c3d3bd49247d5ba14784d120a18f2c3560d479d30f803894e2a2f1103625"
+    },
+    "baseline": {
+      "path": "baseline.json",
+      "sha256": "92064a14cdc0420acb52ffa3a2f6dbf5603af7c3d2fcb1c347fb3c87eca8b881"
+    },
+    "legacy_rubric": {
+      "path": "rubric-163.md",
+      "sha256": "ca04759666607c3a8938e66d9da4bbd38f76c462d95710f95cbeaac0db053cb5"
+    }
+  }
+}

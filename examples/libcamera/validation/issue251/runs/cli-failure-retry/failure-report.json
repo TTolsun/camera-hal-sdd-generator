@@ -1,0 +1,78 @@
+{
+  "scope": "public mini HAL only; no human approval or internal publication",
+  "stages": [
+    {
+      "args": [
+        "generate"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "오류: 설계 항목 검증 실패:\ncompletion-demo: codex CLI가 실패했습니다 (exit 2, cli-failure). 로컬 실행 기록을 확인하세요. 다른 실행기로 대체하지 않습니다.\n"
+    },
+    {
+      "args": [
+        "generate"
+      ],
+      "exit_code": 0,
+      "stdout": "-> sdd/completion.md\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "export-site"
+      ],
+      "exit_code": 0,
+      "stdout": "경고: 뜻을 적지 않은 약어가 2개 있습니다. glossary.yaml 의 terms 에 뜻을 적거나, 설명이 필요 없는 일반 약어면 common 에 추가하세요.\n  HAL: completion.md, index.md\n  LLM: completion.md\n-> C:\\Users\\baboe\\.codex\\worktrees\\a874\\camera-hal-sdd-generator\\build\\issue251-extra\\failure-project\\build\\site\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "verify-site"
+      ],
+      "exit_code": 0,
+      "stdout": "{'html_pages': 2, 'broken_links': 0, 'manifest_verified': True}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "generate"
+      ],
+      "exit_code": 0,
+      "stdout": "-> sdd/completion.md\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "export-site"
+      ],
+      "exit_code": 0,
+      "stdout": "경고: 뜻을 적지 않은 약어가 2개 있습니다. glossary.yaml 의 terms 에 뜻을 적거나, 설명이 필요 없는 일반 약어면 common 에 추가하세요.\n  HAL: completion.md, index.md\n  LLM: completion.md\n-> C:\\Users\\baboe\\.codex\\worktrees\\a874\\camera-hal-sdd-generator\\build\\issue251-extra\\failure-project\\build\\site\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "verify-site"
+      ],
+      "exit_code": 0,
+      "stdout": "{'html_pages': 2, 'broken_links': 0, 'manifest_verified': True}\n",
+      "stderr": ""
+    }
+  ],
+  "baseline_hashes": {
+    "sdd/completion.md": "062a134d3e4cae2fbe54cc4d243794d97e82ca6d0f1a2e6c436b2345ecc2dfdc",
+    "build/site/.nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build/site/assets/reader-tools.js": "c97fa418bc3fa279589ca1e5968ce360d8c684ed4948de802a82369df6144ab0",
+    "build/site/assets/reading.css": "34a4cf7f34f3b6404f02053299281b7adc54ab6600050e967076a90f2cdbd8bf",
+    "build/site/assets/search.json": "6ae88f3aff675f9fc869cfdaf33d99542a90dec302fc6a983610d4d1c33c7cec",
+    "build/site/assets/site.js": "1a50920986c1f951a77a0ede7b5799cac19460781d84eb1390e246a10c1df6ce",
+    "build/site/completion.completion-branches.mmd": "9290181bb740dc19ffad5b1c971f2d83f57e08a67e194d37657cc7196325421e",
+    "build/site/completion.html": "bd497c36f3748624bee2498e166963b772ec8b8898fe106a7d2478038203019c",
+    "build/site/completion.md": "062a134d3e4cae2fbe54cc4d243794d97e82ca6d0f1a2e6c436b2345ecc2dfdc",
+    "build/site/index.html": "1a3bd11b06c3324ae37215e12e7f99b08b2af31aa9d0c468e95f38c64e6acae5",
+    "build/site/site-manifest.json": "3a5f13b011482c57b404e84b7b19a31f00b58a79a01c64da0a305f47312560fa"
+  },
+  "failure_preserved": true,
+  "fresh_retry_receipts": [
+    "failure-project\\build\\prompts\\calls\\15bdb76572e340278f3889ec8f4922b6\\001.receipt.json"
+  ]
+}

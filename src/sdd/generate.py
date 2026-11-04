@@ -114,7 +114,7 @@ class Generator:
     def run(self, section_ids: list[str] | None = None, impact: ImpactReport | None = None) -> list[Path]:
         from .generation_run import Execution
         original = self.agent
-        self.agent = Execution(self.cfg, original)
+        self.agent = Execution(self.cfg, original, model=self.model)
         self.narrator.agent = self.agent
         try:
             with self.agent.track('generation'):
@@ -699,6 +699,10 @@ class Generator:
         return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
 
     def _write(self, path, text):
+        from .generation_run import observed
+        execution = observed()
+        if execution is not None and execution.publication_contract is not None:
+            execution.publication_contract.preserve_output(path, text)
         from .visual_audit import manuscript_gate, policy
         if policy(self.cfg).get('enabled', False):
             from .validation_stage import current

@@ -33,7 +33,7 @@ class Inputs:
         stat = path.stat()
         return stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size, stat.st_ino, stat.st_mode
 
-    def pin(self, cfg, model=None):
+    def pin(self, cfg, model=None, *, include_source_git=True):
         for value in (cfg, model):
             if value is not None and id(value) not in self.objects:
                 self.objects[id(value)] = (value, deepcopy(asdict(value)))
@@ -52,7 +52,7 @@ class Inputs:
                         raise ValueError('Source inputs must stay inside the configured source root')
                     self.read(target, optional=True)
         git = cfg.source_root/'.git'
-        if git.exists():
+        if include_source_git and git.exists():
             if git.is_file():
                 pointer = self.read(git).decode('utf-8').strip()
                 if not pointer.startswith('gitdir: '):

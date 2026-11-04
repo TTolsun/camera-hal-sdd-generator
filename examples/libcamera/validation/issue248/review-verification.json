@@ -1,0 +1,511 @@
+{
+  "schema": 1,
+  "scope": "Automatic code/protocol review, not human reader evaluation or approval",
+  "agent": {
+    "kind": "cli",
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ]
+  },
+  "final_review": "native-review-final/review.json",
+  "archive_sha256": "7184a5cc7994785384220db36f158924b1e2490526874671a417a04673f86d0d",
+  "files": [
+    {
+      "path": "native-review-final/prompts/001_visible-content-fix.md",
+      "sha256": "83ac667ba1334eca8f085deab4fc2bd286db1cd806738855ba16b564b3f49734"
+    },
+    {
+      "path": "native-review-final/prompts/001_visible-content-fix.response.md",
+      "sha256": "0b885877b7508d45c6b21700aede285c6e7adae5a2636cbe2b05eb0fea226e37"
+    },
+    {
+      "path": "native-review-final/prompts/001_visible-content-fix.schema.json",
+      "sha256": "8623cfc268316ba7c1d79d8d857bf50ddfe5aece90f941ee2d3055b2a36a0cf3"
+    },
+    {
+      "path": "native-review-final/prompts/calls/de730887924846859e82964af7151a86/001.receipt.json",
+      "sha256": "46cb53f7fd018885e31fbbe98e4c731a33cd16aa7299a4dbb4a42831b8d60b80"
+    },
+    {
+      "path": "native-review-final/prompts/calls/de730887924846859e82964af7151a86/001.request.json",
+      "sha256": "9ff492abf8d78faae79f244237bc70721507caf009f72bc55bb37538027ac31c"
+    },
+    {
+      "path": "native-review-final/prompts/calls/de730887924846859e82964af7151a86/001.response.txt",
+      "sha256": "78c552a162c21b8efd0bc0f45dbdc0e65459553bcf752b9968510361dc8e1ab4"
+    },
+    {
+      "path": "native-review-final/prompts/cli/call-n3p5cd8v.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-final/prompts/cli/call-n3p5cd8v.stdout.txt",
+      "sha256": "0c5cb4f0667605b4c784071d666c7244c19bb04042fd311cd6ce2f59b1348d45"
+    },
+    {
+      "path": "native-review-final/review.json",
+      "sha256": "0b885877b7508d45c6b21700aede285c6e7adae5a2636cbe2b05eb0fea226e37"
+    },
+    {
+      "path": "native-review-v1/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v1/prompts/001_independent-review.md",
+      "sha256": "d450ab4449f48a948a2891e3f56a893fe601b567a603c9cc8d4293ae1cedb2ae"
+    },
+    {
+      "path": "native-review-v1/prompts/001_independent-review.response.md",
+      "sha256": "9b1f301b2582f1b2fbc4b3d8e052d287fd4cf8a74ef99eceae8a8e152218e057"
+    },
+    {
+      "path": "native-review-v1/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v1/prompts/calls/d5a43c4877fb47d4a410086d7373cf1c/001.receipt.json",
+      "sha256": "0bba01f291e65370fd2b7082fdb622a652e426ecfdc14acf496d2dc479ba0897"
+    },
+    {
+      "path": "native-review-v1/prompts/calls/d5a43c4877fb47d4a410086d7373cf1c/001.request.json",
+      "sha256": "1b4b68caf34d6a635b27072b8953c3c4c0590a7d288407e66c90f0c98704da12"
+    },
+    {
+      "path": "native-review-v1/prompts/calls/d5a43c4877fb47d4a410086d7373cf1c/001.response.txt",
+      "sha256": "ac40a5a4ec7dfa67e4512cf4ea48ecc79a8530b7632295c566507b22bc3c5f97"
+    },
+    {
+      "path": "native-review-v1/prompts/cli/call-0t65g4mz.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v1/prompts/cli/call-0t65g4mz.stdout.txt",
+      "sha256": "3303d7cefab1b38bb09e249ceb6af8be45c85493c45a5e6cf6ee2132ddf082fe"
+    },
+    {
+      "path": "native-review-v1/review.json",
+      "sha256": "9b1f301b2582f1b2fbc4b3d8e052d287fd4cf8a74ef99eceae8a8e152218e057"
+    },
+    {
+      "path": "native-review-v10/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v10/prompts/001_independent-review.md",
+      "sha256": "582f44c3a322ed2cd96f41b035a9d732f94d984874c7a6729bd5b25d520596c5"
+    },
+    {
+      "path": "native-review-v10/prompts/001_independent-review.response.md",
+      "sha256": "8e3828826fbe3e2c5b3a0e2adf211283ecd5069be3758af9a9040701b4d25e47"
+    },
+    {
+      "path": "native-review-v10/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v10/prompts/calls/b30055f986174792a22b0a22645b6226/001.receipt.json",
+      "sha256": "616a2a68edb294394728332fe5060d6649d2bde76d7e07eda543854fef5a034f"
+    },
+    {
+      "path": "native-review-v10/prompts/calls/b30055f986174792a22b0a22645b6226/001.request.json",
+      "sha256": "230b2064ab0fd809c41c1c32ebc44fde6eeba4bfccf2e1ef285d9878a8d280f4"
+    },
+    {
+      "path": "native-review-v10/prompts/calls/b30055f986174792a22b0a22645b6226/001.response.txt",
+      "sha256": "8a7b5f3ddd4ae7b07047284f75dcf39047526f1c0d717057eae3a0791a80738c"
+    },
+    {
+      "path": "native-review-v10/prompts/cli/call-q6f2bcn1.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v10/prompts/cli/call-q6f2bcn1.stdout.txt",
+      "sha256": "bd0b8ffd5a9787a6553b57ca6b9d75dd756c1dcf8e1670e743d048246b049d63"
+    },
+    {
+      "path": "native-review-v10/review.json",
+      "sha256": "8e3828826fbe3e2c5b3a0e2adf211283ecd5069be3758af9a9040701b4d25e47"
+    },
+    {
+      "path": "native-review-v11/prompts/001_visible-content-fix.md",
+      "sha256": "ca5d46dccc4d7787f028c6bf8121c3545ad13d3d751451ed7ce93dee6b933a5f"
+    },
+    {
+      "path": "native-review-v11/prompts/001_visible-content-fix.response.md",
+      "sha256": "38ab290379ffcacb589ba131d8732f1fc80653e719b97e0ec05497908069c4bc"
+    },
+    {
+      "path": "native-review-v11/prompts/001_visible-content-fix.schema.json",
+      "sha256": "8623cfc268316ba7c1d79d8d857bf50ddfe5aece90f941ee2d3055b2a36a0cf3"
+    },
+    {
+      "path": "native-review-v11/prompts/calls/20bd24f4358f4c9d9f598be775c1e272/001.receipt.json",
+      "sha256": "facb35868758ae33c01626bf2529f9471a00458f2d3efa054c771fbe56ad0436"
+    },
+    {
+      "path": "native-review-v11/prompts/calls/20bd24f4358f4c9d9f598be775c1e272/001.request.json",
+      "sha256": "1a773c6fac653eee8c5c261446549bb1951b79912bfaf94cdae2f04e9d04ecdb"
+    },
+    {
+      "path": "native-review-v11/prompts/calls/20bd24f4358f4c9d9f598be775c1e272/001.response.txt",
+      "sha256": "63d040520752bbfb9c512c485660b2e28c8adf0f3ab139b9ed0bced41a145263"
+    },
+    {
+      "path": "native-review-v11/prompts/calls/5f395e4ad3b04daca55fe25bcdda556b/001.receipt.json",
+      "sha256": "6f3f5a778f02c7635f231f3f98dc77ece8b33dd07c7a136a601c201ca5112806"
+    },
+    {
+      "path": "native-review-v11/prompts/calls/5f395e4ad3b04daca55fe25bcdda556b/001.request.json",
+      "sha256": "dc0db304426682fc95c75c92583c339b89d9baeab1ab6ab8ac3bf253914a0d3f"
+    },
+    {
+      "path": "native-review-v11/prompts/calls/5f395e4ad3b04daca55fe25bcdda556b/001.response.txt",
+      "sha256": "4a7a887c4f6ddad0ff270372d65d0c11b2f46706daf8488e428b4b0de3cc1171"
+    },
+    {
+      "path": "native-review-v11/prompts/cli/call-_mjwds43.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v11/prompts/cli/call-_mjwds43.stdout.txt",
+      "sha256": "fcd50ede8a44148af135ab92ed12f63d883e558990127aebf581987c508d1d52"
+    },
+    {
+      "path": "native-review-v11/prompts/cli/call-l88gsq4v.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v11/prompts/cli/call-l88gsq4v.stdout.txt",
+      "sha256": "a29abc44ce26fa504afb09450a971df62e398725b1064c90fe38f6e9decbeca9"
+    },
+    {
+      "path": "native-review-v11/review.json",
+      "sha256": "38ab290379ffcacb589ba131d8732f1fc80653e719b97e0ec05497908069c4bc"
+    },
+    {
+      "path": "native-review-v2/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v2/prompts/001_independent-review.md",
+      "sha256": "982cd945ec9e6908014f15a138bed135fa734471f0c92af2654cb7a2079d3e0a"
+    },
+    {
+      "path": "native-review-v2/prompts/001_independent-review.response.md",
+      "sha256": "c7e1c67fa937e7de055b8021460f643d941b32463be8edce410e293489161c83"
+    },
+    {
+      "path": "native-review-v2/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v2/prompts/calls/e77fce49b3674f30aa299e8074c33a00/001.receipt.json",
+      "sha256": "4353e72e50e3ba161fb8145eaaceca0e8418fcf106985d0113930e5915519390"
+    },
+    {
+      "path": "native-review-v2/prompts/calls/e77fce49b3674f30aa299e8074c33a00/001.request.json",
+      "sha256": "60a973b4c058067696c7abbb55a48b8e280dbfe1ce3ea123aeddebde87357b2a"
+    },
+    {
+      "path": "native-review-v2/prompts/calls/e77fce49b3674f30aa299e8074c33a00/001.response.txt",
+      "sha256": "a826e72d78e65eef1e4413b5a05338976a022bb5f5c468723803d205b83576ae"
+    },
+    {
+      "path": "native-review-v2/prompts/cli/call-97xq03wk.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v2/prompts/cli/call-97xq03wk.stdout.txt",
+      "sha256": "e1792ffd23ef49ca541222393709026113f9e68bea765fb64f9b4db4eba8e78d"
+    },
+    {
+      "path": "native-review-v2/review.json",
+      "sha256": "c7e1c67fa937e7de055b8021460f643d941b32463be8edce410e293489161c83"
+    },
+    {
+      "path": "native-review-v3/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v3/prompts/001_independent-review.md",
+      "sha256": "d767a8f5ac4c7af87d581aa302350657009806dfbf54349458ef5142067a108d"
+    },
+    {
+      "path": "native-review-v3/prompts/001_independent-review.response.md",
+      "sha256": "597ee9fe960631c256544fff1c1e83747613e0aaa5b4c3101bbc8872d41d65e7"
+    },
+    {
+      "path": "native-review-v3/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v3/prompts/calls/25384c43377b4fa690ca4df3f3cb2612/001.receipt.json",
+      "sha256": "0c44e10f89cbc8b1fd1a77a2ff116f62d47c1ab689bd8ab702c73ddb3cd89290"
+    },
+    {
+      "path": "native-review-v3/prompts/calls/25384c43377b4fa690ca4df3f3cb2612/001.request.json",
+      "sha256": "08dbab7d370faa0c8aa3f50eaff913764850fd91d81e123e1aad7d952255def7"
+    },
+    {
+      "path": "native-review-v3/prompts/calls/25384c43377b4fa690ca4df3f3cb2612/001.response.txt",
+      "sha256": "36ba1a5305ad578367add870c01f83b3b9e7331b815762d232fd987b4e3f31f0"
+    },
+    {
+      "path": "native-review-v3/prompts/cli/call-wc42v3yk.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v3/prompts/cli/call-wc42v3yk.stdout.txt",
+      "sha256": "03111a944dd37bd878404d596325477bed3097b6ee1229e71a6b2ab39c386c5b"
+    },
+    {
+      "path": "native-review-v3/review.json",
+      "sha256": "597ee9fe960631c256544fff1c1e83747613e0aaa5b4c3101bbc8872d41d65e7"
+    },
+    {
+      "path": "native-review-v4/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v4/prompts/001_independent-review.md",
+      "sha256": "1e5e1fded6d91261f376166dacba9036a084a7a9c3056b7a40d84852341566fe"
+    },
+    {
+      "path": "native-review-v4/prompts/001_independent-review.response.md",
+      "sha256": "ecc709ad91d9ce21949a55006f8b9c3c8cf580b56638eba2d21e82b01631b0b5"
+    },
+    {
+      "path": "native-review-v4/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v4/prompts/calls/250cb1648f4a458791215b39e3ea98b8/001.receipt.json",
+      "sha256": "7b144d83077b965b671486cd761c9c8cd71709fff60480a5dda99fc88515c589"
+    },
+    {
+      "path": "native-review-v4/prompts/calls/250cb1648f4a458791215b39e3ea98b8/001.request.json",
+      "sha256": "89b8f1ee2b10908f2b68f1b08b56b78ac520e749a724b75bcfbb6b4b1d995ed3"
+    },
+    {
+      "path": "native-review-v4/prompts/calls/250cb1648f4a458791215b39e3ea98b8/001.response.txt",
+      "sha256": "71ccfe407a99787d956856f6ac8d4b13fc13ba9475eeff379f7d8e1a29d8d6cf"
+    },
+    {
+      "path": "native-review-v4/prompts/cli/call-j5qmsta5.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v4/prompts/cli/call-j5qmsta5.stdout.txt",
+      "sha256": "38a438fc6abdb6f6a254c5ee3d9d73809618c273ef29634c33f5c7faca4f890d"
+    },
+    {
+      "path": "native-review-v4/review.json",
+      "sha256": "ecc709ad91d9ce21949a55006f8b9c3c8cf580b56638eba2d21e82b01631b0b5"
+    },
+    {
+      "path": "native-review-v5/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v5/prompts/001_independent-review.md",
+      "sha256": "c49829fe577a4c87c560278e89bdfbf5c0f27dfb3410bd9f676c788c74232604"
+    },
+    {
+      "path": "native-review-v5/prompts/001_independent-review.response.md",
+      "sha256": "171bfd7fe8fefe1ddd2176831a3b8963457ffa8d5919d6d29b84232722e68549"
+    },
+    {
+      "path": "native-review-v5/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v5/prompts/calls/e58e5516d0ac4e81b492b1c9d802a2c8/001.receipt.json",
+      "sha256": "6f80568a4b9aacfa7110f8bc64649d6ac5bddd98e013f741ce417005e9e7aa56"
+    },
+    {
+      "path": "native-review-v5/prompts/calls/e58e5516d0ac4e81b492b1c9d802a2c8/001.request.json",
+      "sha256": "1b618e3531fbc60fa47bc4c34b9b8bd036b8e48a61a8cb1bdc9472a54a02938f"
+    },
+    {
+      "path": "native-review-v5/prompts/calls/e58e5516d0ac4e81b492b1c9d802a2c8/001.response.txt",
+      "sha256": "0b78f2dc78e4950622f02b88d3b5ba0c37cad9814e6c5b05b7fe85c6937a6dbb"
+    },
+    {
+      "path": "native-review-v5/prompts/cli/call-dzrjw7a6.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v5/prompts/cli/call-dzrjw7a6.stdout.txt",
+      "sha256": "1a853df139b960a7b17e1665192102cb4a00493fa77a14f809b3a04aac47e407"
+    },
+    {
+      "path": "native-review-v5/review.json",
+      "sha256": "171bfd7fe8fefe1ddd2176831a3b8963457ffa8d5919d6d29b84232722e68549"
+    },
+    {
+      "path": "native-review-v6/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v6/prompts/001_independent-review.md",
+      "sha256": "3988079e9c2f49a16ceca11ff64fe0b82e4c7c560fa1a620a12e9b6649de1510"
+    },
+    {
+      "path": "native-review-v6/prompts/001_independent-review.response.md",
+      "sha256": "727aa2cd33e321db2389c0d6488493d67de4a6d61633e763d5308570abf738e6"
+    },
+    {
+      "path": "native-review-v6/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v6/prompts/calls/bc7f37bf5ccb4d7eb5fb00e846f67357/001.receipt.json",
+      "sha256": "8cfec3a905cc8cff7f0ed3be007d4106d43d4886d0cfbc58ae927d729c3c3787"
+    },
+    {
+      "path": "native-review-v6/prompts/calls/bc7f37bf5ccb4d7eb5fb00e846f67357/001.request.json",
+      "sha256": "57144ae962080be87fff00769ee5b301356640c0677df44df25ea96b0bd98ec9"
+    },
+    {
+      "path": "native-review-v6/prompts/calls/bc7f37bf5ccb4d7eb5fb00e846f67357/001.response.txt",
+      "sha256": "32187f897d168f71687d928e62d3926845ef00e55b445e081a8a7ccb4bb9edc0"
+    },
+    {
+      "path": "native-review-v6/prompts/cli/call-y4i_iph2.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v6/prompts/cli/call-y4i_iph2.stdout.txt",
+      "sha256": "19c37a0b3aa04c34410afedc1103352af728af6684067622c901cc2c66aa983e"
+    },
+    {
+      "path": "native-review-v6/review.json",
+      "sha256": "727aa2cd33e321db2389c0d6488493d67de4a6d61633e763d5308570abf738e6"
+    },
+    {
+      "path": "native-review-v7/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v7/prompts/001_independent-review.md",
+      "sha256": "83f6f537ca87246074bc817e6b4b7b468893de4a6a4c49c5840788ccfab4fd05"
+    },
+    {
+      "path": "native-review-v7/prompts/001_independent-review.response.md",
+      "sha256": "db42b4f629e84defe3223251eef095102eb33dba0482075c08b0dc56d7757991"
+    },
+    {
+      "path": "native-review-v7/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v7/prompts/calls/ff9764bfe4474f2c82f0380b028a5f91/001.receipt.json",
+      "sha256": "3555382c05e2006f8d536e2d8389c2a9520a53ce0fc7bb3b0c0d84e6e533c857"
+    },
+    {
+      "path": "native-review-v7/prompts/calls/ff9764bfe4474f2c82f0380b028a5f91/001.request.json",
+      "sha256": "2a7aae538af4decdd718d2b70cbb61fe7dcf87cf44873efd1791117fe380c545"
+    },
+    {
+      "path": "native-review-v7/prompts/calls/ff9764bfe4474f2c82f0380b028a5f91/001.response.txt",
+      "sha256": "11da784f84bea368e4cb6ab282156266bfc7dffcf56c407c51bd0783d5480130"
+    },
+    {
+      "path": "native-review-v7/prompts/cli/call-4f2v2pof.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v7/prompts/cli/call-4f2v2pof.stdout.txt",
+      "sha256": "d2f74ce506d3f1424c3037a2ecca98c7897b91d63e9009e1102e1e76fd82d6ee"
+    },
+    {
+      "path": "native-review-v7/review.json",
+      "sha256": "db42b4f629e84defe3223251eef095102eb33dba0482075c08b0dc56d7757991"
+    },
+    {
+      "path": "native-review-v8/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v8/prompts/001_independent-review.md",
+      "sha256": "61caff7554a5e1d2a7d4e5acf06e46e452b223c1217c4b6a044ae26a9029931f"
+    },
+    {
+      "path": "native-review-v8/prompts/001_independent-review.response.md",
+      "sha256": "05cea57bc7ca680853bdecf8119c58a4e85b7f0ec3d27f467d95b5579b473864"
+    },
+    {
+      "path": "native-review-v8/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v8/prompts/calls/ae5820be2ade4b16ba6c7549728f7143/001.receipt.json",
+      "sha256": "2d3c23bfe2ccc10595191370afb5c3e19e5c2b52d5d923343797501572b1a8a2"
+    },
+    {
+      "path": "native-review-v8/prompts/calls/ae5820be2ade4b16ba6c7549728f7143/001.request.json",
+      "sha256": "865611f265d8f02c665204264f88f1f2d56a46a29caf48fa839ed1190d7afeea"
+    },
+    {
+      "path": "native-review-v8/prompts/calls/ae5820be2ade4b16ba6c7549728f7143/001.response.txt",
+      "sha256": "6043a5f66db3956a00cc5ce47b00fff4fb4f62a6f449587f702c620d8aad2a74"
+    },
+    {
+      "path": "native-review-v8/prompts/cli/call-5v8u9il4.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v8/prompts/cli/call-5v8u9il4.stdout.txt",
+      "sha256": "d5f0f24eec2611f17b411626c58ee9426f51e629ede76f1c8839b3da1e2c5386"
+    },
+    {
+      "path": "native-review-v8/review.json",
+      "sha256": "05cea57bc7ca680853bdecf8119c58a4e85b7f0ec3d27f467d95b5579b473864"
+    },
+    {
+      "path": "native-review-v9/profile.json",
+      "sha256": "a1f55a5c44183ac0642e89ec7604d2af57ac0c831fa1839b27d2d88409965a0f"
+    },
+    {
+      "path": "native-review-v9/prompts/001_independent-review.md",
+      "sha256": "d5809600843df368a049068d18a72280524aa5548e4d9fc239a728f7e77bd1d9"
+    },
+    {
+      "path": "native-review-v9/prompts/001_independent-review.response.md",
+      "sha256": "b509d81e649769e581e7072c8164d5c983d7b6cb6a30cdc3c0c24a0a844ebd3b"
+    },
+    {
+      "path": "native-review-v9/prompts/001_independent-review.schema.json",
+      "sha256": "33d0ca8ee02dd97e82c8ba1fc417d99066f8e2163481beb7a5bac18711416634"
+    },
+    {
+      "path": "native-review-v9/prompts/calls/7527ca7a54f644e9945d1709fc46c721/001.receipt.json",
+      "sha256": "1d5af9fd3fece3356af97508322dd3e5d3ab4650684644ce6570ddc074eabffa"
+    },
+    {
+      "path": "native-review-v9/prompts/calls/7527ca7a54f644e9945d1709fc46c721/001.request.json",
+      "sha256": "3437b4ef2f913ce56df9a9c1c7be7c6ae80d83eadca1a2eb376fe95d9d3ce491"
+    },
+    {
+      "path": "native-review-v9/prompts/calls/7527ca7a54f644e9945d1709fc46c721/001.response.txt",
+      "sha256": "275b7be835ebb5695764664aa8e98bda936a8460a0ded9bd8c75a981c7d4c2c9"
+    },
+    {
+      "path": "native-review-v9/prompts/cli/call-5ug849gk.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "native-review-v9/prompts/cli/call-5ug849gk.stdout.txt",
+      "sha256": "cb336592c9f7fcd1413d824ebbb925317e059b164a99b63dce98fda3d1f95ce7"
+    },
+    {
+      "path": "native-review-v9/review.json",
+      "sha256": "b509d81e649769e581e7072c8164d5c983d7b6cb6a30cdc3c0c24a0a844ebd3b"
+    }
+  ],
+  "human_reader_status": "pending",
+  "human_approval": "unchanged"
+}

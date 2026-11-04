@@ -71,7 +71,10 @@ def test_malformed_review_keeps_one_live_draft_and_requests_new_review(unit_case
 
 def test_semantic_rejection_requires_a_new_draft(unit_case):
     raw = unit_case[-1]
-    agent = ScriptedAgent([('draft', raw), ('review', UNSUPPORTED), ('draft', raw), ('review', PASS)])
+    fixed = json.loads(raw)
+    fixed['statements'][0]['text'] = '`stop()`은 `cancelPending()`을 호출해 대기 요청의 취소 처리를 시작합니다.'
+    agent = ScriptedAgent([('draft', raw), ('review', UNSUPPORTED),
+                           ('draft', json.dumps(fixed, ensure_ascii=False)), ('review', PASS)])
     request(unit_case, agent)
     assert counts(agent) == (2, 2)
     assert 'Unsupported claim.' in agent.calls[2][1]
@@ -79,8 +82,10 @@ def test_semantic_rejection_requires_a_new_draft(unit_case):
 
 def test_format_then_semantic_rejection_clears_the_pending_draft(unit_case):
     raw = unit_case[-1]
+    fixed = json.loads(raw)
+    fixed['statements'][0]['text'] = '`stop()`은 `cancelPending()`을 호출해 대기 요청의 취소 처리를 시작합니다.'
     agent = ScriptedAgent([('draft', raw), ('review', 'not JSON'), ('review', UNSUPPORTED),
-                           ('draft', raw), ('review', PASS)])
+                           ('draft', json.dumps(fixed, ensure_ascii=False)), ('review', PASS)])
     request(unit_case, agent)
     assert counts(agent) == (2, 3)
     assert 'Unsupported claim.' in agent.calls[3][1]

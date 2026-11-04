@@ -1,0 +1,253 @@
+{
+  "grades": [
+    {
+      "evaluator_id": "E01",
+      "task_id": "T1",
+      "condition": "A",
+      "correct": false,
+      "independent": true,
+      "reason": "The answer identifies useful introductory and request-lifecycle reading, but names CameraManager only as a component whose role should be understood. Its proposed code entry points are all in camera.cpp; it does not identify CameraManager as the entry point.",
+      "missing_conditions": [
+        "Find CameraManager as the starting code entry point and explain its role."
+      ]
+    },
+    {
+      "evaluator_id": "E01",
+      "task_id": "T1",
+      "condition": "B",
+      "correct": true,
+      "independent": true,
+      "reason": "The answer identifies CameraManager in camera_manager.cpp as the entry point and gives a reasoned path through submission and completion.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E01",
+      "task_id": "T4",
+      "condition": "B",
+      "correct": true,
+      "independent": true,
+      "reason": "It identifies caller ownership and deletion, reuse after completion and before requeueing, and the distinction between ReuseBuffers and reattaching buffers.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E01",
+      "task_id": "T4",
+      "condition": "A",
+      "correct": true,
+      "independent": true,
+      "reason": "It identifies caller ownership and deletion, reuse after completion and before requeueing, and the two buffer-handling paths.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E01",
+      "task_id": "D1",
+      "condition": "A",
+      "correct": true,
+      "independent": true,
+      "reason": "The answer separates acceptance, preparation, queue limits, cancellation or device delivery, buffer completion, and ordered request notification. It proposes observations without repeating state-changing functions and does not claim runtime results.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E01",
+      "task_id": "D1",
+      "condition": "B",
+      "correct": false,
+      "independent": true,
+      "reason": "The answer covers the principal queue and completion branches and proposes non-mutating observations, but its preparation plan mentions fences without checking the preparation timeout.",
+      "missing_conditions": [
+        "Observe or check the preparation timeout and its effect on cancellation and readiness."
+      ]
+    },
+    {
+      "evaluator_id": "E01",
+      "task_id": "D2",
+      "condition": "B",
+      "correct": false,
+      "independent": true,
+      "reason": "It explains the stop ordering, caller, thread and lifetime boundaries, and distinguishes a plan from execution. Its validation plan does not explicitly check duplicate completion or callback timing relative to stop returning, and it does not identify a plan to review device-specific stopDevice implementations.",
+      "missing_conditions": [
+        "Check device-specific stopDevice implementations.",
+        "Check for duplicate completion and callbacks before and after stop returns."
+      ]
+    },
+    {
+      "evaluator_id": "E01",
+      "task_id": "D2",
+      "condition": "A",
+      "correct": false,
+      "independent": true,
+      "reason": "It covers the stop sequence, caller, device-specific examples and a regression plan, but does not explicitly test duplicate completion or callback timing relative to stop returning.",
+      "missing_conditions": [
+        "Check for duplicate completion and callbacks before and after stop returns."
+      ]
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "T2",
+      "condition": "B",
+      "correct": false,
+      "independent": true,
+      "reason": "It distinguishes common API responsibilities from device matching and rejects a universal support guarantee, but does not identify the device-specific PipelineHandler's responsibility for hardware pipeline configuration.",
+      "missing_conditions": [
+        "Identify device-specific PipelineHandler responsibility for configuring the hardware pipeline."
+      ]
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "T2",
+      "condition": "A",
+      "correct": false,
+      "independent": true,
+      "reason": "It describes common interfaces, device matching and limits on support claims, but does not distinguish hardware pipeline configuration as a device-specific PipelineHandler responsibility.",
+      "missing_conditions": [
+        "Identify device-specific PipelineHandler responsibility for configuring the hardware pipeline."
+      ]
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "T3",
+      "condition": "A",
+      "correct": true,
+      "independent": true,
+      "reason": "It includes statistics collection and debayering, excludes capture and output, and rejects interpreting the result as total capture latency.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "T3",
+      "condition": "B",
+      "correct": true,
+      "independent": true,
+      "reason": "It includes statistics collection and debayering, excludes capture and output, and rejects interpreting the result as total capture latency.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "D1",
+      "condition": "B",
+      "correct": true,
+      "independent": true,
+      "reason": "It covers preparation including fences and timer, queue limits, cancellation and device-return branches, separate buffer and request completion, ordered notification, and a non-mutating observation plan.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "D1",
+      "condition": "A",
+      "correct": false,
+      "independent": true,
+      "reason": "It covers the preparation, queue, device and completion branches and proposes non-mutating observations, but does not explicitly plan to observe the application's completion callback or Camera completion notification.",
+      "missing_conditions": [
+        "Observe Camera completion notification and the application's completion callback."
+      ]
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "D2",
+      "condition": "A",
+      "correct": false,
+      "independent": true,
+      "reason": "It covers the stop ordering, caller, thread, lifetime, a device implementation and exactly-once ordered completion checks. The plan does not explicitly check callback timing before and after stop returns.",
+      "missing_conditions": [
+        "Check callbacks before and after stop returns."
+      ]
+    },
+    {
+      "evaluator_id": "E02",
+      "task_id": "D2",
+      "condition": "B",
+      "correct": true,
+      "independent": true,
+      "reason": "It covers the stop ordering, caller, thread and lifetime boundaries, and plans checks of the actual device implementation, exactly-once ordered callbacks and their timing around stop. It attributes the existing virtual-probe observations to the document rather than to this trial.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "T5",
+      "condition": "A",
+      "correct": true,
+      "independent": true,
+      "reason": "It correctly distinguishes the last buffer's return value from request completion and names the PipelineHandler, explicit completeRequest call and CameraManager thread.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "T5",
+      "condition": "B",
+      "correct": true,
+      "independent": true,
+      "reason": "It correctly identifies explicit PipelineHandler request completion on the CameraManager thread after buffer completion.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "T6",
+      "condition": "B",
+      "correct": true,
+      "independent": true,
+      "reason": "It identifies the PipelineHandler target and ConnectionTypeQueued, explains the scheduled-call notation, and distinguishes static evidence and thread contracts from runtime proof.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "T6",
+      "condition": "A",
+      "correct": true,
+      "independent": true,
+      "reason": "It identifies the target and ConnectionTypeQueued and does not infer runtime execution from static code. It explicitly reports that it did not find a separate diagram notation in the official materials.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "D1",
+      "condition": "A",
+      "correct": true,
+      "independent": true,
+      "reason": "It covers preparation and timeout, queue limits, cancellation and device return, buffer and ordered request completion, Camera notification and callback observation without diagnostic state-changing calls.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "D1",
+      "condition": "B",
+      "correct": true,
+      "independent": true,
+      "reason": "It distinguishes the preparation, queue, device and completion branches, includes timeout and pending-buffer observations, and plans to observe Camera notification and the callback without re-invoking state-changing functions.",
+      "missing_conditions": []
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "D2",
+      "condition": "B",
+      "correct": false,
+      "independent": true,
+      "reason": "It covers the stop sequence, caller, thread, lifetime and device-specific review, but its validation plan does not explicitly check duplicate completion or callback timing relative to stop returning.",
+      "missing_conditions": [
+        "Check for duplicate completion and callbacks before and after stop returns."
+      ]
+    },
+    {
+      "evaluator_id": "E03",
+      "task_id": "D2",
+      "condition": "A",
+      "correct": false,
+      "independent": true,
+      "reason": "It covers the stop sequence, caller, thread, lifetime and proposed regression path, while reporting that device-specific implementations remain unread. The validation plan does not explicitly check duplicate completion or callback timing relative to stop returning.",
+      "missing_conditions": [
+        "Check for duplicate completion and callbacks before and after stop returns.",
+        "Review the identified device-specific stopDevice implementations."
+      ]
+    }
+  ],
+  "protocol_findings": [
+    "All 24 assigned rows are included. Each reports help_count 0; independent is therefore true on the supplied help record, including for incomplete answers. The record does not independently establish whether unreported help or feedback occurred.",
+    "The recorded B-condition visits for E01 T4, D1 and D2 do not show index.html as the starting point. The supplied records do not establish whether that starting requirement was followed in those trials.",
+    "Second exposures may retain learning from the first condition. These automatic trials do not establish human success, reading burden, causal impact or productivity.",
+    "Correctness is assessed without rewarding shorter elapsed times. No speed-based improvement conclusion follows from these grades."
+  ],
+  "limitations": [
+    "The supplied camera.cpp window for the Camera::stop region is empty. Caller-specific D2 claims and their cited line ranges cannot be independently checked against that window.",
+    "The supplied windows do not include the B-condition HTML pages or several cited official documents, tests and device-specific implementations. Their precise contents and attribution cannot be independently verified here; the grades use the submitted findings alongside the supplied rubric and available source windows.",
+    "Actual device behavior, callback timing, test execution and unreported visits or assistance cannot be established from these submissions."
+  ]
+}
