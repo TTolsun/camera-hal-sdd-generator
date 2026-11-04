@@ -102,6 +102,28 @@ def test_configured_removal_preserves_visible_entity_text():
     assert '&#65;' in compact_tables(source, question_edits=edits)
 
 
+def test_reader_label_keeps_full_original_requirement_bound_without_rendering_markup():
+    original = '<code>Request</code>의 수명은?'
+    key = hashlib.sha256(original.encode()).hexdigest()
+    source = coverage()
+    label = '요청을 언제 다시 사용할 수 있습니까? <script>alert(1)</script>'
+    result = compact_tables(source, question_edits={key: {'label': label}})
+    assert '요청을 언제 다시 사용할 수 있습니까?' in result
+    assert '&lt;script&gt;' in result and '<script>' not in result
+    assert original in source and original not in result
+    assert re.findall(r'href="([^"]+)"', source) == re.findall(r'href="([^"]+)"', result)
+    assert '실행 확인 항목 별도' in result
+    with pytest.raises(ValueError, match='question changed or is absent'):
+        compact_tables(source.replace('수명은?', '생성은?'), question_edits={key: {'label': label}})
+
+
+@pytest.mark.parametrize('value', [{'label':''},{'label':'???'},{'label':'질문','extra':True},{'label':None}])
+def test_reader_label_rejects_incomplete_or_unknown_shapes(value):
+    key=hashlib.sha256('<code>Request</code>의 수명은?'.encode()).hexdigest()
+    with pytest.raises(ValueError):
+        compact_tables(coverage(),question_edits={key:value})
+
+
 def test_question_guide_follows_lead_before_terms_with_content_and_links_intact():
     lead = '<p><strong>도입할 범위를 판단하세요.</strong></p>'
     terms = '<details class="page-terms"><summary>용어</summary><p>Camera</p></details>'

@@ -1,0 +1,13 @@
+{
+  "scope": "Append-only provenance clarification. Original integration record and its normalized text log remain unchanged.",
+  "original_record_sha256": "8804a5395b00d890825039fb30db8267db52e9e5e9a5bd819c47229c3a1d5498",
+  "tested_integration_head": "0f4bf5499d932d39101fe5fe092b0ad765b7aa3a",
+  "tested_main_merge_base": "aaa64d7ec357bb505229b2e0d616ed0ee269e82f",
+  "remote_ref_observed_at_capture": "da0ca3769c2198fbfb76e3808bdd61ff034a580a",
+  "clarification": "The original main_commit field captured a newer remote ref during concurrent work. It was not the tested base. The 259-test local run covers the exact integration_head and its main merge base recorded here. Current-base PR CI is checked separately.",
+  "raw_test_log_gzip": "native-graph-refresh-integration-tests.txt.gz",
+  "raw_test_log_sha256": "1e56b801d44b2dfca6c46fb605c51df2b85caaab2286ef25c199dc0e9ce6589a",
+  "committed_text_log_sha256": "753c3295f8cca8b9b9992dbfb83a1495c21a22b38ce8a7d61ef67870a6a1afbe",
+  "text_log_note": "Git normalized the text log line endings. The gzip preserves the original raw bytes and matches the original record test_log_sha256.",
+  "human_review": "pending"
+}
