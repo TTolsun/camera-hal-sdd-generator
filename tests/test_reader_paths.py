@@ -1,5 +1,4 @@
 """Entrances retain canonical facts, uncertainty and publication rollback."""
-import copy
 import json
 
 import pytest
@@ -18,10 +17,10 @@ def paths(tmp_cfg, generated):
     save()
     Generator(tmp_cfg, model, agent).run()
     ref = dict(section='device', topic='stop')
-    claims = [dict(id='observed', kind='fact', condition='공개 정적 소스입니다.',
+    claims = [dict(id='observed', title='확인한 사실', kind='fact', condition='공개 정적 소스입니다.',
                    sources=[{**ref, 'part': 'conclusion'}])]
     for cid in ['hypothesis', 'unmeasured', 'decision_request']:
-        claim = dict(id=cid.replace('_', '-'), kind=cid, text='아직 확인하지 않았습니다.',
+        claim = dict(id=cid.replace('_', '-'), title=cid, kind=cid, text='아직 확인하지 않았습니다.',
                      condition='기기 실행은 별도입니다.', sources=[ref], needed_inputs=['실제 자료가 필요합니다.'])
         if cid == 'decision_request':
             claim['options'] = ['검증합니다.', '보류합니다.']
@@ -103,3 +102,34 @@ def test_removed_setting_removes_only_owned_role_outputs(tmp_cfg, paths):
     export_site(tmp_cfg)
     assert not (site/'reader-work.html').exists()
     assert (site/'device.html').is_file()
+
+
+def test_injected_index_is_not_shown_as_an_approved_manuscript(tmp_cfg, paths):
+    from sdd import approvals
+    data, write, section, model, save, _ = paths
+    sections = yaml.safe_load(tmp_cfg.sections_file.read_text(encoding='utf-8'))
+    sections['sections'].append(dict(id='index', title='Home', kind='manual', output='index.md'))
+    tmp_cfg.sections_file.write_text(yaml.safe_dump(sections, allow_unicode=True), encoding='utf-8')
+    text = '---\ngeneration_method: manual\nstatus: ok\n---\n# Original home\n\nApproved before new navigation.\n'
+    (tmp_cfg.sdd_dir/'index.md').write_text(text, encoding='utf-8')
+    ledger = approvals.load(tmp_cfg)
+    approvals.approve_page(ledger, 'index.md', text, 'synthetic reviewer')
+    approvals.save(tmp_cfg, ledger)
+    site = export_site(tmp_cfg)
+    assert '사람 검토 전' in (site/'index.html').read_text(encoding='utf-8')
+    assert approvals.page_status(approvals.load(tmp_cfg), 'index.md', text) == 'approved'
+    assert (tmp_cfg.sdd_dir/'index.md').read_text(encoding='utf-8') == text
+
+
+def test_required_approval_does_not_skip_deterministic_role_metadata(tmp_cfg, paths):
+    from sdd import approvals
+    text = (tmp_cfg.sdd_dir/'device.md').read_text(encoding='utf-8')
+    ledger = approvals.load(tmp_cfg)
+    approvals.approve_page(ledger, 'device.md', text, 'synthetic reviewer')
+    approvals.save(tmp_cfg, ledger)
+    site = export_site(tmp_cfg)
+    before = (site/'site-manifest.json').read_bytes()
+    tmp_cfg.raw['site']['require_approval'] = True
+    with pytest.raises(RuntimeError, match='역할별 판단'):
+        export_site(tmp_cfg)
+    assert (site/'site-manifest.json').read_bytes() == before

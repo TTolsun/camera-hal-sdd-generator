@@ -102,6 +102,8 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
                 raise ValueError('Reader paths: part is only valid for a fact projection')
             return link
         part = _id(ref.get('part'))
+        from .generated_design import verify
+        verify(model, section, texts[rel], cfg=cfg)
         answers = meta.get('generated_design', {}).get('answers', {}).get(topic_id, [])
         selected = [a for a in answers if a.get('part_id') == part]
         if not selected or any(a.get('kind') != 'behavior' or not a.get('evidence') for a in selected):
@@ -110,13 +112,14 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
         paragraphs = '\n\n'.join('> ' + a['text'].replace('\n', '\n> ') for a in selected)
         return paragraphs + f'\n\n[전체 조건·상세 근거]({rel}#{anchor})'
 
-    claims = {}
+    claims, claim_titles = {}, {}
     for claim in _items(data['claims'], 'claims'):
-        _mapping(claim, {'id', 'kind', 'condition', 'sources'}, {'text', 'needed_inputs', 'options'})
+        _mapping(claim, {'id', 'title', 'kind', 'condition', 'sources'}, {'text', 'needed_inputs', 'options'})
         cid, kind = _id(claim['id']), claim['kind']
         if cid in claims or not isinstance(kind, str) or kind not in KINDS:
             raise ValueError('Reader paths: unique claim ID and known kind required')
         condition = _line(claim['condition'], 'condition')
+        claim_titles[cid] = _plain(_line(claim['title'], 'claim title'))
         refs = _items(claim['sources'], 'sources')
         if kind == 'fact':
             if set(claim) & {'text', 'needed_inputs', 'options'} or len(refs) != 1:
@@ -125,11 +128,12 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
         else:
             answer = _plain(_line(claim.get('text'), 'text'))
             needed = _items(claim.get('needed_inputs'), 'needed_inputs')
-            answer += '\n\n필요한 입력: ' + ' · '.join(_plain(_line(v, 'needed input')) for v in needed)
-            answer += '\n\n판단의 배경 근거(효과 측정값이 아님): ' + ' · '.join(source(r) for r in refs)
+            answer += '\n\n| 구분 | 확인할 내용 |\n|---|---|\n'
+            answer += '| 필요한 입력 | ' + '<br>'.join(_plain(_line(v, 'needed input')) for v in needed) + ' |\n'
+            answer += '| 판단의 배경 근거(효과 측정값이 아님) | ' + ' · '.join(source(r) for r in refs) + ' |\n'
         if kind == 'decision_request':
-            answer += '\n\n선택지:\n\n' + '\n'.join(
-                '- ' + _plain(_line(v, 'option')) for v in _items(claim.get('options'), 'options'))
+            answer += '| 선택지 | ' + '<br>'.join(
+                _plain(_line(v, 'option')) for v in _items(claim.get('options'), 'options')) + ' |\n'
         elif 'options' in claim:
             raise ValueError('Reader paths: only decision requests have options')
         claims[cid] = f'**{KINDS[kind]}**\n\n{answer}\n\n적용 조건·한계: {_plain(condition)}\n'
@@ -162,10 +166,10 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
                 if next(c for c in data['claims'] if c['id'] == cid)['kind'] == 'fact':
                     selected_facts.add(cid)
                 if cid in displayed:
-                    body += f'[같은 근거·조건 다시 보기](#claim-{cid})\n\n'
+                    body += f'[{claim_titles[cid]} · 같은 근거·조건 다시 보기](#claim-{cid})\n\n'
                 else:
                     displayed.add(cid)
-                    body += f'<div id="claim-{cid}"></div>\n\n' + claims[cid] + '\n'
+                    body += f'### {claim_titles[cid]} {{#claim-{cid}}}\n\n' + claims[cid] + '\n'
         if seen_questions != ASPECTS[rid]:
             raise ValueError('Reader paths: missing required role questions')
         role_facts.append(selected_facts)
@@ -186,4 +190,8 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
     links = '\n\n## 같은 근거에서 작업과 결정 찾기\n\n' + '\n'.join(
         f"- [{_plain(r['title'])}](reader-{r['id']}.md)" for r in roles) + '\n'
     # Keep the original home and its source-bound guide figures untouched.
-    texts['index.md'] += links
+    from .guide_visuals import headings
+    first_heading = next(iter(headings(texts['index.md'])), None)
+    position = first_heading.start() if first_heading else len(texts['index.md'])
+    texts['index.md'] = texts['index.md'][:position] + links + '\n' + texts['index.md'][position:]
+    approval_states['index.md'] = 'unreviewed'

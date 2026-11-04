@@ -285,6 +285,10 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
         # projecting their answers. No source prose is authored or stored twice.
         assemble(cfg, texts, sections, entries, approval_states, model,
                  lambda rel: _prepare_page_body(cfg, rel, texts, sections, terms, model))
+        glossary.enforce(cfg, terms, {rel: text for rel, text in texts.items()
+                                     if sections.get(rel, {}).get('kind') != 'per-package'})
+        if settings.require_approval:
+            raise RuntimeError('site.require_approval: 역할별 판단 설정의 사람 검토 승인은 아직 기록되지 않았습니다')
     return texts, approval_states, ledger, terms, model
 
 

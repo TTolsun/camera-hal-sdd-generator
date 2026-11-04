@@ -15,6 +15,8 @@ site:
 
 `schema: 1` 설정은 `ready`, `scope`, `limitations`, `required_inputs`, `claims`, `roles`를 갖습니다. `ready`가 `true`가 아니면 필요한 입력을 표시하고 게시를 중단합니다. 빈 사내 자료로 승인 가능한 보고서를 만들지 않습니다.
 
+각 주장에는 표시할 `title`도 필요합니다. 현재 역할별 설정의 사람 승인을 기록하는 CLI는 없으므로 `site.require_approval: true`와 함께 사용하면 게시를 중단합니다. 기존 원고의 승인을 새 역할별 구성의 승인으로 승격하지 않습니다. 검토 환경에서 확인한 뒤 승인 기록 연동을 별도로 준비해야 합니다.
+
 사실 설명은 기존 원고의 `generated_design.answers`가 소유합니다. `kind: fact`는 `sources: [{section, topic, part}]`로 분할 답변 하나를 선택하고 그 답변의 모든 문장을 생성 시 그대로 표시합니다. 사실의 대체 원고를 설정의 `text`에 쓸 수 없습니다. 조건·예외를 포함한 본문, 소스 발췌, 커밋과 검토 상태는 원래 상세 페이지에서 관리합니다.
 
 가설(`hypothesis`), 미측정 효과(`unmeasured`), 결정 요청(`decision_request`)은 `text`, `condition`, `sources`, `needed_inputs`가 필수입니다. 결정 요청에는 `options`도 필요합니다. 이들의 링크는 판단의 배경이며 효과 측정값이 아닙니다. 형식 검사는 문장의 의미를 승인하지 않습니다.
