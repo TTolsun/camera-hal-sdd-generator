@@ -1,0 +1,103 @@
+{
+  "recorded_at": "2026-11-04T00:30:46.725340+00:00",
+  "scope": "Selected materialized source/bilingual-label reviews only. Native calls and completed generation do not approve assembled English prose, every item or public release.",
+  "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "official_upstream_recheck": "25cb6cd274d3112d03d9a825e47eb2c15c70da24",
+  "actual_generation_and_review": {
+    "runner": "codex",
+    "kind": "cli",
+    "model": "gpt-6.1-terra",
+    "args": [
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "command": [],
+    "cli_version": "0.166.0-alpha.5.1",
+    "generation_profile": "examples/libcamera/validation/issue215/generation-profile.yaml",
+    "independent_review_profile": "examples/libcamera/validation/issue215/independent-review-profile.yaml"
+  },
+  "selected_no_finding_scopes": [
+    {
+      "review": "materialized-10-scenario-manager_start",
+      "visuals": [
+        "manager-start-wait-result",
+        "manager-run-notify-before-branch"
+      ],
+      "note": "Read exact checked_visuals in archive for canonical identifiers"
+    },
+    {
+      "review": "materialized-10-ipa",
+      "visuals": [
+        "isolated-destructor-guard"
+      ]
+    },
+    {
+      "review": "materialized-12-ipa",
+      "visuals": [
+        "module-signature-outcomes",
+        "threaded-stop-order"
+      ]
+    },
+    {
+      "review": "materialized-14-overview",
+      "visuals": [
+        "item-verification"
+      ]
+    },
+    {
+      "review": "materialized-14-pipeline-handler",
+      "visuals": [
+        "input-minimum-setup"
+      ]
+    },
+    {
+      "review": "materialized-14-scenario-queue_request",
+      "visuals": [
+        "queue-access-helper"
+      ],
+      "note": "Other selected dispatch graph still has identifier wrap finding deferred to PR231"
+    }
+  ],
+  "failures": [
+    {
+      "work": "refinement-runs-10/scenario-configure/step-01",
+      "cause": "Native CLI exceeded600second limit during graph retry",
+      "outcome": "Prior manuscript/checkpoints preserved; no substitute"
+    },
+    {
+      "work": "refinement-runs-10/vendor-assurance/step-01",
+      "cause": "Native CLI exceeded600second limit",
+      "outcome": "Prior manuscript/checkpoints preserved; no substitute"
+    },
+    {
+      "work": "refinement-runs-15/vendor-assurance/step-01",
+      "cause": "Conflicting native bilingual label translations",
+      "outcome": "Native retry16 generated both graphs; review13 still has semantic findings"
+    },
+    {
+      "work": "refinement-runs-19/ipa/step-01",
+      "cause": "Source selection named a source outside current topic",
+      "outcome": "Rejected; no claim of accepted new graph"
+    },
+    {
+      "work": "refinement-runs-21/ipa/step-01",
+      "cause": "ASSERT explanatory comparison differs from supported if/while guards",
+      "outcome": "Rejected; native retry23 uses words for explanation and preserves original source quote"
+    }
+  ],
+  "baseline_retention": {
+    "inventory": "integrated-inventory-09.json",
+    "structural_diff": "inventory-structural-diff-07.json",
+    "body_and_intro_items": 424,
+    "missing_baseline_reader_items": 0,
+    "note": "Private preview07 before later graph revisions, not final release inventory"
+  },
+  "issue_state": {
+    "issue": 215,
+    "state": "reopened",
+    "reason": "Read-only latest issue was closed despite remaining source/semantic/deferred/public-release work; completion condition remains unmet"
+  },
+  "human_review": "pending",
+  "archive": "native-evidence-07.tar.xz",
+  "archive_sha256": "77b8151e4d30c3a6d9a9ad6266dc4a0ff14ac1b68fc110d85ff6fec5d033c07b"
+}

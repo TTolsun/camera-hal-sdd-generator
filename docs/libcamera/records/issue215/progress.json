@@ -33,12 +33,16 @@
   "other_session": {
     "generator_pr": 231,
     "public_pr": 78,
-    "state": "PR231 draft/unmerged; last read-only API reports mergeable true. PR78 remains unmerged; recheck before integration. No messages, resume, interruption or worktree changes.",
+    "state": "Read-only recheck: PR231 remains draft/open/unmerged, currently mergeable true; PR78 remains open/unmerged with conflicts. No messages, resume, interruption or worktree changes.",
     "scope": [
       "official-cam-validation",
       "require_guard_branches",
       "identifier wrapping"
-    ]
+    ],
+    "checked_at": "2026-11-04T02:51:01.899305+00:00",
+    "generator_head": "559fe43dd812ab34fa964a066de29d4b874fd50e",
+    "public_head": "fb7bfd6d8ed2e06d80374a9da5e27cd6f38c80d2",
+    "deferred_items": 14
   },
   "existing_rule_pr": {
     "pr": 216,
@@ -118,9 +122,25 @@
       "head": "119d6a3baab06adb84f4b6c98a503b0db5490e6e",
       "ci_run": 41724756532,
       "ci": "all4 passed"
+    },
+    {
+      "pr": 236,
+      "sha": "47d97132f79d848c20a3de20c2ca4a99930da8ea",
+      "head": "1b28593d2c8678964de5ba85151f5b6e50dc7232",
+      "ci_run": 41737833639,
+      "ci": "all4 passed",
+      "tests": "Ubuntu2561; Windows2560+1skip"
+    },
+    {
+      "pr": 237,
+      "sha": "ff9161a0e057b9524c099fd3e1e4da9247a3c2aa",
+      "head": "07df4c1519a8ff26287daf044beac86fca4c7a24",
+      "ci_run": 41740019772,
+      "ci": "all4 passed",
+      "tests": "Ubuntu2570; Windows2569+1skip"
     }
   ],
-  "current_branch": "codex/issue-215-public-item-audit",
+  "current_branch": "codex/issue-215-refined-source-recipes",
   "native_archive_checkpoint": "native-evidence-04-index.json",
   "integrated_draft": {
     "sections": 25,
@@ -165,11 +185,12 @@
   "current_full_item_counts": null,
   "current_checkpoint": "25 document draft sections, 28 KO source/render preflight pages passed; full EN translation in progress. No public release or completed all-item audit.",
   "current_generator_pr": {
-    "pr": 235,
-    "sha": "d771418576d49a899f1036d131488d7de1bc7639",
-    "head": "119d6a3baab06adb84f4b6c98a503b0db5490e6e",
-    "ci_run": 41724756532,
+    "pr": 237,
+    "sha": "ff9161a0e057b9524c099fd3e1e4da9247a3c2aa",
+    "head": "07df4c1519a8ff26287daf044beac86fca4c7a24",
+    "ci_run": 41740019772,
     "ci": "all4 passed",
+    "tests": "Ubuntu2570; Windows2569+1skip",
     "state": "merged"
   },
   "current_work": {
@@ -248,7 +269,159 @@
       "tests_passed": 95,
       "archive": "native-evidence-06.tar.xz",
       "scope": "Function-window evidence support; diagram semantic acceptance still pending"
+    },
+    "refinement_checkpoint": {
+      "recorded_at": "2026-11-04T00:30:46.725340+00:00",
+      "scope": "Selected materialized source/bilingual-label reviews only. Native calls and completed generation do not approve assembled English prose, every item or public release.",
+      "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+      "official_upstream_recheck": "25cb6cd274d3112d03d9a825e47eb2c15c70da24",
+      "actual_generation_and_review": {
+        "runner": "codex",
+        "kind": "cli",
+        "model": "gpt-6.1-terra",
+        "args": [
+          "-c",
+          "model_reasoning_effort=\"high\""
+        ],
+        "command": [],
+        "cli_version": "0.166.0-alpha.5.1",
+        "generation_profile": "examples/libcamera/validation/issue215/generation-profile.yaml",
+        "independent_review_profile": "examples/libcamera/validation/issue215/independent-review-profile.yaml"
+      },
+      "selected_no_finding_scopes": [
+        {
+          "review": "materialized-10-scenario-manager_start",
+          "visuals": [
+            "manager-start-wait-result",
+            "manager-run-notify-before-branch"
+          ],
+          "note": "Read exact checked_visuals in archive for canonical identifiers"
+        },
+        {
+          "review": "materialized-10-ipa",
+          "visuals": [
+            "isolated-destructor-guard"
+          ]
+        },
+        {
+          "review": "materialized-12-ipa",
+          "visuals": [
+            "module-signature-outcomes",
+            "threaded-stop-order"
+          ]
+        },
+        {
+          "review": "materialized-14-overview",
+          "visuals": [
+            "item-verification"
+          ]
+        },
+        {
+          "review": "materialized-14-pipeline-handler",
+          "visuals": [
+            "input-minimum-setup"
+          ]
+        },
+        {
+          "review": "materialized-14-scenario-queue_request",
+          "visuals": [
+            "queue-access-helper"
+          ],
+          "note": "Other selected dispatch graph still has identifier wrap finding deferred to PR231"
+        }
+      ],
+      "failures": [
+        {
+          "work": "refinement-runs-10/scenario-configure/step-01",
+          "cause": "Native CLI exceeded600second limit during graph retry",
+          "outcome": "Prior manuscript/checkpoints preserved; no substitute"
+        },
+        {
+          "work": "refinement-runs-10/vendor-assurance/step-01",
+          "cause": "Native CLI exceeded600second limit",
+          "outcome": "Prior manuscript/checkpoints preserved; no substitute"
+        },
+        {
+          "work": "refinement-runs-15/vendor-assurance/step-01",
+          "cause": "Conflicting native bilingual label translations",
+          "outcome": "Native retry16 generated both graphs; review13 still has semantic findings"
+        },
+        {
+          "work": "refinement-runs-19/ipa/step-01",
+          "cause": "Source selection named a source outside current topic",
+          "outcome": "Rejected; no claim of accepted new graph"
+        },
+        {
+          "work": "refinement-runs-21/ipa/step-01",
+          "cause": "ASSERT explanatory comparison differs from supported if/while guards",
+          "outcome": "Rejected; native retry23 uses words for explanation and preserves original source quote"
+        }
+      ],
+      "baseline_retention": {
+        "inventory": "integrated-inventory-09.json",
+        "structural_diff": "inventory-structural-diff-07.json",
+        "body_and_intro_items": 424,
+        "missing_baseline_reader_items": 0,
+        "note": "Private preview07 before later graph revisions, not final release inventory"
+      },
+      "issue_state": {
+        "issue": 215,
+        "state": "reopened",
+        "reason": "Read-only latest issue was closed despite remaining source/semantic/deferred/public-release work; completion condition remains unmet"
+      },
+      "human_review": "pending",
+      "archive": "native-evidence-07.tar.xz",
+      "archive_sha256": "77b8151e4d30c3a6d9a9ad6266dc4a0ff14ac1b68fc110d85ff6fec5d033c07b"
     }
   },
-  "completion": "Goal remains active; unresolved actual diagrams and external-session integration, final reviews/CI/merges/Pages/public build identity verification remain required. Do not close issue215."
+  "completion": "Goal remains active. Final assembled whole-site bilingual item judgments, pending diagrams and owner231/78 integration, public SDD merge, Pages success and public identical build_id verification remain unfinished. Issue215 reopened; do not close until all required unresolved counts are zero.",
+  "native_archive_07": {
+    "schema": 1,
+    "scope": "Immutable completed/failed CLI checkpoints through refinement17 and failed source-selection19, full preliminary review08, restored reader questions and receipt-bound native translation. Active18/20/21 excluded. No final item/site acceptance or public release.",
+    "archive": "native-evidence-07.tar.xz",
+    "archive_sha256": "77b8151e4d30c3a6d9a9ad6266dc4a0ff14ac1b68fc110d85ff6fec5d033c07b",
+    "bytes": 3723808,
+    "unique_archived_cli_receipts": 435,
+    "receipt_hashes_not_in_archives02_06": 139,
+    "count_note": "Receipt SHA counts; copied checkpoints are not new calls. Counts are not final accepted items or human approval.",
+    "generator_commit": "ff9161a0e057b9524c099fd3e1e4da9247a3c2aa",
+    "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+    "human_review": "pending",
+    "compression": "XZ preset9; every original member path and byte SHA verified unchanged; unpublished preset6 archive retained in own build directory",
+    "entry_count": 16455
+  },
+  "citation_vocabulary_checkpoint": "citation-vocabulary-checkpoint.json",
+  "native_archive_08": {
+    "schema": 1,
+    "scope": "Terminal generation packs18..27, materialized reviews15..20 and real failed-generation preservation proof. Active28..33 and review21 excluded. No final full-site item approval, public release or human approval.",
+    "archive": "native-evidence-08.tar.xz",
+    "archive_sha256": "6a94dfbdda4d40ef63079d9ed60ecec58c67c63ad12a76dc47a451f4f32a08c5",
+    "bytes": 2507908,
+    "unique_archived_cli_receipts": 438,
+    "receipt_hashes_not_in_archives02_07": 114,
+    "count_note": "Unique receipt SHA counts; copied checkpoints are not new calls and completed transport is not semantic acceptance.",
+    "generator_checkpoint": "770124b",
+    "runtime_code_baseline": "ff9161a0e057b9524c099fd3e1e4da9247a3c2aa",
+    "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+    "human_review": "pending"
+  },
+  "native_archive_09": {
+    "schema": 1,
+    "scope": "Terminal generation packs28..36, selected materialized reviews21..23, independent code reviews59..76 (including failed protocol65), code-review71 disposition and regression logs. Active pack37 and review24 excluded. Generation success and completed CLI proof are not semantic approval. No final full-site item approval, public release or human approval.",
+    "archive": "native-evidence-09.tar.xz",
+    "archive_sha256": "b5c5804e04340ac7e7d7803a831dfba3c51d0caaf603e478c1e3eec32e86c4ca",
+    "bytes": 2417752,
+    "unique_archived_cli_receipts": 549,
+    "receipt_hashes_not_in_archives02_08": 70,
+    "count_note": "Unique receipt SHA counts; copied checkpoints are not new calls and completed transport is not semantic acceptance.",
+    "generator_checkpoint": "770124b",
+    "runtime_code_baseline": "ff9161a0e057b9524c099fd3e1e4da9247a3c2aa",
+    "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+    "human_review": "pending"
+  },
+  "native_profile_verifications": [
+    "native-profile-verification-07.json",
+    "native-profile-verification-08.json",
+    "native-profile-verification-09.json"
+  ]
 }

@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-11-04T02:51:01.899305+00:00",
+  "scope": "Common partial-required source vocabulary and citation binding policy implementation checkpoint. Not complete item audit or public release.",
+  "implementation": {
+    "source_sha256": {
+      "src/sdd/generated_visuals.py": "de789271dab122a29c8d638a926d1059b4750da863aabef634641b5daeb167d2",
+      "src/sdd/cli_schema.py": "8964856b25afc25798d30ae0bbc5acba246a3f20fc886fa1b1aa39e2bb116adf",
+      "tests/test_generated_visuals.py": "f3b8baeadbd96a2df8e2938e78bb35a67b442eae16855d84f65e53f4c512c6bc",
+      "docs/reference/config.md": "f9b21fc13e348171ad91acb1edcfbba100b5df3c83834373cf35e8e25a5dd889"
+    },
+    "policy": "identifier-boundaries-v1",
+    "partial_required_policy": "source-v1",
+    "legacy": "Exact old input modes are checked against current source/rules/model/arguments. Valid ordinary/fixed results retain original fingerprints and producer fields; generate persists deterministic new_inference=false revalidation before publication. Incompatible records use the selected CLI; no substitute.",
+    "membership_limit": "Lexical complete tokens and qualified suffixes, including C++ scope trivia and line splices. Bare qualifier tokens remain valid; declaration/ownership/execution meaning needs separate semantic review."
+  },
+  "code_review": {
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "reasoning": "high",
+    "execution": "build/issue215/code-review-76",
+    "findings": 0,
+    "human_review": "pending"
+  },
+  "regressions": {
+    "log": "build/issue215/pytest-129.log",
+    "passed": 158,
+    "skipped": 1,
+    "checks": [
+      "partial required coverage with extra cited connectors",
+      "unknown or absent source symbols",
+      "runner versus run and qualified-name boundaries",
+      "C++ scope trivia, comments and line splices",
+      "no symbol synthesis across quote IDs",
+      "fixed object bindings on non-schema paths",
+      "additional valid context quotes",
+      "exact legacy input modes and preservation of original producer fields",
+      "required persisted revalidation and tampered policy/marker rejection",
+      "missing selected runner failure propagation",
+      "failed generation preserves prior manuscripts and complete published site"
+    ],
+    "schema_1_impact": "unchanged"
+  },
+  "real_generation": {
+    "pack": 36,
+    "runtime_snapshot": "preview-engine-28",
+    "sections": {
+      "scenario-configure": {
+        "section": "scenario-configure",
+        "status": "completed-generation-only",
+        "stages": [
+          {
+            "stage": 1,
+            "visual": "configuration-prerequisite-map",
+            "exit_code": 0,
+            "seconds": 90.188,
+            "output": "C:\\Users\\baboe\\.codex\\worktrees\\8982\\camera-hal-sdd-generator\\build\\issue215\\refinement-runs-36\\scenario-configure\\step-01"
+          }
+        ],
+        "human_review": "pending"
+      },
+      "vendor-integration": {
+        "section": "vendor-integration",
+        "status": "completed-generation-only",
+        "stages": [
+          {
+            "stage": 1,
+            "visual": "handler-configuration-contracts",
+            "exit_code": 0,
+            "seconds": 67.844,
+            "output": "C:\\Users\\baboe\\.codex\\worktrees\\8982\\camera-hal-sdd-generator\\build\\issue215\\refinement-runs-36\\vendor-integration\\step-01"
+          }
+        ],
+        "human_review": "pending"
+      },
+      "ipu3-lsc-flow": {
+        "section": "ipu3-lsc-flow",
+        "status": "completed-generation-only",
+        "stages": [
+          {
+            "stage": 1,
+            "visual": "lsc-build-state-integration",
+            "exit_code": 0,
+            "seconds": 47.094,
+            "output": "C:\\Users\\baboe\\.codex\\worktrees\\8982\\camera-hal-sdd-generator\\build\\issue215\\refinement-runs-36\\ipu3-lsc-flow\\step-01"
+          }
+        ],
+        "human_review": "pending"
+      },
+      "team-overview": {
+        "section": "team-overview",
+        "status": "completed-generation-only",
+        "stages": [
+          {
+            "stage": 1,
+            "visual": "item-boundaries",
+            "exit_code": 0,
+            "seconds": 58.89,
+            "output": "C:\\Users\\baboe\\.codex\\worktrees\\8982\\camera-hal-sdd-generator\\build\\issue215\\refinement-runs-36\\team-overview\\step-01"
+          }
+        ],
+        "human_review": "pending"
+      }
+    },
+    "note": "All four terminal generation-only successes. Semantic review24 still has findings; no accepted whole-item count is inferred."
+  },
+  "owner_deferred": {
+    "generator_pr": 231,
+    "public_pr": 78,
+    "items": 14,
+    "partial_required_plans": [
+      "submission-gate",
+      "initial-submission",
+      "request-completion-order",
+      "reproduction-flow"
+    ],
+    "scope": "Read-only assessment of owner source plans; no owner generation, worktree changes or deployment."
+  },
+  "current_full_item_counts": null,
+  "public_merge": null,
+  "pages_release": null,
+  "human_review": "pending"
+}

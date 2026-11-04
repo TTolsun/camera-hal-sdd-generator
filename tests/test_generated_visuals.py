@@ -14,6 +14,312 @@ from sdd.export_html import _split
 from test_design_contracts import contract
 
 
+def test_versioned_symbol_policies_recognize_exact_legacy_input_pins(tmp_cfg, automatic, monkeypatch):
+    import sdd.generated_visuals as visuals
+    monkeypatch.setattr(visuals, 'POLICY', 'Synthetic schema compatibility policy.')
+    (tmp_cfg.style_dir / 'README.md').write_text('', encoding='utf-8')
+    tmp_cfg.agent.model = 'synthetic-schema-model'
+    tmp_cfg.agent.base_url = 'http://synthetic.invalid'
+    section, model, _, _ = automatic
+    base = visuals.plans(tmp_cfg, section)[0]
+    values = {
+        'ordinary': visuals.inputs(tmp_cfg, model, section, base)[0],
+        'partial': visuals.inputs(tmp_cfg, model, section, {**base, 'required_symbols': ['stop']})[0],
+        'fixed': visuals.inputs(tmp_cfg, model, section, {**base, 'required_symbols': ['stop', 'cancelPending'], 'max_nodes': 2})[0],
+    }
+    # Old hashes remain reproducible for strict current-policy revalidation.
+    old_ordinary = '5188100aa2aa3118bb257989df3307773130c50d2200f802bd07fed92eb391c2'
+    old_fixed = 'd593a081a484e6beb58704d795d25edb80a46347b13de5e0b6320052287ceb1f'
+    assert values['ordinary'] != old_ordinary
+    assert values['fixed'] != old_fixed
+    assert visuals.inputs(tmp_cfg, model, section, base, _legacy_citation_binding=True)[0] == old_ordinary
+    assert visuals.inputs(tmp_cfg, model, section, {**base, 'required_symbols':['stop','cancelPending'], 'max_nodes':2}, _legacy_citation_binding=True)[0] == old_fixed
+    assert values['partial'] != '855ea682c48eb8d19cb75af09e722c21375a705e916d1bd3fb8dce76120517c6'
+    assert visuals.inputs(tmp_cfg, model, section, {**base, 'required_symbols':['stop']}, _legacy_citation_binding=True)[0] != '855ea682c48eb8d19cb75af09e722c21375a705e916d1bd3fb8dce76120517c6'
+
+
+def test_required_symbol_allows_additional_cited_nodes_but_keeps_coverage(tmp_cfg, automatic):
+    from sdd.cli_schema import validate_original
+    from sdd.generated_visuals import inputs, materialize, plans, schema
+    section, model, _, agent = automatic
+    plan = {**plans(tmp_cfg, section)[0], 'required_symbols': ['stop']}
+    _, _, passages, _, request = inputs(tmp_cfg, model, section, plan)
+    rules = schema(passages, 4, plan['required_symbols'])
+    assert rules['properties']['nodes']['items']['properties']['symbol']['enum'] == request['allowed_symbols']
+    validate_original(json.dumps(agent.draft), rules)
+    result = materialize(tmp_cfg, model, section, plan, agent.draft, 'synthetic-unit-fixture')
+    assert [node['id'] for node in result['nodes']] == ['stop', 'cancel']
+    missing = copy.deepcopy(agent.draft)
+    missing['nodes'][0]['symbol'] = 'cancelPending'
+    validate_original(json.dumps(missing), rules)
+    with pytest.raises(ValueError, match='missing required question symbols: stop'):
+        materialize(tmp_cfg, model, section, plan, missing, 'synthetic-unit-fixture')
+    unknown = copy.deepcopy(agent.draft)
+    unknown['nodes'][1]['symbol'] = 'notInSelectedSource'
+    with pytest.raises(ValueError, match='output schema'):
+        validate_original(json.dumps(unknown), rules)
+    with pytest.raises(ValueError, match='symbol absent'):
+        materialize(tmp_cfg, model, section, plan, unknown, 'synthetic-unit-fixture')
+    assert not agent.calls
+
+
+def test_partial_required_symbols_validate_schema_and_preserve_outputs_on_failure(tmp_cfg, automatic):
+    from sdd.cli_schema import validate_original
+    section, model, _, agent = automatic
+    config = tmp_cfg.root/'visuals.yaml'
+    data = yaml.safe_load(config.read_bytes())
+    data['sections']['device'][0]['required_symbols'] = ['stop']
+    config.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    original_chat = agent.chat
+    def schema_checked_chat(*args, **kwargs):
+        raw = original_chat(*args, **kwargs)
+        validate_original(raw, kwargs['response_schema'])
+        return raw
+    agent.chat = schema_checked_chat
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    site = export_site(tmp_cfg)
+    outputs = {p.relative_to(site).as_posix(): p.read_bytes() for p in site.rglob('*') if p.is_file()}
+    initial_calls = len(agent.calls)
+    Generator(tmp_cfg, model, agent).run()
+    assert len(agent.calls) == initial_calls
+    original = path.read_bytes()
+    data['sections']['device'][0]['prompt'] = 'Reconsider the same source-backed question.'
+    config.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    agent.draft['nodes'][0]['symbol'] = 'cancelPending'
+    with pytest.raises(ValueError, match='missing required question symbols: stop'):
+        Generator(tmp_cfg, model, agent).run()
+    assert path.read_bytes() == original
+    with pytest.raises(ValueError, match='regenerate before publishing'):
+        export_site(tmp_cfg)
+    assert {p.relative_to(site).as_posix(): p.read_bytes() for p in site.rglob('*') if p.is_file()} == outputs
+
+
+@pytest.mark.parametrize('symbol,longer', [('run','Device::runner')] + [('Device::run',longer) for longer in [
+    'Device::runner', 'Device::run::other', 'Device::run ::other',
+    'Device::run /* scope */ :: /* member */ other', 'Device::run // scope\n ::other',
+    'Device::run\\\n::other',
+]] + [('Device::run', 'Device /* a */ (); other /* b */ ::run')])
+def test_optional_source_symbols_cannot_bind_to_longer_names(tmp_cfg, automatic, symbol, longer):
+    from sdd.cli_schema import validate_original
+    from sdd.generated_visuals import inputs, materialize, plans, schema
+    section, model, _, agent = automatic
+    text = f'void Device::stop() {{ {longer}(); }}\n\nvoid Device::run() {{ stop(); }}'
+    source = section['design_topics'][0]['sources'][0]
+    source.update(end='void Device::run() { stop(); }', sha256=hashlib.sha256(text.encode()).hexdigest())
+    record = model.evidence['device/shutdown/stop']
+    record.update(text=text, sha256=source['sha256'], selector=copy.deepcopy(source), end_line=12)
+    plan = {**plans(tmp_cfg, section)[0], 'required_symbols': ['stop']}
+    _, _, passages, _, _ = inputs(tmp_cfg, model, section, plan)
+    draft = copy.deepcopy(agent.draft)
+    draft['nodes'][1].update(id='run', symbol=symbol, label='run 호출', label_en='Call run.', quote_ids=['stop:1'])
+    draft['edges'][0].update(**{'from': 'run', 'to': 'stop'}, quote_ids=['stop:1'])
+    rules = schema(passages, 4, ['stop'])
+    validate_original(json.dumps(draft), rules)
+    materialize(tmp_cfg, model, section, plan, draft, 'synthetic-unit-fixture')
+    bad_node = copy.deepcopy(draft)
+    bad_node['nodes'][1]['quote_ids'] = ['stop:0']
+    validate_original(json.dumps(bad_node), rules)
+    with pytest.raises(ValueError, match='symbol absent'):
+        materialize(tmp_cfg, model, section, plan, bad_node, 'synthetic-unit-fixture')
+    bad_edge = copy.deepcopy(draft)
+    bad_edge['edges'][0]['quote_ids'] = ['stop:0']
+    validate_original(json.dumps(bad_edge), rules)
+    with pytest.raises(ValueError, match='both endpoint symbols'):
+        materialize(tmp_cfg, model, section, plan, bad_edge, 'synthetic-unit-fixture')
+    fixed_rules = schema(passages, 2, ['stop', symbol])
+    fixed = {
+        'nodes': {
+            'n0': {k: v for k, v in draft['nodes'][0].items() if k not in ('id', 'symbol')},
+            'n1': {k: v for k, v in draft['nodes'][1].items() if k not in ('id', 'symbol')},
+        },
+        'edges': [{**draft['edges'][0], 'from': 'n1', 'to': 'n0'}],
+    }
+    validate_original(json.dumps(fixed), fixed_rules)
+    fixed['nodes']['n1']['quote_ids'] = ['stop:0']
+    validate_original(json.dumps(fixed), fixed_rules)
+    with pytest.raises(ValueError, match='symbol absent'):
+        materialize(tmp_cfg, model, section, {**plan,'required_symbols':['stop',symbol],'max_nodes':2}, fixed, 'synthetic-unit-fixture')
+    assert not agent.calls
+
+
+@pytest.mark.parametrize('qualified', ['ns::Device::run', 'ns::Device /* scope */ :: run', 'ns::Device\\\n::run'])
+def test_qualified_symbol_suffix_is_citable_in_native_and_fixed_shapes(tmp_cfg, automatic, qualified):
+    from sdd.cli_schema import validate_original
+    from sdd.generated_visuals import inputs, materialize, plans, schema
+    section, model, _, agent = automatic
+    text = f'void Device::stop() {{ {qualified}(); }}\n\nvoid finish() {{ stop(); }}'
+    source = section['design_topics'][0]['sources'][0]
+    source.update(end='void finish() { stop(); }', sha256=hashlib.sha256(text.encode()).hexdigest())
+    model.evidence['device/shutdown/stop'].update(
+        text=text, sha256=source['sha256'], selector=copy.deepcopy(source), end_line=12)
+    plan = {**plans(tmp_cfg, section)[0], 'required_symbols': ['stop']}
+    _, _, passages, _, request = inputs(tmp_cfg, model, section, plan)
+    assert 'Device::run' in request['allowed_symbols']
+    assert 'Device' in request['allowed_symbols']
+    inputs(tmp_cfg, model, section, {**plan, 'required_symbols':['Device','stop'], 'max_nodes':2})
+    inputs(tmp_cfg, model, section, {**plan, 'required_symbols':['stop','Device::run']})
+    draft = copy.deepcopy(agent.draft)
+    draft['nodes'][1].update(id='run', symbol='Device::run', label='ns::Device::run 호출',
+        label_en='Call ns::Device::run.', quote_ids=['stop:0'])
+    draft['edges'][0].update(**{'from':'stop','to':'run'}, label='한정 이름으로 호출합니다.',
+        label_en='Call the qualified function.', quote_ids=['stop:0'])
+    validate_original(json.dumps(draft), schema(passages, 4, ['stop']))
+    materialize(tmp_cfg, model, section, plan, draft, 'synthetic-unit-fixture')
+    fixed_plan = {**plan, 'required_symbols':['stop','Device::run'], 'max_nodes':2}
+    fixed = {
+        'nodes': {f'n{i}': {k:v for k,v in node.items() if k not in ('id','symbol')}
+                  for i,node in enumerate(draft['nodes'])},
+        'edges': [{**draft['edges'][0], 'from':'n0', 'to':'n1'}],
+    }
+    validate_original(json.dumps(fixed), schema(passages, 2, fixed_plan['required_symbols']))
+    materialize(tmp_cfg, model, section, fixed_plan, fixed, 'synthetic-unit-fixture')
+    fixed['nodes']['n1']['quote_ids'].append('stop:1')
+    validate_original(json.dumps(fixed), schema(passages, 2, fixed_plan['required_symbols']))
+    materialize(tmp_cfg, model, section, fixed_plan, fixed, 'synthetic-unit-fixture')
+    assert not agent.calls
+
+
+def test_symbols_cannot_be_assembled_across_cited_passages(tmp_cfg, automatic):
+    from sdd.cli_schema import validate_original
+    from sdd.generated_visuals import inputs, materialize, plans, schema
+    section, model, _, agent = automatic
+    text = 'some_long_name Device\n\n::run stop(); return;\n\nvoid Device::run() { stop(); }'
+    source = section['design_topics'][0]['sources'][0]
+    source.update(end='void Device::run() { stop(); }', sha256=hashlib.sha256(text.encode()).hexdigest())
+    model.evidence['device/shutdown/stop'].update(
+        text=text, sha256=source['sha256'], selector=copy.deepcopy(source), end_line=12)
+    plan = {**plans(tmp_cfg, section)[0], 'required_symbols':['stop']}
+    _, _, passages, _, _ = inputs(tmp_cfg, model, section, plan)
+    draft = copy.deepcopy(agent.draft)
+    draft['nodes'][0]['quote_ids'] = ['stop:2']
+    draft['nodes'][1].update(id='run', symbol='Device::run', label='run 호출',
+        label_en='Call run.', quote_ids=['stop:2'])
+    draft['edges'][0].update(**{'from':'stop', 'to':'run'}, quote_ids=['stop:2'])
+    materialize(tmp_cfg, model, section, plan, draft, 'synthetic-unit-fixture')
+    for kind, message in [('nodes','symbol absent'), ('edges','both endpoint symbols')]:
+        invalid = copy.deepcopy(draft)
+        invalid[kind][1 if kind == 'nodes' else 0]['quote_ids'] = ['stop:0','stop:1']
+        validate_original(json.dumps(invalid), schema(passages, 4, ['stop']))
+        with pytest.raises(ValueError, match=message):
+            materialize(tmp_cfg, model, section, plan, invalid, 'synthetic-unit-fixture')
+    fixed = {
+        'nodes': {f'n{i}': {k:v for k,v in node.items() if k not in ('id','symbol')}
+                  for i,node in enumerate(draft['nodes'])},
+        'edges': [{**draft['edges'][0], 'from':'n0', 'to':'n1'}],
+    }
+    rules = schema(passages, 2, ['stop','Device::run'])
+    validate_original(json.dumps(fixed), rules)
+    fixed['nodes']['n1']['quote_ids'] = ['stop:0','stop:1']
+    validate_original(json.dumps(fixed), rules)
+    with pytest.raises(ValueError, match='symbol absent'):
+        materialize(tmp_cfg, model, section, {**plan,'required_symbols':['stop','Device::run'],'max_nodes':2}, fixed, 'synthetic-unit-fixture')
+    assert not agent.calls
+
+
+def _synthetic_legacy_visual_document(record):
+    """Unit fixture only; never a native call or publication review record."""
+    body = 'Synthetic legacy fixture body.'
+    artifact = {'schema':1, 'records':{'stop-flow':record},
+                'body_sha256':hashlib.sha256(body.encode()).hexdigest()}
+    return '---\n' + yaml.safe_dump({'generated_visuals':artifact}, allow_unicode=True) + '---\n' + body
+
+
+@pytest.mark.parametrize('fixed,qualifier', [(False,False),(True,False),(True,True)])
+def test_legacy_binding_is_revalidated_without_repinning_or_inference(tmp_cfg, automatic, fixed, qualifier):
+    from sdd.generated_visuals import CITATION_BINDING_POLICY, generate, inputs, materialize, plans, resolve
+    section, model, _, agent = automatic
+    config = tmp_cfg.root/'visuals.yaml'
+    data = yaml.safe_load(config.read_bytes())
+    if qualifier:
+        text = 'void stop() { Device::run(); }'
+        source = section['design_topics'][0]['sources'][0]
+        source.update(end=text, sha256=hashlib.sha256(text.encode()).hexdigest())
+        model.evidence['device/shutdown/stop'].update(
+            text=text, sha256=source['sha256'], selector=copy.deepcopy(source), end_line=12)
+    if fixed:
+        data['sections']['device'][0].update(required_symbols=['stop','Device' if qualifier else 'cancelPending'], max_nodes=2)
+        config.write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    plan = plans(tmp_cfg, section)[0]
+    draft = copy.deepcopy(agent.draft)
+    if fixed:
+        draft = {'nodes':{f'n{i}':{k:v for k,v in node.items() if k not in ('id','symbol')}
+                          for i,node in enumerate(draft['nodes'])},
+                 'edges':[{**draft['edges'][0], 'from':'n0', 'to':'n1'}]}
+    original_pin = inputs(tmp_cfg, model, section, plan, _legacy_citation_binding=True)[0]
+    assert original_pin != inputs(tmp_cfg, model, section, plan)[0]
+    record = {'input_fingerprint':original_pin, 'draft':draft,
+              'graph':materialize(tmp_cfg, model, section, plan, draft, 'synthetic-legacy-fixture'),
+              'producer':'synthetic-legacy-fixture', 'generation_commit':'a'*40,
+              'human_review':'pending', 'reused':False}
+    previous = _synthetic_legacy_visual_document(record)
+    with pytest.raises(ValueError, match='recorded citation revalidation'):
+        resolve(tmp_cfg, model, section, {'schema':1, 'records':{'stop-flow':record}})
+    spoofed = {**record, 'citation_binding_policy':CITATION_BINDING_POLICY}
+    with pytest.raises(ValueError, match='recorded citation revalidation'):
+        resolve(tmp_cfg, model, section, {'schema':1, 'records':{'stop-flow':spoofed}})
+    class NoInference:
+        def chat(self, *args, **kwargs):pytest.fail('Valid legacy binding should be revalidated without inference')
+    artifact = generate(tmp_cfg, model, section, NoInference(), previous)
+    reused = artifact['records']['stop-flow']
+    for key in ('input_fingerprint','draft','graph','producer','generation_commit','human_review'):
+        assert reused[key] == record[key]
+    assert reused['citation_binding_revalidation'] == {
+        'policy':CITATION_BINDING_POLICY, 'original_input_fingerprint':original_pin, 'new_inference':False}
+    assert reused['reused'] is True
+    assert resolve(tmp_cfg, model, section, artifact) == [record['graph']]
+    assert previous == _synthetic_legacy_visual_document(record)
+    tampered = copy.deepcopy(artifact)
+    tampered['records']['stop-flow']['citation_binding_revalidation']['original_input_fingerprint'] = '0'*64
+    with pytest.raises(ValueError, match='recorded citation revalidation'):
+        resolve(tmp_cfg, model, section, tampered)
+    for value in [0, 1, 'false', None]:
+        tampered = copy.deepcopy(artifact)
+        tampered['records']['stop-flow']['citation_binding_revalidation']['new_inference'] = value
+        with pytest.raises(ValueError, match='recorded citation revalidation'):
+            resolve(tmp_cfg, model, section, tampered)
+    tmp_cfg.agent.model += '-changed'
+    with pytest.raises(ValueError, match='changed; regenerate'):
+        resolve(tmp_cfg, model, section, artifact)
+
+
+def test_incompatible_legacy_binding_is_stale_and_uses_selected_agent(tmp_cfg, automatic, monkeypatch):
+    import sdd.generated_visuals as visuals
+    from sdd.llm import AgentError
+    section, model, _, agent = automatic
+    text = 'void Device::stop() { Device::runner(); }\n\nvoid Device::run() { stop(); }'
+    source = section['design_topics'][0]['sources'][0]
+    source.update(end='void Device::run() { stop(); }', sha256=hashlib.sha256(text.encode()).hexdigest())
+    model.evidence['device/shutdown/stop'].update(
+        text=text, sha256=source['sha256'], selector=copy.deepcopy(source), end_line=12)
+    plan = visuals.plans(tmp_cfg, section)[0]
+    correct = copy.deepcopy(agent.draft)
+    correct['nodes'][1].update(id='run', symbol='Device::run', label='run 호출', label_en='Call run.', quote_ids=['stop:1'])
+    correct['edges'][0].update(**{'from':'run','to':'stop'}, quote_ids=['stop:1'])
+    bad = copy.deepcopy(correct)
+    bad['nodes'][1]['quote_ids'] = ['stop:0']
+    bad['edges'][0]['quote_ids'] = ['stop:0']
+    with monkeypatch.context() as legacy:
+        legacy.setattr(visuals, 'cites_symbol', lambda symbol, quote: symbol in quote)
+        graph = visuals.materialize(tmp_cfg, model, section, plan, bad, 'synthetic-legacy-fixture')
+    record = {'input_fingerprint':visuals.inputs(tmp_cfg, model, section, plan, _legacy_citation_binding=True)[0],
+              'draft':bad, 'graph':graph, 'producer':'synthetic-legacy-fixture', 'generation_commit':'a'*40}
+    previous = _synthetic_legacy_visual_document(record)
+    with pytest.raises(ValueError, match='citation binding is stale; regenerate'):
+        visuals.resolve(tmp_cfg, model, section, {'schema':1, 'records':{'stop-flow':record}})
+    class Unavailable:
+        def chat(self, *args, **kwargs):raise AgentError('Selected runner unavailable')
+    with pytest.raises(AgentError, match='Selected runner unavailable'):
+        visuals.generate(tmp_cfg, model, section, Unavailable(), previous)
+    agent.draft = correct
+    fresh = visuals.generate(tmp_cfg, model, section, agent, previous)['records']['stop-flow']
+    assert len(agent.calls) == 1
+    assert fresh['input_fingerprint'] == visuals.inputs(tmp_cfg, model, section, plan)[0]
+    assert fresh['input_fingerprint'] != record['input_fingerprint']
+    assert fresh['citation_binding_policy'] == visuals.CITATION_BINDING_POLICY
+    assert fresh['reused'] is False
+    assert previous == _synthetic_legacy_visual_document(record)
+
+
 def test_atomic_source_window_keeps_short_returns_and_repeated_fragments(tmp_cfg,automatic):
     from sdd.generated_visuals import inputs,materialize,plans,visual_passages
     from sdd.design_response import source_passages
@@ -462,6 +768,9 @@ def test_full_required_symbol_set_uses_bound_object_supported_by_ollama():
     assert [n['symbol'] for n in expanded['nodes']] == ['stop', 'cancel']
     with pytest.raises(ValueError, match='missing or unknown'):
         expand_draft({'required_symbols': ['stop', 'cancel']}, {'nodes': {'n0': value}}, 2)
+    for array in [[], [{'id':'n0','symbol':'cancel',**value}, {'id':'n1','symbol':'stop',**value}]]:
+        with pytest.raises(ValueError, match='require the bound node object'):
+            expand_draft({'required_symbols':['stop','cancel']}, {'nodes':array,'edges':[]}, 2)
 
 
 def test_status_passages_remain_verbatim_and_keep_caller_duties():
@@ -628,6 +937,12 @@ def test_exact_legacy_cli_visual_proof_is_verified_without_rewriting_its_history
         with pytest.raises(ValueError):
             resolve(tmp_cfg, model, section, artifact)
     else:
-        assert resolve(tmp_cfg, model, section, artifact)
+        with pytest.raises(ValueError, match='recorded citation revalidation'):
+            resolve(tmp_cfg, model, section, artifact)
         assert artifact == original
+        updated = generate(tmp_cfg, model, section, agent,
+                           _synthetic_legacy_visual_document(original['records']['stop-flow']))
+        assert resolve(tmp_cfg, model, section, updated)
+        for key in ('input_fingerprint','producer','draft','graph','generation_commit'):
+            assert updated['records']['stop-flow'][key] == original['records']['stop-flow'][key]
         assert len(agent.calls) == 1
