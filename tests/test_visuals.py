@@ -33,6 +33,28 @@ from test_design_contracts import contract
 from test_generated_design import generated
 
 
+def test_stage_visual_stays_inside_its_question_after_first_explanation(tmp_cfg, visual):
+    from sdd.explanation import STAGES
+    section, model, graph, write = visual
+    topic = section['design_topics'][0]
+    topic['explanation'] = [dict(id=s, title=s.title(), parts=[s]) for s in STAGES]
+    topic['parts'] = [dict(id=s) for s in STAGES]
+    graph['stage'] = 'conditions'
+    write()
+    rendered = render(tmp_cfg, model, section)
+    body = '## '+topic['title']+'\n\n'+'\n\n'.join('### '+s.title()+'\n\n'+s+' explanation.\n\n'+s+' details.' for s in STAGES)
+    result = place(body, rendered, section)
+    assert result.index('conditions explanation.') < result.index('<!-- sdd:visual:') < result.index('conditions details.')
+    assert result.index('normal details.') < result.index('<!-- sdd:visual:') < result.index('### Change')
+    assert place(result, rendered, section) == result
+    with pytest.raises(ValueError, match='stage missing'):
+        place(body.replace('### Conditions', '### Missing'), rendered, section)
+    graph['stage'] = 'unknown'
+    write()
+    with pytest.raises(ValueError, match='stage must belong'):
+        render(tmp_cfg, model, section)
+
+
 def test_visual_provenance_and_question_remain_in_collapsed_evidence(tmp_cfg, visual):
     section, model, graph, write = visual
     graph['producer']='cli/claude/test-model'

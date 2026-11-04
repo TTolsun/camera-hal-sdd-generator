@@ -155,7 +155,7 @@ def render_values(cfg, model, section, values):
         if ident in seen:
             raise ValueError('Duplicate visual ID')
         seen.add(ident)
-        if set(visual) - {'id', 'topic', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display'}:
+        if set(visual) - {'id', 'topic', 'stage', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display'}:
             raise ValueError('Unknown visual setting')
         if visual.get('condition_display','inline') not in ('inline','evidence'):
             raise ValueError('Visual condition_display must be inline or evidence')
@@ -163,6 +163,9 @@ def render_values(cfg, model, section, values):
             raise ValueError('Visual kind or topic is invalid')
         if titles.count(topics[visual['topic']].get('title')) != 1:
             raise ValueError('Visual target heading must be unique')
+        if 'stage' in visual and visual['stage'] not in {
+                s['id'] for s in topics[visual['topic']].get('explanation', [])}:
+            raise ValueError('Visual stage must belong to its topic explanation')
         title, question = (_text(visual.get(k), k) for k in ('title', 'question'))
         nodes, edges = visual.get('nodes'), visual.get('edges')
         if not isinstance(nodes, list) or not nodes or any(not isinstance(n, dict) for n in nodes):
@@ -275,13 +278,21 @@ def place(body, rendered, section):
     topics = {t['id']: t for t in section.get('design_topics', [])}
     grouped = {}
     for visual, block, _ in rendered:
-        grouped.setdefault(visual['topic'], []).append(block)
-    for tid, blocks in grouped.items():
+        grouped.setdefault((visual['topic'], visual.get('stage')), []).append(block)
+    for (tid, stage), blocks in grouped.items():
         heading = '## ' + topics[tid]['title']
         matches = list(re.finditer(r'^' + re.escape(heading) + r'\n+', body, re.M))
         if len(matches) != 1:
             raise ValueError(f'Visual target heading missing or ambiguous: {heading}')
         start = matches[0].end()
+        if stage:
+            title = next(s['title'] for s in topics[tid]['explanation'] if s['id'] == stage)
+            boundary = re.search(r'^## ', body[start:], re.M)
+            stop = start + boundary.start() if boundary else len(body)
+            targets = list(re.finditer(r'^### ' + re.escape(title) + r'\n+', body[start:stop], re.M))
+            if len(targets) != 1:
+                raise ValueError('Visual explanation stage missing or ambiguous: ' + title)
+            start += targets[0].end()
         from .product_context import scope_notice
         notice = scope_notice(topics[tid])
         if notice and body.startswith(notice,start):
