@@ -87,7 +87,8 @@ def test_checkpoint_failure_after_acceptance_is_not_a_semantic_rejection(unit_ca
     failure = ValueError('checkpoint write failed')
     def write(*args):
         raise failure
-    store = SimpleNamespace(path=cfg.build_dir/'cli-checkpoints/example.json', read=lambda: None, write=write)
+    store = SimpleNamespace(path=cfg.build_dir/'cli-checkpoints/example.json', read=lambda: None, write=write,
+                            explain=lambda saved: {'reason_codes': ['test-checkpoint']})
     monkeypatch.setattr('sdd.design_checkpoint.store_for', lambda *args, **kwargs: (store, {}))
     with observe(cfg, 'checkpoint-failure') as execution:
         with pytest.raises(ValueError, match='checkpoint write failed') as raised:
@@ -103,7 +104,8 @@ def checkpoint_case(unit_case, monkeypatch):
     saved = dict(identity={}, raw=unit_case[-1], receipts=[], statements=json.loads(unit_case[-1])['statements'])
     writes = []
     store = SimpleNamespace(path=cfg.build_dir/'cli-checkpoints/example.json', calls=cfg.build_dir/'prompts/calls',
-        read=lambda: (saved, object()), write=lambda *args: writes.append(args))
+        read=lambda: (saved, object()), write=lambda *args: writes.append(args),
+        explain=lambda saved: {'reason_codes': ['test-checkpoint']})
     monkeypatch.setattr('sdd.design_checkpoint.store_for', lambda *args, **kwargs: (store, {}))
     monkeypatch.setattr('sdd.design_checkpoint.changes', lambda *args: (True, False))
     return saved, writes

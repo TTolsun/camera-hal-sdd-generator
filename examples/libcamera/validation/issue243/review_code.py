@@ -21,13 +21,11 @@ EVIDENCE = ['examples/libcamera/validation/issue243/native_case.py', 'tests/test
 HISTORY = ['examples/libcamera/validation/issue243/inspect_history.py',
            'examples/libcamera/validation/issue243/review_history.py',
            'examples/libcamera/validation/issue243/review_code.py', 'tests/test_repair_transitions.py']
-PUBLICATION = ['examples/libcamera/validation/issue243/prepare_public.py',
-               'examples/libcamera/validation/issue243/public_gap.py']
 
 
 def review(scope, output):
     cfg = load(Path(__file__).with_name('independent-review-profile.yaml'))
-    files = {'runtime': RUNTIME, 'evidence': EVIDENCE, 'history': HISTORY, 'publication': PUBLICATION}[scope]
+    files = {'runtime': RUNTIME, 'evidence': EVIDENCE, 'history': HISTORY}[scope]
     # Send changed hunks plus the complete new helper and existing retry owner.
     # Unchanged rendering/source internals retain their existing regression suite.
     complete = RUNTIME[:2] if scope == 'runtime' else files
@@ -37,11 +35,7 @@ def review(scope, output):
     snapshots = {path: (ROOT/path).read_text(encoding='utf-8') for path in complete}
     dependencies = {}
     import inspect
-    if scope == 'publication':
-        from sdd.evidence import collect, select_span
-        dependencies = {'sdd.evidence.collect': inspect.getsource(collect),
-                        'sdd.evidence.select_span': inspect.getsource(select_span)}
-    elif scope == 'runtime':
+    if scope == 'runtime':
         from sdd.cli_checkpoint import UnitStore, Capture, Reviewer
         dependencies = {'checkpoint-write': inspect.getsource(UnitStore.write),
                         'Capture': inspect.getsource(Capture), 'Reviewer': inspect.getsource(Reviewer)}
@@ -87,7 +81,7 @@ def review(scope, output):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('scope', choices=['runtime', 'evidence', 'history', 'publication'])
+    parser.add_argument('scope', choices=['runtime', 'evidence', 'history'])
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     review(args.scope, args.output)
