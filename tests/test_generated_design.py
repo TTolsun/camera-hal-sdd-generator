@@ -1235,12 +1235,16 @@ def test_grounding_rejection_retries_the_model_without_replacing_prose(tmp_cfg, 
                 self.checks += 1
                 return json.dumps({'reviews': [dict(index=0, supported=self.checks > 1,
                                                     reason='Unsupported guarantee in the first draft')]})
-            return json.dumps({'statements': [base.statement]}, ensure_ascii=False)
+            statement = dict(base.statement)
+            if self.checks:
+                statement['text'] = '`stop()`은 `cancelPending()`을 호출해 대기 요청의 취소 처리를 시작합니다.'
+            return json.dumps({'statements': [statement]}, ensure_ascii=False)
     agent = Agent()
     path = Generator(tmp_cfg, model, agent).run()[0]
     assert len(agent.calls) == 4
     assert 'Unsupported guarantee' in agent.calls[2][1]
     assert 'cancelPending' in agent.calls[1][1]
+    assert '대기 요청의 취소 처리를 시작합니다.' in path.read_text(encoding='utf-8')
     assert verify(model, section, path.read_text(encoding='utf-8'))['human_review'] == 'pending'
 
 

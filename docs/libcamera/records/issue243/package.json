@@ -1,0 +1,8 @@
+{
+  "files": 542,
+  "archive_sha256": "6bb5961861c6f5542159322bd02677efcef3723b0860ba75818301e89b247a98",
+  "index_sha256": "2074a2f31138704475982c9c6d950837c8e83a1bdf142c7233efb4524fad3962",
+  "human_review": "pending",
+  "native_AB": "1 vs 1 repair CLI call, no reduction established",
+  "historical_transition": "A format resolved; B meaning newly introduced; unsuccessful repair"
+}
