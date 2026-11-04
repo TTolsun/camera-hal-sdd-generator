@@ -75,7 +75,8 @@ def _html_path(rel: str) -> str:
 
 
 def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
-            source_url: str, commit: str, link_template: str = SOURCE_LINK_TEMPLATES["github"]) -> tuple[str, str, list[dict]]:
+            source_url: str, commit: str, link_template: str = SOURCE_LINK_TEMPLATES["github"],
+            *, coverage_question_edits=None) -> tuple[str, str, list[dict]]:
     def slug(value: str, separator: str) -> str:
         return re.sub(r"[-\s]+", separator, re.sub(r"[^\w\s-]", "", value.lower().strip()))
 
@@ -122,7 +123,7 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
     rendered = fold_source_details(rendered)
     rendered = _remove_route_tables(rendered)
     from .reading_cleanup import compact_tables, fold_scope_notices, promote_coverage
-    rendered = promote_coverage(fold_scope_notices(compact_tables(rendered)))
+    rendered = promote_coverage(fold_scope_notices(compact_tables(rendered, question_edits=coverage_question_edits)))
 
     def table_wrapper(match: re.Match) -> str:
         table = match[0]
