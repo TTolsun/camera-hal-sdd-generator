@@ -1,0 +1,103 @@
+{
+  "scope": "Fitting ASCII identifier/word tokens inside diagram labels; existing namespace wrapping and oversized plain-token fallback retained. This is not full C++ lexical analysis or whole-issue215 publication acceptance.",
+  "base_commit": "3c4c0ce3477df7043c3c8696a08a3488c62d243a",
+  "tests": "119 passed: visual identifiers, authored visuals and generated visuals",
+  "independent_native_review": {
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "model_selection": "explicit",
+    "producer": "cli/codex/gpt-6.1-terra",
+    "stdout_sha256": "e695efa84f3f0ae7bb908229c066f0029339db42ef086650fcef797406fdc616",
+    "arguments_verified": true,
+    "findings": 0,
+    "receipt_sha256": "026197b9427dc3185daafb906337e24a8daec144e0444c8ee7fd6fe92b82edc6",
+    "arguments": [
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "read-only",
+      "--disable",
+      "shell_tool",
+      "--disable",
+      "multi_agent",
+      "--disable",
+      "plugins",
+      "--disable",
+      "apps",
+      "--disable",
+      "shell_snapshot",
+      "--disable",
+      "skill_search",
+      "-c",
+      "project_doc_max_bytes=0",
+      "-c",
+      "approval_policy=\"never\"",
+      "-c",
+      "web_search=\"disabled\"",
+      "--json",
+      "--output-schema",
+      "response-schema.json",
+      "--model",
+      "gpt-6.1-terra",
+      "-c",
+      "model_reasoning_effort=\"high\""
+    ],
+    "cli_version": "codex-cli 0.166.0-alpha.5.1"
+  },
+  "archive": "identifier-token-native-review.tar.gz",
+  "archive_sha256": "6a9d05d93f38af7e04e402210ecc4fa85b15092064b38f1518e197dddca51da3",
+  "entries": [
+    {
+      "path": "code-review-82/build/generation-runs/f1ecc9c8d10c4969aee83d537ba654f9.json",
+      "sha256": "50c21ac082a937a574d098450cf6cc01e16a4914026f3023d75d0c00d9ee139d"
+    },
+    {
+      "path": "code-review-82/execution-profile.json",
+      "sha256": "1178144f09f755a39b69037c366d6d0ff1caf087eccd48331623311ecc6b2bfb"
+    },
+    {
+      "path": "code-review-82/inputs.json",
+      "sha256": "ae1045f454ed1aad8701ded94768cc93017309f16fba76e109c6cfea981fb0a4"
+    },
+    {
+      "path": "code-review-82/prompts/001_token-wrapping-review.md",
+      "sha256": "d16be141563968d854203d173c52304b4c37fb3f3576817e097cdd532c8e7ac3"
+    },
+    {
+      "path": "code-review-82/prompts/001_token-wrapping-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf"
+    },
+    {
+      "path": "code-review-82/prompts/001_token-wrapping-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e"
+    },
+    {
+      "path": "code-review-82/prompts/calls/b4651af8a54a40afb1b706b55e1c5b2a/001.receipt.json",
+      "sha256": "026197b9427dc3185daafb906337e24a8daec144e0444c8ee7fd6fe92b82edc6"
+    },
+    {
+      "path": "code-review-82/prompts/calls/b4651af8a54a40afb1b706b55e1c5b2a/001.request.json",
+      "sha256": "1cea55a72967a3488943afc2dda58f7632aaaa368d67a880819f27d8986d4bbe"
+    },
+    {
+      "path": "code-review-82/prompts/calls/b4651af8a54a40afb1b706b55e1c5b2a/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36"
+    },
+    {
+      "path": "code-review-82/prompts/cli/call-_0pltt2w.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401"
+    },
+    {
+      "path": "code-review-82/prompts/cli/call-_0pltt2w.stdout.txt",
+      "sha256": "e695efa84f3f0ae7bb908229c066f0029339db42ef086650fcef797406fdc616"
+    },
+    {
+      "path": "code-review-82/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36"
+    }
+  ],
+  "human_review": "pending"
+}

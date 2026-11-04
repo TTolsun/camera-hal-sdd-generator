@@ -73,11 +73,18 @@ def wrap_label(value, width=28):
                     line = ''
                 line += chunk
             continue
-        for char in word:
-            if line and size(line + char) > width:
+        # Keep fitting ASCII words/identifiers atomic even inside a C++
+        # expression. Character wrapping can turn `stream` into `strea<br/>m`.
+        # Retain the existing fallback for a single unbounded plain token;
+        # qualified identifiers above keep their namespace-boundary behavior.
+        tokens = re.findall(r'[A-Za-z_]\w*|.', word, re.ASCII)
+        chunks = [chunk for token in tokens
+                  for chunk in ([token] if size(token) <= width else token)]
+        for chunk in chunks:
+            if line and size(line + chunk) > width:
                 lines.append(line)
                 line = ''
-            line += char
+            line += chunk
     if line:
         lines.append(line)
     return '<br/>'.join(html.escape(part, quote=True) for part in lines)
