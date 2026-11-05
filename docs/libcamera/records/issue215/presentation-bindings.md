@@ -12,3 +12,9 @@ HTML5 파서로 문단·목록의 생략된 닫는 태그와 SVG 안의 HTML을 
 - 이전 독자 모델·비교 문서 입력 기능의 [별도 원본 색인](review-context-native-index.json)과 [원본 묶음](review-context-native.tar.xz)도 유지합니다.
 
 새 엔진으로 최종 한영 조립본을 다시 수집·검토해야 합니다. 이 변경만으로 #215 전체 장부, 그림 보완, 공개 SDD 병합이나 Pages 배포를 완료 처리하지 않습니다. 기존 원고·실행·검토 지문과 사람 승인 상태는 소급 변경하지 않습니다.
+
+## 최신 main과의 통합
+
+다른 세션이 병합한 #267·#279의 `24c851f`를 통합했습니다. 새 기능을 중복 집계하지 않으며, 실제 브라우저가 literal fragment를 먼저 선택하는 규칙을 사이트 검증과 항목·그림 근거 검사에 공통으로 적용했습니다. 실제 IAB의 `#proof%20x`가 `id="proof%20x"`를 선택하는 것을 별도 가상 문서에서 확인했습니다.
+
+첫 CI `41969478964`는 frozen 잠금 파일에 `html5lib`가 없어 실패했습니다. 이 실행은 실패로 남기고 `uv.lock`을 갱신했습니다. 별도 frozen 환경의 Python 3.14.7에서 발행 사전 통합·의존 방향·사이트·번역·항목·주제 연결 검사 313개가 통과했고, 독립 CLI 통합 검토 149의 지적은 0건입니다. [통합 원본 색인](presentation-integration-index.json), [원본 묶음](presentation-integration-native.tar.xz), [테스트 원본](presentation-integration-tests.log.gz)에 실패와 재검증을 구분해 보존합니다. 새 head의 CI 확인은 별도로 수행합니다.

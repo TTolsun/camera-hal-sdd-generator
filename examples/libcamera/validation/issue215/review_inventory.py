@@ -24,6 +24,7 @@ from sdd.visual_audit import (Document, digest, source_window, node_window, all_
                               WINDOW_BINDING)
 from review_contract import SYSTEM, response_schema
 from sdd.visual_presentation import paths as presentation_paths
+from sdd.site_fragments import fragment_id
 
 
 def validate_presentation(contexts, ident):
@@ -253,10 +254,11 @@ def main():
                 name = ((args.site/row['page']).parent/unquote(parts.path)).resolve().relative_to(args.site.resolve()).as_posix()
                 target = owned_path(args.site.resolve(), name)
                 symbols = Document(target.read_text(encoding='utf-8'))
-                found = [n for n in all_nodes(symbols.root) if n.attrs.get('id') == unquote(parts.fragment)]
+                resolved = fragment_id(parts.fragment, {n.attrs['id'] for n in all_nodes(symbols.root) if 'id' in n.attrs})
+                found = [n for n in all_nodes(symbols.root) if n.attrs.get('id') == resolved]
                 if len(found) != 1:
                     raise ValueError('Class declaration window missing or ambiguous: '+href)
-                text = presented_window(symbols, unquote(parts.fragment), args.site.resolve(), name)
+                text = presented_window(symbols, parts.fragment, args.site.resolve(), name)
                 document_windows[name+'#'+parts.fragment] = dict(text=text, sha256=digest(text),
                     purpose='Exact class declaration row linked by this page; not explanatory length')
                 structural_hrefs.extend(a.attrs.get('href', '') for a in found[0].all('a'))
@@ -286,7 +288,7 @@ def main():
             page = path.relative_to(args.site.resolve()).as_posix()
             raw = path.read_text(encoding='utf-8')
             if path.suffix == '.html':
-                text = presented_window(Document(raw), unquote(parts.fragment), args.site.resolve(), page)
+                text = presented_window(Document(raw), parts.fragment, args.site.resolve(), page)
             else:
                 lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', unquote(parts.fragment))
                 if not lines or int(lines[1]) > int(lines[2] or lines[1]) or int(lines[2] or lines[1]) > len(raw.splitlines()):

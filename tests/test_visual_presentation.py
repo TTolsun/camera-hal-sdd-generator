@@ -310,6 +310,35 @@ def test_figure_owner_inherits_presentation_even_when_title_is_h2_sibling():
                for element in value['path'])
 
 
+def test_encoded_fragment_prefers_literal_id_in_review_and_site_verification(tmp_path):
+    from sdd.visual_audit import Document,digest,source_window
+    from sdd.site_build import verify_site
+    body='<h2 id="one">Question</h2><p><a class="citation" href="#proof%20x">Evidence</a></p><h2 id="other">Other</h2><p id="proof%20x">Literal browser target.</p><p id="proof x" hidden>Decoded alternate.</p>'
+    source='<html lang="ko"><article>'+body+'</article></html>'
+    (tmp_path/'guide.html').write_text(source,encoding='utf-8')
+    assert verify_site(tmp_path,manifest=False)['broken_links']==0
+    window=source_window(Document(source),'proof%20x',root=tmp_path,page='guide.html',presentation=True)
+    assert 'Literal browser target.' in window and 'Decoded alternate.' not in window
+    rows=inventory_page(source,'guide.html',policy(),root=tmp_path)
+    selected=next(row for row in rows if row['anchor']=='one')
+    assert selected['source_window_hashes']['guide.html#proof%20x']==digest(window)
+    fallback=source_window(Document(source),'proof%2520x',root=tmp_path,page='guide.html',presentation=True)
+    assert fallback==window
+
+
+def test_appropriate_figure_uses_same_raw_fragment_evidence_key():
+    graph=FIGURE.replace('href="#source-inline"','href="#proof%20x"').replace('id="source-inline"','id="proof%20x"')
+    result=report('<h2 id="one">Question</h2><p>Explanation.</p>'+graph+'<h2 id="other">Other</h2><p id="proof x" hidden>Decoded alternate.</p>')
+    records=ledger(result)
+    for row in result['items']:
+        if row['figures']:
+            records['items'][row['id']].update(status='appropriate',figures=['states'],
+                source_windows=list(row['source_window_hashes']))
+    accepted=apply_reviews(result,records)
+    assert all(row['status']=='appropriate' for row in accepted['items'] if row['figures'])
+    enforce(accepted)
+
+
 def test_duplicate_visibility_attributes_cannot_hide_the_browser_interpretation():
     with pytest.raises(ValueError,match='duplicate HTML attributes'):
         report('<h2 id="one">Question</h2><div style="display:none" style=""><p>Actual explanation.</p></div>')

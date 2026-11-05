@@ -90,3 +90,102 @@ def checked_footer(cfg, model, name, meta, body):
     return dict(document=name, paragraph=index, text=paragraphs[index], target=PurePosixPath(target).as_posix(),
                 title=title, target_sha256=hashlib.sha256(raw).hexdigest(),
                 assessment='generated navigation; current target exists; not a runtime contract verdict')
+
+
+def link_topics(cfg, model, pages, sections, headings):
+    """Add local reading routes under verified topic headings, without rewriting prose.
+
+    Resolve actual rendered headings, not guessed slugs. These routes convey
+    navigation only and do not supply a runtime claim or a review verdict.
+    """
+    import html
+    import posixpath
+    from html.parser import HTMLParser
+    from urllib.parse import quote
+    import markdown
+
+    routes = cfg.site.topic_links
+    if not isinstance(routes, dict):
+        raise ValueError('site.topic_links must map current Markdown pages to topics')
+    if not routes:
+        return pages
+
+    class Text(HTMLParser):
+        def __init__(self):
+            super().__init__(); self.parts = []; self.ids = []; self.invalid_ids = False
+        def handle_starttag(self, tag, attrs):
+            ids = [value for key, value in attrs if key == 'id']
+            self.invalid_ids |= len(ids) > 1
+            self.ids.extend(ids)
+        def handle_data(self, value):
+            self.parts.append(value)
+
+    def plain(value):
+        parser = Text(); parser.feed(value)
+        return ''.join(parser.parts).strip()
+
+    def anchor(page, topic_id):
+        if page not in pages or page not in sections:
+            raise ValueError('Topic link page is not published: ' + str(page))
+        if model is None or not model.meta.get('source_commit') or pages[page][1].get('source_commit') != model.meta['source_commit']:
+            raise ValueError('Topic link source commit mismatch: ' + page)
+        topics = [t for t in sections[page].get('design_topics', []) if t['id'] == topic_id]
+        if len(topics) != 1:
+            raise ValueError('Topic link needs one current topic: ' + page + '/' + str(topic_id))
+        title = plain(markdown.markdown('## ' + topics[0]['title'], extensions=['attr_list']))
+        def all_headings(values):
+            for value in values:
+                yield value
+                yield from all_headings(value.get('children', []))
+        matches = [h['id'] for h in all_headings(headings[page]) if h['level'] == 2 and plain(h['name']) == title]
+        if len(matches) != 1:
+            raise ValueError('Topic link heading missing or ambiguous: ' + page + '/' + topic_id)
+        elements = Text(); elements.feed(pages[page][2])
+        if elements.invalid_ids or elements.ids.count(matches[0]) != 1:
+            raise ValueError('Topic link target ID is missing or duplicated: ' + page + '/' + topic_id)
+        encoded = quote(matches[0], safe='')
+        if encoded != matches[0] and encoded in elements.ids:
+            raise ValueError('Topic link encoded fragment selects another element: ' + page + '/' + topic_id)
+        return matches[0]
+
+    result = dict(pages)
+    for page, topics in routes.items():
+        if not isinstance(topics, dict) or not topics:
+            raise ValueError('Topic links need a nonempty topic mapping')
+        additions = []
+        for topic_id, targets in topics.items():
+            source_anchor = anchor(page, topic_id)
+            if not isinstance(targets, list) or not targets:
+                raise ValueError('Topic links need a nonempty target list')
+            links, seen = [], set()
+            for target in targets:
+                if (not isinstance(target, dict) or set(target) != {'section', 'topic', 'label'}
+                        or any(not isinstance(v, str) or not v.strip() or '\n' in v or '\r' in v for v in target.values())):
+                    raise ValueError('Topic link needs explicit section, topic and plain label')
+                destinations = [name for name, section in sections.items() if section.get('id') == target['section']]
+                if len(destinations) != 1:
+                    raise ValueError('Topic link section missing or ambiguous: ' + target['section'])
+                destination = destinations[0]
+                target_anchor = anchor(destination, target['topic'])
+                key = (destination, target_anchor)
+                if key in seen or key == (page, source_anchor):
+                    raise ValueError('Topic links must be distinct and not point to themselves')
+                seen.add(key)
+                url = posixpath.relpath(str(PurePosixPath(destination).with_suffix('.html')), posixpath.dirname(page) or '.')
+                href = quote(url, safe='/.-') + '#' + quote(target_anchor, safe='')
+                links.append('<a href="' + html.escape(href, quote=True) + '">' + html.escape(target['label']) + '</a>')
+            content = pages[page][2]
+            starts = list(re.finditer(r'<h2\b[^>]*\bid="([^"]+)"[^>]*>', content))
+            owned = [i for i, match in enumerate(starts) if html.unescape(match[1]) == source_anchor]
+            if len(owned) != 1:
+                raise ValueError('Topic link source heading is not unique: ' + page)
+            closing = content.find('</h2>', starts[owned[0]].end())
+            if closing < 0:
+                raise ValueError('Topic link source heading is not closed: ' + page)
+            additions.append((closing + len('</h2>'), '\n<p class="reading-links">함께 확인: ' + ' · '.join(links) + '</p>\n'))
+        content = pages[page][2]
+        for position, block in sorted(additions, reverse=True):
+            content = content[:position] + block + content[position:]
+        title, meta, _, toc = pages[page]
+        result[page] = (title, meta, content, toc)
+    return result

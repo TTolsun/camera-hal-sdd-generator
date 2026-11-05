@@ -190,6 +190,8 @@ def node_window(node, root, page, *, heading_context=None, exclude_navigation=Fa
 def source_window(document, fragment, *, root=None, page='', presentation=False):
     """Resolve readable evidence and its owning headings as the browser does."""
     nodes = list(all_nodes(document.root))
+    from .site_fragments import fragment_id
+    fragment = fragment_id(fragment, {n.attrs['id'] for n in nodes if 'id' in n.attrs})
     found = [n for n in nodes if n.attrs.get('id') == fragment]
     if len(found) != 1:
         raise ValueError('Source window missing or ambiguous: '+fragment)
@@ -567,7 +569,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 row['source_window_hashes'][target] = digest(path.read_bytes().hex())
                 continue
             if not parts.scheme and not parts.netloc and parts.fragment:
-                fragment = unquote(parts.fragment)
+                fragment = parts.fragment
                 target = posixpath.normpath(posixpath.join(posixpath.dirname(page), unquote(parts.path))) if parts.path else page
                 key = target+'#'+fragment
                 if key not in window_hashes:
@@ -584,7 +586,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                         if path.suffix == '.html':
                             selected = source_window(Document(raw), fragment, root=root, page=target, presentation=True)
                         else:
-                            lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', fragment)
+                            lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', unquote(fragment))
                             if not lines:
                                 row['unresolved_source_windows'].append(href)
                                 continue
@@ -634,7 +636,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                             if loc.scheme or loc.netloc:
                                 continue
                             name = posixpath.normpath(posixpath.join(posixpath.dirname(page), unquote(loc.path))) if loc.path else page
-                            key = name+('#'+unquote(loc.fragment) if loc.fragment else '')
+                            key = name+('#'+loc.fragment if loc.fragment else '')
                             if href in row['source_window_references'].get(key, []):
                                 binding = dict(url=href, local_window=key, local_sha256=row['source_window_hashes'][key], external_fetched=False)
                                 break
@@ -755,7 +757,7 @@ def apply_reviews(report, reviews):
                     if url.scheme or url.netloc:
                         return None
                     target = posixpath.normpath(posixpath.join(posixpath.dirname(row['page']), unquote(url.path))) if url.path else row['page']
-                    return target+('#'+unquote(url.fragment) if url.fragment else '')
+                    return target+('#'+url.fragment if url.fragment else '')
                 owned_figures = [(row, f) for f in row['figures']]
                 if adjacent and neighbor is not None:
                     owned_figures.extend((neighbor, f) for f in neighbor['figures'])

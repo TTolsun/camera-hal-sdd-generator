@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "archive": "native-and-machine-evidence.tar.gz",
+  "archive_sha256": "018ce13e0f022f35a8d565ce9253827ffe3c1e0de4be034862b794b7e0603143",
+  "index_sha256": "0b2420d9e90487abd7483a2ab87ce22bcfa51179dc8954398819e3bd5aebbefc",
+  "entries": 2249,
+  "archive_bytes": 14876851,
+  "public_input": "TTolsun/libcamera-sdd@4d656cd88c2a366dec7894e87301bf5205e98b36",
+  "runtime": "efdf6cb15fb3537a427aaae8d7810913066628fa",
+  "source_base": "be909e49b7cfcbf8e888b6a17928ae06fd7f9a96",
+  "source_head": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
+  "native_calls_per_condition": 89,
+  "source_only": "Public libcamera and public generator inputs; no person-study responses or in-house source",
+  "excluded": "pytest test doubles, inherited duplicate site HTML/assets (normal manifests retained), Git objects and runtime implementation supplied by pinned commit",
+  "reproduction": "Restore verified archive; resolve recorded original input paths using resolved-inputs/index.json without changing original receipts. Use pinned generator efdf and public source commits. The original extraction/build proof remains in the prior Qt supplemental package. Stored native calls certify old executions, never new CLI runs.",
+  "human_review": "pending"
+}
