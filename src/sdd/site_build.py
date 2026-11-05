@@ -29,10 +29,18 @@ class Page(HTMLParser):
         self.links: list[str] = []
         self.ids: set[str] = set()
         self.duplicate_ids: set[str] = set()
+        self.repeated_id_attributes = False
         self.feed(path.read_text(encoding="utf-8"))
 
     def handle_starttag(self, tag, attrs):
-        values = dict(attrs)
+        values = {}
+        for name, value in attrs:
+            if name in values:
+                if name == 'id':
+                    self.repeated_id_attributes = True
+                continue
+            # Browsers retain the first occurrence of an HTML attribute.
+            values[name] = value
         if "id" in values:
             if values['id'] in self.ids:
                 self.duplicate_ids.add(values['id'])
@@ -59,6 +67,8 @@ def verify_site(root: Path, manifest: bool = True) -> dict:
         html_files = list(root.rglob("*.html"))
     pages = {p: Page(p) for p in html_files if p.exists()}
     for path, page in pages.items():
+        if page.repeated_id_attributes:
+            errors.append(f"Repeated id attribute: {path.name}")
         for link in page.links:
             url = urlsplit(link)
             if url.scheme or url.netloc:

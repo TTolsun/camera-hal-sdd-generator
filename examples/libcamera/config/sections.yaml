@@ -6088,7 +6088,9 @@ sections:
       question: 이 공개 가상 프로브에서 Auto·Queued·Direct 연결의 실행 스레드 차이와, 정지 취소 요청에서 콜백 표식이 애플리케이션의 stop-enter·stop-return
         표식 사이인지 stop-return 뒤인지 구분하세요. stop-enter·stop-return은 camera->stop() 호출 앞뒤에서 남긴 애플리케이션
         표식이며 함수 내부의 정확한 명령 경계는 아니라는 범위를 지키세요. 정상 완료 요청의 표식이 stop 반환 뒤라고 일반화하거나 연결 간 고정 실행 순서를
-        만들지 마세요. 두 문장·350자 이내로 답하고 반환 표식 자체의 한계는 다음 파트에 맡기세요.
+        만들지 마세요. 두 문장·350자 이내로 답하세요. 콜백 내부의 반환 표식은 실제 반환 완료가 아닌 복귀 근처 표식으로 정확히 부르세요.
+        콜백 내부의 진입·복귀 근처 표식과 camera->stop() 호출 앞뒤의 stop-enter·stop-return을 서로 다른 표식으로 구별하세요.
+        후자의 위치를 설명할 때는 모호한 “이 표식” 대신 stop-enter·stop-return을 명시하세요. 실제 반환 추적의 자세한 한계는 다음 파트에 유지합니다.
       sources: []
       max_statements: 1
       answer_contract:

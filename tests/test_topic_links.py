@@ -174,3 +174,22 @@ def test_encoded_topic_fragment_cannot_select_a_different_literal_id(tmp_cfg, li
     sections = {'device.md': tmp_cfg.section('device'), 'nested/other.md': tmp_cfg.section('other')}
     with pytest.raises(ValueError, match='encoded fragment'):
         link_topics(tmp_cfg, linked, pages, sections, headings)
+
+
+@pytest.mark.parametrize('second_id', ['a', 'b'])
+def test_site_rejects_multiple_id_attributes_on_one_element(tmp_path, second_id):
+    from sdd.site_build import verify_site
+    (tmp_path/'index.html').write_text(
+        f'<a href="#a">Target</a><div id="a" id="{second_id}"></div><h2 id="a">Heading</h2>',
+        encoding='utf-8')
+    with pytest.raises(RuntimeError, match='Repeated id attribute'):
+        verify_site(tmp_path, manifest=False)
+
+
+def test_site_verifier_uses_browser_first_attribute_for_links(tmp_path):
+    from sdd.site_build import verify_site
+    (tmp_path/'index.html').write_text(
+        '<a href="#missing" href="#present">Target</a><h2 id="present">Heading</h2>',
+        encoding='utf-8')
+    with pytest.raises(RuntimeError, match='Missing anchor'):
+        verify_site(tmp_path, manifest=False)
