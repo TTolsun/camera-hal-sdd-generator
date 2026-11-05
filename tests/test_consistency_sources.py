@@ -15,6 +15,67 @@ def record(text, *, file='device.cpp', line=1):
                 text=text, sha256=hashlib.sha256(text.encode()).hexdigest())
 
 
+@pytest.mark.parametrize('plan_basis', [None, 'investigation'])
+def test_mixed_display_paragraph_keeps_each_current_answer_basis_without_relabeling_history(tmp_cfg, monkeypatch, plan_basis):
+    from sdd.evidence import _paragraphs
+    from sdd.site_markdown import _render
+    from sdd.site_localization import display_strings
+    from sdd.call_records import canonical_request_hash
+    answers = [dict(text='요청 검증 실패 시 오류를 반환합니다.', evidence=['proof'], kind='behavior', part_id='fact'),
+               dict(text='조사할 때 요청 검증의 반환값을 기록합니다.', evidence=['proof'], kind='behavior', part_id='plan')]
+    section = dict(id='doc', design_topics=[dict(id='q', parts=[
+        dict(id='fact', question='What does the code return?', answer_contract=dict(basis='implementation')),
+        dict(id='plan', question='Which existing return should be observed?', answer_contract=dict(basis=plan_basis))])])
+    monkeypatch.setattr(tmp_cfg, 'sections', lambda: [section])
+    body = '\n\n'.join(_paragraphs([(a['kind'], a['text'], []) for a in answers]))
+    tmp_cfg.sdd_dir.mkdir(parents=True)
+    path = tmp_cfg.sdd_dir/'primary.md'
+    path.write_text('---\nsource_commit: '+'a'*40+'\nsection: doc\ngenerated_design: '
+        +json.dumps(dict(answers={'q': answers}), ensure_ascii=False)+'\n---\n\n'+body, encoding='utf-8')
+    original = path.read_bytes()
+    model = KnowledgeModel(meta={'source_commit': 'a'*40}, evidence={'doc/q/proof': record('if (!valid) return -EINVAL;')})
+    content, _, _ = _render(body, 'primary.md', {'primary.md'}, model, '', 'a'*40)
+    key, = display_strings(content)
+    catalog = tmp_cfg.root/'english.json'
+    catalog.write_text(json.dumps(dict(strings={key:'Validation failure returns an error. During investigation, record the return value.'})), encoding='utf-8')
+    tmp_cfg.raw.setdefault('site', {})['english_catalog'] = str(catalog)
+    group = dict(id='c', primary='primary.md', documents=['primary.md'], match='요청')
+    payload = request(tmp_cfg, model, group)
+    displayed = [c for k,c in payload['claims'].items() if k.startswith('catalog/')]
+    assert {c['language'] for c in displayed} == {'ko', 'en'}
+    for claim in displayed:
+        assert claim['statement_kinds'] == ['behavior']
+        assert [c['basis'] for c in claim['configured_answer_context']] == ['implementation', plan_basis]
+        assert [c['text'] for c in claim['configured_answer_context']] == [a['text'] for a in answers]
+        assert all('not historical execution or approval' in c['provenance'] for c in claim['configured_answer_context'])
+    before = canonical_request_hash(wire_payload(payload))
+    section['design_topics'][0]['parts'][1]['question'] = 'Which different existing return should be observed?'
+    assert canonical_request_hash(wire_payload(request(tmp_cfg, model, group))) != before
+    assert path.read_bytes() == original
+
+
+@pytest.mark.parametrize('part_id', [None, 'removed'])
+def test_unmatched_historical_part_cannot_inherit_topic_investigation_intent(tmp_cfg, monkeypatch, part_id):
+    statement = dict(text='요청 콜백이 실행됐습니다.', evidence=['proof'], kind='behavior')
+    if part_id is not None:
+        statement['part_id'] = part_id
+    monkeypatch.setattr(tmp_cfg, 'sections', lambda: [dict(id='doc', design_topics=[dict(
+        id='q', question='Propose an investigation.', answer_contract=dict(basis='investigation'),
+        parts=[dict(id='current', question='What is the contract?', answer_contract=dict(basis='contract'))])])])
+    tmp_cfg.sdd_dir.mkdir(parents=True)
+    path = tmp_cfg.sdd_dir/'primary.md'
+    path.write_text('---\nsource_commit: '+'a'*40+'\nsection: doc\ngenerated_design: '
+        +json.dumps(dict(answers={'q': [statement]}), ensure_ascii=False)+'\n---\n\n'+statement['text'], encoding='utf-8')
+    original = path.read_bytes()
+    model = KnowledgeModel(meta={'source_commit': 'a'*40}, evidence={'doc/q/proof': record('A callback may be connected.')})
+    payload = request(tmp_cfg, model, dict(id='c', primary='primary.md', documents=['primary.md'], match='요청'))
+    claim = payload['claims']['primary.md/q/0']
+    context, = claim['configured_answer_context']
+    assert context['binding'] == 'unmatched' and context['basis'] is None and context['question'] == ''
+    assert claim['statement_kinds'] == ['behavior'] and claim['text'] == statement['text']
+    assert path.read_bytes() == original
+
+
 def test_source_contract_and_unexecuted_callback_plan_keep_distinct_kinds_in_both_languages(tmp_cfg):
     from sdd.evidence import _paragraphs
     from sdd.site_markdown import _render
@@ -23,6 +84,8 @@ def test_source_contract_and_unexecuted_callback_plan_keep_distinct_kinds_in_bot
         dict(text='요청 완료 함수는 관리자 스레드에서 호출해야 합니다.', evidence=['proof'], kind='behavior'),
         dict(text='요청 콜백 진입과 실행 스레드를 기록할 계획이며 아직 실행하지 않았습니다.',
              evidence=['proof'], kind='limitation'),
+        dict(text='요청 반환값을 따로 기록할 계획이며 아직 실행하지 않았습니다.',
+             evidence=['second-proof'], kind='limitation'),
     ]
     body = '\n\n'.join(_paragraphs([(a['kind'], a['text'], []) for a in answers]))
     tmp_cfg.sdd_dir.mkdir(parents=True)
@@ -30,10 +93,11 @@ def test_source_contract_and_unexecuted_callback_plan_keep_distinct_kinds_in_bot
         +'\nsection: doc\ngenerated_design: '+json.dumps(dict(answers={'q': answers}), ensure_ascii=False)
         +'\n---\n\n'+body, encoding='utf-8')
     model = KnowledgeModel(meta={'source_commit': 'a'*40}, evidence={
-        'doc/q/proof': record('This function shall be called from the manager thread.')})
+        'doc/q/proof': record('This function shall be called from the manager thread.'),
+        'doc/q/second-proof': record('The function returns zero on success.', line=2)})
     content, _, _ = _render(body, 'primary.md', {'primary.md'}, model, '', 'a'*40)
     keys = display_strings(content)
-    assert len(keys) == 2  # The unexecuted plan is never merged into the source contract.
+    assert len(keys) == 3  # Consecutive limitations also remain separate displayed units.
     catalog = tmp_cfg.root/'english.json'
     catalog.write_text(json.dumps({'strings': {key: 'Contract.' if '호출해야' in key else
         'Execution check: Record callback entry and thread; this plan has not been executed.'
@@ -41,13 +105,14 @@ def test_source_contract_and_unexecuted_callback_plan_keep_distinct_kinds_in_bot
     tmp_cfg.raw.setdefault('site', {})['english_catalog'] = str(catalog)
     payload = request(tmp_cfg, model, dict(id='c', question='Who completes?', primary='primary.md',
         documents=['primary.md'], match='요청'))
-    for index, expected in enumerate(('behavior', 'limitation')):
+    for index, expected in enumerate(('behavior', 'limitation', 'limitation')):
         source = payload['claims'][f'primary.md/q/{index}']
         assert source['statement_kinds'] == [expected]
         displayed = [c for k,c in payload['claims'].items() if k.startswith('catalog/')
                      and f'primary.md/q/{index}' in c['origin_claims']]
         assert {c['language'] for c in displayed} == {'ko', 'en'}
         assert all(c['statement_kinds'] == [expected] for c in displayed)
+        assert all(c['evidence'] == ['doc/q/second-proof' if index == 2 else 'doc/q/proof'] for c in displayed)
 
 
 def test_recovered_topic_mapping_order_preserves_exact_audit_requests(tmp_cfg):

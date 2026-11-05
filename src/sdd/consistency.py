@@ -37,6 +37,12 @@ SYSTEM = (
     'limitation is a separate execution check or unverified observation plan. Assess whether that '
     'plan is appropriately scoped, without treating it as an executed callback or measured result. '
     'This label does not excuse an unsupported runtime assertion or establish a successful test. '
+    'configured_answer_context is current authoring intent, not historical execution proof or a verdict. '
+    'A behavior statement can still propose a source-based investigation. Compare its actual modality '
+    'with that context and the source: proposed observations need source-grounded objects and conditions, '
+    'not proof that an investigator already performed them. An observed-result assertion still needs '
+    'execution evidence even when its configured basis says investigation. For a joined displayed '
+    'paragraph, assess each supplied statement context separately; do not apply one basis to all clauses. '
     'Evidence marked analysis-definition establishes only an extractor or diagram representation '
     'and its limits. It cannot establish product runtime behavior, callback execution, ownership '
     'or device performance. Keep this provenance domain separate from project-source contracts. '
@@ -154,6 +160,8 @@ def _request(cfg, model, group):
             display.extend(dict(document=name, **pair) for pair in display_pairs(content, catalog))
         artifact = meta.get('generated_design') or {}
         if artifact.get('answers'):
+            section = next((s for s in cfg.sections() if s['id'] == meta.get('section')), {})
+            topics = {t['id']: t for t in section.get('design_topics', [])}
             # Partial recovery can append a repaired topic after unchanged
             # topics. Mapping order is not contract content, but otherwise it
             # changes batches, literal CLI prompts and schema peer enums.
@@ -163,6 +171,16 @@ def _request(cfg, model, group):
                     refs = [f"{meta['section']}/{tid}/{sid}" for sid in statement['evidence']]
                     all_statements[key] = dict(document=name, topic=tid, language='ko', text=statement['text'], evidence=refs,
                                                statement_kinds=[statement.get('kind', 'behavior')])
+                    topic = topics.get(tid, {})
+                    parts = topic.get('parts', [])
+                    owner = next((p for p in parts if p['id'] == statement.get('part_id')), None)
+                    if not parts and statement.get('part_id') is None:
+                        owner = topic
+                    all_statements[key]['configured_answer_context'] = [dict(
+                        text=statement['text'], basis=(owner or {}).get('answer_contract', {}).get('basis'),
+                        question=(owner or {}).get('question', ''),
+                        binding='matched' if owner else 'unmatched',
+                        provenance='current configuration; not historical execution or approval')]
                     if catalog:
                         from .evidence import _paragraphs
                         # Match the real display label as well as the plan. A
@@ -227,6 +245,10 @@ def _request(cfg, model, group):
         kinds = list(dict.fromkeys(kind for claim in paragraph_claims for kind in claim.get('statement_kinds', [])))
         if kinds:
             claims[key]['statement_kinds'] = claims[key+'/en']['statement_kinds'] = kinds
+        contexts = [context for claim in paragraph_claims
+                    for context in claim.get('configured_answer_context', [])]
+        if contexts:
+            claims[key]['configured_answer_context'] = claims[key+'/en']['configured_answer_context'] = contexts
         if all(claims[origin].get('evidence_domain') == 'analysis-representation' for origin in matches):
             claims[key]['evidence_domain'] = claims[key+'/en']['evidence_domain'] = 'analysis-representation'
     if not claims:
