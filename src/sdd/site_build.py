@@ -78,7 +78,8 @@ def verify_site(root: Path, manifest: bool = True) -> dict:
                 errors.append(f"Missing local target: {path.name} -> {link}")
             elif target in pages and url.fragment:
                 # HTML resolves a literal fragment ID before its decoded form.
-                anchor = url.fragment if url.fragment in pages[target].ids else unquote(url.fragment)
+                from .site_fragments import fragment_id
+                anchor = fragment_id(url.fragment, pages[target].ids)
                 if anchor not in pages[target].ids:
                     errors.append(f"Missing anchor: {path.name} -> {link}")
                 elif anchor in pages[target].duplicate_ids:
@@ -168,7 +169,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "validation_stage.py", code_root / "input_watch.py", code_root / "publication_plan.py",
                                             code_root / "publication_operation.py",
                                             code_root / "publication_reports.py",
-                                            code_root / "validation_execution.py", code_root / "visual_audit.py", code_root / "site_paths.py", code_root / "mermaid_text.py",
+                                            code_root / "validation_execution.py", code_root / "visual_audit.py", code_root / "visual_dom.py", code_root / "visual_presentation.py", code_root / "site_fragments.py", code_root / "site_paths.py", code_root / "mermaid_text.py",
                                             code_root / "execution_lock.py", code_root / "generation_run.py", code_root / "guide_visuals.py",
                                             code_root / "consistency.py", code_root / "consistency_sources.py",
                                             code_root / "consistency_analysis.py", code_root / "cli_schema.py",
@@ -179,7 +180,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             Path(__file__)]}
         from .diagrams import POLICY_VERSION
         data = {"schema": 1, "diagram_policy": POLICY_VERSION, "inputs": inputs, "engine": engine,
-                "dependencies": {name: version(name) for name in ("Markdown", "pymdown-extensions", "PyYAML")},
+                "dependencies": {name: version(name) for name in ("Markdown", "pymdown-extensions", "PyYAML", "html5lib")},
                 "outputs": outputs}
         data["build_id"] = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
         from .generation_run import observed
