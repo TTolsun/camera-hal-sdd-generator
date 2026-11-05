@@ -28,11 +28,22 @@ class Page(HTMLParser):
         super().__init__()
         self.links: list[str] = []
         self.ids: set[str] = set()
+        self.duplicate_ids: set[str] = set()
+        self.repeated_id_attributes = False
         self.feed(path.read_text(encoding="utf-8"))
 
     def handle_starttag(self, tag, attrs):
-        values = dict(attrs)
+        values = {}
+        for name, value in attrs:
+            if name in values:
+                if name == 'id':
+                    self.repeated_id_attributes = True
+                continue
+            # Browsers retain the first occurrence of an HTML attribute.
+            values[name] = value
         if "id" in values:
+            if values['id'] in self.ids:
+                self.duplicate_ids.add(values['id'])
             self.ids.add(values["id"])
         if tag in ("a", "link", "script", "img"):
             link = values.get("href", values.get("src"))
@@ -56,6 +67,8 @@ def verify_site(root: Path, manifest: bool = True) -> dict:
         html_files = list(root.rglob("*.html"))
     pages = {p: Page(p) for p in html_files if p.exists()}
     for path, page in pages.items():
+        if page.repeated_id_attributes:
+            errors.append(f"Repeated id attribute: {path.name}")
         for link in page.links:
             url = urlsplit(link)
             if url.scheme or url.netloc:
@@ -63,8 +76,13 @@ def verify_site(root: Path, manifest: bool = True) -> dict:
             target = (path.parent / unquote(url.path)).resolve() if url.path else path
             if not target.is_relative_to(root) or not target.is_file():
                 errors.append(f"Missing local target: {path.name} -> {link}")
-            elif target in pages and url.fragment and unquote(url.fragment) not in pages[target].ids:
-                errors.append(f"Missing anchor: {path.name} -> {link}")
+            elif target in pages and url.fragment:
+                # HTML resolves a literal fragment ID before its decoded form.
+                anchor = url.fragment if url.fragment in pages[target].ids else unquote(url.fragment)
+                if anchor not in pages[target].ids:
+                    errors.append(f"Missing anchor: {path.name} -> {link}")
+                elif anchor in pages[target].duplicate_ids:
+                    errors.append(f"Ambiguous anchor: {path.name} -> {link}")
     if errors:
         raise RuntimeError("Site verification failed:\n" + "\n".join(errors))
     if manifest:
