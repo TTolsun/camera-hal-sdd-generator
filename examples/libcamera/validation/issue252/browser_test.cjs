@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const {chromium} = require(path.resolve('build/issue252/browser-deps/node_modules/playwright'));
 const base = process.argv[2];
 const out = path.resolve(process.argv[3]);
-const ids = ['preparation-depth-flow','uvc-depth-flow','callback-order-flow','callback-depth-flow','queued-lifetime-flow','stop-depth-flow','change-verification-flow','callback-boundaries-flow','failure-investigation-flow','submission-order-flow','stop-lifetime-flow','fence-timer-order-flow'];
+const ids = ['preparation-depth-flow','uvc-depth-flow','callback-order-flow','callback-depth-flow','queued-lifetime-flow','stop-depth-flow','change-verification-flow','callback-boundaries-flow','failure-investigation-flow','submission-order-flow','stop-lifetime-flow','fence-timer-order-flow','request-ownership','pre-qbuf-failure-flow'];
 if (!/^https?:\/\//.test(base)) throw Error('Supply an exact local or public site URL');
 
 (async () => {

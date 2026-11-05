@@ -5662,6 +5662,24 @@ sections:
       file: src/libcamera/framebuffer.cpp
       start: \enum FrameMetadata::Status
       end: "\n */"
+    - id: cache-get
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2BufferCache::get(const FrameBuffer &buffer)
+      end: '
+
+        }'
+    - id: cache-put
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2BufferCache::put(unsigned int index)
+      end: '
+
+        }'
+    - id: scope-exit
+      file: include/libcamera/base/utils.h
+      start: 'template<typename EF>
+
+        class scope_exit'
+      end: scope_exit(EF) -> scope_exit<EF>;
     parts:
     - id: control-errors
       question: processControls는 각 processControl의 반환값을 검사하지 않으며, 구성한 ControlList를 setControls에 전달합니다. setControls의
@@ -5686,9 +5704,8 @@ sections:
     - id: device
       question: V4L2VideoDevice::queueBuffer에서 Stopping의 -ESHUTDOWN, VIDIOC_QBUF 오류 반환, 성공 후 queuedBuffers_ 등록이라는
         필수 조사 분기를 설명하세요. cache_ 부재는 LOG(V4L2, Fatal) 뒤에 -ENOENT 반환문이 있으므로 정상 반환·공통 취소 도달을 보장하지 않는 별도 경계입니다. Camera
-        제출 0·QBUF 성공·프레임 완료를 구분하고 실제 ret·인덱스·큐 등록을 관찰하는 계획을 세 문장 이내로 연결하세요. 일반 출력 버퍼의 플레인 검증 상세는 이 소개 본문에 늘리지
-        말고 기존 전체 소스 연결로 남기세요. 언급해야 한다면 V4L2_TYPE_IS_OUTPUT이면서 numV4l2Planes != planes.size()인 분기에서만 마지막이 아닌 플레인의
-        빈 부분을 검사한다는 조건을 생략하지 마세요.
+        제출 0·QBUF 성공·프레임 완료를 구분하고 실제 ret·인덱스·큐 등록을 관찰하는 계획을 세 문장 이내로 연결하세요. QBUF 이전 cache 인덱스·공통 plane 검증의 별도
+        항목을 함께 대조하고 두 실패를 QBUF ioctl 오류로 합치지 마세요.
       sources:
       - qbuf
       - submit
@@ -5717,6 +5734,47 @@ sections:
       sources:
       - frame-validity
       max_statements: 1
+    - id: cache-index
+      question: V4L2BufferCache::get은 free_인 항목만 검사하고 사용 가능한 항목이 없으면 -ENOENT를 반환한다는 구현을 설명하세요. queueBuffer는 이
+        음수를 그대로 반환하며 아직 이번 호출의 scope_exit guard가 만들어지지 않았고 새 인덱스를 확보하지 않았으므로 이번 호출의 guard에 의한 put도 없습니다. 이 반환은
+        VIDIOC_QBUF와 이번 버퍼의 queuedBuffers_ 등록보다 앞섭니다. UVC는 processControls가 0을 반환한 뒤 이 호출에 도달하므로 제어 처리는 선행하지만
+        실제 제어 적용이나 롤백을 보장하지 않으며 음수는 공통 cancelRequest로 전달된다는 경계를 연결하세요. cache_ 자체가 없는 Fatal과 free 항목 부재를 혼동하거나
+        모든 cache 상태가 불변이라고 쓰지 마세요. 두 짧은 문단으로 답하세요.
+      sources:
+      - cache-get
+      - cache-put
+      - qbuf
+      - submit
+      - controls
+      - dispatch
+      - complete
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - get
+        - - -ENOENT
+        - - VIDIOC_QBUF
+        - - cancelRequest
+    - id: pre-qbuf-planes
+      question: cache 인덱스를 얻은 뒤 queueBuffer가 검사하는 두 공통 조건을 대조하세요. planes.size() < numV4l2Planes이면 -EINVAL이며,
+        planes.size() != numV4l2Planes && !buffer->_d()->isContiguous()이어도 -EINVAL입니다. 단순한 수 불일치를 모두 오류로 일반화하지
+        마세요. 이 두 반환에서는 scope_exit가 이번 buf.index를 cache_->put으로 반환하며 VIDIOC_QBUF 호출과 이번 버퍼의 queuedBuffers_ 신규
+        등록에 도달하지 않습니다. 제어 처리·호출자 반환·공통 취소의 공통 전제는 앞의 cache 인덱스 항목이 소유하므로 여기에서 반복하지 마세요. 이 항목은 두 plane 조건, 각각의
+        반환과 확보한 인덱스의 정리만 소유합니다. 위 두 공통 검사에 집중하고 다른 형식의 bytesused 합치기 세부 검사를 이 사례로 확대하지 마세요. 실제 UVC 하드웨어에서 부적합
+        plane을 재현했다는 결과가 아니라 이 함수에 도달한 조건의 정적 분기입니다. 두 짧은 문단으로 답하세요.
+      sources:
+      - qbuf
+      - cache-put
+      - scope-exit
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - planes
+        - - -EINVAL
+        - - put
+        - - VIDIOC_QBUF
   - id: resources
     title: 요청·버퍼·fence의 수명
     question: 제출 성공·버퍼 완료·요청 완료와 애플리케이션 반환을 구분하고 버퍼 회수 경계를 근거로 판단하세요. 문제, 수명 원리, 정상 흐름, 조건 변화, 변경 확인을 연결하세요.
@@ -5793,6 +5851,14 @@ sections:
       file: src/libcamera/request.cpp
       start: \brief Complete a buffer for the request
       end: \brief Reset the request internal data to default values
+    - id: figure-signal-lifetime
+      file: src/libcamera/base/signal.cpp
+      start: \class Signal
+      end: \fn Signal::connect
+    - id: figure-connections
+      file: src/libcamera/base/bound_method.cpp
+      start: \enum ConnectionType
+      end: '} /* namespace libcamera */'
     covers:
     - resources
     parts:
@@ -5827,6 +5893,8 @@ sections:
       - buffer-duty
       - complete-access
       - cancel-rules
+      - figure-signal-lifetime
+      - figure-connections
       max_statements: 2
       answer_contract:
         basis: description
@@ -6334,10 +6402,10 @@ sections:
         basis: investigation
   - id: stopping
     title: 정지와 연결 해제를 구분하기
-    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking
-      호출을 구분하세요. PipelineHandler::stop의 waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소,
-      queuedRequests_/waitingRequests_ ASSERT를 조사 지점에 연결하세요. stopDevice 내부에서 멎음과 반환 후 큐가 남음,
-      별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요. 실행 시험 결과나 보장된 타임아웃을 만들지 마세요.
+    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을
+      구분하세요. PipelineHandler::stop의 waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소, queuedRequests_/waitingRequests_
+      ASSERT를 조사 지점에 연결하세요. stopDevice 내부에서 멎음과 반환 후 큐가 남음, 별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요.
+      실행 시험 결과나 보장된 타임아웃을 만들지 마세요.
     sources:
     - id: stop
       file: src/libcamera/camera.cpp
@@ -6416,16 +6484,35 @@ sections:
         end: '
 
           }'
+    - id: stop-implementation
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Stop capturing from all running streams and cancel pending requests
+      end: \brief Determine if the camera has any requests pending
+    - id: uvc-stop-implementation
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void PipelineHandlerUVC::stopDevice(Camera *camera)
+      end: int PipelineHandlerUVC::processControl(
+    - id: streamoff-implementation
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2VideoDevice::streamOff()
+      end: \brief Set the dequeue timeout value
     covers:
     - stopping
     parts:
     - id: summary
       role: summary
-      question: PipelineHandler::stop 원문의 모든 대기 요청 취소·즉시 오류 완료 계약과 Camera::disconnect 원문의 Running 중 연결 해제 시 대기 요청 처리 TODO를 두 짧은 문장으로 비교하세요. 두 함수의 명시된 계약을 비교하고 다른 함수의 계약이나 원문에 없는 용어에 관한 설명을 추가하지 마세요.
+      question: 첫 문장을 PipelineHandler::stop의 문서 계약이라고 명시하고 모든 미완료 요청의 취소·즉시 오류 완료를 요구하는 내용을 설명하세요. Camera::disconnect의
+        Running 중 연결 해제에서 대기 요청 처리가 TODO라는 점을 둘째 문장으로 비교합니다. 다음 짧은 문단은 선택 UVC 구현의 실패 범위입니다. STREAMOFF가 장치 버퍼
+        반환 전에 실패하면 UVC stopDevice는 음수를 검사하지 않고 releaseBuffers를 계속 호출하므로 위 계약이 모든 실패에서 자동 충족되거나 모든 요청이 반환된다고 보장하지
+        않는다는 한계를 바로 연결하세요. 남은 queuedRequests_는 공통 stop의 ASSERT 경계가 될 수 있으므로 정상 반환 0도 무조건 보장하지 마세요. 실제 실패 관측이나
+        다른 파이프라인의 지원 보장으로 쓰지 마세요.
       sources:
       - device-stop
       - disconnect-todo
-      max_statements: 1
+      - stop-implementation
+      - uvc-stop-implementation
+      - streamoff-implementation
+      max_statements: 2
       answer_contract:
         basis: description
         required_terms:
@@ -6436,13 +6523,14 @@ sections:
         - - PipelineHandler::stop
         - - 즉시
           - immediately
-      prompt: 정지 API와 구현 보조 함수의 계약을 혼동하지 마세요. 이 요약에서 선택된 두 원문은 PipelineHandler::stop과 Camera::disconnect입니다. 앞 원문의 즉시 오류 완료와 뒤 원문의 대기 요청 TODO만 비교하고, 호출자가 검사할 순서나 원문에 특정 단어가 없다는 메타 설명은 다른 항목으로 확장하지 마세요.
+        - - 계약
+      prompt: 계약은 계약으로, 선택 UVC의 오류 경로는 구현의 조건부 한계로 구분하세요. 첫 문장에 문서 계약이라는 한정을 넣고 일반 동작의 무조건 보장처럼 쓰지 마세요. 기존 즉시
+        오류 완료·연결 해제 TODO를 보존하고 두 짧은 문단으로 연결합니다.
     - id: camera-entry
-      question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed 음수
-        반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop
-        호출 진입·복귀를 관찰하세요. 호출 뒤의 pending 요청 ASSERT와 CameraConfigured 상태·0 반환도 포함하되 상태 설정과 블로킹
-        호출을 다른 문장으로 되풀이하지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출
-        금지 문구를 이 문단에 덧붙이지 마세요.
+      question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed 음수 반환을 구분하고, 통과하면 CameraStopping
+        상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop 호출 진입·복귀를 관찰하세요. 호출 뒤의 pending 요청 ASSERT와 CameraConfigured
+        상태·0 반환도 포함하되 상태 설정과 블로킹 호출을 다른 문장으로 되풀이하지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태
+        변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
       sources:
       - stop
       - stopping-call
@@ -6456,7 +6544,9 @@ sections:
         - - ConnectionTypeBlocking
       max_statements: 3
     - id: device-entry
-      question: 조사 계획으로 PipelineHandler::stop의 waitingRequests_ 분리 지점, stopDevice 호출 직전과 실제 구현 진입·복귀를 각각 관찰하도록 설명하세요. 선택한 관찰 창의 복귀 미관찰은 원인 미확정으로 남기며 호출 직전 표시만으로 장치 내부 정지를 확정하지 마세요. 실행 결과가 아닌 계획을 두 짧은 문장 이내로 쓰고 반환 뒤 요청 처리나 ASSERT는 다음 항목에 맡기세요.
+      question: 조사 계획으로 PipelineHandler::stop의 waitingRequests_ 분리 지점, stopDevice 호출 직전과 실제 구현 진입·복귀를 각각 관찰하도록
+        설명하세요. 선택한 관찰 창의 복귀 미관찰은 원인 미확정으로 남기며 호출 직전 표시만으로 장치 내부 정지를 확정하지 마세요. 실행 결과가 아닌 계획을 두 짧은 문장 이내로 쓰고 반환
+        뒤 요청 처리나 ASSERT는 다음 항목에 맡기세요.
       sources:
       - device-stop
       answer_contract:
@@ -6470,10 +6560,11 @@ sections:
           - 단정하지
           - 확정하지
       max_statements: 1
-      prompt: 관찰 지점의 비교 계획만 설명하세요. 실제 구현 진입은 호출 직전과 별도로 관찰하는 지점입니다. 관찰 창에서 복귀를 관찰하지 못하더라도 아직 실행 중인지, 관찰이 빠졌는지 또는 어떤 원인인지는 단정하지 않습니다. 추가 상태 변경 호출이나 새 측정 결과를 만들지 마세요.
+      prompt: 관찰 지점의 비교 계획만 설명하세요. 실제 구현 진입은 호출 직전과 별도로 관찰하는 지점입니다. 관찰 창에서 복귀를 관찰하지 못하더라도 아직 실행 중인지, 관찰이 빠졌는지
+        또는 어떤 원인인지는 단정하지 않습니다. 추가 상태 변경 호출이나 새 측정 결과를 만들지 마세요.
     - id: pending
-      question: PipelineHandler::stop()의 취소 반복문에서 doQueueRequest(request)에 전달되는 request 값을 기존
-        실행의 관찰 기록 항목으로 제안하는 한국어 한 문장만 쓰세요.
+      question: PipelineHandler::stop()의 취소 반복문에서 doQueueRequest(request)에 전달되는 request 값을 기존 실행의 관찰 기록 항목으로
+        제안하는 한국어 한 문장만 쓰세요.
       sources:
       - pending-requeue
       answer_contract:
@@ -6487,10 +6578,9 @@ sections:
           message: 이 문단은 전달할 request의 관찰 기록만 설명합니다. 장치 큐 삽입·시퀀스 설명은 앞 절이 담당합니다.
       max_statements: 1
     - id: queue-assertions
-      question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를 해당 검사 지점에서
-        관찰하는 계획과 뒤의 requestSequence_ 0 초기화만 한 문장으로 설명하세요. 앞서 설명한 대기 큐 분리·장치 정지·요청 취소를 다시 나열하거나
-        ASSERT를 미래 실행 보장으로 쓰지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태 변경
-        함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
+      question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를 해당 검사 지점에서 관찰하는 계획과 뒤의 requestSequence_
+        0 초기화만 한 문장으로 설명하세요. 앞서 설명한 대기 큐 분리·장치 정지·요청 취소를 다시 나열하거나 ASSERT를 미래 실행 보장으로 쓰지 마세요. 계획 분류는 생성기의 실행 확인
+        항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
       sources:
       - stop-assertions
       answer_contract:
@@ -6502,20 +6592,19 @@ sections:
       max_statements: 1
     - id: callback-observation
       question: 앞 절의 관찰 기록을 이용하는 조건부 조사 분기만 두 문장 이내로 제안하세요. BoundMethodBase::activatePack의 ConnectionTypeAuto
-        분기에서 Thread::current()와 object_->thread()가 다른 수신 스레드이며 type이 ConnectionTypeQueued가 된다는
-        기록을 확인한 조건을 사용하세요. 그 조건에서 completeRequest 복귀와 파이프라인 큐의 빈 상태는 확인됐지만 콜백 진입 기록이 없다면 수신
-        스레드 이벤트 루프의 콜백 미처리 후보를 조사하도록 제안하세요. 진입·복귀·Thread::currentId 기록 절차와 공통 미실행 주의문은 앞 절에
-        있으므로 반복하지 마세요. 이 분기는 실제 제품 애플리케이션의 추가 조사 계획이며 검증 전 상태를 유지합니다. 별도 공개 가상 CPU 프로브의 관찰을
-        다른 애플리케이션·물리 장치의 실행 검증으로 일반화하지 마세요.
+        분기에서 Thread::current()와 object_->thread()가 다른 수신 스레드이며 type이 ConnectionTypeQueued가 된다는 기록을 확인한 조건을 사용하세요.
+        그 조건에서 completeRequest 복귀와 파이프라인 큐의 빈 상태는 확인됐지만 콜백 진입 기록이 없다면 수신 스레드 이벤트 루프의 콜백 미처리 후보를 조사하도록 제안하세요.
+        진입·복귀·Thread::currentId 기록 절차와 공통 미실행 주의문은 앞 절에 있으므로 반복하지 마세요. 이 분기는 실제 제품 애플리케이션의 추가 조사 계획이며 검증 전 상태를
+        유지합니다. 별도 공개 가상 CPU 프로브의 관찰을 다른 애플리케이션·물리 장치의 실행 검증으로 일반화하지 마세요.
       sources:
       - completion
       - queued-connection
       max_statements: 1
       statement_kind: limitation
     - id: disconnect
-      question: Camera::disconnect()가 내부 객체의 _d()->disconnect()를 호출한 뒤 disconnected.emit()으로
-        알림을 발행하는 순서를 두 문장 이내로 설명하세요. 이 두 호출을 함수 내 모든 호출의 완전한 목록이라고 단정하지 마세요. LOG·id() 등 다른 호출이나
-        작성 범위 안내를 나열하지 말고 연결 해제 처리와 알림 순서만 설명하세요. 신호의 의미와 TODO는 다음 질문에서 다룹니다.
+      question: Camera::disconnect()가 내부 객체의 _d()->disconnect()를 호출한 뒤 disconnected.emit()으로 알림을 발행하는 순서를 두 문장
+        이내로 설명하세요. 이 두 호출을 함수 내 모든 호출의 완전한 목록이라고 단정하지 마세요. LOG·id() 등 다른 호출이나 작성 범위 안내를 나열하지 말고 연결 해제 처리와 알림
+        순서만 설명하세요. 신호의 의미와 TODO는 다음 질문에서 다룹니다.
       sources:
       - disconnect-internal
       - notification
@@ -6531,8 +6620,8 @@ sections:
           message: 작성 과정 안내나 다른 호출 목록을 본문에 덧붙이지 마세요.
       max_statements: 1
     - id: disconnect-todo
-      question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한 문장으로 설명하세요.
-        TODO의 소속 함수와 미완료 자원·조건을 한 번만 쓰세요.
+      question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한 문장으로 설명하세요. TODO의 소속 함수와 미완료
+        자원·조건을 한 번만 쓰세요.
       sources:
       - disconnect-todo
       - disconnect-todo-owner
@@ -6826,6 +6915,38 @@ sections:
       file: src/libcamera/base/timer.cpp
       start: Timer::~Timer()
       end: '} /* namespace libcamera */'
+    - id: cache-get
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2BufferCache::get(const FrameBuffer &buffer)
+      end: '
+
+        }'
+    - id: cache-put
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2BufferCache::put(unsigned int index)
+      end: '
+
+        }'
+    - id: bulk-cancel
+      file: src/libcamera/request.cpp
+      start: void Request::Private::doCancelRequest()
+      end: '
+
+        }'
+    - id: framebuffer-cancel
+      file: include/libcamera/internal/framebuffer.h
+      start: void cancel() { metadata_.status = FrameMetadata::FrameCancelled; }
+      end: FrameMetadata &metadata() { return metadata_; }
+    - id: control-conversion
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: int PipelineHandlerUVC::processControl(
+      end: int PipelineHandlerUVC::processControls(
+    - id: scope-exit
+      file: include/libcamera/base/utils.h
+      start: 'template<typename EF>
+
+        class scope_exit'
+      end: scope_exit(EF) -> scope_exit<EF>;
     covers:
     - review
     parts:
@@ -6994,6 +7115,12 @@ sections:
       - owner-duty
       - camera-notice
       max_statements: 2
+      prompt: 검증 계획을 직접 수행 동사로 쓰세요. 첫 문장은 호출자의 stop 동기화 의무를 유지합니다. 다음 문장은 각 경계의 상대 순서를 기록합니다. 마지막 문장은 요청·버퍼의
+        유지 기한, 중복 완료·재투입 횟수와 ASSERT 전제의 대조 동작을 설명합니다. ~인지·~있는지·~되는지·~유효한지 같은 명사절을 나열하거나 무엇을 확인할지 제안한다는 문장으로 우회하지
+        마세요. 기록합니다·대조합니다·분류합니다로 평서문을 완성하세요. 정지 뒤 실제 메서드가 실행된다는 실험 결과나 복구 보장을 만들지 말고, 그 조건을 별도 시험 경우로 분류하세요. 두
+        짧은 문단까지 허용하되 공통 계약을 다시 길게 나열하지 마세요.
+      answer_contract:
+        basis: investigation
     - id: cancel-timestamp-case
       question: 취소된 장치 버퍼의 메타데이터 검증 계획에서 FrameCancelled는 status만 유효하며 UVC가 timestamp를 SensorTimestamp로 복사해도 유효한
         촬영 시각을 보장하지 않는다는 기대 조건을 적용하세요. 소스 계측 시 같은 요청 cookie·sequence와 버퍼 status, 요청 status, timestamp·SensorTimestamp의
@@ -7040,6 +7167,38 @@ sections:
       max_statements: 2
       answer_contract:
         basis: investigation
+    - id: pre-qbuf-case
+      question: QBUF 이전 실패를 함수 단위·계측 시험 계획으로 두 경우에 나누어 평서문으로 설명하세요. cache_는 존재하지만 free 항목이 없어 get이 실패하는 경우에는
+        반환 -ENOENT, 새 예약 인덱스 부재와 이번 scope_exit put 부재, VIDIOC_QBUF 호출 횟수 0 및 이번 버퍼 신규 등록 부재를 기록합니다. 인덱스를 얻고 공통
+        plane 수·필요 연속성 검증에 실패하는 경우에는 두 실제 조건을 각각 주입하고 -EINVAL, 해당 인덱스의 guard put, QBUF 호출 0과 신규 등록 부재를 대조합니다.
+        두 경우 모두 UVC에서 processControls가 0을 반환한 제어 처리 선행을 기록합니다. 개별 processControl 반환값·구성된 ControlList·setControls
+        반환값으로 실제 요청 제어의 적용 범위를 구분하며 성공한 처리에도 전체 요청 제어 적용이나 롤백을 단정하지 않습니다. 이어  음수의 전달과 공통 cancelRequest의 요청·버퍼
+        취소 및 알림을 요청 식별자별로 대조합니다. 다른 요청의 queuedBuffers_ 항목까지 없어야 한다고 일반화하지 말고, 실제 장치에서 공개 입력만으로 이 조건이 재현된다는 보장이나
+        실행 완료를 만들지 마세요. ~인지·~되는지 나열 대신 기록합니다·대조합니다로 마무리하세요.
+      sources:
+      - cache-get
+      - cache-put
+      - qbuf-flow
+      - uvc-submit
+      - uvc-controls
+      - control-result
+      - dispatch-flow
+      - completion-flow
+      - cancellation-flow
+      - bulk-cancel
+      - framebuffer-cancel
+      - request-invariant
+      - control-conversion
+      - scope-exit
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+      prompt: 제공된 cancellation-flow·bulk-cancel·framebuffer-cancel·completion-flow로 확인된 취소 동작을 미확인이라고 쓰지 마세요.
+        각 pending 버퍼의 cancel과 bufferCompleted 발생, 이후 pending_.clear와 cancelled_ 설정, 이어지는 completeRequest의 상태·선두
+        반환을 소스에서 확인한 시험 기대 분기로 연결하세요. 정상 completeBuffer의 setRequest(nullptr) 경로와 bulk 취소의 차이도 유지합니다. 실제 주입 실행·장치
+        동작·별도 Queued 수신 완료는 미실시이며 정적 분기와 구분합니다. 명사절 질문 나열 없이 기록합니다·대조합니다로 두 짧은 문단을 완성하세요. 정상 경로의 setRequest(nullptr)는
+        request-invariant 원문에 제공됩니다. 제어 적용 범위의 근거는 반환을 무시한 processControl 호출과 실제 변환 함수·구성된 목록이며, 여기서 processControls가
+        0을 반환한 전제와 setControls 쓰기 실패의 일반 계약을 혼합하지 마세요. 앞 항목의 제어 세부를 반복하지 말고 이 실패 시험에서 기록할 입력·변환 결과와 기대 분기를 연결합니다.
     design_prompt: focused
   - id: observed-callbacks
     title: 공개 가상 카메라의 콜백 관찰

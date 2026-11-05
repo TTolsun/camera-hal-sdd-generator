@@ -1524,12 +1524,14 @@ sections:
     question: 준비 timeout, 제출 실패, DQBUF 실패, STREAMOFF 실패에서 각각 무엇을 기록하고 어느 다음 분기를 확인합니까?
     prompt: 네 가지 독립된 실패 조사 경로를 지정한 9개 심볼 노드로 그리세요. timeout은 cancel 뒤 emitPrepareCompleted로 가며 prepared_를 기록합니다.
       UVC queueRequestDevice는 findBuffer·processControls·queueBuffer 실패를 반환하며, 호출한 doQueueRequest의 비0 ret 검사가
-      cancelRequest로 이어지는 실제 경로를 반드시 연결하세요. 제어 처리 음수와 제어 적용 뒤 QBUF 음수를 노드 레이블에서 구분하고 부분 적용·롤백 보장 없음·ret·error_idx를
+      cancelRequest로 이어지는 실제 경로를 반드시 연결하세요. 제어 처리 음수와 제어 처리 뒤 QBUF 음수를 노드 레이블에서 구분하고 부분 적용·롤백 보장 없음·ret·error_idx를
       기록합니다. 이 호출자는 dispatch-flow 원문에 제공되어 있으므로 미확인이라고 쓰지 마세요. bufferAvailable→dequeueBuffer 호출과 nullptr의 해당
       bufferReady 부재에서 ret·index·queuedBuffers_를 확인합니다. streamOff 실패의 조기 반환 뒤에도 UVC stopDevice가 반환을 무시하고 releaseBuffers를
       호출하는 경로에서 cache_ reset·잔존 큐·후속 DQBUF 접근 조건을 확인합니다. 이 네 작은 경로 사이에 실행 순서나 자동 복구 화살표를 만들지 마세요. cache_ 부재 Fatal은
       정상 음수 반환과 구분합니다. 실제 오류 주입 실행이 아닌 소스 기반 검증 위치입니다. 한영 모두 queueBuffer 실패를 after control processing으로 표현하세요.
-      개별 변환 실패가 무시되거나 빈 제어 목록이 0을 반환할 수 있으므로 요청한 제어가 모두 적용됐다고 단정하지 말고 일부 또는 전혀 적용되지 않았을 가능성과 롤백 미보장을 유지하세요.
+      개별 변환 실패가 무시되거나 빈 제어 목록이 0을 반환할 수 있으므로 요청한 제어가 모두 적용됐다고 단정하지 말고 일부 또는 전혀 적용되지 않았을 가능성과 롤백 미보장을 유지하세요. UVC의
+      findBuffer 실패 분기는 함수 안에서 직접 상수 -ENOENT를 반환합니다. processControls와 queueBuffer의 음수는 원래 ret를 그대로 전달합니다. queueBuffer의
+      cache get도 -ENOENT를 반환할 수 있으므로 findBuffer 실패에만 -ENOENT라는 배타적 표현은 한영 모두 금지합니다. 같은 errno라도 발생 위치를 구분하세요.
     sources:
     - prepare-flow
     - uvc-submit
@@ -1544,6 +1546,7 @@ sections:
     - request-invariant
     - completion-flow
     - dispatch-flow
+    - cache-get
     whole_sources:
     - prepare-flow
     - uvc-submit
@@ -1558,6 +1561,7 @@ sections:
     - request-invariant
     - completion-flow
     - dispatch-flow
+    - cache-get
     required_symbols:
     - timeout
     - emitPrepareCompleted
@@ -1688,121 +1692,44 @@ sections:
   - id: request-ownership
     topic: resources
     kind: ownership
+    generation: llm
+    max_nodes: 9
+    max_label_chars: 240
+    max_edge_label_chars: 240
     title: 요청과 버퍼를 유지할 기간
-    question: createRequest와 addBuffer 호출자의 책임 및 completeRequest·cancelRequest 반환 뒤 핸들러의 접근 경계는 어떻게 구분됩니까?
-    nodes:
-    - id: caller
-      label: 'createRequest 호출자: Request 소유'
-      label_en: 'createRequest caller: owns Request'
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: The ownership of the returned request is passed to the caller
-    - id: buffer
-      label: 'addBuffer 호출자: 버퍼 유효성 책임'
-      label_en: 'addBuffer caller: buffer validity duty'
-      evidence:
-      - source: resources/buffer
-        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
-        quote: A reference to the buffer is stored in the request.
-    - id: callback
-      label: 애플리케이션 요청 완료 콜백 호출
-      label_en: Application request-completion callback is called
-      evidence:
-      - source: resources/buffer
-        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
-        quote: "until the request complete\n * callback is called."
-    - id: delete
-      label: 요청 삭제
-      label_en: Delete request
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: "The request may be deleted in the completion\n * handler"
-    - id: reuse
-      label: 상태 초기화 후 Request 재사용
-      label_en: Reuse Request after resetting state
-      evidence:
-      - source: resources/reuse
-        sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
-        quote: be reused and requeued without destruction.
-    - id: complete
-      label: completeRequest 반환 경계
-      label_en: completeRequest return boundary
-      evidence:
-      - source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: void PipelineHandler::completeRequest(Request *request)
-    - id: cancel
-      label: cancelRequest 반환 경계
-      label_en: cancelRequest return boundary
-      evidence:
-      - source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: void PipelineHandler::cancelRequest(Request *request)
-    - id: ban
-      label: 핸들러 관리 종료; 반환 후 요청 접근 금지
-      label_en: Handler management ends; must not access request after return
-      evidence:
-      - source: resources/complete-access
-        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
-          \ function returns."
-    edges:
-    - from: buffer
-      to: callback
-      label: 콜백이 호출될 때까지 버퍼 유효성 유지
-      label_en: Keep buffer valid until callback is called
-      evidence:
-      - source: resources/buffer
-        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
-        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
-    - from: callback
-      to: delete
-      label: 완료 핸들러에서 삭제 가능
-      label_en: May delete in completion handler
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: "The request may be deleted in the completion\n * handler"
-    - from: complete
-      to: ban
-      label: 반환 후 접근 금지
-      label_en: No access once it returns
-      evidence:
-      - source: resources/complete-access
-        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
-          \ function returns."
-    - from: cancel
-      to: ban
-      label: 동일한 규칙 적용
-      label_en: Same rules apply
-      evidence:
-      - source: resources/cancel-rules
-        sha256: 048bc649f307f0f41b7702b59be24a5fba9f7a48ff6a266bfbe458df4a5bdc8d
-        quote: "This function cancels and completes the request. The same rules as for\n * completeRequest()\
-          \ apply."
-      - source: resources/complete-access
-        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
-          \ function returns."
-    - from: caller
-      to: reuse
-      label: 소유자가 상태 초기화 후 재사용을 선택
-      label_en: Owner may reuse after resetting state
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: or reused after resetting its state with Request::reuse().
-    - from: caller
-      to: delete
-      label: 소유자가 삭제 책임을 짐
-      label_en: Owner is responsible for deletion
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: responsible for deleting it.
+    question: createRequest·addBuffer 호출자, 완료 핸들러의 삭제·재사용과 핸들러 접근 종료, 별도 Queued 수신자의 포인터 수명을 어떻게 구분합니까?
+    prompt: 9개 이하의 작은 책임 그림입니다. createRequest 호출자와 addBuffer 호출자는 다른 노드로 구분하세요. Request 삭제·상태 초기화 후 reuse 선택은
+      반드시 완료 핸들러/요청 완료 콜백 경계에 연결하세요. 소유자에서 재사용으로 완료 경계를 건너뛰는 화살표를 그리지 마세요. addBuffer 호출자의 버퍼 유효성 의무도 완료 콜백까지
+      연결합니다. completeRequest·cancelRequest의 반환 뒤 핸들러 접근 금지는 별도 경계입니다. 별도 Queued 수신자가 포인터를 계속 사용하는 구성은 마지막 사용·협의를
+      대조하는 검증 조건으로 표시하고 완료 콜백 하나나 stop 반환이 전체 수신 완료를 자동 대기한다고 보장하지 마세요. Signal의 포인터·참조 인자 책임과 실제 Queued/Direct
+      분기를 근거로 삼되 Queued 실행을 emit 반환 뒤로 한정하지 마세요. 책임 관계를 모든 노드의 실제 시간 순서로 오해할 간선도 피하세요. 삭제와 재사용은 선택지입니다. 한영 모두
+      같은 완료·수명 조건을 온전히 유지하세요.
+    sources:
+    - create
+    - buffer
+    - queue
+    - reuse
+    - complete-access
+    - cancel-rules
+    - completion
+    - figure-signal-lifetime
+    - figure-connections
+    whole_sources:
+    - create
+    - buffer
+    - queue
+    - reuse
+    - complete-access
+    - cancel-rules
+    - completion
+    - figure-signal-lifetime
+    - figure-connections
+    required_symbols:
+    - createRequest
+    - addBuffer
+    - completeRequest
+    - cancelRequest
+    - reuse
     stage: principle
   - id: completed-but-not-returned
     topic: resources
@@ -2287,6 +2214,51 @@ sections:
       - source: resources/buffer-duty
         sha256: 996424643a0de2ec5fbd8b8491639ae1afea030ab989179410e7a1eaa48c1673
         quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
+  - id: pre-qbuf-failure-flow
+    topic: uvc-depth
+    kind: flow
+    generation: llm
+    max_nodes: 9
+    max_label_chars: 240
+    max_edge_label_chars: 240
+    title: QBUF 호출 전 실패와 cache 반환
+    question: cache 인덱스 확보와 공통 plane 검증의 실패는 ioctl·cache 반환·공통 취소에서 어떻게 갈립니까?
+    prompt: cache_가 존재하고 Stopping이 아닌 queueBuffer 진입에서 QBUF 이전 두 오류를 비교합니다. 9개 고정 심볼은 함수·검증·호출자 반환 역할입니다. queueBuffer
+      진입→get을 연결하고 get의 음수 반환은 queueBuffer 진입으로 되돌리지 말고 UVC queueRequestDevice의 원래 ret 전달→doQueueRequest의 비0
+      검사→cancelRequest로 이어집니다. get 성공은 planes와 isContiguous 공통 검사로 진행하고 실패하면 scope_exit의 put→UVC 원래 ret 전달→doQueueRequest→cancelRequest로
+      이어집니다. put 오류 경로를 고립된 노드로 남기지 마세요. 검증 성공만 VIDIOC_QBUF 진입으로 연결하며 ioctl 이후 상세는 별도 본문 범위입니다. get 실패는 아직 guard·예약
+      index가 없고 plane 실패는 확보 index를 put합니다. 두 오류에서 이번 버퍼의 신규 queuedBuffers_ 등록은 없으며 다른 요청까지 큐가 비었다고 그리지 마세요.
+      제어 처리는 선행하지만 모두 적용됐다는 보장이나 롤백은 없습니다. 오류 반환을 함수 진입으로 되돌리는 순환이나 복구 화살표를 만들지 마세요. 실제 주입 실행 결과가 아닌 소스의 정적 분기이며
+      한영 같은 ret·정리·취소 경계를 유지합니다.
+    sources:
+    - cache-get
+    - cache-put
+    - qbuf
+    - submit
+    - controls
+    - dispatch
+    - complete
+    - scope-exit
+    whole_sources:
+    - cache-get
+    - cache-put
+    - qbuf
+    - submit
+    - controls
+    - dispatch
+    - complete
+    - scope-exit
+    required_symbols:
+    - queueBuffer
+    - get
+    - planes
+    - isContiguous
+    - put
+    - VIDIOC_QBUF
+    - queueRequestDevice
+    - doQueueRequest
+    - cancelRequest
+    require_connected: true
   overview:
   - id: discovery-map
     topic: discovery

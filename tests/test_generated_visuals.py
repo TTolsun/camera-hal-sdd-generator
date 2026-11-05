@@ -14,6 +14,73 @@ from sdd.export_html import _split
 from test_design_contracts import contract
 
 
+def test_native_stage_places_figure_beside_its_own_explanation(tmp_cfg, automatic):
+    from sdd.explanation import STAGES
+    from sdd.generated_visuals import inputs, materialize, plans
+    from sdd.visuals import render_values, place
+    section,model,_,agent=automatic
+    topic=section['design_topics'][0]
+    topic.pop('statements')
+    topic['parts']=[dict(id=s,question=s,sources=['stop']) for s in STAGES]
+    topic['explanation']=[dict(id=s,title=s.title(),parts=[s]) for s in STAGES]
+    base=plans(tmp_cfg,section)[0]
+    staged={**base,'stage':'principle'}
+    assert inputs(tmp_cfg,model,section,base)[0]!=inputs(tmp_cfg,model,section,staged)[0]
+    graph=materialize(tmp_cfg,model,section,staged,agent.draft,'synthetic-stage-fixture')
+    body='## '+topic['title']+'\n\n'+'\n\n'.join('### '+s.title()+'\n\n'+s+' explanation.' for s in STAGES)+'\n'
+    result=place(body,render_values(tmp_cfg,model,section,[graph]),section)
+    marker='<!-- sdd:visual:stop-flow -->'
+    assert result.index('### Principle')<result.index(marker)<result.index('### Normal')
+    assert marker not in result.split('### Principle')[0]
+    artifact=dict(schema=1,records={'stop-flow':dict(input_fingerprint=inputs(tmp_cfg,model,section,staged)[0],
+                  draft=agent.draft,graph=graph,producer='synthetic-stage-fixture',generation_commit='a'*40)})
+    def manuscript(text):
+        artifact['body_sha256']=hashlib.sha256(text.strip().encode()).hexdigest()
+        return '---\ngenerated_visuals: '+json.dumps(artifact,ensure_ascii=False)+'\n---\n'+text
+    config=tmp_cfg.root/'visuals.yaml'
+    config.write_text(yaml.safe_dump(dict(schema=1,sections={'device':[staged]}),allow_unicode=True),encoding='utf-8')
+    from_manuscript(tmp_cfg,model,section,manuscript(result))
+    block=render_values(tmp_cfg,model,section,[graph])[0][1]
+    misplaced=result.replace(block,'').replace('problem explanation.','problem explanation.\n\n'+block)
+    with pytest.raises(ValueError,match='outside its declared explanation stage'):
+        from_manuscript(tmp_cfg,model,section,manuscript(misplaced))
+    detached=result.replace(block,marker).replace('normal explanation.','normal explanation.\n\n'+block[len(marker):])
+    with pytest.raises(ValueError,match='stage block'):
+        from_manuscript(tmp_cfg,model,section,manuscript(detached))
+    changed=result.replace('cancelPending','fabricatedCall')
+    with pytest.raises(ValueError,match='stage block'):
+        from_manuscript(tmp_cfg,model,section,manuscript(changed))
+    assert not agent.calls
+
+
+def test_graph_refresh_rejects_declarative_addition_in_another_stage(tmp_cfg,automatic):
+    from sdd.explanation import STAGES
+    from sdd.generated_visuals import materialize,plans
+    from sdd.visuals import render_values,place
+    from sdd.visual_refresh import _reassemble
+    section,model,_,agent=automatic
+    topic=section['design_topics'][0]
+    topic['explanation']=[dict(id=s,title=s.title(),parts=[s]) for s in STAGES]
+    graph=materialize(tmp_cfg,model,section,plans(tmp_cfg,section)[0],agent.draft,'synthetic-native-fixture')
+    old=render_values(tmp_cfg,model,section,[graph])
+    body='## '+topic['title']+'\n\n'+'\n\n'.join('### '+s.title()+'\n\n'+s+' explanation.' for s in STAGES)+'\n'
+    body=place(body,old,section)
+    addition={**graph,'id':'declarative-normal','stage':'normal'}
+    addition.pop('producer')
+    rendered=render_values(tmp_cfg,model,section,[graph,addition])
+    with pytest.raises(ValueError,match='outside its declared explanation stage'):
+        _reassemble(body,body,lambda offset:offset,rendered,section)
+
+
+@pytest.mark.parametrize('stage',['missing',None,[]])
+def test_native_stage_rejects_unknown_owner_before_model_call(tmp_cfg,automatic,stage):
+    from sdd.generated_visuals import inputs,plans
+    section,model,_,agent=automatic
+    with pytest.raises(ValueError,match='stage'):
+        inputs(tmp_cfg,model,section,{**plans(tmp_cfg,section)[0],'stage':stage})
+    assert not agent.calls
+
+
 def test_versioned_symbol_policies_recognize_exact_legacy_input_pins(tmp_cfg, automatic, monkeypatch):
     import sdd.generated_visuals as visuals
     monkeypatch.setattr(visuals, 'POLICY', 'Synthetic schema compatibility policy.')

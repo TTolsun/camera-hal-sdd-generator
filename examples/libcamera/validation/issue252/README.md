@@ -5,7 +5,7 @@
 ## 생성 전에 고정한 기준
 
 - 질문은 [questions.yaml](questions.yaml)의 Q1–Q7입니다. 제출 성공 뒤 완료 누락, 제어·QBUF 실패의 부작용, 프레임과 요청의 서로 다른 완료, 포인터·fence 수명, 정지 실패, 콜백 전달·재진입, 변경 후 불변조건을 묻습니다.
-- 초기 분석 커밋은 공식 libcamera `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`입니다. 병행 공개 갱신 뒤 최종 생성 전에는 upstream HEAD `be7e83e91348250c015aad6d6f59f1468555bae8`로 기준을 옮기고 별도 새 빌드·추출을 수행했습니다. 최종 관련 소스 26개 창은 두 커밋에서 바이트가 같습니다. 이전 원고·검토·신호 프로브는 당시 커밋의 증거로 유지하며 새 HEAD의 실행으로 바꾸지 않습니다.
+- 초기 분석 커밋은 공식 libcamera `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`입니다. 병행 공개 갱신 뒤 최종 생성 전에는 upstream HEAD `be7e83e91348250c015aad6d6f59f1468555bae8`로 기준을 옮기고 별도 새 빌드·추출을 수행했습니다. 최종 관련 소스 27개 창은 두 커밋에서 바이트가 같습니다. 이전 원고·검토·신호 프로브는 당시 커밋의 증거로 유지하며 새 HEAD의 실행으로 바꾸지 않습니다.
 - 공개 문서의 전체 구조 facts와 비선택 원고는 최신 공개 manifest에 결합한 같은 커밋의 입력을 보존합니다. 별도 새 UVC 빌드·추출은 그 facts 전체를 새로 검증했다고 표시하지 않습니다. 동시 작업의 #249 수명 질문과 그림도 보존합니다.
 - 별도 깨끗한 소스와 새 외부 빌드 디렉터리에서 Meson과 Ninja를 실행했습니다. UVC만 선택하고 IPA·GStreamer·qcam·문서·테스트·lc-compliance는 비활성화하며 cam은 활성화했습니다. 새 구성과 전체 빌드는 성공했습니다. 빌드 옵션·컴파일 DB·생성 헤더/소스 16개의 해시를 추출 전후에 대조했습니다.
 - 최종 독립 추출은 135개 번역 단위에서 파싱 오류가 없고 필수 클래스 6개가 있습니다. GCC가 허용하는 C99 배열 지정 초기화 때문에 `controls.cpp`의 분석 명령에만 `-Wno-error=c99-designator`를 추가했습니다. 다른 진단을 숨기거나 원래 빌드 옵션을 바꾸지 않습니다.
@@ -13,7 +13,7 @@
 
 초기 검토 창은 20개였으며, Signal 주석의 반환 선후 표현을 구현과 대조하는 과정에서 Thread·메시지·기본 Poll 디스패처와 관련 헤더 5개를 추가했습니다. 기존 범위와 실패 판정은 보존하고 교정 생성 전에 26개 창을 다시 고정했습니다.
 
-생성에 선택한 발췌 외에도 camera, request, pipeline handler, UVC, V4L2 device/video device, framebuffer, Object·Signal·BoundMethod, notifier·timer와 관련 헤더·스레드 계약의 전체 26개 파일을 독립 검토에 제공합니다. 실제 목록·해시는 실행의 `scope.json`과 `source-windows/`에 기록합니다. 커널 UVC 드라이버·다른 파이프라인·IPA·물리 장치·DMA·성능은 검토하지 않았습니다.
+생성에 선택한 발췌 외에도 camera, request, pipeline handler, UVC, V4L2 device/video device, framebuffer, Object·Signal·BoundMethod, notifier·timer와 관련 헤더·스레드 계약의 전체 27개 파일을 독립 검토에 제공합니다. 실제 목록·해시는 실행의 `scope.json`과 `source-windows/`에 기록합니다. 커널 UVC 드라이버·다른 파이프라인·IPA·물리 장치·DMA·성능은 검토하지 않았습니다.
 
 ## 기존 공백과 반례
 
@@ -86,3 +86,5 @@ uv sync --frozen --extra dev
 최종 원본 검토·질문별 전후 비교·테스트·출판 manifest·배포 확인은 이 실험의 실행 증거와 공개 `publication/issue252`에 연결합니다. 생성기 병합, 공개 SDD 병합, Pages, 실제 공개 파일 일치는 각각 별도로 확인해야 합니다.
 
 호출 연결을 보완하기 전 25개 창의 scope와 검토는 그대로 보존합니다. 최종 교정 전에 Object::invokeMethod의 전체 템플릿 헤더를 더해 26개 창으로 고정했습니다. API 호출→BoundMethod 활성화→메시지 게시→handler의 연결을 이 추가 창에서 확인합니다.
+
+QBUF 이전 cache 정리의 근거에는 함수 이름만 쓰지 않고 실제 scope_exit의 소멸자·active_·release 정의를 연결했습니다. 같은 be7 고정 빌드의 utils.h 전체를 27번째 검토 창으로 추가했으며 이전 26개 창의 검토는 그대로 보존합니다. stage를 선언한 native 그림은 해당 H3의 완전한 블록·내용과 함께 검증합니다. 메타데이터 이월은 원본의 LF·CRLF 본문 바이트와 해시를 보존하며 새 공개 입력의 원본도 이전 스냅샷 위에 쓰지 않습니다.

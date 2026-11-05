@@ -164,7 +164,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches'}:
+    if not required <= set(plan) or set(plan) - required - {'stage', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -196,6 +196,9 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     if section.get('kind', 'prose') != 'prose' or not section.get('show_evidence'):
         raise ValueError('LLM visuals require prose and show_evidence')
     topic = topics[plan['topic']]
+    if 'stage' in plan and (not isinstance(plan['stage'],str) or plan['stage'] not in {
+            stage['id'] for stage in topic.get('explanation',[])}):
+        raise ValueError('Visual stage must belong to its topic explanation')
     selected = plan.get('sources', [s['id'] for s in topic['sources']])
     if (not isinstance(selected, list) or not selected or any(not isinstance(s, str) for s in selected)
             or len(selected) != len(set(selected)) or not set(selected) <= {s['id'] for s in topic['sources']}):
@@ -604,5 +607,10 @@ def from_manuscript(cfg, model, section, manuscript):
         if not isinstance(artifact, dict) or artifact.get('body_sha256') != hashlib.sha256(body.strip().encode()).hexdigest():
             raise ValueError('Visual manuscript integrity mismatch; run generate')
         if plans(cfg, section):
-            resolve(cfg, model, section, artifact)
+            values=resolve(cfg, model, section, artifact)
+            staged={plan['id'] for plan in plans(cfg,section) if 'stage' in plan}
+            if staged:
+                from .visuals import verify_stage_placement
+                verify_stage_placement(body,[row for row in render_values(cfg,model,section,values)
+                                             if row[0]['id'] in staged],section)
     return artifact

@@ -60,6 +60,7 @@ def main():
         'prepare-flow':('preparation-depth','prepare'),'dispatch-flow':('preparation-depth','dispatch'),
         'completion-flow':('uvc-depth','complete'),'uvc-submit':('uvc-depth','submit'),
         'uvc-controls':('uvc-depth','controls'),'control-result':('uvc-depth','set-controls'),
+        'cache-get':('uvc-depth','cache-get'),'cache-put':('uvc-depth','cache-put'),
         'qbuf-flow':('uvc-depth','qbuf'),'dequeue-flow':('uvc-depth','dequeue'),'uvc-ready':('uvc-depth','uvc-ready'),
         'common-stop':('stop-depth','common-stop'),'streamoff-flow':('stop-depth','streamoff'),
         'uvc-stop':('stop-depth','uvc-stop'),'release-buffers':('stop-depth','release'),
@@ -139,6 +140,10 @@ def main():
         changes=yaml.safe_load((HERE/'visual-amendments.yaml').read_bytes())
         additions={visual['id']:visual for visual in changes['additions']}
         for visual in visuals['sections']['request-lifecycle']:
+            replacement=changes.get('replacements',{}).get(visual['id'])
+            if replacement:
+                visual.clear()
+                visual.update(deepcopy(replacement))
             visual.update(deepcopy(changes['overrides'].get(visual['id'],{})))
             visual.update(deepcopy(additions.get(visual['id'],{})))
         existing={visual['id'] for visual in visuals['sections']['request-lifecycle']}
