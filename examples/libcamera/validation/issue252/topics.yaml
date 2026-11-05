@@ -249,6 +249,10 @@ topics:
     file: src/libcamera/camera.cpp
     start: void Camera::requestComplete(Request *request)
     end: '} /* namespace libcamera */'
+  - id: frame-validity
+    file: src/libcamera/framebuffer.cpp
+    start: \enum FrameMetadata::Status
+    end: "\n */"
   parts:
   - id: order
     question: PipelineHandler::stop가 waitingRequests_를 지역 큐로 swap해 stopDevice 내부 완료에서 재투입되지 않게 하고, 장치 정지 후
@@ -313,6 +317,15 @@ topics:
     max_statements: 2
     answer_contract:
       basis: investigation
+  - id: cancel-timestamp
+    question: 정상 UVC 정지에서 streamOff가 버퍼를 FrameCancelled로 표시하여 bufferReady를 발생시키는 경로를 한정하세요. UVCCameraData::imageBufferReady는
+      상태 검사 없이 버퍼 timestamp를 요청 SensorTimestamp로 복사하지만 FrameCancelled에서는 status 이외 metadata가 유효하지 않다는 API 계약
+      때문에 그 복사는 유효한 촬영 시각을 보장하지 않습니다. 두 문장으로 상태와 값의 유효성을 구분하고 실제 촬영·항상 0·항상 오래된 값이라는 관측을 만들지 마세요.
+    sources:
+    - streamoff
+    - uvc-ready
+    - frame-validity
+    max_statements: 1
 - id: callback-order
   title: 버퍼 알림과 요청 반환의 내부 경계
   question: 버퍼 신호와 내부 추적 갱신 및 요청 완료 통지의 순서를 구분하여 재사용 시점을 판단하세요.
@@ -363,6 +376,10 @@ topics:
     file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
     start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
     end: REGISTER_PIPELINE_HANDLER
+  - id: dispatch-contract
+    file: src/libcamera/base/thread.cpp
+    start: \brief Dispatch posted messages for this thread
+    end: \brief Move an \a object and all its children to the thread
   parts:
   - id: bookkeeping
     question: PipelineHandler::completeBuffer는 bufferCompleted.emit 뒤에 Request::Private::completeBuffer를 호출하여
@@ -378,7 +395,9 @@ topics:
     question: 선택한 UVC는 completeBuffer가 반환한 뒤 completeRequest를 명시 호출하며 Request::Private::complete가 상태를 갱신한다는
       내부 호출 순서를 설명하세요. 완료 큐의 선두가 RequestPending이면 통지 없이 순회를 멈추고 완료된 선두만 pop_front 후 Camera::requestComplete로
       전달하며, 해당 Camera 상태 검사를 통과한 경우에만 requestCompleted 신호를 발생시킵니다. 상태 검사 실패의 Fatal 경계에서 실제 신호·정상 반환을 보장하지 말고
-      신호 발생과 별도 Queued 수신자의 실제 실행·복귀도 구분하여 세 문장 이내로 답하세요.
+      신호 발생과 별도 Queued 수신자의 실제 실행·복귀도 구분하여 세 문장 이내로 답하세요. Queued 수신을 이벤트 루프 복귀 때로만 한정하지 마세요. 해당 수신 스레드의 명시적·재귀
+      Thread::dispatchMessages가 type·receiver 필터에 맞는 메시지를 더 일찍 소비할 수 있으며, 스레드 정지 전 실제 소비가 보장되지 않는다고 바로 연결하세요.
+      상세 필터·재귀 조건은 explicit-dispatch에서 설명하므로 반복하지 마세요.
     sources:
     - uvc-return
     - completion
@@ -386,6 +405,7 @@ topics:
     - notification
     - invocation
     - connections
+    - dispatch-contract
     max_statements: 2
   - id: early-reuse
     question: 직접 bufferCompleted 콜백에서는 아직 Request::Private::completeBuffer의 pending_ 제거와 buffer의 Request 연결
@@ -570,11 +590,14 @@ topics:
   - id: reentrancy
     question: libcamera의 thread-safe와 reentrant 정의는 같은 스레드의 콜백에서 동일 함수로 중첩 진입할 수 있다는 허용이 아니며, 별도 문서화가 없으면 허용되지
       않고 교착될 수 있음을 두 문장 이내로 설명하세요. doQueueRequests의 특정 재진입 방어를 모든 Camera API의 콜백 재진입 허용으로 확대하지 말고 정지·재구성 호출은
-      호출자 동기화와 수신 이벤트 루프 진행을 검토하도록 하세요.
+      호출자 동기화와 수신 이벤트 루프 진행을 검토하도록 하세요. Queued 수신을 이벤트 루프 복귀 때로만 한정하지 마세요. 해당 수신 스레드의 명시적·재귀 Thread::dispatchMessages가
+      type·receiver 필터에 맞는 메시지를 더 일찍 소비할 수 있으며, 스레드 정지 전 실제 소비가 보장되지 않는다고 바로 연결하세요. 상세 필터·재귀 조건은 explicit-dispatch에서
+      설명하므로 반복하지 마세요.
     sources:
     - thread-rules
     - sync
     - connections
+    - dispatch-contract
     max_statements: 2
   - id: application-loop
     question: CameraManager::start()를 호출한 애플리케이션 메인 스레드는 Thread 인스턴스에 연결되지만 libcamera가 접근할 수 있는 이벤트 루프가 없다는

@@ -99,3 +99,18 @@ parts:
   - owner-duty
   - camera-notice
   max_statements: 2
+- id: cancel-timestamp-case
+  question: 취소된 장치 버퍼의 메타데이터 검증 계획에서 FrameCancelled는 status만 유효하며 UVC가 timestamp를 SensorTimestamp로 복사해도 유효한
+    촬영 시각을 보장하지 않는다는 기대 조건을 적용하세요. 소스 계측 시 같은 요청 cookie·sequence와 버퍼 status, 요청 status, timestamp·SensorTimestamp의
+    유효성 표식을 함께 확인하고 요청 완료만으로 시간값이 유효하다고 판정하지 않도록 두 문장으로 설명하세요. invalid 필드의 값 일치·항상 0이나 실제 오류 주입 성공을 기대하지 마세요.
+    request-identity의 실제 toString 구현에서 cookie·sequence 식별자를 대조하세요. 이는 계측 계획이며 cookie가 확인되지 않았다는 새 관측 결과를 만들지
+    마세요.
+  sources:
+  - frame-status-contract
+  - uvc-ready
+  - streamoff-flow
+  - request-invariant
+  - request-identity
+  max_statements: 1
+  answer_contract:
+    basis: investigation
