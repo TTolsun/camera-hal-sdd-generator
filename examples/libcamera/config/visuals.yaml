@@ -3735,7 +3735,7 @@ sections:
   - id: buffer-request-completion
     topic: completion
     kind: flow
-    title: 일반적인 버퍼 완료에서 요청 반환까지
+    title: 일반적인 버퍼 완료에서 요청 반환까지 {#버퍼-완료에서-요청-반환까지}
     question: 일반적인 완료 경로에서 마지막 버퍼가 완료된 뒤 요청은 어떻게 명시적으로 완료되어 반환되나요?
     nodes:
     - id: buffer
