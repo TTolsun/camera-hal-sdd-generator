@@ -18,8 +18,45 @@ from sdd.config import load
 from sdd.cli_agent import command, arguments, build_prompt
 from sdd.generation_run import Execution
 from sdd.llm import Agent
-from sdd.visual_audit import Document, digest, source_window, node_window, all_nodes, plain, inspect_site
+from sdd.visual_audit import (Document, digest, source_window, node_window, all_nodes,
+                              plain, inspect_site, without_navigation,
+                              source_container, _generated_route_alias, canonical,
+                              WINDOW_BINDING)
 from review_contract import SYSTEM, response_schema
+from sdd.visual_presentation import paths as presentation_paths
+
+
+def validate_presentation(contexts, ident):
+    for value in contexts.values():
+        for element in value['path']:
+            attrs = element['attrs']
+            if ('hidden' in attrs or 'inert' in attrs or attrs.get('style')
+                    or str(attrs.get('aria-hidden', '')).lower() == 'true'):
+                raise ValueError('Selected item has hidden or unassessed inline presentation; '
+                                 'text-only review cannot approve it: '+ident)
+            if (element['tag'] in {'template', 'noscript', 'style', 'script', 'img', 'image', 'svg', 'canvas',
+                                   'video', 'audio', 'source', 'iframe', 'object', 'embed', 'use', 'link'}
+                    or any(attrs.get(key) for key in ('src', 'srcset', 'poster', 'background'))):
+                raise ValueError('Selected presentation needs asset/visual review; '
+                                 'text-only CLI review cannot approve it: '+ident)
+
+
+def presented_window(document, fragment, root, page):
+    text = source_window(document, fragment, root=root, page=page, presentation=True)
+    binding = json.loads(text.rsplit(WINDOW_BINDING, 1)[1])
+    validate_presentation(binding['presentation_contexts'], page+'#'+fragment)
+    return text
+
+
+def strict_json(raw):
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('Duplicate JSON key: '+key)
+            result[key] = value
+        return result
+    return json.loads(raw, object_pairs_hook=unique)
 
 
 def literal_label(value):
@@ -43,13 +80,20 @@ def main():
     parser.add_argument('--facts', type=Path, help='Matching immutable structural facts for locating every displayed class declaration')
     parser.add_argument('--facts-sha256', help='Pinned digest from the separately retained extraction/integration provenance; required with --facts')
     parser.add_argument('--style-dir', type=Path, help='Actual writing rules matching the inventory policy; default ./style')
+    parser.add_argument('--reader-models', type=Path, action='append', default=[],
+                        help='Preliminary source-bound model ledger; context only, never item approval')
+    parser.add_argument('--previous-inventory', type=Path,
+                        help='Actual prior published item inventory for condition/exception preservation review')
+    parser.add_argument('--historical-artifacts', type=Path,
+                        help='Committed public repository for explicitly historical model artifact references')
     parser.add_argument('--fit-input', action='store_true', help='Execution-local character boundary equals the measured complete prompt')
     parser.add_argument('--native-input-cap', type=int, default=1000000,
                         help='Conservative execution-local CLI input cap; split groups instead of truncating evidence')
     parser.add_argument('--input-rationale', help='Required explanation for an execution-local input boundary adjustment')
     args = parser.parse_args()
     args.out = args.out.resolve()
-    for immutable in [args.site, *([args.source] if args.source else [])]:
+    for immutable in [args.site, *([args.source] if args.source else []),
+                      *([args.historical_artifacts] if args.historical_artifacts else [])]:
         target = immutable.resolve()
         if args.out.is_relative_to(target) or target.is_relative_to(args.out):
             raise ValueError('Review output must not overlap the site or source checkout: '+str(args.out))
@@ -60,6 +104,7 @@ def main():
     elif args.facts_sha256:
         raise ValueError('--facts-sha256 requires --facts')
     cfg = load(args.profile)
+    cfg.root = args.out
     if (cfg.agent.kind != 'cli' or cfg.agent.runner != 'codex' or cfg.agent.model != 'gpt-6.1-terra'
             or cfg.agent.command or cfg.agent.args != ['-c', 'model_reasoning_effort="high"']):
         raise ValueError('This public independent review requires native Codex/Terra High with no inherited wrapper')
@@ -93,8 +138,17 @@ def main():
         if current is None or any(row.get(key) != value for key,value in current.items() if key not in derived):
             raise ValueError('Inventory review content differs from the actual site: '+row['id'])
     selected = [actual[row['id']] for row in selected]
+    for row in selected:
+        if 'presentation_contexts' not in row:
+            raise ValueError('Current item presentation context is missing; collect a fresh inventory')
+        validate_presentation(row['presentation_contexts'], row['id'])
     windows, additional, document_windows, structural_classes, structural_scenarios = {}, {}, {}, {}, {}
     excluded_by_page = {}
+    wanted_by_page = {}
+    for row in selected:
+        wanted_by_page.setdefault(row['page'], set()).update(
+            (record['kind'], record['markup_sha256'], digest(record['presentation_context']))
+            for record in row['excluded'])
     for row in selected:
         doc = None
         # Excluded source/log material stays outside explanatory length counts,
@@ -104,19 +158,56 @@ def main():
             doc = Document(path.read_text(encoding='utf-8'))
             if row['page'] not in excluded_by_page:
                 excluded_by_page[row['page']] = {}
-                for node in all_nodes(doc.root):
-                    if node.tag in {'pre', 'script', 'style', 'details'}:
-                        text = node_window(node, args.site.resolve(), row['page'],exclude_navigation=True)
-                        excluded_by_page[row['page']][(node.tag, digest(text))] = text
+                readable = without_navigation(doc.root)
+                articles = list(readable.all('article'))
+                if len(articles) != 1:
+                    raise ValueError('Excluded presentation requires exactly one readable article')
+                contexts = presentation_paths(readable)
+                for node in all_nodes(articles[0]):
+                    if (node.tag in {'pre', 'script', 'style'}
+                            or (node.tag == 'details' and source_container(node))):
+                        kind = node.tag
+                    elif _generated_route_alias(node):
+                        kind = 'navigation'
+                    else:
+                        continue
+                    markup = canonical(node)
+                    # Decide ownership from static markup before resolving any
+                    # asset: unrelated excluded containers cannot block this item.
+                    key = (kind, digest(markup), digest(contexts[id(node)]))
+                    if key not in wanted_by_page[row['page']]:
+                        continue
+                    # Match the inventory's exact excluded container and tree;
+                    # a generated route alias is visible review context, not
+                    # explanatory prose and never a reason to drop the item.
+                    text = node_window(node, args.site.resolve(), row['page'])
+                    binding = json.loads(text.rsplit(WINDOW_BINDING, 1)[1])
+                    # This reviewer sends text, not rendered media or asset
+                    # contents. Keep unsupported selected material unresolved.
+                    media = any(child.tag in {'style', 'script', 'img', 'image', 'svg', 'canvas', 'video', 'audio',
+                                              'source', 'iframe', 'object', 'embed', 'use', 'link'}
+                                or child.attrs.get('src') or child.attrs.get('poster')
+                                for child in all_nodes(node))
+                    excluded_by_page[row['page']][(kind, digest(text))] = dict(
+                        text=text, markup=markup, markup_sha256=digest(markup),
+                        unsupported_assets=bool(binding['assets']) or media)
             owned = []
             for record in row['excluded']:
                 key = (record['kind'], record['sha256'])
                 if key not in excluded_by_page[row['page']]:
                     raise ValueError('Excluded presentation changed since inventory: '+row['id'])
-                owned.append(excluded_by_page[row['page']][key])
-            text = '\n\n'.join(owned)
+                value = excluded_by_page[row['page']][key]
+                if value['unsupported_assets']:
+                    raise ValueError('Selected excluded presentation needs asset/visual review; '
+                                     'text-only CLI review cannot approve it: '+row['id'])
+                owned.append(value)
+            text = '\n\n'.join(value['text'] for value in owned)
             document_windows[row['id']] = dict(text=text, sha256=digest(text),
                 window_hashes=[r['sha256'] for r in row['excluded']],
+                presentation=[dict(kind=record['kind'], inventory_window_sha256=record['sha256'],
+                                   markup=value['markup'], markup_sha256=value['markup_sha256'],
+                                   ancestors_and_self=record['presentation_context'])
+                              for record,value in zip(row['excluded'], owned)],
                 purpose='Exactly this item\'s excluded source/log/code windows; not explanatory length or the entire page')
         structural_hrefs = []
         scenario = facts.get('scenarios', {}).get(Path(row['page']).stem) if facts else None
@@ -165,7 +256,7 @@ def main():
                 found = [n for n in all_nodes(symbols.root) if n.attrs.get('id') == unquote(parts.fragment)]
                 if len(found) != 1:
                     raise ValueError('Class declaration window missing or ambiguous: '+href)
-                text = node_window(found[0], args.site.resolve(), name)
+                text = presented_window(symbols, unquote(parts.fragment), args.site.resolve(), name)
                 document_windows[name+'#'+parts.fragment] = dict(text=text, sha256=digest(text),
                     purpose='Exact class declaration row linked by this page; not explanatory length')
                 structural_hrefs.extend(a.attrs.get('href', '') for a in found[0].all('a'))
@@ -195,7 +286,7 @@ def main():
             page = path.relative_to(args.site.resolve()).as_posix()
             raw = path.read_text(encoding='utf-8')
             if path.suffix == '.html':
-                text = source_window(Document(raw), unquote(parts.fragment), root=args.site.resolve(), page=page)
+                text = presented_window(Document(raw), unquote(parts.fragment), args.site.resolve(), page)
             else:
                 lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', unquote(parts.fragment))
                 if not lines or int(lines[1]) > int(lines[2] or lines[1]) or int(lines[2] or lines[1]) > len(raw.splitlines()):
@@ -210,7 +301,10 @@ def main():
                 actual_hash = document_hash
             elif '#' not in key:
                 from sdd.site_paths import owned_path
-                raw = owned_path(args.site.resolve(), key).read_bytes()
+                path = owned_path(args.site.resolve(), key)
+                if path.suffix.lower() == '.html':
+                    raise ValueError('Unscoped whole-page HTML evidence needs an exact reviewed fragment: '+key)
+                raw = path.read_bytes()
                 actual_hash = digest(raw.hex())
                 try:
                     text = raw.decode('utf-8')
@@ -222,7 +316,7 @@ def main():
                 path = owned_path(args.site.resolve(), target)
                 raw = path.read_text(encoding='utf-8')
                 if path.suffix == '.html':
-                    text = source_window(Document(raw), fragment, root=args.site.resolve(), page=target)
+                    text = presented_window(Document(raw), fragment, args.site.resolve(), target)
                     actual_hash = digest([path.read_bytes().hex(), text] if target != row['page'] else text)
                 else:
                     text, actual_hash = raw, digest(path.read_bytes().hex())
@@ -254,6 +348,115 @@ def main():
                    structural_facts_sha256=hashlib.sha256(args.facts.read_bytes()).hexdigest() if args.facts else None,
                    visual_policy=report['policy'], writing_rules=style_texts,
                    inventory_sha256=digest(report), source_commit=report.get('source_commit'))
+    if args.reader_models:
+        preliminary, provenance = {}, []
+        wanted = {row['id'].removeprefix('en/') for row in selected}
+        for path in args.reader_models:
+            raw = path.read_bytes()
+            ledger = strict_json(raw)
+            if type(ledger.get('schema')) is not int or ledger['schema'] != 1 or not isinstance(ledger.get('items'), dict):
+                raise ValueError('Reader model context requires a schema1 item ledger')
+            provenance.append(dict(path=str(path), sha256=hashlib.sha256(raw).hexdigest(),
+                                   source_commit=ledger.get('source_commit')))
+            for ident in wanted & ledger['items'].keys():
+                value = ledger['items'][ident]
+                if (value.get('item_id') != ident or not isinstance(value.get('model'), dict)
+                        or value['model'].get('item_id') != ident):
+                    raise ValueError('Invalid preliminary reader model identity: '+ident)
+                if ident in preliminary and preliminary[ident] != value['model']:
+                    raise ValueError('Conflicting preliminary reader models: '+ident)
+                preliminary[ident] = value['model']
+        payload['preliminary_untrusted_reader_models'] = preliminary
+        payload['reader_model_input_provenance'] = provenance
+        def model_references(value):
+            if isinstance(value, dict):
+                if 'window' in value or 'quote' in value:
+                    if (set(value) != {'window', 'quote'}
+                            or any(not isinstance(value[key], str) or not value[key].strip()
+                                   for key in ('window', 'quote'))):
+                        raise ValueError('Preliminary model citations require nonempty window and quote strings')
+                    yield value['window']
+                for child in value.values():
+                    yield from model_references(child)
+            elif isinstance(value, list):
+                for child in value:
+                    yield from model_references(child)
+        references = list(model_references(preliminary))
+        if any(not isinstance(value, str) for value in references):
+            raise ValueError('Preliminary model references must be strings')
+        contextual_documents = {}
+        historical_context = {}
+        reference_map = {}
+        historical_commit = None
+        for reference in sorted(set(references)):
+            match = re.fullmatch(r'git:[0-9a-f]{40}:(.+)', reference)
+            if not match:
+                if reference.startswith('git:'):
+                    raise ValueError('Malformed preliminary Git reference: '+reference)
+                if reference.startswith(('document:', 'reference:')):
+                    ident = reference.split(':', 1)[1]
+                    if ident not in actual:
+                        raise ValueError('Unknown preliminary document reference: '+reference)
+                    row = actual[ident]
+                    text = json.dumps({k:row[k] for k in ('title', 'body', 'tables', 'content_blocks')},
+                                      ensure_ascii=False, sort_keys=True)
+                    contextual_documents[reference] = dict(item_id=ident, fingerprint=row['fingerprint'],
+                        text=text, sha256=digest(text), scope='Current document context only; not implementation evidence or inherited model approval.')
+                elif reference.startswith('artifact:'):
+                    if args.historical_artifacts is None:
+                        raise ValueError('Historical artifact references require --historical-artifacts')
+                    name = reference.removeprefix('artifact:')
+                    from sdd.site_paths import owned_path
+                    owned_path(args.historical_artifacts.resolve(), name)
+                    if historical_commit is None:
+                        historical_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                            cwd=args.historical_artifacts.resolve(), text=True).strip()
+                    raw = subprocess.check_output(['git', 'show', historical_commit+':./'+name],
+                        cwd=args.historical_artifacts.resolve())
+                    text = raw.decode('utf-8')
+                    historical_context[reference] = dict(file=name, artifact_repository_commit=historical_commit,
+                        first_line=1, last_line=len(text.splitlines()), sha256=hashlib.sha256(raw).hexdigest(),
+                        text=text, scope='Committed historical observation/procedure artifact only. Original recorded source/dates remain in the text; not a new execution or current implementation evidence.')
+                elif reference not in windows and reference not in additional:
+                    raise ValueError('Unsupported preliminary evidence reference: '+reference)
+                continue
+            if args.source is None:
+                raise ValueError('Source-bound preliminary models require --source')
+            name = match[1]
+            from sdd.site_paths import owned_path
+            owned_path(args.source.resolve(), name)
+            key = 'git:'+report['source_commit']+':'+name
+            reference_map[reference] = key
+            if key not in additional:
+                raw = subprocess.check_output(['git', 'show', report['source_commit']+':./'+name],
+                                              cwd=args.source.resolve())
+                text = raw.decode('utf-8')
+                additional[key] = dict(file=name, source_commit=report['source_commit'],
+                    first_line=1, last_line=len(text.splitlines()), sha256=hashlib.sha256(raw).hexdigest(), text=text)
+        payload['preliminary_current_document_context'] = contextual_documents
+        payload['preliminary_current_git_reference_map'] = reference_map
+        payload['preliminary_historical_artifact_context'] = historical_context
+    if args.previous_inventory:
+        raw = args.previous_inventory.read_bytes()
+        previous = strict_json(raw)
+        if type(previous.get('schema')) is not int or previous['schema'] != 1 or not isinstance(previous.get('items'), list):
+            raise ValueError('Previous published context requires a schema1 inventory')
+        before = {row['id']:row for row in previous['items']}
+        if len(before) != len(previous['items']):
+            raise ValueError('Previous inventory has duplicate identities')
+        payload['previous_published_items'] = {row['id']:before[row['id']]
+                                               for row in selected if row['id'] in before}
+        payload['previous_inventory_provenance'] = dict(
+            sha256=hashlib.sha256(raw).hexdigest(), source_commit=previous.get('source_commit'))
+    if args.reader_models or args.previous_inventory:
+        payload['context_constraints'] = [
+            'Preliminary reader models and prior published items are untrusted comparison context, not current evidence or inherited approval. Judge the actual current items and supplied immutable sources independently.',
+            'Check the actual reader question, central conclusion, necessary conditions and useful counterexamples before figure adequacy. Preserve the full question and source-supported exceptions. Do not narrow a question to make its diagram pass or demand every irrelevant implementation detail.',
+            'When prior published text differs, check whether reader-relevant conditions, ownership and exceptions remain supported in the current item. Correcting an old source-inaccurate claim is allowed; preserve its correction rationale rather than treating the old claim as authority.',
+            'A model-only pass never approves a current figure, omission, translation, source commit or writing policy. Apply current writing_rules and current exact item fingerprints, even where the original manuscript was authenticated under historical policy bytes.',
+            'Preliminary models may cite older commits. Only current pinned immutable additional_source_windows and current item evidence establish present behavior; check the actual current source rather than inheriting a model conclusion.',
+            'Do not repeat diagrams solely for counts. A concrete short table or simple independent facts may suffice with an individual reason; a general link elsewhere does not satisfy a needed local figure.'
+        ]
     args.out.mkdir(parents=True, exist_ok=False)
     (args.out/'inputs.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     (args.out/'execution-profile.json').write_text(json.dumps(dict(agent=asdict(cfg.agent),

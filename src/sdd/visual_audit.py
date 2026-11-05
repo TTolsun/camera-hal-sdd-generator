@@ -11,7 +11,6 @@ import gzip
 from collections import Counter
 from dataclasses import dataclass, field
 import hashlib
-from html.parser import HTMLParser
 import json
 from pathlib import Path
 import posixpath
@@ -96,34 +95,10 @@ class Node:
                 yield from child.all(tag)
 
 
-class Document(HTMLParser):
+class Document:
     def __init__(self, source):
-        super().__init__(convert_charrefs=True)
-        self.root = Node('document')
-        self.stack = [self.root]
-        self.feed(source)
-
-    def handle_starttag(self, tag, attrs):
-        node = Node(tag, dict(attrs))
-        self.stack[-1].children.append(node)
-        if tag not in {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}:
-            self.stack.append(node)
-
-    def handle_startendtag(self, tag, attrs):
-        self.handle_starttag(tag, attrs)
-        self.handle_endtag(tag)
-
-    def handle_endtag(self, tag):
-        for index in range(len(self.stack)-1, 0, -1):
-            if self.stack[index].tag == tag:
-                del self.stack[index:]
-                break
-
-    def handle_data(self, value):
-        self.stack[-1].children.append(value)
-
-    def handle_comment(self, value):
-        self.stack[-1].children.append(Node('!', {'value': value.strip()}))
+        from .visual_dom import parse
+        self.root = parse(source, Node)
 
 
 def all_nodes(node):
@@ -212,7 +187,7 @@ def node_window(node, root, page, *, heading_context=None, exclude_navigation=Fa
                          heading_context=heading_context)
 
 
-def source_window(document, fragment, *, root=None, page=''):
+def source_window(document, fragment, *, root=None, page='', presentation=False):
     """Resolve readable evidence and its owning headings as the browser does."""
     nodes = list(all_nodes(document.root))
     found = [n for n in nodes if n.attrs.get('id') == fragment]
@@ -233,20 +208,36 @@ def source_window(document, fragment, *, root=None, page=''):
     if owner is document.root:
         raise ValueError('Source target has no owning article: '+fragment)
     scoped_nodes = list(all_nodes(owner))
+    outline = {id(node) for node in outline_nodes(document.root)}
     owner_index = next(i for i,node in enumerate(nodes) if node is owner)
-    titles = [node for node in nodes[:owner_index] if node.tag == 'h1' and not inside_navigation(node)]
-    context=[]
+    titles = [node for node in nodes[:owner_index] if node.tag == 'h1' and id(node) in outline]
+    context, context_nodes = [], []
     for node in ([titles[-1]] if titles else []) + scoped_nodes:
         if inside_navigation(node):
             continue
-        heading = bool(re.fullmatch(r'h[1-6]',node.tag))
+        heading = bool(re.fullmatch(r'h[1-6]',node.tag)) and id(node) in outline
         if heading:
             while context and int(context[-1]['tag'][1]) >= int(node.tag[1]):
                 context.pop()
+                context_nodes.pop()
         if node is found[0]:
             break
         if heading:
             context.append(dict(tag=node.tag,id=node.attrs.get('id',''),text=plain(without_navigation(node))))
+            context_nodes.append(node)
+    def presented(text, selected):
+        if not presentation:
+            return text
+        from .visual_presentation import paths, bind
+        ancestry = paths(document.root)
+        row = dict(presentation_contexts={})
+        for node in [*selected, *(n for h in context_nodes for n in all_nodes(h))]:
+            if not inside_navigation(node):
+                bind(row, node, ancestry, text=True)
+        prose, binding = text.rsplit(WINDOW_BINDING, 1)
+        value = json.loads(binding)
+        value['presentation_contexts'] = row['presentation_contexts']
+        return prose+WINDOW_BINDING+json.dumps(value,ensure_ascii=False,sort_keys=True)
     window = found[0]
     parent = parents.get(id(window))
     anchor = parent if parent and parent.tag == 'p' else window
@@ -260,7 +251,8 @@ def source_window(document, fragment, *, root=None, page=''):
                 ancestor=parents[id(ancestor)]
             if ancestor is not owner:
                 raise ValueError('Source panel crosses its owning article boundary: '+fragment)
-            return node_window(following, root, page,heading_context=context+([dict(tag=window.tag,id=fragment,text=plain(without_navigation(window)))] if re.fullmatch(r'h[1-6]',window.tag) else []),exclude_navigation=True)
+            text = node_window(following, root, page,heading_context=context+([dict(tag=window.tag,id=fragment,text=plain(without_navigation(window)))] if re.fullmatch(r'h[1-6]',window.tag) else []),exclude_navigation=True)
+            return presented(text, [*all_nodes(following), *all_nodes(window)])
     if re.fullmatch(r'h[1-6]', found[0].tag):
         level = int(found[0].tag[1])
         def events(node):
@@ -280,7 +272,8 @@ def source_window(document, fragment, *, root=None, page=''):
             if kind == 'start':
                 if event is found[0]:
                     collecting = True
-                elif collecting and re.fullmatch(r'h[1-6]', event.tag) and int(event.tag[1]) <= level:
+                elif (collecting and re.fullmatch(r'h[1-6]', event.tag)
+                      and id(event) in outline and int(event.tag[1]) <= level):
                     break
                 if collecting:
                     selected.append(event)
@@ -291,10 +284,11 @@ def source_window(document, fragment, *, root=None, page=''):
                     structure.append([kind, event])
                 else:
                     structure.append([kind, event.tag])
-        return window_bundle(''.join(parts), structure, selected, root, page,heading_context=context)
+        return presented(window_bundle(''.join(parts), structure, selected, root, page,heading_context=context), selected)
     while window is not owner and window.tag != 'details':
         window = parents[id(window)]
-    return node_window(found[0] if window is owner else window, root, page,heading_context=context,exclude_navigation=True)
+    selected = found[0] if window is owner else window
+    return presented(node_window(selected, root, page,heading_context=context,exclude_navigation=True), list(all_nodes(selected)))
 
 
 def plain(node):
@@ -319,12 +313,26 @@ def source_container(node):
     return bool(summary and re.match(r'(?:소스 근거|Source evidence|설계 질문과 검증 범위|Design questions and verification scope)', plain(summary), re.I))
 
 
+def outline_nodes(node):
+    if isinstance(node, str):
+        return
+    if (node.tag in {'nav','aside','footer','pre','script','style'}
+            or (node.tag == 'details' and source_container(node)) or _generated_route_alias(node)):
+        return
+    yield node
+    for child in node.children:
+        yield from outline_nodes(child)
+
+
 def inventory_page(source, page, options, *, source_commit='', root=None, draft=False):
     doc = Document(source)
-    articles = list(without_navigation(doc.root).all('article'))
+    readable = without_navigation(doc.root)
+    articles = list(readable.all('article'))
     if len(articles) != 1:
         raise ValueError('Visualization audit requires exactly one readable article: ' + page)
     article = articles[0]
+    from .visual_presentation import paths, bind, bind_text
+    presentation = paths(readable)
     html = next(doc.root.all('html'), Node('html'))
     lang = html.attrs.get('lang', 'ko')
     thresholds = options['thresholds'].get(lang, options['thresholds']['default'])
@@ -332,7 +340,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
     active = None
     visual_owner, visual_stack = None, None
 
-    def add(anchor, title, level):
+    def add(anchor, title, level, node=None):
         locator = anchor or '$heading-'+str(len(rows))
         if locator in seen:
             raise ValueError('Duplicate visualization item anchor: ' + page + '#' + locator)
@@ -342,18 +350,35 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
         row = dict(id=page+'#'+locator, page=page, anchor=anchor, url=page+('#'+anchor if anchor else ''), language=lang,
                    title=title, question=title, level=level, parent=stack[-1]['id'] if stack else None,
                    ancestors=[dict(id=p['id'], title=p['title'], level=p['level']) for p in stack],
-                   paragraphs=[], loose_text=[], summaries=[], content_blocks=[], tables=[], figures=[], available_source_windows=[], excluded=[], children=[])
+                   paragraphs=[], loose_text=[], summaries=[], content_blocks=[], tables=[], figures=[], available_source_windows=[], excluded=[], children=[], presentation_contexts={}, heading_contexts={})
+        if node is not None:
+            bind(row, node, presentation, subtree=True)
+            row['heading_contexts'] = dict(row['presentation_contexts'])
+        for parent in stack:
+            row['presentation_contexts'].update(parent['heading_contexts'])
         if stack:
             stack[-1]['children'].append(row['id'])
         rows.append(row)
         stack.append(row)
         return row
 
-    current = add(None, 'Page introduction', 1)
+    nodes = list(outline_nodes(readable))
+    article_index = next(i for i,node in enumerate(nodes) if node is article)
+    page_titles = [node for node in nodes[:article_index] if node.tag == 'h1']
+    current = add(None, 'Page introduction', 1, page_titles[-1] if page_titles else None)
 
-    def walk(node):
+    def flush_loose(row):
+        if row['loose_text']:
+            row['paragraphs'].append(' '.join(' '.join(row['loose_text']).split()))
+            row['loose_text'].clear()
+
+    def walk(node, parent=None, position=0):
         nonlocal current, active, visual_owner, visual_stack
         if isinstance(node, str):
+            if parent is not None and node.strip():
+                bind_text(current, parent, position, node, presentation)
+                if active is not None:
+                    bind_text(visual_owner, parent, position, node, presentation)
             if active is not None:
                 active['text'].append(node)
             elif node.strip():
@@ -379,7 +404,13 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
             elif value.startswith(('sdd:visual:', '/sdd:visual:', 'sdd:class-diagram', '/sdd:class-diagram')):
                 raise ValueError('Malformed visualization marker: '+page)
             return
+        if re.fullmatch(r'h[1-6]', node.tag) and any(
+            child.tag in {'pre','script','style'} or (child.tag == 'details' and source_container(child))
+            or _generated_route_alias(child) for child in all_nodes(node) if child is not node):
+            raise ValueError('Reader heading contains a source/log container; separate its evidence: '+page)
         if active is not None:
+            bind(current, node, presentation)
+            bind(visual_owner, node, presentation, text=True)
             active['markup_bindings'].append(digest(node_window(node, root, page)))
             if re.fullmatch(r'h[1-6]', node.tag):
                 # Explanation stages are H3 questions; their generated figure
@@ -391,10 +422,13 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 active['heading_count'] += 1
                 # Inventory the title too. A marker must never make a real
                 # question disappear, even when it is the block's first title.
-                current = add(node.attrs.get('id'), plain(node), int(node.tag[1]))
+                current = add(node.attrs.get('id'), plain(node), int(node.tag[1]), node)
+                bind(current, node, presentation, subtree=True)
                 current['role'] = 'visual_title'
                 current['figures'].append(active)
             if node.tag == 'pre' and 'mermaid' in node.attrs.get('class', '').split():
+                bind(current, node, presentation, subtree=True)
+                bind(visual_owner, node, presentation, subtree=True)
                 active['source'] += node.text()
                 return
             if node.tag == 'p':
@@ -409,6 +443,8 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                     active['convenience_designations'].append(href)
                 active['downloads' if urlsplit(href).path.endswith('.mmd') else 'evidence'].append(href)
             if node.tag == 'details':
+                bind(current, node, presentation, subtree=True)
+                bind(visual_owner, node, presentation, subtree=True)
                 active['text'].append(plain(node))
                 active['evidence'].extend(a.attrs.get('href', '') for a in node.all('a'))
                 active['convenience_designations'].extend(a.attrs.get('href', '') for a in node.all('a') if a.attrs.get('data-sdd-convenience') == 'true')
@@ -419,11 +455,14 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 evidence_note = summary and re.match(r'(?:그림 근거와 확인 범위|Figure evidence|Diagram evidence)', plain(summary), re.I)
                 if source_container(node) or evidence_note:
                     return
-            for child in node.children:
-                walk(child)
+            for index,child in enumerate(node.children):
+                walk(child, node, index)
             return
         if node.tag in {'pre', 'script', 'style'} or (node.tag == 'details' and source_container(node)):
-            current['excluded'].append(dict(kind=node.tag, chars=len(plain(node)), sha256=digest(node_window(node, root, page))))
+            bind(current, node, presentation, subtree=True)
+            current['excluded'].append(dict(kind=node.tag, chars=len(plain(node)), sha256=digest(node_window(node, root, page)),
+                                            markup_sha256=digest(canonical(node)),
+                                            presentation_context=presentation[id(node)]))
             for link in node.all('a'):
                 href = link.attrs.get('href', '')
                 if href:
@@ -432,30 +471,45 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 current['figures'].append(dict(id='mermaid-'+str(len(current['figures'])), source=node.text(), evidence=[], text=[]))
             return
         if _generated_route_alias(node):
+            bind(current, node, presentation, subtree=True)
             # Exclude only explanation counting. Keep the full control in
             # source windows and fingerprints, and retain explicit citations.
             binding = digest(node_window(node, root, page))
-            current['excluded'].append(dict(kind='navigation', chars=len(plain(node)), sha256=binding))
+            current['excluded'].append(dict(kind='navigation', chars=len(plain(node)), sha256=binding,
+                                            markup_sha256=digest(canonical(node)),
+                                            presentation_context=presentation[id(node)]))
             current['content_blocks'].append(binding)
             current['available_source_windows'].extend(
                 link.attrs.get('href', '') for link in node.all('a')
                 if 'citation' in link.attrs.get('class', '').split())
             return
-        if node.tag == 'summary':
+        descendants = [child for child in all_nodes(node) if child is not node]
+        heading_children = any(re.fullmatch(r'h[1-6]', child.tag) for child in descendants)
+        separate_children = heading_children or any(
+            child.tag in {'pre','script','style'} or (child.tag == 'details' and source_container(child))
+            or _generated_route_alias(child) for child in descendants)
+        block = node.tag in {'p','li','div','section','blockquote','summary','table'} or re.fullmatch(r'h[1-6]', node.tag)
+        if block:
+            flush_loose(current)
+        if node.tag == 'summary' and not separate_children:
+            bind(current, node, presentation, subtree=True)
             current['summaries'].append(plain(node))
             current['content_blocks'].append(digest(node_window(node, root, page)))
             return
-        if re.fullmatch(r'h[2-6]', node.tag):
+        if re.fullmatch(r'h[1-6]', node.tag):
             anchor = node.attrs.get('id')
-            current = add(anchor, plain(node), int(node.tag[1]))
+            current = add(anchor, plain(node), int(node.tag[1]), node)
+            bind(current, node, presentation, subtree=True)
             return
-        if node.tag == 'table':
+        if node.tag == 'table' and not separate_children:
+            bind(current, node, presentation, subtree=True)
             current['tables'].append(plain(node))
             current['content_blocks'].append(digest(node_window(node, root, page)))
             return
         simple_container = node.tag in {'div', 'blockquote', 'section', 'figcaption'} and not any(
-            n.tag in {'p', 'li', 'table', 'details', 'pre', 'h2', 'h3', 'h4', 'h5', 'h6'} for n in all_nodes(node) if n is not node)
-        if node.tag == 'p' or simple_container or (node.tag == 'li' and not list(node.all('p')) and not list(node.all('li'))):
+            n.tag in {'p', 'li', 'table', 'details', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'} for n in descendants)
+        if not separate_children and (node.tag == 'p' or simple_container or (node.tag == 'li' and not list(node.all('p')) and not list(node.all('li')))):
+            bind(current, node, presentation, subtree=True)
             current['content_blocks'].append(digest(node_window(node, root, page)))
             value = plain(node)
             if value:
@@ -464,10 +518,15 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 if 'citation' in link.attrs.get('class', '').split():
                     current['available_source_windows'].append(link.attrs.get('href', ''))
             return
-        for child in node.children:
-            walk(child)
+        if not node.children:
+            bind(current, node, presentation)
+            current['content_blocks'].append(digest(node_window(node, root, page)))
+        for index,child in enumerate(node.children):
+            walk(child, node, index)
+        if block:
+            flush_loose(current)
 
-    walk(without_navigation(article))
+    walk(article)
     if active is not None:
         raise ValueError('Unclosed visualization marker: '+page)
     by_id = {row['id']: row for row in rows}
@@ -513,7 +572,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 key = target+'#'+fragment
                 if key not in window_hashes:
                     if target == page:
-                        selected = source_window(doc, fragment, root=root, page=page)
+                        selected = source_window(doc, fragment, root=root, page=page, presentation=True)
                         window_hashes[key] = digest(selected)
                         window_references[key] = json.loads(selected.rsplit(WINDOW_BINDING, 1)[1])['references']
                     elif root is not None:
@@ -523,7 +582,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                             continue
                         raw = path.read_text(encoding='utf-8')
                         if path.suffix == '.html':
-                            selected = source_window(Document(raw), fragment, root=root, page=target)
+                            selected = source_window(Document(raw), fragment, root=root, page=target, presentation=True)
                         else:
                             lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', fragment)
                             if not lines:
