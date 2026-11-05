@@ -146,7 +146,7 @@ def main():
         'include/libcamera/internal/framebuffer.h','include/libcamera/internal/pipeline_handler.h',
         'include/libcamera/internal/v4l2_videodevice.h','Documentation/thread-safety.dox',
         'src/libcamera/base/thread.cpp','src/libcamera/base/message.cpp','src/libcamera/base/event_dispatcher_poll.cpp',
-        'include/libcamera/base/thread.h','include/libcamera/base/message.h',
+        'include/libcamera/base/thread.h','include/libcamera/base/message.h','include/libcamera/base/object.h',
     ]
     windows = []
     for file in files:

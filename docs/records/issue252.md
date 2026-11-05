@@ -16,7 +16,7 @@
 | Q6 | Direct·Queued·Blocking의 스레드 분기, 메인 스레드의 이벤트 루프 기본 조건과 수신 종료 경계를 확인합니다. |
 | Q7 | 정상 erase와 bulk 취소 clear, 실패별 ret·index·큐·상태·횟수를 변경 검증 계획으로 연결합니다. |
 
-분석 커밋은 `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`입니다. 확인한 공식 upstream과 공개 mirror는 `be7e83e91348250c015aad6d6f59f1468555bae8`이며, 사이의 세 변경 파일과 선택한 25개 전체 소스 파일은 겹치지 않습니다. 초기 19개 창에서 V4L2Device를 더한 20개를 거쳐 Thread·Message·기본 dispatcher까지 확장한 시점과 원래 창의 검토 결과를 따로 보존합니다. 과거 검토를 25개 창의 새 검토로 바꾸지 않습니다.
+분석 커밋은 `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`입니다. 확인한 공식 upstream과 공개 mirror는 `be7e83e91348250c015aad6d6f59f1468555bae8`이며, 사이의 세 변경 파일과 최종 선택한 26개 전체 소스 파일은 겹치지 않습니다. 초기 19개 창에서 V4L2Device를 더한 20개를 거쳐 Thread·Message·기본 dispatcher의 25개와 Object 템플릿 헤더의 26개까지 확장한 시점과 원래 창의 검토 결과를 따로 보존합니다. 과거 검토를 25개 창의 새 검토로 바꾸지 않습니다.
 
 범위는 공통 Camera·Request·PipelineHandler와 UVC의 제출·장치 알림·취소·정지, 기본 Thread/Signal 전달입니다. 다른 파이프라인·IPA·커널·물리 DMA·장치 성능·사용자 dispatcher·동시 연결 파괴·사내 HAL은 검증하지 않습니다. 실제 비작성자 평가와 #215 전체 보완도 포함하지 않습니다.
 

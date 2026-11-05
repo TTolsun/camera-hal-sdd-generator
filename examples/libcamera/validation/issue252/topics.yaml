@@ -49,6 +49,30 @@ topics:
     file: src/libcamera/v4l2_videodevice.cpp
     start: void V4L2VideoDevice::bufferAvailable()
     end: \brief Start the video stream
+  - id: object-template
+    file: include/libcamera/base/object.h
+    start: class Object
+    end: '} /* namespace libcamera */'
+  - id: bound-overloads
+    file: include/libcamera/base/bound_method.h
+    start: class BoundMethodBase
+    end: '} /* namespace libcamera */'
+  - id: connections
+    file: src/libcamera/base/bound_method.cpp
+    start: \enum ConnectionType
+    end: '} /* namespace libcamera */'
+  - id: object-message
+    file: src/libcamera/base/object.cpp
+    start: void Object::postMessage(
+    end: \fn R Object::invokeMethod()
+  - id: invoke-message
+    file: src/libcamera/base/message.cpp
+    start: void InvokeMessage::invoke()
+    end: \var InvokeMessage::method_
+  - id: thread-dispatch
+    file: src/libcamera/base/thread.cpp
+    start: void Thread::dispatchMessages(
+    end: \brief Move an \a object and all its children to the thread
   parts:
   - id: message
     question: queueRequest가 0을 반환했지만 PipelineHandler::queueRequest 진입 자체가 없는 경우를 waitingRequests_ 준비 대기보다 먼저
@@ -101,7 +125,8 @@ topics:
       Request sequence_·queuedRequests_ 등록, completeRequest의 선두 통지 순서를 연결하고 Request 소프트웨어 sequence와 V4L2에서
       받은 FrameMetadata sequence를 같다고 가정하지 마세요. API 시작·0 반환, 잠금 안의 메시지 추가 순서, 핸들러 진입·등록·Request sequence, 신호
       발생과 특정 수신 연결의 실제 콜백을 구분해 기록하는 검증 조건을 최대 네 문장으로 설명하세요. source-caller 진입 시각을 전역 제출 순서로 단정하거나 여러 수신 연결을
-      중복 완료로 세지 마세요.
+      중복 완료로 세지 마세요. object-template·bound-overloads·connections·object-message·invoke-message·thread-dispatch의
+      실제 호출 연결도 제공되어 있으므로 이 게시·처리 관계를 불명으로 대체하지 마세요.
     sources:
     - submit-message
     - post-order
@@ -109,6 +134,12 @@ topics:
     - camera-notice
     - frame-sequence
     - common-stop
+    - object-template
+    - bound-overloads
+    - connections
+    - object-message
+    - invoke-message
+    - thread-dispatch
     max_statements: 2
     answer_contract:
       basis: investigation
@@ -542,6 +573,10 @@ topics:
     file: src/libcamera/base/thread.cpp
     start: \brief Dispatch posted messages for this thread
     end: \brief Move an \a object and all its children to the thread
+  - id: object-template
+    file: include/libcamera/base/object.h
+    start: class Object
+    end: '} /* namespace libcamera */'
   parts:
   - id: delivery
     question: CameraManager 문맥에서 완료 신호를 내는 위치와 Object 슬롯의 수신 문맥을 두 문장 이내로 구분하세요. Auto의 현재·수신 스레드 비교와 Direct
@@ -639,6 +674,7 @@ topics:
     sources:
     - connections
     - stop-entry
+    - object-template
     max_statements: 1
   - id: explicit-dispatch
     question: 이벤트 루프 외에도 수신 스레드에서 Thread::dispatchMessages를 명시 호출해 type·receiver 필터에 맞는 게시 메시지를 즉시 전달할 수 있음을

@@ -5,15 +5,15 @@
 ## 생성 전에 고정한 기준
 
 - 질문은 [questions.yaml](questions.yaml)의 Q1–Q7입니다. 제출 성공 뒤 완료 누락, 제어·QBUF 실패의 부작용, 프레임과 요청의 서로 다른 완료, 포인터·fence 수명, 정지 실패, 콜백 전달·재진입, 변경 후 불변조건을 묻습니다.
-- 분석 커밋은 공식 libcamera `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`입니다. 확인한 upstream HEAD는 `be7e83e91348250c015aad6d6f59f1468555bae8`이며, 최종 관련 소스 25개 창은 두 커밋에서 바이트가 같습니다. 다른 문서의 facts와 새 HEAD의 원고를 혼합하지 않습니다.
+- 분석 커밋은 공식 libcamera `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`입니다. 확인한 upstream HEAD는 `be7e83e91348250c015aad6d6f59f1468555bae8`이며, 최종 관련 소스 26개 창은 두 커밋에서 바이트가 같습니다. 다른 문서의 facts와 새 HEAD의 원고를 혼합하지 않습니다.
 - 공개 문서의 전체 구조 facts는 같은 분석 커밋의 기존 추출을 보존합니다. 별도 새 UVC 빌드·추출은 그 facts 전체를 새로 검증했다고 표시하지 않습니다.
 - 별도 깨끗한 소스와 새 외부 빌드 디렉터리에서 Meson과 Ninja를 실행했습니다. UVC만 선택하고 IPA·GStreamer·qcam·문서·테스트·lc-compliance는 비활성화하며 cam은 활성화했습니다. 새 구성과 전체 빌드는 성공했습니다. 빌드 옵션·컴파일 DB·생성 헤더/소스 16개의 해시를 추출 전후에 대조했습니다.
 - 최종 독립 추출은 135개 번역 단위에서 파싱 오류가 없고 필수 클래스 6개가 있습니다. GCC가 허용하는 C99 배열 지정 초기화 때문에 `controls.cpp`의 분석 명령에만 `-Wno-error=c99-designator`를 추가했습니다. 다른 진단을 숨기거나 원래 빌드 옵션을 바꾸지 않습니다.
 - 원래 빌드의 lc-compliance 자동 활성화와 141개 번역 단위 기록도 보존합니다. 최종 증거는 새 구성의 135개 번역 단위 기록이며 두 결과를 같은 실행으로 합치지 않습니다.
 
-초기 검토 창은 20개였으며, Signal 주석의 반환 선후 표현을 구현과 대조하는 과정에서 Thread·메시지·기본 Poll 디스패처와 관련 헤더 5개를 추가했습니다. 기존 범위와 실패 판정은 보존하고 교정 생성 전에 25개 창을 다시 고정했습니다.
+초기 검토 창은 20개였으며, Signal 주석의 반환 선후 표현을 구현과 대조하는 과정에서 Thread·메시지·기본 Poll 디스패처와 관련 헤더 5개를 추가했습니다. 기존 범위와 실패 판정은 보존하고 교정 생성 전에 26개 창을 다시 고정했습니다.
 
-생성에 선택한 발췌 외에도 camera, request, pipeline handler, UVC, V4L2 device/video device, framebuffer, Object·Signal·BoundMethod, notifier·timer와 관련 헤더·스레드 계약의 전체 25개 파일을 독립 검토에 제공합니다. 실제 목록·해시는 실행의 `scope.json`과 `source-windows/`에 기록합니다. 커널 UVC 드라이버·다른 파이프라인·IPA·물리 장치·DMA·성능은 검토하지 않았습니다.
+생성에 선택한 발췌 외에도 camera, request, pipeline handler, UVC, V4L2 device/video device, framebuffer, Object·Signal·BoundMethod, notifier·timer와 관련 헤더·스레드 계약의 전체 26개 파일을 독립 검토에 제공합니다. 실제 목록·해시는 실행의 `scope.json`과 `source-windows/`에 기록합니다. 커널 UVC 드라이버·다른 파이프라인·IPA·물리 장치·DMA·성능은 검토하지 않았습니다.
 
 ## 기존 공백과 반례
 
@@ -84,3 +84,5 @@ uv sync --frozen --extra dev
 `publication.py`는 최초 프로필을 구성합니다. 병행 공개 갱신 뒤에는 `integrate_public_base.py`가 실제 공개 manifest와 일치하는 원고·구조 facts·스타일을 확인하여 다른 페이지를 보존합니다. 원래 요청 본문이 착수 기준과 같다는 사실도 별도로 확인합니다. `reader_questions.py`는 전체 검증 질문을 유지하면서 해시로 연결한 짧은 독자용 탐색 질문을 표시합니다. 과거 페이지의 인증 프로필과 새 번역·별도 계약 검토 프로필은 분리합니다. 이후 일반 번역 카탈로그 준비, `audit-consistency`, `export-site`, `verify-site` 관문을 사용합니다. 생성 HTML은 직접 수정하지 않습니다. `browser_test.cjs`는 한영 각각의 데스크톱·모바일 크기에서 질문별 그림 확대·검색·확대율·Escape·초점 복귀, 소스 발췌와 검색을 확인합니다. 실제 휴대폰이나 사람 읽기 평가로 표시하지 않습니다.
 
 최종 원본 검토·질문별 전후 비교·테스트·출판 manifest·배포 확인은 이 실험의 실행 증거와 공개 `publication/issue252`에 연결합니다. 생성기 병합, 공개 SDD 병합, Pages, 실제 공개 파일 일치는 각각 별도로 확인해야 합니다.
+
+호출 연결을 보완하기 전 25개 창의 scope와 검토는 그대로 보존합니다. 최종 교정 전에 Object::invokeMethod의 전체 템플릿 헤더를 더해 26개 창으로 고정했습니다. API 호출→BoundMethod 활성화→메시지 게시→handler의 연결을 이 추가 창에서 확인합니다.

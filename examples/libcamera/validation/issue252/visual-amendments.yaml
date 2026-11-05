@@ -12,7 +12,8 @@ overrides:
       imageBufferReady, completeRequest를 구분하세요. 제어 음수는 QBUF 전에 취소로, 제어 성공 뒤 QBUF 실패는 제어 롤백 보장 없이 취소로 연결합니다.
       QBUF 성공은 큐 등록으로 연결하고, 여기에서 장치 알림이 별도로 발생하고 DQBUF가 성공한 조건에만 bufferAvailable→imageBufferReady→버퍼 뒤 요청 완료로
       이어집니다. 이 연결은 동기 호출이나 하드웨어 완료 보장이 아니라 별도 장치 이벤트 조건입니다. 등록→장치 알림을 무조건 즉시 실행으로 그리지 마세요. DQBUF 실패의 알림 부재를
-      표시하고 성공 경로와 섞지 마세요. Fatal cache_ 부재는 정상 음수 반환으로 일반화하지 마세요.
+      표시하고 성공 경로와 섞지 마세요. Fatal cache_ 부재는 정상 음수 반환으로 일반화하지 마세요. processControls 노드는 개별 processControl 반환을
+      검사하지 않고 구성된 목록만 setControls로 전달한다고 명시하세요. 빈 목록도 0을 반환할 수 있으므로 0을 모든 요청 제어가 적용되었다는 증명으로 쓰지 마세요.
     sources:
     - submit
     - controls
@@ -22,6 +23,7 @@ overrides:
     - uvc-wiring
     - complete
     - dispatch
+    - set-controls
     whole_sources:
     - submit
     - controls
@@ -31,6 +33,7 @@ overrides:
     - uvc-wiring
     - complete
     - dispatch
+    - set-controls
   stop-depth-flow:
     question: streamOff의 즉시 반환·ioctl 오류·성공 버퍼 반환은 언제 합류하여 UVC releaseBuffers 호출로 이어집니까?
     prompt: UVC stopDevice에서 streamOff를 호출하고, 그 함수가 실제 반환한 뒤에만 releaseBuffers를 호출하는 순서를 최대 9노드로 그리세요. streamOff
@@ -59,16 +62,12 @@ additions:
   title: 직접 중첩 호출과 별도 Queued 수신의 경계
   generation: llm
   max_nodes: 9
-  question: emit 안의 Direct 실행, emit 뒤 내부 갱신, 별도 Queued 수신과 stop 반환의 수명 협의는 어떻게 다릅니까?
-  prompt: 지정한 9개 노드로 Signal::emit→슬롯의 activate→BoundMethodBase::activatePack 실제 호출 간선을 반드시 연결하세요. Object 멤버
-    슬롯의 activate에서 activatePack으로 이어지는 원문은 bound-overloads에 있습니다. activatePack의 Direct→invokePack과 Queued→postMessage를
-    분기하고, Direct 수신은 emit 안에서 동기 실행합니다. postMessage 뒤 Object::message 처리는 수신 객체와 실제 메시지 소비가 성립한 조건이며 emit 반환·completeBuffer
-    내부 갱신보다 앞이나 뒤일 수 있으므로 그 선후를 고정하지 마세요. emit 반환 뒤에만 Request::Private::completeBuffer 내부 갱신으로 연결합니다. Camera::stop
-    노드에서는 해당 Blocking 호출의 완료와 다른 Queued 수신자의 마지막 사용을 확인하는 수명 협의를 검증 계획으로 구분하세요. stop 반환에서 모든 수신 처리가 끝났다는 간선을
-    만들지 마세요. Direct에서 같은 함수 중첩은 별도 허용 문서가 없으면 금지이며 임의 Camera 상태 변경의 재진입 허용으로 쓰지 않습니다. 신호 발생과 수신 실행을 같은 노드로
-    쓰지 마세요. 경계·협의의 그림이며 지원·실행 성공 보장을 만들지 마세요. Queued postMessage에서 조건부 dispatchMessages를 거쳐 Object::message로
-    이어지는 간선을 연결하세요. 수신 스레드의 일반 이벤트 루프 또는 명시적 호출이 type·receiver 필터에 맞는 메시지를 소비합니다. 같은 스레드 메시지 핸들러의 재귀 dispatch도
-    가능하므로 이벤트 루프 복귀를 필수로 쓰지 말고 다른 스레드 호출은 허용하지 않습니다. 이 소비와 emit 반환·내부 pending 갱신의 선후는 고정하지 마세요.
+  question: Direct 중첩 호출·Queued 게시와 명시적 dispatch는 emit 반환 및 내부 갱신과 어떻게 구분됩니까?
+  prompt: 지정한 여덟 노드를 모두 연결하세요. emit→activate→activatePack은 실제 호출이고 Direct는 invokePack으로, Queued는 postMessage로
+    분기합니다. 게시된 메시지는 해당 수신 스레드가 type·receiver 필터에 맞춰 dispatchMessages로 소비한 조건에서 Object::message로 전달됩니다. 일반 이벤트
+    루프뿐 아니라 명시적·같은 스레드 메시지 핸들러의 재귀 dispatch가 가능하며, 이 수신의 시작을 emit 반환 전후로 고정하지 마세요. emit이 실제 반환한 뒤 Request::Private::completeBuffer가
+    pending을 갱신합니다. Direct 수신의 동기 복귀와 Queued 게시의 무대기를 구분하세요. stop의 Blocking 반환은 별도 stop-lifetime-flow가 설명하므로
+    이 그림에 stop 노드를 넣지 마세요.
   sources:
   - signals
   - signal-overloads
@@ -78,7 +77,6 @@ additions:
   - receiver-lifetime
   - completion
   - status
-  - stop-entry
   - thread-rules
   - bound-overloads
   - thread-dispatch
@@ -93,7 +91,6 @@ additions:
   - receiver-lifetime
   - completion
   - status
-  - stop-entry
   - thread-rules
   - bound-overloads
   - thread-dispatch
@@ -107,8 +104,8 @@ additions:
   - postMessage
   - message
   - completeBuffer
-  - stop
   - dispatchMessages
+  require_connected: true
 - id: failure-investigation-flow
   topic: review
   kind: flow
@@ -174,7 +171,11 @@ additions:
     Request sequence_와 queuedRequests_ 등록, requestCompleted 신호 발생 관찰입니다. API 시작 시각은 서로 다른 스레드의 게시 순서를 확정하지
     않으며 0 반환은 게시 뒤임을 보존하세요. 정상 선택 경로의 메시지 소비→대기/준비→등록→완료된 큐 선두 통지라는 경계를 연결합니다. 준비·장치 한도와 정지 취소의 상세는 기존 그림으로
     연결하고 즉시 실행·촬영 성공을 보장하지 마세요. Request 소프트웨어 sequence와 장치 FrameMetadata sequence를 같다고 쓰지 말고, 마지막 노드는 신호 발생과
-    특정 연결의 실제 콜백 관찰을 구분합니다. 추가 계측 위치의 그림이며 실제 동시 시험 결과가 아닙니다.
+    특정 연결의 실제 콜백 관찰을 구분합니다. 추가 계측 위치의 그림이며 실제 동시 시험 결과가 아닙니다. object-template에서 invokeMethod→BoundMethodMember
+    activate, bound-overloads와 connections에서 activatePack→postMessage, object-message에서 Thread postMessage
+    호출, thread-dispatch와 invoke-message에서 실제 handler 실행의 연결을 제공합니다. 다섯 노드 사이 간선은 이 중간 함수를 별도 노드로 늘리지 않고 호출/소비가
+    성립한 조건의 관찰 관계로 모두 연결하세요. registration에서 완료 통지는 completion의 완료된 queuedRequests_ 선두 pop과 camera-notice의 신호
+    발생을 거칩니다. 이 관계를 직접 동기 호출·시간 보장으로 그리지 마세요.
   sources:
   - submit-message
   - post-order
@@ -182,6 +183,14 @@ additions:
   - camera-notice
   - frame-sequence
   - common-stop
+  - object-template
+  - invocation
+  - bound-overloads
+  - connections
+  - object-message
+  - invoke-message
+  - thread-dispatch
+  - completion
   whole_sources:
   - submit-message
   - post-order
@@ -189,9 +198,51 @@ additions:
   - camera-notice
   - frame-sequence
   - common-stop
+  - object-template
+  - invocation
+  - bound-overloads
+  - connections
+  - object-message
+  - invoke-message
+  - thread-dispatch
+  - completion
   required_symbols:
   - queueRequest
   - postMessage
   - waitingRequests_
   - registerRequest
   - requestCompleted
+  require_connected: true
+- id: stop-lifetime-flow
+  topic: callback-depth
+  kind: ownership
+  title: stop 반환과 별도 수신의 마지막 사용 확인
+  generation: llm
+  max_nodes: 7
+  max_label_chars: 130
+  max_edge_label_chars: 95
+  question: 정상 stop의 Blocking 호출이 반환해도 별도 Queued 수신자의 포인터 사용은 왜 따로 확인합니까?
+  prompt: 정상 접근 검사를 통과한 Camera::stop→PipelineHandler::stop의 Blocking 호출→Camera::stop 실제 반환을 세 노드로 연결하세요. 같은
+    stop 심볼을 다른 id로 사용해도 됩니다. 같은 스레드 Blocking은 Direct이고 다른 스레드는 해당 InvokeMessage의 semaphore만 기다립니다. 별도 Queued
+    Object 수신 처리와 Request 포인터의 마지막 사용 확인 계획을 별도 두 노드로 연결하세요. stop 반환에서 마지막 사용 확인으로는 실행 순서가 아닌 확인 책임의 관계를 연결하고
+    간선에 별도 확인 필요·선후 보장 아님을 명시하세요. 이 ownership 그림의 관계를 모든 Queued 큐 drain·객체 수명 연장·콜백 실행 시각 보장으로 쓰지 마세요. 마지막
+    사용 확인 전 삭제·재사용을 하지 않는 조건은 검증 계획이며 실제 시험 결과가 아닙니다.
+  sources:
+  - stop-entry
+  - object-template
+  - connections
+  - signals
+  - invocation
+  - object-message
+  - invoke-message
+  - buffer-duty
+  whole_sources:
+  - stop-entry
+  - object-template
+  - connections
+  - signals
+  - invocation
+  - object-message
+  - invoke-message
+  - buffer-duty
+  require_connected: true
