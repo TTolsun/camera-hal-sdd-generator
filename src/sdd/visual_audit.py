@@ -38,11 +38,13 @@ def digest(value):
 
 def policy(cfg=None):
     raw = cfg.visual_audit if cfg else {}
-    allowed = {'enabled', 'reviews', 'thresholds', 'signals', 'deferred_pages', 'baseline'}
+    allowed = {'enabled', 'reviews', 'thresholds', 'signals', 'deferred_pages', 'baseline', 'require_provenance'}
     if not isinstance(raw, dict) or set(raw) - allowed:
-        raise ValueError('visual_audit accepts enabled, reviews, thresholds, signals, deferred_pages, baseline')
+        raise ValueError('visual_audit accepts enabled, reviews, thresholds, signals, deferred_pages, baseline, require_provenance')
     if type(raw.get('enabled', False)) is not bool:
         raise ValueError('visual_audit.enabled must be boolean')
+    if type(raw.get('require_provenance', False)) is not bool:
+        raise ValueError('visual_audit.require_provenance must be boolean')
     baseline = raw.get('baseline')
     if baseline is not None and (not isinstance(baseline,dict) or set(baseline) != {'file','sha256'}
             or not isinstance(baseline.get('file'),str) or not baseline['file']
@@ -205,10 +207,10 @@ def source_window(document, fragment, *, root=None, page='', presentation=False)
     if inside_navigation(found[0]):
         raise ValueError('Source target is inside excluded navigation: '+fragment)
     owner = found[0]
-    while owner is not document.root and owner.tag != 'article':
+    while owner is not document.root and owner.tag not in {'article','main'}:
         owner = parents[id(owner)]
     if owner is document.root:
-        raise ValueError('Source target has no owning article: '+fragment)
+        raise ValueError('Source target has no owning article or main reading content: '+fragment)
     scoped_nodes = list(all_nodes(owner))
     outline = {id(node) for node in outline_nodes(document.root)}
     owner_index = next(i for i,node in enumerate(nodes) if node is owner)
@@ -333,6 +335,22 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
     if len(articles) != 1:
         raise ValueError('Visualization audit requires exactly one readable article: ' + page)
     article = articles[0]
+    mains = list(readable.all('main'))
+    if mains and (len(mains) != 1 or not any(node is article for node in all_nodes(mains[0]))):
+        raise ValueError('Visualization audit requires one main containing its article: '+page)
+    reading = mains[0] if mains else article
+    if options.get('require_provenance', False) and not draft:
+        if not mains:
+            raise ValueError('Visualization audit requires one main and generated provenance section: '+page)
+        article_nodes = {id(node) for node in all_nodes(article)}
+        provenance = [node for node in reading.children if isinstance(node, Node)
+                      and node.tag == 'section' and 'evidence' in node.attrs.get('class', '').split()
+                      and any(isinstance(child, Node) and child.tag == 'h2'
+                              and child.attrs.get('id') == 'page-evidence' for child in node.children)]
+        if len(provenance) != 1 or id(provenance[0]) in article_nodes:
+            raise ValueError('Visualization audit requires one generated provenance section: '+page)
+    controls = {id(node) for node in reading.children if not isinstance(node,str) and
+                (node.tag,node.attrs.get('class')) in {('p','breadcrumb'),('div','page-state'),('details','mobile-toc')}} if mains else set()
     from .visual_presentation import paths, bind, bind_text
     presentation = paths(readable)
     html = next(doc.root.all('html'), Node('html'))
@@ -367,7 +385,8 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
     nodes = list(outline_nodes(readable))
     article_index = next(i for i,node in enumerate(nodes) if node is article)
     page_titles = [node for node in nodes[:article_index] if node.tag == 'h1']
-    current = add(None, 'Page introduction', 1, page_titles[-1] if page_titles else None)
+    page_title = page_titles[-1] if page_titles else None
+    current = add(None, 'Page introduction', 1, page_title)
 
     def flush_loose(row):
         if row['loose_text']:
@@ -385,6 +404,10 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 active['text'].append(node)
             elif node.strip():
                 current['loose_text'].append(node)
+            return
+        if id(node) in controls:
+            if any(re.fullmatch(r'h[1-6]', child.tag) for child in all_nodes(node)):
+                raise ValueError('Reader heading inside generated shell control: '+page)
             return
         if node.tag == '!':
             value = node.attrs['value']
@@ -498,6 +521,12 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
             current['summaries'].append(plain(node))
             current['content_blocks'].append(digest(node_window(node, root, page)))
             return
+        if node is page_title:
+            if heading_children:
+                raise ValueError('Reader question inside generated page title: '+page)
+            current = rows[0]
+            stack[:] = [current]
+            return
         if re.fullmatch(r'h[1-6]', node.tag):
             anchor = node.attrs.get('id')
             current = add(anchor, plain(node), int(node.tag[1]), node)
@@ -528,7 +557,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
         if block:
             flush_loose(current)
 
-    walk(article)
+    walk(reading)
     if active is not None:
         raise ValueError('Unclosed visualization marker: '+page)
     by_id = {row['id']: row for row in rows}
