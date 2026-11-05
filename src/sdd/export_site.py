@@ -270,6 +270,14 @@ def _prepare_site_pages(cfg, settings, sections, entries, *, check_consistency=T
     glossary.enforce(cfg, terms, {rel: text for rel, text in texts.items()
                                   if sections.get(rel, {}).get("kind") != "per-package"})
     model = KnowledgeModel.load(cfg.facts_path) if cfg.facts_path.exists() else None
+    if model is not None:
+        from .next_steps import checked_footer
+        # Translation renders without a completed bilingual consistency report.
+        # Its Korean input must still pass the same generated-navigation check
+        # as independent review, including targets absent from that report.
+        for name, text in texts.items():
+            meta, body = split_frontmatter(text)
+            checked_footer(cfg, model, name, meta, body)
     if cfg.paths.get('consistency_file') and check_consistency:
         from .consistency import enforce as enforce_consistency
         if model is None:
@@ -716,8 +724,16 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
             (out / (name + '.json')).write_text(json.dumps(
                 {'schema': 1, 'source_commit': model.meta.get('source_commit'), 'pages': records},
                 ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8', newline='\n')
-    if cfg.paths.get('consistency_file') and check_consistency:
-        shutil.copyfile(cfg.build_dir/'consistency-review.json', out/'contract-consistency.json')
+    if cfg.paths.get('consistency_file'):
+        if check_consistency:
+            shutil.copyfile(cfg.build_dir/'consistency-review.json', out/'contract-consistency.json')
+        else:
+            # The private Korean preview precedes bilingual review. Preserve
+            # its real link/text for catalog discovery, without inventing a
+            # passed report or reading an older review as current evidence.
+            (out/'contract-consistency.json').write_text(json.dumps(dict(
+                schema=1, status='pending', human_review='pending',
+                assessment='Private preparation only; independent review has not run.'))+'\n', encoding='utf-8')
     from .site_localization import localize_site
     localize_site(cfg, out)
     return out

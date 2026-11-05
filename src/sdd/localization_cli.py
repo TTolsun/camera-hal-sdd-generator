@@ -47,6 +47,8 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
     import copy
     import tempfile
     from .export_site import _render_site
+    from .generation_run import observe
+    from .site_build import verify_site
     cfg = copy.deepcopy(config)
     cfg.raw.setdefault('site', {}).pop('english_catalog', None)
     original = read_bytes(destination, optional=True)
@@ -56,7 +58,9 @@ def prepare_catalog(config, destination: Path, *, translate: bool = False, repla
         # Private Korean rendering discovers strings for the not-yet-created
         # translation. It is never synchronized to a publication directory.
         # The public export path always checks the completed bilingual review.
-        out = _render_site(cfg, Path(temporary), check_consistency=False)
+        with observe(config, 'translation-preflight'):
+            out = _render_site(cfg, Path(temporary), check_consistency=False)
+            verify_site(out, manifest=False)
         declared_labels = diagram_translation_scopes(out)
         from .facts.model import KnowledgeModel
         from .translation_context import collect, git_loader
@@ -208,3 +212,7 @@ def main() -> None:
     args = parser.parse_args()
     result = prepare_catalog(load(args.config), args.out, translate=args.translate)
     print(f'Prepared {result["pages"]} pages and {result["strings"]} strings. Review all changed source context before publishing.')
+
+
+if __name__ == '__main__':
+    main()
