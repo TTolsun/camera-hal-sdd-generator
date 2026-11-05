@@ -1,12 +1,40 @@
 name: Generator regression tests
 on:
   push:
+    branches: [main]
+    tags: ['**']
   pull_request:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      scope: ${{ steps.classify.outputs.scope }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Classify complete Git changes
+        id: classify
+        run: python ci/scope.py
+      - name: Preserve routing evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-scope-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/ci/scope.json
+          if-no-files-found: error
   test:
+    needs: scope
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
@@ -18,12 +46,38 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
+      - name: Require successful routing
+        env:
+          ROUTING_RESULT: ${{ needs.scope.result }}
+          CI_SCOPE: ${{ needs.scope.outputs.scope }}
+        run: >-
+          python -c "import os;
+          ok = os.environ['ROUTING_RESULT'] == 'success' and os.environ['CI_SCOPE'] in ('full', 'docs');
+          raise SystemExit(0 if ok else 'CI routing did not complete successfully')"
       - run: python -m pip install uv==0.12.17
       - run: uv sync --frozen --extra dev --python ${{ matrix.python }}
       - name: Publication pre-merge integration
+        if: needs.scope.outputs.scope == 'full'
         run: >-
           uv run --no-sync pytest -q
           tests/test_dependencies.py
           tests/test_translation_preflight.py
           tests/test_publication_operation.py::test_first_merge_pipeline_keeps_basis_through_translation_review_export_and_rollback
-      - run: uv run --no-sync pytest -q
+          --junitxml=build/ci/preflight.xml
+      - name: Full regression suite
+        if: needs.scope.outputs.scope == 'full'
+        run: uv run --no-sync pytest -q --junitxml=build/ci/results.xml
+      - name: Documentation validation
+        if: needs.scope.outputs.scope == 'docs'
+        run: >-
+          uv run --no-sync pytest -q
+          tests/test_ci_scope.py tests/test_docs_links.py tests/test_skill_messages.py
+          tests/test_inhouse_package.py tests/test_reader_study.py
+          --junitxml=build/ci/results.xml
+      - name: Preserve validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-tests-${{ matrix.os }}-${{ matrix.python }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/ci/*.xml
+          if-no-files-found: warn
