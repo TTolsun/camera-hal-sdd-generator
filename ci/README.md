@@ -29,6 +29,8 @@ flowchart TD
 
 작업 브랜치는 PR에서 검증합니다. 같은 커밋의 브랜치 push에서는 전체 CI를 중복 실행하지 않습니다. main push, 태그 push와 수동 실행은 유지합니다. 같은 PR에 새 커밋이 올라오면 이전 PR 실행을 자동 취소하며, 다른 PR·main·수동 실행은 취소하지 않습니다. 취소된 실행은 통과로 간주하지 않습니다.
 
+새 작업 브랜치는 최신 main에서 시작합니다. 기존 브랜치는 main을 통합해 새 workflow를 가져온 뒤 이 동작을 확인합니다. GitHub는 [이벤트의 커밋·ref에 있는 workflow](https://docs.github.com/en/actions/concepts/workflows-and-actions/workflows)를 사용하므로, 예전 workflow가 남은 브랜치에서는 기존 중복 실행이 계속될 수 있습니다.
+
 | 변경과 이벤트 | 검증 |
 | --- | --- |
 | 일반 Markdown 문서만 바꾼 PR 또는 main push | 링크·앵커, 안내 메시지, 사내 이관 패키지, 독자 평가 자료와 경로 판정 시험 |
