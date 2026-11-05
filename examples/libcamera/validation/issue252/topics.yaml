@@ -86,6 +86,13 @@ topics:
     file: include/libcamera/internal/request.h
     start: class Request::Private
     end: '} /* namespace libcamera */'
+  - id: fence-expiry
+    file: src/libcamera/request.cpp
+    start: If the \a fence associated with \a buffer isn't signalled, the request will
+    end: be reused in another request.
+    scope:
+      start: \brief Add a FrameBuffer with its associated Stream to the Request
+      end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
   parts:
   - id: message
     question: queueRequest가 0을 반환했지만 PipelineHandler::queueRequest 진입 자체가 없는 경우를 waitingRequests_ 준비 대기보다 먼저
@@ -106,6 +113,7 @@ topics:
     - dispatch
     - prepare
     - cancel
+    - fence-expiry
     max_statements: 2
   - id: recursive
     question: doQueueRequests의 선두 미준비와 queuedRequests_.size()==maxQueuedRequestsDevice_ 중단 조건, 준비된 선두를 pop한
@@ -276,8 +284,8 @@ topics:
     question: queueBuffer의 Stopping은 -ESHUTDOWN이며 cache_ 부재는 Fatal 로그 뒤 반환문이 있어도 정상 반환이나 취소 도달을 보장하지 않는 경계입니다.
       다음 문단은 cache get 성공 뒤 실제 VIDIOC_QBUF가 음수인 경우입니다. guard.release 전에 반환하므로 활성 scope_exit 소멸자가 cache_->put(buf.index)을
       수행하고 이번 버퍼의 queuedBuffers_ 신규 등록 없이 원래 ret를 반환합니다. 성공한 QBUF에서는 queuedBuffers_에 등록한 뒤 guard.release하므로
-      이번 함수 반환에서의 자동 put은 없습니다. 나중의 dequeue가 별도로 put하는 경로와 구분하고 QBUF 반환값과 프레임 완료를 구분하세요. 공통 cache·plane
-      사전 검사는 별도 항목이 소유하므로 반복하지 말고 두 짧은 문단으로 설명하세요.
+      이번 함수 반환에서의 자동 put은 없습니다. 나중의 dequeue가 별도로 put하는 경로와 구분하고 QBUF 반환값과 프레임 완료를 구분하세요. 공통 cache·plane 사전
+      검사는 별도 항목이 소유하므로 반복하지 말고 두 짧은 문단으로 설명하세요.
     sources:
     - qbuf
     - submit

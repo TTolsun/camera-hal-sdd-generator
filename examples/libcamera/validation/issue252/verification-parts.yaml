@@ -25,12 +25,15 @@ parts:
   max_statements: 2
 - id: control-qbuf-case
   question: 제출 실패 시험을 세 짧은 평서문 문단으로 계획합니다. 개별 processControl 오류가 무시되는 경우와 setControls 음수가 UVC를 거쳐 취소되는 경우를
-    나누어 변환 ret·구성 제어 수·setControls ret를 기록합니다. 빈 제어 목록과 ioctl 이전 검증 실패를 먼저 분리하고 실제 제어 ioctl이 실행된 경우에만 그 호출의 error_idx를 조사합니다. error_idx를 QBUF 구조체의 필드로 쓰지 않습니다. 다음은 cache
-    get 성공 뒤 VIDIOC_QBUF에 음수를 주입하는 경우입니다. 확보 index·ioctl ret·이번 scope_exit의 put 횟수와 항목 free 상태·이번 버퍼 신규 queuedBuffers_
-    등록 부재를 기록하고 원래 ret 전달과 공통 취소·요청별 알림 횟수를 앞의 완료 불변조건에 맞춰 대조합니다. 제어 처리는 선행해도 전체 요청 제어 적용이나 롤백을 단정하지 않습니다.
-    성공 대조군에서는 등록과 guard.release를 기록하여 이번 queueBuffer 반환 시 자동 put이 없음을 대조하고 이후 dequeue의 별도 put과 구별합니다. cache_
-    자체 부재 Fatal은 정상 음수 반환 및 cancelRequest 도달을 보장하지 않는 별도 경우입니다. 실제 오류 주입 실행이나 복구 성공이 아니라 기록·기대 분기의 시험 계획으로
-    쓰고 ~인지 나열을 피하세요.
+    나누어 변환 ret·구성 제어 수·setControls ret를 기록합니다. 빈 제어 목록과 ioctl 이전 검증 실패를 먼저 분리하고 실제 제어 ioctl이 실행된 경우에만 그 호출의
+    error_idx를 조사합니다. error_idx를 QBUF 구조체의 필드로 쓰지 않습니다. 다음은 cache get 성공 뒤 VIDIOC_QBUF에 음수를 주입하는 경우입니다. 확보
+    index·ioctl ret·이번 scope_exit의 put 횟수와 항목 free 상태·이번 버퍼 신규 queuedBuffers_ 등록 부재를 기록하고 원래 ret 전달과 공통 취소·요청별
+    알림 횟수를 앞의 완료 불변조건에 맞춰 대조합니다. 제어 처리는 선행해도 전체 요청 제어 적용이나 롤백을 단정하지 않습니다. 성공 대조군에서는 등록과 guard.release를 기록하여
+    이번 queueBuffer 반환 시 자동 put이 없음을 대조하고 이후 dequeue의 별도 put과 구별합니다. cache_ 자체 부재 Fatal은 정상 음수 반환 및 cancelRequest
+    도달을 보장하지 않는 별도 경우입니다. 실제 오류 주입 실행이나 복구 성공이 아니라 기록·기대 분기의 시험 계획으로 쓰고 ~인지 나열을 피하세요. 성공 대조군의 다음 DQBUF는 정적
+    예상 분기로 분리합니다. DQBUF 성공과 queuedBuffers_에 존재하는 index일 때만 cache_->put 뒤 항목 erase가 실행되므로 put 횟수와 큐 상태를 대조합니다.
+    DQBUF 오류와 예상 밖 index는 그 전에 nullptr로 반환하므로 이번 dequeue의 put·erase가 없다는 분기를 대조합니다. 이 소스 분기를 미확인이라고 쓰지 말고 실행
+    결과나 실제 put 관측값을 만들지도 마세요.
   sources:
   - uvc-submit
   - uvc-controls
@@ -41,6 +44,7 @@ parts:
   - control-conversion
   - cache-put
   - scope-exit
+  - dequeue-flow
   max_statements: 3
   answer_contract:
     basis: investigation
