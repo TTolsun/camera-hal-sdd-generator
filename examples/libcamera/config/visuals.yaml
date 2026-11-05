@@ -1524,19 +1524,20 @@ sections:
     kind: flow
     title: 실패 주입별 다음 관찰 분기
     generation: llm
-    max_nodes: 9
+    max_nodes: 10
     question: 준비 timeout, 장치 제출 실패와 DQBUF 실패에서는 어떤 호출·반환·완료 분기를 차례로 확인합니까?
     prompt: 준비 취소·장치 제출 실패·DQBUF 무알림 반환 세 경로의 소스 기반 조사 그림입니다. stop 오류는 별도 stop-lifetime-flow가 소유하므로 이 그림에 중복하지
-      마세요. 9노드를 사용합니다. doQueueRequest는 진입과 장치 반환값 검사라는 별도 두 노드로 나누어 같은 함수의 호출 전후를 구분합니다. timeout은 doCancelRequest로
+      마세요. 10노드를 사용합니다. doQueueRequest는 진입과 장치 반환값 검사라는 별도 두 노드로 나누어 같은 함수의 호출 전후를 구분합니다. timeout은 doCancelRequest로
       취소한 뒤 emitPrepareCompleted를 발행합니다. prepared 발행에서 실제 공통 대기 큐의 준비·선두·한도 조건을 통과하여 doQueueRequest에 진입한 조건으로만
       이어집니다. 진입에서 이미 cancelled_이면 completeRequest로 끝납니다. 비취소이면 queueRequestDevice를 실제 호출하고, 장치 반환 뒤 doQueueRequest의
       별도 ret 검사 노드로 돌아온 뒤 ret != 0일 때만 cancelRequest를 호출합니다. 진입에서 ret 검사 없이 cancelRequest로 바로 갈라지는 화살표는 금지합니다.
       queueRequestDevice 레이블은 findBuffer의 직접 -ENOENT, processControls 또는 queueBuffer의 원래 음수 ret 반환을 간결히 구분합니다.
       cache get도 -ENOENT일 수 있으므로 배타적 errno 원인 단정을 피합니다. QBUF ioctl 음수는 활성 guard put 뒤 원래 ret를 돌려주고 이번 버퍼 신규 등록이
       없으며 제어 롤백을 보장하지 않는 조건을 간결히 표시합니다. bufferAvailable은 먼저 dequeueBuffer를 호출하고, 그 호출의 오류·예상 밖 index가 nullptr로
-      반환되면 bufferAvailable이 bufferReady 없이 반환합니다. bufferAvailable→dequeueBuffer는 호출, dequeueBuffer→bufferAvailable은
-      nullptr 반환 화살표로 구별하고 검사 이전에 무알림 반환으로 가지 마세요. 기록할 ret·index·큐 상태를 간결히 연결하며 실제 오류 주입 결과를 만들지 마세요. 각 호출·반환과
-      조건을 한영에서 같은 순서로 표시하세요.
+      반환되면 bufferAvailable이 bufferReady 없이 반환합니다. bufferAvailable 진입→dequeueBuffer는 호출입니다. dequeueBuffer의 오류·예상
+      밖 index에서 nullptr이면 별도의 bufferAvailable 반환 상태 노드로 연결하고 그 종료 노드는 bufferReady 없이 반환하며 나가는 화살표가 없습니다. 함수 진입과
+      반환 상태에 각각 별도 노드를 사용하세요. nullptr 화살표를 진입 노드로 되돌리거나 이번 호출 안의 반복·재시도 순환을 만들지 마세요. 다른 장치 이벤트의 후속 호출은 이 그림의
+      실행 순서에 넣지 마세요. 기록할 ret·index·큐 상태를 간결히 연결하며 실제 오류 주입 결과를 만들지 마세요. 각 호출·반환과 조건을 한영에서 같은 순서로 표시하세요.
     sources:
     - prepare-flow
     - uvc-submit

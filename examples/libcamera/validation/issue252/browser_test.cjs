@@ -56,7 +56,7 @@ if (!/^https?:\/\//.test(base)) throw Error('Supply an exact local or public sit
         const after = await page.locator('#diagram-viewport svg').evaluate(e=>e.getBoundingClientRect().width);
         assert.ok(after>before);
         const nodes = await page.locator('#diagram-viewport .node').count();
-        assert.ok(nodes>=2 && nodes<=(id==='callback-order-flow'?11:9));
+        assert.ok(nodes>=2 && nodes<=(id==='callback-order-flow'?11:id==='failure-investigation-flow'?10:9));
         await page.screenshot({path:path.join(out,`${language}-${mobile?'mobile':'desktop'}-${id}.png`)});
         await page.keyboard.press('Escape');
         await page.locator('#diagram-dialog').waitFor({state:'hidden'});
