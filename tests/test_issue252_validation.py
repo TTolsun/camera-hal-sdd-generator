@@ -2,9 +2,177 @@ from pathlib import Path
 import importlib.util
 import pytest
 import json
+import hashlib
+import base64
+import subprocess
+import sys
 import shutil
 import yaml
 from types import SimpleNamespace
+
+
+def _native_verifier():
+    path=Path(__file__).parents[1]/'examples/libcamera/validation/issue252/verify_native_calls.py'
+    spec=importlib.util.spec_from_file_location('issue252_native_verifier',path)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module
+
+
+def _historical_import(tmp_path):
+    rel='build/prompts/calls/historical/001.receipt.json'
+    receipt=tmp_path/rel;receipt.parent.mkdir(parents=True)
+    receipt.write_bytes(b'synthetic historical receipt for digest validation only')
+    binding=dict(receipt=rel,sha256=hashlib.sha256(receipt.read_bytes()).hexdigest())
+    manifest=tmp_path/'historical-native-restoration-clarity.json'
+    manifest.write_text(json.dumps(dict(schema=2,receipts=[binding])))
+    return rel,receipt,manifest
+
+
+def _trusted_import_maps(tmp_path):
+    return {p.name:hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in tmp_path.glob('historical-native-restoration-*.json')}
+
+
+def test_historical_exclusion_verifies_bound_receipt_and_map_bytes(tmp_path):
+    rel,_,manifest=_historical_import(tmp_path)
+    preserved,maps=_native_verifier().historical_receipts(tmp_path,_trusted_import_maps(tmp_path))
+    assert preserved=={rel}
+    assert maps==[dict(path=manifest.name,sha256=hashlib.sha256(manifest.read_bytes()).hexdigest())]
+
+
+@pytest.mark.parametrize('corruption',['replaced','missing'])
+def test_historical_exclusion_rejects_changed_or_missing_receipt(tmp_path,corruption):
+    _,receipt,_=_historical_import(tmp_path)
+    if corruption=='replaced':
+        receipt.write_bytes(b'a different receipt at the same path')
+    else:
+        receipt.unlink()
+    with pytest.raises(ValueError,match='missing or changed'):
+        _native_verifier().historical_receipts(tmp_path,_trusted_import_maps(tmp_path))
+
+
+def test_historical_exclusion_rejects_unbound_path_only_map(tmp_path):
+    (tmp_path/'historical-native-restoration-navigation.json').write_text(
+        json.dumps(dict(receipt_paths=['build/prompts/calls/old/001.receipt.json'])))
+    with pytest.raises(ValueError,match='needs receipt digests'):
+        _native_verifier().historical_receipts(tmp_path,_trusted_import_maps(tmp_path))
+
+
+def test_historical_exclusion_rejects_receipt_outside_run(tmp_path):
+    (tmp_path/'historical-native-restoration-clarity.json').write_text(json.dumps(dict(
+        receipts=[dict(receipt='../outside.receipt.json',sha256='0'*64)])))
+    with pytest.raises(ValueError,match='Invalid historical receipt binding'):
+        _native_verifier().historical_receipts(tmp_path,_trusted_import_maps(tmp_path))
+
+
+def test_historical_exclusion_rejects_receipt_and_map_changed_together(tmp_path):
+    _,receipt,manifest=_historical_import(tmp_path)
+    trusted=_trusted_import_maps(tmp_path)
+    receipt.write_bytes(b'replacement with a rewritten import binding')
+    data=json.loads(manifest.read_bytes())
+    data['receipts'][0]['sha256']=hashlib.sha256(receipt.read_bytes()).hexdigest()
+    manifest.write_text(json.dumps(data))
+    with pytest.raises(ValueError,match='Historical import map changed'):
+        _native_verifier().historical_receipts(tmp_path,trusted)
+
+
+def test_historical_exclusion_rejects_removed_import_map(tmp_path):
+    _,_,manifest=_historical_import(tmp_path)
+    trusted=_trusted_import_maps(tmp_path);manifest.unlink()
+    with pytest.raises(ValueError,match='map set changed'):
+        _native_verifier().historical_receipts(tmp_path,trusted)
+
+
+def test_native_verification_rechecks_historical_receipts_before_reporting(tmp_path,monkeypatch):
+    _,receipt,_=_historical_import(tmp_path)
+    module=_native_verifier()
+    monkeypatch.setattr(module,'RUN',tmp_path)
+    monkeypatch.setattr(module,'HISTORICAL_IMPORT_MAP_SHA256',_trusted_import_maps(tmp_path))
+    monkeypatch.setattr(module,'load',lambda path:SimpleNamespace(agent=object()))
+    def changed_records(path):
+        receipt.write_bytes(b'replaced while the verifier scans records')
+        return []
+    monkeypatch.setattr(module,'iter_records',changed_records)
+    with pytest.raises(ValueError,match='missing or changed'):
+        module.main()
+    assert json.loads((tmp_path/'native-call-verification.json').read_bytes())['status']=='failed'
+
+
+def test_native_verification_does_not_trust_old_timestamp_as_exclusion(tmp_path,monkeypatch):
+    calls=tmp_path/'build/prompts/calls';calls.mkdir(parents=True)
+    module=_native_verifier()
+    monkeypatch.setattr(module,'RUN',tmp_path)
+    monkeypatch.setattr(module,'HISTORICAL_IMPORT_MAP_SHA256',{})
+    monkeypatch.setattr(module,'load',lambda path:SimpleNamespace(agent=object()))
+    record=SimpleNamespace(receipt=dict(completed_at='2020-01-01T00:00:00'),
+                           receipt_path=calls/'old.receipt.json')
+    monkeypatch.setattr(module,'iter_records',lambda path:[record])
+    with pytest.raises(ValueError,match='no digest binding'):
+        module.main()
+    assert json.loads((tmp_path/'native-call-verification.json').read_bytes())['status']=='failed'
+
+
+def test_native_verification_failure_archives_and_invalidates_prior_success(tmp_path,monkeypatch):
+    _,receipt,_=_historical_import(tmp_path)
+    module=_native_verifier()
+    monkeypatch.setattr(module,'RUN',tmp_path)
+    monkeypatch.setattr(module,'HISTORICAL_IMPORT_MAP_SHA256',_trusted_import_maps(tmp_path))
+    monkeypatch.setattr(module,'load',lambda path:SimpleNamespace(agent=object()))
+    report=tmp_path/'native-call-verification.json'
+    prior=b'{"status":"verified","synthetic_test_fixture":true}\r\n'
+    report.write_bytes(prior)
+    receipt.write_bytes(b'changed after a prior successful verification')
+    with pytest.raises(ValueError,match='missing or changed'):
+        module.main()
+    latest=json.loads(report.read_bytes())
+    assert latest['status']=='failed'
+    assert (tmp_path/latest['previous_report']['path']).read_bytes()==prior
+    assert latest['previous_report']['sha256']==hashlib.sha256(prior).hexdigest()
+
+
+def test_native_verification_archive_conflict_preserves_bytes_and_fails_latest(tmp_path,monkeypatch):
+    module=_native_verifier();monkeypatch.setattr(module,'RUN',tmp_path)
+    prior=b'{"status":"verified","synthetic_test_fixture":true}\r\n'
+    report=tmp_path/'native-call-verification.json';report.write_bytes(prior)
+    archive=tmp_path/'native-call-verification-history'/(hashlib.sha256(prior).hexdigest()+'.json')
+    archive.parent.mkdir();archive.write_bytes(b'conflicting archive evidence')
+    with pytest.raises(ValueError,match='archive changed'):
+        module.main()
+    latest=json.loads(report.read_bytes())
+    assert latest['status']=='failed'
+    assert base64.b64decode(latest['previous_snapshot']['bytes_base64'])==prior
+    assert archive.read_bytes()==b'conflicting archive evidence'
+
+
+def test_native_verification_rejects_interleaved_attempt_before_it_can_publish(tmp_path,monkeypatch):
+    module=_native_verifier();monkeypatch.setattr(module,'RUN',tmp_path)
+    report=tmp_path/'native-call-verification.json'
+    def outer():
+        with pytest.raises(RuntimeError,match='Native call verification'):
+            module.main()
+        script="""import importlib.util,sys
+from pathlib import Path
+spec=importlib.util.spec_from_file_location('child_verifier',sys.argv[1])
+module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+module.RUN=Path(sys.argv[2])
+module._verify=lambda:dict(status='verified',calls=[],counts={},historical_calls_excluded=0)
+module.main()
+"""
+        child=subprocess.run([sys.executable,'-X','utf8','-c',script,module.__file__,str(tmp_path)],
+                             capture_output=True,text=True,encoding='utf-8',timeout=20)
+        assert child.returncode!=0
+        assert 'Native call verification' in child.stderr
+        assert json.loads(report.read_bytes())['status']=='in-progress'
+        return dict(status='verified',calls=[],counts={},historical_calls_excluded=0)
+    monkeypatch.setattr(module,'_verify',outer)
+    module.main()
+    assert json.loads(report.read_bytes())['status']=='verified'
+    def later():
+        raise ValueError('later attempt fails')
+    monkeypatch.setattr(module,'_verify',later)
+    with pytest.raises(ValueError,match='later attempt fails'):
+        module.main()
+    assert json.loads(report.read_bytes())['status']=='failed'
 
 @pytest.mark.parametrize('delimiter',['`','~'])
 def test_visual_audit_ignores_shorter_fences_inside_a_longer_code_block(delimiter):

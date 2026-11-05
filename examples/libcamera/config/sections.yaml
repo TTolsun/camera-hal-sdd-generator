@@ -6164,6 +6164,10 @@ sections:
       file: src/libcamera/base/thread.cpp
       start: \brief Dispatch posted messages for this thread
       end: \brief Move an \a object and all its children to the thread
+    - id: request-state
+      file: src/libcamera/request.cpp
+      start: void Request::Private::complete()
+      end: void Request::Private::doCancelRequest()
     parts:
     - id: bookkeeping
       question: PipelineHandler::completeBuffer는 bufferCompleted.emit 뒤에 Request::Private::completeBuffer를 호출하여
@@ -6181,7 +6185,9 @@ sections:
         전달하며, 해당 Camera 상태 검사를 통과한 경우에만 requestCompleted 신호를 발생시킵니다. 상태 검사 실패의 Fatal 경계에서 실제 신호·정상 반환을 보장하지 말고
         신호 발생과 별도 Queued 수신자의 실제 실행·복귀도 구분하여 세 문장 이내로 답하세요. Queued 수신을 이벤트 루프 복귀 때로만 한정하지 마세요. 해당 수신 스레드의 명시적·재귀
         Thread::dispatchMessages가 type·receiver 필터에 맞는 메시지를 더 일찍 소비할 수 있으며, 스레드 정지 전 실제 소비가 보장되지 않는다고 바로 연결하세요.
-        상세 필터·재귀 조건은 explicit-dispatch에서 설명하므로 반복하지 마세요.
+        상세 필터·재귀 조건은 explicit-dispatch에서 설명하므로 반복하지 마세요. 상태 선택의 상세는 앞 resources/normal 항목이 소유합니다. 이 항목에서는 completeRequest가
+        Request::Private::complete를 호출하는 순서만 연결하고 enum 판정식을 되풀이하지 마세요. 취소된 버퍼의 유무를 cancelled_와 동치로 바꾸지 마세요. 실제
+        complete는 cancelled_만 검사하고 doCancelRequest는 pending_이 비어 있어도 true를 설정할 수 있습니다.
       sources:
       - uvc-return
       - completion
@@ -6190,6 +6196,7 @@ sections:
       - invocation
       - connections
       - dispatch-contract
+      - request-state
       max_statements: 2
     - id: early-reuse
       question: 앞 문단의 공통 신호·내부 정리 순서와 버퍼 유지 기한을 다시 설명하지 말고 서로 다른 요청 A와 B의 조건부 반례만 한 문단으로 설명하세요. 첫 문장의 주어는 B의
