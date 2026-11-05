@@ -1,5 +1,6 @@
 """Entrances retain canonical facts, uncertainty and publication rollback."""
 import json
+from urllib.parse import unquote
 
 import pytest
 import yaml
@@ -60,7 +61,7 @@ def test_roles_project_one_canonical_answer_with_distinct_questions(tmp_cfg, pat
 
 @pytest.mark.parametrize('mutation', ['missing-topic', 'missing-part', 'mixed-commit', 'no-role-question',
     'unmeasured-as-fact', 'authored-fact', 'incomplete-template', 'missing-source', 'missing-claim',
-    'collision', 'no-shared-fact'])
+    'collision', 'no-shared-fact', 'missing-question-source', 'empty-question-sources', 'missing-question-heading'])
 def test_invalid_role_inputs_preserve_previous_site(tmp_cfg, paths, mutation):
     data, write, section, model, save, _ = paths
     site = export_site(tmp_cfg)
@@ -90,6 +91,12 @@ def test_invalid_role_inputs_preserve_previous_site(tmp_cfg, paths, mutation):
     elif mutation == 'no-shared-fact':
         for q in data['roles'][1]['questions']:
             q['claims'].remove('observed')
+    elif mutation == 'missing-question-source':
+        data['roles'][0]['questions'][0]['sources'] = [dict(section='device', topic='missing')]
+    elif mutation == 'empty-question-sources':
+        data['roles'][0]['questions'][0]['sources'] = []
+    elif mutation == 'missing-question-heading':
+        data['roles'][0]['questions'][0]['sources'] = [dict(section='device', topic='stop', heading='없는 상세 제목')]
     write()
     with pytest.raises((ValueError, RuntimeError)):
         export_site(tmp_cfg)
@@ -180,6 +187,51 @@ def test_configuration_cannot_create_unverified_markdown_links_or_emphasis(tmp_c
     assert 'href="https://example.invalid"' not in page
     assert '**Approved**' in page
     assert '&lt;img src=x&gt;' in page
+
+
+@pytest.mark.parametrize('explicit_sources', [False, True])
+def test_question_links_go_straight_to_canonical_details_before_repeated_claims(tmp_cfg, paths, explicit_sources):
+    data, write, _, _, _, agent = paths
+    question = next(q for q in data['roles'][0]['questions'] if q['aspect'] == 'verification')
+    if explicit_sources:
+        question['sources'] = [dict(section='device', topic='stop')]
+    write()
+    original = (tmp_cfg.sdd_dir/'device.md').read_bytes()
+    calls = len(agent.calls)
+    site = export_site(tmp_cfg)
+    page = (site/'reader-work.html').read_text(encoding='utf-8')
+    local = unquote(page.split('id="question-verification"', 1)[1].split('<h2', 1)[0])
+    assert 'device.html#종료-책임' in local
+    assert local.index('바로 확인할 상세 설명') < local.index('같은 근거·조건 다시 보기')
+    fact = page.split('id="claim-observed"', 1)[1].split('<h3', 1)[0]
+    assert fact.index('공개 정적 소스입니다.') < fact.index('<blockquote>')
+    assert (tmp_cfg.sdd_dir/'device.md').read_bytes() == original
+    assert len(agent.calls) == calls
+    assert verify_site(site)['broken_links'] == 0
+
+
+def test_detail_heading_uses_real_rendered_headings_inside_its_canonical_topic():
+    from sdd.reader_paths import _detail_anchor, _detail_headings
+    body = '## Owner\n\n```md\n### Fake\n```\n\n### Target\n\nRead this.\n\n## Other\n\n### Fake\n\nOutside.\n'
+    headings = _detail_headings(body, 'device.md', {'device.md'}, None, '')
+    assert _detail_anchor(headings, 'owner', 'Target') == 'target'
+    with pytest.raises(ValueError, match='missing or ambiguous'):
+        _detail_anchor(headings, 'owner', 'Fake')
+    with pytest.raises(ValueError, match='missing or ambiguous'):
+        _detail_anchor(headings, 'other', 'Target')
+
+
+def test_fact_condition_has_its_own_detail_link_before_the_unchanged_quote(tmp_cfg, paths):
+    data, write, _, _, _, _ = paths
+    data['claims'][0]['details'] = [dict(section='device', topic='stop')]
+    write()
+    source = (tmp_cfg.sdd_dir/'device.md').read_bytes()
+    site = export_site(tmp_cfg)
+    page = unquote((site/'reader-work.html').read_text(encoding='utf-8'))
+    fact = page.split('id="claim-observed"', 1)[1].split('<h3', 1)[0]
+    assert fact.index('조건을 확인할 상세 설명') < fact.index('device.html#종료-책임') < fact.index('<blockquote>')
+    assert '<strong>적용 조건·한계:' in fact
+    assert (tmp_cfg.sdd_dir/'device.md').read_bytes() == source
 def test_public_reader_fact_sources_select_existing_example_parts():
     from pathlib import Path
     import yaml
