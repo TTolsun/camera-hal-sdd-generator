@@ -1713,7 +1713,8 @@ sections:
       분기합니다. 게시된 메시지는 해당 수신 스레드가 type·receiver 필터에 맞춰 dispatchMessages로 소비한 조건에서 Object::message로 전달됩니다. 일반 이벤트
       루프뿐 아니라 명시적·같은 스레드 메시지 핸들러의 재귀 dispatch가 가능하며, 이 수신의 시작을 emit 반환 전후로 고정하지 마세요. emit이 실제 반환한 뒤 Request::Private::completeBuffer가
       pending을 갱신합니다. Direct 수신의 동기 복귀와 Queued 게시의 무대기를 구분하세요. stop의 Blocking 반환은 별도 stop-lifetime-flow가 설명하므로
-      이 그림에 stop 노드를 넣지 마세요.
+      이 그림에 stop 노드를 넣지 마세요. emit 노드는 연결 슬롯의 activate를 순서대로 호출한다고 정확히 쓰고, 수신 함수들을 연결 순서대로 실행·완료한다고 쓰지 마세요. Queued
+      수신 실행·완료는 별도입니다. 한국어와 영어 모두 이 동작의 주어·목적어를 명확히 구분하세요.
     sources:
     - signals
     - signal-overloads
@@ -1810,10 +1811,10 @@ sections:
     title: 동시 제출의 순서를 관찰할 경계
     generation: llm
     max_nodes: 9
-    max_label_chars: 110
-    max_edge_label_chars: 80
+    max_label_chars: 240
+    max_edge_label_chars: 160
     question: API 호출 시작과 실제 게시·등록·완료 통지의 순서는 어디에서 구분합니까?
-    prompt: 지정한 다섯 노드는 API queueRequest, Thread postMessage의 mutex 안 메시지 추가, 파이프라인 waitingRequests_ 등록, registerRequest의
+    prompt: 지정한 다섯 노드는 API queueRequest, Thread postMessage의 mutex 안 메시지 추가, 파이프라인 waitingRequests_ 등록, doQueueRequest의
       Request sequence_와 queuedRequests_ 등록, requestCompleted 신호 발생 관찰입니다. API 시작 시각은 서로 다른 스레드의 게시 순서를 확정하지
       않으며 0 반환은 게시 뒤임을 보존하세요. 정상 선택 경로의 메시지 소비→대기/준비→등록→완료된 큐 선두 통지라는 경계를 연결합니다. 준비·장치 한도와 정지 취소의 상세는 기존 그림으로
       연결하고 즉시 실행·촬영 성공을 보장하지 마세요. Request 소프트웨어 sequence와 장치 FrameMetadata sequence를 같다고 쓰지 말고, 마지막 노드는 신호 발생과
@@ -1821,7 +1822,8 @@ sections:
       activate, bound-overloads와 connections에서 activatePack→postMessage, object-message에서 Thread postMessage
       호출, thread-dispatch와 invoke-message에서 실제 handler 실행의 연결을 제공합니다. 다섯 노드 사이 간선은 이 중간 함수를 별도 노드로 늘리지 않고 호출/소비가
       성립한 조건의 관찰 관계로 모두 연결하세요. registration에서 완료 통지는 completion의 완료된 queuedRequests_ 선두 pop과 camera-notice의 신호
-      발생을 거칩니다. 이 관계를 직접 동기 호출·시간 보장으로 그리지 마세요.
+      발생을 거칩니다. 이 관계를 직접 동기 호출·시간 보장으로 그리지 마세요. registerRequest는 생성 시 prepared 신호를 연결할 뿐이며 큐 등록·순번 부여는 doQueueRequest입니다.
+      한국어와 영어 라벨은 각각 짧은 완전한 문장으로 의역하고 단어·인용부호·문장 꼬리를 잘라 맞추지 마세요. 실행 미보장 조건도 완전한 영어로 보존하세요.
     sources:
     - submit-message
     - post-order
@@ -1856,7 +1858,7 @@ sections:
     - queueRequest
     - postMessage
     - waitingRequests_
-    - registerRequest
+    - doQueueRequest
     - requestCompleted
     require_connected: true
   - id: stop-lifetime-flow
@@ -1865,14 +1867,15 @@ sections:
     title: stop 반환과 별도 수신의 마지막 사용 확인
     generation: llm
     max_nodes: 7
-    max_label_chars: 130
-    max_edge_label_chars: 95
+    max_label_chars: 240
+    max_edge_label_chars: 160
     question: 정상 stop의 Blocking 호출이 반환해도 별도 Queued 수신자의 포인터 사용은 왜 따로 확인합니까?
     prompt: 정상 접근 검사를 통과한 Camera::stop→PipelineHandler::stop의 Blocking 호출→Camera::stop 실제 반환을 세 노드로 연결하세요. 같은
       stop 심볼을 다른 id로 사용해도 됩니다. 같은 스레드 Blocking은 Direct이고 다른 스레드는 해당 InvokeMessage의 semaphore만 기다립니다. 별도 Queued
       Object 수신 처리와 Request 포인터의 마지막 사용 확인 계획을 별도 두 노드로 연결하세요. stop 반환에서 마지막 사용 확인으로는 실행 순서가 아닌 확인 책임의 관계를 연결하고
       간선에 별도 확인 필요·선후 보장 아님을 명시하세요. 이 ownership 그림의 관계를 모든 Queued 큐 drain·객체 수명 연장·콜백 실행 시각 보장으로 쓰지 마세요. 마지막
-      사용 확인 전 삭제·재사용을 하지 않는 조건은 검증 계획이며 실제 시험 결과가 아닙니다.
+      사용 확인 전 삭제·재사용을 하지 않는 조건은 검증 계획이며 실제 시험 결과가 아닙니다. 한영 라벨은 각각 짧고 완전한 문장으로 쓰고 길이를 맞추려고 semaphore·검증 계획의 문장
+      꼬리나 단어를 자르지 마세요. 해당 호출의 semaphore와 별도 마지막 사용 확인은 완전한 영어 문장으로 구분하세요.
     sources:
     - stop-entry
     - object-template

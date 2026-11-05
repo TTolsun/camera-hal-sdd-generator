@@ -121,12 +121,13 @@ topics:
     max_statements: 3
   - id: submission-order
     question: 선택한 단일 카메라 경로에서 API 계약의 제출 순서와 동시 호출의 관찰 경계를 구분하세요. 서로 다른 스레드의 Camera::queueRequest 호출 시작 순서만으로
-      게시 순서를 확정할 수 없으며 Thread::postMessage는 mutex를 얻은 뒤 메시지를 큐에 추가합니다. 실제 파이프라인 진입과 waitingRequests_ 등록, registerRequest의
+      게시 순서를 확정할 수 없으며 Thread::postMessage는 mutex를 얻은 뒤 메시지를 큐에 추가합니다. 실제 파이프라인 진입과 waitingRequests_ 등록, doQueueRequest의
       Request sequence_·queuedRequests_ 등록, completeRequest의 선두 통지 순서를 연결하고 Request 소프트웨어 sequence와 V4L2에서
-      받은 FrameMetadata sequence를 같다고 가정하지 마세요. API 시작·0 반환, 잠금 안의 메시지 추가 순서, 핸들러 진입·등록·Request sequence, 신호
-      발생과 특정 수신 연결의 실제 콜백을 구분해 기록하는 검증 조건을 최대 네 문장으로 설명하세요. source-caller 진입 시각을 전역 제출 순서로 단정하거나 여러 수신 연결을
-      중복 완료로 세지 마세요. object-template·bound-overloads·connections·object-message·invoke-message·thread-dispatch의
-      실제 호출 연결도 제공되어 있으므로 이 게시·처리 관계를 불명으로 대체하지 마세요.
+      받은 FrameMetadata sequence를 같다고 가정하지 마세요. API 시작·0 반환, 잠금 안의 메시지 추가 순서, 핸들러 진입·doQueueRequest 등록·Request
+      sequence, 신호 발생과 특정 수신 연결의 실제 콜백을 구분해 기록하는 검증 조건을 최대 네 문장으로 설명하세요. source-caller 진입 시각을 전역 제출 순서로 단정하거나
+      여러 수신 연결을 중복 완료로 세지 마세요. object-template·bound-overloads·connections·object-message·invoke-message·thread-dispatch의
+      실제 호출 연결도 제공되어 있으므로 이 게시·처리 관계를 불명으로 대체하지 마세요. registerRequest는 생성 시 prepared 신호만 연결하며 순번과 queuedRequests_는
+      doQueueRequest가 담당한다는 실제 함수 경계를 유지하세요.
     sources:
     - submit-message
     - post-order

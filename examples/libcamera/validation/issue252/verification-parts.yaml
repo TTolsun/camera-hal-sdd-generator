@@ -116,7 +116,7 @@ parts:
     basis: investigation
 - id: concurrent-order-case
   question: 서로 다른 Request와 버퍼를 유지하는 동시 제출 시험의 계획을 설명하세요. API 호출 시작·0 반환만 비교하지 말고 실제 메시지 게시의 mutex 안 추가 순서,
-    PipelineHandler 진입·waitingRequests_ 등록, registerRequest가 부여한 Request sequence와 queuedRequests_ 선두 통지 순서를
+    PipelineHandler 진입·waitingRequests_ 등록, doQueueRequest가 부여한 Request sequence와 queuedRequests_ 선두 통지 순서를
     연관하여 기록합니다. 신호 발생과 특정 연결의 실제 콜백 진입·복귀는 구분하고 Request sequence와 장치 FrameMetadata sequence의 동일성 또는 서로 다른 스레드
     호출 시작의 전역 순서를 가정하지 마세요. 필요한 추가 계측의 관찰 계획이며 기존 로그가 전부 제공하거나 시험을 실행했다고 쓰지 마세요. 세 문장 이내로 답하세요.
   sources:
