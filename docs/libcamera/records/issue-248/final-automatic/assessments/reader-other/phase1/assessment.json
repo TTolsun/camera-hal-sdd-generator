@@ -1,0 +1,44 @@
+{
+  "source_kind": "agent",
+  "tasks": [
+    {
+      "task_id": "vendor_overview",
+      "semantic_verdict": "aligned",
+      "reason": "공통 프레임워크의 카메라 제어와 API를 장치별 핸들러의 미디어 장치 매칭·확보 및 Camera 생성 책임과 구분했다. 장치 지원이 구현과 필요한 장치 확보에 달려 있음을 설명하고 공통 API만으로 지원이나 성능을 보장하지 않았다.",
+      "evidence": [
+        "vendor-overview.html#카메라-스택의-네-계층",
+        "vendor-overview.html#공통-camera와-장치별-구현의-경계",
+        "vendor-overview.html#지원하는-하드웨어와-빌드-선택"
+      ],
+      "procedure_limit": "Python을 이용한 텍스트 탐색 기록이며 실제 UI 사용이나 사람의 수행이 아니다."
+    },
+    {
+      "task_id": "vendor_assurance",
+      "semantic_verdict": "aligned",
+      "reason": "벤치마크가 통계 수집과 디베이어링 시간만 측정하고 프레임 캡처와 출력은 제외한다는 점을 정확히 구분했다. 종단 간 성능으로 확대하지 않았고 실행 조건도 제시했다.",
+      "evidence": [
+        "vendor-assurance.html#성능-근거를-읽는-기준"
+      ],
+      "procedure_limit": "기록된 답변과 근거를 대조한 평가이며 벤치마크의 실제 실행이나 기기 성능 검증은 아니다."
+    },
+    {
+      "task_id": "S",
+      "semantic_verdict": "incomplete",
+      "reason": "호출 예약의 성공과 요청 완료, 별도의 requestCompleted, 마지막 버퍼와 명시적 요청 완료를 구분했다. 선두 pending에 따른 반환 지연도 조건부로 설명했다. 다만 필수 의미인 성공 반환이 입력 검사를 통과한 뒤의 결과라는 점은 자기 말 답변에 명시되지 않았다.",
+      "evidence": [
+        "request-lifecycle.html#제출-성공-뒤에도-남는-수명-문제",
+        "request-lifecycle.html#제출에서-완료까지",
+        "request-lifecycle.html#정상-완료와-다음-요청-준비",
+        "request-lifecycle.html#알림-순서와-취소가-달라질-때"
+      ],
+      "procedure_limit": "문서 접근 중단과 재열기 전 답변 보존은 기록상 주장이다. 실제 문서 닫기 여부는 이 기록만으로 독립 확인할 수 없고, 유지된 모델 문맥은 사람의 기억이나 망각을 나타내지 않는다."
+    }
+  ],
+  "findings": [
+    "1단계에 배정된 기본 두 과업과 S만 평가했다. R은 중단 전 메모만 있으며 R과 X의 평가는 2단계 범위다.",
+    "기록에는 부모 에이전트가 300초 간격을 관리한다는 계획만 있고 재개 시각이 없어 실제 간격을 확인할 수 없다.",
+    "텍스트 탐색과 모델 문맥 유지 때문에 이 기록을 사람 대상 연구나 5분 후 기억 회복의 증거로 해석할 수 없다. 에이전트의 읽기 용이성·흥미·자연스러움 추정치는 사람의 주관적 데이터가 아니다.",
+    "문서와 답변의 대조는 실제 실행 결과나 시간적 동작을 검증하지 않는다."
+  ],
+  "human_completion": "not-established"
+}

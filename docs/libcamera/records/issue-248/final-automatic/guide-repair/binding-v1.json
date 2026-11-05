@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "observed_by": "fresh reader-new phase1 B1 naturalness estimate",
+  "frozen_before_build": "52d0226eff7ccee8170b3d7c5b4631ec8d9ff00708ab2e5a8b4f14a5bed95b9f",
+  "source_question_html": "Camera::start()의 허용 상태와 상태 검사 실패 시 음수 오류 반환을 behavior로 설명하고, 별도 limitation에서 Camera 클래스 주석의 시작 타이밍 문서화 TODO만 설명하세요. 호출자 동기화 의무는 boundary 절에서 한 번 설명하므로 여기서 되풀이하지 마세요. TODO로 전체 구현이 미정이라고 추정하지 마세요.",
+  "source_sha256": "d5114293d4a54fa88c64bf17dee0407a22c90be449297810b15b481684e14a90",
+  "reader_label": "Camera::start()의 허용 상태·오류 반환과 시작 타이밍 문서화의 한계는 무엇입니까?",
+  "configuration": "C:\\Users\\baboe\\.codex\\worktrees\\c828\\camera-hal-sdd-generator\\build\\issue248\\final-readers\\inherited-249\\integration\\publication-repair.yaml",
+  "inherited_archive_sha256": "32fdf06972545e13e2b4e6ae142fab436130193b5ef46a88916003e1ea8c9ccc",
+  "inherited_native_files": 4123,
+  "original_manuscripts_preserved": true,
+  "human_approval": "unchanged",
+  "source_kind": "agent"
+}

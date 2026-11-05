@@ -1,0 +1,201 @@
+{
+  "schema": 1,
+  "source_kind": "agent",
+  "unique_new_native_calls": 13,
+  "runner": "codex",
+  "model": "gpt-6.1-terra",
+  "args": [
+    "-c",
+    "model_reasoning_effort=\"high\""
+  ],
+  "calls": [
+    {
+      "path": "independent-grading/reader-other/S-adjudication/prompts/calls/c2fc2e8fa62041e39e30ccd5534da1ca/001.receipt.json",
+      "sha256": "2fc9ba94f0a16473c59df5b80b1cb72a515df939a416e80832352f4aaf25fc1f",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "e9de8151e57954a9915159536e91e8eca53a162180405f3ae135d5f6a8fc6ea5",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "independent-grading/reader-other/phase2/prompts/calls/ec685e04d42d42168554a55aab23af2f/001.receipt.json",
+      "sha256": "0b05f8f0631d17769aeea229cdce2a6d9cab8f561e9c7e51fb8b2308111a6e68",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "482ada03b48afd02e81b3ce62690db4761e062814fcef47f9b58d543484c5662",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "independent-grading/reader-other/phase1/prompts/calls/17b3884681c844dcbd60e831c5e88dd3/001.receipt.json",
+      "sha256": "f30756f0f1d0bc6193eeaf3936cf04601e30c476253a661ad39c85dc6612571d",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "97dac246968b9d1aa594c9f6959b553452fff57a291d87e09ed008395c7e69cf",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "independent-grading/reader-nonauthor/phase2/prompts/calls/e384dfc6e3a44c13a09b7613ef0d131d/001.receipt.json",
+      "sha256": "64cb0339d502bca80e60a22ddd2f79f67513e5197a9f83b4260fc78ea02b515d",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "af157c4b8e380ef4f12f2a82b56e68b38f9e1962ead0e369a021f170f00867b2",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "independent-grading/reader-nonauthor/phase1/prompts/calls/359efc5c9fe34089bbf5443d6e73cd38/001.receipt.json",
+      "sha256": "3fb10a280fd29ce54c7aafb28b17d382f890d075d8fafae86cb338dc0daa37b2",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "e809bfe19f46a10423ad79b54294972cbcbdaeb9ec8873bb80e85166e3c805e7",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "independent-grading/reader-new/phase2/prompts/calls/672eb9e6c317426f9ee374d9173a318a/001.receipt.json",
+      "sha256": "6cc5317d530697cb34acdd4c4712f2f4f10fd0dfd93c2088627642cc6888faa2",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "3120d18da5522580d8b01dcca954dbadaa6655f5e3af7c5a7c930018604211c5",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "independent-grading/reader-new/phase1/prompts/calls/7b34c1d042b64206842844da1d820885/001.receipt.json",
+      "sha256": "c2cf31df114c10babbd7b278ce3d8b7caa8f0b4088c23c693ceec4c4e50b11ee",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "27b5df1cda7465f93ace3c219237e97046aefbb74e6161b3d44b8a0a876c9a34",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "independent-grading/phase2-adjudication/prompts/calls/540c68a2fd4a419db053d10a99920c55/001.receipt.json",
+      "sha256": "e9b9b6042bd4e73dcb3033d098e2d075727ab5b5008d5de54361083404662004",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "6692459a918030f2bb4a54ccc8331576bc3046ca00517ce7e27c5fbf7b98131f",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "guide-repair/scope-review/prompts/calls/752109989bd240caa22a197bf787b1ed/001.receipt.json",
+      "sha256": "2f162ea93310fa034f6e0dcfbf04078288fc8bc885d4c3c411a542ca404fa249",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "b783974d85f1f5643699938aa204cf828f7a9b02172566a24eb41deb027e0f03",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "guide-repair/english-review/prompts/calls/8bf0996173644dd6805965298369a6a1/001.receipt.json",
+      "sha256": "c6e1af5ea8bc21616ecbb416534c457e68c287a6e21d3c1c116608b2a85d1987",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "868f8fce855695d4b6515f1ee9e8ebc88d1561b1cdc98ce40e085d2447d587ed",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "guide-repair/english-review/prompts/calls/b298bcc0c1e8438eaf85dbdcb1561648/001.receipt.json",
+      "sha256": "6f5457a13c047dc6abf19bbf59b81a0950c91df0ee2c042efbdb2ed5c2e5b473",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "94da7fb833908273474b7cbf8a722a0cb20281f6c5b4486d86e092eab2214a8d",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "inherited-249/integration/build/translation-prompts/calls/d1224ebbcbab44b5b8fa29d9e61bacfa/001.receipt.json",
+      "sha256": "26b0ab844a5de9de5d49f7205a281c28fe0b49ea108c8c8dc242be7534c22988",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "74673a9145c9f4f31ce9bb2b7b94789a49d83f0b603d941235af93e32a5c35dc",
+        "arguments_verified": true
+      }
+    },
+    {
+      "path": "inherited-249/integration/build/translation-prompts/calls/ea5eac9cda444e3d950a2c48aee1a16f/001.receipt.json",
+      "sha256": "deec6d3871d40efcd89087650301b7d5080870c6a5f5267ee5f057d04871e78a",
+      "model": "gpt-6.1-terra",
+      "cli_call": true,
+      "verified": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "5bb860b4397f30241698d80c373cb8626949211ba79643dc5e86602151bbdc0f",
+        "arguments_verified": true
+      }
+    }
+  ],
+  "archive_sha256": "c9782ef992d9d1a2a7f73de52149cfe61a9c7f58cf96d4f95d01d8bb67fb2e25",
+  "contract_new_calls": 0,
+  "contract_revalidated_units": 90,
+  "inherited_unresolved": 8,
+  "human_approval": "unchanged",
+  "actual_human_participants": 0
+}

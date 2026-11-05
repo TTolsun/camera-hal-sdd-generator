@@ -115,6 +115,10 @@ site:
         label: Camera::queueRequest()의 요청 조건을 확인하고 반환값과 완료 알림을 어떻게 구분합니까?
       ac0df8dce59b62959299298e031e9f81defd90814297f68908cab997ab1e78f4:
         label: 접수된 요청은 언제 장치로 전달되며, 대기·취소·큐잉 실패는 어떻게 처리됩니까?
+    overview.md:
+      d5114293d4a54fa88c64bf17dee0407a22c90be449297810b15b481684e14a90:
+        label: Camera::start()는 어떤 상태에서 호출할 수 있고, 상태 검사 실패 시 무엇을 반환합니까? 시작 타이밍 문서에는
+          어떤 TODO가 남아 있습니까?
   overview_visual: {section: vendor-overview, visual: camera-stack}
   enabled: true
   title: libcamera 설계 문서
