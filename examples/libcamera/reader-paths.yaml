@@ -27,6 +27,8 @@ claims:
       - {section: request-lifecycle, topic: stopping, part: summary}
     details:
       - {section: request-lifecycle, topic: stopping, heading: 완료 통지의 호출자 의무와 반환 뒤 경계}
+      - {section: request-lifecycle, topic: observed-callbacks, heading: 가상 CPU 프로브의 연결별 취소 콜백 표시}
+      - {section: request-lifecycle, topic: observed-callbacks, heading: 반환 근처 표시로 알 수 있는 범위}
   - id: value
     title: 독자의 조사에 도움이 될 것이라는 가설
     kind: hypothesis
@@ -94,6 +96,7 @@ roles:
       - aspect: verification
         question: 무엇을 확인해야 수정 결과를 판단할 수 있나요?
         sources:
+          - {section: request-lifecycle, topic: observed-callbacks, heading: 반환 근처 표시로 알 수 있는 범위}
           - {section: request-lifecycle, topic: review}
           - {section: request-lifecycle, topic: stopping}
         claims: [trial, measurement]
