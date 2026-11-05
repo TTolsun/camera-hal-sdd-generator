@@ -22,4 +22,8 @@
 
 후속 독립 검토에서는 job의 `always()`가 concurrency 취소 후에도 비용이 큰 행렬 실행을 유지할 수 있는 결함을 찾았습니다. job 조건은 `!cancelled()`로 바꾸고, 판정 작업 실패 후 네 검사를 실패시키는 동작은 유지했습니다. 산출물 업로드 단계는 `always()`로 남겼습니다. 두 검토의 원본 요청·응답·receipt를 모두 보존합니다.
 
-아직 이 기록의 계획만으로 GitHub 실행 효과를 확인했다고 판단하지 않습니다. 실제 실행 결과와 병합 증거는 검증 후 추가합니다.
+## 첫 PR 실행과 후속 커밋의 기준
+
+구현 커밋 `496e448412baccc4448edd7feab973d9e66ea73b`을 push한 후 [PR #276](https://github.com/TTolsun/camera-hal-sdd-generator/pull/276)을 열었습니다. [첫 실행](https://github.com/TTolsun/camera-hal-sdd-generator/actions/runs/41947203175)은 `pull_request` 하나이며 같은 브랜치 push 실행은 생성되지 않았습니다. scope가 성공했고 네 기존 행렬 job이 시작했습니다. 판정 산출물 `ci-scope-41947203175-1`도 시험 시작 전에 업로드되었습니다.
+
+이 문단을 후속 커밋으로 push해 위 실행의 자동 취소를 확인합니다. 후속 커밋 자체는 문서 변경이지만 PR 전체에는 CI 코드가 있으므로 전체 검증을 받아야 합니다. 실제 취소와 후속 검증의 완료 여부는 아직 확인하지 않았습니다.
