@@ -1,0 +1,70 @@
+{
+  "scope": "Actual staged source text matches independent native149 input; CRLF originals and raw hashes remain in archives.",
+  "files": {
+    "src/sdd/visual_audit.py": {
+      "staged_blob_sha256": "808f0d04416d2c7cc572b86683121dc2e535219238196fd92042c6d06b9396c9",
+      "reviewed_text_sha256": "808f0d04416d2c7cc572b86683121dc2e535219238196fd92042c6d06b9396c9",
+      "text_matches": true
+    },
+    "src/sdd/visual_dom.py": {
+      "staged_blob_sha256": "a739ad491075e7f699748c38459ff56c79d15bd39777420ce78c1a6989a3b289",
+      "reviewed_text_sha256": "a739ad491075e7f699748c38459ff56c79d15bd39777420ce78c1a6989a3b289",
+      "text_matches": true
+    },
+    "src/sdd/visual_presentation.py": {
+      "staged_blob_sha256": "dca2af4ddde8ae722a9b8034b0f4cf85a3066015689b3600ba3134a5ef5c8a39",
+      "reviewed_text_sha256": "dca2af4ddde8ae722a9b8034b0f4cf85a3066015689b3600ba3134a5ef5c8a39",
+      "text_matches": true
+    },
+    "tests/test_visual_presentation.py": {
+      "staged_blob_sha256": "95f3e1c440f0e5860a1e031d0eeb5f1db888089bab48b3a6b4cf12fa0853a68c",
+      "reviewed_text_sha256": "95f3e1c440f0e5860a1e031d0eeb5f1db888089bab48b3a6b4cf12fa0853a68c",
+      "text_matches": true
+    },
+    "examples/libcamera/validation/issue215/review_inventory.py": {
+      "staged_blob_sha256": "1aa30d5a7a40f4a8b50c820b1edb94d8ae3548a8de74cf30b3325739c0569464",
+      "reviewed_text_sha256": "1aa30d5a7a40f4a8b50c820b1edb94d8ae3548a8de74cf30b3325739c0569464",
+      "text_matches": true
+    },
+    "pyproject.toml": {
+      "staged_blob_sha256": "e96d5a435ebea5422db2fd699bd0c97be2afd832715d0fcfca1563110983b59b",
+      "reviewed_text_sha256": "e96d5a435ebea5422db2fd699bd0c97be2afd832715d0fcfca1563110983b59b",
+      "text_matches": true
+    },
+    "src/sdd/site_build.py": {
+      "staged_blob_sha256": "237eeb1465a7f5126234153977b3a5836b0b711082b2c53cb2af7a732b07d0fe",
+      "reviewed_text_sha256": "237eeb1465a7f5126234153977b3a5836b0b711082b2c53cb2af7a732b07d0fe",
+      "text_matches": true
+    },
+    "src/sdd/next_steps.py": {
+      "staged_blob_sha256": "f41d6e7318bbc7474ab65769981096a586eecd4016f8f487063a498b726b7634",
+      "reviewed_text_sha256": "f41d6e7318bbc7474ab65769981096a586eecd4016f8f487063a498b726b7634",
+      "text_matches": true
+    },
+    "src/sdd/config.py": {
+      "staged_blob_sha256": "a0a942e546fbb282c614cd357af1a3722846da842c96f11a1f11ca1a82231d0b",
+      "reviewed_text_sha256": "a0a942e546fbb282c614cd357af1a3722846da842c96f11a1f11ca1a82231d0b",
+      "text_matches": true
+    },
+    "src/sdd/export_site.py": {
+      "staged_blob_sha256": "325068fa4bdef129c618e650681e8052d0c1b971bb0e5889c91a1e68ec872d1e",
+      "reviewed_text_sha256": "325068fa4bdef129c618e650681e8052d0c1b971bb0e5889c91a1e68ec872d1e",
+      "text_matches": true
+    },
+    "tests/test_topic_links.py": {
+      "staged_blob_sha256": "01c0cbfe182d94a7eaaf7ce8e1be0af01b3d06d6b7e922f9daf9e9771de06d4a",
+      "reviewed_text_sha256": "01c0cbfe182d94a7eaaf7ce8e1be0af01b3d06d6b7e922f9daf9e9771de06d4a",
+      "text_matches": true
+    },
+    "src/sdd/site_fragments.py": {
+      "staged_blob_sha256": "c6569fb21345eaa45d68d379cce5ded669cd12b0d9d1188f1d06b3fbc433ef2b",
+      "reviewed_text_sha256": "c6569fb21345eaa45d68d379cce5ded669cd12b0d9d1188f1d06b3fbc433ef2b",
+      "text_matches": true
+    },
+    "uv.lock": {
+      "staged_blob_sha256": "6ada4d0540c066d79fcee7eaa2fbf70b1d00dc466341e9a340afb490fb816009",
+      "reviewed_text_sha256": "6ada4d0540c066d79fcee7eaa2fbf70b1d00dc466341e9a340afb490fb816009",
+      "text_matches": true
+    }
+  }
+}

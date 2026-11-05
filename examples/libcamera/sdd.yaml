@@ -56,6 +56,11 @@ review:
   document_max_calls: 160
   document_max_seconds: 7200
 
+# Keep the generation/review H2 in the full rendered reader-item inventory.
+# Publication remains opt-in until every current bilingual item is reviewed.
+visual_audit:
+  require_provenance: true
+
 documentation:
   enabled: true
   features:
