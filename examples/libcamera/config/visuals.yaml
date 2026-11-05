@@ -2044,8 +2044,9 @@ sections:
   - id: submission-completion
     topic: request
     kind: flow
-    title: 접수 성공과 촬영 완료는 다른 시점
-    question: queueRequest()의 0 반환은 접수 결과입니다. 요청 완료는 별도의 requestCompleted 신호로 확인합니다.
+    title: 요청 접수와 버퍼 완료, 요청 완료
+    question: queueRequest()의 반환값은 접수 결과입니다. completeBuffer()는 버퍼 완료를 알리고 추적하며, 파이프라인
+      핸들러는 completeRequest()로 요청을 별도로 완료해야 합니다. requestCompleted 신호는 요청 완료를 별도로 알립니다.
     nodes:
     - id: request
       label: 버퍼를 연결한 Request
@@ -2075,6 +2076,21 @@ sections:
       - source: request/queue
         sha256: b24af43d2f808f81b527cf4ee8915451be675f43f877bac5e6edfe69ff3739d6
         quote: through the \ref requestCompleted signal.
+    - id: complete-buffer
+      label: 'completeBuffer(): 버퍼 완료 알림과 추적'
+      label_en: 'completeBuffer(): buffer completion notification and tracking'
+      evidence:
+      - source: completion/buffer
+        sha256: 49b0139e3f0f620c0a3c044caf699179753dddf1b896d48de417c338bbae6a22
+        quote: "It notifies applications of buffer\n * completion and updates the request's\
+          \ internal buffer tracking."
+    - id: complete-request
+      label: 'completeRequest(): 파이프라인 핸들러의 명시적 요청 완료'
+      label_en: 'completeRequest(): explicit request completion by the pipeline handler'
+      evidence:
+      - source: completion/buffer
+        sha256: 49b0139e3f0f620c0a3c044caf699179753dddf1b896d48de417c338bbae6a22
+        quote: They shall complete requests explicitly with completeRequest().
     edges:
     - from: request
       to: queue
@@ -2099,8 +2115,21 @@ sections:
       evidence:
       - source: request/queue
         sha256: b24af43d2f808f81b527cf4ee8915451be675f43f877bac5e6edfe69ff3739d6
-        quote: "Once the request has been queued, the camera will notify its completion\n * through the \\ref requestCompleted\
-          \ signal."
+        quote: "Once the request has been queued, the camera will notify its completion\n\
+          \ * through the \\ref requestCompleted signal."
+    - from: complete-buffer
+      to: complete-request
+      label: 마지막 버퍼가 완료되어도 요청은 자동으로 완료되지 않으므로 핸들러가 별도로 완료해야 함
+      label_en: Even the last buffer does not automatically complete the request; the
+        handler must complete it separately
+      evidence:
+      - source: completion/buffer
+        sha256: 49b0139e3f0f620c0a3c044caf699179753dddf1b896d48de417c338bbae6a22
+        quote: "The request\n * is not completed automatically when the last buffer\
+          \ completes to give\n * pipeline handlers a chance to perform any operation\
+          \ that may still be\n * needed. They shall complete requests explicitly with\
+          \ completeRequest()."
+    producer: cli/codex/gpt-6.1-terra
   pipeline-handler:
   - id: handler-device-ownership
     topic: responsibility
