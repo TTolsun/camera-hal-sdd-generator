@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "source_kind": "agent",
+  "minimum_interval_seconds": 300,
+  "context_retention": "not a human forgetting test",
+  "readers": {
+    "reader-new": {
+      "ready_utc": "2026-11-05T00:19:44.077122+00:00",
+      "parent_resume_authorized_utc": "2026-11-05T00:24:51+00:00",
+      "actual_resume_utc": "2026-11-05T00:25:08Z",
+      "actual_interval_seconds": 323.922878,
+      "memo_byte_sha256": "1d711c9d39ff61044a0f801c9fe7faf00233ba6e6a472b17f2fd61f4e7a26380"
+    },
+    "reader-other": {
+      "ready_utc": "2026-11-05T00:21:47.183979+00:00",
+      "parent_resume_authorized_utc": "2026-11-05T00:26:55+00:00",
+      "actual_resume_utc": "2026-11-05T00:27:18.039971+00:00",
+      "actual_interval_seconds": 330.855992,
+      "memo_byte_sha256": "00c5ddf6856e4606377f60500997fcd33d53f28a73f6226a70c528b4e1f18eb4"
+    },
+    "reader-nonauthor": {
+      "ready_utc": "2026-11-05T00:22:34.275968+00:00",
+      "parent_resume_authorized_utc": "2026-11-05T00:28:00+00:00",
+      "actual_resume_utc": "2026-11-05T00:28:34.659199+00:00",
+      "actual_interval_seconds": 360.383231,
+      "memo_byte_sha256": "08403d3c161505b19bc698662c5f638541bb6de2d2199c21f08700985cee997e"
+    }
+  }
+}

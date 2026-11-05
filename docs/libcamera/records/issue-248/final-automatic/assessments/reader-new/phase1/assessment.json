@@ -1,0 +1,43 @@
+{
+  "source_kind": "agent",
+  "tasks": [
+    {
+      "task_id": "index",
+      "semantic_verdict": "aligned",
+      "reason": "신규 개발자 경로에서 시스템 개요를 선택한 이유를 설명하고, 이어 요청 제출과 완료 절로 이동한 방문 기록을 남겼다.",
+      "evidence": [
+        "index.html#처음-읽는-개발자의-순서",
+        "overview.html#요청-제출과-완료"
+      ],
+      "procedure_limit": "로컬 HTML 텍스트와 링크를 추출해 이동했으며 실제 브라우저 화면이나 조작을 검증하지 않았다."
+    },
+    {
+      "task_id": "overview",
+      "semantic_verdict": "aligned",
+      "reason": "createRequest가 반환한 요청의 소유권과 삭제 책임이 호출자에게 있고, 같은 요청을 다시 큐에 넣기 전에 reuse로 상태를 초기화해야 한다고 답했다. 버퍼 유지 플래그에 관한 설명도 제시된 근거와 부합한다.",
+      "evidence": [
+        "overview.html#요청-생성과-소유권",
+        "overview.html#source-d61960ed2545ba78",
+        "overview.html#source-0556d5e91908d040"
+      ],
+      "procedure_limit": "접힌 근거 발췌를 포함한 HTML 텍스트 추출을 사용했다."
+    },
+    {
+      "task_id": "S",
+      "semantic_verdict": "incomplete",
+      "reason": "성공 반환을 접수로, requestCompleted를 별도 완료 알림으로 구분하고 미관측 신호만으로 촬영 완료를 단정하지 않았다. 그러나 입력 검사 후 queued 호출이 예약된다는 의미와 버퍼 완료와 요청 전체 완료의 구분은 답변에 빠져 있다.",
+      "evidence": [
+        "overview.html#접수-성공과-촬영-완료는-다른-시점",
+        "request-lifecycle.html#source-28d007de6ad1a8a5",
+        "request-lifecycle.html#버퍼-완료와-명시적-요청-완료의-경계"
+      ],
+      "procedure_limit": "실제 브라우저를 닫지 않고 문서 접근을 중지한 뒤 답을 저장하고 재접근했다. 문맥은 유지되었다."
+    }
+  ],
+  "findings": [
+    "Phase 1의 배정 과업 두 개와 S만 의미 채점했다. R은 중단 전 메모만 있고 재개하지 않았으며 X도 수행하지 않았으므로 이 단계에서 채점하지 않았다.",
+    "기록된 시각과 경과 시간은 독립적으로 검증되지 않았다. R의 300초 중단과 재개는 이 기록으로 입증되지 않으며, 경과 시간만으로 모델의 망각을 입증할 수도 없다.",
+    "에이전트의 읽기 쉬움·흥미·자연스러움 추정치는 사람의 주관적 자료가 아니므로 채점이나 인간·ADHD 검증에 사용하지 않았다."
+  ],
+  "human_completion": "not-established"
+}

@@ -1,0 +1,235 @@
+{
+  "participant_id": "A02",
+  "role": "other_team",
+  "method": "자동 독자 시뮬레이션. Python HTML main 본문과 보이는 링크를 따른 텍스트 탐색이며 실제 UI 사용이 아니다. 사람 또는 실제 직원의 평가가 아니며 임상 검증이나 실제 망각을 주장하지 않는다.",
+  "public_commit_supplied": "ad19ae6e83caa22d60daf736535a98bb29ca4015",
+  "build_id": "52d0226eff7ccee8170b3d7c5b4631ec8d9ff00708ab2e5a8b4f14a5bed95b9f",
+  "manifest_sha256": "5c3d2493e4e7c229078c82e4fd830a8e4aec10a06a906cd7533958b8472af42a",
+  "verification": "build_id 및 manifest SHA-256 일치. 읽은 HTML마다 outputs의 SHA-256과 대조했다.",
+  "read_file_hashes": {
+    "index.html": "a6b008013b305220b6bb6777e85d47090589a8c99a7e644c6008210f08e1bc32",
+    "vendor-overview.html": "6487143e9f59feff50ef9ab9e16c911c1fb6953a347dbf461bf33ab0e2a14193",
+    "participant-inputs/P02-tasks.md": "c1cff3069b9327300b7bc1d58fe29f720d111ad2b4795ca00b019c29c04ede19",
+    "participant-inputs/participant.md": "19dd7883ffbe4e54df66175bd995229fc76830c5a91a7066f795e18fee79a255",
+    "vendor-assurance.html": "15fac7dd3ea215eacc7ce44485d0f7e5fef6a75fae5ac0cdcef3ab95d0f6a3b9",
+    "request-lifecycle.html": "e1df20932a0bb94e760857d966f9f18bc43680b1d3a58f043ee3e8d6590ecb40",
+    "request-diagnosis.html": "cef1ca04d379d91831dbb15613fb2abf170e264d8b822a70cf3b29f9dbad8cb0"
+  },
+  "raw_answers": {
+    "base1": {
+      "start_utc": "2026-11-05T00:15:45.579191+00:00",
+      "end_utc": "2026-11-05T00:17:24.969085+00:00",
+      "elapsed_seconds": 99.389894,
+      "answer_ko": "공통 libcamera 프레임워크는 커널의 V4L2 계열 API를 이용해 장치를 제어하고 상위에 일관된 C++ 인터페이스를 제공한다. Camera는 카메라의 구성·제어·캡처와 획득부터 해제까지의 수명 주기를 모델링한다. 상태를 바꾸는 함수의 동기화는 필요하면 호출자가 책임진다. 장치별 Pipeline Handler는 필요한 미디어 장치를 시스템 장치와 대조하고 모두 확보하면 Camera를 생성하며, 하위 클래스는 등록 매크로로 등록해야 한다. 커널 드라이버는 하드웨어 직접 제어를, adaptation은 다른 프레임워크와의 연결을 맡는다. 애플리케이션과 상위 프레임워크는 프로젝트 범위 밖이다. 지원 대상은 문서가 나열한 전용/범용 플랫폼과 선택한 빌드 핸들러에 달려 있으므로 공통 API만으로 임의 장치 지원을 단정할 수 없다. pipelines의 auto는 대상 아키텍처에 맞는 핸들러를, all은 전체 핸들러를 빌드하는 선택이다. 이것을 실제 기기 검증이나 성능 보장으로 해석하지 않는다.",
+      "evidence": [
+        {
+          "page_anchor": "vendor-overview.html#제공-기능과-지원-범위",
+          "quote": "카메라 상태에 영향을 주는 함수들은 Camera 클래스가 일반적으로 서로 동기화하지 않으므로, 필요하다면 호출하는 쪽이 그 동기화를 책임집니다."
+        },
+        {
+          "page_anchor": "vendor-overview.html#공통-camera와-장치별-구현의-경계",
+          "quote": "파이프라인 핸들러 구현은 필요한 미디어 장치를 시스템에 있는 장치와 맞추고, 필요한 장치를 모두 확보할 수 있으면 해당 Camera 인스턴스를 생성하는 책임을 지며, PipelineHandler의 모든 하위 클래스는 REGISTER_PIPELINE_HANDLER() 매크로로 libcamera에 등록해야 합니다."
+        },
+        {
+          "page_anchor": "vendor-overview.html#카메라-스택의-네-계층",
+          "quote": "마지막 계층은 애플리케이션과 상위 프레임워크입니다. 이들은 libcamera 프레임워크 또는 libcamera adaptation을 기반으로 합니다. 이 계층은 libcamera 프로젝트의 범위 밖에 있습니다."
+        },
+        {
+          "page_anchor": "vendor-overview.html#지원하는-하드웨어와-빌드-선택",
+          "quote": "auto를 선택하면 대상 아키텍처에 맞는 모든 파이프라인이 빌드되고, all을 선택하면 모든 파이프라인이 빌드됩니다."
+        }
+      ],
+      "visited_route": [
+        "index.html",
+        "vendor-overview.html",
+        "vendor-overview.html#지원하는-하드웨어와-빌드-선택",
+        "vendor-overview.html#제공-기능과-지원-범위",
+        "vendor-overview.html#공통-camera와-장치별-구현의-경계",
+        "vendor-overview.html#무엇이며-누구의-어떤-문제를-푸는가",
+        "vendor-overview.html#카메라-스택의-네-계층"
+      ],
+      "backtracks": [
+        "동일 페이지 상단의 무엇이며/카메라 스택 절로 되돌아가 상위·하위 계층의 책임을 확인했다."
+      ],
+      "blockage": "첫 검증 때 콘솔 인코딩이 깨져 UTF-8로 다시 읽었다. 첫 본문 출력은 길어서 일부가 잘렸으므로 목차 앵커별로 다시 읽었다. 해결 후 내용상 막힘은 없었다.",
+      "author_help": "없음"
+    },
+    "base2": {
+      "start_utc": "2026-11-05T00:17:48.887679+00:00",
+      "end_utc": "2026-11-05T00:18:17.777250+00:00",
+      "elapsed_seconds": 28.889571,
+      "answer_ko": "DebayerCpu 내장 벤치마크에 포함되는 것은 통계 수집과 디베이어링 처리 시간이다. 프레임을 캡처하는 시간과 결과를 출력하는 시간은 제외된다. 따라서 이 수치를 카메라 전체의 지연이나 종단 간 처리 성능으로 읽으면 안 된다. Software ISP를 사용하는 파이프라인에서 cam 또는 qcam을 실행해 사용할 수 있다.",
+      "evidence": [
+        {
+          "page_anchor": "vendor-assurance.html#성능-근거를-읽는-기준",
+          "quote": "DebayerCpu의 내장 벤치마크는 통계를 수집하고 디베이어링하는 처리에 걸린 시간만 측정합니다. 프레임 캡처와 출력에 걸린 시간은 측정하지 않습니다."
+        },
+        {
+          "page_anchor": "vendor-assurance.html#성능-근거를-읽는-기준",
+          "quote": "이 벤치마크는 Software ISP를 사용하는 파이프라인에서 cam 또는 qcam을 실행하여 사용할 수 있습니다."
+        }
+      ],
+      "visited_route": [
+        "index.html (제품 개요에서 시작 주소로 돌아옴)",
+        "vendor-assurance.html",
+        "vendor-assurance.html#성능-근거를-읽는-기준"
+      ],
+      "backtracks": [
+        "vendor-overview.html에서 index.html로 돌아가 지원 범위와 검증 링크를 선택했다."
+      ],
+      "blockage": "없음",
+      "author_help": "없음"
+    },
+    "S": {
+      "start_utc": "2026-11-05T00:18:41.930897+00:00",
+      "document_access_stopped_utc": "2026-11-05T00:18:41.943066+00:00",
+      "own_words_preserved_utc": "2026-11-05T00:19:10.446899+00:00",
+      "own_words_before_reopen_ko": "제출 함수의 성공은 요청을 파이프라인 쪽으로 넘길 비동기 호출을 예약했다는 뜻이다. 그때 촬영이나 장치 처리가 끝났다는 뜻은 아니다. 이후 준비 대기, 장치 전달, 버퍼 처리, 명시적인 요청 완료가 별도로 진행되고 애플리케이션은 requestCompleted 알림으로 요청 반환을 확인해야 한다. 마지막 버퍼 알림도 요청 완료를 자동으로 대신하지 않는다. 핸들러가 요청 완료를 호출했더라도 먼저 제출된 요청이 아직 pending이면 뒤 요청의 애플리케이션 반환이 늦어질 수 있다. 그래서 성공 반환만 있고 완료 알림이 없다는 관찰로 특정 내부 단계가 원인이라고 단정할 수 없다. 완료 콜백까지 요청과 버퍼의 유효성을 유지해야 한다.",
+      "preservation_rule": "이 설명은 문서를 다시 열기 전에 저장했으며, 이후 근거 대조로 덮어쓰지 않는다.",
+      "visited_route": [
+        "vendor-assurance.html의 다음 링크 → request-lifecycle.html",
+        "request-lifecycle.html#제출에서-완료까지",
+        "request-lifecycle.html#제출-성공-뒤에도-남는-수명-문제",
+        "request-lifecycle.html#정상-완료와-다음-요청-준비",
+        "request-lifecycle.html#알림-순서와-취소가-달라질-때"
+      ],
+      "blockage": "없음",
+      "author_help": "없음",
+      "reopened_utc": "2026-11-05T00:19:30.575376+00:00",
+      "end_utc": "2026-11-05T00:19:58.471747+00:00",
+      "elapsed_seconds": 76.54085,
+      "evidence": [
+        {
+          "page_anchor": "request-lifecycle.html#제출에서-완료까지",
+          "quote": "queueRequest가 0을 반환하는 것은 파이프라인 대상의 queued 호출이 예약되었다는 성공을 뜻하며, 요청의 완료를 뜻하지 않습니다."
+        },
+        {
+          "page_anchor": "request-lifecycle.html#제출-성공-뒤에도-남는-수명-문제",
+          "quote": "요청 완료는 별도의 requestCompleted 신호로 통지합니다."
+        },
+        {
+          "page_anchor": "request-lifecycle.html#정상-완료와-다음-요청-준비",
+          "quote": "마지막 버퍼가 완료되어도 요청은 자동으로 완료되지 않으므로 파이프라인 핸들러는 필요한 처리를 마친 뒤 completeRequest로 명시적으로 완료를 통지해야 합니다."
+        },
+        {
+          "page_anchor": "request-lifecycle.html#알림-순서와-취소가-달라질-때",
+          "quote": "두 상태 모두 queuedRequests_의 선두 A가 RequestPending이면 B의 애플리케이션 반환은 지연됩니다."
+        }
+      ],
+      "post_reopen_assessment_ko": "사전 설명의 핵심 구분은 본문의 예약 성공·별도 requestCompleted·명시적 completeRequest·선두 pending의 반환 지연과 부합한다. 이는 텍스트 근거 대조이며 실제 실행을 검증한 것은 아니다.",
+      "backtracks": [
+        "문서를 닫은 후 자기 말 설명을 저장하고 같은 페이지의 네 앵커를 다시 열었다."
+      ]
+    },
+    "R_phase1": {
+      "start_utc": "2026-11-05T00:20:32.746707+00:00",
+      "document_access_stopped_utc": "2026-11-05T00:20:32.748861+00:00",
+      "ready_utc": "2026-11-05T00:21:47.183979+00:00",
+      "elapsed_seconds": 74.437272,
+      "memo_file": "C:\\Users\\baboe\\.codex\\worktrees\\c828\\camera-hal-sdd-generator\\build\\issue248\\final-readers\\reader-other\\pre-interrupt-note.md",
+      "answer_status": "조사 시작과 중단 메모만 기록했다. R 재개·완료와 X는 아직 수행하지 않았다.",
+      "visited_route": [
+        "request-lifecycle.html",
+        "request-diagnosis.html#실패-위치별-확인-순서"
+      ],
+      "backtracks": [],
+      "blockage": "문서 탐색 막힘은 없다. 실제 실행 관측값이 없어 원인은 미확정이다.",
+      "author_help": "없음"
+    }
+  },
+  "agent_estimates": {
+    "base1": {
+      "label": "AGENT ESTIMATES: 사람의 주관 평가가 아닌 자동 독자 추정치",
+      "reading_ease_1_to_5": 3,
+      "reading_ease_reason": "목차의 공통 Camera와 장치별 구현의 경계가 바로 답의 위치를 알려 준다. 다만 지원 범위·계층·동기화 책임이 여러 절에 흩어져 다시 이동해야 했다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "일관된 API 뒤에도 장치 확보와 등록 책임이 남는다는 설명이 타팀 연동 범위 파악과 연결된다.",
+      "naturalness_1_to_5": 3,
+      "naturalness_reason": "책임을 지며와 호출하는 쪽 같은 표현은 명확하지만, 그 작업을 이렇게 직접 다루는 대신은 지시 대상이 모호하고 발췌 한계 설명이 개요 읽기를 끊는다."
+    },
+    "base2": {
+      "label": "AGENT ESTIMATES: 사람의 주관 평가가 아닌 자동 독자 추정치",
+      "reading_ease_1_to_5": 5,
+      "reading_ease_reason": "성능 근거를 읽는 기준이라는 짧은 절에 포함·제외 처리가 서로 이어진 두 문장으로 나와 한 번에 구분된다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "벤치마크 수치가 프레임 캡처와 출력을 포함하지 않는다는 경계가 제품 도입 판단에 직접 필요하다.",
+      "naturalness_1_to_5": 5,
+      "naturalness_reason": "시간만 측정합니다와 측정하지 않습니다가 대칭적으로 쓰였고, 실행 조건도 별도 한 문장으로 명료하다."
+    }
+  },
+  "task_status": {
+    "R": "phase1_memo_saved_waiting_for_parent_resume",
+    "X": "not_started",
+    "base1": "complete",
+    "base2": "complete",
+    "S": "complete"
+  },
+  "r_ready_utc": "2026-11-05T00:21:47.183979+00:00",
+  "interruption_protocol": "부모 에이전트가 실제 300초 이상 간격을 관리한다. 여기서는 장시간 대기나 무관한 활동을 수행했다고 주장하지 않는다. 재개 신호 전까지 문서에 접근하지 않는다.",
+  "read_events": [
+    {
+      "utc": "2026-11-05T00:15:21.448180+00:00",
+      "pages": [
+        "index.html"
+      ],
+      "note": "초기 manifest 검증. 본문 인코딩이 깨져 재탐색했다."
+    },
+    {
+      "utc": "2026-11-05T00:15:45.579191+00:00",
+      "pages": [
+        "index.html",
+        "vendor-overview.html"
+      ],
+      "note": "manifest.outputs 해시를 확인한 뒤 텍스트 탐색. 긴 출력 일부가 잘려 앵커별로 다시 읽었다."
+    },
+    {
+      "utc_end": "2026-11-05T00:16:09+00:00",
+      "pages": [
+        "vendor-overview.html#지원하는-하드웨어와-빌드-선택",
+        "vendor-overview.html#제공-기능과-지원-범위",
+        "vendor-overview.html#공통-camera와-장치별-구현의-경계"
+      ],
+      "note": "도구 종료 시계 값이다. 매회 파일 해시를 확인했다."
+    },
+    {
+      "utc_end": "2026-11-05T00:16:31+00:00",
+      "pages": [
+        "vendor-overview.html#무엇이며-누구의-어떤-문제를-푸는가",
+        "vendor-overview.html#카메라-스택의-네-계층"
+      ],
+      "note": "도구 종료 시계 값이다. 매회 파일 해시를 확인했다."
+    },
+    {
+      "utc": "2026-11-05T00:17:48.887679+00:00",
+      "pages": [
+        "index.html",
+        "vendor-assurance.html"
+      ],
+      "note": "시작 주소로 돌아간 뒤 눈에 보이는 지원 범위와 검증 링크를 따라갔다."
+    },
+    {
+      "utc": "2026-11-05T00:18:41.930897+00:00",
+      "pages": [
+        "request-lifecycle.html"
+      ],
+      "note": "앞 페이지의 다음 링크를 따라갔다. 본문을 읽은 뒤 접근을 중단했다."
+    },
+    {
+      "utc": "2026-11-05T00:19:30.575376+00:00",
+      "pages": [
+        "request-lifecycle.html#제출에서-완료까지",
+        "request-lifecycle.html#제출-성공-뒤에도-남는-수명-문제",
+        "request-lifecycle.html#정상-완료와-다음-요청-준비",
+        "request-lifecycle.html#알림-순서와-취소가-달라질-때"
+      ],
+      "note": "자기 말 답변 저장 이후에만 근거를 다시 읽었다."
+    },
+    {
+      "utc": "2026-11-05T00:20:32.746707+00:00",
+      "pages": [
+        "request-diagnosis.html#실패-위치별-확인-순서"
+      ],
+      "note": "R 조사 시작. 이 읽기 이후 문서 접근 중단."
+    }
+  ]
+}

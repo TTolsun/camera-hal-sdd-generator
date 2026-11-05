@@ -765,3 +765,93 @@ def test_independent_audit_keeps_original_config_snapshot_under_same_revision(tm
             checks.audit(tmp_cfg, sample_model, object())
     else:
         assert checks.audit(tmp_cfg, sample_model, object())['revision'] == 1
+
+
+def test_first_merge_pipeline_keeps_basis_through_translation_review_export_and_rollback(cli_units, tmp_cfg, monkeypatch):
+    """Real entry points and receipts; only the CLI process is a test double."""
+    import re
+    from dataclasses import asdict
+    from sdd.consistency import audit
+    from sdd.export_site import export_site
+    from sdd.localization_cli import prepare_catalog
+    from sdd.site_build import verify_site
+    import sdd.cli_agent as cli
+    section, model, save, calls, state, agent = cli_units
+    state['interrupt'] = False
+    tmp_cfg.agent.max_input_chars = 48000
+    tmp_cfg.raw['site'] = dict(english_catalog='english.json', translation_batch_size=12)
+    selected = {}
+    for role, path_key in [('translation', 'translation_profile'), ('review', 'consistency_profile')]:
+        value = asdict(tmp_cfg.agent)
+        value['model'] = 'fixture-'+role
+        path = tmp_cfg.root/(role+'.yaml')
+        path.write_text(json.dumps(dict(agent=value)), encoding='utf-8')
+        tmp_cfg.paths[path_key] = path
+        selected[role] = value
+    contracts = tmp_cfg.root/'contracts.yaml'
+    contracts.write_text(json.dumps(dict(contracts=[dict(id='lifetime', question='Who stops?',
+        primary='device.md', documents=['device.md'], match='stop|prepare')])), encoding='utf-8')
+    tmp_cfg.paths['consistency_file'] = contracts
+    declaration, write = configure(tmp_cfg, model, ['device'])
+    for role in selected:
+        declaration['profiles'][role]['model'] = 'fixture-'+role
+    write()
+    original_run = cli.run
+    roles = []
+    def run(argv, **kwargs):
+        prompt = kwargs['prompt']
+        if 'Translate Korean to English;' in prompt:
+            roles.append('translation')
+            assert 'fixture-translation' in argv
+            payload = json.loads(prompt.split('<user>\n',1)[1].split('\n</user>',1)[0])
+            raw = dict(translations={key:('section-wide evidence ' if '절 전체 근거' in text else 'English must ')
+                                     + ' '.join(re.findall(r'\{\{\d+\}\}', text))
+                                     for key,text in payload['texts'].items()})
+        elif 'Audit contracts across documents' in prompt:
+            roles.append('review')
+            assert 'fixture-review' in argv
+            payload = json.loads(prompt.split('<user>\n',1)[1].split('\n</user>',1)[0])
+            raw = dict(findings=[dict(claim_id=key, peers=[], status='compatible',
+                condition='Fixture', actor='Fixture', timing='Fixture', scope='Fixture', reason='Fixture',
+                sources=[dict(source_id=next(iter(payload['sources'])))]) for key in payload['claims']])
+        else:
+            return original_run(argv, **kwargs)
+        return subprocess.CompletedProcess(argv, 0, json.dumps(dict(subtype='success',is_error=False,
+                                            result=json.dumps(raw))), '')
+    monkeypatch.setattr(cli, 'run', run)
+    Generator(tmp_cfg, model, agent()).run()
+    target = tmp_cfg.sdd_dir/'device.md'
+    original = target.read_bytes()
+    catalog = tmp_cfg.root/'english.json'
+    assert prepare_catalog(tmp_cfg, catalog, translate=True)['missing_translations'] == 0
+    assert audit(tmp_cfg, model, object())['status'] == 'passed'
+    assert roles and roles.index('review') > roles.index('translation')
+    assert tmp_cfg.agent.model == 'fixture-model'
+    site = export_site(tmp_cfg)
+    assert verify_site(site)['broken_links'] == 0
+    assert target.read_bytes() == original
+    # Retain a valid prior manifest with distinct producer metadata so this
+    # failure cannot pass merely because repeated output bytes are identical.
+    manifest = site/'site-manifest.json'
+    prior_manifest = json.loads(manifest.read_bytes())
+    prior_manifest['fixture_previous'] = 'restore this exact prior manifest'
+    manifest.write_text(json.dumps(prior_manifest), encoding='utf-8')
+    before = {p:p.read_bytes() for p in site.rglob('*') if p.is_file()}
+    journals = {p:p.read_bytes() for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')}
+    import sdd.state_io as state_io
+    old_save = state_io.save
+    def fail_after_manifest(path, data, **kwargs):
+        old_save(path, data, **kwargs)
+        if path == site/'site-manifest.json':
+            assert path.read_bytes() != before[path]
+            raise OSError('fixture final site acceptance failed')
+    monkeypatch.setattr(state_io, 'save', fail_after_manifest)
+    with pytest.raises(OSError, match='final site acceptance'):
+        export_site(tmp_cfg)
+    assert all(p.read_bytes()==raw for p,raw in before.items())
+    assert all(p.read_bytes()==raw for p,raw in journals.items())
+    assert target.read_bytes()==original
+    assert len(revisions(tmp_cfg))==1
+    runs = [json.loads(p.read_bytes()) for p in (tmp_cfg.build_dir/'generation-runs').glob('*.json')]
+    assert any(p['name']=='translation-preflight' and p['status']=='completed' for r in runs for p in r['phases'])
+    assert any(p['status']=='failed' for r in runs for p in r['phases'])

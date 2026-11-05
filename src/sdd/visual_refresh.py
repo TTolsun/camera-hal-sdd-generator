@@ -256,9 +256,12 @@ def refresh(cfg, model, section_id, manuscript: bytes, *, expected_sha256: str,
                 or set(visual_artifact['records']) != planned_ids):
             raise ValueError('Replacement must be a complete unassembled native graph artifact')
         artifact = copy.deepcopy(visual_artifact)
-        if any(not isinstance(record, dict) or record.get('generation_commit') != commit
-               or record.get('producer') != selected.agent.label
-               for record in artifact['records'].values()):
+        # Original records have already passed the original profile above and
+        # still pass resolve() below. Keep their actual historical provenance;
+        # only changed records must come from the current generation profile.
+        if any(not isinstance(record, dict) or (_json_digest(record) != _json_digest((saved or {}).get('records', {}).get(ident))
+               and (record.get('generation_commit') != commit or record.get('producer') != selected.agent.label))
+               for ident, record in artifact['records'].items()):
             raise ValueError('Replacement graph commit or producer differs from current profile')
         resolve(selected, model, section, artifact)
     else:

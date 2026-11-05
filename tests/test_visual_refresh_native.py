@@ -20,7 +20,7 @@ def digest(raw):
 
 
 @pytest.fixture
-def native_replacement(tmp_cfg, generated, monkeypatch):
+def native_replacement(tmp_cfg, generated, monkeypatch, request):
     section, model, _, prose = generated
     plan = dict(id='native-stop', topic='stop', kind='flow', generation='llm',
                 title='종료 호출', question='어떤 취소 함수를 호출합니까?')
@@ -37,7 +37,9 @@ def native_replacement(tmp_cfg, generated, monkeypatch):
     tmp_cfg.agent.max_input_chars=160000
     tmp_cfg.raw['visuals']=dict(file='visuals.yaml',max_nodes=4)
     config=tmp_cfg.root/'visuals.yaml'
-    config.write_text(yaml.safe_dump(dict(schema=1,sections={'device':[plan]}),allow_unicode=True),encoding='utf-8')
+    mixed = getattr(request, 'param', False)
+    plans = [plan, {**plan, 'id': 'native-other'}] if mixed else [plan]
+    config.write_text(yaml.safe_dump(dict(schema=1,sections={'device':plans}),allow_unicode=True),encoding='utf-8')
     calls=[]
     monkeypatch.setattr('sdd.cli_agent.command',lambda cfg:['fixture-cli'])
     def run(argv,**kwargs):
@@ -53,16 +55,23 @@ def native_replacement(tmp_cfg, generated, monkeypatch):
     meta,body=split_frontmatter(original.decode())
     meta['generated_visuals']['historical_annotation']=dict(review='pending',note='Original recorded value')
     meta['historical_graph_metadata']=meta['generated_visuals']
+    if mixed:
+        # Byte-identical source windows can retain an earlier generation commit.
+        meta['generated_visuals']['records']['native-other']['generation_commit']='b'*40
+        meta['generated_visuals']['records']['native-other']['historical_counter']=1
     original=('---\n'+yaml.safe_dump(meta,allow_unicode=True)+'---\n'+body).encode()
     path.write_bytes(original)
     origin=copy.deepcopy(tmp_cfg)
     (tmp_cfg.root/'original-visuals.yaml').write_bytes(config.read_bytes())
     origin.raw['visuals']['file']='original-visuals.yaml'
-    tmp_cfg.agent.model='synthetic-current-model'
+    if not mixed:
+        tmp_cfg.agent.model='synthetic-current-model'
     plan['prompt']='Keep the same source-supported cancellation relationship.'
-    config.write_text(yaml.safe_dump(dict(schema=1,sections={'device':[plan]}),allow_unicode=True),encoding='utf-8')
+    config.write_text(yaml.safe_dump(dict(schema=1,sections={'device':plans}),allow_unicode=True),encoding='utf-8')
     artifact=generate_visuals(tmp_cfg,model,section,Agent(tmp_cfg.agent,tmp_cfg.build_dir/'prompts'),
                               previous=original.decode())
+    if mixed:
+        artifact['records']['native-other']=copy.deepcopy(meta['generated_visuals']['records']['native-other'])
     return model,path,original,origin,artifact,calls
 
 
@@ -115,4 +124,27 @@ def test_invalid_native_replacement_keeps_original_and_has_no_calls(tmp_cfg,nati
     with pytest.raises(ValueError):
         refresh(tmp_cfg,model,'device',original,expected_sha256=digest(original),
                 original_cfg=origin,visual_artifact=artifact)
+    assert path.read_bytes()==original and len(calls)==count
+
+
+@pytest.mark.parametrize('native_replacement', [True], indirect=True)
+@pytest.mark.parametrize('tamper', [False, 'commit', 'counter-type'])
+def test_one_new_graph_preserves_exact_validated_historical_records(tmp_cfg,native_replacement,tamper):
+    model,path,original,origin,artifact,calls=native_replacement
+    before,_=split_frontmatter(original.decode())
+    if tamper == 'commit':
+        artifact['records']['native-other']['generation_commit']='c'*40
+    elif tamper == 'counter-type':
+        artifact['records']['native-other']['historical_counter']=True
+    count=len(calls)
+    if tamper:
+        with pytest.raises(ValueError,match='commit or producer'):
+            refresh(tmp_cfg,model,'device',original,expected_sha256=digest(original),
+                    original_cfg=origin,visual_artifact=artifact)
+    else:
+        result=refresh(tmp_cfg,model,'device',original,expected_sha256=digest(original),
+                       original_cfg=origin,visual_artifact=artifact)
+        after,_=split_frontmatter(result.decode())
+        assert after['generated_visuals']['records']['native-other']==before['generated_visuals']['records']['native-other']
+        assert after['generated_visuals']['records']['native-stop']['generation_commit']==model.meta['source_commit']
     assert path.read_bytes()==original and len(calls)==count
