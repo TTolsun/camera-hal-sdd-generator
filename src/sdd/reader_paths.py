@@ -65,7 +65,7 @@ def _plain(value):
 
 def assemble(cfg, texts, sections, entries, approval_states, model, validate):
     data = load_yaml(cfg.root / cfg.site.reader_paths)
-    _mapping(data, {'schema', 'ready', 'scope', 'limitations', 'required_inputs', 'claims', 'roles'})
+    _mapping(data, {'schema', 'ready', 'scope', 'limitations', 'required_inputs', 'claims', 'roles'}, {'visuals'})
     if type(data['schema']) is not int or data['schema'] != 1:
         raise ValueError('Reader paths: unsupported schema')
     inputs = [_line(v, 'required input') for v in _items(data['required_inputs'], 'required_inputs')]
@@ -188,6 +188,8 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
     if (seen_roles != set(ASPECTS) or used != set(claims) or not set.intersection(*role_facts)
             or {c['kind'] for c in data['claims']} != set(KINDS)):
         raise ValueError('Reader paths: both roles must share facts and cover all four claim kinds without unused claims')
+    from .reader_path_visuals import placements
+    placements(cfg, data, sections)
     texts.update(pages)
     links = '\n\n## 같은 근거에서 작업과 결정 찾기\n\n' + '\n'.join(
         f"- [{_plain(r['title'])}](reader-{r['id']}.md)" for r in roles) + '\n'
