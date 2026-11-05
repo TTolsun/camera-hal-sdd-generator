@@ -15,7 +15,7 @@ from .generated_design import source_passages
 from .llm import AgentError, SCHEMA_KINDS
 from .visuals import definitions, render_values, _id, _text
 
-CITATION_BINDING_POLICY = 'identifier-boundaries-v1'
+CITATION_BINDING_POLICY = 'identifier-and-guard-boundaries-v2'
 IDENTIFIER = r'[A-Za-z_][A-Za-z_0-9]*'
 COMMENT = r'/\*(?:[^*]|\*(?!/))*\*/|//[^\n]*(?:\n|$)'
 TRIVIA = r'(?:\s|' + COMMENT + ')*'
@@ -160,11 +160,11 @@ def expand_draft(plan, draft, limit):
     return draft
 
 
-def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_citation_binding=False):
+def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_citation_binding=False, _binding_policy=None):
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches'}:
+    if not required <= set(plan) or set(plan) - required - {'stage', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -196,6 +196,9 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     if section.get('kind', 'prose') != 'prose' or not section.get('show_evidence'):
         raise ValueError('LLM visuals require prose and show_evidence')
     topic = topics[plan['topic']]
+    if 'stage' in plan and (not isinstance(plan['stage'],str) or plan['stage'] not in {
+            stage['id'] for stage in topic.get('explanation',[])}):
+        raise ValueError('Visual stage must belong to its topic explanation')
     selected = plan.get('sources', [s['id'] for s in topic['sources']])
     if (not isinstance(selected, list) or not selected or any(not isinstance(s, str) for s in selected)
             or len(selected) != len(set(selected)) or not set(selected) <= {s['id'] for s in topic['sources']}):
@@ -232,7 +235,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     if len(required_symbols) > limit:
         raise ValueError('Visual required_symbols exceed the node limit')
     pin = digest({'plan': plan, 'policy': system, 'limit': limit,
-                  **({'citation_binding_policy': CITATION_BINDING_POLICY}
+                  **({'citation_binding_policy': _binding_policy or CITATION_BINDING_POLICY}
                      if not _legacy_citation_binding else {}),
                   **({'required_symbol_vocabulary': 'source-v1'}
                      if required_symbols and len(required_symbols) < limit else {}),
@@ -259,6 +262,11 @@ def _record_input_mode(cfg, model, section, plan, original_pin, current_pin):
         return None
     if original_pin == current_pin:
         return False, False
+    for policy in ('identifier-boundaries-v1','identifier-and-passage-boundaries-v2'):
+        for command in ([False, True] if cfg.agent.kind=='cli' else [False]):
+            if original_pin == inputs(cfg,model,section,plan,_legacy_cli_command=command,
+                                      _binding_policy=policy)[0]:
+                return command, True
     modes = [(False, True)]
     if cfg.agent.kind == 'cli':
         modes = [(True, False), *modes, (True, True)]
@@ -337,12 +345,38 @@ def materialize(cfg, model, section, plan, draft, producer):
             evidence.append({'source': f"{plan['topic']}/{source}", 'sha256': rec['sha256'], 'quote': quote})
             quotes.append(quote)
         quote = '\n'.join(quotes)
+        def comparison_tokens(value):
+            # Tokenize -- before ->: value-->0 contains a comparison, while
+            # value--->member contains postfix decrement followed by access.
+            # Keep arrow tokens and identifiers distinct when matching guards.
+            # A trailing 0. is a distinct C++ floating literal, even if it may
+            # be intended as prose punctuation: require unambiguous wording.
+            return re.findall(r"--|->\*?|==|!=|<=|>=|&&|\|\||(?:\d|\.\d)(?:[eEpP][+-]|[A-Za-z_0-9.'])*|[A-Za-z_][A-Za-z_0-9]*|[^\s]", value)
         for key in ('label', 'label_en'):
-            remaining = ''.join(item[key].split())
-            for guard in sorted(conditions({'cited': ('cited', quote)}, include_while=plan.get('while_conditions', False)), key=len, reverse=True):
+            remaining = comparison_tokens(item[key])
+            for guard in sorted(conditions({str(i): ('cited', value) for i, value in enumerate(quotes)}, include_while=plan.get('while_conditions', False)), key=len, reverse=True):
                 if guard:
-                    remaining = remaining.replace(''.join(guard.split()), '')
-            if re.search(r'[<>=!]', remaining):
+                    expected = comparison_tokens(guard)
+                    offset = 0
+                    while expected and offset <= len(remaining)-len(expected):
+                        if remaining[offset:offset+len(expected)] == expected:
+                            left,right=offset,offset+len(expected)
+                            while left and right<len(remaining) and remaining[left-1]=='(' and remaining[right]==')':
+                                left-=1;right+=1
+                            operators={'sizeof','alignof','co_await','co_yield','typeid','noexcept','new','delete','throw','(',')','and','or','bitand','bitor','xor','and_eq','or_eq','xor_eq','not','not_eq','compl','{','}','==','!=','<=','>=','&&','||','.','->','->*','[',']','+','-','--','*','/','%','&','|','^','?','!','~',',','<','>','='}
+                            before=remaining[left-1] if left else None
+                            after=remaining[right] if right<len(remaining) else None
+                            qualified_before=left>=2 and remaining[left-2:left]==[':',':']
+                            qualified_after=remaining[right:right+2]==[':',':']
+                            call_wrapper = left < offset and (before in (')',']','}') or
+                                isinstance(before,str) and re.fullmatch(IDENTIFIER,before) and before not in ('if','while'))
+                            if before in operators or after in operators or after=='(' or qualified_before or qualified_after or call_wrapper:
+                                offset+=1
+                            else:
+                                del remaining[offset:offset+len(expected)]
+                        else:
+                            offset += 1
+            if any(token not in ('->', '->*') and re.search(r'[<>=!]', token) for token in remaining):
                 location = item.get('id') or f"{item.get('from')} to {item.get('to')}"
                 from .repair_diagnostics import RepairRequired
                 raise RepairRequired('Label comparison differs from cited source guards; '
@@ -377,13 +411,16 @@ def materialize(cfg, model, section, plan, draft, producer):
                              f'{item["from"]!r} -> {item["to"]!r}; unknown_nodes={unknown!r}; '
                              f'uncited_symbols={uncited!r}; quote_ids={item["quote_ids"]!r}. '
                              'Cite whole identifiers with their original case and spelling.')
+        # A legitimate control-flow edge may span two paragraphs of the same
+        # function. Literal endpoint binding above is mechanical; relationship
+        # and direction still require independent source/semantic review.
         choice = item['condition_ref']
         allowed = {'always': ('', 'always')} | {f'{key}:{branch}': (text, branch)
                     for key, text in condition_catalog(passages, include_while=plan.get('while_conditions', False)).items() for branch in ('true', 'false')}
         if not isinstance(choice, str) or choice not in allowed:
             raise ValueError('Unknown source condition ID')
         condition, branch = allowed[choice]
-        if condition not in conditions({'edge': ('edge', quote)}, include_while=plan.get('while_conditions', False)):
+        if condition not in conditions({str(i): ('edge', ref['quote']) for i, ref in enumerate(evidence)}, include_while=plan.get('while_conditions', False)):
             raise ValueError('Edge condition ID is absent from its cited source passages')
         edge = {k: item[k] for k in ('from', 'to', 'label', 'label_en')} | {'evidence': evidence}
         if condition:
@@ -570,5 +607,10 @@ def from_manuscript(cfg, model, section, manuscript):
         if not isinstance(artifact, dict) or artifact.get('body_sha256') != hashlib.sha256(body.strip().encode()).hexdigest():
             raise ValueError('Visual manuscript integrity mismatch; run generate')
         if plans(cfg, section):
-            resolve(cfg, model, section, artifact)
+            values=resolve(cfg, model, section, artifact)
+            staged={plan['id'] for plan in plans(cfg,section) if 'stage' in plan}
+            if staged:
+                from .visuals import verify_stage_placement
+                verify_stage_placement(body,[row for row in render_values(cfg,model,section,values)
+                                             if row[0]['id'] in staged],section)
     return artifact

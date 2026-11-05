@@ -25,7 +25,7 @@ from .generated_design import enabled, verify as verify_design
 from .generated_visuals import from_manuscript, plans, render, resolve
 from .render_profiles import for_page
 from .validation_stage import staged
-from .visuals import place
+from .visuals import place, owned_spans as _owned_spans, verify_stage_placement
 
 
 def _digest(value):
@@ -38,27 +38,6 @@ def _body_digest(value):
 
 def _json_digest(value):
     return _digest(json.dumps(value, ensure_ascii=False, sort_keys=True).encode('utf-8'))
-
-
-def _owned_spans(body):
-    marker = re.compile(r'<!-- (/?sdd:visual:)([a-z][a-z0-9_-]*) -->')
-    matches = list(marker.finditer(body))
-    if len(matches) != body.count('<!-- sdd:visual:') + body.count('<!-- /sdd:visual:'):
-        raise ValueError('Malformed owned visual marker')
-    from .next_steps import _outside_fence
-    ids, spans = [], []
-    for index in range(0, len(matches), 2):
-        if index + 1 >= len(matches):
-            raise ValueError('Owned visual markers must be complete and unique')
-        start, end = matches[index:index + 2]
-        if (start[1] != 'sdd:visual:' or end[1] != '/sdd:visual:'
-                or start[2] != end[2] or start[2] in ids
-                or not _outside_fence(body[:start.start()])
-                or not _outside_fence(body[:end.start()])):
-            raise ValueError('Owned visual markers must be complete, unique and outside code fences')
-        ids.append(start[2])
-        spans.append((start.start(), end.end(), start[2]))
-    return spans
 
 
 def _normalized(raw):
@@ -195,6 +174,7 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
     projected.append(updated[cursor:])
     if ''.join(projected) != ''.join(outside):
         raise ValueError('Visual refresh changed bytes outside owned edit regions')
+    verify_stage_placement(updated,rendered,section)
     return updated, old_ids, _digest(''.join(outside).encode()), [row for _, _, row in regions]
 
 

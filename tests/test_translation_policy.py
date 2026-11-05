@@ -9,6 +9,19 @@ from sdd.llm import SCHEMA_KINDS
 from sdd.translation import translate_missing
 
 
+@pytest.mark.parametrize('builder',['_single_system','_single_retry_system','_batch_system'])
+def test_prompt_contract_supports_repeated_tokens_and_shared_subjects(builder):
+    from sdd import translation
+    source='조건 A에서는 {{0}}를 기록하고 조건 B에서는 {{0}}를 확인합니다. {{1}}은 조건 C에서 반환하며 조건 D에서는 신호를 냅니다.'
+    prompt=getattr(translation,builder)({source:''})
+    assert 'exactly once' not in prompt
+    assert 'exact source occurrence count' in prompt
+    assert 'shared subject' in prompt
+    translation._validate_text(source,
+        'Under condition A, {{0}} is recorded; under condition B, {{0}} is checked. '
+        '{{1}} returns under condition C and emits a signal under condition D.')
+
+
 @pytest.mark.parametrize('source,text,valid', [
     ('설명', '  Description.  ', True),
     ('설명', '', False),
