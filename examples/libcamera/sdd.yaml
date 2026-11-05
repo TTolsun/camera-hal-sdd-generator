@@ -103,7 +103,22 @@ documentation:
     - ipu3-lsc-prepare
 site:
   reader_paths: reader-paths.yaml
+  reading_checkpoints:
+    request-diagnosis.md: [diagnosis]
   topic_links:
+    overview.md:
+      request:
+      - section: overview
+        topic: completion
+        label: 버퍼 완료와 요청 전체 완료 구분
+      - section: overview
+        topic: boundary
+        label: 완료 호출자와 스레드 의무
+    vendor-integration.md:
+      request:
+      - section: vendor-integration
+        topic: validation
+        label: completeRequest 호출 스레드와 반환 뒤 접근 의무
     request-diagnosis.md:
       diagnosis:
       - section: pipeline-requests
