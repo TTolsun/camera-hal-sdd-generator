@@ -153,7 +153,9 @@ def main():
         else:
             # The main example retains its existing diagnosis plans and formatting.
             start,end = text.index('  - id: preparation-depth-flow\n'),text.index('  overview:\n')
-            plans=[v for v in visuals['sections']['request-lifecycle'] if v.get('generation')=='llm' and v['topic'] in ['preparation-depth','uvc-depth','stop-depth','callback-order','callback-depth','review']]
+            plans=[v for v in visuals['sections']['request-lifecycle']
+                   if v.get('topic')=='resources' or (v.get('generation')=='llm'
+                       and v['topic'] in ['preparation-depth','uvc-depth','stop-depth','callback-order','callback-depth','review'])]
             rendered = yaml.dump(plans,Dumper=NoAliases,allow_unicode=True,sort_keys=False,width=105)
             path.write_text(text[:start]+''.join(('  '+line).rstrip()+'\n' for line in rendered.splitlines())+text[end:],encoding='utf-8',newline='\n')
     print('Refined source-bound questions, verification cases and diagram order; regeneration required.',flush=True)

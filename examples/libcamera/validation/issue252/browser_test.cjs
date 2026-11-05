@@ -75,9 +75,13 @@ if (!/^https?:\/\//.test(base)) throw Error('Supply an exact local or public sit
       const destination = page.locator(target);
       await destination.waitFor({state:'visible'});
       run.evidence_anchor = target;
-      const sourceLink = page.locator('article a[href*="/blob/293d751a814e0d4c34e85ad457ccd9d5eefd1a61/"]').first();
+      const sourceLink = page.locator('article a[href*="/blob/be7e83e91348250c015aad6d6f59f1468555bae8/"]').first();
       assert.ok(await sourceLink.count());
       run.source_url = await sourceLink.getAttribute('href');
+      const citations = await page.locator('details.source-excerpts a[href*="/blob/"]').evaluateAll(links=>links.map(a=>a.href));
+      assert.ok(citations.length,'Source appendix must contain original code links');
+      assert.ok(citations.every(href=>href.includes('/blob/be7e83e91348250c015aad6d6f59f1468555bae8/')),'Every current source appendix citation must use the frozen current commit');
+      run.current_source_links = citations.length;
       await page.keyboard.press('Control+k');
       await page.locator('#search-dialog').waitFor({state:'visible'});
       await page.locator('#search-input').fill('UVC');

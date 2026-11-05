@@ -124,126 +124,6 @@ sections:
         sha256: e85796df194551ecbd587ba1a7bb356a1409fa1d606762865e7eb989c92d2f72
         quote: Running -> Running [label = "createRequest(), queueRequest()"]
   request-lifecycle:
-  - id: request-ownership
-    topic: resources
-    kind: ownership
-    title: 요청과 버퍼를 유지할 기간
-    question: createRequest와 addBuffer 호출자의 책임 및 completeRequest·cancelRequest 반환 뒤 핸들러의 접근 경계는 어떻게 구분됩니까?
-    nodes:
-    - id: caller
-      label: 'createRequest 호출자: Request 소유'
-      label_en: 'createRequest caller: owns Request'
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: The ownership of the returned request is passed to the caller
-    - id: buffer
-      label: 'addBuffer 호출자: 버퍼 유효성 책임'
-      label_en: 'addBuffer caller: buffer validity duty'
-      evidence:
-      - source: resources/buffer
-        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
-        quote: A reference to the buffer is stored in the request.
-    - id: callback
-      label: 애플리케이션 요청 완료 콜백 호출
-      label_en: Application request-completion callback is called
-      evidence:
-      - source: resources/buffer
-        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
-        quote: "until the request complete\n * callback is called."
-    - id: delete
-      label: 요청 삭제
-      label_en: Delete request
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: "The request may be deleted in the completion\n * handler"
-    - id: reuse
-      label: 상태 초기화 후 Request 재사용
-      label_en: Reuse Request after resetting state
-      evidence:
-      - source: resources/reuse
-        sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
-        quote: be reused and requeued without destruction.
-    - id: complete
-      label: completeRequest 반환 경계
-      label_en: completeRequest return boundary
-      evidence:
-      - source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: void PipelineHandler::completeRequest(Request *request)
-    - id: cancel
-      label: cancelRequest 반환 경계
-      label_en: cancelRequest return boundary
-      evidence:
-      - source: resources/completion
-        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: void PipelineHandler::cancelRequest(Request *request)
-    - id: ban
-      label: 핸들러 관리 종료; 반환 후 요청 접근 금지
-      label_en: Handler management ends; must not access request after return
-      evidence:
-      - source: resources/complete-access
-        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
-          \ function returns."
-    edges:
-    - from: buffer
-      to: callback
-      label: 콜백이 호출될 때까지 버퍼 유효성 유지
-      label_en: Keep buffer valid until callback is called
-      evidence:
-      - source: resources/buffer
-        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
-        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
-    - from: callback
-      to: delete
-      label: 완료 핸들러에서 삭제 가능
-      label_en: May delete in completion handler
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: "The request may be deleted in the completion\n * handler"
-    - from: complete
-      to: ban
-      label: 반환 후 접근 금지
-      label_en: No access once it returns
-      evidence:
-      - source: resources/complete-access
-        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
-          \ function returns."
-    - from: cancel
-      to: ban
-      label: 동일한 규칙 적용
-      label_en: Same rules apply
-      evidence:
-      - source: resources/cancel-rules
-        sha256: 048bc649f307f0f41b7702b59be24a5fba9f7a48ff6a266bfbe458df4a5bdc8d
-        quote: "This function cancels and completes the request. The same rules as for\n * completeRequest()\
-          \ apply."
-      - source: resources/complete-access
-        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
-        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
-          \ function returns."
-    - from: callback
-      to: reuse
-      label: 완료 핸들러에서 상태를 초기화한 뒤 요청을 재사용할 수 있음
-      label_en: May reuse the request after resetting its state in the completion handler
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: " * responsible for deleting it. The request may be deleted in the completion\n * handler, or\
-          \ reused after resetting its state with Request::reuse()."
-    - from: caller
-      to: delete
-      label: 소유자가 삭제 책임을 짐
-      label_en: Owner is responsible for deletion
-      evidence:
-      - source: resources/create
-        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
-        quote: responsible for deleting it.
-
   - id: request-stages
     topic: journey
     kind: flow
@@ -520,124 +400,6 @@ sections:
       - source: stopping/stop
         sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
         quote: d->setState(Private::CameraConfigured);
-  - id: lifecycle-timeout-fence-recovery
-    topic: resources
-    kind: flow
-    title: 타임아웃 뒤 펜스 회수
-    question: 신호되지 않은 펜스로 타임아웃이 나면 다른 요청에 재사용하기 전에 무엇을 해야 합니까?
-    nodes:
-    - id: timeout
-      label: '펜스 미신호: 요청 타임아웃'
-      label_en: 'Unsignalled fence: request times out'
-      evidence:
-      - source: resources/fence-expiry
-        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
-        quote: isn't signalled
-    - id: retained
-      label: 버퍼에 펜스가 남음
-      label_en: Buffer still contains its fence
-      evidence:
-      - source: resources/fence-expiry
-        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
-        quote: The buffer will still contain the fence
-    - id: retrieve
-      label: 애플리케이션이 releaseFence()로 회수
-      label_en: Application retrieves with releaseFence()
-      evidence:
-      - source: resources/fence-expiry
-        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
-        quote: applications must retrieve with FrameBuffer::releaseFence()
-    - id: reuse
-      label: 다른 요청의 재사용에 필요한 회수 조건
-      label_en: Required retrieval condition for reuse in another request
-      evidence:
-      - source: resources/fence-expiry
-        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
-        quote: can be reused in another request.
-    edges:
-    - from: timeout
-      to: retained
-      label: 요청 실패 뒤에도 유지
-      label_en: Remains after request failure
-      evidence:
-      - source: resources/fence-expiry
-        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
-        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
-    - from: retained
-      to: retrieve
-      label: 재사용 전 회수 의무
-      label_en: Must retrieve before reuse
-      evidence:
-      - source: resources/fence-expiry
-        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
-        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
-    - from: retrieve
-      to: reuse
-      label: 회수는 필요한 선행 조건
-      label_en: Retrieval is a necessary precondition
-      evidence:
-      - source: resources/fence-expiry
-        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
-        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
-  - id: lifecycle-reuse-buffer-fence-distinction
-    topic: resources
-    kind: flow
-    title: 버퍼 재사용과 펜스 권고
-    question: ReuseBuffers가 재사용하는 대상과 펜스 사용 시 권고는 무엇입니까?
-    nodes:
-    - id: flag
-      label: ReuseBuffers
-      label_en: ReuseBuffers
-      evidence:
-      - source: resources/reuse-flags
-        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
-        quote: \var Request::ReuseBuffers
-    - id: buffers
-      label: 앞서 addBuffer로 넣은 버퍼 재사용
-      label_en: Reuse buffers previously added by addBuffer
-      evidence:
-      - source: resources/reuse-flags
-        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
-        quote: Reuse the buffers that were previously added by addBuffer()
-    - id: fences
-      label: 연결된 펜스는 재사용하지 않음
-      label_en: Associated fences are not reused
-      evidence:
-      - source: resources/reuse-flags
-        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
-        quote: Fences associated with the buffers are not reused.
-    - id: advice
-      label: 펜스를 쓰면 이 플래그를 피하도록 권고
-      label_en: Should not use this flag with fences
-      evidence:
-      - source: resources/reuse-flags
-        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
-        quote: This flag should not be used if fences are used.
-    edges:
-    - from: flag
-      to: buffers
-      label: 플래그의 재사용 범위
-      label_en: Flag reuse scope
-      evidence:
-      - source: resources/reuse-flags
-        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
-        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
-    - from: buffers
-      to: fences
-      label: 버퍼와 펜스의 범위 구분
-      label_en: Distinguish buffer and fence reuse
-      evidence:
-      - source: resources/reuse-flags
-        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
-        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
-    - from: fences
-      to: advice
-      label: API의 should not 권고
-      label_en: API should-not recommendation
-      evidence:
-      - source: resources/reuse-flags
-        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
-        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
   - id: observed-stop-callback-timing
     topic: observed-callbacks
     kind: flow
@@ -1923,6 +1685,608 @@ sections:
     - request-private
     - bound-overloads
     require_connected: true
+  - id: request-ownership
+    topic: resources
+    kind: ownership
+    title: 요청과 버퍼를 유지할 기간
+    question: createRequest와 addBuffer 호출자의 책임 및 completeRequest·cancelRequest 반환 뒤 핸들러의 접근 경계는 어떻게 구분됩니까?
+    nodes:
+    - id: caller
+      label: 'createRequest 호출자: Request 소유'
+      label_en: 'createRequest caller: owns Request'
+      evidence:
+      - source: resources/create
+        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+        quote: The ownership of the returned request is passed to the caller
+    - id: buffer
+      label: 'addBuffer 호출자: 버퍼 유효성 책임'
+      label_en: 'addBuffer caller: buffer validity duty'
+      evidence:
+      - source: resources/buffer
+        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
+        quote: A reference to the buffer is stored in the request.
+    - id: callback
+      label: 애플리케이션 요청 완료 콜백 호출
+      label_en: Application request-completion callback is called
+      evidence:
+      - source: resources/buffer
+        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
+        quote: "until the request complete\n * callback is called."
+    - id: delete
+      label: 요청 삭제
+      label_en: Delete request
+      evidence:
+      - source: resources/create
+        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+        quote: "The request may be deleted in the completion\n * handler"
+    - id: reuse
+      label: 상태 초기화 후 Request 재사용
+      label_en: Reuse Request after resetting state
+      evidence:
+      - source: resources/reuse
+        sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
+        quote: be reused and requeued without destruction.
+    - id: complete
+      label: completeRequest 반환 경계
+      label_en: completeRequest return boundary
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: void PipelineHandler::completeRequest(Request *request)
+    - id: cancel
+      label: cancelRequest 반환 경계
+      label_en: cancelRequest return boundary
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: void PipelineHandler::cancelRequest(Request *request)
+    - id: ban
+      label: 핸들러 관리 종료; 반환 후 요청 접근 금지
+      label_en: Handler management ends; must not access request after return
+      evidence:
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
+    edges:
+    - from: buffer
+      to: callback
+      label: 콜백이 호출될 때까지 버퍼 유효성 유지
+      label_en: Keep buffer valid until callback is called
+      evidence:
+      - source: resources/buffer
+        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
+        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
+    - from: callback
+      to: delete
+      label: 완료 핸들러에서 삭제 가능
+      label_en: May delete in completion handler
+      evidence:
+      - source: resources/create
+        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+        quote: "The request may be deleted in the completion\n * handler"
+    - from: complete
+      to: ban
+      label: 반환 후 접근 금지
+      label_en: No access once it returns
+      evidence:
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
+    - from: cancel
+      to: ban
+      label: 동일한 규칙 적용
+      label_en: Same rules apply
+      evidence:
+      - source: resources/cancel-rules
+        sha256: 048bc649f307f0f41b7702b59be24a5fba9f7a48ff6a266bfbe458df4a5bdc8d
+        quote: "This function cancels and completes the request. The same rules as for\n * completeRequest()\
+          \ apply."
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
+    - from: caller
+      to: reuse
+      label: 소유자가 상태 초기화 후 재사용을 선택
+      label_en: Owner may reuse after resetting state
+      evidence:
+      - source: resources/create
+        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+        quote: or reused after resetting its state with Request::reuse().
+    - from: caller
+      to: delete
+      label: 소유자가 삭제 책임을 짐
+      label_en: Owner is responsible for deletion
+      evidence:
+      - source: resources/create
+        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+        quote: responsible for deleting it.
+    stage: principle
+  - id: completed-but-not-returned
+    topic: resources
+    stage: conditions
+    kind: flow
+    title: 완료 상태와 애플리케이션 반환의 차이
+    question: A 다음 B를 제출한 조건부 예이며 두 요청 사이에 다른 요청이 있을 수도 있습니다. cancelled_가 B의 상태를 정하고, 반환 루프는 현재 선두를 하나씩 검사합니다.
+      중간 Pending 요청에서도 중단하므로 A가 끝났다는 사실만으로 B 반환을 보장하지 않습니다. 수명 화살표는 접근·유효성 계약이며 실제 콜백 시각이나 함수 전체의 종료 순서가 아닙니다.
+    nodes:
+    - id: b
+      label: 'B의 처리 종료: completeRequest(B)'
+      label_en: 'B processing finished: completeRequest(B)'
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: request->_d()->complete();
+    - id: flag
+      label: cancelled_ 값은?
+      label_en: Value of cancelled_?
+      evidence:
+      - source: resources/internal-completion
+        sha256: 8498bd73d69b1968ec400ec4ac12b473ec4ded1098969af3318c7238fe9d68b8
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+      shape: decision
+    - id: complete
+      label: RequestComplete
+      label_en: RequestComplete
+      evidence:
+      - source: resources/internal-completion
+        sha256: 8498bd73d69b1968ec400ec4ac12b473ec4ded1098969af3318c7238fe9d68b8
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+    - id: cancelled
+      label: RequestCancelled
+      label_en: RequestCancelled
+      evidence:
+      - source: resources/internal-completion
+        sha256: 8498bd73d69b1968ec400ec4ac12b473ec4ded1098969af3318c7238fe9d68b8
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+    - id: head
+      label: 현재 큐 선두가 RequestPending인가?
+      label_en: Is the current queue head RequestPending?
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+      shape: decision
+    - id: wait
+      label: 선두 Pending에서 반환 루프 중단
+      label_en: Stop the return loop at a Pending head
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: request->_d()->complete();
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+    - id: return
+      label: 현재 선두를 제거하고 앱에 반환
+      label_en: Pop the current head and return it to the app
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->requestComplete(req);
+    - id: handler
+      label: 완료 함수 반환 뒤 핸들러 접근 금지
+      label_en: No handler access after completion function returns
+      evidence:
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
+    - id: buffer
+      label: 요청 완료 콜백까지 버퍼 유지
+      label_en: Keep buffer valid until request completion callback
+      evidence:
+      - source: resources/buffer-duty
+        sha256: 996424643a0de2ec5fbd8b8491639ae1afea030ab989179410e7a1eaa48c1673
+        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
+    - id: end
+      label: 이 반환 루프 종료
+      label_en: End this return loop
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty()) {
+    edges:
+    - from: b
+      to: flag
+      label: 내부 complete에서 상태 선택
+      label_en: Select status in internal complete
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: request->_d()->complete();
+      - source: resources/internal-completion
+        sha256: 8498bd73d69b1968ec400ec4ac12b473ec4ded1098969af3318c7238fe9d68b8
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+    - from: flag
+      to: complete
+      label: 'false'
+      label_en: 'false'
+      evidence:
+      - source: resources/internal-completion
+        sha256: 8498bd73d69b1968ec400ec4ac12b473ec4ded1098969af3318c7238fe9d68b8
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+    - from: flag
+      to: cancelled
+      label: 'true'
+      label_en: 'true'
+      evidence:
+      - source: resources/internal-completion
+        sha256: 8498bd73d69b1968ec400ec4ac12b473ec4ded1098969af3318c7238fe9d68b8
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+    - from: complete
+      to: head
+      label: 상태 갱신 뒤 선두 검사
+      label_en: Check queue head after status update
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: request->_d()->complete();
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+    - from: cancelled
+      to: head
+      label: 취소 상태도 같은 선두 검사
+      label_en: Same head check for cancelled status
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: request->_d()->complete();
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+    - from: head
+      to: wait
+      label: 선두가 Pending이면 break
+      label_en: Break if the head is Pending
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+    - from: head
+      to: return
+      label: Pending 아님
+      label_en: Not Pending
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->requestComplete(req);
+    - from: b
+      to: handler
+      label: 함수 반환 시점의 접근 경계
+      label_en: Access boundary when the function returns
+      evidence:
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
+    - from: b
+      to: buffer
+      label: B도 자기 요청 완료 콜백까지 유효성 보장
+      label_en: Keep B buffers valid until its own request completion callback
+      evidence:
+      - source: resources/buffer-duty
+        sha256: 996424643a0de2ec5fbd8b8491639ae1afea030ab989179410e7a1eaa48c1673
+        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
+    - from: return
+      to: head
+      label: 다음 선두
+      label_en: Next head
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty()) {
+    - from: return
+      to: end
+      label: 큐가 비었으면 이 루프 종료
+      label_en: End this loop if the queue is empty
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: while (!data->queuedRequests_.empty()) {
+    - from: wait
+      to: end
+      label: break로 루프 종료
+      label_en: Exit the loop via break
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+  - id: lifecycle-timeout-fence-recovery
+    topic: resources
+    kind: flow
+    title: 타임아웃 뒤 펜스 회수
+    question: 신호되지 않은 펜스로 타임아웃이 나면 다른 요청에 재사용하기 전에 무엇을 해야 합니까?
+    nodes:
+    - id: timeout
+      label: '펜스 미신호: 요청 타임아웃'
+      label_en: 'Unsignalled fence: request times out'
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: isn't signalled
+    - id: retained
+      label: 버퍼에 펜스가 남음
+      label_en: Buffer still contains its fence
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: The buffer will still contain the fence
+    - id: retrieve
+      label: 애플리케이션이 releaseFence()로 회수
+      label_en: Application retrieves with releaseFence()
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: applications must retrieve with FrameBuffer::releaseFence()
+    - id: reuse
+      label: 다른 요청의 재사용에 필요한 회수 조건
+      label_en: Required retrieval condition for reuse in another request
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: can be reused in another request.
+    edges:
+    - from: timeout
+      to: retained
+      label: 요청 실패 뒤에도 유지
+      label_en: Remains after request failure
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after\
+          \ a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence()\
+          \ before the buffer\n * can be reused in another request."
+    - from: retained
+      to: retrieve
+      label: 재사용 전 회수 의무
+      label_en: Must retrieve before reuse
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after\
+          \ a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence()\
+          \ before the buffer\n * can be reused in another request."
+    - from: retrieve
+      to: reuse
+      label: 회수는 필요한 선행 조건
+      label_en: Retrieval is a necessary precondition
+      evidence:
+      - source: resources/fence-expiry
+        sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
+        quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after\
+          \ a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence()\
+          \ before the buffer\n * can be reused in another request."
+    stage: conditions
+  - id: lifecycle-reuse-buffer-fence-distinction
+    topic: resources
+    kind: flow
+    title: 버퍼 재사용과 펜스 권고
+    question: ReuseBuffers가 재사용하는 대상과 펜스 사용 시 권고는 무엇입니까?
+    nodes:
+    - id: flag
+      label: ReuseBuffers
+      label_en: ReuseBuffers
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: \var Request::ReuseBuffers
+    - id: buffers
+      label: 앞서 addBuffer로 넣은 버퍼 재사용
+      label_en: Reuse buffers previously added by addBuffer
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Reuse the buffers that were previously added by addBuffer()
+    - id: fences
+      label: 연결된 펜스는 재사용하지 않음
+      label_en: Associated fences are not reused
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: Fences associated with the buffers are not reused.
+    - id: advice
+      label: 펜스를 쓰면 이 플래그를 피하도록 권고
+      label_en: Should not use this flag with fences
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: This flag should not be used if fences are used.
+    edges:
+    - from: flag
+      to: buffers
+      label: 플래그의 재사용 범위
+      label_en: Flag reuse scope
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n\
+          \ * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously\
+          \ added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This\
+          \ flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: buffers
+      to: fences
+      label: 버퍼와 펜스의 범위 구분
+      label_en: Distinguish buffer and fence reuse
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n\
+          \ * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously\
+          \ added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This\
+          \ flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    - from: fences
+      to: advice
+      label: API의 should not 권고
+      label_en: API should-not recommendation
+      evidence:
+      - source: resources/reuse-flags
+        sha256: 9e55d8335a38080c0af78cf267bac78c573636447425e25d394e5b206217e7fe
+        quote: "\\enum Request::ReuseFlag\n * Flags to control the behavior of Request::reuse()\n * \\var Request::Default\n\
+          \ * Don't reuse buffers\n * \\var Request::ReuseBuffers\n * Reuse the buffers that were previously\
+          \ added by addBuffer()\n *\n * \\note Fences associated with the buffers are not reused.\n *  This\
+          \ flag should not be used if fences are used.\n */\n\n/**\n * \\typedef Request::BufferMap"
+    stage: conditions
+  - id: completion-notification-order
+    topic: resources
+    stage: normal
+    kind: flow
+    title: 버퍼 알림에서 요청 반환까지
+    question: 정상 경로의 호출·추적 순서입니다. 모든 버퍼와 필요한 추가 처리가 끝난 뒤 요청 완료를 통지하며, 실제 실행 시간이나 애플리케이션 콜백 스레드를 나타내지 않습니다.
+    nodes:
+    - id: notice
+      label: bufferCompleted 알림
+      label_en: bufferCompleted notification
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->bufferCompleted.emit(request, buffer);
+    - id: tracking
+      label: 요청 내부 버퍼 추적 갱신
+      label_en: Update internal buffer tracking
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: return request->_d()->completeBuffer(buffer);
+    - id: complete
+      label: 명시적 completeRequest
+      label_en: Explicit completeRequest
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: They shall complete requests explicitly with completeRequest().
+    - id: return
+      label: 제출 순서로 애플리케이션 반환
+      label_en: Return to application in submission order
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->requestComplete(req);
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+    edges:
+    - from: notice
+      to: tracking
+      label: emit 뒤 갱신
+      label_en: Update after emit
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->bufferCompleted.emit(request, buffer);
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: return request->_d()->completeBuffer(buffer);
+    - from: tracking
+      to: complete
+      label: 마지막 버퍼만으로 자동 완료되지 않음
+      label_en: Last buffer does not automatically complete request
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: They shall complete requests explicitly with completeRequest().
+    - from: complete
+      to: return
+      label: 완료된 선두부터 반환
+      label_en: Return completed queue heads
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: camera->requestComplete(req);
+  - id: completion-change-checks
+    topic: resources
+    stage: change
+    kind: flow
+    title: 완료 책임 변경에서 함께 대조할 계약
+    question: 변경 검토의 확인 관계입니다. 화살표는 실행 순서나 기기 보장이 아니라 completeRequest 책임을 바꿀 때 함께 보존할 소스 계약을 가리킵니다.
+    nodes:
+    - id: api
+      label: 완료 책임 변경
+      label_en: Change completion responsibility
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: They shall complete requests explicitly with completeRequest().
+    - id: thread
+      label: CameraManager 스레드 호출 의무
+      label_en: Must call from CameraManager thread
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "\\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request\
+          \ *request)"
+    - id: order
+      label: 제출 순서로 요청 반환
+      label_en: Return requests in submission order
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+    - id: lifetime
+      label: 완료 함수 반환 뒤 핸들러 접근 금지
+      label_en: No handler access after completion function returns
+      evidence:
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
+    - id: buffer
+      label: 요청 완료 콜백까지 버퍼 유효
+      label_en: Buffer valid until request completion callback
+      evidence:
+      - source: resources/buffer-duty
+        sha256: 996424643a0de2ec5fbd8b8491639ae1afea030ab989179410e7a1eaa48c1673
+        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
+    edges:
+    - from: api
+      to: thread
+      label: 호출자 문맥 확인
+      label_en: Check caller context
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "\\context This function shall be called from the CameraManager thread.\n */\nvoid PipelineHandler::completeRequest(Request\
+          \ *request)"
+    - from: api
+      to: order
+      label: 선두 상태·반환 경로 확인
+      label_en: Check queue head and return path
+      evidence:
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+      - source: resources/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "This function ensures that requests will be returned to the application in\n * submission order"
+    - from: api
+      to: lifetime
+      label: 핸들러 수명 경계 확인
+      label_en: Check handler lifetime boundary
+      evidence:
+      - source: resources/complete-access
+        sha256: d2c64999e07c4a9df08f21b514cd8480e6ccc091f1aeef3ebaf44522d8fb0961
+        quote: "The request is no longer managed by the pipeline\n * handler and shall not be accessed once this\
+          \ function returns."
+    - from: api
+      to: buffer
+      label: 연동 호출자 수명 확인
+      label_en: Check integration caller lifetime
+      evidence:
+      - source: resources/buffer-duty
+        sha256: 996424643a0de2ec5fbd8b8491639ae1afea030ab989179410e7a1eaa48c1673
+        quote: "for ensuring that the buffer will remain valid until the request complete\n * callback is called."
   overview:
   - id: discovery-map
     topic: discovery
