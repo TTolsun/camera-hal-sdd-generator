@@ -54,6 +54,7 @@ def main():
     target['question'] = plan['question']
     aliases = {
         'frame-status-contract':('uvc-depth','frame-validity'),
+        'message-post':('preparation-depth','post-order'),
         'prepare-flow':('preparation-depth','prepare'),'dispatch-flow':('preparation-depth','dispatch'),
         'completion-flow':('uvc-depth','complete'),'uvc-submit':('uvc-depth','submit'),
         'uvc-controls':('uvc-depth','controls'),'control-result':('uvc-depth','set-controls'),
