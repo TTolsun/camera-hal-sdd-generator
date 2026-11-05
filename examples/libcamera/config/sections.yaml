@@ -986,8 +986,9 @@ sections:
         end: bool PipelineHandler::completeBuffer
     parts:
     - id: device
-      question: queueRequestDevice 구현자는 요청 파라미터를 어느 버퍼의 프레임에 적용해야 합니까? 버퍼와 파라미터의 관계를
-        설명하세요. 질문의 모든 항목을 한 문장으로 설명하세요.
+      question: queueRequestDevice 구현자는 요청 파라미터를 어느 버퍼의 프레임에 적용해야 합니까? 버퍼가 스트림과 연결된다는
+        관계와 요청에 파라미터 집합이 포함된다는 관계를 각각 주어와 서술어가 있는 별도 문장으로 명확히 구분하세요.
+        파라미터 적용 의무는 보존하고, 파라미터와 스트림 연결을 금지한다는 제품 보장은 만들지 마세요.
       sources:
       - device
       answer_contract:
@@ -996,6 +997,9 @@ sections:
         - - queueRequestDevice
         - - 버퍼
         - - 파라미터
+        reject_patterns:
+        - pattern: 스트림에 연결된 버퍼 집합과 파라미터 집합
+          message: 버퍼와 스트림의 연결 관계, 요청에 파라미터가 포함된다는 관계를 별도 문장으로 구분하세요.
     - id: device-result
       question: queueRequestDevice 구현자가 성공·실패 때 반환해야 하는 값만 한 문장으로 설명하세요. 호출 스레드는 별도
         질문에서 다루므로 반환 계약에 새 스레드 의무를 추가하지 마세요.
@@ -6366,6 +6370,10 @@ sections:
       file: src/libcamera/camera.cpp
       start: int Camera::Private::isAccessAllowed(State state, bool allowDisconnected,
       end: int Camera::Private::isAccessAllowed(State low, State high,
+    - id: access-declaration
+      file: include/libcamera/internal/camera.h
+      start: int isAccessAllowed(State state, bool allowDisconnected = false,
+      end: void disconnect();
     parts:
     - id: access
       question: queueRequest의 첫 검사는 isAccessAllowed(CameraRunning)입니다. 연결 해제와 Running
@@ -6374,6 +6382,7 @@ sections:
       sources:
       - queue
       - access
+      - access-declaration
       max_statements: 1
       answer_contract:
         basis: implementation
@@ -6991,6 +7000,10 @@ sections:
       end: '
 
         }'
+    - id: access-declaration
+      file: include/libcamera/internal/camera.h
+      start: int isAccessAllowed(State state, bool allowDisconnected = false,
+      end: void disconnect();
     parts:
     - id: answer
       question: Camera::queueRequest()의 캡처용 요청 접수 목적과 Running 상태·thread-safe 계약 및
@@ -7000,6 +7013,7 @@ sections:
       sources:
       - queue
       - access
+      - access-declaration
       max_statements: 3
       answer_contract:
         basis: implementation

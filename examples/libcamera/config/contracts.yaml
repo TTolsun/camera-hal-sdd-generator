@@ -29,7 +29,7 @@ contracts:
   primary: scenarios/queue_request.md
   documents: [vendor-integration.md, overview.md, camera-model.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md, scenarios/queue_request.md]
   match: '스레드|동기화|thread|콜백|requestCompleted|제출 순서'
-  evidence: [overview/boundary/synchronization, overview/boundary/completion, vendor-integration/request/completion-context, request-lifecycle/journey/request-notice, camera-model/concurrency/create, camera-model/concurrency/queue, camera-model/concurrency/start, camera-model/concurrency/stop, camera-model/concurrency/callback-signal]
+  evidence: [overview/boundary/synchronization, overview/boundary/completion, vendor-integration/request/completion-context, request-lifecycle/journey/request-notice, camera-model/concurrency/create, camera-model/concurrency/queue, camera-model/concurrency/start, camera-model/concurrency/stop, camera-model/concurrency/callback-signal, scenario-queue_request/acceptance/access-declaration]
 - id: submission-checks
   question: 요청 제출 오류 코드를 카메라 연결·상태, 생성 카메라, 요청 상태·control 정보 맵, 버퍼·활성 스트림의 검사 순서와
     연결하고, API 주석의 -ENOMEM과 보이는 함수의 명시적 분기를 구분하여 한영 조건·반환 의미를 대조하세요.
@@ -42,3 +42,4 @@ contracts:
   evidence:
   - request-diagnosis/submission-checks/queue
   - request-diagnosis/submission-checks/access
+  - request-diagnosis/submission-checks/access-declaration
