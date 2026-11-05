@@ -273,13 +273,16 @@ topics:
     - complete
     max_statements: 2
   - id: device
-    question: V4L2VideoDevice::queueBuffer에서 Stopping의 -ESHUTDOWN, VIDIOC_QBUF 오류 반환, 성공 후 queuedBuffers_ 등록이라는
-      필수 조사 분기를 설명하세요. cache_ 부재는 LOG(V4L2, Fatal) 뒤에 -ENOENT 반환문이 있으므로 정상 반환·공통 취소 도달을 보장하지 않는 별도 경계입니다. Camera
-      제출 0·QBUF 성공·프레임 완료를 구분하고 실제 ret·인덱스·큐 등록을 관찰하는 계획을 세 문장 이내로 연결하세요. QBUF 이전 cache 인덱스·공통 plane 검증의 별도
-      항목을 함께 대조하고 두 실패를 QBUF ioctl 오류로 합치지 마세요.
+    question: queueBuffer의 Stopping은 -ESHUTDOWN이며 cache_ 부재는 Fatal 로그 뒤 반환문이 있어도 정상 반환이나 취소 도달을 보장하지 않는 경계입니다.
+      다음 문단은 cache get 성공 뒤 실제 VIDIOC_QBUF가 음수인 경우입니다. guard.release 전에 반환하므로 활성 scope_exit 소멸자가 cache_->put(buf.index)을
+      수행하고 이번 버퍼의 queuedBuffers_ 신규 등록 없이 원래 ret를 반환합니다. 성공한 QBUF에서는 queuedBuffers_에 등록한 뒤 guard.release하므로
+      이번 함수 반환에서의 자동 put은 없습니다. 나중의 dequeue가 별도로 put하는 경로와 구분하고 QBUF 반환값과 프레임 완료를 구분하세요. 공통 cache·plane
+      사전 검사는 별도 항목이 소유하므로 반복하지 말고 두 짧은 문단으로 설명하세요.
     sources:
     - qbuf
     - submit
+    - cache-put
+    - scope-exit
     max_statements: 2
   - id: completion
     question: bufferAvailable의 dequeueBuffer 실패 또는 예상 밖 인덱스는 nullptr로 알림을 내지 않으며, 정상 반환은 bufferReady→UVC imageBufferReady→completeBuffer→completeRequest로

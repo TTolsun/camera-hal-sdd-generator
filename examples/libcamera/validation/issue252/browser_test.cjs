@@ -22,7 +22,7 @@ if (!/^https?:\/\//.test(base)) throw Error('Supply an exact local or public sit
       page.on('pageerror',error=>errors.push(String(error)));
       const url = new URL((language==='en'?'en/':'')+'request-lifecycle.html',base).href;
       await page.goto(url,{waitUntil:'networkidle'});
-      await page.waitForFunction(()=>[...document.querySelectorAll('.mermaid')].every(e=>e.dataset.ready==='true'),{timeout:60000});
+      await page.waitForFunction(()=>[...document.querySelectorAll('.mermaid')].every(e=>e.dataset.ready==='true'),undefined,{timeout:60000});
       assert.equal(await page.locator('.diagram-error').count(),0);
       const run = {language,mobile,url,figures:[],errors};
       run.layout = await page.evaluate(()=>({width:innerWidth,body:document.body.scrollWidth,document:document.documentElement.scrollWidth}));

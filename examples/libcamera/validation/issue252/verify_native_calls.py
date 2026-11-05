@@ -23,6 +23,9 @@ def main():
     current=RUN/'historical-native-restoration-current.json'
     if current.exists():
         preserved.update(path.replace(chr(92),'/') for path in json.loads(current.read_bytes())['receipt_paths'])
+    navigation=RUN/'historical-native-restoration-navigation.json'
+    if navigation.exists():
+        preserved.update(path.replace(chr(92),'/') for path in json.loads(navigation.read_bytes())['receipt_paths'])
     for calls in sorted(RUN.rglob('calls')):
         if not calls.is_dir():
             continue

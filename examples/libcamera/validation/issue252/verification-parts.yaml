@@ -24,10 +24,13 @@ parts:
   - completion-flow
   max_statements: 2
 - id: control-qbuf-case
-  question: '제출 실패 시험 계획: 개별 processControl 오류가 무시되는 경우와 setControls 오류가 UVC의 음수 반환을 통해 취소로 이어지는 경우를 구분하세요.
-    제어 적용 뒤 QBUF가 실패하는 경우에는 ret·error_idx·queuedBuffers_ 등록 여부·순번과 취소 완료를 확인하고 제어 변경 롤백을 기대하지 않도록 하세요. 준비 성공·장치
-    제출·요청 통지를 구별하여 각 경우의 기대 분기를 두 문장 이내로 제시하세요. cache_ 부재의 Fatal 로그는 별도 경계로 기록하고 실제 -ENOENT 반환이나 cancelRequest
-    도달을 기대하지 마세요.'
+  question: 제출 실패 시험을 세 짧은 평서문 문단으로 계획합니다. 개별 processControl 오류가 무시되는 경우와 setControls 음수가 UVC를 거쳐 취소되는 경우를
+    나누어 변환 ret·구성 제어 수·setControls ret를 기록합니다. 빈 제어 목록과 ioctl 이전 검증 실패를 먼저 분리하고 실제 제어 ioctl이 실행된 경우에만 그 호출의 error_idx를 조사합니다. error_idx를 QBUF 구조체의 필드로 쓰지 않습니다. 다음은 cache
+    get 성공 뒤 VIDIOC_QBUF에 음수를 주입하는 경우입니다. 확보 index·ioctl ret·이번 scope_exit의 put 횟수와 항목 free 상태·이번 버퍼 신규 queuedBuffers_
+    등록 부재를 기록하고 원래 ret 전달과 공통 취소·요청별 알림 횟수를 앞의 완료 불변조건에 맞춰 대조합니다. 제어 처리는 선행해도 전체 요청 제어 적용이나 롤백을 단정하지 않습니다.
+    성공 대조군에서는 등록과 guard.release를 기록하여 이번 queueBuffer 반환 시 자동 put이 없음을 대조하고 이후 dequeue의 별도 put과 구별합니다. cache_
+    자체 부재 Fatal은 정상 음수 반환 및 cancelRequest 도달을 보장하지 않는 별도 경우입니다. 실제 오류 주입 실행이나 복구 성공이 아니라 기록·기대 분기의 시험 계획으로
+    쓰고 ~인지 나열을 피하세요.
   sources:
   - uvc-submit
   - uvc-controls
@@ -35,7 +38,12 @@ parts:
   - qbuf-flow
   - dispatch-flow
   - completion-flow
-  max_statements: 2
+  - control-conversion
+  - cache-put
+  - scope-exit
+  max_statements: 3
+  answer_contract:
+    basis: investigation
 - id: dequeue-case
   question: 'DQBUF 실패 시험 계획: ioctl 오류와 예상 밖 인덱스를 각각 주입·관찰할 경우 그 dequeueBuffer 호출은 nullptr을 반환하므로 bufferAvailable이
     bufferReady를 내지 않는 기대 분기를 설명하세요. 해당 시점의 ret·index·queuedBuffers_와 요청 pending·큐 선두 status를 기록하고, 이 한 번의
