@@ -20,4 +20,10 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install uv==0.12.17
       - run: uv sync --frozen --extra dev --python ${{ matrix.python }}
+      - name: Publication pre-merge integration
+        run: >-
+          uv run --no-sync pytest -q
+          tests/test_dependencies.py
+          tests/test_translation_preflight.py
+          tests/test_publication_operation.py::test_first_merge_pipeline_keeps_basis_through_translation_review_export_and_rollback
       - run: uv run --no-sync pytest -q
