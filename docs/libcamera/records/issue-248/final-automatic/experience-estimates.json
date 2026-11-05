@@ -1,0 +1,75 @@
+{
+  "source_kind": "agent",
+  "rows": [
+    {
+      "reader": "reader-new",
+      "task": "B1",
+      "kind": "AGENT ESTIMATE",
+      "reading_ease_1_to_5": 4,
+      "reading_ease_reason": "신입 경로가 시스템 개요, 요청 제출과 완료, 문제 진단 순으로 명시되어 선택 부담이 낮다. 다만 index에 용어와 별도 독자 경로가 함께 많다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "전체 클래스 암기 대신 한 요청을 따라가도록 해 구현 과업과 이어진다.",
+      "sentence_naturalness_1_to_5": 3,
+      "sentence_naturalness_reason": "index 안내는 자연스럽지만 overview 설계 질문에 behavior·limitation·boundary 절을 지시하는 긴 명령문이 그대로 보여 독자 문장으로 어색하다."
+    },
+    {
+      "reader": "reader-new",
+      "task": "B2",
+      "kind": "AGENT ESTIMATE",
+      "reading_ease_1_to_5": 4,
+      "reading_ease_reason": "소유권·삭제·재사용 의무가 같은 절에서 연속으로 나온다. cookie와 내부 필드 설명이 앞뒤에 있어 핵심 계약을 다시 고르는 비용이 조금 있다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "누가 삭제하는지와 재사용 시 버퍼 유지 여부가 바로 구현 결정으로 이어진다.",
+      "sentence_naturalness_1_to_5": 4,
+      "sentence_naturalness_reason": "호출자 책임은 명료하다. completely opaque와 _d()->pending_ 같은 표현은 초심자 문장에서 호흡을 끊는다."
+    },
+    {
+      "reader": "reader-other",
+      "task": "base1",
+      "label": "AGENT ESTIMATES: 사람의 주관 평가가 아닌 자동 독자 추정치",
+      "reading_ease_1_to_5": 3,
+      "reading_ease_reason": "목차의 공통 Camera와 장치별 구현의 경계가 바로 답의 위치를 알려 준다. 다만 지원 범위·계층·동기화 책임이 여러 절에 흩어져 다시 이동해야 했다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "일관된 API 뒤에도 장치 확보와 등록 책임이 남는다는 설명이 타팀 연동 범위 파악과 연결된다.",
+      "naturalness_1_to_5": 3,
+      "naturalness_reason": "책임을 지며와 호출하는 쪽 같은 표현은 명확하지만, 그 작업을 이렇게 직접 다루는 대신은 지시 대상이 모호하고 발췌 한계 설명이 개요 읽기를 끊는다."
+    },
+    {
+      "reader": "reader-other",
+      "task": "base2",
+      "label": "AGENT ESTIMATES: 사람의 주관 평가가 아닌 자동 독자 추정치",
+      "reading_ease_1_to_5": 5,
+      "reading_ease_reason": "성능 근거를 읽는 기준이라는 짧은 절에 포함·제외 처리가 서로 이어진 두 문장으로 나와 한 번에 구분된다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "벤치마크 수치가 프레임 캡처와 출력을 포함하지 않는다는 경계가 제품 도입 판단에 직접 필요하다.",
+      "naturalness_1_to_5": 5,
+      "naturalness_reason": "시간만 측정합니다와 측정하지 않습니다가 대칭적으로 쓰였고, 실행 조건도 별도 한 문장으로 명료하다."
+    },
+    {
+      "reader": "reader-nonauthor",
+      "task": "base1",
+      "reading_ease_1_to_5": 4,
+      "reading_ease_reason": "마지막 버퍼 완료와 요청 완료의 차이를 한 문단에서 직접 설명한다. 함수명과 스레드가 반복되어 책임자를 따라가기 쉽다. completeRequest 자체 스레드는 별도 문장으로 확인할 수 없었다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "마지막 버퍼가 끝나도 별도 완료 호출이 필요하다는 조건이 완료 누락 조사에 직접 연결된다.",
+      "sentence_naturalness_1_to_5": 4,
+      "sentence_naturalness_reason": "파이프라인 핸들러를 주어로 명시하고 명시적으로 호출해야 한다는 동작을 분명히 적었다. 요청에 제공된 버퍼에 캡처된 프레임에 같은 조사 반복은 다소 무겁다."
+    },
+    {
+      "reader": "reader-nonauthor",
+      "task": "base2",
+      "reading_ease_1_to_5": 4,
+      "reading_ease_reason": "주요 확인 지점에서 제출 대상을 표로 찾고, 추적 범위와 경계에서 예약의 뜻을 바로 확인할 수 있다. 긴 전체 추적 표가 자동 추출에 섞여 분량은 늘었다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "예약 호출이라는 표기를 비동기 실행 보장으로 오해하지 않게 해 실제 조사에 유용하다.",
+      "sentence_naturalness_1_to_5": 4,
+      "sentence_naturalness_reason": "나열 순서는 실행 순서가 아닙니다와 비동기 실행을 보증하지 않습니다가 짧고 구체적이다. 호출부의 연결 방식과 동기화 계약은 용어를 이미 알아야 읽기 쉽다."
+    }
+  ],
+  "medians": {
+    "reading_ease_1_to_5": 4.0,
+    "interest_1_to_5": 4.0,
+    "naturalness_1_to_5": 4.0
+  },
+  "human_subjective_validation": false
+}
