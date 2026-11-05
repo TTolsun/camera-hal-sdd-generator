@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "scope": "Common explanation-stage visual-audit compatibility only. No final book/diagram/item/human/publication acceptance.",
+  "base_commit": "a1c4e2ded82628b1c72d837bd55e33c13a4974f5",
+  "native_review": {
+    "runner": "codex",
+    "model": "gpt-6.1-terra",
+    "model_selection": "explicit",
+    "producer": "cli/codex/gpt-6.1-terra",
+    "stdout_sha256": "948ba77b3ab3dfee89e046fb1bba6a1e0acd7c5f07ffd8a7e2cbd03b8e8d64bf",
+    "arguments_verified": true,
+    "receipt_sha256": "cfc523404ae3a553cd0d8b18d9cd87bfb504de9415e0321258dda928916199a2",
+    "findings": 0,
+    "cli_version": "codex-cli 0.166.0-alpha.5.1"
+  },
+  "before": {
+    "expected_reproduction": "Unpatched main rejects actual generated H4 stage figures.",
+    "failed": 2,
+    "passed": 4
+  },
+  "after": {
+    "passed": 139,
+    "seconds": 32.37
+  },
+  "reviewed_source_raw_sha256": {
+    "src/sdd/visual_audit.py": "6e5ae59d0c3f5f27858d1b0602bfad6da9e343b7b68b6f79f0a406ee18af5d12",
+    "tests/test_visual_audit_explanations.py": "47cb31a7127ff85f908fb9724af8d6594402f3f409b9b8d74dc7d48800d3696b",
+    "docs/reference/explanation.md": "31cfa256d00166b7ec6e9cd43932bf7deab34b62475dbb9241314ce5dff85a4a"
+  },
+  "archive": "explanation-audit-native-review.tar.gz",
+  "archive_sha256": "83d2ce0027845b81758559187779ef7265f4a4cb023211d7b9e310be31f82117",
+  "entries": [
+    {
+      "path": "build/issue215/code-review-109/build/generation-runs/94ddf080bcc7450e84e2dc77ffc466f8.json",
+      "sha256": "7701d7665385d8c5bcdab3382ae67611e3895333f943a2d23572980c2bc49cfc",
+      "bytes": 1037
+    },
+    {
+      "path": "build/issue215/code-review-109/execution-profile.json",
+      "sha256": "8411abb601fab99708f811695b1efebf301663eebeac25ad13e2cd89dcb2ad50",
+      "bytes": 1364
+    },
+    {
+      "path": "build/issue215/code-review-109/inputs.json",
+      "sha256": "5d5e4b6d83decd162006d347581902142ff47f4701329f248c850382aef2b659",
+      "bytes": 92225
+    },
+    {
+      "path": "build/issue215/code-review-109/prompts/001_stage-figure-audit-code-review.md",
+      "sha256": "14c46166b2b61eb737a3169006127d48ed593f13772ee9f8734272893ee8638a",
+      "bytes": 92311
+    },
+    {
+      "path": "build/issue215/code-review-109/prompts/001_stage-figure-audit-code-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "build/issue215/code-review-109/prompts/001_stage-figure-audit-code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-109/prompts/calls/e0e19bb6c856485496146d0f7952b6d5/001.receipt.json",
+      "sha256": "cfc523404ae3a553cd0d8b18d9cd87bfb504de9415e0321258dda928916199a2",
+      "bytes": 2208
+    },
+    {
+      "path": "build/issue215/code-review-109/prompts/calls/e0e19bb6c856485496146d0f7952b6d5/001.request.json",
+      "sha256": "5c5bc7554cbee94afe06553498c6021df3a5620944ab520705e8af363db65fc6",
+      "bytes": 95527
+    },
+    {
+      "path": "build/issue215/code-review-109/prompts/calls/e0e19bb6c856485496146d0f7952b6d5/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-109/prompts/cli/call-szo8l_6x.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-109/prompts/cli/call-szo8l_6x.stdout.txt",
+      "sha256": "948ba77b3ab3dfee89e046fb1bba6a1e0acd7c5f07ffd8a7e2cbd03b8e8d64bf",
+      "bytes": 359
+    },
+    {
+      "path": "build/issue215/code-review-109/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-109.py",
+      "sha256": "e79f218b033f6b95dd0f3cff9a42c958a0f7cbb657ba2498bc88fa7830af070f",
+      "bytes": 4003
+    },
+    {
+      "path": "build/issue215/pytest-158.log",
+      "sha256": "0346c641496c5f17d3c01ba18a1a9d3ec3f2ae148828f68379493e1e1a998333",
+      "bytes": 4452
+    },
+    {
+      "path": "build/issue215/pytest-159.log",
+      "sha256": "f569f426c16f3d484e9b2fd0d07a8a1da977b73d977a8394fb0d98faf24674e0",
+      "bytes": 36036
+    },
+    {
+      "path": "build/issue215/pytest-160.log",
+      "sha256": "782a03f3bc505010e7fea1c2282600cba9d1b883731abe4d7534ce0e7df1d505",
+      "bytes": 100
+    },
+    {
+      "path": "build/issue215/pytest-161.log",
+      "sha256": "5ce0581bc22d06a4b06cddfba5f2727d7207e52f70687bfa7135cdc683fd7bf6",
+      "bytes": 184
+    },
+    {
+      "path": "build/issue215/pytest-162-before.log",
+      "sha256": "2ea1df8cac25bb99e8190c743b1e6f15bf8983a39c18ffba5fe61028edd890e8",
+      "bytes": 7558
+    },
+    {
+      "path": "build/issue215/pytest-163-after.log",
+      "sha256": "96f895c167a9ffb6780c4372a2642a421d0db09804c6423820daf8e3e59c3c24",
+      "bytes": 184
+    }
+  ],
+  "human_review": "pending"
+}

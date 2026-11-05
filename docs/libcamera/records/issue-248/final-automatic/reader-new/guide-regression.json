@@ -1,0 +1,92 @@
+{
+  "role": "A01/new_developer",
+  "start_utc": "2026-11-05T00:47:45Z",
+  "scope": "설계 질문과 검증 범위의 Camera::start 관련 안내만",
+  "limitations": [
+    "같은 자동 에이전트의 반복 노출이다. 독립적인 첫 독해나 실제 사람 점수가 아니다.",
+    "로컬 HTML 텍스트 파싱으로 좁은 안내문만 읽었다. 실제 UI 조작이나 본문 기술 답변·링크 목적지 재검증은 하지 않는다."
+  ],
+  "copies": {
+    "site": {
+      "opened_utc": "2026-11-05T00:48:16.025079+00:00",
+      "url": "site/overview.html",
+      "manifest_sha256": "5c3d2493e4e7c229078c82e4fd830a8e4aec10a06a906cd7533958b8472af42a",
+      "build_id": "52d0226eff7ccee8170b3d7c5b4631ec8d9ff00708ab2e5a8b4f14a5bed95b9f",
+      "html_sha256_before": "a466de86f1ebeb22f09124dcfd0d0d701f5b4e3917213418bd0d6b7a7a1e9965",
+      "html_sha256_after": "a466de86f1ebeb22f09124dcfd0d0d701f5b4e3917213418bd0d6b7a7a1e9965",
+      "manifest_match": true,
+      "guide_item_text": "Camera::start()의 허용 상태와 상태 검사 실패 시 음수 오류 반환을 behavior로 설명하고, 별도 limitation에서 Camera 클래스 주석의 시작 타이밍 문서화 TODO만 설명하세요. 호출자 동기화 의무는 boundary 절에서 한 번 설명하므로 여기서 되풀이하지 마세요. TODO로 전체 구현이 미정이라고 추정하지 마세요. 정적 근거의 확인 범위",
+      "visible_link_targets": [
+        "#정적-근거의-확인-범위"
+      ],
+      "links_followed": false,
+      "manifest_sha256_final": "5c3d2493e4e7c229078c82e4fd830a8e4aec10a06a906cd7533958b8472af42a",
+      "html_sha256_final": "a466de86f1ebeb22f09124dcfd0d0d701f5b4e3917213418bd0d6b7a7a1e9965"
+    },
+    "site-after": {
+      "opened_utc": "2026-11-05T00:48:16.026082+00:00",
+      "url": "site-after/overview.html",
+      "manifest_sha256": "14a0d5f6651e8841a863efa3c3453ba6021f918ca7d336422df68278b40e4250",
+      "build_id": "ba53bbf0e176385195a877db564a61fdd872d3795091c6f9a231cdd5b942b120",
+      "html_sha256_before": "f38b5f42ddf15955ea0529f95ee0e4627939b44cad6092a75692e70a2d2fb4d9",
+      "html_sha256_after": "f38b5f42ddf15955ea0529f95ee0e4627939b44cad6092a75692e70a2d2fb4d9",
+      "manifest_match": true,
+      "guide_item_text": "Camera::start()는 어떤 상태에서 호출할 수 있고, 상태 검사 실패 시 무엇을 반환합니까? 시작 타이밍 문서에는 어떤 TODO가 남아 있습니까? 정적 근거의 확인 범위",
+      "visible_link_targets": [
+        "#정적-근거의-확인-범위"
+      ],
+      "links_followed": false,
+      "manifest_sha256_final": "14a0d5f6651e8841a863efa3c3453ba6021f918ca7d336422df68278b40e4250",
+      "html_sha256_final": "f38b5f42ddf15955ea0529f95ee0e4627939b44cad6092a75692e70a2d2fb4d9"
+    }
+  },
+  "preserved_files_before": {
+    "phase1.md": "2a5a21ab83e28e3099aab0c8db95829165b1f5cf150e8e8eaee40ba2c7516811",
+    "phase1.json": "48982add8c00dc1e55e60699439d08f2e3a28cc6c27c286402d87c2490f8f3b8",
+    "pre-interrupt-note.md": "1d711c9d39ff61044a0f801c9fe7faf00233ba6e6a472b17f2fd61f4e7a26380",
+    "phase2.md": "9e1750099f0caeed2b0b1ec0cbd2640f0d6198ad662bb9f8c1972ca0653fd986",
+    "phase2.json": "47ffcb374d6632f3f1426714426ee03cf2333e66c9bcf99a88e609cb81591be4"
+  },
+  "raw_observations": {
+    "site": {
+      "what_it_asks": "허용되는 호출 상태, 상태 검사 실패의 음수 오류 반환, 시작 타이밍 문서화 TODO의 범위를 설명하려는 항목으로 읽힌다. 다만 독자의 질문보다 원고 작성 방식에 대한 지시가 먼저 드러난다.",
+      "author_instructions_present": true,
+      "instruction_evidence": [
+        "behavior로 설명하고",
+        "별도 limitation에서",
+        "설명하세요",
+        "boundary 절에서 한 번 설명하므로 여기서 되풀이하지 마세요",
+        "TODO로 전체 구현이 미정이라고 추정하지 마세요."
+      ],
+      "sentence_naturalness_1_to_5": 2,
+      "estimate_kind": "AGENT ESTIMATE",
+      "reason": "독자에게 묻는 형식 없이 설명하세요·되풀이하지 마세요·추정하지 마세요라는 명령이 이어진다. behavior·limitation·boundary는 안내문의 기술 질문이 아니라 작성 구조를 가리켜 문장 목적을 다시 해석하게 한다."
+    },
+    "site-after": {
+      "what_it_asks": "Camera::start()의 허용 호출 상태, 상태 검사 실패 시 반환값, 시작 타이밍 문서에 남은 TODO라는 세 정보를 묻는다.",
+      "author_instructions_present": false,
+      "instruction_evidence": [],
+      "sentence_naturalness_1_to_5": 5,
+      "estimate_kind": "AGENT ESTIMATE",
+      "reason": "첫 문장이 허용 상태와 실패 반환값을 묻고, 둘째 문장이 문서 TODO를 따로 묻는다. 두 문장 모두 독자의 확인 질문으로 읽히며 이 항목 안에서는 원고 작성 명령이나 편집용 절 이름이 보이지 않는다."
+    }
+  },
+  "narrow_conclusion": "확인한 안내 항목에서는 수정본이 기술 확인 질문으로 읽히고 작성 지시는 관찰되지 않았다. 이전본에는 작성 지시가 명시적으로 남아 있다. 이 판단은 같은 에이전트의 반복 노출에 따른 AGENT ESTIMATE다.",
+  "unverified": [
+    "본문 기술 답변의 정확성·충분성",
+    "보이는 링크의 실제 목적지와 질문-답변의 의미 연결",
+    "페이지의 다른 안내문이나 다른 문서",
+    "실제 사람·신규 독자의 평가 또는 임상적 효과"
+  ],
+  "backtracks": [],
+  "preserved_files_after": {
+    "phase1.md": "2a5a21ab83e28e3099aab0c8db95829165b1f5cf150e8e8eaee40ba2c7516811",
+    "phase1.json": "48982add8c00dc1e55e60699439d08f2e3a28cc6c27c286402d87c2490f8f3b8",
+    "pre-interrupt-note.md": "1d711c9d39ff61044a0f801c9fe7faf00233ba6e6a472b17f2fd61f4e7a26380",
+    "phase2.md": "9e1750099f0caeed2b0b1ec0cbd2640f0d6198ad662bb9f8c1972ca0653fd986",
+    "phase2.json": "47ffcb374d6632f3f1426714426ee03cf2333e66c9bcf99a88e609cb81591be4"
+  },
+  "prior_answers_unchanged": true,
+  "end_utc": "2026-11-05T00:49:01.022544+00:00",
+  "elapsed_seconds": 76.022544
+}

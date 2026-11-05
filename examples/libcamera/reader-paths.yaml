@@ -22,9 +22,13 @@ claims:
   - id: stopping
     title: 정지와 연결 해제의 차이
     kind: fact
-    condition: 정지와 연결 해제는 서로 다른 경로입니다. 구체적 구현의 동작과 기기 결과는 상세 설명과 실행 기록을 별도로 대조해야 합니다.
+    condition: 아래 요약의 즉시 오류 완료를 모든 애플리케이션 콜백의 실행과 반환이 끝났다는 보장으로 읽지 말고, 콜백 연결 방식과 수신 객체 스레드 및 관찰 범위는 정지의 공통 상세 설명에서 확인하세요.
     sources:
       - {section: request-lifecycle, topic: stopping, part: summary}
+    details:
+      - {section: request-lifecycle, topic: stopping, heading: 완료 통지의 호출자 의무와 반환 뒤 경계}
+      - {section: request-lifecycle, topic: observed-callbacks, heading: 가상 CPU 프로브의 연결별 취소 콜백 표시}
+      - {section: request-lifecycle, topic: observed-callbacks, heading: 반환 근처 표시로 알 수 있는 범위}
   - id: value
     title: 독자의 조사에 도움이 될 것이라는 가설
     kind: hypothesis
@@ -80,12 +84,21 @@ roles:
         claims: [submission, trial]
       - aspect: investigation
         question: 제출 이후 어디에서 멈췄는지 어떻게 조사할까요?
+        sources:
+          - {section: request-diagnosis, topic: submission-checks}
+          - {section: request-diagnosis, topic: diagnosis}
         claims: [submission, trial]
       - aspect: responsibility
         question: 수정할 구현과 함께 확인할 책임·자원 경계는 무엇인가요?
+        sources:
+          - {section: request-lifecycle, topic: stopping, heading: 완료 통지의 호출자 의무와 반환 뒤 경계}
         claims: [ownership, stopping]
       - aspect: verification
         question: 무엇을 확인해야 수정 결과를 판단할 수 있나요?
+        sources:
+          - {section: request-lifecycle, topic: observed-callbacks, heading: 반환 근처 표시로 알 수 있는 범위}
+          - {section: request-lifecycle, topic: review}
+          - {section: request-lifecycle, topic: stopping}
         claims: [trial, measurement]
   - id: decision
     title: 기술 의사결정자 · 문제·가치·위험·결정 찾기
@@ -98,10 +111,14 @@ roles:
         claims: [value, measurement]
       - aspect: risk
         question: 어떤 조건·위험·미검증 범위가 남아 있나요?
+        sources:
+          - {section: request-lifecycle, topic: stopping, heading: 완료 통지의 호출자 의무와 반환 뒤 경계}
+          - {section: request-lifecycle, topic: stopping}
+          - {section: request-lifecycle, topic: resources}
         claims: [stopping]
       - aspect: options
-        question: 지금 선택할 수 있는 검증 범위와 보류 조건은 무엇인가요?
+        question: 실제 완료 누락 조사에 착수할 조건과 보류 조건은 무엇인가요?
         claims: [trial]
       - aspect: decision
-        question: 무엇을 더 확인하거나 결정해야 하나요?
+        question: 문서의 근거 탐색 평가를 시작하려면 무엇을 더 정해야 하나요?
         claims: [adoption]

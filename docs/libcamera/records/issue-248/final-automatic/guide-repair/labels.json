@@ -1,0 +1,4 @@
+{
+  "ko": "Camera::start()는 어떤 상태에서 호출할 수 있고, 상태 검사 실패 시 무엇을 반환합니까? 시작 타이밍 문서에는 어떤 TODO가 남아 있습니까?",
+  "en": "In what states can Camera::start() be called, and what does Camera::start() return if the state check fails? What TODO remains in the start timing documentation?"
+}

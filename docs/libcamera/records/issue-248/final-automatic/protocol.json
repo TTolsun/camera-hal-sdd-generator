@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "source_kind": "agent",
+  "frozen_at": "2026-11-05T00:12:20.650377+00:00",
+  "public_commit": "ad19ae6e83caa22d60daf736535a98bb29ca4015",
+  "build_id": "52d0226eff7ccee8170b3d7c5b4631ec8d9ff00708ab2e5a8b4f14a5bed95b9f",
+  "manifest_sha256": "5c3d2493e4e7c229078c82e4fd830a8e4aec10a06a906cd7533958b8472af42a",
+  "input_artifacts": {
+    "P01-tasks.md": "5c7114fcbd36b19d67f8ac3dfeb6f0d726bf6d0f3de9c95d5b8320be4217f2f8",
+    "P02-tasks.md": "c1cff3069b9327300b7bc1d58fe29f720d111ad2b4795ca00b019c29c04ede19",
+    "P03-tasks.md": "f51573b3c489f30f3ce3390a12ac9acf0cee28e4c85de3e4df70bb3f0b71072b",
+    "participant.md": "19dd7883ffbe4e54df66175bd995229fc76830c5a91a7066f795e18fee79a255"
+  },
+  "base_tasks": [
+    "index",
+    "overview",
+    "vendor_overview",
+    "vendor_assurance",
+    "vendor_integration",
+    "queue_request"
+  ],
+  "task_success_rubric": "Original issue163 rubric plus issue248 S/R/X essential meanings, unchanged; not shown to reader agents.",
+  "rubric_sha256": {
+    "rubric-163.md": "ca04759666607c3a8938e66d9da4bbd38f76c462d95710f95cbeaac0db053cb5",
+    "facilitator.md": "7270c3d3bd49247d5ba14784d120a18f2c3560d479d30f803894e2a2f1103625"
+  },
+  "evaluation": "Fresh role agents; each two assigned base tasks, no-reference own-word explanation, a measured 300-second interval before resumption, separate transfer task.",
+  "experience": "Agent estimates with literal reasons; not human subjective data.",
+  "pause_limit": "An elapsed interval does not cause model forgetting; retained context and prior model knowledge remain limitations. No human five-minute resumption claim.",
+  "human_participants": 0,
+  "human_approval": "unchanged",
+  "issue_completion": "not-decided",
+  "quality": {
+    "html_pages": 66,
+    "broken_links": 0,
+    "manifest_verified": true
+  }
+}

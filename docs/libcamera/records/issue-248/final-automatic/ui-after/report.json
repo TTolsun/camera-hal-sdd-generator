@@ -1,0 +1,51 @@
+{
+  "base": "http://127.0.0.1:52680/",
+  "engine": "156.0.8078.80",
+  "scope": "Fresh Chromium contexts; mobile emulation; automatic UI regression, not human reading evaluation",
+  "runs": [
+    {
+      "lang": "ko",
+      "mobile": false,
+      "coverageLinks": 8,
+      "width": {
+        "screen": 1280,
+        "page": 1265
+      },
+      "errors": [],
+      "diagramEscapeFocus": true
+    },
+    {
+      "lang": "en",
+      "mobile": false,
+      "coverageLinks": 8,
+      "width": {
+        "screen": 1280,
+        "page": 1265
+      },
+      "errors": [],
+      "diagramEscapeFocus": true
+    },
+    {
+      "lang": "ko",
+      "mobile": true,
+      "coverageLinks": 8,
+      "width": {
+        "screen": 390,
+        "page": 390
+      },
+      "errors": [],
+      "diagramEscapeFocus": true
+    },
+    {
+      "lang": "en",
+      "mobile": true,
+      "coverageLinks": 8,
+      "width": {
+        "screen": 390,
+        "page": 390
+      },
+      "errors": [],
+      "diagramEscapeFocus": true
+    }
+  ]
+}
