@@ -93,7 +93,7 @@ def checked_footer(cfg, model, name, meta, body):
 
 
 def link_topics(cfg, model, pages, sections, headings):
-    """Add local reading routes to verified topic ends, without rewriting prose.
+    """Add local reading routes under verified topic headings, without rewriting prose.
 
     Resolve actual rendered headings, not guessed slugs. These routes convey
     navigation only and do not supply a runtime claim or a review verdict.
@@ -112,7 +112,11 @@ def link_topics(cfg, model, pages, sections, headings):
 
     class Text(HTMLParser):
         def __init__(self):
-            super().__init__(); self.parts = []
+            super().__init__(); self.parts = []; self.ids = []; self.invalid_ids = False
+        def handle_starttag(self, tag, attrs):
+            ids = [value for key, value in attrs if key == 'id']
+            self.invalid_ids |= len(ids) > 1
+            self.ids.extend(ids)
         def handle_data(self, value):
             self.parts.append(value)
 
@@ -136,6 +140,9 @@ def link_topics(cfg, model, pages, sections, headings):
         matches = [h['id'] for h in all_headings(headings[page]) if h['level'] == 2 and plain(h['name']) == title]
         if len(matches) != 1:
             raise ValueError('Topic link heading missing or ambiguous: ' + page + '/' + topic_id)
+        elements = Text(); elements.feed(pages[page][2])
+        if elements.invalid_ids or elements.ids.count(matches[0]) != 1:
+            raise ValueError('Topic link target ID is missing or duplicated: ' + page + '/' + topic_id)
         return matches[0]
 
     result = dict(pages)
@@ -169,9 +176,10 @@ def link_topics(cfg, model, pages, sections, headings):
             owned = [i for i, match in enumerate(starts) if html.unescape(match[1]) == source_anchor]
             if len(owned) != 1:
                 raise ValueError('Topic link source heading is not unique: ' + page)
-            index = owned[0]
-            position = starts[index + 1].start() if index + 1 < len(starts) else len(content)
-            additions.append((position, '<p class="reading-links">함께 확인: ' + ' · '.join(links) + '</p>\n'))
+            closing = content.find('</h2>', starts[owned[0]].end())
+            if closing < 0:
+                raise ValueError('Topic link source heading is not closed: ' + page)
+            additions.append((closing + len('</h2>'), '\n<p class="reading-links">함께 확인: ' + ' · '.join(links) + '</p>\n'))
         content = pages[page][2]
         for position, block in sorted(additions, reverse=True):
             content = content[:position] + block + content[position:]

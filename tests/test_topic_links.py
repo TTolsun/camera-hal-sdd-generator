@@ -122,3 +122,34 @@ def test_topic_routes_encode_paths_and_explicit_heading_ids_separately(tmp_cfg, 
     content = result['device.md'][2]
     assert 'href="nested/other%20%23%25.html#stop%25%3Ftag"' in content
     assert 'id="stop%?tag"' in result['nested/other #%.md'][2]
+
+
+@pytest.mark.parametrize('collision_tag', ['h3', 'h4', 'span'])
+def test_topic_destination_rejects_another_element_with_the_same_id(tmp_cfg, linked, collision_tag):
+    from sdd.next_steps import link_topics
+    from sdd.site_markdown import _render
+    names = {'device.md', 'nested/other.md'}
+    pages, headings = {}, {}
+    for name in names:
+        collision = f'<{collision_tag} id="종료-책임">다른 요소</{collision_tag}>\n\n' if name.startswith('nested/') else ''
+        content, toc, tokens = _render(collision + '## 종료 책임\n\n설명입니다.\n', name, names, linked, '', linked.meta['source_commit'])
+        pages[name] = ('Title', {'source_commit': linked.meta['source_commit']}, content, toc)
+        headings[name] = tokens
+    sections = {'device.md': tmp_cfg.section('device'), 'nested/other.md': tmp_cfg.section('other')}
+    with pytest.raises(ValueError, match='duplicated'):
+        link_topics(tmp_cfg, linked, pages, sections, headings)
+
+
+def test_topic_routes_stay_above_nested_stage_and_figure_headings(tmp_cfg, linked):
+    from sdd.next_steps import link_topics
+    from sdd.site_markdown import _render
+    names = {'device.md', 'nested/other.md'}
+    pages, headings = {}, {}
+    for name in names:
+        text = '## 종료 책임\n\n먼저 읽을 결론입니다.\n\n### 정상 경로\n\n단계 설명입니다.\n\n#### 해당 질문의 그림\n\n그림 설명입니다.\n'
+        content, toc, tokens = _render(text, name, names, linked, '', linked.meta['source_commit'])
+        pages[name] = ('Title', {'source_commit': linked.meta['source_commit']}, content, toc)
+        headings[name] = tokens
+    sections = {'device.md': tmp_cfg.section('device'), 'nested/other.md': tmp_cfg.section('other')}
+    content = link_topics(tmp_cfg, linked, pages, sections, headings)['device.md'][2]
+    assert content.index('</h2>') < content.index('class="reading-links"') < content.index('<h3') < content.index('<h4')
