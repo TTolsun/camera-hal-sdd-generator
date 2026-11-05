@@ -1,0 +1,19 @@
+{
+  "status": "verified",
+  "archive_sha256": "018ce13e0f022f35a8d565ce9253827ffe3c1e0de4be034862b794b7e0603143",
+  "index_sha256": "0b2420d9e90487abd7483a2ab87ce22bcfa51179dc8954398819e3bd5aebbefc",
+  "restored_original_files": 2249,
+  "restored_bytes": 81591125,
+  "receipt_integrity": [
+    {
+      "condition": "base",
+      "completed_original_cli_receipts_verified": 89
+    },
+    {
+      "condition": "head",
+      "completed_original_cli_receipts_verified": 89
+    }
+  ],
+  "scope": "Every archived file hash checked after safe restoration, plus all178 actual original native CLI request/response/stdout/argument chains. No archived script executed, no model inference rerun and no human or semantic approval created.",
+  "human_review": "pending"
+}
