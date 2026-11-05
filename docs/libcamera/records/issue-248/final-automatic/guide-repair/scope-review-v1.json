@@ -1,0 +1,5 @@
+{
+  "verdict": "faithful",
+  "reason": "내비게이션 문구가 허용 상태와 오류 반환, 시작 타이밍 문서화의 한계를 모두 담고 있으며 구현 전체가 미완성이라고 암시하지 않습니다. 별도의 호출자 동기화 경계도 재정의하지 않습니다.",
+  "human_readability": "not-established"
+}

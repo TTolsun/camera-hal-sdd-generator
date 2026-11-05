@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "build_id": "ba53bbf0e176385195a877db564a61fdd872d3795091c6f9a231cdd5b942b120",
+  "manifest_sha256": "14a0d5f6651e8841a863efa3c3453ba6021f918ca7d336422df68278b40e4250",
+  "outputs": 350,
+  "quality": {
+    "html_pages": 66,
+    "broken_links": 0,
+    "manifest_verified": true
+  },
+  "repeat_quality": {
+    "html_pages": 66,
+    "broken_links": 0,
+    "manifest_verified": true
+  },
+  "repeated_manifest_identical": true,
+  "changed_outputs": [
+    "en/overview.html",
+    "overview.html"
+  ],
+  "unchanged_manuscripts": 29,
+  "before_build_id": "52d0226eff7ccee8170b3d7c5b4631ec8d9ff00708ab2e5a8b4f14a5bed95b9f",
+  "contract_fresh_batches": 0,
+  "contract_revalidated_batches": 90,
+  "inherited_unresolved": 8,
+  "source_commit": "be7e83e91348250c015aad6d6f59f1468555bae8",
+  "source_kind": "agent",
+  "human_approval": "unchanged"
+}
