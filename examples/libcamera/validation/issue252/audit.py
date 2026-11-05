@@ -85,6 +85,17 @@ Return only JSON matching the schema. Findings must identify concrete erroneous/
     rules = {p.name:p.read_text(encoding='utf-8') for p in (ROOT/'style').glob('*.md')}
     payload = dict(phase=args.phase,purpose=purpose,scope=scope,writing_rules=rules,document=text,
                    complete_boundary_source_windows=windows,expected_h2_h3_items=expected_items)
+    previous = [p for p in (RUN/'audits').glob(args.phase+'-*/review.json')
+                if p.parent != folder]
+    if previous:
+        prior = max(previous, key=lambda p:p.stat().st_mtime)
+        payload['prior_independent_review'] = dict(
+            path=prior.relative_to(RUN).as_posix(),
+            sha256=hashlib.sha256(prior.read_bytes()).hexdigest(),
+            review=json.loads(prior.read_bytes()))
+        system += ('\nCheck resolution of the supplied prior findings against the CURRENT document and complete sources. '
+                   'Do not inherit its pass or fail: recheck every mandatory question and report any remaining or new concrete defect. '
+                   'A correction to one claim does not invalidate unchanged adequate answers merely because they are unchanged.')
     probe=RUN/'signal-probe.json'
     if probe.exists():
         payload['separate_bounded_signal_probe']=json.loads(probe.read_bytes())
