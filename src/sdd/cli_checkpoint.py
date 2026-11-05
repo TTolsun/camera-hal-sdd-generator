@@ -140,8 +140,24 @@ class UnitStore:
 
     @staticmethod
     def draft_identity(identity):
-        return {key: value for key, value in identity.items()
-                if key not in ('validation_policy', 'validation_model', 'validation_answers', 'grounding_policy')}
+        excluded = {'validation_policy', 'validation_model', 'validation_answers', 'grounding_policy'}
+        result = {key: value for key, value in identity.items() if key not in excluded}
+        if identity.get('purpose') == 'cross-document-consistency':
+            # The original native request STILL contains its revision. Only
+            # this provenance value is masked in the lookup key. read() checks
+            # the original full request byte-for-byte against its receipt.
+            request = identity['request']
+            user = json.loads(request['user'])
+            revision = user.get('source_commit')
+            if not isinstance(revision, str) or not revision or revision != identity.get('source_commit'):
+                raise ValueError('Contract checkpoint revision is not bound to its native request')
+            literal = json.dumps(user, ensure_ascii=False, separators=(',', ':'))
+            if literal != request['user']:
+                raise ValueError('Contract checkpoint requires the canonical literal native request')
+            user['source_commit'] = '@source-revision'
+            result.pop('source_commit')
+            result['request'] = {**request, 'user': json.dumps(user, ensure_ascii=False, separators=(',', ':'))}
+        return result
 
     @classmethod
     def compatible_identity(cls, identity):
@@ -151,9 +167,9 @@ class UnitStore:
             if isinstance(result['topic'].get('answer_contract'), dict):
                 result['topic']['answer_contract'] = {key: value for key, value in result['topic']['answer_contract'].items()
                                                        if key != 'reject_patterns'}
-        # Actual system/user/schema, source revision and execution identity must
-        # STILL match. Only a layout title and checks absent from the model's
-        # input can use this path, always under current deterministic validation.
+        # Actual system/user/schema and execution identity must STILL match.
+        # Generation also retains its source revision. The contract-only
+        # revision provenance exception is defined in draft_identity above.
         return result
 
     def _records(self, paths):
@@ -187,9 +203,11 @@ class UnitStore:
                     or not isinstance(payload['receipts'], list) or not payload['receipts']):
                 raise ValueError('checkpoint identity or checksum mismatch')
             records = self._records(payload['receipts'])
-            request = self.identity['request']
+            contract = self.identity.get('purpose') == 'cross-document-consistency'
+            request = payload['identity']['request'] if contract else self.identity['request']
             if not any(row.raw == payload['raw'] and row.request['system'] == request['system']
-                       and same_request_context(request['user'], row.request['user'])
+                       and (row.request['user'] == request['user'] if contract
+                            else same_request_context(request['user'], row.request['user']))
                        and row.request.get('response_schema') == request['response_schema'] for row in records):
                 raise ValueError('validated response has no completed CLI receipt')
             cached = payload, Reviewer(records)
