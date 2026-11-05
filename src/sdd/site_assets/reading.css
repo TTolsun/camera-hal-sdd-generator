@@ -1,7 +1,8 @@
 /* Reading rules: omm-doc-workflow/DESIGN.md; navigation inspired by libcamera docs. */
 :root{color-scheme:light;--ink:#17201e;--muted:#626d68;--line:#e4e9e6;--accent:#08745a;--soft:#f3f7f5}
 *{box-sizing:border-box}[hidden]{display:none!important}
-html{scroll-padding-top:88px;scroll-behavior:smooth}
+/* Keep native fragment anchoring stable while asynchronous diagrams resize. */
+html{scroll-padding-top:88px;scroll-behavior:auto}
 body{margin:0;background:#fff;color:var(--ink);font:16px/1.8 Geist,"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;word-break:keep-all;overflow-wrap:anywhere}
 a{color:var(--accent);text-underline-offset:4px}button,input{font:inherit}button{cursor:pointer;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:6px 12px}button:hover{background:var(--soft)}
 :is(a,button,input,summary,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:4px}

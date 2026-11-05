@@ -445,6 +445,7 @@ def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_
     search = []
     diagram_sources = {}
     visual_sources = {}
+    page_headings = {}
     for group, name, rel in entries:
         page_title, meta, body, diagram, visuals = _prepare_page_body(cfg, rel, texts, sections, terms, model)
         if diagram is not None:
@@ -459,6 +460,7 @@ def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_
             content, symbols = index_navigation(content, _html_path(rel), page_title)
             search.extend(symbols)
         rendered_pages[rel] = (page_title, meta, content, toc)
+        page_headings[rel] = tokens
         search.append({"title": page_title, "page": page_title, "url": _html_path(rel)})
 
         search.extend(_heading_search(tokens, page_title, rel))
@@ -470,6 +472,8 @@ def _render_pages(cfg, entries, sections, texts, terms, model, source_url, link_
     for rel, (page_title, meta, content, toc) in rendered_pages.items():
         if sections.get(rel, {}).get('kind', 'prose') == 'prose':
             rendered_pages[rel] = (page_title, meta, link_related_classes(content, _html_path(rel), targets), toc)
+    from .next_steps import link_topics
+    rendered_pages = link_topics(cfg, model, rendered_pages, sections, page_headings)
     return rendered_pages, search, diagram_sources, visual_sources
 
 
