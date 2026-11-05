@@ -153,3 +153,24 @@ def test_topic_routes_stay_above_nested_stage_and_figure_headings(tmp_cfg, linke
     sections = {'device.md': tmp_cfg.section('device'), 'nested/other.md': tmp_cfg.section('other')}
     content = link_topics(tmp_cfg, linked, pages, sections, headings)['device.md'][2]
     assert content.index('</h2>') < content.index('class="reading-links"') < content.index('<h3') < content.index('<h4')
+
+
+@pytest.mark.parametrize('linked', [{'heading': '종료 책임 {#sidebar}'}], indirect=True)
+def test_topic_anchor_cannot_collide_with_the_full_page_shell(tmp_cfg, linked):
+    with pytest.raises(RuntimeError, match='Ambiguous anchor'):
+        export_site(tmp_cfg)
+
+
+def test_encoded_topic_fragment_cannot_select_a_different_literal_id(tmp_cfg, linked):
+    from sdd.next_steps import link_topics
+    from sdd.site_markdown import _render
+    names = {'device.md', 'nested/other.md'}
+    pages, headings = {}, {}
+    for name in names:
+        collision = '<span id="' + quote('종료-책임') + '">다른 요소</span>\n\n' if name.startswith('nested/') else ''
+        content, toc, tokens = _render(collision + '## 종료 책임\n\n설명입니다.\n', name, names, linked, '', linked.meta['source_commit'])
+        pages[name] = ('Title', {'source_commit': linked.meta['source_commit']}, content, toc)
+        headings[name] = tokens
+    sections = {'device.md': tmp_cfg.section('device'), 'nested/other.md': tmp_cfg.section('other')}
+    with pytest.raises(ValueError, match='encoded fragment'):
+        link_topics(tmp_cfg, linked, pages, sections, headings)

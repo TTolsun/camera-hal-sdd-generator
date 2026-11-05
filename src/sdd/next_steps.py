@@ -143,6 +143,9 @@ def link_topics(cfg, model, pages, sections, headings):
         elements = Text(); elements.feed(pages[page][2])
         if elements.invalid_ids or elements.ids.count(matches[0]) != 1:
             raise ValueError('Topic link target ID is missing or duplicated: ' + page + '/' + topic_id)
+        encoded = quote(matches[0], safe='')
+        if encoded != matches[0] and encoded in elements.ids:
+            raise ValueError('Topic link encoded fragment selects another element: ' + page + '/' + topic_id)
         return matches[0]
 
     result = dict(pages)
