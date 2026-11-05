@@ -1875,6 +1875,14 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: void PipelineHandler::completeRequest(Request *request)
       end: void PipelineHandler::cancelRequest(Request *request)
+    - id: internal-cancel
+      file: src/libcamera/request.cpp
+      start: void Request::Private::doCancelRequest()
+      end: \brief Reset the request internal data to default values
+    - id: internal-complete
+      file: src/libcamera/request.cpp
+      start: void Request::Private::complete()
+      end: void Request::Private::doCancelRequest()
     - id: cancel-contract
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Cancel request and signal its completion
@@ -1951,11 +1959,12 @@ sections:
         - - completeRequest
         - - doQueueRequests
     - id: thread
-      question: completeBuffer와 completeRequest 호출자가 지켜야 할 CameraManager 스레드 문맥만 설명하세요.
-        잘못된 스레드의 결과는 추정하지 마세요.
+      question: completeBuffer와 completeRequest가 CameraManager 스레드에서 호출되어야 한다는 계약을 보존하세요. 일반 완료의 버퍼 알림·추적과 명시적 요청 완료의 호출 의무를 해당 경로에 한정하고, 취소 helper는 cancelRequest가 내부 cancel 처리 후 completeRequest를 호출한다는 별도 경로임을 구분하세요. 취소도 모든 버퍼에 completeBuffer를 호출한다고 일반화하거나 잘못된 스레드의 결과를 추정하지 마세요.
       sources:
       - request-contract
       - buffer-contract
+      - cancel-contract
+      - internal-cancel
       answer_contract:
         basis: contract
         required_terms:
@@ -4868,7 +4877,7 @@ sections:
       max_statements: 1
       prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-buffers
-      question: 이 if는 buffers에 어떤 조건을 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
+      question: 이 버퍼 검사는 앞선 접근·생성 카메라 소유·RequestPending 상태·control infoMap 검사를 모두 통과해 이 위치에 도달했을 때 수행됨을 명시하세요. 그 조건 아래 buffers.empty()가 참일 때 오류 로그와 -EINVAL 반환을 한 문장으로 연결하세요. 앞선 검사에서 반환하면 이 버퍼 검사는 실행되지 않습니다.
       sources:
       - queue-buffers-guard
       answer_contract:
@@ -4879,7 +4888,7 @@ sections:
       max_statements: 1
       prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-stream
-      question: 이 if는 activeStreams_의 스트림 포함 여부를 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
+      question: 앞선 접근·생성 카메라 소유·RequestPending 상태·control infoMap 검사와 비어 있지 않은 버퍼 검사를 통과해 스트림 검사에 도달했을 때, activeStreams_의 find가 end()이면 -EINVAL을 반환한다는 조건을 한 문장으로 설명하세요. 선행 실패를 무시한 무조건적 오류 코드 보장으로 쓰지 마세요.
       sources:
       - queue-stream-guard
       answer_contract:
