@@ -1,0 +1,12 @@
+import pathlib,urllib.request,urllib.parse,json,hashlib,concurrent.futures,time,datetime
+r=pathlib.Path(__file__).resolve().parents[2];lock=json.loads((r/'build/issue253/fresh-final499/lock.json').read_bytes());out=r/'build/issue253/final-live-verification.json';assert not out.exists();base='https://ttolsun.github.io/libcamera-sdd/';sha=lambda b:hashlib.sha256(b).hexdigest();start=datetime.datetime.now(datetime.timezone.utc).isoformat();t=time.perf_counter()
+def get(p):
+ req=urllib.request.Request(base+urllib.parse.quote(p,safe='/'),headers={'Cache-Control':'no-cache','User-Agent':'issue253-final-artifact-verification'})
+ with urllib.request.urlopen(req,timeout=45) as x:return x.read()
+raw=get('site-manifest.json');manifest=json.loads(raw);assert manifest['build_id']==lock['build_id'] and sha(raw)==lock['manifest_sha256'] and manifest['outputs']==lock['outputs']
+def check(item):
+ p,h=item
+ try:b=get(p);a=sha(b);return dict(path=p,expected=h,actual=a,ok=a==h,bytes=len(b))
+ except Exception as exc:return dict(path=p,expected=h,ok=False,error=repr(exc))
+with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:rows=list(pool.map(check,manifest['outputs'].items()))
+record=dict(status='passed' if all(a['ok'] for a in rows) else 'failed',started_at=start,ended_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),elapsed_seconds=time.perf_counter()-t,public_merge='019c8d068f140764bf9f7ed34699ddc67f7b2478',evaluated_artifact='499465da2dc50feded066ee956de1ee166e7667f',url=base,build_id=manifest['build_id'],manifest_sha256=sha(raw),expected_outputs=len(rows),passed_outputs=sum(a['ok'] for a in rows),rows=rows,human_review='pending',human_participants=0);out.write_text(json.dumps(record,indent=2),encoding='utf8');print({k:v for k,v in record.items() if k!='rows'});assert record['status']=='passed'
