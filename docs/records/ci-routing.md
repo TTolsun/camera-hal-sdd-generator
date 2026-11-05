@@ -27,3 +27,9 @@
 구현 커밋 `496e448412baccc4448edd7feab973d9e66ea73b`을 push한 후 [PR #276](https://github.com/TTolsun/camera-hal-sdd-generator/pull/276)을 열었습니다. [첫 실행](https://github.com/TTolsun/camera-hal-sdd-generator/actions/runs/41947203175)은 `pull_request` 하나이며 같은 브랜치 push 실행은 생성되지 않았습니다. scope가 성공했고 네 기존 행렬 job이 시작했습니다. 판정 산출물 `ci-scope-41947203175-1`도 시험 시작 전에 업로드되었습니다.
 
 이 문단을 후속 커밋으로 push해 위 실행의 자동 취소를 확인합니다. 후속 커밋 자체는 문서 변경이지만 PR 전체에는 CI 코드가 있으므로 전체 검증을 받아야 합니다. 실제 취소와 후속 검증의 완료 여부는 아직 확인하지 않았습니다.
+
+## 병행 main 변경에 따른 추가 통합
+
+첫 실행의 네 전체 회귀 단계는 후속 커밋으로 자동 취소됐습니다. scope와 네 시험 산출물은 모두 보존됐으며 취소된 시험을 성공으로 바꾸지 않았습니다. [후속 실행](https://github.com/TTolsun/camera-hal-sdd-generator/actions/runs/41947352000)은 네 환경의 첫 병합 전 통합 시험을 통과했습니다.
+
+그 실행 중 병행 PR #274·#275가 main `1174e60fdb5b252e8c9266e8feb2be9b36cec04a`에 병합돼 독자 경로와 시각화 코드 등이 바뀌었습니다. 최신 main을 충돌 없이 통합했습니다. 이에 따른 재검증은 병행 변경과의 호환성을 확인하기 위한 것이며, 이번 CI 정책을 다시 고치기 위한 재작업은 아닙니다. 병행 PR의 코드·문서·원래 실행 증거를 그대로 보존합니다.
