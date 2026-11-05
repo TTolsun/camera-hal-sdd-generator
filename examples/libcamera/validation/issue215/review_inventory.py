@@ -164,7 +164,7 @@ def main():
                 if len(articles) != 1:
                     raise ValueError('Excluded presentation requires exactly one readable article')
                 contexts = presentation_paths(readable)
-                for node in all_nodes(articles[0]):
+                for node in all_nodes(readable):
                     if (node.tag in {'pre', 'script', 'style'}
                             or (node.tag == 'details' and source_container(node))):
                         kind = node.tag
