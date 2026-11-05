@@ -1,5 +1,4 @@
 """Local role-question figures using the normal pinned-source renderer."""
-from copy import deepcopy
 from pathlib import PurePosixPath
 import posixpath
 import re
@@ -15,7 +14,7 @@ def configuration(cfg, data=None):
     spec = data.get('visuals')
     if spec is None:
         return None
-    from .reader_paths import _mapping, _text, _items
+    from .reader_path_contract import _mapping, _text, _items
     _mapping(spec, {'file', 'placements'})
     _text(spec['file'], 'visual file')
     _items(spec['placements'], 'visual placements')
@@ -31,7 +30,7 @@ def placements(cfg, data, sections):
     spec = configuration(cfg, data)
     if spec is None:
         return []
-    from .reader_paths import _mapping, _id
+    from .reader_path_contract import _mapping, _id
     roles = {role['id']: role for role in data['roles']}
     claims = {claim['id']: claim for claim in data['claims']}
     available = {value['id'] for value in sections.values()}
@@ -126,7 +125,7 @@ def _position(body, anchor):
         position, depth = _position(body[start+claim.start():stop], claim[1])
         return start + claim.start() + position, depth
     # Claim-kind labels are not the explanation that a figure should follow.
-    from .reader_paths import KINDS
+    from .reader_path_contract import KINDS
     for label in KINDS.values():
         prefix = '**'+label+'**\n\n'
         if body.startswith(prefix, start):
@@ -162,9 +161,8 @@ def inject(cfg, model, rel, sections, body):
         return body, []
     if model is None:
         raise ValueError('Reader visuals require current facts')
-    from .visuals import render
-    alternative = deepcopy(cfg)
-    alternative.raw.setdefault('visuals', {})['file'] = str(cfg.root / configuration(cfg, data)['file'])
+    from .visuals import render_values
+    definitions = load_yaml(definition_file(cfg))
     by_id = {value['id']: value for value in sections.values()}
     rendered, insertions, cache = [], [], {}
     for item in selected:
@@ -172,7 +170,8 @@ def inject(cfg, model, rel, sections, body):
         if source['id'] not in cache:
             # Render for the actual output path: normal download names and
             # source pins apply, while canonical prose stays byte-identical.
-            cache[source['id']] = render(alternative, model, {**source, 'output': rel})
+            cache[source['id']] = render_values(cfg, model, {**source, 'output': rel},
+                                                  definitions['sections'].get(source['id'], []))
         found = [value for value in cache[source['id']] if value[0]['id'] == item['visual']]
         if len(found) != 1 or not found[0][2]:
             raise ValueError('Required reader visual missing or stale; it cannot be omitted')

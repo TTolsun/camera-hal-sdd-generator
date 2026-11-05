@@ -143,7 +143,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "consistency_profile.py", code_root / "next_steps.py",
                                             code_root / "design_contracts.py", code_root / "evidence.py",
                                             code_root / "contract_schema.py", code_root / "explanation.py", code_root / "reader_profiles.py",
-                                            code_root / "reader_scope.py", code_root / "reader_paths.py", code_root / "reader_path_visuals.py", code_root / "product_context.py",
+                                            code_root / "reader_scope.py", code_root / "reader_paths.py", code_root / "reader_path_visuals.py", code_root / "reader_path_contract.py", code_root / "product_context.py",
                                             code_root / "contract_render.py", code_root / "markdown_text.py",
                                             code_root / "generated_design.py", code_root / "generated_visuals.py",
                                             code_root / "config.py", code_root / "render_profiles.py", code_root / "design_types.py",
