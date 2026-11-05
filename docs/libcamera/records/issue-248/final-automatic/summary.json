@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "source_kind": "agent",
+  "fresh_reader_agents": 3,
+  "base_aligned": 5,
+  "base_assigned": 6,
+  "self_explanation_aligned": 2,
+  "self_explanation_assigned": 3,
+  "resumption_aligned": 2,
+  "resumption_assigned": 3,
+  "transfer_aligned": 3,
+  "transfer_assigned": 3,
+  "first_S_aligned": 1,
+  "first_R_aligned": 0,
+  "first_X_aligned": 0,
+  "verdict_basis": "Original fixed minimum; raw answers and first native verdicts retained alongside explicit adjudications.",
+  "actual_human_participants": 0,
+  "human_approval": "unchanged",
+  "overall_goal_completion": "not-established"
+}

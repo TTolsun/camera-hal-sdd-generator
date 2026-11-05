@@ -63,6 +63,33 @@ def _plain(value):
     return re.sub(r'([\\`*_{}\[\]()#!~])', r'\\\1', escaped)
 
 
+def _detail_headings(body, rel, known, model, commit):
+    from .site_markdown import _render
+    from .visual_audit import Document, Node
+    document, _, _ = _render(body, rel, known, model, '', commit)
+    def visit(node):
+        if node.tag in {'pre', 'code', 'details', 'nav', 'aside', 'footer'}:
+            return
+        if re.fullmatch(r'h[2-6]', node.tag):
+            yield node
+        for child in node.children:
+            if isinstance(child, Node):
+                yield from visit(child)
+    return list(visit(Document(document).root))
+
+
+def _detail_anchor(headings, topic_anchor, title):
+    active, found = False, []
+    for node in headings:
+        if node.tag == 'h2':
+            active = node.attrs.get('id') == topic_anchor
+        elif active and node.text().strip() == title:
+            found.append(node.attrs.get('id', ''))
+    if len(found) != 1 or not re.fullmatch(r'[\w-]+', found[0]):
+        raise ValueError('Reader paths: detail heading missing or ambiguous within canonical topic: ' + title)
+    return found[0]
+
+
 def assemble(cfg, texts, sections, entries, approval_states, model, validate):
     data = load_yaml(cfg.root / cfg.site.reader_paths)
     _mapping(data, {'schema', 'ready', 'scope', 'limitations', 'required_inputs', 'claims', 'roles'})
@@ -77,10 +104,10 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
         raise ValueError('Reader paths: current facts are required')
     commit = _text(model.meta.get('source_commit'), 'source_commit')
     by_id = {s['id']: (rel, s) for rel, s in sections.items()}
-    checked = set()
+    checked, rendered_headings = set(), {}
 
     def source(ref, *, quote=False):
-        _mapping(ref, {'section', 'topic'}, {'part'})
+        _mapping(ref, {'section', 'topic'}, {'part', 'heading'})
         section_id, topic_id = _id(ref['section']), _id(ref['topic'])
         if section_id not in by_id:
             raise ValueError('Reader paths: missing canonical section ' + section_id)
@@ -91,12 +118,19 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
         if rel not in checked:
             validate(rel)
             checked.add(rel)
-        meta, _ = split_frontmatter(texts[rel])
+        meta, canonical_body = split_frontmatter(texts[rel])
         if meta.get('source_commit') != commit:
             raise ValueError('Reader paths: facts and canonical source commits differ')
         title = topics[0]['title']
         # The normal renderer validates the actual destination anchor as well.
         anchor = re.sub(r'[-\s]+', '-', re.sub(r'[^\w\s-]', '', title.lower().strip()))
+        if 'heading' in ref:
+            if quote:
+                raise ValueError('Reader paths: a fact projection cannot replace its canonical part destination')
+            title = _line(ref['heading'], 'detail heading')
+            if rel not in rendered_headings:
+                rendered_headings[rel] = _detail_headings(canonical_body, rel, set(texts), model, commit)
+            anchor = _detail_anchor(rendered_headings[rel], anchor, title)
         link = f'[{_plain(title)}]({rel}#{anchor})'
         if not quote:
             if 'part' in ref:
@@ -114,9 +148,9 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
         paragraphs = '\n\n'.join('> ' + a['text'].replace('\n', '\n> ') for a in selected)
         return paragraphs + f'\n\n[전체 조건·상세 근거]({rel}#{anchor})'
 
-    claims, claim_titles = {}, {}
+    claims, claim_titles, claim_sources = {}, {}, {}
     for claim in _items(data['claims'], 'claims'):
-        _mapping(claim, {'id', 'title', 'kind', 'condition', 'sources'}, {'text', 'needed_inputs', 'options'})
+        _mapping(claim, {'id', 'title', 'kind', 'condition', 'sources'}, {'text', 'needed_inputs', 'options', 'details'})
         cid, kind = _id(claim['id']), claim['kind']
         if cid in claims or not isinstance(kind, str) or kind not in KINDS:
             raise ValueError('Reader paths: unique claim ID and known kind required')
@@ -133,12 +167,23 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
             answer += '\n\n| 구분 | 확인할 내용 |\n|---|---|\n'
             answer += '| 필요한 입력 | ' + '<br>'.join(_plain(_line(v, 'needed input')) for v in needed) + ' |\n'
             answer += '| 판단의 배경 근거(효과 측정값이 아님) | ' + ' · '.join(source(r) for r in refs) + ' |\n'
+        claim_sources[cid] = [{key: ref[key] for key in ('section', 'topic', 'heading') if key in ref} for ref in refs]
         if kind == 'decision_request':
             answer += '| 선택지 | ' + '<br>'.join(
                 _plain(_line(v, 'option')) for v in _items(claim.get('options'), 'options')) + ' |\n'
         elif 'options' in claim:
             raise ValueError('Reader paths: only decision requests have options')
-        claims[cid] = f'**{KINDS[kind]}**\n\n{answer}\n\n적용 조건·한계: {_plain(condition)}\n'
+        boundary = f'적용 조건·한계: {_plain(condition)}'
+        detail_links = ''
+        if 'details' in claim:
+            if kind != 'fact':
+                raise ValueError('Reader paths: details link reading conditions of a canonical fact')
+            details = _items(claim['details'], 'fact details')
+            detail_links = '\n\n조건을 확인할 상세 설명: ' + ' · '.join(source(ref) for ref in details)
+            claim_sources[cid].extend(details)
+        # A quoted contract must be read with its scope before its timing words.
+        claims[cid] = (f'**{KINDS[kind]}**\n\n**{boundary}**{detail_links}\n\n{answer}\n' if kind == 'fact'
+                       else f'**{KINDS[kind]}**\n\n{answer}\n\n{boundary}\n')
 
     roles = _items(data['roles'], 'roles')
     seen_roles, used, role_facts, pages = set(), set(), [], {}
@@ -155,15 +200,20 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
                 '상세 설명과 소스 근거는 연결된 기준 문서에서 관리합니다. 아래 사실은 그 문서의 답변을 그대로 표시합니다. '
                 '이 경로는 조직의 직책·승인 권한을 정의하지 않습니다.\n\n')
         for q in questions:
-            _mapping(q, {'aspect', 'question', 'claims'})
+            _mapping(q, {'aspect', 'question', 'claims'}, {'sources'})
             aspect = q['aspect']
             if not isinstance(aspect, str) or aspect not in ASPECTS[rid] or aspect in seen_questions:
                 raise ValueError('Reader paths: unknown or duplicate role question')
             seen_questions.add(aspect)
             body += f"## {_plain(_line(q['question'], 'question'))} {{#question-{aspect}}}\n\n"
-            for cid in _items(q['claims'], 'question claims'):
-                if not isinstance(cid, str) or cid not in claims:
-                    raise ValueError('Reader paths: unknown claim')
+            requested = _items(q['claims'], 'question claims')
+            if any(not isinstance(cid, str) or cid not in claims for cid in requested):
+                raise ValueError('Reader paths: unknown claim')
+            refs = ((_items(q['sources'], 'question sources') if 'sources' in q else []) +
+                    [ref for cid in requested for ref in claim_sources[cid]])
+            links = list(dict.fromkeys(source(ref) for ref in refs))
+            body += '**바로 확인할 상세 설명:** ' + ' · '.join(links) + '\n\n'
+            for cid in requested:
                 used.add(cid)
                 if next(c for c in data['claims'] if c['id'] == cid)['kind'] == 'fact':
                     selected_facts.add(cid)
