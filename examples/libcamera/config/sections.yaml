@@ -1879,6 +1879,10 @@ sections:
       file: src/libcamera/request.cpp
       start: void Request::Private::doCancelRequest()
       end: \brief Reset the request internal data to default values
+    - id: internal-complete
+      file: src/libcamera/request.cpp
+      start: void Request::Private::complete()
+      end: void Request::Private::doCancelRequest()
     - id: cancel-contract
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Cancel request and signal its completion
