@@ -73,6 +73,19 @@ topics:
     file: src/libcamera/base/thread.cpp
     start: void Thread::dispatchMessages(
     end: \brief Move an \a object and all its children to the thread
+  - id: poll-dispatch
+    file: src/libcamera/base/event_dispatcher_poll.cpp
+    start: '/* SPDX-License-Identifier: LGPL-2.1-or-later */'
+    end: '} /* namespace libcamera */'
+    max_chars: 30000
+  - id: timer-lifetime
+    file: src/libcamera/base/timer.cpp
+    start: Timer::~Timer()
+    end: '} /* namespace libcamera */'
+  - id: request-private
+    file: include/libcamera/internal/request.h
+    start: class Request::Private
+    end: '} /* namespace libcamera */'
   parts:
   - id: message
     question: queueRequest가 0을 반환했지만 PipelineHandler::queueRequest 진입 자체가 없는 경우를 waitingRequests_ 준비 대기보다 먼저
@@ -141,6 +154,23 @@ topics:
     - object-message
     - invoke-message
     - thread-dispatch
+    max_statements: 2
+    answer_contract:
+      basis: investigation
+  - id: fence-timer-tie
+    question: 선택한 기본 EventDispatcherPoll의 같은 처리 회차에서 poll 결과가 유효한 fence fd의 Read 준비를 보고하고 그 요청의 타이머 기한도 지난
+      경우를 설명하세요. processEvents는 ret가 양수일 때 processNotifiers를 처리한 다음 processTimers를 호출합니다. 이 회차 안에 notifierActivated가
+      마지막 notifiers_ 항목을 제거하면 timer_.reset으로 Timer 소멸·stop·dispatcher 등록 제거를 거친 뒤 prepared를 발행하므로, 기한 경과만으로
+      timeout이 먼저 호출되었다고 판정할 수 없습니다. 다른 fence가 남아 타이머가 여전히 등록·만료 상태라면 뒤의 timer 처리에서 timeout이 실행될 수 있다는 분기를
+      구분하세요. 이는 timeout 경로의 판정이며 후속 장치 제출 오류의 취소를 배제하지 않습니다. fd와 revents는 handler 전에, notifier/timer 진입 순서·등록
+      제거·cancelled_·prepared_는 각 경계에 기록하는 검증 계획을 최대 네 문장으로 설명하고 실제 경합 시험 성공이나 다른 dispatcher의 같은 우선순위를 주장하지
+      마세요.
+    sources:
+    - poll-dispatch
+    - timer-lifetime
+    - prepare
+    - request-private
+    - bound-overloads
     max_statements: 2
     answer_contract:
       basis: investigation

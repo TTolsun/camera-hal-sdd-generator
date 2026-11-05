@@ -130,3 +130,18 @@ parts:
   max_statements: 2
   answer_contract:
     basis: investigation
+- id: fence-timer-case
+  question: 기본 Poll에서 fence 준비와 타이머 만료가 같은 처리 회차에 잡히는 시험의 계획을 설명하세요. poll ret·fd·revents·deadline, processNotifiers와
+    processTimers 및 notifierActivated/timeout의 실제 진입 순서, dispatcher 타이머 등록·제거와 cancelled_·prepared_를 관찰합니다.
+    마지막 fence가 처리돼 timer_.reset 후 prepared로 가는 경우와 다른 fence가 남아 timeout에서 취소되는 경우를 나누고, deadline 경과만으로 timeout
+    선행을 판정하지 마세요. 타이머 포인터 존재와 등록·실제 timeout 호출을 혼동하지 말고 후속 queueRequestDevice 실패의 취소는 별도입니다. 추가 계측을 포함한 검증
+    계획이며 실행 결과가 아니라고 최대 세 문장으로 연결하세요.
+  sources:
+  - poll-events
+  - timer-lifetime
+  - prepare-flow
+  - dispatch-flow
+  - request-identity
+  max_statements: 2
+  answer_contract:
+    basis: investigation
