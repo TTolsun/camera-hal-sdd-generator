@@ -55,6 +55,10 @@ overrides:
     max_nodes: 9
     max_label_chars: 140
     max_edge_label_chars: 90
+  preparation-depth-flow:
+    prompt: 조건·실패·반환 경계를 지지하는 작은 그림으로 답하세요. 본문 전체를 노드로 옮기지 마세요. 실제 queuedRequests_.size() == maxQueuedRequestsDevice_
+      비교만 한도 분기로 표시합니다. true면 break이고 false면 그 동등 조건으로는 중단하지 않습니다. false를 size < max 또는 미만이라고 바꾸지 마세요. 크기가
+      한도를 넘는 상태를 이 비교가 막는다고 보장하지 말고 불변조건 별도 검증과 구분하세요.
 additions:
 - id: callback-boundaries-flow
   topic: callback-depth
@@ -68,7 +72,9 @@ additions:
     루프뿐 아니라 명시적·같은 스레드 메시지 핸들러의 재귀 dispatch가 가능하며, 이 수신의 시작을 emit 반환 전후로 고정하지 마세요. emit이 실제 반환한 뒤 Request::Private::completeBuffer가
     pending을 갱신합니다. Direct 수신의 동기 복귀와 Queued 게시의 무대기를 구분하세요. stop의 Blocking 반환은 별도 stop-lifetime-flow가 설명하므로
     이 그림에 stop 노드를 넣지 마세요. emit 노드는 연결 슬롯의 activate를 순서대로 호출한다고 정확히 쓰고, 수신 함수들을 연결 순서대로 실행·완료한다고 쓰지 마세요. Queued
-    수신 실행·완료는 별도입니다. 한국어와 영어 모두 이 동작의 주어·목적어를 명확히 구분하세요.
+    수신 실행·완료는 별도입니다. 한국어와 영어 모두 이 동작의 주어·목적어를 명확히 구분하세요. Queued 메시지의 전달은 dispatch 시 메시지가 큐에 남아 있고 수신 Object가
+    유효하며 type·receiver 필터와 일치하는 경우로 한정합니다. Object 소멸자는 남은 메시지를 제거할 수 있으므로 게시만으로 미래 전달을 보장하지 않습니다. 이 조건을 한영
+    전달 화살표에 명시하세요.
   sources:
   - signals
   - signal-overloads
