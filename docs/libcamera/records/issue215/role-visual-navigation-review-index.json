@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "scope": "Latest main1174e60 role-detail integration. Figures follow the first actual projected fact after scope warnings and details, with target claim details included in source/topic bounds. Independent native121 found no remaining code defects. Connected regressions183:87 passed, including dependency, translation, first-merge review/export/rollback, role paths/figures and native-refresh provenance. Explicit test doubles are not actual document inference, semantic/human/device acceptance.",
+  "archive": "role-visual-navigation-review.tar.xz",
+  "archive_sha256": "4c64f0b6afc15bc3cb504d9d493afe9a0a6b63f5573893d19a4e1024c4166f65",
+  "baseline_main": "1174e60fdb5b252e8c9266e8feb2be9b36cec04a",
+  "source_hashes": {
+    "src/sdd/reader_path_visuals.py": "fa03706ec4c46a8b9051278f3d912c25a576cf39ad8cc8ec1a75bf555dec102b",
+    "src/sdd/reader_path_contract.py": "9ed75b3d004b582cc9b4a239897bd844d66ac36470502faf0f69b99ccc0d59cd",
+    "src/sdd/reader_paths.py": "5e616fa42d594e8b215b3be08619f3cedd451571afb311119d8bec8abe5d3b99",
+    "src/sdd/export_site.py": "b9869ad9314ccb7724c19981a5a6fa15bea6af65a77abb69f85e1901fbaf25c4",
+    "src/sdd/site_build.py": "93e9d133b186cced67f7fadc0e41054a10183158af3c487c91a70dbaa5ceafb5",
+    "tests/test_reader_path_visuals.py": "e26a065872c6e365d83b455069135d94927ccf550d20b2cd4c725c0f91337a1c",
+    "docs/reference/reader-visuals.md": "e6e927fc2dbf35b9ee14e88a5a0577f80cf1ec2c0655105ef7e0e3473fe0eefa",
+    "docs/concepts/role-decisions.md": "e6b61ee449e02353b2120359fb20fdfc5ee885b3100e78263b1e33f01cd8f0e2",
+    "src/sdd/visuals.py": "ea4279ad687d6e6afaa331c643419a2296ed8fe888f563d129f408299917cd31",
+    "src/sdd/visual_audit.py": "6e5ae59d0c3f5f27858d1b0602bfad6da9e343b7b68b6f79f0a406ee18af5d12",
+    "src/sdd/site_localization.py": "4d3fbdac8a3fd0a73c3d3f8c72e03d0853b326d1ce994b2fc9f075495d751976"
+  },
+  "actual_native_reviews": [
+    {
+      "receipt": "code-review-121/prompts/calls/cc520eea336d42cf9f62dd3bf62eb589/001.receipt.json",
+      "sha256": "13bf4fee61f19e6ce49740c2f5d2f6f08fd2e24e459fe46d2dea34e526eda392"
+    }
+  ],
+  "entries": [
+    {
+      "path": "evidence/code-review-121/build/generation-runs/f6af5b9d59bc48fd9965deb458d4de26.json",
+      "sha256": "17a2889457e49d8b60462149733fa2b640769ffee5c0e3828805e5d512db5efd",
+      "bytes": 1065
+    },
+    {
+      "path": "evidence/code-review-121/execution-profile.json",
+      "sha256": "33ce6cbd898d75651ef0527025574e534e4b3f7350dcbf6ce50d27512cb91d58",
+      "bytes": 1366
+    },
+    {
+      "path": "evidence/code-review-121/inputs.json",
+      "sha256": "b0ad4d6df9ebdc5b3ecbc3d8cd57aada6919a1e9c052ecfad0e7945f1a31529e",
+      "bytes": 204838
+    },
+    {
+      "path": "evidence/code-review-121/prompts/001_role-visual-integration-code-review.md",
+      "sha256": "ae7859647fc3321c8f4d928e9dc1bbfc212c07963558e62aff3997044d60db11",
+      "bytes": 204865
+    },
+    {
+      "path": "evidence/code-review-121/prompts/001_role-visual-integration-code-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "evidence/code-review-121/prompts/001_role-visual-integration-code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "evidence/code-review-121/prompts/calls/cc520eea336d42cf9f62dd3bf62eb589/001.receipt.json",
+      "sha256": "13bf4fee61f19e6ce49740c2f5d2f6f08fd2e24e459fe46d2dea34e526eda392",
+      "bytes": 2214
+    },
+    {
+      "path": "evidence/code-review-121/prompts/calls/cc520eea336d42cf9f62dd3bf62eb589/001.request.json",
+      "sha256": "c63915d27fab70a650cadb3020de9cc9bb6aedc27acf75de05a4b47a5a99fbb8",
+      "bytes": 212325
+    },
+    {
+      "path": "evidence/code-review-121/prompts/calls/cc520eea336d42cf9f62dd3bf62eb589/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "evidence/code-review-121/prompts/cli/call-cxly8u60.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "evidence/code-review-121/prompts/cli/call-cxly8u60.stdout.txt",
+      "sha256": "f3f6fde4d224094c8290b6c8726d165119c01ab68caaa0173695b5eaee3549df",
+      "bytes": 360
+    },
+    {
+      "path": "evidence/code-review-121/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "evidence/code-review-121.log",
+      "sha256": "19d3822515cfa590b0816bdd050c478d3131eadb8718c1b3f6abd4e3590109ef",
+      "bytes": 268
+    },
+    {
+      "path": "evidence/code-review-121.py",
+      "sha256": "e6b54b67332ff2854c78ce557b43ac151aa1cc0be0cf0b913499bc574dda02c0",
+      "bytes": 4080
+    },
+    {
+      "path": "evidence/pytest-183.log",
+      "sha256": "bedd0f257c71d5359ebb752dd2a6dabc7d991701ae9fc8e8162e7c81f91f681e",
+      "bytes": 194
+    }
+  ],
+  "human_review": "pending"
+}

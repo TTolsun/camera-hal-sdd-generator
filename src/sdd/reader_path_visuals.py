@@ -59,7 +59,8 @@ def placements(cfg, data, sections):
                 displayed.update(question['claims'])
             if not selected:
                 raise ValueError('Reader visual question needs a local claim explanation')
-        refs = {(ref['section'], ref['topic']) for cid in selected for ref in claims[cid]['sources']}
+        refs = {(ref['section'], ref['topic']) for cid in selected
+                for ref in [*claims[cid]['sources'], *claims[cid].get('details', [])]}
         if item['section'] not in {sid for sid, topic in refs}:
             raise ValueError('Reader visual must answer a real role item with a referenced canonical source')
         # Question anchors alias the first local claim; count that effective
@@ -126,11 +127,20 @@ def _position(body, anchor):
         return start + claim.start() + position, depth
     # Claim-kind labels are not the explanation that a figure should follow.
     from .reader_path_contract import KINDS
+    fact = False
     for label in KINDS.values():
         prefix = '**'+label+'**\n\n'
         if body.startswith(prefix, start):
             start += len(prefix)
+            fact = label == KINDS['fact']
             break
+    if fact:
+        # Scope warnings and detail links precede a fact's projected answer.
+        # Preserve that order, then put the figure after the actual answer.
+        quote = re.search(r'^> ', body[start:stop], re.M)
+        if not quote:
+            raise ValueError('Reader visual fact needs a projected explanation: '+anchor)
+        start += quote.start()
     paragraph = re.search(r'\n\n|\n(?=##+ )', body[start:stop])
     end = start + paragraph.start() if paragraph else stop
     if not body[start:end].strip() or body[start:end].startswith('#'):

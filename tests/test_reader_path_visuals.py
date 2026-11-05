@@ -46,6 +46,7 @@ def test_local_role_figure_uses_normal_source_and_download_without_changing_pros
     assert 'device.html#source-' in page
     assert any(graph['title'] in plain(node) for node in Document(page).root.all('h4'))
     assert page.count('<!-- sdd:visual:role-stop -->')==1
+    assert page.index('</blockquote>') < page.index('<!-- sdd:visual:role-stop -->')
     assert 'reader-work.role-stop.mmd' in page
     assert not (site/'reader-decision.role-stop.mmd').exists()
     source=(site/'reader-work.role-stop.mmd').read_text(encoding='utf-8')
