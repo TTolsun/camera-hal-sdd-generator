@@ -11,50 +11,23 @@ import yaml
 
 from .document_metadata import split_frontmatter
 from .validation_stage import load_yaml
+from .reader_path_contract import KINDS, _text, _line, _items, _mapping, _id
 
 
 ASPECTS = {
     'work': {'reproduction', 'investigation', 'responsibility', 'verification'},
     'decision': {'problem', 'value', 'risk', 'options', 'decision'},
 }
-KINDS = {
-    'fact': '관측된 사실 · 정적 소스 설명',
-    'hypothesis': '가설 · 검증 전',
-    'unmeasured': '미측정 효과',
-    'decision_request': '결정 요청 · 승인 아님',
-}
 
 
-def _text(value, name):
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f'Reader paths: {name} must be nonempty')
-    return value
 
 
-def _line(value, name):
-    value = _text(value, name)
-    if '\n' in value or '\r' in value:
-        raise ValueError(f'Reader paths: {name} must be one line')
-    return value
 
 
-def _items(value, name):
-    if not isinstance(value, list) or not value:
-        raise ValueError(f'Reader paths: {name} must be a nonempty list')
-    return value
 
 
-def _mapping(value, required, optional=()):
-    if (not isinstance(value, dict) or not set(required) <= set(value)
-            or set(value) - set(required) - set(optional)):
-        raise ValueError(f'Reader paths: expected fields {sorted(required)}')
-    return value
 
 
-def _id(value):
-    if not isinstance(value, str) or not re.fullmatch(r'[a-z][a-z0-9-]*', value):
-        raise ValueError('Reader paths: IDs must be lowercase slugs')
-    return value
 
 
 def _plain(value):
@@ -92,7 +65,7 @@ def _detail_anchor(headings, topic_anchor, title):
 
 def assemble(cfg, texts, sections, entries, approval_states, model, validate):
     data = load_yaml(cfg.root / cfg.site.reader_paths)
-    _mapping(data, {'schema', 'ready', 'scope', 'limitations', 'required_inputs', 'claims', 'roles'})
+    _mapping(data, {'schema', 'ready', 'scope', 'limitations', 'required_inputs', 'claims', 'roles'}, {'visuals'})
     if type(data['schema']) is not int or data['schema'] != 1:
         raise ValueError('Reader paths: unsupported schema')
     inputs = [_line(v, 'required input') for v in _items(data['required_inputs'], 'required_inputs')]
@@ -238,6 +211,8 @@ def assemble(cfg, texts, sections, entries, approval_states, model, validate):
     if (seen_roles != set(ASPECTS) or used != set(claims) or not set.intersection(*role_facts)
             or {c['kind'] for c in data['claims']} != set(KINDS)):
         raise ValueError('Reader paths: both roles must share facts and cover all four claim kinds without unused claims')
+    from .reader_path_visuals import placements
+    placements(cfg, data, sections)
     texts.update(pages)
     links = '\n\n## 같은 근거에서 작업과 결정 찾기\n\n' + '\n'.join(
         f"- [{_plain(r['title'])}](reader-{r['id']}.md)" for r in roles) + '\n'

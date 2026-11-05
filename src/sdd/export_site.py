@@ -387,6 +387,9 @@ def _prepare_page_body(cfg, rel, texts, sections, terms, model):
     artifact = from_manuscript(cfg, model, section, texts[rel]) if section else None
     visuals = render_visuals(cfg, model, section, artifact) if section else []
     body = place(body, visuals, section)
+    from .reader_path_visuals import inject as inject_reader_visuals
+    body, reader_visuals = inject_reader_visuals(publication_cfg, model, rel, sections, body)
+    visuals += reader_visuals
     if rel == 'index.md':
         from .guide_visuals import inject
         body, guide_visuals = inject(cfg, body, {value[0]['id'] for value in visuals})

@@ -1,0 +1,182 @@
+{
+  "schema": 1,
+  "scope": "Actual native reviews119/120 and preserved failed integration attempts180/181. Shared validators remove the import cycle; direct render_values eliminates cfg.raw access; helper code participates in engine hashing. Current integration182 is excluded while running. Code review120 has zero remaining findings, not semantic/human/release acceptance.",
+  "archive": "role-visual-publication-review.tar.xz",
+  "archive_sha256": "fd9b56163b10a15d3a247a1b71edf49a5e08a94df3fd8e56cd070ef12cfafe6b",
+  "source_hashes": {
+    "src/sdd/reader_path_visuals.py": "f4be356cf4656811235fe779bd41fbabb750be356341f50920f2e23798f1d221",
+    "src/sdd/reader_path_contract.py": "9ed75b3d004b582cc9b4a239897bd844d66ac36470502faf0f69b99ccc0d59cd",
+    "src/sdd/reader_paths.py": "969aad3de00b3103ba370c128745643dd1332f839bcb08fc36012e850080a382",
+    "src/sdd/export_site.py": "b9869ad9314ccb7724c19981a5a6fa15bea6af65a77abb69f85e1901fbaf25c4",
+    "src/sdd/site_build.py": "93e9d133b186cced67f7fadc0e41054a10183158af3c487c91a70dbaa5ceafb5",
+    "tests/test_reader_path_visuals.py": "171bfb6d2a84339586d60a534050276488d814e4762da763845739ab9a31338d",
+    "docs/reference/reader-visuals.md": "e6e927fc2dbf35b9ee14e88a5a0577f80cf1ec2c0655105ef7e0e3473fe0eefa",
+    "docs/concepts/role-decisions.md": "260035c70b1a410d5de0566d525f4060ca1fc723f5ec9cd25fb9f083a5c467f7",
+    "src/sdd/visuals.py": "ea4279ad687d6e6afaa331c643419a2296ed8fe888f563d129f408299917cd31",
+    "src/sdd/visual_audit.py": "6e5ae59d0c3f5f27858d1b0602bfad6da9e343b7b68b6f79f0a406ee18af5d12",
+    "src/sdd/site_localization.py": "4d3fbdac8a3fd0a73c3d3f8c72e03d0853b326d1ce994b2fc9f075495d751976"
+  },
+  "actual_native_reviews": [
+    {
+      "receipt": "code-review-119/prompts/calls/3a7cdfd3cdec45dfb55a4e13e652572d/001.receipt.json",
+      "sha256": "645768b543116fa33dd512e2385a1dfccc98d18beb2373b5f3e47e2e72b5e551"
+    },
+    {
+      "receipt": "code-review-120/prompts/calls/e0124297c67f49efaf2f955616d015d5/001.receipt.json",
+      "sha256": "265041b2cd696bc77dab0bbc8be49a2597320c74d434310a8ad0213714e54eeb"
+    }
+  ],
+  "entries": [
+    {
+      "path": "evidence/code-review-119/build/generation-runs/75e91f18d27a4d3781d3539604bffefd.json",
+      "sha256": "41e4a01bc20f667c8fd161ab3a7e2f1f3d4b0e9bc8c9b8305ee8865adf0f4cec",
+      "bytes": 997
+    },
+    {
+      "path": "evidence/code-review-119/execution-profile.json",
+      "sha256": "6a7f849441da081991d66041b040fd4a71b62caf3f6b7e2c0b9475c7d80a7965",
+      "bytes": 1366
+    },
+    {
+      "path": "evidence/code-review-119/inputs.json",
+      "sha256": "caa59396955961167065db840e17def4b24c3ee1e1dee3416285119f34d1c375",
+      "bytes": 192186
+    },
+    {
+      "path": "evidence/code-review-119/prompts/001_role-visual-integration-code-review.md",
+      "sha256": "c5375e089079a8acbcaf32d30761138d37d9a9ed6c058e398c27e4170ca66305",
+      "bytes": 192223
+    },
+    {
+      "path": "evidence/code-review-119/prompts/001_role-visual-integration-code-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "evidence/code-review-119/prompts/001_role-visual-integration-code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "evidence/code-review-119/prompts/calls/3a7cdfd3cdec45dfb55a4e13e652572d/001.receipt.json",
+      "sha256": "645768b543116fa33dd512e2385a1dfccc98d18beb2373b5f3e47e2e72b5e551",
+      "bytes": 2216
+    },
+    {
+      "path": "evidence/code-review-119/prompts/calls/3a7cdfd3cdec45dfb55a4e13e652572d/001.request.json",
+      "sha256": "544faf7c16b73c2f1b50362a169065a8013c3e46fcafa668c49ccc2ed0993f66",
+      "bytes": 199361
+    },
+    {
+      "path": "evidence/code-review-119/prompts/calls/3a7cdfd3cdec45dfb55a4e13e652572d/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "evidence/code-review-119/prompts/cli/call-naxltnd5.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "evidence/code-review-119/prompts/cli/call-naxltnd5.stdout.txt",
+      "sha256": "9ab73d39c61c2397f5b1f57f9537c855b47eb35604313e91b3f10097876915b0",
+      "bytes": 362
+    },
+    {
+      "path": "evidence/code-review-119/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "evidence/code-review-119.log",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "evidence/code-review-119.py",
+      "sha256": "888cd6801f93d88af83e68fb4a0134860093c5fb501228d123816c705fac2ec8",
+      "bytes": 3497
+    },
+    {
+      "path": "evidence/code-review-120/build/generation-runs/041da9f52b814d6cb8d6f94ad6f1e23e.json",
+      "sha256": "11d7d80a01832a040b966e787c02eafce9820c8174a7f91f131e6760886ffaaa",
+      "bytes": 1039
+    },
+    {
+      "path": "evidence/code-review-120/execution-profile.json",
+      "sha256": "c93c173780df360eb1a747902c2b41a81080f38c2dd7bbcf0390e45a9f9479ef",
+      "bytes": 1366
+    },
+    {
+      "path": "evidence/code-review-120/inputs.json",
+      "sha256": "7c055a1a50dafc7a435f104a6e5fa2cfce62add1bbb07aa25d18b98ee0411403",
+      "bytes": 194990
+    },
+    {
+      "path": "evidence/code-review-120/prompts/001_role-visual-integration-code-review.md",
+      "sha256": "29fedd021a92234d42300ad5a58f0b422a01ab6f7e2798a711f181aa4d94043a",
+      "bytes": 195017
+    },
+    {
+      "path": "evidence/code-review-120/prompts/001_role-visual-integration-code-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "evidence/code-review-120/prompts/001_role-visual-integration-code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "evidence/code-review-120/prompts/calls/e0124297c67f49efaf2f955616d015d5/001.receipt.json",
+      "sha256": "265041b2cd696bc77dab0bbc8be49a2597320c74d434310a8ad0213714e54eeb",
+      "bytes": 2212
+    },
+    {
+      "path": "evidence/code-review-120/prompts/calls/e0124297c67f49efaf2f955616d015d5/001.request.json",
+      "sha256": "57626bfd38cd172dc7186fda874afe5330aa4a20a110628697e9d4a3231b8d71",
+      "bytes": 202341
+    },
+    {
+      "path": "evidence/code-review-120/prompts/calls/e0124297c67f49efaf2f955616d015d5/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "evidence/code-review-120/prompts/cli/call-7t8aewp_.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "evidence/code-review-120/prompts/cli/call-7t8aewp_.stdout.txt",
+      "sha256": "4061f307e4006745fcfa8de8be0b95f5f5197319d0b4ef07d709079ad9a3a300",
+      "bytes": 358
+    },
+    {
+      "path": "evidence/code-review-120/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "evidence/code-review-120.log",
+      "sha256": "8affebfd8b48e509f1e01b9913525300006d8c440741492e74a310d601d1ef28",
+      "bytes": 373
+    },
+    {
+      "path": "evidence/code-review-120.py",
+      "sha256": "955f620a34a4c46b7dc9c4fb72b2efff4019f4757f99284aa4f61ee2ecbba1de",
+      "bytes": 3855
+    },
+    {
+      "path": "evidence/pytest-180.log",
+      "sha256": "be12e9215fc9bebd384bb1e2fe69791cca7840b51c41bf05fc272a201dfa3d4e",
+      "bytes": 6078
+    },
+    {
+      "path": "evidence/pytest-181.log",
+      "sha256": "a34e73935bdad3b90348d5c864c53eb971ddb886b21589eecb95db8b799c04fe",
+      "bytes": 110439
+    }
+  ],
+  "human_review": "pending"
+}

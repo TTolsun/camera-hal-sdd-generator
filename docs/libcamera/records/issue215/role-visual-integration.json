@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "scope": "Common role-item figures connected with current main pretranslation/independent-review/export/rollback regression. Explicit CLI test doubles in the connected regression are not actual document generation, source semantics, human or device acceptance.",
+  "baseline_main": "efbf6cb",
+  "tests": 68,
+  "status": "passed",
+  "log_sha256": "b2ae3b7625d58fed8768a3fec41e45170bde42ca7540f5a750fe25cf867fcfa6",
+  "original_failures": "role-visual-publication-review.tar.xz retains180 and181; final architecture corrected without weakening tests or allowlists.",
+  "native_code_reviews": "114..120, original findings preserved; latest120 has zero remaining findings.",
+  "human_review": "pending"
+}
