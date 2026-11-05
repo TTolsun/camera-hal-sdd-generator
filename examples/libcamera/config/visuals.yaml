@@ -3735,8 +3735,8 @@ sections:
   - id: buffer-request-completion
     topic: completion
     kind: flow
-    title: 버퍼 완료에서 요청 반환까지
-    question: 마지막 버퍼의 완료가 요청을 자동 완료하지 않습니다. 핸들러의 명시적 요청 완료 통지가 필요합니다.
+    title: 일반적인 버퍼 완료에서 요청 반환까지
+    question: 일반적인 완료 경로에서 마지막 버퍼가 완료된 뒤 요청은 어떻게 명시적으로 완료되어 반환되나요?
     nodes:
     - id: buffer
       label: completeBuffer()
