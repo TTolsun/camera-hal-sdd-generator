@@ -4,7 +4,7 @@
 
 ## 먼저 고정한 대상과 과업을 확인하세요
 
-평가 시작 시점의 공개 manifest를 캡처하고, 정확히 일치하는 공개 커밋 [ad19ae6e](https://github.com/TTolsun/libcamera-sdd/tree/ad19ae6e83caa22d60daf736535a98bb29ca4015/docs)를 별도 사본으로 복원했습니다. build_id는 `52d0226eff7ccee8170b3d7c5b4631ec8d9ff00708ab2e5a8b4f14a5bed95b9f`입니다. 과업을 읽기 전에 [프로토콜](protocol.json)과 [과업 카드](participant-inputs/)를 고정했으며 #163의 여섯 과업과 #248의 S·R·X 및 [필수 의미](rubrics/protocol.md)는 바꾸지 않았습니다. 정답표·작성 이력·이전 평가·다른 역할의 답은 독자 에이전트에 제공하지 않았습니다.
+평가 시작 시점의 공개 manifest를 캡처하고, 정확히 일치하는 공개 커밋 [ad19ae6e](https://github.com/TTolsun/libcamera-sdd/tree/ad19ae6e83caa22d60daf736535a98bb29ca4015/docs)를 별도 사본으로 복원했습니다. build_id는 `52d0226eff7ccee8170b3d7c5b4631ec8d9ff00708ab2e5a8b4f14a5bed95b9f`입니다. 과업을 읽기 전에 [프로토콜](protocol.json)과 [과업 카드](participant-inputs/)를 고정했으며 #163의 여섯 과업과 #248의 S·R·X 및 [필수 의미의 바이트 사본](rubrics/protocol.md.txt)은 바꾸지 않았습니다. 원래 위치를 기준으로 한 상대 링크는 [정본 프로토콜](https://github.com/TTolsun/camera-hal-sdd-generator/blob/bc3430b23928a59b492f81256c4b807b4eef60f8/docs/libcamera/records/issue-248/protocol.md)에서 확인합니다. 정답표·작성 이력·이전 평가·다른 역할의 답은 독자 에이전트에 제공하지 않았습니다.
 
 이 공개본은 #249·#250의 별도 개선을 포함하며 분석 소스는 `be7e83e91348250c015aad6d6f59f1468555bae8`입니다. 이전 #248 기준본의 분석 소스 293과 다르므로 전체 차이를 #248의 효과로 귀속하지 않습니다. 새로운 전체 추출·장치 실행·사내 HAL 검증도 수행하지 않았습니다.
 
