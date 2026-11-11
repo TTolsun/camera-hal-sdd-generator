@@ -93,10 +93,11 @@ def checked_footer(cfg, model, name, meta, body):
 
 
 def link_topics(cfg, model, pages, sections, headings):
-    """Add local reading routes under verified topic headings, without rewriting prose.
+    """Add routes and optional memo guidance under verified topic headings.
 
     Resolve actual rendered headings, not guessed slugs. These routes convey
     navigation only and do not supply a runtime claim or a review verdict.
+    Checkpoint text offers a copyable empty memo, never state restoration.
     """
     import html
     import posixpath
@@ -105,9 +106,23 @@ def link_topics(cfg, model, pages, sections, headings):
     import markdown
 
     routes = cfg.site.topic_links
+    checkpoints = cfg.site.reading_checkpoints
     if not isinstance(routes, dict):
         raise ValueError('site.topic_links must map current Markdown pages to topics')
-    if not routes:
+    if not isinstance(checkpoints, dict):
+        raise ValueError('site.reading_checkpoints must map current Markdown pages to topic lists')
+    for page, topics in checkpoints.items():
+        path = PurePosixPath(page) if isinstance(page, str) else None
+        if (path is None or path.is_absolute() or '..' in path.parts or path.as_posix() != page
+                or not page.endswith('.md') or any(c in page for c in (':', '\\', '\n', '\r', '\0'))):
+            raise ValueError('Reading checkpoint needs a current relative Markdown path')
+        if (not isinstance(topics, list) or not topics
+                or any(not isinstance(topic, str) or not topic.strip() or topic != topic.strip()
+                       or '\n' in topic or '\r' in topic for topic in topics)):
+            raise ValueError('Reading checkpoint needs a nonempty list of topic IDs')
+        if len(topics) != len(set(topics)):
+            raise ValueError('Reading checkpoint topic IDs must be distinct')
+    if not routes and not checkpoints:
         return pages
 
     class Text(HTMLParser):
@@ -148,11 +163,27 @@ def link_topics(cfg, model, pages, sections, headings):
             raise ValueError('Topic link encoded fragment selects another element: ' + page + '/' + topic_id)
         return matches[0]
 
-    result = dict(pages)
+    # Plain display text enters the normal exact English catalog. No form,
+    # storage, executable text, runtime claim or assessment is supplied here.
+    checkpoint = (
+        '\n<aside class="reading-checkpoint" aria-label="중단 전과 재개 후의 조사 메모">'
+        '<p><strong>중단 전에 메모를 남기세요.</strong></p>'
+        '<p>아래 틀을 복사해 빈칸을 채우고, 재개할 때 원래 메모와 대조하세요.</p>'
+        '<ul>'
+        '<li>제보된 증상과 조건을 적으세요: ____.</li>'
+        '<li>직접 관측한 값과 확인 위치를 적으세요: ____.</li>'
+        '<li>문서로 해석한 내용과 임시 가정을 적으세요: ____.</li>'
+        '<li>아직 확인하지 못한 점을 적으세요: ____.</li>'
+        '<li>다음 확인과 결과에 따른 분기를 적으세요: ____.</li>'
+        '<li>근거 문서의 URL과 절 위치를 적으세요: ____.</li>'
+        '</ul>'
+        '<p>관측하지 않은 값은 미확인으로 남기고, 관측하려고 상태 변경 함수를 다시 호출하지 마세요.</p>'
+        '<p>재개할 때 제보·관측·해석이 서로 섞이지 않았는지 원래 메모와 대조하세요.</p>'
+        '</aside>\n')
+    blocks = {}
     for page, topics in routes.items():
         if not isinstance(topics, dict) or not topics:
             raise ValueError('Topic links need a nonempty topic mapping')
-        additions = []
         for topic_id, targets in topics.items():
             source_anchor = anchor(page, topic_id)
             if not isinstance(targets, list) or not targets:
@@ -174,7 +205,18 @@ def link_topics(cfg, model, pages, sections, headings):
                 url = posixpath.relpath(str(PurePosixPath(destination).with_suffix('.html')), posixpath.dirname(page) or '.')
                 href = quote(url, safe='/.-') + '#' + quote(target_anchor, safe='')
                 links.append('<a href="' + html.escape(href, quote=True) + '">' + html.escape(target['label']) + '</a>')
-            content = pages[page][2]
+            blocks.setdefault(page, {})[source_anchor] = '\n<p class="reading-links">함께 확인: ' + ' · '.join(links) + '</p>\n'
+    for page, topics in checkpoints.items():
+        for topic_id in topics:
+            source_anchor = anchor(page, topic_id)
+            existing = blocks.setdefault(page, {}).get(source_anchor, '')
+            blocks[page][source_anchor] = existing + checkpoint
+
+    result = dict(pages)
+    for page, topics in blocks.items():
+        additions = []
+        content = pages[page][2]
+        for source_anchor, block in topics.items():
             starts = list(re.finditer(r'<h2\b[^>]*\bid="([^"]+)"[^>]*>', content))
             owned = [i for i, match in enumerate(starts) if html.unescape(match[1]) == source_anchor]
             if len(owned) != 1:
@@ -182,8 +224,7 @@ def link_topics(cfg, model, pages, sections, headings):
             closing = content.find('</h2>', starts[owned[0]].end())
             if closing < 0:
                 raise ValueError('Topic link source heading is not closed: ' + page)
-            additions.append((closing + len('</h2>'), '\n<p class="reading-links">함께 확인: ' + ' · '.join(links) + '</p>\n'))
-        content = pages[page][2]
+            additions.append((closing + len('</h2>'), block))
         for position, block in sorted(additions, reverse=True):
             content = content[:position] + block + content[position:]
         title, meta, _, toc = pages[page]

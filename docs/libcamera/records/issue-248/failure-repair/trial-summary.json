@@ -1,0 +1,302 @@
+{
+  "source_kind": "agent",
+  "actual_human_participants": 0,
+  "build_id": "236846f043d327f50e060de29ac5b8e20ca0e42b6378e23def6d2eae43fe4270",
+  "counts": {
+    "base": {
+      "aligned": 6,
+      "assigned": 6
+    },
+    "S": {
+      "aligned": 2,
+      "assigned": 3
+    },
+    "R": {
+      "aligned": 1,
+      "assigned": 3
+    },
+    "X": {
+      "aligned": 3,
+      "assigned": 3
+    }
+  },
+  "first_native_verdicts_preserved": true,
+  "ratings": [
+    {
+      "role": "new",
+      "task": "B1",
+      "reading_ease_1_to_5": 5,
+      "reading_ease_reason": "「처음 읽는 개발자의 순서」에 첫 문서와 다음 절이 차례대로 표시되어 다른 메뉴를 살펴볼 필요가 없었다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "카메라를 찾는 지점에서 요청을 제출하고 신호를 받는 지점까지 한 건을 따라갈 수 있어서 읽을 목적이 생겼다.",
+      "naturalness_1_to_5": 4,
+      "naturalness_reason": "시작 화면은 문장이 짧고 자연스러웠다. 일부 그림 레이블은 줄을 넘기며 단어가 붙어 보여 한 번 더 읽었다."
+    },
+    {
+      "role": "new",
+      "task": "B2",
+      "reading_ease_1_to_5": 4,
+      "reading_ease_reason": "절 제목이 과업과 맞고 답도 한 절에 있었다. 플래그 설명에 내부 구현 이름이 여럿 나온다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "버퍼를 다시 붙여야 하는 조건이 실제로 다음 요청을 만드는 행동과 연결된다.",
+      "naturalness_1_to_5": 4,
+      "naturalness_reason": "소유권과 호출 순서 문장은 자연스러웠다. 플래그 문장에는 조건과 내부 동작이 한꺼번에 들어 있다."
+    },
+    {
+      "role": "other",
+      "task": "B1",
+      "reading_ease_1_to_5": 4,
+      "reading_ease_reason": "지원 목록과 책임 그림이 제목 아래에서 바로 보여 답을 찾기 쉬웠다. 공통 큐와 완료의 설명까지 읽으니 문단과 그림이 같은 내용을 일부 반복했다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "새 장치가 기존 Camera API와 어디서 만나는지와 내가 구현해야 할 조건을 함께 볼 수 있었다.",
+      "naturalness_1_to_5": 3,
+      "naturalness_reason": "계층별 설명은 읽기 쉬웠다. 장치 큐잉 실패와 정지 시 완료 설명이 비슷한 말로 두 차례 나와 흐름이 끊겼다."
+    },
+    {
+      "role": "other",
+      "task": "B2",
+      "reading_ease_1_to_5": 5,
+      "reading_ease_reason": "해당 절의 세 문장에서 포함 범위와 제외 범위, 실행 조건을 바로 확인했다.",
+      "interest_1_to_5": 3,
+      "interest_reason": "성능 수치를 해석할 때 필요한 경계지만 측정 구간을 설명하는 짧은 확인 과업이었다.",
+      "naturalness_1_to_5": 5,
+      "naturalness_reason": "측정하는 처리, 빠진 처리, 실행 조건이 문장별로 이어져 읽기 자연스러웠다."
+    },
+    {
+      "role": "nonauthor",
+      "task": "B1",
+      "reading_ease_1_to_5": 4,
+      "reading_ease_reason": "차이가 한 문단에 있어 찾기 쉬웠고 두 번째 함수의 스레드는 내부 링크를 한 번 더 따라갔다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "두 완료 시점을 혼동할 때 놓치는 구현 의무를 바로 보여 준다.",
+      "naturalness_1_to_5": 4,
+      "naturalness_reason": "문장이 뜻을 분명히 전한다. 짧은 문단에서 ‘요청’과 ‘완료’가 반복돼 한 번 다시 읽었다."
+    },
+    {
+      "role": "nonauthor",
+      "task": "B2",
+      "reading_ease_1_to_5": 4,
+      "reading_ease_reason": "전달 대상은 표로 바로 찾았다. 점선은 범례, 본문, 추적 경계 문장을 맞춰 읽었다.",
+      "interest_1_to_5": 4,
+      "interest_reason": "그림에서 보이는 전달 관계와 호출부에서 따로 확인해야 하는 정보를 한 사례로 볼 수 있다.",
+      "naturalness_1_to_5": 4,
+      "naturalness_reason": "예약 표시의 설명은 명료하다. ‘요약의 hide 규칙’은 별도 설명을 찾기 전까지 문장에 낯설게 섞였다."
+    }
+  ],
+  "rating_medians": {
+    "reading_ease": 4.0,
+    "interest": 4.0,
+    "naturalness": 4.0
+  },
+  "reader_rows": [
+    {
+      "role": "new",
+      "grades": [
+        {
+          "task_id": "B1",
+          "semantic_verdict": "aligned",
+          "reason": "처음 열 시스템 개요와 이어서 요청 제출·완료를 따라갈 절을 선택하고, 선택 이유와 방문 경로를 기록했다. 제시한 근거가 안내 경로를 뒷받침한다.",
+          "evidence": [
+            "index.html#처음-읽는-개발자의-순서",
+            "overview.html#요청-제출과-완료"
+          ],
+          "procedure_limit": "방문 기록은 브라우저 도우미를 이용한 자동 에이전트 탐색이다. 기록된 시간만으로 사람의 탐색 시간을 평가할 수 없다."
+        },
+        {
+          "task_id": "B2",
+          "semantic_verdict": "aligned",
+          "reason": "createRequest가 반환한 요청의 소유권과 삭제 책임이 호출자에게 있음을 밝혔다. 같은 요청을 다시 큐에 넣기 전에 reuse를 호출해야 한다는 계약과 버퍼 유지 조건도 근거에 맞게 설명했다.",
+          "evidence": [
+            "overview.html#요청-생성과-소유권",
+            "overview.html#요청-제출과-완료"
+          ],
+          "procedure_limit": "앞 과업에서 읽은 제출 절을 근거로 재사용했다. 이 기록은 자동 에이전트의 수행이며 사람의 기억이나 읽기 부담을 측정하지 않는다."
+        },
+        {
+          "task_id": "S",
+          "semantic_verdict": "incomplete",
+          "reason": "답변 자체는 0 반환과 별도 완료 신호, 버퍼 완료와 요청 전체 완료, 선두 요청으로 인한 반환 지연을 구분한다. 그러나 답변에 제시된 두 앵커는 접수·완료 통지와 제출 순서에 관한 것으로, 버퍼 완료와 요청 전체 완료의 차이를 뒷받침하는 근거는 제시되지 않았다. 재열람 전 원답 파일의 내용도 제공되지 않아 자기 설명이 재열람 전에 작성된 그대로인지 확인할 수 없다.",
+          "evidence": [
+            "request-lifecycle.html#접수-반환과-완료-알림",
+            "request-lifecycle.html#제출-큐의-선두-상태와-반환-순서",
+            "request-lifecycle.html#버퍼-완료와-명시적-요청-완료의-경계"
+          ],
+          "procedure_limit": "원답 저장과 재열람 시각은 기록됐지만, 제공 자료만으로 문서를 실제로 닫은 상태에서 설명했는지 또는 원답이 최종 답변과 같은지 검증할 수 없다. 브라우저 도우미 탐색과 유지된 모델 문맥은 사람의 기억 시험이 아니다."
+        },
+        {
+          "task_id": "R",
+          "semantic_verdict": "incomplete",
+          "reason": "제출 성공이 조건부 제보라는 점과 실행 로그가 없어 반환값, 호출 위치, 장치 진행 및 앱 콜백을 확인하지 못했다는 점은 복원했다. 원래 호출의 반환값을 재제출 없이 확인하고 음수와 0에 따라 조사하는 분기도 근거와 함께 제시했다. 그러나 중단 전 메모에서 미확인으로 남긴 ‘버퍼 알림이 있었는지’는 복원하지 않았다. 답변의 ‘버퍼 처리 여부’는 알림 관측 여부와 같지 않으므로 원래 메모의 관측 구분을 모두 보존했다고 볼 수 없다.",
+          "evidence": [
+            "index.html#처음-읽는-개발자의-순서",
+            "request-lifecycle.html#제출에서-완료까지",
+            "request-diagnosis.html#실패-위치별-확인-순서"
+          ],
+          "procedure_limit": "모델 문맥이 유지됐고 브라우저 헬퍼를 통한 탐색이므로 사람의 기억이나 중단 후 복귀를 검증한 결과가 아니다. 기록된 시각과 간격만으로 실제 문서 닫기, 무관한 활동 또는 대기 시간의 이행을 독립적으로 확인할 수 없다."
+        },
+        {
+          "task_id": "X",
+          "semantic_verdict": "aligned",
+          "reason": "버퍼 하나의 알림 관측만 확정하고 다른 버퍼와 요청의 완료·취소 상태는 미확인으로 남겼다. 기존 completeBuffer 반환값의 분기와 별도 요청 완료 호출을 구분하고, 제출 큐 선두 및 앱의 완료 알림을 추가로 조사하도록 했다. 인용한 근거는 알림과 내부 갱신의 순서, 명시적 요청 완료, 취소 및 반환 지연을 뒷받침한다.",
+          "evidence": [
+            "request-diagnosis.html#버퍼-완료와-명시적-요청-완료의-경계",
+            "request-lifecycle.html#정상-완료와-다음-요청-준비",
+            "request-lifecycle.html#알림-순서와-취소가-달라질-때"
+          ],
+          "procedure_limit": "브라우저 헬퍼를 사용한 자동 독자 기록이며 실제 장치의 실행 상태나 사람의 읽기 경험을 입증하지 않는다. 기록된 소요 시간은 독립적인 실측으로 확인할 수 없다."
+        }
+      ],
+      "r_ready_at": "2026-11-11T18:37:06.8916858Z",
+      "r_resumed_at": "2026-11-11T18:42:45.6668881Z",
+      "pause_seconds": 338.775,
+      "memo_sha256": "b0a3d9460015d3b8f539aee46786830ceee86f379a946d402cf06efd9f87e0e1",
+      "browser_visits": 14,
+      "no_visit_recorded_during_pause": true,
+      "s_before_reopen_sha256": "ea6ba1d2e1e9159674e983d9b60e1e46b3d773f1496185ec3db3f7f8b0430f16",
+      "s_saved_at": "2026-11-11T18:36:02.8092972Z",
+      "first_later_browser_visit_at": "2026-11-11T18:36:09.828Z"
+    },
+    {
+      "role": "other",
+      "grades": [
+        {
+          "task_id": "B1",
+          "semantic_verdict": "aligned",
+          "reason": "공통 프레임워크의 카메라 제어·API와 장치별 핸들러의 하드웨어 구성·장치 확보 책임을 구분했고, 지원 목록과 빌드 선택의 한계도 제시했다. 공통 API만으로 특정 보드의 실제 동작이 보장된다고 확대하지 않았다.",
+          "evidence": [
+            "vendor-overview.html#카메라-스택의-네-계층",
+            "vendor-overview.html#제공-기능과-지원-범위",
+            "vendor-overview.html#장치-구현자가-공통-계층에서-얻는-것",
+            "vendor-overview.html#지원하는-하드웨어와-빌드-선택"
+          ],
+          "procedure_limit": "브라우저 헬퍼를 통한 자동 에이전트 탐색 기록이며 사람의 수행이나 실제 장치 동작을 입증하지 않는다."
+        },
+        {
+          "task_id": "B2",
+          "semantic_verdict": "aligned",
+          "reason": "통계 수집과 디베이어링은 측정에 포함되고 프레임 캡처와 출력 시간은 제외된다고 정확히 구분했다. 이를 전체 촬영 지연이나 기기 실측 성능으로 해석하지 않았다.",
+          "evidence": [
+            "vendor-assurance.html#성능-근거를-읽는-기준"
+          ],
+          "procedure_limit": "브라우저 헬퍼를 통한 자동 에이전트 탐색 기록이며 실제 벤치마크 실행 결과가 아니다."
+        },
+        {
+          "task_id": "S",
+          "semantic_verdict": "aligned",
+          "reason": "기록된 답변은 0 반환을 접수 성공으로 설명하고, 별도의 requestCompleted 통지와 버퍼 전체 완료 후 핸들러의 명시적 요청 완료를 구분한다. 인용한 두 절이 이 의미를 뒷받침한다.",
+          "evidence": [
+            "overview.html#요청-제출과-완료",
+            "overview.html#버퍼-완료와-요청-완료"
+          ],
+          "procedure_limit": "재열람 전 원답의 경로와 해시는 기록되어 있으나 그 파일의 본문은 제공되지 않아 최종 답변과의 일치나 닫힌 상태에서의 자기 설명을 독립적으로 확인할 수 없다. 닫기와 재열람 시각도 기록된 주장만으로 검증할 수 없으며, 모델 문맥 유지와 브라우저 헬퍼 사용은 사람의 기억 시험 해석을 제한한다."
+        },
+        {
+          "task_id": "R",
+          "semantic_verdict": "incomplete",
+          "reason": "0 반환과 완료 신호 미관측, 장치 제출·버퍼·요청 완료의 미확인 상태와 관찰 결과에 따른 분기를 복원했다. 상태 변경 함수를 관찰 목적으로 재호출하는 계획도 없다. 그러나 원본 메모는 반환값과 미관측을 주어진 값으로 적고, 요청 ID와 각 단계의 시각이 아직 없다고 했다. 재개 답변은 이를 관측값이라고 부르고 첫 행동에서 확보한 제출 회차 식별 기록을 사용하는 것처럼 서술해 이 구분을 보존하지 못했다. 뒤에서 식별값이 주어지지 않았다고 적었지만 첫 행동의 전제를 해소하지는 못한다.",
+          "evidence": [
+            "request-lifecycle.html#제출에서-완료까지",
+            "request-lifecycle.html#완료-상태와-애플리케이션-반환의-차이",
+            "request-lifecycle.html#제출-회차별-완료-기록의-비교-계획"
+          ],
+          "procedure_limit": "모델 문맥이 유지된 자동 재탐색이며 브라우저 도우미를 사용했다. 기록된 중단 간격과 문서 닫기 여부는 제공된 서술만으로 독립 검증할 수 없으므로 사람의 기억·복귀 시험으로 해석할 수 없다."
+        },
+        {
+          "task_id": "X",
+          "semantic_verdict": "aligned",
+          "reason": "한 버퍼의 완료 알림만 확인된 사실로 두고, 다른 버퍼의 상태와 요청 전체의 앱 반환 여부를 미확인으로 유지했다. 버퍼별 완료와 별도의 요청 완료를 구분하고, 파이프라인 핸들러의 CameraManager 스레드 호출 의무와 선두 Pending 요청에 따른 반환 지연을 근거와 함께 설명했다. 추가 기록을 관찰하는 조건부 조사 계획도 제시했다.",
+          "evidence": [
+            "overview.html#버퍼-완료와-요청-완료",
+            "overview.html#스레드-경계와-동기화",
+            "overview.html#요청-제출과-완료",
+            "request-lifecycle.html#제출-큐의-선두-상태와-반환-순서"
+          ],
+          "procedure_limit": "해시 확인 브라우저 도우미를 이용한 자동 에이전트 결과이며 실제 기기 실행이나 사람의 읽기 시험이 아니다. 기록된 소요 시간은 서술만으로 독립 검증하지 않았다."
+        }
+      ],
+      "r_ready_at": "2026-11-11T18:39:25.1006191Z",
+      "r_resumed_at": "2026-11-11T18:44:51.9340722Z",
+      "pause_seconds": 326.833,
+      "memo_sha256": "a6cb1eab8585b00731f0dfeff0533154d688e14aade606a8bd6f091586e6af77",
+      "browser_visits": 23,
+      "no_visit_recorded_during_pause": true,
+      "s_before_reopen_sha256": "46ae9c055df1809bb61c9cc695d8c70ef90b6887a964a0ab051f40f5426aeb34",
+      "s_saved_at": "2026-11-11T18:37:52.5124713Z",
+      "first_later_browser_visit_at": "2026-11-11T18:37:59.149Z"
+    },
+    {
+      "role": "nonauthor",
+      "grades": [
+        {
+          "task_id": "B1",
+          "semantic_verdict": "aligned",
+          "reason": "버퍼 완료 통지와 내부 추적 갱신을 요청 완료와 구분했고, 마지막 버퍼 이후에도 파이프라인 핸들러가 CameraManager 스레드에서 completeRequest를 명시적으로 호출해야 한다고 답했다. 두 호출의 스레드 계약을 뒷받침하는 근거도 제시했다.",
+          "evidence": [
+            "vendor-integration.html#요청을-장치에-전달하고-반환하기",
+            "vendor-integration.html#구현-뒤-확인할-계약과-실행-한계"
+          ],
+          "procedure_limit": "브라우저 도우미를 이용한 자동 독자 기록이며 사람의 독서 관찰이 아니다. 기록된 시간만으로 실제 수행 시간을 검증할 수 없다."
+        },
+        {
+          "task_id": "B2",
+          "semantic_verdict": "aligned",
+          "reason": "Camera가 invokeMethod에 PipelineHandler::queueRequest와 ConnectionTypeQueued를 전달하는 사례를 찾았고, 점선의 메서드 전달 관계와 정적 목록만으로 실행 순서·경로·스레드를 확정할 수 없는 한계를 구분했다.",
+          "evidence": [
+            "scenarios/queue_request.html#요청을-제출하기-전에-갖출-조건",
+            "scenarios/queue_request.html#주요-확인-지점",
+            "scenarios/queue_request.html#주요-호출-관계",
+            "scenarios/queue_request.html#추적-범위와-경계",
+            "scenarios/queue_request.html#전체-추적-기록"
+          ],
+          "procedure_limit": "브라우저 도우미를 이용한 자동 탐색이며 실제 기기에서 해당 경로가 실행됐다는 관측이 아니다."
+        },
+        {
+          "task_id": "S",
+          "semantic_verdict": "aligned",
+          "reason": "성공 반환을 이후 처리를 위한 요청 전달로 설명하고, 장치 전달·버퍼 완료·요청 전체 완료가 반환값만으로 확인되지 않으며 별도 요청 완료 알림을 관측해야 한다고 구분했다. 재열람에서 해당 근거도 제시했다.",
+          "evidence": [
+            "scenarios/queue_request.html#요청을-제출하기-전에-갖출-조건",
+            "request-lifecycle.html#정상-완료와-다음-요청-준비"
+          ],
+          "procedure_limit": "재열람 전 답 저장은 기록됐지만 문서를 실제로 닫았다는 독립적인 관측은 제시되지 않았다. 모델 문맥이 유지되고 브라우저 도우미를 사용한 자동 절차이므로 사람의 기억이나 독서 경험으로 해석할 수 없다."
+        },
+        {
+          "task_id": "R",
+          "semantic_verdict": "aligned",
+          "reason": "중단 전 메모의 제보와 문서에서 확인한 계약을 구분하고, 실제 반환값·호출 위치·완료 기록과 콜백 연결 및 스레드를 미확인으로 유지했다. 기존 제출 기록의 호출 위치와 반환값을 먼저 관찰하고 음수와 0에 따른 조사 분기를 제시했으며, 관찰을 위해 다시 제출하지 않는다. 이후 버퍼 완료, 명시적 요청 완료, 선두 Pending과 앱 콜백도 별도로 확인할 계획이다.",
+          "evidence": [
+            "request-lifecycle.html#제출에서-완료까지",
+            "request-diagnosis.html#실패-위치별-확인-순서",
+            "request-lifecycle.html#정상-완료와-다음-요청-준비",
+            "request-lifecycle.html#소유권과-두-완료-경계",
+            "request-lifecycle.html#정지와-연결-해제를-구분하기"
+          ],
+          "procedure_limit": "모델 문맥이 유지된 자동 탐색이므로 사람의 기억이나 중단 후 복귀를 검증하지 못한다. 브라우저 보조 도구의 탐색 기록과 보고된 경과시간만으로 문서를 실제로 닫았는지, 무관한 활동을 포함한 중단 절차가 충족됐는지 독립적으로 확인할 수 없다."
+        },
+        {
+          "task_id": "X",
+          "semantic_verdict": "aligned",
+          "reason": "한 버퍼의 알림만 관측되었다는 사실과 나머지 버퍼 및 요청 전체의 미확인 상태를 구분했다. 기존 completeBuffer 반환값을 확인해 남은 버퍼 여부를 조사하고, 모든 버퍼가 끝나도 핸들러의 별도 completeRequest 호출과 선두 Pending에 따른 반환 지연 및 앱 콜백을 확인하도록 했다. 취소 중에도 버퍼 알림이 발생할 수 있다는 점과 콜백까지의 버퍼 유효성도 짚었다.",
+          "evidence": [
+            "request-diagnosis.html#실패-위치별-확인-순서",
+            "request-lifecycle.html#정상-완료와-다음-요청-준비",
+            "request-lifecycle.html#알림-순서와-취소가-달라질-때",
+            "scenarios/complete_request.html#요청-완료를-알릴-책임과-접근-종료",
+            "scenarios/complete_request.html#대기-요청을-확인하고-앱으로-알리는-경로"
+          ],
+          "procedure_limit": "브라우저 보조 도구를 사용한 자동 에이전트의 문서 탐색이며 실제 장치에서 두 번째 버퍼나 요청 완료 상태를 관측한 결과가 아니다. 기록된 소요시간은 이 자료만으로 독립 검증하지 않았다."
+        }
+      ],
+      "r_ready_at": "2026-11-11T18:41:33.6302106Z",
+      "r_resumed_at": "2026-11-11T18:46:56.2598544Z",
+      "pause_seconds": 322.63,
+      "memo_sha256": "7a93ca89a75ebf3c39daab9c54be13e961d018bb09c6c0f756522831625b53b2",
+      "browser_visits": 22,
+      "no_visit_recorded_during_pause": true,
+      "s_before_reopen_sha256": "22f54d65f9f01679ef7267cff3faf9312dc515d0b25b1bbae10d3d41a6ebcf93",
+      "s_saved_at": "2026-11-11T18:40:12.0769765Z",
+      "first_later_browser_visit_at": "2026-11-11T18:40:16.539Z"
+    }
+  ],
+  "human_review": "pending"
+}

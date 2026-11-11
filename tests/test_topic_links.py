@@ -84,6 +84,7 @@ def test_duplicate_heading_is_not_guessed(tmp_cfg, cli_units):
 
 def test_topic_routes_join_the_normal_english_catalog(tmp_cfg, linked):
     """Synthetic translation fixtures verify routing, never model quality."""
+    tmp_cfg.raw['site']['reading_checkpoints'] = {'device.md': ['stop']}
     out = export_site(tmp_cfg)
     pages, units = {}, set()
     for path in out.rglob('*.html'):
@@ -94,6 +95,9 @@ def test_topic_routes_join_the_normal_english_catalog(tmp_cfg, linked):
         units.update(row[k] for k in ('title', 'page') if re.search('[가-힣]', row[k]))
     assert any('함께 확인' in unit for unit in units)
     assert any('자세한 종료 조건 확인' in unit for unit in units)
+    assert '중단 전에 메모를 남기세요.' in units
+    assert '직접 관측한 값과 확인 위치를 적으세요: ____.' in units
+    assert '중단 전과 재개 후의 조사 메모' in units
     catalog = {'schema': 1, 'pages': pages, 'strings': {
         unit: 'English section ' + ' '.join(re.findall(r'\{\{\d+\}\}', unit)) for unit in units}}
     path = tmp_cfg.root / 'english.json'
@@ -103,6 +107,79 @@ def test_topic_routes_join_the_normal_english_catalog(tmp_cfg, linked):
     content = (out / 'en/device.html').read_text(encoding='utf-8')
     assert 'href="nested/other.html#' + quote('종료-책임') + '"' in content
     assert '함께 확인' not in content and '자세한 종료 조건 확인' not in content
+    assert 'reading-checkpoint' in content and '중단 전에 메모를 남기세요.' not in content
+    assert '직접 관측한 값과 확인 위치를 적으세요' not in content
+    checkpoint = re.search(r'<aside class="reading-checkpoint"[^>]*>', content)[0]
+    assert 'aria-label="English section "' in checkpoint
+    assert '중단 전과 재개 후의 조사 메모' not in checkpoint
+
+
+def test_reading_checkpoint_follows_topic_links_and_preserves_prose(tmp_cfg, linked):
+    from sdd.next_steps import link_topics
+    from sdd.site_markdown import _render
+    names = {'device.md', 'nested/other.md'}
+    pages, headings = {}, {}
+    for name in names:
+        content, toc, tokens = _render('## 종료 책임\n\n원래 설명입니다.\n\n### 다음 단계\n\n조건입니다.\n',
+                                      name, names, linked, '', linked.meta['source_commit'])
+        pages[name] = ('Title', {'source_commit': linked.meta['source_commit']}, content, toc)
+        headings[name] = tokens
+    sections = {'device.md': tmp_cfg.section('device'), 'nested/other.md': tmp_cfg.section('other')}
+    before = link_topics(tmp_cfg, linked, pages, sections, headings)
+    assert 'reading-checkpoint' not in before['device.md'][2]
+    tmp_cfg.raw['site']['reading_checkpoints'] = {'device.md': ['stop']}
+    after = link_topics(tmp_cfg, linked, pages, sections, headings)
+    content = after['device.md'][2]
+    panel = re.search(r'\n<aside class="reading-checkpoint".*?</aside>\n', content, re.S)[0]
+    assert content.replace(panel, '') == before['device.md'][2]
+    assert content.index('</h2>') < content.index('class="reading-links"') < content.index(panel) < content.index('원래 설명입니다.') < content.index('<h3')
+    assert after['nested/other.md'] == before['nested/other.md']
+    assert content.count('class="reading-checkpoint"') == 1
+    assert all(tag not in panel for tag in ('<form', '<input', '<textarea', '<script', '<pre', '<code'))
+    assert '문서로 해석한 내용과 임시 가정' in panel
+    assert '아직 확인하지 못한 점' in panel
+    assert '결과에 따른 분기' in panel and 'URL과 절 위치' in panel
+
+
+def test_reading_checkpoint_works_without_topic_links_and_is_repeatable(tmp_cfg, linked):
+    tmp_cfg.raw['site'] = {'reading_checkpoints': {'device.md': ['stop']}}
+    before = {p: p.read_bytes() for p in tmp_cfg.sdd_dir.rglob('*.md')}
+    out = export_site(tmp_cfg)
+    content = (out / 'device.html').read_text(encoding='utf-8')
+    assert 'class="reading-checkpoint"' in content and 'class="reading-links"' not in content
+    assert all(p.read_bytes() == raw for p, raw in before.items())
+    manifest = (out / 'site-manifest.json').read_bytes()
+    export_site(tmp_cfg)
+    assert (out / 'site-manifest.json').read_bytes() == manifest
+    tmp_cfg.raw['site'] = {}
+    export_site(tmp_cfg)
+    assert 'reading-checkpoint' not in (out / 'device.html').read_text(encoding='utf-8')
+
+
+@pytest.mark.parametrize('checkpoints', [None, [], True, {'absent.md': ['stop']},
+    {'../device.md': ['stop']}, {'/device.md': ['stop']}, {'device\\file.md': ['stop']},
+    {'./device.md': ['stop']}, {'device.md/../other.md': ['stop']}, {1: ['stop']},
+    {'device.html': ['stop']}, {'C:/device.md': ['stop']}, {'device.md': []},
+    {'device.md': 'stop'}, {'device.md': [None]}, {'device.md': ['']},
+    {'device.md': [' stop']}, {'device.md': ['stop\n']},
+    {'device.md': ['absent']}, {'device.md': ['stop', 'stop']}])
+def test_bad_reading_checkpoints_preserve_the_previous_site(tmp_cfg, linked, checkpoints):
+    out = export_site(tmp_cfg)
+    before = {p.relative_to(out): p.read_bytes() for p in out.rglob('*') if p.is_file()}
+    tmp_cfg.raw['site']['reading_checkpoints'] = checkpoints
+    with pytest.raises((ValueError, RuntimeError)):
+        export_site(tmp_cfg)
+    assert before == {p.relative_to(out): p.read_bytes() for p in out.rglob('*') if p.is_file()}
+
+
+def test_reading_checkpoint_rejects_stale_source_without_navigation(tmp_cfg, linked):
+    from sdd.next_steps import link_topics
+    from sdd.site_markdown import _render
+    tmp_cfg.raw['site'] = {'reading_checkpoints': {'device.md': ['stop']}}
+    content, toc, headings = _render('## 종료 책임\n', 'device.md', {'device.md'}, linked, '', linked.meta['source_commit'])
+    with pytest.raises(ValueError, match='source commit mismatch'):
+        link_topics(tmp_cfg, linked, {'device.md': ('Title', {'source_commit': 'b' * 40}, content, toc)},
+                    {'device.md': tmp_cfg.section('device')}, {'device.md': headings})
 
 
 @pytest.mark.parametrize('linked', [{'output': 'nested/other #%.md',

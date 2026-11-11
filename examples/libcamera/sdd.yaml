@@ -102,7 +102,30 @@ documentation:
     sections:
     - ipu3-lsc-prepare
 site:
+  reading_checkpoints:
+    request-diagnosis.md: [diagnosis]
   topic_links:
+    overview.md:
+      request:
+      - section: overview
+        topic: completion
+        label: 버퍼 완료와 요청 전체 완료 구분
+      - section: overview
+        topic: boundary
+        label: 완료 호출자와 스레드 의무
+    vendor-integration.md:
+      request:
+      - section: vendor-integration
+        topic: validation
+        label: completeRequest 호출 스레드와 함수 반환 후 요청 접근 금지
+    request-lifecycle.md:
+      journey:
+      - section: overview
+        topic: request
+        label: 접수·버퍼 완료·요청 완료를 함께 확인
+      - section: request-diagnosis
+        topic: diagnosis
+        label: 제보와 관측을 구분해 조사 메모 남기기
     request-diagnosis.md:
       diagnosis:
       - section: pipeline-requests
