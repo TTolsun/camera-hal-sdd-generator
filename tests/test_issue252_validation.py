@@ -68,6 +68,73 @@ def test_bilingual_dedup_keeps_literal_nested_fence():
     assert module.deduplicate_source_blocks(original,{'a.cpp':dict(text='return 73;\n')})==(original,[])
 
 
+def test_review_resume_only_calls_affected_questions(tmp_cfg, monkeypatch):
+    from sdd.config import AgentConfig
+
+    module = _source_auditor()
+    run = tmp_cfg.root
+    monkeypatch.setattr(module, 'RUN', run)
+    monkeypatch.setattr(module, 'load', lambda _: tmp_cfg)
+    tmp_cfg.agent = AgentConfig(kind='cli', runner='codex', model='gpt-6.1-terra',
+                                command=['fixture-cli', 'exec'], args=['-c', 'model_reasoning_effort="high"'],
+                                max_input_chars=100000)
+    source = run/'source-windows/source.cpp'
+    source.parent.mkdir()
+    source.write_bytes(b'return 0;\n')
+    scope = yaml.safe_load((module.HERE/'questions.yaml').read_bytes())
+    scope['source_windows'] = [dict(file='source.cpp', sha256=hashlib.sha256(source.read_bytes()).hexdigest())]
+    scope_file = run/'scope.json'
+    scope_file.write_text(json.dumps(scope), encoding='utf-8')
+    manuscript = run/'manuscript.md'
+
+    def write_manuscript(stopping='Stopping boundary'):
+        body = ''.join(f'\n## {title}\n\n{stopping if key == "stopping" else key}\n'
+                       for title, key in module.TOPICS.items())
+        manuscript.write_text(f"---\nsource_commit: {scope['source_commit']}\n---\n# Fixture\n{body}", encoding='utf-8')
+
+    calls = []
+    monkeypatch.setattr('sdd.cli_agent.command', lambda _: ['fixture-cli', 'exec'])
+
+    def transport(argv, **kwargs):
+        user = kwargs['prompt'].split('<user>\n', 1)[1].split('\n</user>', 1)[0]
+        payload = json.loads(user)
+        questions = payload['scope']['questions']
+        calls.append(tuple(q['id'] for q in questions))
+        result = dict(status='passed', human_review='pending', findings=[], unreviewed_scope=[],
+                      questions=[dict(id=q['id'], answerable=True, answer_location='source:1',
+                                      diagnosis_values='status', next_branch='return', change_validation='assert',
+                                      source_windows=['source.cpp'], missing=[]) for q in questions],
+                      items=[dict(anchor=item['anchor'], visual_status='omitted-with-reason',
+                                  question=item['title'], reason='Single fact') for item in payload['expected_h2_h3_items']])
+        events = [dict(type='turn.started'), dict(type='item.completed', item=dict(type='agent_message',
+                  text=json.dumps(result))), dict(type='turn.completed')]
+        return subprocess.CompletedProcess(argv, 0, '\n'.join(map(json.dumps, events)), '')
+
+    monkeypatch.setattr('sdd.cli_agent.run', transport)
+
+    def audit(attempt):
+        monkeypatch.setattr(sys, 'argv', ['audit.py', 'accuracy', '--document', str(manuscript), '--attempt', attempt])
+        module.main()
+        return json.loads((run/f'audits/accuracy-{attempt}/review.json').read_bytes())
+
+    write_manuscript()
+    first = audit('01')
+    assert (first['fresh_units'], first['reused_units'], len(calls)) == (8, 0, 8)
+    unchanged = audit('02')
+    assert (unchanged['fresh_units'], unchanged['reused_units'], len(calls)) == (0, 8, 8)
+    assert unchanged['review_units']['Q1']['receipts'] == first['review_units']['Q1']['receipts']
+
+    scope['questions'][1]['question'] += ' Check this additional condition.'
+    scope_file.write_text(json.dumps(scope), encoding='utf-8')
+    assert audit('03')['fresh_units'] == 1 and calls[8:] == [('Q2',)]
+
+    write_manuscript('Stopping boundary changed')
+    changed = audit('04')
+    assert changed['fresh_units'] == 1 and calls[9:] == [('Q5',)]
+    assert len(changed['items']) == len(module.TOPICS)
+    assert [q['id'] for q in changed['questions']] == [f'Q{n}' for n in range(1, 8)]
+
+
 def _historical_import(tmp_path):
     rel='build/prompts/calls/historical/001.receipt.json'
     receipt=tmp_path/rel;receipt.parent.mkdir(parents=True)
