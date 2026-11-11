@@ -1879,6 +1879,10 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: \brief Cancel request and signal its completion
       end: \brief Retrieve the absolute path to a platform configuration file
+    - id: pending-cancel-code
+      file: src/libcamera/request.cpp
+      start: void Request::Private::doCancelRequest()
+      end: \brief Reset the request internal data to default values
     - id: ordering-contract
       file: src/libcamera/pipeline_handler.cpp
       start: This function ensures that requests will be returned
@@ -1891,6 +1895,7 @@ sections:
       sources:
       - buffer-contract
       - cancel-contract
+      - pending-cancel-code
       answer_contract:
         basis: description
         required_terms:
@@ -1901,6 +1906,7 @@ sections:
       sources:
       - buffer-contract
       - cancel-contract
+      - pending-cancel-code
       answer_contract:
         basis: contract
         required_terms:
@@ -1965,10 +1971,10 @@ sections:
         - - CameraManager
       max_statements: 1
     - id: cancel
-      question: cancelRequest 구현이 직접 수행하는 호출과 호출 순서만 설명하세요. completeRequest의 접근 금지·반환
-        순서·스레드 계약은 이 절의 다른 답변에서 설명하므로 다시 나열하지 마세요.
+      question: cancelRequest가 내부 취소 뒤 completeRequest를 호출하는 순서와, 내부 취소가 대기 버퍼를 취소하고 bufferCompleted를 발생시키는 범위를 설명하세요. 일반 완료의 개별 completeBuffer 호출이나 반환 뒤 접근·스레드 계약은 반복하지 마세요.
       sources:
       - cancel-contract
+      - pending-cancel-code
       answer_contract:
         basis: implementation
         required_terms:

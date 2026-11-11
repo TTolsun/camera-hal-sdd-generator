@@ -18,6 +18,7 @@ from sdd.design_execution import _request_unit
 from sdd.design_checkpoint import store_for
 from sdd.design_request import _design_units, prepare_requests
 from sdd.document_metadata import split_frontmatter
+from sdd.execution_lock import locked
 from sdd.facts.model import KnowledgeModel
 from sdd.generate import Generator
 from sdd.generated_design import _assemble_generation
@@ -27,7 +28,11 @@ from sdd.llm import Agent
 
 
 def repair(config: Path, targets: Path, output: Path) -> None:
-    cfg = load(config)
+    _repair(load(config), targets, output)
+
+
+@locked('generation')
+def _repair(cfg, targets: Path, output: Path) -> None:
     assert cfg.agent.kind == 'cli' and cfg.agent.runner == 'codex'
     assert cfg.agent.model == 'gpt-6.1-terra'
     assert 'model_reasoning_effort="high"' in cfg.agent.args
@@ -80,6 +85,7 @@ def repair(config: Path, targets: Path, output: Path) -> None:
                 store, _ = store_for(cfg, model, section, unit, plan.prompts[unit['id']],
                                      plan.policy['design_grounding'], answers)
                 assert store is not None, 'This native recipe requires receipt-bound checkpoints'
+                first_call = len(execution.report['calls'])
                 statements, record = _request_unit(
                     cfg, model, execution, section, unit, plan.prompts[unit['id']],
                     plan.policy['design_grounding'], None, answers)
@@ -89,16 +95,18 @@ def repair(config: Path, targets: Path, output: Path) -> None:
                 # this checkpoint. read() verifies its original native receipts.
                 checked = store.read()
                 assert checked is not None and checked[0]['statements'] == statements
+                calls = execution.report['calls'][first_call:]
                 key = (unit['id'], unit['_part_id'])
                 replacements[key] = statements[0]
                 answers[unit['id']].extend(statements)
                 records.append(dict(topic=key[0], part=key[1], native_record=record,
-                                    action=('generated' if record is None else
+                                    action=(('validated-new-cli' if calls else 'validated-current') if record is None else
                                             'reused-draft-new-grounding' if record.get('new_grounding_review') else
                                             'checkpoint-revalidated' if record.get('revalidated') else 'checkpoint-reused'),
                                     verified_checkpoint=str(store.path),
                                     checkpoint_sha256=hashlib.sha256(store.path.read_bytes()).hexdigest(),
-                                    native_receipts=checked[0]['receipts']))
+                                    native_receipts=checked[0]['receipts'],
+                                    current_cli_calls=[dict(tag=row.get('tag'), status=row.get('status')) for row in calls]))
             # Restore the original display order, keeping every unaffected row exact.
             answers = {tid: [replacements.get((tid, row.get('part_id')), copy.deepcopy(row))
                              for row in rows] for tid, rows in old['answers'].items()}
@@ -114,7 +122,7 @@ def repair(config: Path, targets: Path, output: Path) -> None:
                 retained_topic_identities='Historical identities retained; no current-profile reuse promotion',
                 retained_statement_count=sum(len(rows) for rows in answers.values()) - len(wanted),
                 selected_unit_grounding_review='passed; may reuse historical grounding; see each unit action and native receipts',
-                new_unit_agent=dict(runner=cfg.agent.runner, model=cfg.agent.model,
+                validation_profile=dict(runner=cfg.agent.runner, model=cfg.agent.model,
                                     command=cfg.agent.identity_command, args=cfg.agent.args),
                 human_review='pending')
             # Only the selected units have a fresh source review. Original full
@@ -149,7 +157,7 @@ def repair(config: Path, targets: Path, output: Path) -> None:
         for rel in originals:
             shutil.copyfile(staged_cfg.sdd_dir / rel, original_sdd / rel)
         (output / 'result.json').write_text(json.dumps(dict(
-            status='selected-native-units-repaired', results=results,
+            status='selected-native-units-validated-and-assembled', results=results,
             source_commit=model.meta['source_commit'], human_review='pending'),
             ensure_ascii=False, indent=2), encoding='utf-8')
     except BaseException:
