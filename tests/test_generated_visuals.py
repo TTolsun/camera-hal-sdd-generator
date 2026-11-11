@@ -68,7 +68,7 @@ def test_graph_refresh_rejects_declarative_addition_in_another_stage(tmp_cfg,aut
     addition={**graph,'id':'declarative-normal','stage':'normal'}
     addition.pop('producer')
     rendered=render_values(tmp_cfg,model,section,[graph,addition])
-    with pytest.raises(ValueError,match='outside its declared explanation stage'):
+    with pytest.raises(ValueError,match='without an existing anchor requires normal generation'):
         _reassemble(body,body,lambda offset:offset,rendered,section)
 
 

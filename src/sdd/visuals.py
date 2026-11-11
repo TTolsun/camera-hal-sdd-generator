@@ -327,14 +327,18 @@ def strip_blocks(body):
     return re.sub(r'<!-- sdd:visual:([a-z][a-z0-9_-]*) -->.*?<!-- /sdd:visual:\1 -->\s*', '', body, flags=re.S)
 
 
+def placement_stage(visual, topic):
+    stages = topic.get('explanation', [])
+    return visual.get('stage') or (stages[0]['id'] if stages else None)
+
+
 def place(body, rendered, section):
     """Replace owned blocks and insert after the topic's first explanation."""
     body = strip_blocks(body)
     topics = {t['id']: t for t in section.get('design_topics', [])}
     grouped = {}
     for visual, block, _ in rendered:
-        stages = topics[visual['topic']].get('explanation', [])
-        stage = visual.get('stage') or (stages[0]['id'] if stages else None)
+        stage = placement_stage(visual, topics[visual['topic']])
         grouped.setdefault((visual['topic'], stage), []).append(block)
     for (tid, stage), blocks in grouped.items():
         heading = '## ' + topics[tid]['title']

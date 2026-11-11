@@ -25,7 +25,7 @@ from .generated_design import enabled, verify as verify_design
 from .generated_visuals import from_manuscript, plans, render, resolve
 from .render_profiles import for_page
 from .validation_stage import staged
-from .visuals import place, owned_spans as _owned_spans, verify_stage_placement
+from .visuals import place, placement_stage, owned_spans as _owned_spans, verify_stage_placement
 
 
 def _digest(value):
@@ -62,28 +62,26 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
         title = topics[current[ident][0]['topic']]['title']
         if not preceding or preceding[-1][1] != title:
             raise ValueError('Moving an existing figure to another topic requires normal generation')
-    by_topic, old_by_topic = {}, {}
+    def placement_key(visual):
+        topic = visual['topic']
+        return topic, placement_stage(visual, topics[topic])
+
+    by_stage, old_by_stage = {}, {}
     for visual, _, _ in rendered:
-        by_topic.setdefault(visual['topic'], []).append(visual['id'])
+        by_stage.setdefault(placement_key(visual), []).append(visual['id'])
     for _, _, ident in spans:
-        old_by_topic.setdefault(current[ident][0]['topic'], []).append(ident)
+        old_by_stage.setdefault(placement_key(current[ident][0]), []).append(ident)
     groups = {ident: [ident] for ident in old_ids}
 
-    def stage_orders(ids):
-        orders = {}
-        for ident in ids:
-            orders.setdefault(current[ident][0].get('stage'), []).append(ident)
-        return orders
-
-    for topic, old_order in old_by_topic.items():
+    for key, old_order in old_by_stage.items():
         # Production placement orders explicit stages by their H3 positions,
-        # independently of definition order. Keep every physical span in place
-        # and still reject any changed order within the same stage.
-        configured_order = [ident for ident in by_topic[topic] if ident in old_ids]
-        if stage_orders(configured_order) != stage_orders(old_order):
+        # independently of definition order. Use an anchor in the same stage
+        # when inserting a figure between existing spans.
+        configured_order = by_stage[key]
+        if [ident for ident in configured_order if ident in old_ids] != old_order:
             raise ValueError('Reordering existing figures requires normal generation')
         pending = []
-        for ident in by_topic[topic]:
+        for ident in configured_order:
             if ident in old_ids:
                 groups[ident] = [*pending, ident]
                 pending = []
@@ -101,8 +99,11 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
         block = block.replace('\n', ending[0] if ending else default_eol)
         edits.append((first, last, block, groups[ident]))
 
-    new_topics = {topic: ids for topic, ids in by_topic.items() if topic not in old_by_topic}
-    if new_topics:
+    unanchored = {key: ids for key, ids in by_stage.items() if key not in old_by_stage}
+    old_topics = {topic for topic, _ in old_by_stage}
+    if any(topic in old_topics for topic, _ in unanchored):
+        raise ValueError('Adding a figure to a stage without an existing anchor requires normal generation')
+    if unanchored:
         # Use the production placement contract on a probe. Existing figures
         # are opaque anchors, so its legacy strip_blocks cannot eat their
         # surrounding whitespace. The probe must differ by insertions only.
@@ -122,7 +123,7 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
         chunks.append(body[cursor:])
         probe = ''.join(chunks)
         tokens, fake = {}, []
-        for index, ids in enumerate(new_topics.values()):
+        for index, ids in enumerate(unanchored.values()):
             token = f'SDD_REFRESH_INSERT_{seed}_{index}'
             if token in body:
                 raise ValueError('Visual refresh probe conflicts with source text')

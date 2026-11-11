@@ -1307,6 +1307,8 @@ sections:
     prompt: 조건·실패·반환 경계를 지지하는 작은 그림으로 답하세요. 본문 전체를 노드로 옮기지 마세요. 실제 queuedRequests_.size() == maxQueuedRequestsDevice_
       비교만 한도 분기로 표시합니다. true면 break이고 false면 그 동등 조건으로는 중단하지 않습니다. false를 size < max 또는 미만이라고 바꾸지 마세요. 크기가 한도를
       넘는 상태를 이 비교가 막는다고 보장하지 말고 불변조건 별도 검증과 구분하세요.
+      timeout()은 notifiers_가 비어 있지 않음을 단언하고 항목을 지운 뒤 cancel()과 emitPrepareCompleted()를 호출합니다.
+      한영 레이블에는 처리되지 않은 notifier가 남았다고 쓰세요. 실제 fence 신호 상태를 조회하거나 미신호임을 확정한다고 쓰지 마세요.
     sources:
     - dispatch
     - prepare
@@ -1560,6 +1562,8 @@ sections:
       밖 index에서 nullptr이면 별도의 bufferAvailable 반환 상태 노드로 연결하고 그 종료 노드는 bufferReady 없이 반환하며 나가는 화살표가 없습니다. 함수 진입과
       반환 상태에 각각 별도 노드를 사용하세요. nullptr 화살표를 진입 노드로 되돌리거나 이번 호출 안의 반복·재시도 순환을 만들지 마세요. 다른 장치 이벤트의 후속 호출은 이 그림의
       실행 순서에 넣지 마세요. 기록할 ret·index·큐 상태를 간결히 연결하며 실제 오류 주입 결과를 만들지 마세요. 각 호출·반환과 조건을 한영에서 같은 순서로 표시하세요.
+      timeout()은 notifiers_가 비어 있지 않음을 단언하고 항목을 지운 뒤 cancel()과 emitPrepareCompleted()를 호출합니다.
+      한영 레이블에는 처리되지 않은 notifier가 남았다고 쓰세요. 실제 fence 신호 상태를 조회하거나 미신호임을 확정한다고 쓰지 마세요.
     sources:
     - prepare-flow
     - uvc-submit

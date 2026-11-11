@@ -19,8 +19,10 @@ def digest(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
-@pytest.mark.parametrize('second_stage', ['first', 'second'])
-def test_existing_figure_order_is_checked_within_its_stage(second_stage):
+@pytest.mark.parametrize('second_stage,add_figure', [
+    (None, False), ('first', False), ('second', False), ('second', True),
+])
+def test_existing_figure_order_is_checked_within_its_stage(second_stage, add_figure):
     def block(ident, title):
         return f'<!-- sdd:visual:{ident} -->\n#### {title}\n<!-- /sdd:visual:{ident} -->'
 
@@ -35,11 +37,18 @@ def test_existing_figure_order_is_checked_within_its_stage(second_stage):
     body = f'## Shutdown\n\n### First\n\nFirst explanation.\n\n{first}{between}{second}\n'
     updated_first = block('a', 'Updated A')
     updated_second = block('b', 'Updated B')
+    second_visual = {'id': 'b', 'topic': 'shutdown'}
+    if second_stage:
+        second_visual['stage'] = second_stage
     rendered = [
-        ({'id': 'b', 'topic': 'shutdown', 'stage': second_stage}, updated_second, ''),
+        (second_visual, updated_second, ''),
         ({'id': 'a', 'topic': 'shutdown', 'stage': 'first'}, updated_first, ''),
     ]
-    if second_stage == 'first':
+    if add_figure:
+        added = block('c', 'New C')
+        rendered.insert(1, ({'id': 'c', 'topic': 'shutdown', 'stage': 'second'}, added, ''))
+        updated_second += '\n\n' + added
+    if second_stage != 'second':
         with pytest.raises(ValueError, match='Reordering existing figures'):
             _reassemble(body, body, lambda offset: offset, rendered, section)
     else:
