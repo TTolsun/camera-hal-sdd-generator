@@ -5179,9 +5179,10 @@ sections:
   design_topics:
   - id: journey
     title: 제출에서 완료까지
-    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임, 버퍼
-      완료와 요청 완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션 콜백 스레드의 확인 범위를 구분하세요. Camera::queueRequest()의 0 반환은 queued invokeMethod로
-      파이프라인에 전달한 시점으로 설명하고 waitingRequests_ 삽입 완료나 하드웨어 큐잉 성공·요청 완료로 단정하지 마세요. 각 함수의 호출·비동기 처리·완료 시점을 구분하세요.
+    question: 요청 생성·버퍼 연결·Camera::queueRequest() 제출 반환의 의미, 파이프라인 대기 큐·준비 상태·장치 큐 한도, queueRequestDevice()의 책임,
+      버퍼 완료와 요청 완료 및 반환 순서를 구분하세요. 공통 함수 호출 문맥과 애플리케이션 콜백 스레드의 확인 범위를 구분하세요. Camera::queueRequest()의 0 반환은 queued
+      invokeMethod로 파이프라인에 전달한 시점으로 설명하고 waitingRequests_ 삽입 완료나 하드웨어 큐잉 성공·요청 완료로 단정하지 마세요. 각 함수의 호출·비동기 처리·완료
+      시점을 구분하세요.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -5263,20 +5264,25 @@ sections:
         end: '
 
           }'
+    - id: buffer-implementation
+      file: src/libcamera/request.cpp
+      start: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+      end: '
+
+        }'
     covers:
     - journey
     parts:
     - id: summary
       role: summary
-      question: queueRequest의 0 반환은 파이프라인 대상 queued 호출을 예약한 성공을 뜻하고 요청 완료와 구분된다는 점을 설명하세요. completeRequest는 이미 완료된
-        요청을 카메라에 알리고 완료 요청을 제출 순서대로 애플리케이션에 반환한다는 계약을 요약하세요. 알림 함수가 반환한 뒤 완료가 발생한다고 추정하지 말고 두 문장 이내로 답하세요.
+      question: queueRequest의 0 반환은 파이프라인 대상 queued 호출을 예약한 성공을 뜻하고 요청 완료와 구분된다는 점을 설명하세요. completeRequest는 이미
+        완료된 요청을 카메라에 알리고 완료 요청을 제출 순서대로 애플리케이션에 반환한다는 계약을 요약하세요. 알림 함수가 반환한 뒤 완료가 발생한다고 추정하지 말고 두 문장 이내로 답하세요.
       sources:
       - queue
       - request-duty
       - request-notice
       - completed-head
       - queued-connection
-      - buffer-notice
       max_statements: 2
       answer_contract:
         basis: description
@@ -5300,10 +5306,11 @@ sections:
         - - unique_ptr
         - - Request
     - id: buffer
-      question: 두 문장으로 답하세요. 첫 문장은 Request::addBuffer()가 FrameBuffer를 지정한 Stream과 연결해 요청에 추가하는 동작만 설명하세요. 둘째 문장은 버퍼가
-        유효한 Stream을 참조하지 않는 경우의 -EINVAL과 같은 Stream에 버퍼가 이미 추가된 경우의 -EEXIST를 조건과 결과로 함께 설명하세요.
+      question: Request::addBuffer가 버퍼를 Stream과 연결하는 동작과 API의 -EINVAL·-EEXIST 반환 계약을 설명하세요. 구현이 확인한 -EINVAL 조건은
+        stream == nullptr이며 API 설명의 유효한 Stream이라는 표현을 비null 포인터 검증으로 확대하지 마세요. 두 문장 이내로 답하세요.
       sources:
       - buffer
+      - buffer-implementation
       max_statements: 1
       answer_contract:
         basis: description
@@ -5317,13 +5324,14 @@ sections:
         reject_patterns:
         - pattern: (?:[가-힣]다\.\s+\S[\s\S]*?){2}
           message: 입력 연결과 오류 조건을 두 문장 이내로 설명하고 같은 제약을 일반론과 오류 조건으로 반복하지 마세요.
-        - pattern: nullptr|스트림당.{0,12}(?:하나|한 개|1개)|(?:하나|한 개|1개).{0,12}버퍼만
-          message: 발췌의 유효한 Stream 조건을 쓰고 nullptr나 스트림당 하나 일반론을 별도로 도입하지 마세요. 오류 조건은 유지합니다.
+        - pattern: 스트림당.{0,12}(?:하나|한 개|1개)|(?:하나|한 개|1개).{0,12}버퍼만
+          message: 오류 조건과 null stream 검사를 설명하고 스트림당 하나 일반론을 별도로 반복하지 마세요.
     - id: submission-errors
-      question: Camera::queueRequest()가 queued 호출 전에 동기적으로 거절하는 조건을 네 문장 이내로 설명하세요. isAccessAllowed 검사의 음수 ret을 그대로
-        반환하는 경로, 다른 카메라가 만든 요청의 -EXDEV, RequestPending이 아님·controls().infoMap()이 &controls()와 다름·버퍼가 없음·비활성 Stream의
-        -EINVAL 조건을 연결하세요. API 주석이 명시한 연결 해제 -ENODEV, 실행 상태 아님 -EACCES, 버퍼 메모리 부족 -ENOMEM도 포함하되, 특히 -ENOMEM을 제공된 함수
-        본문에 실제 있는 반환 분기라고 쓰지 말고 주석의 반환 계약과 보인 구현 분기를 구분하세요. 같은 조건을 주석과 구현 설명으로 두 번 반복하거나 실제 장치 결과로 쓰지 마세요.
+      question: Camera::queueRequest()가 queued 호출 전에 동기적으로 거절하는 조건을 네 문장 이내로 설명하세요. isAccessAllowed 검사의 음수 ret을
+        그대로 반환하는 경로, 다른 카메라가 만든 요청의 -EXDEV, RequestPending이 아님·controls().infoMap()이 &controls()와 다름·버퍼가 없음·비활성
+        Stream의 -EINVAL 조건을 연결하세요. API 주석이 명시한 연결 해제 -ENODEV, 실행 상태 아님 -EACCES, 버퍼 메모리 부족 -ENOMEM도 포함하되, 특히 -ENOMEM을
+        제공된 함수 본문에 실제 있는 반환 분기라고 쓰지 말고 주석의 반환 계약과 보인 구현 분기를 구분하세요. 같은 조건을 주석과 구현 설명으로 두 번 반복하거나 실제 장치 결과로 쓰지
+        마세요.
       sources:
       - queue
       max_statements: 2
@@ -5342,8 +5350,8 @@ sections:
         - - 스트림
           - Stream
     - id: queue-context
-      question: API 주석에 명시된 PipelineHandler::queueRequest()와 PipelineHandler::queueRequestDevice()의 공통 호출 스레드 문맥을
-        한 문장으로 설명하세요. 문서상의 함수 호출 문맥을 실제 장치나 애플리케이션 콜백에서 관측한 결과로 확대하지 마세요.
+      question: API 주석에 명시된 PipelineHandler::queueRequest()와 PipelineHandler::queueRequestDevice()의 공통 호출 스레드
+        문맥을 한 문장으로 설명하세요. 문서상의 함수 호출 문맥을 실제 장치나 애플리케이션 콜백에서 관측한 결과로 확대하지 마세요.
       sources:
       - device-queue
       - device-contract
@@ -5356,9 +5364,9 @@ sections:
         - - CameraManager
     - id: preparation
       question: 준비 신호 연결과 요청 준비를 담당하는 함수를 구분하세요. PipelineHandler::registerRequest()는 요청이 준비됐을 때 doQueueRequests(request->_d()->camera())를
-        부르는 prepared 신호 연결을 설정합니다. PipelineHandler::queueRequest()가 waitingRequests_에 요청을 추가한 뒤 prepare(300ms)를 호출하는
-        순서를 설명하고, 준비 단계에서 실패하면 요청이 취소된다는 주석의 조건만 포함하세요. 하드웨어 큐잉 실패와 cancelRequest 분기는 dispatch 질문에서 설명하므로 여기서는 반복하지
-        마세요. 대기 큐의 선두·한도 조건은 다음 질문에서 다루므로 반복하지 마세요. 세 문장 이내로 답하세요.
+        부르는 prepared 신호 연결을 설정합니다. PipelineHandler::queueRequest()가 waitingRequests_에 요청을 추가한 뒤 prepare(300ms)를
+        호출하는 순서를 설명하고, 준비 단계에서 실패하면 요청이 취소된다는 주석의 조건만 포함하세요. 하드웨어 큐잉 실패와 cancelRequest 분기는 dispatch 질문에서 설명하므로
+        여기서는 반복하지 마세요. 대기 큐의 선두·한도 조건은 다음 질문에서 다루므로 반복하지 마세요. 세 문장 이내로 답하세요.
       sources:
       - device-queue
       answer_contract:
@@ -5379,9 +5387,10 @@ sections:
       max_statements: 1
     - id: waiting
       question: waitingRequests_의 선두 요청 prepared_가 거짓이면 뒤 요청도 전달하지 않는 조건과, queuedRequests_ 크기가 maxQueuedRequestsDevice_
-        한도에 도달하면 전달을 중단하는 조건을 구분하세요. completeRequest()가 완료된 요청을 큐에서 제거한 뒤 끝에서 doQueueRequests(camera)를 호출하여 장치 큐 한도
-        여유가 생긴 대기 요청의 전달을 다시 시도하는 연결도 함께 세 문장 이내로 설명하세요. 같은 선두 준비 조건이나 완료 순서 상세를 되풀이하지 마세요. queuedRequests_는 장치 전달
-        전에 요청을 추가하는 소프트웨어 큐이므로 그 크기를 장치에 전달된 요청 수와 동일시하지 마세요. 취소된 요청도 이 큐에 추가될 수 있으므로 실제 큐 이름과 크기 비교식으로만 조건을 설명하세요.
+        한도에 도달하면 전달을 중단하는 조건을 구분하세요. completeRequest()가 완료된 요청을 큐에서 제거한 뒤 끝에서 doQueueRequests(camera)를 호출하여 장치
+        큐 한도 여유가 생긴 대기 요청의 전달을 다시 시도하는 연결도 함께 세 문장 이내로 설명하세요. 같은 선두 준비 조건이나 완료 순서 상세를 되풀이하지 마세요. queuedRequests_는
+        장치 전달 전에 요청을 추가하는 소프트웨어 큐이므로 그 크기를 장치에 전달된 요청 수와 동일시하지 마세요. 취소된 요청도 이 큐에 추가될 수 있으므로 실제 큐 이름과 크기 비교식으로만
+        조건을 설명하세요.
       sources:
       - device-queue
       - waiting-prepared
@@ -5414,8 +5423,8 @@ sections:
         - - queueRequestDevice
         - - queuedRequests_
     - id: device-result
-      question: queueRequestDevice() 구현자가 장치에 요청 파라미터를 프로그래밍하여 제공된 버퍼에 캡처되는 프레임에 적용해야 하는 책임을 설명하세요. 성공 시 0, 오류 시 음수
-        오류 코드 반환 계약을 함께 구분하세요. 실제 특정 장치에서 수행했다고 쓰거나 다른 큐의 준비·완료 경로를 반복하지 마세요.
+      question: queueRequestDevice() 구현자가 장치에 요청 파라미터를 프로그래밍하여 제공된 버퍼에 캡처되는 프레임에 적용해야 하는 책임을 설명하세요. 성공 시 0, 오류
+        시 음수 오류 코드 반환 계약을 함께 구분하세요. 실제 특정 장치에서 수행했다고 쓰거나 다른 큐의 준비·완료 경로를 반복하지 마세요.
       sources:
       - device-contract
       max_statements: 1
@@ -5433,11 +5442,12 @@ sections:
         - - 음수
           - negative
     - id: callback-context-check
-      question: completeRequest와 애플리케이션 콜백의 진입·복귀를 각각 기록하고 Thread::currentId()의 반환값으로 실행 스레드를 비교할 조사 계획을 두 문장 이내로
-        제안하세요. 이 API가 현재 Linux 스레드 ID를 반환한다는 정의를 사용하세요. 아직 실행하지 않은 계획이며 콜백의 실제 실행 결과와 스레드는 검증 전임을 명시하세요.
+      question: completeRequest와 애플리케이션 콜백의 진입·복귀를 각각 기록하고 Thread::currentId()의 반환값으로 실행 스레드를 비교할 조사 계획을 두 문장
+        이내로 제안하세요. 이 API가 현재 Linux 스레드 ID를 반환한다는 정의를 사용하세요. 아직 실행하지 않은 계획이며 콜백의 실제 실행 결과와 스레드는 검증 전임을 명시하세요.
       sources:
       - completion
       - thread-id
+      - buffer-notice
       max_statements: 1
       statement_kind: limitation
     answer_contract:
@@ -5446,12 +5456,369 @@ sections:
       - pattern: doQueueRequest(?!Device).{0,35}(?:성공\s*시|성공하면).{0,15}0.{0,15}반환
         message: doQueueRequest는 void입니다. queueRequestDevice의 반환 계약과 바꾸지 마세요.
     design_prompt: focused
-    prompt: 제출·대기·장치 전달을 이 절에서 소유합니다. 완료 내부 추적·스레드 의무·제출 순서별 자원 수명은 요청·버퍼·fence의 수명 절에서 통합 설명하므로 이 절은 첫 요약의 결론만 보존하고
-      같은 상세를 반복하지 마세요.
+  - id: preparation-depth
+    title: 준비 대기와 재진입을 좁히기
+    question: 준비 대기의 생산자·소비자와 중첩 재진입을 연결하여 완료 누락의 조사 위치와 변경 불변조건을 설명하세요.
+    covers:
+    - preparation-depth
+    sources:
+    - id: dispatch
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::registerRequest(Request *request)
+      end: \fn PipelineHandler::queueRequestDevice()
+    - id: prepare
+      file: src/libcamera/request.cpp
+      start: void Request::Private::emitPrepareCompleted()
+      end: '#endif /* __DOXYGEN_PUBLIC__ */'
+    - id: cancel
+      file: src/libcamera/request.cpp
+      start: void Request::Private::doCancelRequest()
+      end: \brief Reset the request internal data
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+    - id: submit-message
+      file: src/libcamera/camera.cpp
+      start: \brief Queue a request to the camera
+      end: \brief Start capture from camera
+    - id: invocation
+      file: src/libcamera/base/object.cpp
+      start: \fn R Object::invokeMethod()
+      end: \fn Object::thread()
+    - id: stop-entry
+      file: src/libcamera/camera.cpp
+      start: \brief Stop capture from camera
+      end: \brief Handle request completion and notify application
+    - id: common-stop
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Stop capturing from all running streams and cancel pending requests
+      end: \brief Determine if the camera has any requests pending
+    - id: camera-notice
+      file: src/libcamera/camera.cpp
+      start: \brief Handle request completion and notify application
+      end: '} /* namespace libcamera */'
+    - id: post-order
+      file: src/libcamera/base/thread.cpp
+      start: void Thread::postMessage(
+      end: \brief Remove all posted messages
+    - id: frame-sequence
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2VideoDevice::bufferAvailable()
+      end: \brief Start the video stream
+    - id: object-template
+      file: include/libcamera/base/object.h
+      start: class Object
+      end: '} /* namespace libcamera */'
+    - id: bound-overloads
+      file: include/libcamera/base/bound_method.h
+      start: class BoundMethodBase
+      end: '} /* namespace libcamera */'
+    - id: connections
+      file: src/libcamera/base/bound_method.cpp
+      start: \enum ConnectionType
+      end: '} /* namespace libcamera */'
+    - id: object-message
+      file: src/libcamera/base/object.cpp
+      start: void Object::postMessage(
+      end: \fn R Object::invokeMethod()
+    - id: invoke-message
+      file: src/libcamera/base/message.cpp
+      start: void InvokeMessage::invoke()
+      end: \var InvokeMessage::method_
+    - id: thread-dispatch
+      file: src/libcamera/base/thread.cpp
+      start: void Thread::dispatchMessages(
+      end: \brief Move an \a object and all its children to the thread
+    - id: poll-dispatch
+      file: src/libcamera/base/event_dispatcher_poll.cpp
+      start: '/* SPDX-License-Identifier: LGPL-2.1-or-later */'
+      end: '} /* namespace libcamera */'
+      max_chars: 30000
+    - id: timer-lifetime
+      file: src/libcamera/base/timer.cpp
+      start: Timer::~Timer()
+      end: '} /* namespace libcamera */'
+    - id: request-private
+      file: include/libcamera/internal/request.h
+      start: class Request::Private
+      end: '} /* namespace libcamera */'
+    - id: fence-expiry
+      file: src/libcamera/request.cpp
+      start: If the \a fence associated with \a buffer isn't signalled, the request will
+      end: be reused in another request.
+      scope:
+        start: \brief Add a FrameBuffer with its associated Stream to the Request
+        end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    parts:
+    - id: message
+      question: queueRequest가 0을 반환했지만 PipelineHandler::queueRequest 진입 자체가 없는 경우를 waitingRequests_ 준비 대기보다 먼저
+        구분하는 조사 경로를 두 문장 이내로 설명하세요. queued 메시지의 대상 스레드·이벤트 루프 진행과 메서드 진입을 관찰하고, Request 포인터는 값 복사로 소유되지 않으므로
+        실제 메서드 호출까지 유효해야 하며 Queued 호출은 스레드가 멈추기 전에 실행된다는 보장이 없다는 계약을 연결하세요. 메시지가 버려지면 요청이나 버퍼를 즉시 해제해도 된다는 결론은
+        내리지 마세요.
+      sources:
+      - submit-message
+      - invocation
+      - dispatch
+      max_statements: 1
+    - id: fence
+      question: 완료 누락을 조사할 때 waitingRequests_ 선두의 prepared_와 각 fence의 notifiers_, prepare(300ms), notifierActivated
+        및 timeout을 연결하세요. fence가 없으면 동기 prepared 신호를 내고, 모두 신호되거나 타임아웃되면 prepared_를 참으로 바꾼 뒤 신호를 냅니다. 타임아웃은 취소
+        후 준비 완료 신호를 내므로 prepared_가 촬영 준비 성공을 뜻하지 않음을 설명하세요. 300ms를 촬영·정지 완료 시간 보장으로 확대하지 마세요. 조사 계획과 구현 사실을 구분하여
+        세 문장 이내로 답하세요.
+      sources:
+      - dispatch
+      - prepare
+      - cancel
+      - fence-expiry
+      max_statements: 2
+    - id: recursive
+      question: doQueueRequests의 선두 미준비와 queuedRequests_.size()==maxQueuedRequestsDevice_ 중단 조건, 준비된 선두를 pop한
+        뒤 doQueueRequest를 호출하는 재진입 방어를 연결하세요. 준비 취소 또는 장치 제출 실패는 완료 처리 중 다시 doQueueRequests를 호출할 수 있으므로 pop 순서
+        변경 전에 중복 처리·순서·대기 큐 관찰을 검사하도록 설명하세요. 후속 준비 요청이 앞선 미준비 요청을 추월한다고 쓰지 마세요. 세 문장 이내로 설명하세요.
+      sources:
+      - dispatch
+      - completion
+      max_statements: 2
+    - id: stop-crossing
+      question: Camera 상태 변경 호출의 호출자 동기화 의무를 전제로, queueRequest의 상태 검사와 실제 queued 메서드 실행 사이에 정지가 교차하는 경우의 조사 분기를
+        세 문장 이내로 설명하세요. Camera::queueRequest가 실행 도중 상태 변화가 가능하다고 명시하는 계약과, PipelineHandler::queueRequest는 CameraStopping을
+        재검사하지 않고 waitingRequests_ 추가·prepare를 실행한다는 구현을 연결하세요. 메시지가 stop의 대기 큐 분리 뒤에 실행된다는 조건이 실제로 성립하는지는 게시·실행·CameraStopping·stopDevice·준비·장치
+        제출·Camera::requestComplete 상태 검사의 순서를 기록해 확인해야 하며 정상 지원 동작·발생 보장·복구 성공으로 단정하지 마세요. 이미 제출된 요청과 새로운 상태
+        변경 호출을 호출자가 동기화해야 하는 의무를 제거하지 마세요. 게시된 호출이 대기 큐 분리 뒤 실행되고 요청 완료가 CameraConfigured 상태에서 Camera::requestComplete까지
+        도달하는 조건이면 상태 검사 실패의 Trying to complete a request when stopped Fatal 로그 경계에 이릅니다. 이 조건부 다음 분기를 명시하고 신호·정상
+        반환을 보장하지 마세요. 실제 교차 발생이나 그 경계 도달을 관측했다고 쓰지 마세요.
+      sources:
+      - submit-message
+      - invocation
+      - dispatch
+      - completion
+      - stop-entry
+      - common-stop
+      - camera-notice
+      max_statements: 3
+    - id: submission-order
+      question: 선택한 단일 카메라 경로에서 API 계약의 제출 순서와 동시 호출의 관찰 경계를 구분하세요. 서로 다른 스레드의 Camera::queueRequest 호출 시작 순서만으로
+        게시 순서를 확정할 수 없으며 Thread::postMessage는 mutex를 얻은 뒤 메시지를 큐에 추가합니다. 실제 파이프라인 진입과 waitingRequests_ 등록, doQueueRequest의
+        Request sequence_·queuedRequests_ 등록, completeRequest의 선두 통지 순서를 연결하고 Request 소프트웨어 sequence와 V4L2에서
+        받은 FrameMetadata sequence를 같다고 가정하지 마세요. API 시작·0 반환, 잠금 안의 메시지 추가 순서, 핸들러 진입·doQueueRequest 등록·Request
+        sequence, 신호 발생과 특정 수신 연결의 실제 콜백을 구분해 기록하는 검증 조건을 최대 네 문장으로 설명하세요. source-caller 진입 시각을 전역 제출 순서로 단정하거나
+        여러 수신 연결을 중복 완료로 세지 마세요. object-template·bound-overloads·connections·object-message·invoke-message·thread-dispatch의
+        실제 호출 연결도 제공되어 있으므로 이 게시·처리 관계를 불명으로 대체하지 마세요. registerRequest는 생성 시 prepared 신호만 연결하며 순번과 queuedRequests_는
+        doQueueRequest가 담당한다는 실제 함수 경계를 유지하세요.
+      sources:
+      - submit-message
+      - post-order
+      - dispatch
+      - camera-notice
+      - frame-sequence
+      - common-stop
+      - object-template
+      - bound-overloads
+      - connections
+      - object-message
+      - invoke-message
+      - thread-dispatch
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+    - id: fence-timer-tie
+      question: 선택한 기본 EventDispatcherPoll의 같은 처리 회차에서 poll 결과가 유효한 fence fd의 Read 준비를 보고하고 그 요청의 타이머 기한도 지난
+        경우를 설명하세요. processEvents는 ret가 양수일 때 processNotifiers를 처리한 다음 processTimers를 호출합니다. 이 회차 안에 notifierActivated가
+        마지막 notifiers_ 항목을 제거하면 timer_.reset으로 Timer 소멸·stop·dispatcher 등록 제거를 거친 뒤 prepared를 발행하므로, 기한 경과만으로
+        timeout이 먼저 호출되었다고 판정할 수 없습니다. 다른 fence가 남아 타이머가 여전히 등록·만료 상태라면 뒤의 timer 처리에서 timeout이 실행될 수 있다는 분기를
+        구분하세요. 이는 timeout 경로의 판정이며 후속 장치 제출 오류의 취소를 배제하지 않습니다. fd와 revents는 handler 전에, notifier/timer 진입 순서·등록
+        제거·cancelled_·prepared_는 각 경계에 기록하는 검증 계획을 최대 네 문장으로 설명하고 실제 경합 시험 성공이나 다른 dispatcher의 같은 우선순위를 주장하지
+        마세요.
+      sources:
+      - poll-dispatch
+      - timer-lifetime
+      - prepare
+      - request-private
+      - bound-overloads
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+  - id: uvc-depth
+    title: UVC의 장치 제출과 완료를 추적하기
+    question: 선택한 UVC 구체 경로의 실패·장치 큐잉·버퍼 및 요청 완료를 연결하세요. 다른 파이프라인이나 실제 장치 관찰로 확대하지 마세요.
+    covers:
+    - uvc-depth
+    sources:
+    - id: submit
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: int PipelineHandlerUVC::queueRequestDevice(Camera *camera, Request *request)
+      end: bool PipelineHandlerUVC::match(DeviceEnumerator *enumerator)
+    - id: controls
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: int PipelineHandlerUVC::processControls(
+      end: int PipelineHandlerUVC::queueRequestDevice(
+    - id: control-conversion
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: int PipelineHandlerUVC::processControl(
+      end: int PipelineHandlerUVC::processControls(
+    - id: set-controls
+      file: src/libcamera/v4l2_device.cpp
+      start: int V4L2Device::setControls(
+      end: \brief Retrieve the v4l2_query_ext_ctrl information
+    - id: qbuf
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2VideoDevice::queueBuffer(
+      end: void V4L2VideoDevice::bufferAvailable()
+    - id: dequeue
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2VideoDevice::bufferAvailable()
+      end: \brief Start the video stream
+    - id: uvc-ready
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
+      end: REGISTER_PIPELINE_HANDLER
+    - id: uvc-wiring
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: video_->bufferReady.connect(this, &UVCCameraData::imageBufferReady);
+      end: /* Generate the camera ID. */
+      scope:
+        start: int UVCCameraData::init(std::shared_ptr<MediaDevice> media)
+        end: '
+
+          }'
+    - id: complete
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+    - id: status
+      file: src/libcamera/request.cpp
+      start: bool Request::Private::completeBuffer(FrameBuffer *buffer)
+      end: void Request::Private::doCancelRequest()
+    - id: dispatch
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequest(Request *request)
+      end: \brief Queue prepared requests to the device
+    - id: frame-validity
+      file: src/libcamera/framebuffer.cpp
+      start: \enum FrameMetadata::Status
+      end: "\n */"
+    - id: cache-get
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2BufferCache::get(const FrameBuffer &buffer)
+      end: '
+
+        }'
+    - id: cache-put
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2BufferCache::put(unsigned int index)
+      end: '
+
+        }'
+    - id: scope-exit
+      file: include/libcamera/base/utils.h
+      start: 'template<typename EF>
+
+        class scope_exit'
+      end: scope_exit(EF) -> scope_exit<EF>;
+    parts:
+    - id: control-errors
+      question: processControls는 각 processControl의 반환값을 검사하지 않으며, 구성한 ControlList를 setControls에 전달합니다. setControls의
+        빈 목록 0, 미등록 제어 또는 일반 검증 -EINVAL, 특정 제어 실패 -EIO와 실패 인덱스 앞의 updateControls 범위를 구분하세요. setControls 쓰기 오류
+        자체에서도 일부 제어가 이미 적용됐을 수 있다는 API 계약을 명시하고 error_idx 앞의 제어 상태를 조사하도록 연결하세요. 개별 변환 오류가 항상 요청 취소로 전달되거나 controls
+        설정이 원자적으로 롤백된다고 보장하지 말고 원래 호출의 반환값과 error_idx를 관찰하는 소스 기반 조사로 세 문장 이내에 설명하세요.
+      sources:
+      - controls
+      - control-conversion
+      - set-controls
+      max_statements: 2
+    - id: failure
+      question: UVC는 findBuffer가 비면 -ENOENT, processControls가 음수면 장치 제출 전 반환, queueBuffer가 음수면 그 값을 반환합니다. 공통
+        doQueueRequest가 sequence와 queuedRequests_ 등록 뒤 비0 반환을 cancelRequest로 보내므로 Camera::queueRequest의 앞선 0과
+        별도로 취소가 발생함을 설명하세요. processControls 성공 뒤 QBUF가 실패하더라도 이 경로는 제어 변경 롤백을 보장하지 않음을 세 문장 이내로 연결하세요.
+      sources:
+      - submit
+      - controls
+      - dispatch
+      - complete
+      max_statements: 2
+    - id: device
+      question: queueBuffer의 Stopping은 -ESHUTDOWN이며 cache_ 부재는 Fatal 로그 뒤 반환문이 있어도 정상 반환이나 취소 도달을 보장하지 않는 경계입니다.
+        다음 문단은 cache get 성공 뒤 실제 VIDIOC_QBUF가 음수인 경우입니다. guard.release 전에 반환하므로 활성 scope_exit 소멸자가 cache_->put(buf.index)을
+        수행하고 이번 버퍼의 queuedBuffers_ 신규 등록 없이 원래 ret를 반환합니다. 성공한 QBUF에서는 queuedBuffers_에 등록한 뒤 guard.release하므로
+        이번 함수 반환에서의 자동 put은 없습니다. 나중의 dequeue가 별도로 put하는 경로와 구분하고 QBUF 반환값과 프레임 완료를 구분하세요. 공통 cache·plane
+        사전 검사는 별도 항목이 소유하므로 반복하지 말고 두 짧은 문단으로 설명하세요.
+      sources:
+      - qbuf
+      - submit
+      - cache-put
+      - scope-exit
+      max_statements: 2
+    - id: completion
+      question: bufferAvailable의 dequeueBuffer 실패 또는 예상 밖 인덱스는 nullptr로 알림을 내지 않으며, 정상 반환은 bufferReady→UVC imageBufferReady→completeBuffer→completeRequest로
+        이어지는 점을 설명하세요. V4L2_BUF_FLAG_ERROR는 FrameError로 남지만 Request::Private::complete는 cancelled_만으로 RequestComplete/RequestCancelled를
+        정하므로 RequestComplete를 FrameSuccess나 촬영 성공 보장으로 쓰지 마세요. 완료 누락은 pending_와 queuedRequests_ 선두 status를 함께
+        확인하고 후속 완료가 제출 순서 때문에 지연될 수 있음을 세 문장 이내로 연결하세요. FrameError는 오류 플래그 외에 유효하지 않은 플레인 수 또는 분할에 부족한 bytesused에서도
+        발생하므로 해당 값을 조사하도록 간결히 추가하세요. 단일 V4L2 플레인을 여러 버퍼 플레인으로 분할할 때에는 각 플레인 처리를 시작하기 전에 remaining이 0이면 FrameError이며,
+        마지막 플레인은 길이보다 적은 양의 bytesused를 가질 수 있는 허용을 구분하세요. 부족한 모든 bytesused나 모든 플레인 수 불일치를 오류라고 일반화하지 마세요.
+      sources:
+      - dequeue
+      - uvc-ready
+      - uvc-wiring
+      - complete
+      - status
+      max_statements: 2
+    - id: frame-validity
+      question: 선택한 경로에서 프레임 상태를 판정할 때 완전히 한정된 FrameMetadata::FrameSuccess·FrameMetadata::FrameError·FrameMetadata::FrameCancelled를
+        각 문장의 주어로 사용하여 FrameMetadata::Status의 API 주석 계약을 세 짧은 문장으로 대조하세요. FrameMetadata::FrameSuccess는 프레임 데이터와
+        모든 metadata 필드가 유효합니다. FrameMetadata::FrameError는 데이터가 일부·전체 손상되거나 없거나 유효하지 않으며 sequence·timestamp만 유효하고
+        나머지 필드는 유효하지 않을 수 있습니다. FrameMetadata::FrameCancelled는 데이터가 유효하지 않고 status 외의 metadata 필드는 유효하지 않습니다.
+        RequestComplete는 cancelled_ 기준이므로 이 판정을 대신할 수 없다는 기존 설명에 연결하되 되풀이하지 말고, 실제 하드웨어·DMA 검증을 했다는 주장으로 확대하지
+        마세요. FrameStartup/IPA 등 선택 밖 상태를 포함한 전체 열거형 완료 표라고 쓰지 마세요.
+      sources:
+      - frame-validity
+      max_statements: 1
+    - id: cache-index
+      question: V4L2BufferCache::get은 free_인 항목만 검사하고 사용 가능한 항목이 없으면 -ENOENT를 반환한다는 구현을 설명하세요. queueBuffer는 이
+        음수를 그대로 반환하며 아직 이번 호출의 scope_exit guard가 만들어지지 않았고 새 인덱스를 확보하지 않았으므로 이번 호출의 guard에 의한 put도 없습니다. 이 반환은
+        VIDIOC_QBUF와 이번 버퍼의 queuedBuffers_ 등록보다 앞섭니다. UVC는 processControls가 0을 반환한 뒤 이 호출에 도달하므로 제어 처리는 선행하지만
+        실제 제어 적용이나 롤백을 보장하지 않으며 음수는 공통 cancelRequest로 전달된다는 경계를 연결하세요. cache_ 자체가 없는 Fatal과 free 항목 부재를 혼동하거나
+        모든 cache 상태가 불변이라고 쓰지 마세요. 두 짧은 문단으로 답하세요.
+      sources:
+      - cache-get
+      - cache-put
+      - qbuf
+      - submit
+      - controls
+      - dispatch
+      - complete
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - get
+        - - -ENOENT
+        - - VIDIOC_QBUF
+        - - cancelRequest
+    - id: pre-qbuf-planes
+      question: cache 인덱스를 얻은 뒤 queueBuffer가 검사하는 두 공통 조건을 대조하세요. planes.size() < numV4l2Planes이면 -EINVAL이며,
+        planes.size() != numV4l2Planes && !buffer->_d()->isContiguous()이어도 -EINVAL입니다. 단순한 수 불일치를 모두 오류로 일반화하지
+        마세요. 이 두 반환에서는 scope_exit가 이번 buf.index를 cache_->put으로 반환하며 VIDIOC_QBUF 호출과 이번 버퍼의 queuedBuffers_ 신규
+        등록에 도달하지 않습니다. 제어 처리·호출자 반환·공통 취소의 공통 전제는 앞의 cache 인덱스 항목이 소유하므로 여기에서 반복하지 마세요. 이 항목은 두 plane 조건, 각각의
+        반환과 확보한 인덱스의 정리만 소유합니다. 위 두 공통 검사에 집중하고 다른 형식의 bytesused 합치기 세부 검사를 이 사례로 확대하지 마세요. 실제 UVC 하드웨어에서 부적합
+        plane을 재현했다는 결과가 아니라 이 함수에 도달한 조건의 정적 분기입니다. 두 짧은 문단으로 답하세요.
+      sources:
+      - qbuf
+      - cache-put
+      - scope-exit
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - planes
+        - - -EINVAL
+        - - put
+        - - VIDIOC_QBUF
   - id: resources
     title: 요청·버퍼·fence의 수명
-    question: 제출 성공·버퍼 완료·요청 완료와 애플리케이션 반환을 구분하고 버퍼 회수 경계를 근거로 판단하세요. 문제, 수명 원리, 정상 흐름, 조건 변화, 변경 확인을 연결하세요. 요청 소유권·버퍼
-      유지 기한·fence 이동과 실패·타임아웃 회수·ReuseBuffers의 should not 권고·핸들러 접근 금지를 보존하세요. 필드 초기화 상세는 요청 API 문서가 담당합니다.
+    question: 제출 성공·버퍼 완료·요청 완료와 애플리케이션 반환을 구분하고 버퍼 회수 경계를 근거로 판단하세요. 문제, 수명 원리, 정상 흐름, 조건 변화, 변경 확인을 연결하세요.
+      요청 소유권·버퍼 유지 기한·fence 이동과 실패·타임아웃 회수·ReuseBuffers의 should not 권고·핸들러 접근 금지를 보존하세요. 필드 초기화 상세는 요청 API 문서가
+      담당합니다.
     sources:
     - id: create
       file: src/libcamera/camera.cpp
@@ -5523,14 +5890,23 @@ sections:
       file: src/libcamera/request.cpp
       start: \brief Complete a buffer for the request
       end: \brief Reset the request internal data to default values
+    - id: figure-signal-lifetime
+      file: src/libcamera/base/signal.cpp
+      start: \class Signal
+      end: \fn Signal::connect
+    - id: figure-connections
+      file: src/libcamera/base/bound_method.cpp
+      start: \enum ConnectionType
+      end: '} /* namespace libcamera */'
     covers:
     - resources
     parts:
     - id: problem
-      question: 요청 제출의 성공 반환과 실제 완료를 혼동하는 문제를 두 문장 이내로 소개하세요. 설명의 적용 범위는 Camera::queueRequest가 입력 검사를 통과해 0을 반환하는
-        성공 경로로 명시적으로 한정합니다. 이 성공 경로에서는 ConnectionTypeQueued invokeMethod 호출 뒤 0을 반환하며, 요청 완료는 별도 requestCompleted로
-        통지된다는 차이만 설명하세요. 여러 검증 실패에서 음수를 반환할 수 있으므로 모든 호출이 invokeMethod까지 도달하거나 항상 0을 반환하는 것처럼 쓰지 마세요. 버퍼 유지 의무의 주체·기한은
-        다음 항목이 소유하므로 반복하지 마세요. 성공 반환 순간의 실제 콜백 진행 상태나 콜백이 반드시 반환 뒤 발생한다는 시간 보장을 만들지 마세요. 첫 문장에 성공 경로라는 조건을 포함하세요.
+      question: 요청 제출의 성공 반환과 실제 완료를 혼동하는 문제를 두 문장 이내로 소개하세요. 설명의 적용 범위는 Camera::queueRequest가 입력 검사를 통과해 0을
+        반환하는 성공 경로로 명시적으로 한정합니다. 이 성공 경로에서는 ConnectionTypeQueued invokeMethod 호출 뒤 0을 반환하며, 요청 완료는 별도 requestCompleted로
+        통지된다는 차이만 설명하세요. 여러 검증 실패에서 음수를 반환할 수 있으므로 모든 호출이 invokeMethod까지 도달하거나 항상 0을 반환하는 것처럼 쓰지 마세요. 버퍼 유지 의무의
+        주체·기한은 다음 항목이 소유하므로 반복하지 마세요. 성공 반환 순간의 실제 콜백 진행 상태나 콜백이 반드시 반환 뒤 발생한다는 시간 보장을 만들지 마세요. 첫 문장에 성공 경로라는
+        조건을 포함하세요.
       sources:
       - queue
       max_statements: 1
@@ -5547,8 +5923,8 @@ sections:
     - id: ownership
       question: createRequest 호출자가 반환된 Request를 소유하고 삭제를 책임지며 완료 핸들러에서 삭제하거나 reuse로 상태 초기화 후 재사용할 수 있다는 계약을 설명하세요.
         별도 문단에서 addBuffer 호출자가 버퍼를 요청 완료 콜백이 호출될 때까지 유효하게 유지해야 한다는 의무와 파이프라인 핸들러가 completeRequest 또는 cancelRequest
-        반환 뒤 요청에 접근해서는 안 된다는 경계를 연결하세요. 두 호출자를 동일 주체로 단정하지 마세요. 버퍼 참조 저장을 배타적 저장이라고 쓰지 마세요. 정상 흐름과 조건 변화에서는 이 의무 문장을
-        반복하지 않고 해당 조건에서 달라지는 결과에 집중하도록 이 문단이 공통 수명 규칙을 소유합니다.
+        반환 뒤 요청에 접근해서는 안 된다는 경계를 연결하세요. 두 호출자를 동일 주체로 단정하지 마세요. 버퍼 참조 저장을 배타적 저장이라고 쓰지 마세요. 정상 흐름과 조건 변화에서는 이
+        의무 문장을 반복하지 않고 해당 조건에서 달라지는 결과에 집중하도록 이 문단이 공통 수명 규칙을 소유합니다.
       sources:
       - create
       - reuse
@@ -5556,6 +5932,8 @@ sections:
       - buffer-duty
       - complete-access
       - cancel-rules
+      - figure-signal-lifetime
+      - figure-connections
       max_statements: 2
       answer_contract:
         basis: description
@@ -5579,6 +5957,7 @@ sections:
         제출 순서 지연 여부, 요청 완료 콜백을 관찰할 소스 기반 조사 계획으로 짧게 연결하세요. 실제 실행 결과나 두 사건의 관측되지 않은 시간 순서를 만들지 마세요.
         다음 확인을 설명할 때는 completeBuffer 호출에서 반환값을 관찰하는 계획과 completeRequest 호출 자체를 관찰하는 계획을 주어·서술어를 갖춘 서로 다른 두 문장으로 쓰세요.
         completeRequest는 void 함수이므로 반환값이 있다고 표현하거나 두 함수의 반환값을 묶지 마세요. 관측 계획을 실제 실행 결과로 바꾸지 마세요.
+        이 항목으로 통합한 기존 completeBuffer 반환 계약도 보존하세요. 요청의 모든 버퍼가 완료되면 true, 남은 버퍼가 있으면 false를 반환하며 true만으로 요청의 명시 완료를 대신하지 않는다는 뜻을 첫 문단에 연결하세요. 별도 원리·기한 의무 문장을 반복하지 마세요.
       sources:
       - completion
       - internal-completion
@@ -5594,14 +5973,17 @@ sections:
         - - cancelled_
         - - RequestComplete
         - - RequestCancelled
+        - - 모든
+        - - 'true'
+        - - 'false'
     - id: out-of-order
       question: 소스에서 유도한 조건부 예라고 명시하세요. A 다음 B를 제출했고 A는 선두 RequestPending이며 B의 모든 버퍼와 추가 처리가 끝나 completeRequest(B)를
-        호출한 조건입니다. 이 조건만으로 B의 cancelled_ 값이 false라고 가정하지 마세요. 상태 대입은 cancelled_가 false이면 RequestComplete, true이면 RequestCancelled이므로
-        값이 주어지지 않으면 두 상태 분기를 함께 설명해야 합니다. 버퍼 처리가 끝났다는 사실만으로 비취소를 뜻하지 않는다는 점을 간단히 구별하세요. 두 상태 모두 queuedRequests_ 선두
-        A가 Pending이면 애플리케이션 반환이 지연됩니다. 그동안 addBuffer 호출자의 B 버퍼 유효성 기한은 요청 완료 콜백이고, 파이프라인 핸들러는 completeRequest(B) 반환
-        뒤 B에 접근해서는 안 됩니다. A가 완료되고 이어지는 선두들이 완료 상태이면 A, B 순으로 반환된다는 조건을 연결하세요. 다음 확인은 Private::complete의 상태 대입 지점에서
-        cancelled_와 상태를 대조하고, 제출 큐의 선두·pending 버퍼·완료 콜백을 관찰하는 조사 계획으로만 제시하세요. 핸들러가 completeRequest 반환 뒤 B를 읽도록 제안하지
-        마세요. 실제 기기 결과나 하드웨어 처리 순서를 보장하지 마세요.
+        호출한 조건입니다. 이 조건만으로 B의 cancelled_ 값이 false라고 가정하지 마세요. 상태 대입은 cancelled_가 false이면 RequestComplete, true이면
+        RequestCancelled이므로 값이 주어지지 않으면 두 상태 분기를 함께 설명해야 합니다. 버퍼 처리가 끝났다는 사실만으로 비취소를 뜻하지 않는다는 점을 간단히 구별하세요. 두
+        상태 모두 queuedRequests_ 선두 A가 Pending이면 애플리케이션 반환이 지연됩니다. 그동안 addBuffer 호출자의 B 버퍼 유효성 기한은 요청 완료 콜백이고, 파이프라인
+        핸들러는 completeRequest(B) 반환 뒤 B에 접근해서는 안 됩니다. A가 완료되고 이어지는 선두들이 완료 상태이면 A, B 순으로 반환된다는 조건을 연결하세요. 다음 확인은
+        Private::complete의 상태 대입 지점에서 cancelled_와 상태를 대조하고, 제출 큐의 선두·pending 버퍼·완료 콜백을 관찰하는 조사 계획으로만 제시하세요. 핸들러가
+        completeRequest 반환 뒤 B를 읽도록 제안하지 마세요. 실제 기기 결과나 하드웨어 처리 순서를 보장하지 마세요.
       sources:
       - completion
       - buffer-duty
@@ -5622,10 +6004,10 @@ sections:
         - - cancelled_
     - id: cancel
       question: 앞의 정상 완료 예와 분리된 대안 조건부 경로입니다. A가 선두에서 RequestPending이고 B도 아직 RequestPending인 시점에 정상 completeRequest(B)
-        대신 cancelRequest(B)를 선택한 경우만 설명하세요. 이미 완료한 B를 다시 취소하는 예로 이어 쓰지 마세요. Request::Private::doCancelRequest는 pending_
-        버퍼를 취소하고 bufferCompleted를 emit한 다음 pending_를 비우며 cancelled_를 true로 설정합니다. cancelRequest가 cancel 다음 completeRequest를
-        호출하면 Request::Private::complete는 RequestCancelled를 선택하고, 선두 A가 RequestPending이면 B의 애플리케이션 반환은 지연됩니다. 수명과 접근
-        규칙은 앞의 공통 원리를 따른다고 짧게 연결하고 의무 문장은 반복하지 마세요. 취소 즉시 A를 건너뛰는 반환이나 버퍼 회수를 보장하지 마세요.
+        대신 cancelRequest(B)를 선택한 경우만 설명하세요. 이미 완료한 B를 다시 취소하는 예로 이어 쓰지 마세요. Request::Private::doCancelRequest는
+        pending_ 버퍼를 취소하고 bufferCompleted를 emit한 다음 pending_를 비우며 cancelled_를 true로 설정합니다. cancelRequest가 cancel
+        다음 completeRequest를 호출하면 Request::Private::complete는 RequestCancelled를 선택하고, 선두 A가 RequestPending이면 B의
+        애플리케이션 반환은 지연됩니다. 수명과 접근 규칙은 앞의 공통 원리를 따른다고 짧게 연결하고 의무 문장은 반복하지 마세요. 취소 즉시 A를 건너뛰는 반환이나 버퍼 회수를 보장하지 마세요.
       sources:
       - completion
       - cancel-rules
@@ -5641,8 +6023,8 @@ sections:
         - - RequestCancelled
         - - RequestPending
     - id: fence-transfer
-      question: Request::addBuffer() 성공 시 유효한 Fence의 소유권이 buffer로 이동하는 경로와 실패 시 전달한 fence가 수정되지 않고 소유권도 넘어가지 않는 경로를
-        한 문장으로 함께 비교하세요. 동일한 조건을 인용·풀이·결론으로 되풀이하지 마세요.
+      question: Request::addBuffer() 성공 시 유효한 Fence의 소유권이 buffer로 이동하는 경로와 실패 시 전달한 fence가 수정되지 않고 소유권도 넘어가지
+        않는 경로를 한 문장으로 함께 비교하세요. 동일한 조건을 인용·풀이·결론으로 되풀이하지 마세요.
       sources:
       - fence-move
       answer_contract:
@@ -5663,8 +6045,8 @@ sections:
           message: 1문장 이내로 필요한 조건을 연결하세요. 같은 조건과 작성 과정 안내를 반복하지 마세요.
       max_statements: 1
     - id: fence-timeout
-      question: 펜스가 신호되지 않아 요청이 타임아웃할 때 요청·버퍼·펜스의 상태와, 다른 요청에 버퍼를 재사용하기 전에 호출자가 수행할 회수 동작을 한 문단으로 함께 설명하세요. 같은 조건을
-        두 번 반복하지 마세요.
+      question: 펜스가 신호되지 않아 요청이 타임아웃할 때 요청·버퍼·펜스의 상태와, 다른 요청에 버퍼를 재사용하기 전에 호출자가 수행할 회수 동작을 한 문단으로 함께 설명하세요. 같은
+        조건을 두 번 반복하지 마세요.
       sources:
       - fence-expiry
       answer_contract:
@@ -5675,8 +6057,8 @@ sections:
         - - releaseFence
       max_statements: 1
     - id: reuse-fences
-      question: 두 문장으로 설명하세요. 첫 문장은 ReuseBuffers가 기존 버퍼를 유지하되 연결된 fence는 재사용하지 않는다는 범위입니다. 둘째 문장은 fence를 사용하는 경우 이
-        플래그를 사용하지 않아야 한다는 부정형 권고 should not be used입니다. 이 권고의 조건과 부정을 보존하고 must not 의무로 강화하지 마세요.
+      question: 두 문장으로 설명하세요. 첫 문장은 ReuseBuffers가 기존 버퍼를 유지하되 연결된 fence는 재사용하지 않는다는 범위입니다. 둘째 문장은 fence를 사용하는
+        경우 이 플래그를 사용하지 않아야 한다는 부정형 권고 should not be used입니다. 이 권고의 조건과 부정을 보존하고 must not 의무로 강화하지 마세요.
       sources:
       - reuse-flags
       - reuse-advice
@@ -5701,11 +6083,12 @@ sections:
           message: 원문의 should not 부정형 지침을 사용하지 않아야 한다는 권고로 보존하세요. 자제·피하기 조언으로 우회하지 마세요.
       max_statements: 1
     - id: change
-      question: 변경 검토를 위한 소스 기반 조사 계획으로 두 문단 이내에 답하세요. 이 항목은 completeBuffer와 completeRequest의 호출 책임을 다른 스레드로 옮기려는
-        변경에서, 기존 호출자와 스레드 전달 경계를 찾아 CameraManager 스레드 호출 의무를 보존하는지 대조할 과업만 구체화합니다. 다른 스레드에서 이 API를 직접 호출하도록 옮기면 문서화된
-        의무와 충돌한다는 조건부 판단을 설명하세요. 마지막 버퍼 알림에서 조기 재사용하는 판단은 앞의 조건 변화 항목이 이미 설명하므로 그 점검 목록과 queuedRequests_ 관찰 순서를 다시
-        나열하지 마세요. Request::reuse 필드 초기화 상세는 요청 API 문서가 소유합니다. 실제 콜백 스레드·기기 DMA·캐시·실행 시간·사내 HAL은 이 조사 계획으로 검증된 결과가
-        아니며, 역사적 설계 이유와 대안 우열에는 별도 결정 기록이나 실행 자료가 필요함을 짧게 구별하세요. 소스에 없는 동기화 구현이나 새 스레드 전달 코드를 제안하지 마세요.
+      question: 변경 검토를 위한 소스 기반 조사 계획으로 두 문단 이내에 답하세요. 이 항목은 completeBuffer와 completeRequest의 호출 책임을 다른 스레드로
+        옮기려는 변경에서, 기존 호출자와 스레드 전달 경계를 찾아 CameraManager 스레드 호출 의무를 보존하는지 대조할 과업만 구체화합니다. 다른 스레드에서 이 API를 직접 호출하도록
+        옮기면 문서화된 의무와 충돌한다는 조건부 판단을 설명하세요. 마지막 버퍼 알림에서 조기 재사용하는 판단은 앞의 조건 변화 항목이 이미 설명하므로 그 점검 목록과 queuedRequests_
+        관찰 순서를 다시 나열하지 마세요. Request::reuse 필드 초기화 상세는 요청 API 문서가 소유합니다. 실제 콜백 스레드·기기 DMA·캐시·실행 시간·사내 HAL은 이 조사
+        계획으로 검증된 결과가 아니며, 역사적 설계 이유와 대안 우열에는 별도 결정 기록이나 실행 자료가 필요함을 짧게 구별하세요. 소스에 없는 동기화 구현이나 새 스레드 전달 코드를 제안하지
+        마세요.
       sources:
       - completion
       - internal-completion
@@ -5743,12 +6126,335 @@ sections:
       parts:
       - change
     design_prompt: standard
+  - id: callback-order
+    title: 버퍼 알림과 요청 반환의 내부 경계
+    question: 버퍼 신호와 내부 추적 갱신 및 요청 완료 통지의 순서를 구분하여 재사용 시점을 판단하세요.
+    covers:
+    - callback-order
+    sources:
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+    - id: status
+      file: src/libcamera/request.cpp
+      start: bool Request::Private::completeBuffer(FrameBuffer *buffer)
+      end: void Request::Private::doCancelRequest()
+    - id: connections
+      file: src/libcamera/base/bound_method.cpp
+      start: \enum ConnectionType
+      end: '} /* namespace libcamera */'
+    - id: lifetime
+      file: src/libcamera/request.cpp
+      start: \brief Add a FrameBuffer with its associated Stream to the Request
+      end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: notification
+      file: src/libcamera/camera.cpp
+      start: \brief Handle request completion and notify application
+      end: '} /* namespace libcamera */'
+    - id: add-code
+      file: src/libcamera/request.cpp
+      start: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+      end: '
+
+        }'
+    - id: bulk
+      file: src/libcamera/request.cpp
+      start: void Request::Private::doCancelRequest()
+      end: \brief Reset the request internal data
+    - id: buffer-request
+      file: src/libcamera/framebuffer.cpp
+      start: \brief Retrieve the request this buffer belongs to
+      end: '
+
+        }'
+    - id: invocation
+      file: src/libcamera/base/object.cpp
+      start: \fn R Object::invokeMethod()
+      end: \fn Object::thread()
+    - id: uvc-return
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
+      end: REGISTER_PIPELINE_HANDLER
+    - id: dispatch-contract
+      file: src/libcamera/base/thread.cpp
+      start: \brief Dispatch posted messages for this thread
+      end: \brief Move an \a object and all its children to the thread
+    - id: request-state
+      file: src/libcamera/request.cpp
+      start: void Request::Private::complete()
+      end: void Request::Private::doCancelRequest()
+    parts:
+    - id: bookkeeping
+      question: PipelineHandler::completeBuffer는 bufferCompleted.emit 뒤에 Request::Private::completeBuffer를 호출하여
+        pending_ 제거와 buffer의 Request 연결 해제를 진행한다는 순서를 설명하세요. 직접 콜백은 내부 갱신 전에 실행될 수 있으므로 신호만으로 요청 완료를 판단하거나 요청을
+        파괴·재사용하지 말고 요청 완료 콜백까지 버퍼를 유지하는 계약을 적용하도록 두 문장 이내로 설명하세요. 요청 반환의 선두·Camera 상태 조건은 다음 별도 항목에서 설명하므로 여기에서
+        무조건 통지를 주장하지 마세요.
+      sources:
+      - completion
+      - status
+      - lifetime
+      max_statements: 2
+    - id: request-delivery
+      question: 선택한 UVC는 completeBuffer가 반환한 뒤 completeRequest를 명시 호출하며 Request::Private::complete가 상태를 갱신한다는
+        내부 호출 순서를 설명하세요. 완료 큐의 선두가 RequestPending이면 통지 없이 순회를 멈추고 완료된 선두만 pop_front 후 Camera::requestComplete로
+        전달하며, 해당 Camera 상태 검사를 통과한 경우에만 requestCompleted 신호를 발생시킵니다. 상태 검사 실패의 Fatal 경계에서 실제 신호·정상 반환을 보장하지 말고
+        신호 발생과 별도 Queued 수신자의 실제 실행·복귀도 구분하여 세 문장 이내로 답하세요. Queued 수신을 이벤트 루프 복귀 때로만 한정하지 마세요. 해당 수신 스레드의 명시적·재귀
+        Thread::dispatchMessages가 type·receiver 필터에 맞는 메시지를 더 일찍 소비할 수 있으며, 스레드 정지 전 실제 소비가 보장되지 않는다고 바로 연결하세요.
+        상세 필터·재귀 조건은 explicit-dispatch에서 설명하므로 반복하지 마세요. 상태 선택의 상세는 앞 resources/normal 항목이 소유합니다. 이 항목에서는 completeRequest가
+        Request::Private::complete를 호출하는 순서만 연결하고 enum 판정식을 되풀이하지 마세요. 취소된 버퍼의 유무를 cancelled_와 동치로 바꾸지 마세요. 실제
+        complete는 cancelled_만 검사하고 doCancelRequest는 pending_이 비어 있어도 true를 설정할 수 있습니다.
+      sources:
+      - uvc-return
+      - completion
+      - status
+      - notification
+      - invocation
+      - connections
+      - dispatch-contract
+      - request-state
+      max_statements: 2
+    - id: early-reuse
+      question: 앞 문단의 공통 신호·내부 정리 순서와 버퍼 유지 기한을 다시 설명하지 말고 서로 다른 요청 A와 B의 조건부 반례만 한 문단으로 설명하세요. 첫 문장의 주어는 B의
+        Request::addBuffer입니다. A 버퍼의 직접 bufferCompleted 수신자 안에서 B의 addBuffer가 같은 버퍼의 연결을 B로 바꾼 경우, 뒤따르는 A의 내부
+        completeBuffer가 setRequest(nullptr)로 B 연결을 지울 수 있다는 동작을 한 문장으로 연결하세요. 이는 소스에서 유도한 조건부 자료구조 반례이며 그 사용이
+        안전한 API 사용이라는 권고나 실제 장애 관측이 아닙니다. 데이터 읽기를 금지하는 의무를 만들지 마세요. 지연된 수신자의 마지막 포인터 사용은 별도 수명 항목에서 대조하도록 짧게
+        연결하고, 그 수신 실행을 이벤트 루프 복귀 이후로만 한정하지 마세요. 앞의 버퍼 유지 의무를 다시 쓰지 말고 두 문장 이내로 답하세요.
+      sources:
+      - completion
+      - status
+      - connections
+      - lifetime
+      - add-code
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - addBuffer
+        - - nullptr
+    - id: bulk-pointer
+      question: 정상 completeBuffer는 setRequest(nullptr)을 호출하지만 doCancelRequest의 bulk 취소는 직접 신호와 pending_.clear만
+        하고 같은 연결 해제를 하지 않는 차이를 두 문장 이내로 설명하세요. FrameBuffer::request 계약상 반환 포인터의 유효 구간은 addBuffer 연결부터 버퍼 완료까지이므로,
+        취소 뒤 저장된 비null 연결 값이 남아 있어도 유효한 Request 포인터나 소유권·수명 연장으로 읽지 말아야 함을 연결하세요. 요청·버퍼의 기존 유지 계약과 지연 수신자 수명을
+        지키며 두 경로별 재사용을 검증하도록 하세요.
+      sources:
+      - status
+      - bulk
+      - buffer-request
+      - lifetime
+      - invocation
+      max_statements: 2
+  - id: callback-depth
+    title: 콜백의 스레드와 재진입을 구분하기
+    question: 연결 방식별 실제 수신 문맥과 포인터 수명을 구분하여 정지·재구성 변경의 안전 조건을 설명하세요.
+    covers:
+    - callback-depth
+    sources:
+    - id: completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+    - id: status
+      file: src/libcamera/request.cpp
+      start: bool Request::Private::completeBuffer(FrameBuffer *buffer)
+      end: void Request::Private::doCancelRequest()
+    - id: connections
+      file: src/libcamera/base/bound_method.cpp
+      start: \enum ConnectionType
+      end: '} /* namespace libcamera */'
+    - id: signals
+      file: src/libcamera/base/signal.cpp
+      start: \class Signal
+      end: \fn Signal::connect
+    - id: sync
+      file: src/libcamera/camera.cpp
+      start: \section camera_operation Operating the Camera
+      end: \subsection Camera States
+    - id: notification
+      file: src/libcamera/camera.cpp
+      start: \brief Handle request completion and notify application
+      end: '} /* namespace libcamera */'
+    - id: thread-rules
+      file: Documentation/thread-safety.dox
+      start: '// SPDX-License-Identifier: CC-BY-SA-4.0'
+      end: ' */'
+    - id: signal-overloads
+      file: include/libcamera/base/signal.h
+      start: 'class Signal : public SignalBase'
+      end: '} /* namespace libcamera */'
+    - id: bound-overloads
+      file: include/libcamera/base/bound_method.h
+      start: class BoundMethodBase
+      end: '} /* namespace libcamera */'
+    - id: invocation
+      file: src/libcamera/base/object.cpp
+      start: \fn R Object::invokeMethod()
+      end: \fn Object::thread()
+    - id: receiver-lifetime
+      file: src/libcamera/base/object.cpp
+      start: '
+
+        Object::~Object()
+
+        {'
+      end: \brief Schedule deletion of the instance in the thread it belongs to
+    - id: buffer-duty
+      file: src/libcamera/request.cpp
+      start: \brief Add a FrameBuffer with its associated Stream to the Request
+      end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: thread-post
+      file: src/libcamera/base/thread.cpp
+      start: void Thread::postMessage(
+      end: \brief Remove all posted messages
+    - id: thread-dispatch
+      file: src/libcamera/base/thread.cpp
+      start: void Thread::dispatchMessages(
+      end: \brief Move an \a object and all its children to the thread
+    - id: object-message
+      file: src/libcamera/base/object.cpp
+      start: void Object::postMessage(
+      end: \fn R Object::invokeMethod()
+    - id: invoke-message
+      file: src/libcamera/base/message.cpp
+      start: void InvokeMessage::invoke()
+      end: \var InvokeMessage::method_
+    - id: thread-support
+      file: src/libcamera/base/thread.cpp
+      start: \page thread Thread Support
+      end: "\n */"
+    - id: stop-entry
+      file: src/libcamera/camera.cpp
+      start: int Camera::stop()
+      end: \brief Handle request completion and notify application
+    - id: dispatch-contract
+      file: src/libcamera/base/thread.cpp
+      start: \brief Dispatch posted messages for this thread
+      end: \brief Move an \a object and all its children to the thread
+    - id: object-template
+      file: include/libcamera/base/object.h
+      start: class Object
+      end: '} /* namespace libcamera */'
+    parts:
+    - id: delivery
+      question: CameraManager 문맥에서 완료 신호를 내는 위치와 Object 슬롯의 수신 문맥을 두 문장 이내로 구분하세요. Auto의 현재·수신 스레드 비교와 Direct
+        즉시 호출·Queued 수신 이벤트 루프 실행을 연결하고, 다른 스레드의 Object에도 Direct를 명시하면 송신 문맥에서 즉시 실행함을 포함하세요. 인자 수명과 Object 외
+        수신자는 다음 항목에서 설명하므로 반복하지 마세요. Queued의 수신 실행은 수신 객체가 유효하고 수신 스레드가 실제 메시지를 소비하는 경우에만 비동기로 이루어진다고 조건을 명시하세요.
+        스레드 정지 전 실행 보장이 없으며 Object 소멸 시 대기 메시지가 제거될 수 있으므로 단순 이벤트 루프 복귀나 stop 반환을 실행·처리 완료 보장으로 쓰지 마세요. 이벤트 루프는
+        일반 전달 경로이며 유일한 실행 진입점이 아닙니다. 명시적·재귀 Thread::dispatchMessages도 해당 수신 스레드에서 메시지를 소비할 수 있으므로 이벤트 루프 복귀가
+        필수라고 한정하지 마세요. 상세 호출 조건과 검증 계획은 별도 항목이 담당하므로 반복하지 마세요.
+      sources:
+      - connections
+      - notification
+      - completion
+      - invocation
+      - receiver-lifetime
+      - dispatch-contract
+      max_statements: 1
+    - id: non-object-delivery
+      question: Signal의 Object 외 멤버·functor 수신자와 정적 함수 연결이 각각의 activate에서 호출 문맥상 즉시 함수를 실행하는 동작을 한 문장으로 묶어 설명하세요.
+        세 주체마다 같은 즉시 호출을 따로 반복하지 마세요. Object Auto의 스레드 비교와 인자 수명은 다른 항목이 담당하므로 추가하지 마세요.
+      sources:
+      - signal-overloads
+      - bound-overloads
+      max_statements: 1
+    - id: queued-lifetime
+      question: Object::invokeMethod의 Queued 인자 복사는 포인터 대상의 수명을 연장하지 않으므로 실제 메서드 호출까지 대상을 유효하게 유지해야 한다는 의무를 설명하세요.
+        수신 객체가 유효하고 해당 수신 스레드가 실제 메시지를 소비하는 조건을 명시하되 이벤트 루프를 유일한 소비 경로로 한정하지 마세요. Camera 상태 변경 함수의 호출자 동기화 의무는
+        별도 짧은 문장으로 구분하고 인자 복사와 잠금 사이의 근거 없는 인과를 만들지 마세요. Blocking의 스레드 분기와 별도 Queued 수신 종료 경계는 blocking-context와
+        sender-lifetime-duty가 소유하므로 여기서 반복하지 마세요. 최대 두 문단·세 문장으로 쓰세요.
+      sources:
+      - connections
+      - signals
+      - sync
+      - invocation
+      - receiver-lifetime
+      - dispatch-contract
+      max_statements: 2
+    - id: sender-lifetime-duty
+      question: 기존 자원 절의 Request 소유권·완료 핸들러 삭제/재사용 허용과 버퍼 유지 계약은 되풀이하지 마세요. 이 항목은 다른 스레드의 Object 슬롯으로 인자 복사본을
+        비동기 전달하는 Signal 발신자가 포인터·참조의 유효성을 신호 발생 이후에도 보장할 책임과, 각 별도 Queued 수신자의 마지막 사용 확인이라는 새 조건만 설명합니다. 안전한
+        변경 검증 계획으로 발신자와 요청 소유자의 완료/해제 협의, 지연 수신자별 마지막 사용 추적·동기화, 확인 전 삭제·재사용으로 수명을 끊지 않음이라는 실행 가능한 조건을 두세 문장으로
+        연결하세요. 요청 완료 신호·한 핸들러 복귀·stop 반환이 모든 지연 수신자의 마지막 사용까지 보장한다고 쓰거나 자동 잠금·대기 및 실행한 시험을 만들지 마세요. Signal Doxygen의
+        일반적인 타스레드 슬롯 설명에 emit 반환 뒤라는 문구가 있다는 사실과 실제 구현을 구분하세요. Auto가 서로 다른 스레드를 보아 Queued로 선택되거나 명시적 Queued를
+        쓰는 경우의 게시로 한정하고, 명시적 Direct는 타스레드 affinity에서도 발신 스레드에서 즉시 실행됩니다. Signal::emit의 activate 반복, Queued postMessage의
+        무대기 반환, Thread 큐 잠금 해제와 수신 dispatchMessages→Object::message→InvokeMessage::invoke를 연결하면 타스레드 수신 실행이 emit
+        반환 전에도 시작될 수 있으므로 일반적인 반환 전후 순서를 보장하지 않는다고 설명하세요. 같은 스레드의 Queued에도 항상 병렬 실행이 있다는 일반화는 하지 마세요. 이 구현·주석
+        차이와 책임·검증 계획을 최대 네 문장으로 명확히 구분하세요.
+      sources:
+      - signals
+      - buffer-duty
+      - connections
+      - invocation
+      - signal-overloads
+      - thread-post
+      - thread-dispatch
+      - object-message
+      - invoke-message
+      max_statements: 3
+      answer_contract:
+        basis: investigation
+    - id: validation
+      question: 안전한 변경을 위한 소스 기반 검증 계획을 두 문장 이내로 쓰세요. 수신자 Object 유무·연결 종류·현재/수신 TID·이벤트 루프·요청 cookie/sequence/status·버퍼
+        status·콜백 진입/복귀와 stop 앞뒤를 함께 기록하고 Direct 재진입과 Queued 지연에서 수명·중복 완료·정지 후 제출을 확인하도록 하세요. 애플리케이션 표식을 정확한
+        C++ 반환 명령 관측이나 실제 새 실행 결과로 표시하지 마세요.
+      sources:
+      - connections
+      - signals
+      - sync
+      - completion
+      - status
+      max_statements: 2
+    - id: reentrancy
+      question: libcamera의 thread-safe와 reentrant 정의는 같은 스레드의 콜백에서 동일 함수로 중첩 진입할 수 있다는 허용이 아니며, 별도 문서화가 없으면 허용되지
+        않고 교착될 수 있음을 두 문장 이내로 설명하세요. doQueueRequests의 특정 재진입 방어를 모든 Camera API의 콜백 재진입 허용으로 확대하지 말고 정지·재구성 호출은
+        호출자 동기화와 수신 이벤트 루프 진행을 검토하도록 하세요. Queued 수신을 이벤트 루프 복귀 때로만 한정하지 마세요. 해당 수신 스레드의 명시적·재귀 Thread::dispatchMessages가
+        type·receiver 필터에 맞는 메시지를 더 일찍 소비할 수 있으며, 스레드 정지 전 실제 소비가 보장되지 않는다고 바로 연결하세요. 상세 필터·재귀 조건은 explicit-dispatch에서
+        설명하므로 반복하지 마세요.
+      sources:
+      - thread-rules
+      - sync
+      - connections
+      - dispatch-contract
+      max_statements: 2
+    - id: application-loop
+      question: CameraManager::start()를 호출한 애플리케이션 메인 스레드는 Thread 인스턴스에 연결되지만 libcamera가 접근할 수 있는 이벤트 루프가 없다는
+        기본 조건을 설명하세요. 그 스레드에 묶인 Object의 Queued 또는 타스레드 Auto 수신을 조사할 때 이를 먼저 확인하고 실제 애플리케이션의 메시지 소비 경로와 진행 여부를
+        별도로 기록하도록 두 문장으로 연결하세요. 기본 메시지 전달 보장이나 모든 UI 루프와의 자동 통합을 만들지 말고 별도 내부 Thread 프로브를 일반화하지 마세요.
+      sources:
+      - thread-support
+      max_statements: 1
+      answer_contract:
+        basis: investigation
+    - id: blocking-context
+      question: ConnectionTypeBlocking에서 Thread::current()와 수신 Object의 thread가 같으면 Direct로 바꾸어 즉시 호출하고, 다르면 InvokeMessage를
+        게시한 뒤 해당 호출의 semaphore를 기다리는 구현을 두 문장 이내로 설명하세요. 이 대기가 다른 Queued 수신자들의 처리 완료나 전체 큐 drain을 뜻한다고 확대하지 마세요.
+      sources:
+      - connections
+      - stop-entry
+      - object-template
+      max_statements: 1
+    - id: explicit-dispatch
+      question: Thread::dispatchMessages의 게시 순서 문구는 Doxygen 계약임을 명시하고 type·receiver 필터로 앞의 메시지를 건너뛰며 잠금을 풀고 핸들러를
+        호출하는 실제 구현과 구분하세요. 다른 필터를 쓰는 재귀 dispatch에서는 앞서 건너뛴 메시지보다 뒤 메시지를 먼저 전달할 수 있으므로 모든 호출을 관통하는 전역 FIFO 보장으로
+        쓰지 마세요. 이벤트 루프 외에도 해당 수신 스레드의 명시적·재귀 dispatch가 남아 있는 일치 메시지를 전달할 수 있고, thread-safe가 아니며 다른 스레드 호출은 undefined
+        behaviour임을 두 번째 짧은 문단에 설명하세요. 세 번째 문단은 type·receiver·게시 순서·실제 전달 순서·수신 TID·재귀 깊이·콜백 진입/복귀와 포인터 마지막 사용을
+        기록하는 소스 기반 검증 계획입니다. 실행 관측이나 모든 메시지의 무조건 전달을 주장하지 마세요.
+      sources:
+      - dispatch-contract
+      - object-message
+      - invoke-message
+      - invocation
+      - thread-dispatch
+      - receiver-lifetime
+      max_statements: 3
+      answer_contract:
+        basis: investigation
   - id: stopping
     title: 정지와 연결 해제를 구분하기
-    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking
-      호출을 구분하세요. PipelineHandler::stop의 waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소,
-      queuedRequests_/waitingRequests_ ASSERT를 조사 지점에 연결하세요. stopDevice 내부에서 멎음과 반환 후 큐가 남음,
-      별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요. 실행 시험 결과나 보장된 타임아웃을 만들지 마세요.
+    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을
+      구분하세요. PipelineHandler::stop의 waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소, queuedRequests_/waitingRequests_
+      ASSERT를 조사 지점에 연결하세요. stopDevice 내부에서 멎음과 반환 후 큐가 남음, 별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요.
+      실행 시험 결과나 보장된 타임아웃을 만들지 마세요.
     sources:
     - id: stop
       file: src/libcamera/camera.cpp
@@ -5827,16 +6533,35 @@ sections:
         end: '
 
           }'
+    - id: stop-implementation
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Stop capturing from all running streams and cancel pending requests
+      end: \brief Determine if the camera has any requests pending
+    - id: uvc-stop-implementation
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void PipelineHandlerUVC::stopDevice(Camera *camera)
+      end: int PipelineHandlerUVC::processControl(
+    - id: streamoff-implementation
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2VideoDevice::streamOff()
+      end: \brief Set the dequeue timeout value
     covers:
     - stopping
     parts:
     - id: summary
       role: summary
-      question: PipelineHandler::stop 원문의 모든 대기 요청 취소·즉시 오류 완료 계약과 Camera::disconnect 원문의 Running 중 연결 해제 시 대기 요청 처리 TODO를 두 짧은 문장으로 비교하세요. 두 함수의 명시된 계약을 비교하고 다른 함수의 계약이나 원문에 없는 용어에 관한 설명을 추가하지 마세요.
+      question: 첫 문장을 PipelineHandler::stop의 문서 계약이라고 명시하고 모든 미완료 요청의 취소·즉시 오류 완료를 요구하는 내용을 설명하세요. Camera::disconnect의
+        Running 중 연결 해제에서 대기 요청 처리가 TODO라는 점을 둘째 문장으로 비교합니다. 다음 짧은 문단은 선택 UVC 구현의 실패 범위입니다. STREAMOFF가 장치 버퍼
+        반환 전에 실패하면 UVC stopDevice는 음수를 검사하지 않고 releaseBuffers를 계속 호출하므로 위 계약이 모든 실패에서 자동 충족되거나 모든 요청이 반환된다고 보장하지
+        않는다는 한계를 바로 연결하세요. 남은 queuedRequests_는 공통 stop의 ASSERT 경계가 될 수 있으므로 정상 반환 0도 무조건 보장하지 마세요. 실제 실패 관측이나
+        다른 파이프라인의 지원 보장으로 쓰지 마세요.
       sources:
       - device-stop
       - disconnect-todo
-      max_statements: 1
+      - stop-implementation
+      - uvc-stop-implementation
+      - streamoff-implementation
+      max_statements: 2
       answer_contract:
         basis: description
         required_terms:
@@ -5847,13 +6572,14 @@ sections:
         - - PipelineHandler::stop
         - - 즉시
           - immediately
-      prompt: 정지 API와 구현 보조 함수의 계약을 혼동하지 마세요. 이 요약에서 선택된 두 원문은 PipelineHandler::stop과 Camera::disconnect입니다. 앞 원문의 즉시 오류 완료와 뒤 원문의 대기 요청 TODO만 비교하고, 호출자가 검사할 순서나 원문에 특정 단어가 없다는 메타 설명은 다른 항목으로 확장하지 마세요.
+        - - 계약
+      prompt: 계약은 계약으로, 선택 UVC의 오류 경로는 구현의 조건부 한계로 구분하세요. 첫 문장에 문서 계약이라는 한정을 넣고 일반 동작의 무조건 보장처럼 쓰지 마세요. 기존 즉시
+        오류 완료·연결 해제 TODO를 보존하고 두 짧은 문단으로 연결합니다.
     - id: camera-entry
-      question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed 음수
-        반환을 구분하고, 통과하면 CameraStopping 상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop
-        호출 진입·복귀를 관찰하세요. 호출 뒤의 pending 요청 ASSERT와 CameraConfigured 상태·0 반환도 포함하되 상태 설정과 블로킹
-        호출을 다른 문장으로 되풀이하지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출
-        금지 문구를 이 문단에 덧붙이지 마세요.
+      question: Camera::stop 조사 계획을 세 문장 이내로 설명하세요. 미실행 시 0 반환과 실행 중 경로의 isAccessAllowed 음수 반환을 구분하고, 통과하면 CameraStopping
+        상태 설정 및 ConnectionTypeBlocking 방식의 PipelineHandler::stop 호출 진입·복귀를 관찰하세요. 호출 뒤의 pending 요청 ASSERT와 CameraConfigured
+        상태·0 반환도 포함하되 상태 설정과 블로킹 호출을 다른 문장으로 되풀이하지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태
+        변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
       sources:
       - stop
       - stopping-call
@@ -5879,7 +6605,9 @@ sections:
         - - 완료
       max_statements: 1
     - id: device-entry
-      question: 조사 계획으로 PipelineHandler::stop의 waitingRequests_ 분리 지점, stopDevice 호출 직전과 실제 구현 진입·복귀를 각각 관찰하도록 설명하세요. 선택한 관찰 창의 복귀 미관찰은 원인 미확정으로 남기며 호출 직전 표시만으로 장치 내부 정지를 확정하지 마세요. 실행 결과가 아닌 계획을 두 짧은 문장 이내로 쓰고 반환 뒤 요청 처리나 ASSERT는 다음 항목에 맡기세요.
+      question: 조사 계획으로 PipelineHandler::stop의 waitingRequests_ 분리 지점, stopDevice 호출 직전과 실제 구현 진입·복귀를 각각 관찰하도록
+        설명하세요. 선택한 관찰 창의 복귀 미관찰은 원인 미확정으로 남기며 호출 직전 표시만으로 장치 내부 정지를 확정하지 마세요. 실행 결과가 아닌 계획을 두 짧은 문장 이내로 쓰고 반환
+        뒤 요청 처리나 ASSERT는 다음 항목에 맡기세요.
       sources:
       - device-stop
       answer_contract:
@@ -5893,10 +6621,11 @@ sections:
           - 단정하지
           - 확정하지
       max_statements: 1
-      prompt: 관찰 지점의 비교 계획만 설명하세요. 실제 구현 진입은 호출 직전과 별도로 관찰하는 지점입니다. 관찰 창에서 복귀를 관찰하지 못하더라도 아직 실행 중인지, 관찰이 빠졌는지 또는 어떤 원인인지는 단정하지 않습니다. 추가 상태 변경 호출이나 새 측정 결과를 만들지 마세요.
+      prompt: 관찰 지점의 비교 계획만 설명하세요. 실제 구현 진입은 호출 직전과 별도로 관찰하는 지점입니다. 관찰 창에서 복귀를 관찰하지 못하더라도 아직 실행 중인지, 관찰이 빠졌는지
+        또는 어떤 원인인지는 단정하지 않습니다. 추가 상태 변경 호출이나 새 측정 결과를 만들지 마세요.
     - id: pending
-      question: PipelineHandler::stop()의 취소 반복문에서 doQueueRequest(request)에 전달되는 request 값을 기존
-        실행의 관찰 기록 항목으로 제안하는 한국어 한 문장만 쓰세요.
+      question: PipelineHandler::stop()의 취소 반복문에서 doQueueRequest(request)에 전달되는 request 값을 기존 실행의 관찰 기록 항목으로
+        제안하는 한국어 한 문장만 쓰세요.
       sources:
       - pending-requeue
       answer_contract:
@@ -5924,10 +6653,9 @@ sections:
         - - requestComplete
       max_statements: 2
     - id: queue-assertions
-      question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를 해당 검사 지점에서
-        관찰하는 계획과 뒤의 requestSequence_ 0 초기화만 한 문장으로 설명하세요. 앞서 설명한 대기 큐 분리·장치 정지·요청 취소를 다시 나열하거나
-        ASSERT를 미래 실행 보장으로 쓰지 마세요. 계획 분류는 생성기의 실행 확인 항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태 변경
-        함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
+      question: stop 마지막의 두 ASSERT가 검사하는 queuedRequests_와 waitingRequests_의 빈 상태를 해당 검사 지점에서 관찰하는 계획과 뒤의 requestSequence_
+        0 초기화만 한 문장으로 설명하세요. 앞서 설명한 대기 큐 분리·장치 정지·요청 취소를 다시 나열하거나 ASSERT를 미래 실행 보장으로 쓰지 마세요. 계획 분류는 생성기의 실행 확인
+        항목 표시로 구분합니다. 테스트를 실행하지 않았다는 문장과 상태 변경 함수 재호출 금지 문구를 이 문단에 덧붙이지 마세요.
       sources:
       - stop-assertions
       answer_contract:
@@ -5939,20 +6667,19 @@ sections:
       max_statements: 1
     - id: callback-observation
       question: 앞 절의 관찰 기록을 이용하는 조건부 조사 분기만 두 문장 이내로 제안하세요. BoundMethodBase::activatePack의 ConnectionTypeAuto
-        분기에서 Thread::current()와 object_->thread()가 다른 수신 스레드이며 type이 ConnectionTypeQueued가 된다는
-        기록을 확인한 조건을 사용하세요. 그 조건에서 completeRequest 복귀와 파이프라인 큐의 빈 상태는 확인됐지만 콜백 진입 기록이 없다면 수신
-        스레드 이벤트 루프의 콜백 미처리 후보를 조사하도록 제안하세요. 진입·복귀·Thread::currentId 기록 절차와 공통 미실행 주의문은 앞 절에
-        있으므로 반복하지 마세요. 이 분기는 실제 제품 애플리케이션의 추가 조사 계획이며 검증 전 상태를 유지합니다. 별도 공개 가상 CPU 프로브의 관찰을
-        다른 애플리케이션·물리 장치의 실행 검증으로 일반화하지 마세요.
+        분기에서 Thread::current()와 object_->thread()가 다른 수신 스레드이며 type이 ConnectionTypeQueued가 된다는 기록을 확인한 조건을 사용하세요.
+        그 조건에서 completeRequest 복귀와 파이프라인 큐의 빈 상태는 확인됐지만 콜백 진입 기록이 없다면 수신 스레드 이벤트 루프의 콜백 미처리 후보를 조사하도록 제안하세요.
+        진입·복귀·Thread::currentId 기록 절차와 공통 미실행 주의문은 앞 절에 있으므로 반복하지 마세요. 이 분기는 실제 제품 애플리케이션의 추가 조사 계획이며 검증 전 상태를
+        유지합니다. 별도 공개 가상 CPU 프로브의 관찰을 다른 애플리케이션·물리 장치의 실행 검증으로 일반화하지 마세요.
       sources:
       - completion
       - queued-connection
       max_statements: 1
       statement_kind: limitation
     - id: disconnect
-      question: Camera::disconnect()가 내부 객체의 _d()->disconnect()를 호출한 뒤 disconnected.emit()으로
-        알림을 발행하는 순서를 두 문장 이내로 설명하세요. 이 두 호출을 함수 내 모든 호출의 완전한 목록이라고 단정하지 마세요. LOG·id() 등 다른 호출이나
-        작성 범위 안내를 나열하지 말고 연결 해제 처리와 알림 순서만 설명하세요. 신호의 의미와 TODO는 다음 질문에서 다룹니다.
+      question: Camera::disconnect()가 내부 객체의 _d()->disconnect()를 호출한 뒤 disconnected.emit()으로 알림을 발행하는 순서를 두 문장
+        이내로 설명하세요. 이 두 호출을 함수 내 모든 호출의 완전한 목록이라고 단정하지 마세요. LOG·id() 등 다른 호출이나 작성 범위 안내를 나열하지 말고 연결 해제 처리와 알림
+        순서만 설명하세요. 신호의 의미와 TODO는 다음 질문에서 다룹니다.
       sources:
       - disconnect-internal
       - notification
@@ -5968,8 +6695,8 @@ sections:
           message: 작성 과정 안내나 다른 호출 목록을 본문에 덧붙이지 마세요.
       max_statements: 1
     - id: disconnect-todo
-      question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한 문장으로 설명하세요.
-        TODO의 소속 함수와 미완료 자원·조건을 한 번만 쓰세요.
+      question: Camera::disconnect 함수의 TODO가 실행 중 연결 해제 시 아직 처리 대상으로 남겨 둔 대기 요청을 한 문장으로 설명하세요. TODO의 소속 함수와 미완료
+        자원·조건을 한 번만 쓰세요.
       sources:
       - disconnect-todo
       - disconnect-todo-owner
@@ -5984,10 +6711,135 @@ sections:
         - pattern: exportFrameBuffers
           message: 발췌 끝의 다음 함수를 TODO 소속으로 바꾸지 마세요.
       max_statements: 1
+  - id: stop-depth
+    title: UVC 정지의 정상 경로와 실패 경계
+    question: 정상 정지의 대기 격리·장치 반환·호출자 복귀와 STREAMOFF 실패 반례를 구분하고 변경 후 검사 조건을 제시하세요.
+    covers:
+    - stop-depth
+    sources:
+    - id: common-stop
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Stop capturing from all running streams and cancel pending requests
+      end: \brief Determine if the camera has any requests pending
+    - id: uvc-stop
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void PipelineHandlerUVC::stopDevice(Camera *camera)
+      end: int PipelineHandlerUVC::processControl(
+    - id: streamoff
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2VideoDevice::streamOff()
+      end: \brief Set the dequeue timeout value
+    - id: release
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2VideoDevice::releaseBuffers()
+      end: \brief Queue a buffer to the video device
+    - id: camera-stop
+      file: src/libcamera/camera.cpp
+      start: \brief Stop capture from camera
+      end: \brief Handle request completion and notify application
+    - id: dispatch
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequest(Request *request)
+      end: \brief Queue prepared requests to the device
+    - id: uvc-ready
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
+      end: REGISTER_PIPELINE_HANDLER
+    - id: dequeue
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2VideoDevice::bufferAvailable()
+      end: \brief Start the video stream
+    - id: disconnect
+      file: src/libcamera/camera.cpp
+      start: void Camera::Private::disconnect()
+      end: '
+
+        }'
+    - id: camera-complete
+      file: src/libcamera/camera.cpp
+      start: void Camera::requestComplete(Request *request)
+      end: '} /* namespace libcamera */'
+    - id: frame-validity
+      file: src/libcamera/framebuffer.cpp
+      start: \enum FrameMetadata::Status
+      end: "\n */"
+    parts:
+    - id: order
+      question: PipelineHandler::stop가 waitingRequests_를 지역 큐로 swap해 stopDevice 내부 완료에서 재투입되지 않게 하고, 장치 정지 후
+        지역 대기를 cancel→doQueueRequest로 순번을 부여해 완료시키는 이유를 소스 주석 범위 안에서 설명하세요. 정상 UVC streamOff는 Stopping 상태에서 각
+        장치 버퍼를 취소하고 bufferReady를 내므로 같은 imageBufferReady가 요청을 완료합니다. 공통 ASSERT와 CameraStopping→Blocking stop→CameraConfigured를
+        연결하되 ASSERT를 복구·실행 보장으로 쓰지 마세요. 세 문장 이내로 답하세요.
+      sources:
+      - common-stop
+      - uvc-stop
+      - streamoff
+      - camera-stop
+      - dispatch
+      - uvc-ready
+      max_statements: 2
+    - id: failure
+      question: streamOff의 비스트리밍·빈 큐 0 단축 반환과 VIDIOC_STREAMOFF 실패 시 ret를 반환하며 Stopping/버퍼 반환 루프 이전에 빠지는 예외를 설명하세요.
+        UVC stopDevice는 이 ret와 releaseBuffers ret를 확인하지 않습니다. releaseBuffers는 cache_를 먼저 reset한 뒤 requestBuffers(0)의
+        결과를 반환하므로 STREAMOFF 실패 뒤에도 이 해제 호출로 진행하는 사실과 큐·알림 잔존 확인을 연결하세요. 공통 stop은 void이고 Camera::stop은 ASSERT
+        등을 지나 정상 경로 끝에 도달한 경우 0을 반환하며, 장치 오류를 그 반환값으로 전달하지 않습니다. ASSERT 실패 시에도 Camera::stop이 실제로 반환한다고 보장하지 말고
+        stop 0을 모든 장치 버퍼의 반환·콜백 처리 완료 보장으로 확대하지 마세요. 원래 호출의 ret·state_·queuedBuffers_·queuedRequests_·cache_와
+        ASSERT 도달 여부를 관찰하는 조사 계획으로 세 문단 이내에 답하세요. 실제 장치에서 이 오류를 관찰했다고 쓰지 마세요.
+      sources:
+      - streamoff
+      - uvc-stop
+      - release
+      - common-stop
+      - camera-stop
+      max_statements: 3
+    - id: verification
+      question: 선택 경로를 바꾼 뒤 필요한 실패 주입 검증을 조사 계획으로 제시하세요. 준비 대기와 장치 대기를 섞은 정지, STREAMOFF 실패·releaseBuffers 실패,
+        취소 콜백 재진입에서 요청별 1회 완료·제출 순서·큐 잔존·정지 후 재투입을 각각 기록하도록 하세요. 이 소스 기반 계획을 실행 완료나 오류 복구 보장으로 쓰지 말고 두 문장 이내로
+        답하세요.
+      sources:
+      - common-stop
+      - uvc-stop
+      - streamoff
+      - release
+      - dispatch
+      max_statements: 2
+    - id: residual-event
+      question: STREAMOFF 실패로 queuedBuffers_ 정리·notifier 비활성화 전에 반환한 뒤 UVC가 releaseBuffers를 호출하여 cache_를 reset하는
+        경계를 설명하세요. 잔존 알림에서 DQBUF가 알려진 인덱스를 실제 반환하는 조건이면 dequeueBuffer의 cache_->put이 null cache_에 접근할 가능성을 조사해야
+        한다는 소스 기반 반례를 세 문장 이내로 연결하세요. 오류 주입 후 이벤트 실행 여부·인덱스·cache_·큐·notifier 상태와 정지·재구성의 안전한 후속 처리 조건을 검증하는
+        계획이며 실제 이벤트 발생·오류 복구·Camera::stop의 정상 반환을 보장하지 마세요.
+      sources:
+      - streamoff
+      - uvc-stop
+      - release
+      - dequeue
+      - common-stop
+      - camera-stop
+      max_statements: 2
+    - id: disconnect-stop
+      question: 실행 중 Camera::Private::disconnect는 Running을 Configured로 바꾸고 disconnected_를 설정합니다. 이후 Camera::stop은
+        isRunning이 거짓이면 즉시 0을 반환하고 PipelineHandler::stop을 호출하지 않으므로 연결 해제 뒤 정리·완료 배출을 보장하지 않습니다. 이 상태에서 잔여 요청이
+        Camera::requestComplete에 실제 도달한다는 조건이면 Configured는 허용 범위 밖이어서 Fatal 경계에 도달합니다. 이 세 분기를 명시하고 상태 전이·stop
+        진입과 반환·잔여 완료 진입의 상대 순서와 수명을 변경 검증에서 기록하도록 세 문장으로 설명하세요. 실제 장치 분리·후속 완료 발생·정상 복구를 관측했다고 쓰지 마세요.
+      sources:
+      - disconnect
+      - camera-stop
+      - camera-complete
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+    - id: cancel-timestamp
+      question: 정상 UVC 정지에서 streamOff가 버퍼를 FrameCancelled로 표시하여 bufferReady를 발생시키는 경로를 한정하세요. UVCCameraData::imageBufferReady는
+        상태 검사 없이 버퍼 timestamp를 요청 SensorTimestamp로 복사하지만 FrameCancelled에서는 status 이외 metadata가 유효하지 않다는 API 계약
+        때문에 그 복사는 유효한 촬영 시각을 보장하지 않습니다. 두 문장으로 상태와 값의 유효성을 구분하고 실제 촬영·항상 0·항상 오래된 값이라는 관측을 만들지 마세요.
+      sources:
+      - streamoff
+      - uvc-ready
+      - frame-validity
+      max_statements: 1
   - id: review
     title: 변경 검토와 실행 확인
-    question: queueRequest 반환값, Request::reuse 전후 상태·컨트롤·메타데이터와 선두 요청 상태를 조사 기록 항목으로 제안하세요.
-      정지의 stopDevice 진입·복귀와 두 큐의 ASSERT 관찰은 앞 정지 절에서 이미 제안하므로 다시 나열하지 마세요. 실제 시험 결과를 만들지 마세요.
+    question: 기존 호출의 기록과 함께 준비·제출·완료·정지의 실패 주입별 예상 분기와 변경 불변조건을 연결하는 검증 계획을 제시하세요. 실행 결과를 만들지 마세요. 완료 횟수는 신호
+      발생 또는 특정 수신 연결을 기준으로 구분하고 여러 연결의 콜백을 중복 완료로 세지 마세요.
     sources:
     - id: queue
       file: src/libcamera/camera.cpp
@@ -6023,13 +6875,159 @@ sections:
         end: '
 
           }'
+    - id: prepare-flow
+      file: src/libcamera/request.cpp
+      start: void Request::Private::emitPrepareCompleted()
+      end: '#endif /* __DOXYGEN_PUBLIC__ */'
+    - id: dispatch-flow
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::registerRequest(Request *request)
+      end: \fn PipelineHandler::queueRequestDevice()
+    - id: completion-flow
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Complete a buffer for a request
+      end: \brief Retrieve the absolute path to a platform configuration file
+    - id: uvc-submit
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: int PipelineHandlerUVC::queueRequestDevice(Camera *camera, Request *request)
+      end: bool PipelineHandlerUVC::match(DeviceEnumerator *enumerator)
+    - id: uvc-controls
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: int PipelineHandlerUVC::processControls(
+      end: int PipelineHandlerUVC::queueRequestDevice(
+    - id: control-result
+      file: src/libcamera/v4l2_device.cpp
+      start: int V4L2Device::setControls(
+      end: \brief Retrieve the v4l2_query_ext_ctrl information
+    - id: qbuf-flow
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2VideoDevice::queueBuffer(
+      end: void V4L2VideoDevice::bufferAvailable()
+    - id: dequeue-flow
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2VideoDevice::bufferAvailable()
+      end: \brief Start the video stream
+    - id: uvc-ready
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
+      end: REGISTER_PIPELINE_HANDLER
+    - id: common-stop
+      file: src/libcamera/pipeline_handler.cpp
+      start: \brief Stop capturing from all running streams and cancel pending requests
+      end: \brief Determine if the camera has any requests pending
+    - id: streamoff-flow
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2VideoDevice::streamOff()
+      end: \brief Set the dequeue timeout value
+    - id: uvc-stop
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void PipelineHandlerUVC::stopDevice(Camera *camera)
+      end: int PipelineHandlerUVC::processControl(
+    - id: release-buffers
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2VideoDevice::releaseBuffers()
+      end: \brief Queue a buffer to the video device
+    - id: connection-rules
+      file: src/libcamera/base/bound_method.cpp
+      start: \enum ConnectionType
+      end: '} /* namespace libcamera */'
+    - id: signal-lifetime
+      file: src/libcamera/base/signal.cpp
+      start: \class Signal
+      end: \fn Signal::connect
+    - id: thread-contract
+      file: Documentation/thread-safety.dox
+      start: '// SPDX-License-Identifier: CC-BY-SA-4.0'
+      end: ' */'
+    - id: owner-duty
+      file: src/libcamera/request.cpp
+      start: \brief Add a FrameBuffer with its associated Stream to the Request
+      end: int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,
+    - id: request-invariant
+      file: src/libcamera/request.cpp
+      start: \brief Complete a buffer for the request
+      end: void Request::Private::doCancelRequest()
+    - id: request-identity
+      file: src/libcamera/request.cpp
+      start: std::string Request::toString() const
+      end: '} /* namespace libcamera */'
+    - id: cancellation-flow
+      file: src/libcamera/request.cpp
+      start: void Request::Private::doCancelRequest()
+      end: \brief Reset the request internal data
+    - id: submit-message
+      file: src/libcamera/camera.cpp
+      start: \brief Queue a request to the camera
+      end: \brief Start capture from camera
+    - id: stop-entry
+      file: src/libcamera/camera.cpp
+      start: \brief Stop capture from camera
+      end: \brief Handle request completion and notify application
+    - id: camera-notice
+      file: src/libcamera/camera.cpp
+      start: \brief Handle request completion and notify application
+      end: '} /* namespace libcamera */'
+    - id: buffer-request
+      file: src/libcamera/framebuffer.cpp
+      start: \brief Retrieve the request this buffer belongs to
+      end: '
+
+        }'
+    - id: frame-status-contract
+      file: src/libcamera/framebuffer.cpp
+      start: \enum FrameMetadata::Status
+      end: "\n */"
+    - id: message-post
+      file: src/libcamera/base/thread.cpp
+      start: void Thread::postMessage(
+      end: \brief Remove all posted messages
+    - id: poll-events
+      file: src/libcamera/base/event_dispatcher_poll.cpp
+      start: '/* SPDX-License-Identifier: LGPL-2.1-or-later */'
+      end: '} /* namespace libcamera */'
+      max_chars: 30000
+    - id: timer-lifetime
+      file: src/libcamera/base/timer.cpp
+      start: Timer::~Timer()
+      end: '} /* namespace libcamera */'
+    - id: cache-get
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: int V4L2BufferCache::get(const FrameBuffer &buffer)
+      end: '
+
+        }'
+    - id: cache-put
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2BufferCache::put(unsigned int index)
+      end: '
+
+        }'
+    - id: bulk-cancel
+      file: src/libcamera/request.cpp
+      start: void Request::Private::doCancelRequest()
+      end: '
+
+        }'
+    - id: framebuffer-cancel
+      file: include/libcamera/internal/framebuffer.h
+      start: void cancel() { metadata_.status = FrameMetadata::FrameCancelled; }
+      end: FrameMetadata &metadata() { return metadata_; }
+    - id: control-conversion
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: int PipelineHandlerUVC::processControl(
+      end: int PipelineHandlerUVC::processControls(
+    - id: scope-exit
+      file: include/libcamera/base/utils.h
+      start: 'template<typename EF>
+
+        class scope_exit'
+      end: scope_exit(EF) -> scope_exit<EF>;
     covers:
     - review
     parts:
     - id: submission-record
-      question: 조사 시 기록할 Camera::queueRequest() 반환값을 하나의 관찰 항목으로 완전한 한국어 한 문장으로 제안하세요. 설명은 관찰
-        대상인 반환값에만 한정하세요. 작성 과정·입력 코드·예시·근거 설명이나 테스트를 실행했는지에 관한 안내문은 본문에 쓰지 마세요. 관찰을 위해 함수를 새로
-        호출하는 절차를 제안하지 마세요.
+      question: 조사 시 기록할 Camera::queueRequest() 반환값을 하나의 관찰 항목으로 완전한 한국어 한 문장으로 제안하세요. 설명은 관찰 대상인 반환값에만 한정하세요.
+        작성 과정·입력 코드·예시·근거 설명이나 테스트를 실행했는지에 관한 안내문은 본문에 쓰지 마세요. 관찰을 위해 함수를 새로 호출하는 절차를 제안하지 마세요.
       sources:
       - queue
       max_statements: 1
@@ -6047,7 +7045,8 @@ sections:
         - pattern: 성공|오류\s*코드|ENODEV|EACCES|EXDEV|EINVAL|ENOMEM|원문
           message: 이 문단은 실제 기존 호출의 반환값을 기록하자는 계획만 제안합니다. 앞 절의 반환 계약과 오류 목록을 다시 쓰지 마세요.
     - id: reuse-state-record
-      question: 기존 실행의 Request::reuse 전후 status_·controls_·metadata_와 RequestPending 대입을 한 번씩 묶은 조사 기록 항목을 완전한 한국어 한 문장으로 제안하세요. 코드 대입식만으로 문장을 끝내지 말고, 같은 변수를 다른 말로 되풀이하지 마세요. 미실행·함수 재호출 주의문은 앞 질문에서 설명했으므로 반복하지 마세요.
+      question: 기존 실행의 Request::reuse 전후 status_·controls_·metadata_와 RequestPending 대입을 한 번씩 묶은 조사 기록 항목을 완전한
+        한국어 한 문장으로 제안하세요. 코드 대입식만으로 문장을 끝내지 말고, 같은 변수를 다른 말로 되풀이하지 마세요. 미실행·함수 재호출 주의문은 앞 질문에서 설명했으므로 반복하지 마세요.
       sources:
       - record-status
       - record-controls
@@ -6063,11 +7062,11 @@ sections:
         - - Request::reuse
       prompt: '
 
-        독립 검토의 관찰 시점 오류를 수정하세요. 관찰 시점은 Request::reuse 호출 전과 호출 완료 후입니다. status_ 대입 행 앞뒤만 보면 그 뒤의 controls_와 metadata_ 초기화를 놓칠 수 있습니다. 실제로 실행한 결과가 아닌 관찰 계획으로, Request::reuse를 추가로 호출하라는 지시 없이 변수와 RequestPending을 한 문장에 연결하세요.'
+        독립 검토의 관찰 시점 오류를 수정하세요. 관찰 시점은 Request::reuse 호출 전과 호출 완료 후입니다. status_ 대입 행 앞뒤만 보면 그 뒤의 controls_와 metadata_
+        초기화를 놓칠 수 있습니다. 실제로 실행한 결과가 아닌 관찰 계획으로, Request::reuse를 추가로 호출하라는 지시 없이 변수와 RequestPending을 한 문장에 연결하세요.'
     - id: completion-record
-      question: 기존 실행의 선두 요청 상태 조회식 req->status() 값을 조사 기록 항목으로 남기자는 관찰 계획만 완전한 한국어 한 문장으로 제안하세요.
-        RequestPending 또는 break 분기는 앞 제출에서 완료까지 절에서 이미 설명했으므로 다시 서술하지 마세요. 미실행·함수 재호출 주의문과 작성
-        과정 안내는 덧붙이지 마세요.
+      question: 기존 실행의 선두 요청 상태 조회식 req->status() 값을 조사 기록 항목으로 남기자는 관찰 계획만 완전한 한국어 한 문장으로 제안하세요. RequestPending
+        또는 break 분기는 앞 제출에서 완료까지 절에서 이미 설명했으므로 다시 서술하지 마세요. 미실행·함수 재호출 주의문과 작성 과정 안내는 덧붙이지 마세요.
       sources:
       - record-head-status
       max_statements: 1
@@ -6079,6 +7078,214 @@ sections:
         reject_patterns:
         - pattern: RequestPending|break
           message: 이 항목은 관찰할 선두 요청 상태 조회 값만 제안합니다. 완료 반복문의 중단 분기는 앞 절에서 설명했습니다.
+    - id: completion-invariants
+      question: 정상 내부 버퍼 완료에서는 Request::Private::completeBuffer의 pending_.erase 결과가 1이어야 하지만, bulk 취소의 doCancelRequest는
+        pending 버퍼에 취소와 bufferCompleted를 직접 발생시킨 뒤 pending_를 clear하며 각 버퍼에 completeBuffer를 호출하지 않는 예외를 먼저 구분하세요.
+        두 경로의 버퍼·요청 중복 완료 부재, 요청 완료 전 pending 없음, completeRequest 반환 뒤 핸들러 접근 금지와 ASSERT를 연결하고 cookie·sequence·status·버퍼
+        status·pending_·신호 발생 또는 특정 연결별 알림 횟수를 기록하는 검증 계획을 세 문장 이내로 제시하세요. 여러 수신 연결을 중복 완료로 세지 마세요. bulk 취소는
+        정상 경로의 setRequest(nullptr)을 실행하지 않더라도 FrameBuffer::request의 포인터 유효 구간은 버퍼 완료까지라는 계약을 적용하고 저장된 비null 값으로
+        수명을 추정하지 않도록 두 경로별 재사용·지연 콜백 검증을 연결하세요.
+      sources:
+      - request-invariant
+      - cancellation-flow
+      - completion-flow
+      - buffer-request
+      - request-identity
+      max_statements: 2
+    - id: preparation-case
+      question: '준비 취소 시험 계획: fence가 신호되지 않는 입력에서 timeout의 cancel→prepared 발행과 cancelled_·prepared_를 기록하고, 준비
+        취소도 순번 등록·공통 완료 경로로 전달되는지 확인하도록 하세요. 미준비 선두·장치 큐 한도와 앞선 Pending 요청 때문에 실제 통지가 지연될 수 있으므로 300ms를 촬영 또는
+        정지 완료 시간 보장으로 쓰지 마세요. 기대 분기와 중복 처리·반환 순서·pending 잔존 검사를 두 문장 이내로 연결하세요.'
+      sources:
+      - prepare-flow
+      - dispatch-flow
+      - completion-flow
+      max_statements: 2
+    - id: control-qbuf-case
+      question: 제출 실패 시험을 세 짧은 평서문 문단으로 계획합니다. 개별 processControl 오류가 무시되는 경우와 setControls 음수가 UVC를 거쳐 취소되는 경우를
+        나누어 변환 ret·구성 제어 수·setControls ret를 기록합니다. 빈 제어 목록과 ioctl 이전 검증 실패를 먼저 분리하고 실제 제어 ioctl이 실행된 경우에만 그 호출의
+        error_idx를 조사합니다. error_idx를 QBUF 구조체의 필드로 쓰지 않습니다. 다음은 cache get 성공 뒤 VIDIOC_QBUF에 음수를 주입하는 경우입니다. 확보
+        index·ioctl ret·이번 scope_exit의 put 횟수와 항목 free 상태·이번 버퍼 신규 queuedBuffers_ 등록 부재를 기록하고 원래 ret 전달과 공통 취소·요청별
+        알림 횟수를 앞의 완료 불변조건에 맞춰 대조합니다. 제어 처리는 선행해도 전체 요청 제어 적용이나 롤백을 단정하지 않습니다. 성공 대조군에서는 등록과 guard.release를 기록하여
+        이번 queueBuffer 반환 시 자동 put이 없음을 대조하고 이후 dequeue의 별도 put과 구별합니다. cache_ 자체 부재 Fatal은 정상 음수 반환 및 cancelRequest
+        도달을 보장하지 않는 별도 경우입니다. 실제 오류 주입 실행이나 복구 성공이 아니라 기록·기대 분기의 시험 계획으로 쓰고 ~인지 나열을 피하세요. 성공 대조군의 다음 DQBUF는 정적
+        예상 분기로 분리합니다. DQBUF 성공과 queuedBuffers_에 존재하는 index일 때만 cache_->put 뒤 항목 erase가 실행되므로 put 횟수와 큐 상태를 대조합니다.
+        DQBUF 오류와 예상 밖 index는 그 전에 nullptr로 반환하므로 이번 dequeue의 put·erase가 없다는 분기를 대조합니다. 이 소스 분기를 미확인이라고 쓰지 말고
+        실행 결과나 실제 put 관측값을 만들지도 마세요.
+      sources:
+      - uvc-submit
+      - uvc-controls
+      - control-result
+      - qbuf-flow
+      - dispatch-flow
+      - completion-flow
+      - control-conversion
+      - cache-put
+      - scope-exit
+      - dequeue-flow
+      max_statements: 3
+      answer_contract:
+        basis: investigation
+    - id: dequeue-case
+      question: 'DQBUF 실패 시험 계획: ioctl 오류와 예상 밖 인덱스를 각각 주입·관찰할 경우 그 dequeueBuffer 호출은 nullptr을 반환하므로 bufferAvailable이
+        bufferReady를 내지 않는 기대 분기를 설명하세요. 해당 시점의 ret·index·queuedBuffers_와 요청 pending·큐 선두 status를 기록하고, 이 한 번의
+        알림 부재를 영구 정지·자동 취소·하드웨어 롤백 보장으로 확대하지 않는 계획을 두 문장 이내로 제시하세요.'
+      sources:
+      - dequeue-flow
+      - request-invariant
+      - completion-flow
+      max_statements: 2
+    - id: frame-error-case
+      question: '프레임 오류 시험 계획: 유효한 dequeued 버퍼에 V4L2_BUF_FLAG_ERROR가 설정되면 FrameError를 유지하면서 UVC가 completeBuffer와
+        completeRequest를 호출하는 경로를 확인하도록 하세요. 다른 취소 원인이 없으면 RequestComplete가 가능하므로 FrameError·RequestComplete를
+        별도로 기록하고 pending 제거 1회·제출 순서 통지·요청 완료 전 버퍼 유지 조건을 확인하는 계획을 두 문장 이내로 제시하세요. 실제 촬영 성공으로 표시하지 마세요.'
+      sources:
+      - dequeue-flow
+      - uvc-ready
+      - request-invariant
+      - completion-flow
+      - owner-duty
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+      prompt: 검증 계획을 완전한 평서문으로 설명하세요. ~인지, ~되는지 같은 명사절을 쉼표로 나열하지 말고 기록할 값·횟수·순서·수명과 기대 분기를 직접 연결하세요. 시험 완료를 주장하지
+        마세요.
+    - id: stop-case
+      question: '정지 시험 계획: 준비 대기 요청과 장치에 들어간 요청이 섞인 정상 정지에서는 waitingRequests_ 분리·장치 취소 완료·분리한 대기 요청의 순번 등록과 반환
+        순서, 각 요청·버퍼 완료 횟수와 큐 잔존을 확인하도록 하세요. STREAMOFF 실패와 releaseBuffers 실패는 별도 사례로 두고 ret·state_·cache_·queuedBuffers_·queuedRequests_·ASSERT
+        도달 여부와 정지 중 재투입 여부를 관찰하되, 실패 시 실제 0 반환이나 모든 버퍼 반환을 기대하지 않는 계획을 두 문장 이내로 제시하세요. STREAMOFF 실패 뒤 cache_
+        reset과 잔존 notifier·큐가 겹치는 경우 알려진 인덱스의 후속 DQBUF에서 cache_->put 접근을 안전하게 처리하는지 확인하도록 명시하세요.'
+      sources:
+      - common-stop
+      - streamoff-flow
+      - uvc-stop
+      - release-buffers
+      - dispatch-flow
+      - completion-flow
+      - dequeue-flow
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+      prompt: 검증 계획을 완전한 평서문으로 설명하세요. ~인지, ~되는지 같은 명사절을 쉼표로 나열하지 말고 기록할 값·횟수·순서·수명과 기대 분기를 직접 연결하세요. 시험 완료를 주장하지
+        마세요.
+    - id: delivery-case
+      question: '콜백 시험 계획: 허용된 내부 doQueueRequests 재진입에서는 pop이 먼저 이루어져 중복 투입하지 않는지 확인하고, Direct와 지연된 Queued 수신에서는
+        현재·수신 스레드, cookie·sequence·콜백 진입/복귀·stop 앞뒤와 객체 수명을 기록하도록 하세요. 같은 함수의 콜백 중첩 진입은 별도 허용 문서 없이 하지 말고, stop의
+        Blocking 반환과 별도 Queued 수신자 처리 완료를 구분해 확인하는 계획을 두 문장 이내로 제시하세요. 표식을 정확한 C++ 반환 명령의 관찰이나 실제 실행 결과로 표시하지
+        마세요. Signal 발신자의 포인터·참조 수명 책임과 별도 Queued 수신자의 마지막 사용을 추적하고, 요청 소유자가 삭제·재사용 전에 이를 동기화하는 완료/해제 협의가 지켜지는지
+        확인하는 검증 조건을 추가하세요. 요청 완료 신호나 한 핸들러의 복귀를 모든 지연 수신자 사용 종료로 간주하지 마세요. Camera::stop이 실행 중이고 접근 검사를 통과한 정상
+        경로에서 PipelineHandler::stop을 ConnectionTypeBlocking으로 호출한다는 사실은 정적 소스에서 확인됩니다. Blocking 자체를 미확인으로 쓰지 말고
+        특정 실행이 해당 경로에 도달했는지와 별도 Queued 수신자의 마지막 사용·종료 여부만 관찰 대상으로 분리하세요.'
+      sources:
+      - connection-rules
+      - signal-lifetime
+      - thread-contract
+      - dispatch-flow
+      - owner-duty
+      - stop-entry
+      - request-identity
+      max_statements: 3
+      answer_contract:
+        basis: investigation
+      prompt: 검증 계획을 완전한 평서문으로 설명하세요. ~인지, ~되는지 같은 명사절을 쉼표로 나열하지 말고 기록할 값·횟수·순서·수명과 기대 분기를 직접 연결하세요. 시험 완료를 주장하지
+        마세요.
+    - id: stop-crossing-case
+      question: 제출과 정지의 교차 시험 계획에서 queued 메시지의 게시·메서드 실행, CameraStopping 설정, 공통 stop의 대기 분리와 stopDevice, 준비·장치
+        재투입, Camera::requestComplete 상태 검사까지의 상대 순서를 기록하도록 하세요. 호출자 동기화 의무를 유지하고, 정지 뒤 실제 메서드가 실행되는 조건이 성립하는
+        경우를 분리하여 요청·버퍼 수명과 중복 완료·재투입·ASSERT 조건을 검증하도록 두 문장 이내로 설명하세요. 경쟁 발생·지원·복구 성공을 관측한 것으로 쓰지 마세요.
+      sources:
+      - submit-message
+      - stop-entry
+      - dispatch-flow
+      - common-stop
+      - completion-flow
+      - owner-duty
+      - camera-notice
+      max_statements: 2
+      prompt: 검증 계획을 직접 수행 동사로 쓰세요. 첫 문장은 호출자의 stop 동기화 의무를 유지합니다. 다음 문장은 각 경계의 상대 순서를 기록합니다. 마지막 문장은 요청·버퍼의
+        유지 기한, 중복 완료·재투입 횟수와 ASSERT 전제의 대조 동작을 설명합니다. ~인지·~있는지·~되는지·~유효한지 같은 명사절을 나열하거나 무엇을 확인할지 제안한다는 문장으로 우회하지
+        마세요. 기록합니다·대조합니다·분류합니다로 평서문을 완성하세요. 정지 뒤 실제 메서드가 실행된다는 실험 결과나 복구 보장을 만들지 말고, 그 조건을 별도 시험 경우로 분류하세요. 두
+        짧은 문단까지 허용하되 공통 계약을 다시 길게 나열하지 마세요.
+      answer_contract:
+        basis: investigation
+    - id: cancel-timestamp-case
+      question: 취소된 장치 버퍼의 메타데이터 검증 계획에서 FrameCancelled는 status만 유효하며 UVC가 timestamp를 SensorTimestamp로 복사해도 유효한
+        촬영 시각을 보장하지 않는다는 기대 조건을 적용하세요. 소스 계측 시 같은 요청 cookie·sequence와 버퍼 status, 요청 status, timestamp·SensorTimestamp의
+        유효성 표식을 함께 확인하고 요청 완료만으로 시간값이 유효하다고 판정하지 않도록 두 문장으로 설명하세요. invalid 필드의 값 일치·항상 0이나 실제 오류 주입 성공을 기대하지
+        마세요. request-identity의 실제 toString 구현에서 cookie·sequence 식별자를 대조하세요. 이는 계측 계획이며 cookie가 확인되지 않았다는 새 관측
+        결과를 만들지 마세요.
+      sources:
+      - frame-status-contract
+      - uvc-ready
+      - streamoff-flow
+      - request-invariant
+      - request-identity
+      max_statements: 1
+      answer_contract:
+        basis: investigation
+    - id: concurrent-order-case
+      question: 서로 다른 Request와 버퍼를 유지하는 동시 제출 시험의 계획을 설명하세요. API 호출 시작·0 반환만 비교하지 말고 실제 메시지 게시의 mutex 안 추가 순서,
+        PipelineHandler 진입·waitingRequests_ 등록, doQueueRequest가 부여한 Request sequence와 queuedRequests_ 선두 통지 순서를
+        연관하여 기록합니다. 신호 발생과 특정 연결의 실제 콜백 진입·복귀는 구분하고 Request sequence와 장치 FrameMetadata sequence의 동일성 또는 서로 다른
+        스레드 호출 시작의 전역 순서를 가정하지 마세요. 필요한 추가 계측의 관찰 계획이며 기존 로그가 전부 제공하거나 시험을 실행했다고 쓰지 마세요. 세 문장 이내로 답하세요.
+      sources:
+      - submit-message
+      - message-post
+      - dispatch-flow
+      - completion-flow
+      - camera-notice
+      - dequeue-flow
+      - request-identity
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+    - id: fence-timer-case
+      question: 기본 Poll에서 fence 준비와 타이머 만료가 같은 처리 회차에 잡히는 시험의 계획을 설명하세요. poll ret·fd·revents·deadline, processNotifiers와
+        processTimers 및 notifierActivated/timeout의 실제 진입 순서, dispatcher 타이머 등록·제거와 cancelled_·prepared_를 관찰합니다.
+        마지막 fence가 처리돼 timer_.reset 후 prepared로 가는 경우와 다른 fence가 남아 timeout에서 취소되는 경우를 나누고, deadline 경과만으로 timeout
+        선행을 판정하지 마세요. 타이머 포인터 존재와 등록·실제 timeout 호출을 혼동하지 말고 후속 queueRequestDevice 실패의 취소는 별도입니다. 추가 계측을 포함한 검증
+        계획이며 실행 결과가 아니라고 최대 세 문장으로 연결하세요.
+      sources:
+      - poll-events
+      - timer-lifetime
+      - prepare-flow
+      - dispatch-flow
+      - request-identity
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+    - id: pre-qbuf-case
+      question: QBUF 이전 실패를 함수 단위·계측 시험 계획으로 두 경우에 나누어 평서문으로 설명하세요. cache_는 존재하지만 free 항목이 없어 get이 실패하는 경우에는
+        반환 -ENOENT, 새 예약 인덱스 부재와 이번 scope_exit put 부재, VIDIOC_QBUF 호출 횟수 0 및 이번 버퍼 신규 등록 부재를 기록합니다. 인덱스를 얻고 공통
+        plane 수·필요 연속성 검증에 실패하는 경우에는 두 실제 조건을 각각 주입하고 -EINVAL, 해당 인덱스의 guard put, QBUF 호출 0과 신규 등록 부재를 대조합니다.
+        두 경우 모두 UVC에서 processControls가 0을 반환한 제어 처리 선행을 기록합니다. 개별 processControl 반환값·구성된 ControlList·setControls
+        반환값으로 실제 요청 제어의 적용 범위를 구분하며 성공한 처리에도 전체 요청 제어 적용이나 롤백을 단정하지 않습니다. 이어  음수의 전달과 공통 cancelRequest의 요청·버퍼
+        취소 및 알림을 요청 식별자별로 대조합니다. 다른 요청의 queuedBuffers_ 항목까지 없어야 한다고 일반화하지 말고, 실제 장치에서 공개 입력만으로 이 조건이 재현된다는 보장이나
+        실행 완료를 만들지 마세요. ~인지·~되는지 나열 대신 기록합니다·대조합니다로 마무리하세요.
+      sources:
+      - cache-get
+      - cache-put
+      - qbuf-flow
+      - uvc-submit
+      - uvc-controls
+      - control-result
+      - dispatch-flow
+      - completion-flow
+      - cancellation-flow
+      - bulk-cancel
+      - framebuffer-cancel
+      - request-invariant
+      - control-conversion
+      - scope-exit
+      max_statements: 2
+      answer_contract:
+        basis: investigation
+      prompt: 제공된 cancellation-flow·bulk-cancel·framebuffer-cancel·completion-flow로 확인된 취소 동작을 미확인이라고 쓰지 마세요.
+        각 pending 버퍼의 cancel과 bufferCompleted 발생, 이후 pending_.clear와 cancelled_ 설정, 이어지는 completeRequest의 상태·선두
+        반환을 소스에서 확인한 시험 기대 분기로 연결하세요. 정상 completeBuffer의 setRequest(nullptr) 경로와 bulk 취소의 차이도 유지합니다. 실제 주입 실행·장치
+        동작·별도 Queued 수신 완료는 미실시이며 정적 분기와 구분합니다. 명사절 질문 나열 없이 기록합니다·대조합니다로 두 짧은 문단을 완성하세요. 정상 경로의 setRequest(nullptr)는
+        request-invariant 원문에 제공됩니다. 제어 적용 범위의 근거는 반환을 무시한 processControl 호출과 실제 변환 함수·구성된 목록이며, 여기서 processControls가
+        0을 반환한 전제와 setControls 쓰기 실패의 일반 계약을 혼합하지 마세요. 앞 항목의 제어 세부를 반복하지 말고 이 실패 시험에서 기록할 입력·변환 결과와 기대 분기를 연결합니다.
     design_prompt: focused
   - id: observed-callbacks
     title: 공개 가상 카메라의 콜백 관찰
@@ -6165,6 +7372,16 @@ sections:
     - verification
   - id: observed-callbacks
     question: 공개 가상 콜백 프로브에서 실제로 관찰한 범위와 아직 검증하지 않은 범위는 무엇입니까?
+  - id: preparation-depth
+    question: 준비 대기의 생산자·소비자와 중첩 재진입을 연결하여 완료 누락의 조사 위치와 변경 불변조건을 설명하세요.
+  - id: uvc-depth
+    question: 선택한 UVC 구체 경로의 실패·장치 큐잉·버퍼 및 요청 완료를 연결하세요. 다른 파이프라인이나 실제 장치 관찰로 확대하지 마세요.
+  - id: stop-depth
+    question: 정상 정지의 대기 격리·장치 반환·호출자 복귀와 STREAMOFF 실패 반례를 구분하고 변경 후 검사 조건을 제시하세요.
+  - id: callback-depth
+    question: 신호 발생과 수신 실행·내부 상태 갱신을 구분하여 요청·버퍼 재사용과 정지 변경의 안전 조건을 설명하세요.
+  - id: callback-order
+    question: 버퍼 신호와 내부 추적 갱신 및 요청 완료 통지의 순서를 구분하여 재사용 시점을 판단하세요.
   reader_profile: vendor
   design_generation: llm
   design_grounding: true

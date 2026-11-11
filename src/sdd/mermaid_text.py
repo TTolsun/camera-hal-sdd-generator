@@ -1,7 +1,7 @@
 """Literal text in quoted Mermaid flowchart labels, separate from HTML escaping."""
 import html
 
-_ENTITIES = {char:'#'+str(ord(char))+';' for char in '&"\'<>#\\|`*_~[]()!'}
+_ENTITIES = {char:'#'+str(ord(char))+';' for char in '&"\'<>#\\|`*_~[]()!='}
 
 
 def label(value):

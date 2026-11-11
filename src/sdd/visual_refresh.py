@@ -25,7 +25,7 @@ from .generated_design import enabled, verify as verify_design
 from .generated_visuals import from_manuscript, plans, render, resolve
 from .render_profiles import for_page
 from .validation_stage import staged
-from .visuals import place
+from .visuals import place, placement_stage, owned_spans as _owned_spans, verify_stage_placement
 
 
 def _digest(value):
@@ -38,27 +38,6 @@ def _body_digest(value):
 
 def _json_digest(value):
     return _digest(json.dumps(value, ensure_ascii=False, sort_keys=True).encode('utf-8'))
-
-
-def _owned_spans(body):
-    marker = re.compile(r'<!-- (/?sdd:visual:)([a-z][a-z0-9_-]*) -->')
-    matches = list(marker.finditer(body))
-    if len(matches) != body.count('<!-- sdd:visual:') + body.count('<!-- /sdd:visual:'):
-        raise ValueError('Malformed owned visual marker')
-    from .next_steps import _outside_fence
-    ids, spans = [], []
-    for index in range(0, len(matches), 2):
-        if index + 1 >= len(matches):
-            raise ValueError('Owned visual markers must be complete and unique')
-        start, end = matches[index:index + 2]
-        if (start[1] != 'sdd:visual:' or end[1] != '/sdd:visual:'
-                or start[2] != end[2] or start[2] in ids
-                or not _outside_fence(body[:start.start()])
-                or not _outside_fence(body[:end.start()])):
-            raise ValueError('Owned visual markers must be complete, unique and outside code fences')
-        ids.append(start[2])
-        spans.append((start.start(), end.end(), start[2]))
-    return spans
 
 
 def _normalized(raw):
@@ -83,17 +62,26 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
         title = topics[current[ident][0]['topic']]['title']
         if not preceding or preceding[-1][1] != title:
             raise ValueError('Moving an existing figure to another topic requires normal generation')
-    by_topic, old_by_topic = {}, {}
+    def placement_key(visual):
+        topic = visual['topic']
+        return topic, placement_stage(visual, topics[topic])
+
+    by_stage, old_by_stage = {}, {}
     for visual, _, _ in rendered:
-        by_topic.setdefault(visual['topic'], []).append(visual['id'])
+        by_stage.setdefault(placement_key(visual), []).append(visual['id'])
     for _, _, ident in spans:
-        old_by_topic.setdefault(current[ident][0]['topic'], []).append(ident)
+        old_by_stage.setdefault(placement_key(current[ident][0]), []).append(ident)
     groups = {ident: [ident] for ident in old_ids}
-    for topic, old_order in old_by_topic.items():
-        if [ident for ident in by_topic[topic] if ident in old_ids] != old_order:
+
+    for key, old_order in old_by_stage.items():
+        # Production placement orders explicit stages by their H3 positions,
+        # independently of definition order. Use an anchor in the same stage
+        # when inserting a figure between existing spans.
+        configured_order = by_stage[key]
+        if [ident for ident in configured_order if ident in old_ids] != old_order:
             raise ValueError('Reordering existing figures requires normal generation')
         pending = []
-        for ident in by_topic[topic]:
+        for ident in configured_order:
             if ident in old_ids:
                 groups[ident] = [*pending, ident]
                 pending = []
@@ -111,8 +99,11 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
         block = block.replace('\n', ending[0] if ending else default_eol)
         edits.append((first, last, block, groups[ident]))
 
-    new_topics = {topic: ids for topic, ids in by_topic.items() if topic not in old_by_topic}
-    if new_topics:
+    unanchored = {key: ids for key, ids in by_stage.items() if key not in old_by_stage}
+    old_topics = {topic for topic, _ in old_by_stage}
+    if any(topic in old_topics for topic, _ in unanchored):
+        raise ValueError('Adding a figure to a stage without an existing anchor requires normal generation')
+    if unanchored:
         # Use the production placement contract on a probe. Existing figures
         # are opaque anchors, so its legacy strip_blocks cannot eat their
         # surrounding whitespace. The probe must differ by insertions only.
@@ -132,7 +123,7 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
         chunks.append(body[cursor:])
         probe = ''.join(chunks)
         tokens, fake = {}, []
-        for index, ids in enumerate(new_topics.values()):
+        for index, ids in enumerate(unanchored.values()):
             token = f'SDD_REFRESH_INSERT_{seed}_{index}'
             if token in body:
                 raise ValueError('Visual refresh probe conflicts with source text')
@@ -195,6 +186,7 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
     projected.append(updated[cursor:])
     if ''.join(projected) != ''.join(outside):
         raise ValueError('Visual refresh changed bytes outside owned edit regions')
+    verify_stage_placement(updated,rendered,section)
     return updated, old_ids, _digest(''.join(outside).encode()), [row for _, _, row in regions]
 
 

@@ -2,6 +2,7 @@ from sdd.mermaid_text import label, wrapped_html_label
 from sdd.visuals import wrap_label
 from sdd.diagrams import class_diagram, scenario_call_map
 from sdd.facts.model import ClassInfo, KnowledgeModel, Message, Location
+import re
 
 
 def test_literal_punctuation_uses_mermaid_codes_not_html_entities():
@@ -18,6 +19,15 @@ def test_only_generated_breaks_are_markup():
     assert label('" ] --> EXTRA["') == '#34; #93; --#62; EXTRA#91;#34;'
     assert label('`**literal**`') == '#96;#42;#42;literal#42;#42;#96;'
     assert label('[x](y) _z_ ~~w~~!') == '#91;x#93;#40;y#41; #95;z#95; #126;#126;w#126;#126;#33;'
+
+
+def test_wrapped_equality_remains_literal_instead_of_a_markdown_heading():
+    original='data->queuedRequests_.size() == maxQueuedRequestsDevice_ [false]'
+    escaped=wrapped_html_label(wrap_label(original))
+    assert '#61;#61;' in escaped
+    assert not re.search(r'(?:^|<br/>)\s*=+\s*(?:<br/>|$)',escaped)
+    decoded=re.sub(r'#(\d+);',lambda m:chr(int(m[1])),escaped.replace('<br/>',' '))
+    assert ''.join(decoded.split())==''.join(original.split())
 
 
 def test_static_type_and_call_labels_keep_template_and_operator_text():
