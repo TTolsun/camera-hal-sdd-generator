@@ -307,7 +307,11 @@ def main():
         vocabulary_hrefs = set()
         excluded_details = {digest(record['presentation_context'])
                             for record in row['excluded'] if record['kind'] == 'details'}
-        for context in row['presentation_contexts'].values():
+        inherited_headings = {key for ancestor in row['ancestors']
+                              for key in actual[ancestor['id']]['heading_contexts']}
+        for key, context in row['presentation_contexts'].items():
+            if key in inherited_headings and key not in row['heading_contexts']:
+                continue
             ancestry = context['path']
             anchor = ancestry[-1]
             if anchor['tag'] != 'a':
@@ -336,6 +340,9 @@ def main():
                     path = ((args.site/row['page']).parent/unquote(url.path)).resolve()
                     if path.suffix.lower() == '.html':
                         targets.add(path.relative_to(args.site.resolve()).as_posix())
+        if whole_html_evidence:
+            raise ValueError('Unscoped whole-page HTML evidence needs an exact reviewed fragment: '
+                             + ', '.join(sorted(whole_html_evidence)))
         for key, expected_hash in row['source_window_hashes'].items():
             if key == 'item:'+row['id'] or (key == row['id'] and expected_hash == document_hash):
                 text = json.dumps(document, ensure_ascii=False, sort_keys=True)
@@ -346,7 +353,7 @@ def main():
                 raw = path.read_bytes()
                 actual_hash = digest(raw.hex())
                 if path.suffix.lower() == '.html':
-                    if key in whole_html_evidence or key not in vocabulary_targets:
+                    if key not in vocabulary_targets:
                         raise ValueError('Unscoped whole-page HTML evidence needs an exact reviewed fragment: '+key)
                     if actual_hash != expected_hash:
                         raise ValueError('Linked HTML dependency changed since inventory: '+key)
