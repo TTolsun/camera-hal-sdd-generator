@@ -3777,12 +3777,12 @@ sections:
         quote: camera->bufferCompleted.emit(request, buffer);
     - from: remaining
       to: request
-      label: 후처리 뒤 구현자가 명시적으로 호출
-      label_en: Handler explicitly completes after remaining work
+      label: "모든 버퍼 완료 → 필요한 작업이 있으면 수행 후 핸들러가 명시적으로 호출"
+      label_en: "All buffers complete → handler performs any remaining work if needed, then explicitly calls"
       evidence:
       - source: completion/completion
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        quote: They shall complete requests explicitly with completeRequest().
+        quote: "is not completed automatically when the last buffer completes to give\n * pipeline handlers a chance to perform any operation that may still be\n * needed. They shall complete requests explicitly with completeRequest()."
     - from: request
       to: application
       label: 선두 미완료 요청 뒤의 반환은 대기
