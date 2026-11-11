@@ -144,6 +144,7 @@ def main():
             raise ValueError('Current item presentation context is missing; collect a fresh inventory')
         validate_presentation(row['presentation_contexts'], row['id'])
     windows, additional, document_windows, structural_classes, structural_scenarios = {}, {}, {}, {}, {}
+    linked_dependencies = {}
     excluded_by_page = {}
     wanted_by_page = {}
     for row in selected:
@@ -297,6 +298,42 @@ def main():
             windows[key] = dict(text=text, sha256=digest(text))
         document = {key:row[key] for key in ('title', 'body', 'tables', 'content_blocks')}
         document_hash = digest(document)
+        # An already-inventoried vocabulary route in the generated page-terms
+        # control is a byte dependency, not inspected behavioral evidence.
+        # Other whole-page evidence retains the exact-fragment requirement.
+        evidence_hrefs = [href for figure in row['figures'] for href in figure['evidence']] + structural_hrefs
+        vocabulary_hrefs = set()
+        excluded_details = {digest(record['presentation_context'])
+                            for record in row['excluded'] if record['kind'] == 'details'}
+        for context in row['presentation_contexts'].values():
+            ancestry = context['path']
+            anchor = ancestry[-1]
+            if anchor['tag'] != 'a':
+                continue
+            attrs = anchor['attrs']
+            href = attrs.get('href', '')
+            if 'citation' in attrs.get('class', '').split():
+                evidence_hrefs.append(href)
+                continue
+            # The audit records the outer container it excluded as one unit.
+            # Its links retain that ownership even with nested controls.
+            for index, ancestor in enumerate(ancestry[:-1]):
+                if ancestor['tag'] != 'details' or digest(ancestry[:index+1]) not in excluded_details:
+                    continue
+                if ancestor['attrs'].get('class') == 'page-terms':
+                    vocabulary_hrefs.add(href)
+                else:
+                    evidence_hrefs.append(href)
+                break
+        whole_html_evidence = set()
+        vocabulary_targets = set()
+        for hrefs,targets in [(evidence_hrefs,whole_html_evidence),(vocabulary_hrefs,vocabulary_targets)]:
+            for href in hrefs:
+                url = urlsplit(href)
+                if not url.scheme and not url.netloc and url.path and not url.fragment:
+                    path = ((args.site/row['page']).parent/unquote(url.path)).resolve()
+                    if path.suffix.lower() == '.html':
+                        targets.add(path.relative_to(args.site.resolve()).as_posix())
         for key, expected_hash in row['source_window_hashes'].items():
             if key == 'item:'+row['id'] or (key == row['id'] and expected_hash == document_hash):
                 text = json.dumps(document, ensure_ascii=False, sort_keys=True)
@@ -304,10 +341,17 @@ def main():
             elif '#' not in key:
                 from sdd.site_paths import owned_path
                 path = owned_path(args.site.resolve(), key)
-                if path.suffix.lower() == '.html':
-                    raise ValueError('Unscoped whole-page HTML evidence needs an exact reviewed fragment: '+key)
                 raw = path.read_bytes()
                 actual_hash = digest(raw.hex())
+                if path.suffix.lower() == '.html':
+                    if key in whole_html_evidence or key not in vocabulary_targets:
+                        raise ValueError('Unscoped whole-page HTML evidence needs an exact reviewed fragment: '+key)
+                    if actual_hash != expected_hash:
+                        raise ValueError('Linked HTML dependency changed since inventory: '+key)
+                    linked_dependencies[key] = dict(file=key, sha256=hashlib.sha256(raw).hexdigest(),
+                        inventory_sha256=actual_hash, inspected=False,
+                        scope='Already-inventoried page-terms vocabulary route byte binding only, not an enumeration of all ordinary links. Linked contents were not inspected or supplied as source evidence; if needed for this question, leave the item unreviewed.')
+                    continue
                 try:
                     text = raw.decode('utf-8')
                 except UnicodeError as exc:
@@ -325,7 +369,7 @@ def main():
             if actual_hash != expected_hash:
                 raise ValueError('Source window changed since inventory; make a new inventory: '+key)
             windows[key] = dict(text=text, sha256=digest(text), inventory_sha256=actual_hash)
-        if not set(row['source_window_hashes']) <= windows.keys():
+        if not set(row['source_window_hashes']) <= windows.keys() | linked_dependencies.keys():
             raise ValueError('Inventory evidence was not completely collected: '+row['id'])
     current = {row['id']:row['fingerprint'] for row in inspect_site(
         args.site, report['policy'], source_commit=report['source_commit'])['items']}
@@ -344,6 +388,7 @@ def main():
             compact['figures'].append(dict(id=figure['id'], sha256=figure['sha256'], definition=key))
         item_inputs.append(compact)
     payload = dict(items=item_inputs, figures=figures, source_windows=windows, additional_source_windows=additional,
+                   linked_document_dependencies=linked_dependencies,
                    document_windows=document_windows,
                    structural_classes=structural_classes,
                    structural_scenarios=structural_scenarios,
@@ -495,6 +540,9 @@ def main():
         if sorted(ids) != sorted(r['id'] for r in selected):
             raise ValueError('Independent review IDs differ from supplied item set')
         for row in result['items']:
+            own = next(item for item in selected if item['id'] == row['id'])
+            if not set(row['source_windows']) <= own['source_window_hashes'].keys() & windows.keys():
+                raise ValueError('Review named an uninspected or foreign item source window')
             if not set(row['additional_source_windows']) <= additional.keys():
                 raise ValueError('Review named an unsupplied additional source window')
         result.update(seconds=round(time.monotonic()-started, 3), human_review='pending',
