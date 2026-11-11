@@ -249,6 +249,12 @@ def test_accepted_report_is_built_and_verified_with_site(tmp_cfg):
     assert verify_site(out)['html_pages'] == 1
     recorded = json.loads((out/'item-visual-audit.json').read_bytes())
     assert recorded['unresolved'] == 0 and recorded['human_review'] == 'pending'
+    by_id = {row['id']: row for row in recorded['items']}
+    assert all('presentation_contexts' in row for row in rows)
+    for row in rows:
+        assert 'presentation_contexts' not in by_id[row['id']]
+        assert by_id[row['id']]['fingerprint'] == row['fingerprint']
+        assert by_id[row['id']]['source_window_hashes'] == row['source_window_hashes']
 
 
 def test_unknown_review_window_cannot_approve():

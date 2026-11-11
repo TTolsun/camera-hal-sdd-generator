@@ -64,7 +64,14 @@ def test_combined_questions_preserve_all_unique_argument_and_completion_contract
     assert {p['id'] for p in request_parts} == {'default', 'delegate'}
     constructors = parts('ipa', 'execution')
     interface = next(p for p in constructors if p['id'] == 'constructor-interface')
-    assert interface['sources'] == ['ctor-interface', 'ctor-events']
+    ipa = next(section for section in cfg.sections() if section['id'] == 'ipa')
+    execution = next(topic for topic in ipa['design_topics'] if topic['id'] == 'execution')
+    constructor = next(source for source in execution['sources'] if source['id'] == 'threaded')
+    # The complete Threaded source window includes the load guard, pointer
+    # transfer, event connections, and valid_ assignment in execution order.
+    assert interface['sources'] == ['threaded']
+    assert constructor['start'] == '{{proxy_name}}Threaded::{{proxy_name}}Threaded('
+    assert 'proxy_.setIPA(ipa_.get())' in interface['question']
     assert all([term] in interface['answer_contract']['required_terms']
                for term in ['createInterface', 'unique_ptr', 'setIPA', 'Handler', 'valid_', 'true'])
     assert ['connect', '연결'] in interface['answer_contract']['required_terms']

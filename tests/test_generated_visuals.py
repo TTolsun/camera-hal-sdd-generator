@@ -521,6 +521,27 @@ def test_automatic_graph_generation_reuse_export_and_carryover(tmp_cfg, automati
     assert _split(path.read_text(encoding='utf-8'))[0]['generated_visuals']['records']['stop-flow']['generation_commit']=='a'*40
 
 
+def test_impact_includes_a_changed_or_removed_generated_figure(tmp_cfg, automatic):
+    from sdd.impact import config_changes
+
+    section, model, _, agent = automatic
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    original = path.read_bytes()
+    visual_file = tmp_cfg.root / 'visuals.yaml'
+    visual_config = yaml.safe_load(visual_file.read_bytes())
+    assert config_changes(tmp_cfg, model) == {}
+
+    plan, = visual_config['sections'][section['id']]
+    plan['question'] = '어떤 조건에서 대기 요청을 취소합니까?'
+    visual_file.write_text(yaml.safe_dump(visual_config, allow_unicode=True), encoding='utf-8')
+    assert 'Visual source or question changed' in config_changes(tmp_cfg, model)[section['id']][0]
+
+    visual_config['sections'][section['id']] = []
+    visual_file.write_text(yaml.safe_dump(visual_config, allow_unicode=True), encoding='utf-8')
+    assert 'plan was removed' in config_changes(tmp_cfg, model)[section['id']][0]
+    assert len(agent.calls) == 1 and path.read_bytes() == original
+
+
 def test_guard_branch_check_is_optional_and_preserves_source_conditions(tmp_cfg, automatic):
     from sdd.generated_visuals import inputs, materialize, plans
     section, model, save, agent = automatic

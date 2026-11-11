@@ -7,12 +7,12 @@
 
 <div class="reader-start">
 <section>
-<h3>For Vendor</h3>
+<h3 id="for-vendor">For Vendor</h3>
 <p>기능과 지원 조건을 확인하고 연동·구현 범위를 정합니다.</p>
 <a href="vendor-overview.md">제품 개요부터 읽기 →</a>
 </section>
 <section>
-<h3>For Developer</h3>
+<h3 id="for-developer">For Developer</h3>
 <p>전체 구조를 익히고 요청 처리 흐름을 따라갑니다.</p>
 <a href="overview.md">시스템 개요부터 읽기 →</a>
 </section>

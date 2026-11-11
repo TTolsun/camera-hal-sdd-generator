@@ -219,3 +219,72 @@ def test_native_plan_separates_vocabulary_navigation_from_source_evidence(run_la
     assert 'glossary.html' not in payload['source_windows']
     assert payload['linked_document_dependencies']['glossary.html']['inspected'] is False
     assert json.loads((out/'input-plan.json').read_bytes())['native_call'] is False
+
+
+def test_explicit_source_windows_bind_exact_lines_and_commit(tmp_path,monkeypatch):
+    import hashlib
+    import importlib.util
+
+    monkeypatch.syspath_prepend(str(TOOLS))
+    spec=importlib.util.spec_from_file_location('issue215_source_windows',TOOLS/'review_inventory.py')
+    helper=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(helper)
+    source=tmp_path/'source.cpp'
+    source.write_bytes(b'working tree contents\n')
+    committed=b'one\ntwo\nthree\n'
+    commit='a'*40
+    def git(command, *, cwd):
+        assert command==['git','show',commit+':./source.cpp'] and cwd==tmp_path.resolve()
+        return committed
+    monkeypatch.setattr(helper.subprocess,'check_output',git)
+    windows=helper.explicit_source_windows(tmp_path,commit,['source.cpp#L2-L3'])
+    assert windows['git:'+commit+':source.cpp#L2-L3']==dict(
+        file='source.cpp',source_commit=commit,first_line=2,last_line=3,
+        sha256=hashlib.sha256(b'two\nthree\n').hexdigest(),
+        file_sha256=hashlib.sha256(committed).hexdigest(),text='two\nthree\n')
+    with pytest.raises(ValueError,match='outside the pinned file'):
+        helper.explicit_source_windows(tmp_path,commit,['source.cpp#L2-L4'])
+
+
+def test_compact_structured_window_input_keeps_original_records(monkeypatch):
+    import json
+
+    from sdd.review_context import INSTRUCTIONS as SHARED_INSTRUCTIONS, unpack
+
+    monkeypatch.syspath_prepend(str(TOOLS))
+    from review_window_transport import INSTRUCTIONS, prepare_review
+
+    text='same long source line\n'*100
+    payload=dict(items=[],source_windows={'a':{'text':text},'b':{'text':text}})
+    before, first_package, first_proof=prepare_review(payload,structured=True)
+    after, package, proof=prepare_review(payload,structured=True,compact_json=True)
+    assert package==first_package
+    assert len(after)<len(before)
+    assert unpack(json.loads(after.removeprefix(INSTRUCTIONS+SHARED_INSTRUCTIONS)))==payload
+    assert proof['complete_input_sha256']==first_proof['complete_input_sha256']
+    assert proof['native_chars']==len(after)
+
+
+def test_checked_presentation_keeps_semantic_content_and_raw_paths_in_archive(monkeypatch):
+    import json
+
+    from sdd.visual_audit import WINDOW_BINDING, digest
+
+    monkeypatch.syspath_prepend(str(TOOLS))
+    from review_window_transport import prepare_review, structured_payload
+
+    paths = {'body': {'path': [{'tag': 'article', 'attrs': {}}]}}
+    binding = dict(presentation_contexts=paths, locator='source.cpp:12')
+    source = 'void stop() {}'+WINDOW_BINDING+json.dumps(binding,ensure_ascii=False,sort_keys=True)
+    payload = dict(items=[{'body': 'A stop request.', 'presentation_contexts': paths}],
+                   source_windows={'source': {'text': source}})
+    projected = structured_payload(payload,checked_presentation=True)
+    assert projected['items'][0]['body']=='A stop request.'
+    assert projected['items'][0]['checked_presentation']==dict(contexts=1,sha256=digest(paths))
+    assert projected['source_windows']['source']['text']=='void stop() {}'
+    assert projected['source_windows']['source']['window_binding']['locator']=='source.cpp:12'
+    assert payload['source_windows']['source']['text']==source
+    assert payload['items'][0]['presentation_contexts']==paths
+    _,_,proof = prepare_review(payload,structured=True,compact_json=True,checked_presentation=True)
+    assert proof['complete_input_sha256']==digest(payload)
+    assert not proof['complete_input_round_trip']

@@ -1,0 +1,349 @@
+schema: 1
+sections:
+  official-cam-validation:
+  - id: observed-kernel-boundaries
+    topic: conclusion
+    kind: flow
+    title: 기본 커널·시험 커널·복구 후 관측 범위
+    question: 어느 커널에서 공식 cam과 별도 DMA-BUF 프로브를 관찰했으며 시험 종료 시 어떤 상태였습니까?
+    nodes:
+    - id: baseline
+      label: 기본 WSL 커널은 DMA-BUF 할당기를 노출하지 않았습니다.
+      label_en: The default WSL kernel did not expose a DMA-BUF allocator.
+      shape: box
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 기본 커널은 allocator를 노출하지 않았습니다.
+    - id: trial
+      label: 시험 WSL2 커널에 udmabuf이 내장돼 있었습니다.
+      label_en: The test WSL2 kernel had built-in udmabuf.
+      shape: box
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 시험 커널에서는 udmabuf이 내장이었고, 일치하는 모듈은 설치하지 않았습니다.
+    - id: camera
+      label: 공식 cam의 Virtual2 캡처는 세 실행에서 각각 3프레임을 완료했습니다.
+      label_en: Official cam completed three Virtual2 frames in each of three runs.
+      shape: box
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: WSL `Virtual2` 카메라(400x300 NV12)에서 프레임 3개를 처리했습니다.
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 실행 세 개(PID 434, 449, 464)는 모두 request와 sequence 0~2에서 status 1, buffer_status
+          0을 기록했습니다.
+      - source: conclusion/product-official-cam-reader
+        sha256: 6ad6510d9624cd8075ccdc0a4622214c441afc5a778a2e577b4c7a76bf10efc0
+        quote: "\"pid\": 434,\r\n      \"allocations\": 4"
+    - id: cpu
+      label: 별도 DMA-BUF 프로브는 4,096바이트를 할당하고 CPU로 접근했습니다.
+      label_en: The separate DMA-BUF probe allocated 4,096 bytes and accessed them
+        on the CPU.
+      shape: box
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: DMA 프로브는 `/dev/udmabuf` 열기, 4096바이트 할당, mmap, RW START(flags 3), CPU
+          접근, RW END(flags 7), munmap과 닫기를 모두 errno 0으로 마쳤습니다.
+    - id: restored
+      label: 기본 커널을 복구했고 .wslconfig는 없었습니다.
+      label_en: The default kernel was restored and .wslconfig was absent.
+      shape: box
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 복구 후 커널은 기본 커널로 돌아왔고 `.wslconfig`는 존재하지 않습니다.
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 기본 커널은 allocator를 노출하지 않았습니다.
+    edges:
+    - from: baseline
+      to: trial
+      label: 시험 구성
+      label_en: Test configuration
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 기본 커널은 allocator를 노출하지 않았습니다.
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 시험 커널에서는 udmabuf이 내장이었고, 일치하는 모듈은 설치하지 않았습니다.
+    - from: trial
+      to: camera
+      label: 공식 cam 관측
+      label_en: Official cam observation
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 시험 커널에서는 udmabuf이 내장이었고, 일치하는 모듈은 설치하지 않았습니다.
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: WSL `Virtual2` 카메라(400x300 NV12)에서 프레임 3개를 처리했습니다.
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 실행 세 개(PID 434, 449, 464)는 모두 request와 sequence 0~2에서 status 1, buffer_status
+          0을 기록했습니다.
+    - from: trial
+      to: cpu
+      label: 별도 프로브 관측
+      label_en: Separate probe observation
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 시험 커널에서는 udmabuf이 내장이었고, 일치하는 모듈은 설치하지 않았습니다.
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: DMA 프로브는 `/dev/udmabuf` 열기, 4096바이트 할당, mmap, RW START(flags 3), CPU
+          접근, RW END(flags 7), munmap과 닫기를 모두 errno 0으로 마쳤습니다.
+    - from: trial
+      to: restored
+      label: 시험 후 복구
+      label_en: Restored after the trial
+      evidence:
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 시험 커널에서는 udmabuf이 내장이었고, 일치하는 모듈은 설치하지 않았습니다.
+      - source: conclusion/product-reproduction-procedure
+        sha256: 93f4c8ea45fc873453b7739b88105877f6b1bc60ed7f3f6a280b15d8b131a9a7
+        quote: 복구 후 커널은 기본 커널로 돌아왔고 `.wslconfig`는 존재하지 않습니다.
+  - id: initial-submission
+    topic: initial-submission
+    kind: decision
+    title: 초기 요청 제출 반복과 오류 반환
+    generation: llm
+    max_nodes: 11
+    required_symbols:
+    - Camera::start
+    - requests_
+    - CameraSession::queueRequest
+    - Camera::queueRequest
+    - stop
+    question: 같은 기록 구성에서 카메라 시작 뒤 남은 초기 요청을 순회하며 제출 한도를 적용하고 큐 반환 오류와 정상 순회 종료를 어떻게
+      처리합니까?
+    sources:
+    - cam-request-buffers
+    - camera-queue
+    max_label_chars: 85
+    condition_display: evidence
+    require_connected: true
+    prompt: 고정된 초기 제출 경계에 다음 11개 노드와 이 연결만 사용합니다. 1 카메라 시작 결과 → 오류면 2 sink가 있으면 중지하고
+      시작 오류 반환, 정상이면 3 처리할 요청이 남았는지 확인. 3 → 요청이 없으면 11 한도 유무에 따른 캡처 안내를 출력하고 startCapture가
+      0 반환, 있으면 4 한도 도달 검사. 4 → 도달이면 실제 API 호출 없이 helper가 0을 반환한 뒤 9 호출자 검사로, 미달 또는
+      한도 없으면 5 제어 병합과 제출 횟수 증가. 5에서 스크립트가 있을 때만 제어를 병합하고, 스크립트 유무와 무관하게 queueCount_를
+      항상 증가시킵니다. 5 → 6 카메라 큐가 실행 상태와 이 카메라의 요청인지 및 요청 유효성을 검사. 6 → 검사 실패면 7 API 오류
+      반환, 검사를 통과하면 8 파이프라인 큐 호출을 비동기로 예약하고 API에서 0 반환. 7과 8 모두 → 9 helper 반환 뒤 호출자가
+      음수 결과인지 검사. 9 → 음수이면 10 카메라와 존재하는 sink 중지 뒤 오류 반환, 아니면 3으로. API의 예약 및 반환은 호출자의
+      결과 검사보다 먼저 발생합니다. 상태 및 여러 요청 검사를 묶은 6의 두 경로는 집합 결과라 항상 간선으로 요약할 수 있습니다. 실제 단일
+      조건은 정확한 원문 조건의 참·거짓에 연결하세요. 노드와 간선은 같은 한영 의미, 실제 양 끝 symbol이 포함된 인용, 정상 복귀 범위를
+      지킵니다. 상태만 검사한다고 줄이지 마세요. startCapture의 시작 실패에는 카메라 중지를 넣지 않습니다. 보이는 라벨에서 내부
+      변수명은 쓸 필요가 없으며 간단한 동작과 결과를 쓰세요. 11 정상 끝의 근거에 안내 출력뿐 아니라 바로 뒤 startCapture의 return
+      0; 구절을 반드시 포함하세요. 한도에 도달한 0 반환, API 오류 반환, API 성공 0 반환 모두 같은 호출자 결과 검사 9에 연결됩니다.
+      9의 음수 검사가 거짓일 때만 3으로 돌아갑니다. 4 한도와 5 증가를 설명할 때 큐 API 호출 시도 횟수라고 쓰세요. 영어는 queue
+      API call attempts입니다. API 결과를 알기 전에 항상 증가하므로 성공한 제출 수라고 쓰지 마세요. 정상 종료 11에는 startCapture()
+      전체 호출 창 cam-request-buffers의 순회 후 안내와 return 0을 인용하세요.
+    answer_contract_en:
+      basis: implementation
+      reject_patterns:
+      - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+        message: Use concise preparation actions and decisions in authored labels.
+          Keep function/counter identifiers in symbol bindings and evidence.
+      - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+        message: The allocation gate tests the actual cam allocate() return, not allocator
+          validity. Keep comparisons and raw calls in source evidence.
+      - pattern: (?m)^[^·\n]*(?:reservation|예약)
+        message: Express queuing/dispatching request work asynchronously inside the
+          validated camera call, not resource reservation.
+      - pattern: (?m)^[^·\n]*(?:카메라 세션|camera session)
+        message: This gate checks camera_->start(), not all of CameraSession::startCapture.
+      - pattern: already performed|delivery.{0,15}completed
+        message: A queued invocation is scheduled before return, not completed delivery
+          or execution.
+      - pattern: (?i)before running|after running|before execution|after execution
+        message: Queued execution can race the caller return; state scheduling and
+          zero return only.
+      required_terms:
+      - - running
+        - Running
+    max_edge_label_chars: 20
+    answer_contract:
+      basis: implementation
+      reject_patterns:
+      - pattern: (?m)^[^·\n]*(?:exportFrameBuffers|createRequest|addBuffer|startCapture|captureLimit_|queueCount_|::|ConnectionTypeQueued)
+        message: Use concise preparation actions and decisions in authored labels.
+          Keep function/counter identifiers in symbol bindings and evidence.
+      - pattern: (?m)^[^·\n]*(?:isValid|할당기\s*(?:유효|무효)|allocator.{0,20}invalid|\bret\b)
+        message: The allocation gate tests the actual cam allocate() return, not allocator
+          validity. Keep comparisons and raw calls in source evidence.
+      - pattern: (?m)^[^·\n]*(?:reservation|예약)
+        message: Express queuing/dispatching request work asynchronously inside the
+          validated camera call, not resource reservation.
+      - pattern: (?m)^[^·\n]*(?:카메라 세션|camera session)
+        message: This gate checks camera_->start(), not all of CameraSession::startCapture.
+      - pattern: 실행 전.{0,8}반환|반환.{0,8}실행 후
+        message: Do not order execution on the other thread relative to the caller
+          return.
+    require_guard_branches: true
+    while_conditions: true
+    whole_sources:
+    - cam-request-buffers
+  - id: virtual-dmabuf-attachment
+    topic: virtual-principle
+    kind: flow
+    title: 가상 DMA-BUF 할당과 cam 요청 연결
+    question: 가상 파이프라인이 DMA-BUF를 내보내고 cam이 요청에 연결하기까지 어떤 호출과 조건을 거칩니까?
+    nodes:
+    - id: allocate
+      label: cam은 구성된 스트림에 allocate()를 호출합니다.
+      label_en: cam calls allocate() for the configured stream.
+      shape: box
+      evidence:
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: ret = allocator_->allocate(cfg.stream());
+    - id: camera_export
+      label: 카메라는 구성 상태와 활성 스트림을 검사한 뒤 파이프라인에 동기 위임합니다.
+      label_en: Camera checks configured state and active stream, then calls the pipeline
+        with blocking delivery.
+      shape: box
+      evidence:
+      - source: virtual-principle/camera-export
+        sha256: bfd7aa3f1785e3d1dbc4c8507aafbb7c799371e924ec743523f6078a3c37640f
+        quote: int ret = d->isAccessAllowed(Private::CameraConfigured);
+      - source: virtual-principle/camera-export
+        sha256: bfd7aa3f1785e3d1dbc4c8507aafbb7c799371e924ec743523f6078a3c37640f
+        quote: if (d->activeStreams_.find(stream) == d->activeStreams_.end())
+      - source: virtual-principle/camera-export
+        sha256: bfd7aa3f1785e3d1dbc4c8507aafbb7c799371e924ec743523f6078a3c37640f
+        quote: return d->pipe_->invokeMethod(&PipelineHandler::exportFrameBuffers,
+    - id: virtual_guard
+      label: 가상 DMA-BUF 할당기가 유효합니까?
+      label_en: Is the virtual DMA-BUF allocator valid?
+      shape: decision
+      evidence:
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: "if (!dmaBufAllocator_.isValid())\n\t\treturn -ENOBUFS;"
+    - id: failure
+      label: 가상 파이프라인은 -ENOBUFS를 반환하고 cam은 할당 실패로 -ENOMEM을 반환합니다.
+      label_en: The virtual pipeline returns -ENOBUFS and cam returns -ENOMEM for
+        allocation failure.
+      shape: box
+      evidence:
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: "if (!dmaBufAllocator_.isValid())\n\t\treturn -ENOBUFS;"
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: "std::cerr << \"Can't allocate buffers\" << std::endl;\n\t\t\treturn\
+          \ -ENOMEM;"
+    - id: export
+      label: 가상 파이프라인은 플레인 크기와 구성의 버퍼 수로 내보냅니다.
+      label_en: The virtual pipeline exports using plane sizes and the configured
+        buffer count.
+      shape: box
+      evidence:
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: planeSizes.push_back(info.planeSize(config.size, i));
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: return dmaBufAllocator_.exportBuffers(config.bufferCount, planeSizes,
+          buffers);
+    - id: attach
+      label: cam은 새 요청에 해당 인덱스의 스트림 버퍼를 addBuffer()로 연결합니다.
+      label_en: cam uses addBuffer() to attach the indexed stream buffer to the new
+        request.
+      shape: box
+      evidence:
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: std::unique_ptr<Request> request = camera_->createRequest();
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: const std::unique_ptr<FrameBuffer> &buffer = buffers[i];
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: ret = request->addBuffer(stream, buffer.get());
+    edges:
+    - from: allocate
+      to: camera_export
+      label: 카메라로 전달
+      label_en: Pass to Camera
+      evidence:
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: ret = allocator_->allocate(cfg.stream());
+      - source: virtual-principle/allocator-to-camera
+        sha256: 860da864490293ef6a9228ca9babb066369470fecf3936e4b0807c8e43364403
+        quote: int ret = camera_->exportFrameBuffers(stream, &it->second);
+      - source: virtual-principle/camera-export
+        sha256: bfd7aa3f1785e3d1dbc4c8507aafbb7c799371e924ec743523f6078a3c37640f
+        quote: int ret = d->isAccessAllowed(Private::CameraConfigured);
+    - from: camera_export
+      to: virtual_guard
+      label: 검사 통과 후
+      label_en: After checks pass
+      evidence:
+      - source: virtual-principle/camera-export
+        sha256: bfd7aa3f1785e3d1dbc4c8507aafbb7c799371e924ec743523f6078a3c37640f
+        quote: int ret = d->isAccessAllowed(Private::CameraConfigured);
+      - source: virtual-principle/camera-export
+        sha256: bfd7aa3f1785e3d1dbc4c8507aafbb7c799371e924ec743523f6078a3c37640f
+        quote: if (d->activeStreams_.find(stream) == d->activeStreams_.end())
+      - source: virtual-principle/camera-export
+        sha256: bfd7aa3f1785e3d1dbc4c8507aafbb7c799371e924ec743523f6078a3c37640f
+        quote: return d->pipe_->invokeMethod(&PipelineHandler::exportFrameBuffers,
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: "if (!dmaBufAllocator_.isValid())\n\t\treturn -ENOBUFS;"
+    - from: virtual_guard
+      to: failure
+      label: 아니오
+      label_en: 'No'
+      evidence:
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: "if (!dmaBufAllocator_.isValid())\n\t\treturn -ENOBUFS;"
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: "std::cerr << \"Can't allocate buffers\" << std::endl;\n\t\t\treturn\
+          \ -ENOMEM;"
+    - from: virtual_guard
+      to: export
+      label: 예
+      label_en: 'Yes'
+      evidence:
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: "if (!dmaBufAllocator_.isValid())\n\t\treturn -ENOBUFS;"
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: planeSizes.push_back(info.planeSize(config.size, i));
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: return dmaBufAllocator_.exportBuffers(config.bufferCount, planeSizes,
+          buffers);
+    - from: export
+      to: attach
+      label: 할당 성공 후
+      label_en: After successful allocation
+      evidence:
+      - source: virtual-principle/virtual-buffer-allocation
+        sha256: 17db9f86c10efedebf2b21298865cea7070c1c384427e7a2e386899273d07f86
+        quote: return dmaBufAllocator_.exportBuffers(config.bufferCount, planeSizes,
+          buffers);
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: ret = allocator_->allocate(cfg.stream());
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: std::unique_ptr<Request> request = camera_->createRequest();
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: const std::unique_ptr<FrameBuffer> &buffer = buffers[i];
+      - source: virtual-principle/cam-request-buffers
+        sha256: 37ab5790b8eb30e2c5c484e7a3e86f59ec2a4927dcbf8c1b2aa8ffd9ba5af417
+        quote: ret = request->addBuffer(stream, buffer.get());
