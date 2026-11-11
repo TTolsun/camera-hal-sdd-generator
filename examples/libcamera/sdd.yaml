@@ -118,7 +118,15 @@ site:
       request:
       - section: vendor-integration
         topic: validation
-        label: completeRequest 호출 스레드와 반환 뒤 접근 의무
+        label: completeRequest 호출 스레드와 함수 반환 후 요청 접근 금지
+    request-lifecycle.md:
+      journey:
+      - section: overview
+        topic: request
+        label: 접수·버퍼 완료·요청 완료를 함께 확인
+      - section: request-diagnosis
+        topic: diagnosis
+        label: 제보와 관측을 구분해 조사 메모 남기기
     request-diagnosis.md:
       diagnosis:
       - section: pipeline-requests
