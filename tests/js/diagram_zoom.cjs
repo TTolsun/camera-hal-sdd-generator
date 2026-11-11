@@ -15,11 +15,11 @@ const viewport = elements['#diagram-viewport'];
 Object.assign(viewport,{clientWidth:400,clientHeight:300,scrollLeft:0,scrollTop:0,
   scrollTo(x,y){ this.scrollLeft=x; this.scrollTop=y; }});
 const win = new Element();
-let bodyFont = 16, labels = [], restored = false, oldStyle = null;
-const svg = {style:{},viewBox:{baseVal:{width:2000,height:1000}},
+let bodyFont = 16, labels = [], diagramNodes = [], restored = false, oldStyle = null;
+const svg = {style:{},computed:{visibility:'visible',display:'block',opacity:'1'},viewBox:{baseVal:{width:2000,height:1000}},
   width:{baseVal:{unitType:1,value:2000}},height:{baseVal:{unitType:1,value:1000}},
   getAttribute(){return oldStyle;},setAttribute(k,v){this.restoredStyle=v;},removeAttribute(){this.restoredStyle=null;},
-  before(){},querySelectorAll(selector){return selector.includes('foreignObject')?labels.filter(e=>e.html||selector.split(', ').includes(e.tagName)):[];},
+  before(){},querySelectorAll(selector){return selector.includes('foreignObject')?labels.filter(e=>e.html||selector.split(', ').includes(e.tagName)):selector.includes('.node')?diagramNodes:[];},
   getBoundingClientRect(){return {width:parseFloat(this.style.width),height:parseFloat(this.style.height)};}};
 Object.defineProperties(viewport,{scrollWidth:{get:()=>Math.max(viewport.clientWidth,parseFloat(svg.style.width)+56)},scrollHeight:{get:()=>Math.max(viewport.clientHeight,parseFloat(svg.style.height)+56)}});
 let captured=null;
@@ -109,4 +109,43 @@ viewport.fire('pointerdown',pointer());elements['#zoom-in'].fire('click');assert
 viewport.fire('pointerdown',pointer());elements['#diagram-dialog'].fire('close');assert.equal(captured,null);
 open();elements['#zoom-fit'].fire('click');assert.ok(!viewport.classList.contains('can-pan'));
 const fitDown=pointer();viewport.fire('pointerdown',fitDown);assert.ok(!fitDown.prevented);
-console.log('readable opening, bounds, transformations, resize modes and restore passed');
+// Reading scale must start at an actual visible node, not a blank corner.
+function diagramNode(x,y,width=200,height=100,hidden=false) {
+  return {parentElement:svg,computed:{visibility:hidden?'hidden':'visible',display:'block',opacity:'1'},
+    getBoundingClientRect(){const z=value();return {left:11+x*z-viewport.scrollLeft,
+      top:21+y*z-viewport.scrollTop,width:width*z,height:height*z};}};
+}
+svg.viewBox.baseVal={width:2000,height:1000};viewport.clientWidth=320;viewport.clientHeight=440;
+labels=[label(14)];diagramNodes=[diagramNode(0,300),diagramNode(1000,20),diagramNode(1300,20),diagramNode(0,0,20,20,true)];
+open();near(value(),16/14);
+const first=diagramNodes[1].getBoundingClientRect();
+assert.ok(first.left>=11 && first.left+first.width<=331,'mobile opening shows the top node');
+assert.ok(first.top>=21 && first.top+first.height<=461,'top node is visible vertically');
+assert.ok(viewport.scrollLeft>500,'opening pans past the blank left area');
+const readingLeft=viewport.scrollLeft;win.fire('resize');assert.equal(viewport.scrollLeft,readingLeft);
+elements['#zoom-in'].fire('click');near(value(),(16/14)*1.25);
+elements['#zoom-fit'].fire('click');assert.equal(viewport.scrollLeft,0);assert.equal(viewport.scrollTop,0);
+elements['#diagram-dialog'].fire('close');open();near(value(),16/14);assert.ok(viewport.scrollLeft>500);
+// Oversized labels start at their left edge, and absent/unmeasurable nodes
+// retain the existing origin fallback without changing the reading scale.
+diagramNodes=[diagramNode(1000,20,700,100)];open();
+near(diagramNodes[0].getBoundingClientRect().left,23);
+diagramNodes=[diagramNode(1000,20,271.25,100)];open();
+const nearlyFull=diagramNodes[0].getBoundingClientRect();
+near(nearlyFull.width,310);near(nearlyFull.left,16);
+assert.ok(nearlyFull.left+nearlyFull.width<=331,'a fitting node must not clip at the right');
+diagramNodes=[diagramNode(1000,20,280,100)];open();
+near(diagramNodes[0].getBoundingClientRect().left,11);
+diagramNodes=[diagramNode(1000,500,200,376.25)];open();
+const nearlyTall=diagramNodes[0].getBoundingClientRect();
+near(nearlyTall.height,430);near(nearlyTall.top,26);
+assert.ok(nearlyTall.top+nearlyTall.height<=461,'a fitting tall node must not clip at the bottom');
+diagramNodes=[diagramNode(1000,500,200,385)];open();
+near(diagramNodes[0].getBoundingClientRect().top,21);
+diagramNodes=[diagramNode(NaN,20)];open();assert.equal(viewport.scrollLeft,0);assert.equal(viewport.scrollTop,0);
+diagramNodes=[];open();assert.equal(viewport.scrollLeft,0);near(value(),16/14);
+const invisibleParent={parentElement:svg,computed:{display:'block',opacity:'0'}};
+const invisibleChild=diagramNode(0,0);invisibleChild.parentElement=invisibleParent;
+diagramNodes=[invisibleChild,diagramNode(1000,30)];open();
+assert.ok(viewport.scrollLeft>500,'a transparent ancestor cannot capture the initial viewport');
+console.log('readable opening, first visible node, bounds, transformations, resize modes and restore passed');

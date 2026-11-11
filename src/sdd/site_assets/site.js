@@ -351,6 +351,33 @@
     scale(Math.min((viewport.clientWidth - 60) / active.width, (viewport.clientHeight - 60) / active.height, 1), false, 'fit');
     viewport.scrollTo(0, 0);
   }
+  function showDiagramStart() {
+    viewport.scrollTo(0, 0);
+    const nodes = [...active.svg.querySelectorAll('.node, .actor, .classGroup')].map(node => {
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      let visible = style.visibility === 'visible';
+      for (let element = node; visible && element; element = element.parentElement) {
+        const parentStyle = getComputedStyle(element);
+        visible = parentStyle.display !== 'none' && Number(parentStyle.opacity) !== 0;
+        if (element === active.svg) break;
+      }
+      return {rect, visible};
+    }).filter(({rect, visible}) => visible && rect.width > 0 && rect.height > 0
+      && [rect.left, rect.top, rect.width, rect.height].every(Number.isFinite));
+    nodes.sort((a, b) => Math.abs(a.rect.top - b.rect.top) < 1
+      ? a.rect.left - b.rect.left : a.rect.top - b.rect.top);
+    if (!nodes.length) return;
+    // A wide graph's first row can be far from the SVG's empty top-left corner.
+    // Move only this scroll region; opening must not scroll the background page.
+    const rect = nodes[0].rect;
+    const frame = viewport.getBoundingClientRect();
+    const leftInset = rect.width <= viewport.clientWidth ? (viewport.clientWidth - rect.width) / 2 : 12;
+    const topInset = rect.height <= viewport.clientHeight ? Math.min(24, (viewport.clientHeight - rect.height) / 2) : 24;
+    viewport.scrollLeft = Math.max(0, viewport.scrollLeft + rect.left - frame.left - viewport.clientLeft
+      - leftInset);
+    viewport.scrollTop = Math.max(0, viewport.scrollTop + rect.top - frame.top - viewport.clientTop - topInset);
+  }
   function readDiagram() {
     // Measure after moving the SVG into the open dialog, at intrinsic scale.
     // Include edge labels and nested SVG/HTML labels, not just node boxes.
@@ -384,7 +411,7 @@
     const target = parseFloat(getComputedStyle(document.body).fontSize) || 16;
     // An unmeasurable diagram keeps its intrinsic size instead of shrinking.
     scale(sizes.length ? Math.max(1, target / Math.min(...sizes)) : 1, false, 'reading');
-    viewport.scrollTo(0, 0);
+    showDiagramStart();
   }
   function searchNodes() {
     if (!active) return;

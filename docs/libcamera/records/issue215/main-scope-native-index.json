@@ -1,0 +1,102 @@
+{
+  "scope": "Narrow code and regression evidence, not whole-book, human, device or publication acceptance.",
+  "archive_sha256": "2cec6eb428ef75c795049b21d994e61fa667b3fe71174ceed6d26f38dafc8b21",
+  "entries": {
+    "build/issue215/code-review-153.py": "0efee13d75c875254b2c77bf3928967ed330bbba44b8b649329bf5c1a835c705",
+    "build/issue215/code-review-153/build/generation-runs/4dd4aefcc20a467fa4d5ec00bdb1129b.json": "4936a50f4eee932b3a99b3607bc06b218a5a4f34cb6d72a95444fb29f4d1543c",
+    "build/issue215/code-review-153/execution-profile.json": "39cd652bb325b5386e64d7ffe56b2a476dad8fbb0aedc9bc0af904c2db9bbbba",
+    "build/issue215/code-review-153/inputs.json": "ad94019f87addc77611971d2ff1618e3fa2bffb388db8f10cb9865e95180835c",
+    "build/issue215/code-review-153/prompts/001_main-reader-scope-review.md": "b785743392357589b7bb5fa5ec1dfa4e5c221f220ea3437e401f55f4dbada2f7",
+    "build/issue215/code-review-153/prompts/001_main-reader-scope-review.response.md": "fa640ef774e1eb235f858bb4ec441b25a5eda9be3d526cd03967ff9b109e3772",
+    "build/issue215/code-review-153/prompts/001_main-reader-scope-review.schema.json": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+    "build/issue215/code-review-153/prompts/calls/fa3e48d1b04545fa9c54d8c38aa52c9d/001.receipt.json": "d043361b96813bedb61a0ef4e216ef1f77c2de0689ab61ece7a626da653ca719",
+    "build/issue215/code-review-153/prompts/calls/fa3e48d1b04545fa9c54d8c38aa52c9d/001.request.json": "5506d563536fe0d3a969bb31d0dbb1a674d3683fa79482f964070330ee2599c6",
+    "build/issue215/code-review-153/prompts/calls/fa3e48d1b04545fa9c54d8c38aa52c9d/001.response.txt": "fa641afa4be820b953cf5b3afce04a27e0795ecd2197e29ce01454c1f4451740",
+    "build/issue215/code-review-153/prompts/cli/call-kvtuh035.stderr.txt": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+    "build/issue215/code-review-153/prompts/cli/call-kvtuh035.stdout.txt": "2bc66e853e17f8499f7ac2ff488af735b8129e1155e14fda2d188c75826ec6e5",
+    "build/issue215/code-review-153/review.json": "fa641afa4be820b953cf5b3afce04a27e0795ecd2197e29ce01454c1f4451740",
+    "build/issue215/code-review-155.py": "659556385674a495ed0f2b8d563aacd1dea1b64acf93bea42fa66b5a0e9b2b31",
+    "build/issue215/code-review-155/build/generation-runs/542be97d675244b4af6269826e5b49c6.json": "78757483e96b0c6402f0297bce341f0007d0bc6ee8c6ec11bca98cefe90a9dd2",
+    "build/issue215/code-review-155/execution-profile.json": "725780a499547e45d115a2d8114d643a3b83c2bbdd8263b115b335ee1e27a41a",
+    "build/issue215/code-review-155/inputs.json": "e5848fa9ef08a271c4c647084cc2197e0f5478db7a2dc2e6bac7deb113022e4a",
+    "build/issue215/code-review-155/prompts/001_main-reader-scope-review.md": "80def67e19caf80f6c78b9441c4d36484984309e1123db2caf3d0ffe8d610393",
+    "build/issue215/code-review-155/prompts/001_main-reader-scope-review.response.md": "30ecc48c278fbb54ce91f4884e249b81396d81129d41a15cd4f147f7c46f1c37",
+    "build/issue215/code-review-155/prompts/001_main-reader-scope-review.schema.json": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+    "build/issue215/code-review-155/prompts/calls/59ffc20649e240d488bfc32e05f19552/001.receipt.json": "ca6f66bf37c8c368062cf37554af3e73b835db35b4bef972652005af3ad5800c",
+    "build/issue215/code-review-155/prompts/calls/59ffc20649e240d488bfc32e05f19552/001.request.json": "890ce2714f0abbedae0de40b3147a85f9ed7895c91206e2ada7b27b72df70123",
+    "build/issue215/code-review-155/prompts/calls/59ffc20649e240d488bfc32e05f19552/001.response.txt": "524fd872136b4d412eeca240f227eea98ddaf520c00aadc8e58e67ff7032f775",
+    "build/issue215/code-review-155/prompts/cli/call-pcp0vfzp.stderr.txt": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+    "build/issue215/code-review-155/prompts/cli/call-pcp0vfzp.stdout.txt": "4ed6310555b7a567172888edf375abe489598f2a8bb31b826ab7bab3a0ee4938",
+    "build/issue215/code-review-155/review.json": "524fd872136b4d412eeca240f227eea98ddaf520c00aadc8e58e67ff7032f775",
+    "build/issue215/code-review-156.py": "7ca14822825a2a545cf0e0e30323dee13bd7abfec135bb1ed8a560567aea241e",
+    "build/issue215/code-review-156/build/generation-runs/57fd9d375a454619a0d1d191a9144865.json": "6589b30e1a7128a6a4834e591f6693fd5c942f7e1e8412a532eb1072b26dad30",
+    "build/issue215/code-review-156/execution-profile.json": "9933a584ebd04142766d0d9591536c63b951947ce5a7457bf0e841c6eee8a680",
+    "build/issue215/code-review-156/inputs.json": "762be7436b64231ae593d4efcd452d3a1b49cc2055758cee95de35d442909d39",
+    "build/issue215/code-review-156/prompts/001_main-reader-scope-review.md": "e8068161407e4eeb995bf20f9fe758ed185fbd8922480be2635929323beefc7d",
+    "build/issue215/code-review-156/prompts/001_main-reader-scope-review.response.md": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+    "build/issue215/code-review-156/prompts/001_main-reader-scope-review.schema.json": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+    "build/issue215/code-review-156/prompts/calls/04b2e61e20c24f05ac63e4c803f5df0a/001.receipt.json": "4f11b8f405b759f62edc915d6d2ee6c5924619a58cdb8dced9a19b0556f505f3",
+    "build/issue215/code-review-156/prompts/calls/04b2e61e20c24f05ac63e4c803f5df0a/001.request.json": "92b7e6d3c48093bba8e7513c48415f5188793ce5ab07a2f32e86fd6ef5902e0c",
+    "build/issue215/code-review-156/prompts/calls/04b2e61e20c24f05ac63e4c803f5df0a/001.response.txt": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+    "build/issue215/code-review-156/prompts/cli/call-tnxhpx5k.stderr.txt": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+    "build/issue215/code-review-156/prompts/cli/call-tnxhpx5k.stdout.txt": "52a5d6250b402509d798ef2f26f59062ad9acda82114b97a8e70ee03bc89c57d",
+    "build/issue215/code-review-156/review.json": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+    "build/issue215/collect-main-inventory-23.py": "18d474c49ee985af28acb0bae6fa8f65ffacfb4fa54ee5e073524beceee813dd",
+    "build/issue215/nonarticle-headings-01.json": "36ed58695331a1c730bf0ce6852107d32638b07d90aee36584c81707893f55cb",
+    "build/issue215/package-scope-and-view-01.py": "02a8878b5e1a350d0069336e095a10204cdf4565da9e1363dfc45e5537380c96",
+    "build/issue215/presentation-inventory-23/basis.json": "11ec1f7a45f4102a90d342e46acdba757a68244649f28bc169c8bec7d0278914",
+    "build/issue215/pytest-211.log": "af2d57a1480e42e59e48fdd0ff84533c69c034d2250897b6ec7050b6b30384b4",
+    "build/issue215/pytest-213.log": "44bedb97e2c8cf9147602c8fb71b50ca46ea905a59e5b45f2da0ac69450f6eba",
+    "build/issue215/pytest-214.log": "300d798fc02e7c8ffbfb853690ce6d489a90ecb51dfc82fb8740ba5262d0b185",
+    "build/issue215/pytest-215.log": "41104ad146f8bf9f5d2d4ef488c44b0584773925dee382c5d34752f1a49d389a",
+    "build/issue215/scan-nonarticle-headings-01.py": "40ab5e7c56fa9471f026042a2b5a1bd79bc664f91cef5062d43fc6499a22afd9"
+  },
+  "native_verifications": [
+    {
+      "run": 153,
+      "proof": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "2bc66e853e17f8499f7ac2ff488af735b8129e1155e14fda2d188c75826ec6e5",
+        "arguments_verified": true
+      }
+    },
+    {
+      "run": 155,
+      "proof": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "4ed6310555b7a567172888edf375abe489598f2a8bb31b826ab7bab3a0ee4938",
+        "arguments_verified": true
+      }
+    },
+    {
+      "run": 156,
+      "proof": {
+        "runner": "codex",
+        "model": "gpt-6.1-terra",
+        "model_selection": "explicit",
+        "producer": "cli/codex/gpt-6.1-terra",
+        "stdout_sha256": "52a5d6250b402509d798ef2f26f59062ad9acda82114b97a8e70ee03bc89c57d",
+        "arguments_verified": true
+      }
+    }
+  ],
+  "final_code_review": 156,
+  "reviewed_code": {
+    "src/sdd/visual_audit.py": "adb0f676678fa99cadeb88ac766a2bcbf690023d71a50cf0892634a206ba1db7",
+    "src/sdd/visual_dom.py": "a739ad491075e7f699748c38459ff56c79d15bd39777420ce78c1a6989a3b289",
+    "src/sdd/visual_presentation.py": "dca2af4ddde8ae722a9b8034b0f4cf85a3066015689b3600ba3134a5ef5c8a39",
+    "src/sdd/site_fragments.py": "c6569fb21345eaa45d68d379cce5ded669cd12b0d9d1188f1d06b3fbc433ef2b",
+    "src/sdd/site_build.py": "237eeb1465a7f5126234153977b3a5836b0b711082b2c53cb2af7a732b07d0fe",
+    "examples/libcamera/validation/issue215/review_inventory.py": "76fad3674739a50ec3e93684efd448aec5446f0d26453df4ee9bf110fddd5778",
+    "tests/test_visual_audit_main_scope.py": "f7205afcf90c58dd9ff12e726e61576cc7de1ca40dfd4ea6c337650614c26b9a",
+    "examples/libcamera/sdd.yaml": "e2a3248d4d0e7118c2e33b7d3422a730db88566f5602bbd31948ffe29d72cfb3",
+    "docs/reference/visual-audit.md": "b13f1a9ae7b72136e4536a8c31a40606b1fc6099fced60d872ada311bb37df04"
+  },
+  "human_review": "pending"
+}

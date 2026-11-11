@@ -1,0 +1,364 @@
+{
+  "schema": 1,
+  "scope": "Optional preliminary reader-model, previous-publication and explicitly historical artifact context in the example reviewer. Four actual separate native code reviews110..113; original defects preserved and113 has zero remaining code findings. Plan-only guard regressions are not model inference or current item acceptance.",
+  "archive": "review-context-native.tar.xz",
+  "archive_sha256": "3772494feb290bc950ce60765d2b9761f1a08bf52615bee915fd1798b7b7c4ff",
+  "helper_sha256": "c553009af5583899e4cdd0fb52df283c573f0717d13fea9f3301e5d942192861",
+  "calls": [
+    {
+      "receipt": "build/issue215/code-review-110/prompts/calls/a5eed8ffc7814287b305258c3fb5bffb/001.receipt.json",
+      "sha256": "b29730dc235e60786dbb8dfef1e2902a6a8465f39164ad6bdd6898550a65ad7c",
+      "model": "gpt-6.1-terra",
+      "reasoning": "high"
+    },
+    {
+      "receipt": "build/issue215/code-review-111/prompts/calls/68eee9aa07b94875899ba9c1b403bf3a/001.receipt.json",
+      "sha256": "1d37e4bd571556ed309047056d1b8b7ff6d1e2576478cb077c61323b3b018b42",
+      "model": "gpt-6.1-terra",
+      "reasoning": "high"
+    },
+    {
+      "receipt": "build/issue215/code-review-112/prompts/calls/1091c7e0caa94a84a4c60bc46dd1a7b9/001.receipt.json",
+      "sha256": "85b4250b18850de0e493a181344508c07c6fb03e9d58fbac958c8f8ff215085f",
+      "model": "gpt-6.1-terra",
+      "reasoning": "high"
+    },
+    {
+      "receipt": "build/issue215/code-review-113/prompts/calls/902f04da9e814714b999659fdf44ec00/001.receipt.json",
+      "sha256": "c1a4c15bf6421adfa60d7d4f56430c657ece343bde27180bd5d75695a5054718",
+      "model": "gpt-6.1-terra",
+      "reasoning": "high"
+    }
+  ],
+  "regressions": {
+    "scope": "Real CLI input/output-isolation and current-source binding regressions only. Negative JSON is deliberately modified fixture data; no real model record was edited and no new generation/review approval is claimed.",
+    "results": [
+      {
+        "case": "duplicate",
+        "rejected": true,
+        "native_calls": 0
+      },
+      {
+        "case": "malformed-git",
+        "rejected": true,
+        "native_calls": 0
+      },
+      {
+        "case": "missing-quote",
+        "rejected": true,
+        "native_calls": 0
+      },
+      {
+        "case": "historical-output-overlap",
+        "rejected": true,
+        "native_calls": 0
+      },
+      {
+        "case": "actual-current-source-plan",
+        "accepted_plan_only": true,
+        "native_calls": 0,
+        "input_chars": 121973
+      }
+    ],
+    "helper_sha256": "c553009af5583899e4cdd0fb52df283c573f0717d13fea9f3301e5d942192861",
+    "human_review": "pending"
+  },
+  "entries": [
+    {
+      "path": "build/issue215/check-review-context-23.py",
+      "sha256": "4d5cd36e29f18f9043f08884896fb357bff8e4ece4dcbddcff1ca57b29cf8248",
+      "bytes": 4312
+    },
+    {
+      "path": "build/issue215/code-review-110/build/generation-runs/17fd36fdb59745a9af703698d6fab644.json",
+      "sha256": "da7ef0203a49aad96ced5c5f6b6095bedf446d0f03afeb2589d0b8126afc201b",
+      "bytes": 1033
+    },
+    {
+      "path": "build/issue215/code-review-110/execution-profile.json",
+      "sha256": "df59991e7b8fc382cd639aed335037826de87b4401e8509372eab68e4374c8c8",
+      "bytes": 1364
+    },
+    {
+      "path": "build/issue215/code-review-110/inputs.json",
+      "sha256": "8a3179d5e12205a2c2b028aa377afd0b9885f07f937ec58f2a17081660126a3b",
+      "bytes": 44469
+    },
+    {
+      "path": "build/issue215/code-review-110/prompts/001_item-review-context-code-review.md",
+      "sha256": "216ecd4b0cc207788c49ab2736c4d34985e323df9773840ff5b1798cdc236d48",
+      "bytes": 44579
+    },
+    {
+      "path": "build/issue215/code-review-110/prompts/001_item-review-context-code-review.response.md",
+      "sha256": "decf79c13c5d0f1b442df8e9d0b22e19f5645bd88592e91545eaf425a08ce1dd",
+      "bytes": 1083
+    },
+    {
+      "path": "build/issue215/code-review-110/prompts/001_item-review-context-code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-110/prompts/calls/a5eed8ffc7814287b305258c3fb5bffb/001.receipt.json",
+      "sha256": "b29730dc235e60786dbb8dfef1e2902a6a8465f39164ad6bdd6898550a65ad7c",
+      "bytes": 2210
+    },
+    {
+      "path": "build/issue215/code-review-110/prompts/calls/a5eed8ffc7814287b305258c3fb5bffb/001.request.json",
+      "sha256": "853c989de95cca1c0dea687fb0a0ac17ae984093cbcc170b557de959b09c1d45",
+      "bytes": 46109
+    },
+    {
+      "path": "build/issue215/code-review-110/prompts/calls/a5eed8ffc7814287b305258c3fb5bffb/001.response.txt",
+      "sha256": "d3323fc15ef544ed83a17800865bb15aa46ed595c6e550b690d8c0e6729337e4",
+      "bytes": 1081
+    },
+    {
+      "path": "build/issue215/code-review-110/prompts/cli/call-g9ytnk2n.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-110/prompts/cli/call-g9ytnk2n.stdout.txt",
+      "sha256": "b253cd89eaa17fcc87a828280b1de9e6a85edecee66f4cf0a3ec9a34484046b2",
+      "bytes": 1462
+    },
+    {
+      "path": "build/issue215/code-review-110/review.json",
+      "sha256": "d3323fc15ef544ed83a17800865bb15aa46ed595c6e550b690d8c0e6729337e4",
+      "bytes": 1081
+    },
+    {
+      "path": "build/issue215/code-review-110.log",
+      "sha256": "727c34b6cf43eb41fd5e2ef691a0bc5806cb5584616dd7491fe7db7f0ff5fe57",
+      "bytes": 1235
+    },
+    {
+      "path": "build/issue215/code-review-110.py",
+      "sha256": "e1f733cec802f5d64ddd806fc4fe45047c45c2bd01c13706b0d355ed33dac843",
+      "bytes": 3544
+    },
+    {
+      "path": "build/issue215/code-review-111/build/generation-runs/aa1c74e10de842019e82c2a2b0f340ba.json",
+      "sha256": "3e835adaa1aa1942f8bac5c0f92e8aab07e294c58c6e2f80d977cd582f0b67b9",
+      "bytes": 1040
+    },
+    {
+      "path": "build/issue215/code-review-111/execution-profile.json",
+      "sha256": "0be35c357fc4be389dd5d7aa9262ace9bc6c7ebf1ac44a89a4b9661cb37a4ebd",
+      "bytes": 1364
+    },
+    {
+      "path": "build/issue215/code-review-111/inputs.json",
+      "sha256": "7dde3b545d0b81850706395e23db6c9641db95f91e7cb2b57edc03c05b8d0536",
+      "bytes": 51813
+    },
+    {
+      "path": "build/issue215/code-review-111/prompts/001_item-review-context-code-review.md",
+      "sha256": "1da36dd01fc1d43478a8ec97bcbc9fe94b12ea4d3f37d436ed943d593b4029be",
+      "bytes": 51918
+    },
+    {
+      "path": "build/issue215/code-review-111/prompts/001_item-review-context-code-review.response.md",
+      "sha256": "2d8422bd32005c24115935c9be6d128677ccb18f80c8d4be4e9fddc2e4fe593b",
+      "bytes": 1146
+    },
+    {
+      "path": "build/issue215/code-review-111/prompts/001_item-review-context-code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-111/prompts/calls/68eee9aa07b94875899ba9c1b403bf3a/001.receipt.json",
+      "sha256": "1d37e4bd571556ed309047056d1b8b7ff6d1e2576478cb077c61323b3b018b42",
+      "bytes": 2210
+    },
+    {
+      "path": "build/issue215/code-review-111/prompts/calls/68eee9aa07b94875899ba9c1b403bf3a/001.request.json",
+      "sha256": "d5a40a868e8a4094bdac33fd8740fc051001f18cff8278ef42822bce0a199fb8",
+      "bytes": 53551
+    },
+    {
+      "path": "build/issue215/code-review-111/prompts/calls/68eee9aa07b94875899ba9c1b403bf3a/001.response.txt",
+      "sha256": "d4aa8de9789b5aac002a22ea17c056d783b4f786e0db57d868952ab6c8eda61d",
+      "bytes": 1144
+    },
+    {
+      "path": "build/issue215/code-review-111/prompts/cli/call-dp2i6nzn.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-111/prompts/cli/call-dp2i6nzn.stdout.txt",
+      "sha256": "94e6a983d384d19002facc314419ecd88e0476e0562533bfedbfe661a0b504cd",
+      "bytes": 1525
+    },
+    {
+      "path": "build/issue215/code-review-111/review.json",
+      "sha256": "d4aa8de9789b5aac002a22ea17c056d783b4f786e0db57d868952ab6c8eda61d",
+      "bytes": 1144
+    },
+    {
+      "path": "build/issue215/code-review-111.log",
+      "sha256": "ff6e17bde3958a1d5c6fad5c6695c0d8ce8293869e7e81f5c671326008e0aabf",
+      "bytes": 1298
+    },
+    {
+      "path": "build/issue215/code-review-111.py",
+      "sha256": "d0c9d0e8247c6f37927b73b74893e79e4caab73ba1d12e7a06f135e760a8b765",
+      "bytes": 3980
+    },
+    {
+      "path": "build/issue215/code-review-112/build/generation-runs/63113739bcc844b985593f9feb4f1cd4.json",
+      "sha256": "f883c6459e2585640c8f086f889fd550c7a54d148af0e31e0d8bd14b8470ce64",
+      "bytes": 1039
+    },
+    {
+      "path": "build/issue215/code-review-112/execution-profile.json",
+      "sha256": "923a551e66ac547b7e1c44a30ad372dacbf9463d48d362dcc6cee6776efdb360",
+      "bytes": 1364
+    },
+    {
+      "path": "build/issue215/code-review-112/inputs.json",
+      "sha256": "83576a72edd22bd94d4ba81555bd06818e558aa5af2598a5cb81bc9c6e103d5a",
+      "bytes": 53111
+    },
+    {
+      "path": "build/issue215/code-review-112/prompts/001_item-review-context-code-review.md",
+      "sha256": "86899ffa3626c56bded90dd59d02c34cfc0e07cb8d4f6afe7cd6b26b09167ffc",
+      "bytes": 53211
+    },
+    {
+      "path": "build/issue215/code-review-112/prompts/001_item-review-context-code-review.response.md",
+      "sha256": "725ffaa51e9367914bba5114c50c205bdab08c2a973a034398c144c8dfc9f704",
+      "bytes": 1207
+    },
+    {
+      "path": "build/issue215/code-review-112/prompts/001_item-review-context-code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-112/prompts/calls/1091c7e0caa94a84a4c60bc46dd1a7b9/001.receipt.json",
+      "sha256": "85b4250b18850de0e493a181344508c07c6fb03e9d58fbac958c8f8ff215085f",
+      "bytes": 2214
+    },
+    {
+      "path": "build/issue215/code-review-112/prompts/calls/1091c7e0caa94a84a4c60bc46dd1a7b9/001.request.json",
+      "sha256": "51b27824b8d0216f3784e7c02612288cb6d0ce8f2e1f4a748cfe0ad5ecb24319",
+      "bytes": 54862
+    },
+    {
+      "path": "build/issue215/code-review-112/prompts/calls/1091c7e0caa94a84a4c60bc46dd1a7b9/001.response.txt",
+      "sha256": "df4c0e3611dc4d61af682743cbccfb412a69954a88a6477f6eaec7ba5fdc6af0",
+      "bytes": 1205
+    },
+    {
+      "path": "build/issue215/code-review-112/prompts/cli/call-jcui72kg.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-112/prompts/cli/call-jcui72kg.stdout.txt",
+      "sha256": "8f7c2b43a5c3ba5d563c0090768c2b2dba53193393e7c38dc68ec2bfa3d440ac",
+      "bytes": 1598
+    },
+    {
+      "path": "build/issue215/code-review-112/review.json",
+      "sha256": "df4c0e3611dc4d61af682743cbccfb412a69954a88a6477f6eaec7ba5fdc6af0",
+      "bytes": 1205
+    },
+    {
+      "path": "build/issue215/code-review-112.log",
+      "sha256": "f0fc3c161ce43c61105ac80bb29cea597bf24f233805d950fcfb073f9c9e6827",
+      "bytes": 1359
+    },
+    {
+      "path": "build/issue215/code-review-112.py",
+      "sha256": "1b0de4147e9664bf90cabbf46ba6de846465bbdccfa2ecee327137426d1e94df",
+      "bytes": 4214
+    },
+    {
+      "path": "build/issue215/code-review-113/build/generation-runs/bcd904797fc64b268255596611d297fa.json",
+      "sha256": "b46f81d5a6bc37e8c5fe9f1687a0b8ac9e9fcc34c1f784add45dcd8c1b22de74",
+      "bytes": 1038
+    },
+    {
+      "path": "build/issue215/code-review-113/execution-profile.json",
+      "sha256": "859ab4d916d81dcd740bc8fd14c0faaa35697d740cb7d88c4703adfb4bad52fb",
+      "bytes": 1364
+    },
+    {
+      "path": "build/issue215/code-review-113/inputs.json",
+      "sha256": "e57ac9d3eab0ec304bc40d28a2ce4b1a4e0e8f47745ee0ec6096e7aeb0169b61",
+      "bytes": 54602
+    },
+    {
+      "path": "build/issue215/code-review-113/prompts/001_item-review-context-code-review.md",
+      "sha256": "2529ce71d4c791a45faf8ec90f33b5e0e45c8f740c5999996c7a119b0dfb36ca",
+      "bytes": 54697
+    },
+    {
+      "path": "build/issue215/code-review-113/prompts/001_item-review-context-code-review.response.md",
+      "sha256": "142b83d705a2524052efa520629eab0192c804eb954e974d351ae60e5fe2b9cf",
+      "bytes": 17
+    },
+    {
+      "path": "build/issue215/code-review-113/prompts/001_item-review-context-code-review.schema.json",
+      "sha256": "6434e2fe551bf00e71192b014b88ac4ddf1b4e785a35e5e035b3032c115ffe9e",
+      "bytes": 770
+    },
+    {
+      "path": "build/issue215/code-review-113/prompts/calls/902f04da9e814714b999659fdf44ec00/001.receipt.json",
+      "sha256": "c1a4c15bf6421adfa60d7d4f56430c657ece343bde27180bd5d75695a5054718",
+      "bytes": 2210
+    },
+    {
+      "path": "build/issue215/code-review-113/prompts/calls/902f04da9e814714b999659fdf44ec00/001.request.json",
+      "sha256": "06372dc086972a989150a0c424911f58c550b7d96046647868a6d063641cc661",
+      "bytes": 56364
+    },
+    {
+      "path": "build/issue215/code-review-113/prompts/calls/902f04da9e814714b999659fdf44ec00/001.response.txt",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-113/prompts/cli/call-hqhx2n6l.stderr.txt",
+      "sha256": "3e75d28a6681c31400a3f0fcb564c7613fd42796fb83294e4d53fea86bcbd401",
+      "bytes": 29
+    },
+    {
+      "path": "build/issue215/code-review-113/prompts/cli/call-hqhx2n6l.stdout.txt",
+      "sha256": "d96a6d60e624c864aac155d82b8a368f15976a183dd520661589c3bf9066866e",
+      "bytes": 360
+    },
+    {
+      "path": "build/issue215/code-review-113/review.json",
+      "sha256": "9d0f2143c61cfbb6c0cf0425ce8b447811a32d48ec37333ba8b3700218631b36",
+      "bytes": 15
+    },
+    {
+      "path": "build/issue215/code-review-113.log",
+      "sha256": "4420c9e1c6982e0219c64f0228814ea27a1d0efd07544fdc5b86c33ede92d6e8",
+      "bytes": 169
+    },
+    {
+      "path": "build/issue215/code-review-113.py",
+      "sha256": "bab41c8e2961646d87eeb7318b3626e36dfe5ce55f8689db38b5b2ce4a31d229",
+      "bytes": 4636
+    },
+    {
+      "path": "build/issue215/review-context-regressions-23/result.json",
+      "sha256": "53706a22b3fe834397906478bf3fafed1dbae3a7f699a2f95d30d77c6db95003",
+      "bytes": 917
+    },
+    {
+      "path": "examples/libcamera/validation/issue215/review_inventory.py",
+      "sha256": "c553009af5583899e4cdd0fb52df283c573f0717d13fea9f3301e5d942192861",
+      "bytes": 29940
+    }
+  ],
+  "human_review": "pending"
+}
