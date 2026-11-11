@@ -106,7 +106,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
             raise RuntimeError("Unexpected staging directory")
         render(cfg, stage, mermaid_src)
         verify_site(stage, manifest=False)
-        from .visual_audit import publication_gate
+        from .visual_audit import publication_gate, verify_published
         publication_gate(cfg, stage)
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
@@ -178,6 +178,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                 "dependencies": {name: version(name) for name in ("Markdown", "pymdown-extensions", "PyYAML", "html5lib")},
                 "outputs": outputs}
         data["build_id"] = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+        verify_published(stage, data)
         from .generation_run import observed
         execution = observed()
         if execution is not None and execution.publication_contract is not None:

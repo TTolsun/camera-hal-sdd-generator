@@ -235,12 +235,15 @@ def test_generation_rolls_back_earlier_pages_if_later_item_fails(tmp_cfg, sample
     assert first.read_bytes() == b'original one' and second.read_bytes() == b'original two'
 
 
-def test_accepted_report_is_built_and_verified_with_site(tmp_cfg):
+def test_accepted_report_is_built_and_verified_with_site(tmp_cfg, monkeypatch):
+    from sdd import visual_audit
     from sdd.site_build import build_site, verify_site
     tmp_cfg.sdd_dir.mkdir(parents=True)
-    tmp_cfg.raw['visual_audit'] = dict(enabled=True, reviews='reviews.json')
-    body = document('<h2 id="one">Values</h2><table><tr><td>x</td></tr></table>')
+    tmp_cfg.raw['visual_audit'] = dict(enabled=True, reviews='reviews.json',
+                                      signals={'custom_z': 'marker', 'custom_a': 'marker'})
+    body = document('<h2 id="one">Values</h2><p>State after completion marker.</p><table><tr><td>x</td></tr></table>')
     rows = inventory_page(body, 'guide.html', policy(tmp_cfg))
+    assert rows[-1]['complexity_signals'] == ['state', 'order', 'custom_z', 'custom_a']
     records = ledger(dict(items=rows))
     (tmp_cfg.root/'reviews.json').write_text(json.dumps(records), encoding='utf-8')
     def render(cfg, stage, mermaid):
@@ -255,6 +258,20 @@ def test_accepted_report_is_built_and_verified_with_site(tmp_cfg):
         assert 'presentation_contexts' not in by_id[row['id']]
         assert by_id[row['id']]['fingerprint'] == row['fingerprint']
         assert by_id[row['id']]['source_window_hashes'] == row['source_window_hashes']
+
+    before = {p.relative_to(out): p.read_bytes() for p in out.rglob('*') if p.is_file()}
+    gate = visual_audit.publication_gate
+
+    def reorder_report(cfg, stage):
+        gate(cfg, stage)
+        path = stage/visual_audit.REPORT
+        data = json.loads(path.read_bytes())
+        path.write_text(json.dumps(data, sort_keys=True), encoding='utf-8')
+
+    monkeypatch.setattr(visual_audit, 'publication_gate', reorder_report)
+    with pytest.raises(ValueError, match='visualization review incomplete'):
+        build_site(tmp_cfg, out, render, None)
+    assert {p.relative_to(out): p.read_bytes() for p in out.rglob('*') if p.is_file()} == before
 
 
 def test_unknown_review_window_cannot_approve():
