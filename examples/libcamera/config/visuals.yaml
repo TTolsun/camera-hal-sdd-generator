@@ -1309,6 +1309,9 @@ sections:
       넘는 상태를 이 비교가 막는다고 보장하지 말고 불변조건 별도 검증과 구분하세요.
       timeout()은 notifiers_가 비어 있지 않음을 단언하고 항목을 지운 뒤 cancel()과 emitPrepareCompleted()를 호출합니다.
       한영 레이블에는 처리되지 않은 notifier가 남았다고 쓰세요. 실제 fence 신호 상태를 조회하거나 미신호임을 확정한다고 쓰지 마세요.
+      큐 크기는 Camera::Private::queuedRequests_에 등록된 소프트웨어 요청의 수입니다. 한영 모두 이 식별자를 사용하세요.
+      doQueueRequest는 이 소프트웨어 큐에 먼저 등록합니다. 이미 취소된 요청은 completeRequest 후 반환하여 queueRequestDevice를 건너뜁니다.
+      그 외에는 queueRequestDevice로 실제 장치 제출을 시도합니다. 등록을 장치 제출로 표현하지 마세요.
     sources:
     - dispatch
     - prepare
@@ -1564,6 +1567,8 @@ sections:
       실행 순서에 넣지 마세요. 기록할 ret·index·큐 상태를 간결히 연결하며 실제 오류 주입 결과를 만들지 마세요. 각 호출·반환과 조건을 한영에서 같은 순서로 표시하세요.
       timeout()은 notifiers_가 비어 있지 않음을 단언하고 항목을 지운 뒤 cancel()과 emitPrepareCompleted()를 호출합니다.
       한영 레이블에는 처리되지 않은 notifier가 남았다고 쓰세요. 실제 fence 신호 상태를 조회하거나 미신호임을 확정한다고 쓰지 마세요.
+      준비 신호 간선은 대기열이 비어 있지 않고 queuedRequests_.size() == maxQueuedRequestsDevice_ 비교가 거짓이며 선두가 준비된 조건만 표시하세요.
+      한도 미만 또는 장치 큐가 한도에 미달했다는 표현을 쓰지 마세요. doQueueRequest의 queuedRequests_ 등록은 공통 소프트웨어 기록이며 실제 장치 제출은 queueRequestDevice입니다.
     sources:
     - prepare-flow
     - uvc-submit
@@ -1618,6 +1623,7 @@ sections:
       성립한 조건의 관찰 관계로 모두 연결하세요. registration에서 완료 통지는 completion의 완료된 queuedRequests_ 선두 pop과 camera-notice의 신호
       발생을 거칩니다. 이 관계를 직접 동기 호출·시간 보장으로 그리지 마세요. registerRequest는 생성 시 prepared 신호를 연결할 뿐이며 큐 등록·순번 부여는 doQueueRequest입니다.
       한국어와 영어 라벨은 각각 짧은 완전한 문장으로 의역하고 단어·인용부호·문장 꼬리를 잘라 맞추지 마세요. 실행 미보장 조건도 완전한 영어로 보존하세요.
+      정지 중 등록은 분리된 대기 요청을 취소한 뒤 doQueueRequest에 전달하는 경로입니다. 영어에서는 대상을 a cancelled waiting request로 표시하세요.
     sources:
     - submit-message
     - post-order
