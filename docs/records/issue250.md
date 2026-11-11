@@ -1,12 +1,14 @@
 # 역할별 작업·의사결정 경로의 공개 사례
 
+[공개 SDD PR #100](https://github.com/TTolsun/libcamera-sdd/pull/100)에서 역할 페이지를 내렸습니다. 아래는 당시 구현과 평가 기록입니다.
+
 같은 요청 처리 근거에서 파트원은 다음 조사 작업을, 기술 의사결정자는 검증의 착수·보류 조건을 찾도록 구성했습니다. [생성기 PR #257](https://github.com/TTolsun/camera-hal-sdd-generator/pull/257)에서 공통 기능을 검토합니다. 실제 사람 평가가 없어 [이슈 #250](https://github.com/TTolsun/camera-hal-sdd-generator/issues/250) 전체는 미완료입니다.
 
 ## 기준과 근거 소유권
 
 착수 기준은 생성기 `25f65af`이며 작업 중 main의 `bc58d09`, `dd5daa3` 및 `bc3430b`까지 통합했습니다. 공개 원고 29개와 facts는 실제 공개 기준본의 manifest 해시와 일치함을 확인한 뒤 재사용했습니다. 사실은 `request-lifecycle`의 `journey`, `resources`, `stopping`에서 선택한 분할 답변을 그대로 표시합니다. 별도 상세 원고나 사람 승인 장부를 만들지 않았습니다.
 
-사전 질문·출력 위치·평가 과제는 [공통 계약](../concepts/role-decisions.md), 역할별 순서는 [공개 설정](../../examples/libcamera/reader-paths.yaml)에 있습니다. 기존 Vendor/Developer를 유지하며 사실·가설·미측정 효과·결정 요청을 구분합니다.
+당시 사전 질문·출력 위치·평가 과제는 [공통 계약](https://github.com/TTolsun/camera-hal-sdd-generator/blob/ea1582dfa37e0958f43a409e23b2c5cfe823f626/docs/concepts/role-decisions.md), 역할별 순서는 [공개 설정](https://github.com/TTolsun/camera-hal-sdd-generator/blob/ea1582dfa37e0958f43a409e23b2c5cfe823f626/examples/libcamera/reader-paths.yaml)에 있습니다. 기존 Vendor/Developer를 유지하며 사실·가설·미측정 효과·결정 요청을 구분했습니다.
 
 공식 upstream과 공개 `upstream/master`에서 확인한 최신 SHA는 `be7e83e91348250c015aad6d6f59f1468555bae8`입니다. facts·원고·이전 실행의 기준은 `293d751a814e0d4c34e85ad457ccd9d5eefd1a61`로 유지합니다. 역할별 경로가 참조하는 주제의 근거 창과 재생성한 Pipeline Handler 네 주제의 창 총 67개를 전체 변경 경로와 대조했으며 해당 라이브러리 소스 창은 변경되지 않았습니다.
 
@@ -54,8 +56,8 @@
 
 ## 사내 적용과 남은 조건
 
-[사내 양식](../../examples/inhouse-template/config/reader-paths.yaml)은 `ready: false`이며 실제 자료가 없으면 게시를 중단합니다. 사내 문제·소스·빌드·장치·계측·책임·승인 권한·게시 경계·승인된 생성 및 별도 검토 CLI 설정이 필요합니다. 공개 역할·호스팅 방식을 사내 필수 조건으로 강제하지 않습니다.
+[당시 사내 양식](https://github.com/TTolsun/camera-hal-sdd-generator/blob/ea1582dfa37e0958f43a409e23b2c5cfe823f626/examples/inhouse-template/config/reader-paths.yaml)은 `ready: false`이며 실제 자료가 없으면 게시를 중단하도록 구성했습니다. 사내 문제·소스·빌드·장치·계측·책임·승인 권한·게시 경계·승인된 생성 및 별도 검토 CLI 설정이 필요합니다. 공개 역할·호스팅 방식을 사내 필수 조건으로 강제하지 않습니다.
 
 실제 사람 평가, 사내 HAL 적용, 실제 임원 공감 검증은 미완료입니다. 역할별 설정 자체의 사람 승인을 기록하는 CLI도 아직 없어 `site.require_approval: true`에서는 게시를 차단합니다. 자동 검사·독립 CLI 검토·대리 평가·공개 배포는 각각 구분해 보고합니다.
 
-다음 단계: 실제 참여자에게 [사전 과제](../concepts/role-decisions.md#비작성자-평가의-사전-계획)와 같은 배포본만 제공하고 익명 결과를 기록합니다.
+당시 [사람 평가 계획](https://github.com/TTolsun/camera-hal-sdd-generator/blob/ea1582dfa37e0958f43a409e23b2c5cfe823f626/docs/concepts/role-decisions.md#비작성자-평가의-사전-계획)은 실제 참여자에게 사전 과제와 같은 배포본을 제공하고 익명 결과를 기록하는 것이었습니다.
