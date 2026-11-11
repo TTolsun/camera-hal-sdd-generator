@@ -88,6 +88,8 @@ def main():
     parser.add_argument('--historical-artifacts', type=Path,
                         help='Committed public repository for explicitly historical model artifact references')
     parser.add_argument('--fit-input', action='store_true', help='Execution-local character boundary equals the measured complete prompt')
+    parser.add_argument('--compact-input', action='store_true',
+                        help='Losslessly share repeated JSON values; archive and round-trip the complete original input')
     parser.add_argument('--native-input-cap', type=int, default=1000000,
                         help='Conservative execution-local CLI input cap; split groups instead of truncating evidence')
     parser.add_argument('--input-rationale', help='Required explanation for an execution-local input boundary adjustment')
@@ -510,6 +512,12 @@ def main():
         argv=command(cfg.agent)+arguments(cfg.agent, schema)), ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     system = SYSTEM
     user = json.dumps(payload, ensure_ascii=False)
+    if args.compact_input:
+        from sdd.review_context import prepare
+        user, context, proof = prepare(payload)
+        (args.out/'native-context-proof.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+        if context is not None:
+            (args.out/'native-context.json').write_text(json.dumps(context,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     measured = len(build_prompt(system, user, schema))
     if args.fit_input:
         if not args.input_rationale:

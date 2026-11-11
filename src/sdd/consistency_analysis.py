@@ -37,14 +37,15 @@ def evidence(model, sid):
     if not sid.startswith(PREFIX) or sid[len(PREFIX):] not in model.scenarios:
         raise ValueError('Unknown scenario analysis evidence')
     scenario = model.scenarios[sid[len(PREFIX):]]
-    data = dict(kind='analysis-definition', project_source_commit=model.meta['source_commit'],
+    data = dict(kind='analysis-definition',
         scope='Analysis representation only; not product runtime, hardware or callback-thread evidence.',
         scenario=dict(id=scenario.id, entry=scenario.entry, messages_total=len(scenario.messages),
             unresolved=scenario.unresolved, deferred=scenario.deferred,
             annotated_messages=[asdict(row) for row in scenario.messages if row.note]),
         generator_definitions=definitions())
     text = json.dumps(data, ensure_ascii=False, sort_keys=True)
-    return dict(kind='analysis-definition', file=sid, line=1, text=text,
+    return dict(kind='analysis-definition', project_source_commit=model.meta['source_commit'],
+                file=sid, line=1, text=text,
                 sha256=hashlib.sha256(text.encode()).hexdigest())
 
 
