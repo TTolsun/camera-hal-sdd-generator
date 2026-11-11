@@ -13,6 +13,7 @@ import re
 import yaml
 
 from .call_records import canonical_request_hash
+from .config import section_output
 from .document_metadata import split_frontmatter
 from .state_io import save
 from .trial_workspace import contained_path
@@ -88,6 +89,7 @@ def policy_hash():
                           'validation_stage.py', 'input_watch.py', 'consistency_profile.py', 'document_metadata.py',
                           'validation_execution.py',
                           'cli_checkpoint.py', 'cli_provenance.py', 'call_records.py',
+                          'generated_design.py', 'render_profiles.py', 'generation_run.py',
                           'site_localization.py', 'config.py', 'cli_schema.py')}
     return canonical_request_hash(parts)
 
@@ -129,6 +131,7 @@ def _request(cfg, model, group):
     excluded_navigation = []
     display = []
     catalog = {}
+    sections = {section_output(section).replace('\\', '/'): section for section in cfg.sections()}
     site = cfg.site
     if site.english_catalog:
         catalog = load_json(cfg.root/site.english_catalog)
@@ -155,6 +158,21 @@ def _request(cfg, model, group):
             display.extend(dict(document=name, **pair) for pair in display_pairs(content, catalog))
         artifact = meta.get('generated_design') or {}
         if artifact.get('answers'):
+            from . import generated_design
+            section = sections.get(name)
+            if section and generated_design.enabled(section):
+                from .render_profiles import for_page
+
+                def verify_manuscript():
+                    return generated_design.verify(model, section, text, cfg=for_page(cfg, name))
+
+                inputs = current()
+                if inputs is None:
+                    verify_manuscript()
+                else:
+                    inputs.memo(('consistency-manuscript', id(cfg), id(model), name), verify_manuscript)
+            elif artifact.get('schema') == 1:
+                raise ValueError(f'Generated consistency manuscript has no matching LLM section: {name}')
             # Partial recovery can append a repaired topic after unchanged
             # topics. Mapping order is not contract content, but otherwise it
             # changes batches, literal CLI prompts and schema peer enums.
@@ -375,15 +393,25 @@ def review_store(cfg, payload):
     return UnitStore(cfg, identity_data), request_data
 
 
-def review_origin(batch, request_data, saved, index):
+def review_origin(batch, request_data, saved, index, archive):
     """Expose the original receipt context; never relabel reuse as a new call."""
     original = saved['identity'].get('source_commit')
     if not isinstance(original, str) or not original:
         raise ValueError('Consistency checkpoint lacks its original source revision')
+    receipt_name, = saved['receipts']
+    receipt_bytes = read_bytes(contained_path(archive, receipt_name))
+    tag = json.loads(receipt_bytes).get('tag')
+    if not isinstance(tag, str) or not tag:
+        raise ValueError('Consistency checkpoint lacks its original call tag')
     return dict(batch=index, request_sha256=canonical_request_hash(request_data),
                 review_request_sha256=canonical_request_hash(saved['identity']['request']),
                 current_source_commit=batch['source_commit'], reviewed_source_commit=original,
-                receipts=saved['receipts'])
+                receipts=saved['receipts'], receipt_tag=tag,
+                receipt_sha256=hashlib.sha256(receipt_bytes).hexdigest())
+
+
+def _audit_tag(run, ordinal):
+    return f"contract-{run['id']}-{run['document']}-{ordinal}"
 
 
 def _review_config(cfg):
@@ -429,10 +457,11 @@ def _audit_prepared(cfg, model, agent, prepared):
     report = dict(schema=1, source_commit=model.meta.get('source_commit'), contracts=[],
                   fresh_batches=0, reused_batches=0, source_equivalent_batches=0, human_review='pending',
                   assessment=ASSESSMENT, comparison_scope=COMPARISON_SCOPE)
-    report['audit_run'] = dict(path=agent.path.relative_to(cfg.build_dir).as_posix(),
-                              document=len(agent.report['documents'])-1)
+    report['audit_run'] = dict(id=agent.path.stem, document=len(agent.report['documents'])-1,
+                              phase=len(agent.report['phases'])-1)
     path = cfg.build_dir/'consistency-review.json'
     current_key = None
+    ordinal = 0
     try:
         for group, payload, prepared_batches in prepared:
             findings = []
@@ -456,7 +485,8 @@ def _audit_prepared(cfg, model, agent, prepared):
                 else:
                     report['fresh_batches'] += 1
                     capture = Capture(agent)
-                    raw = capture.chat(SYSTEM, user, tag=f"consistency_{group['id']}_{index}", response_schema=schema(batch))
+                    raw = capture.chat(SYSTEM, user, tag=_audit_tag(report['audit_run'], ordinal),
+                                       response_schema=schema(batch))
                     checked = validate(batch, raw)
                     store.write(raw, checked, capture)
                     if not capture.receipts:
@@ -466,12 +496,13 @@ def _audit_prepared(cfg, model, agent, prepared):
                     if cached is None:
                         raise ValueError('Consistency review lacks its durable checkpoint')
                     saved, _ = cached
-                origin = review_origin(batch, request_data, saved, index)
+                origin = review_origin(batch, request_data, saved, index, store.calls)
                 origins.append(origin)
                 agent.unit(current_key, 'checkpoint-reused' if reused else 'completed', **origin)
                 if origin['reviewed_source_commit'] != batch['source_commit']:
                     report['source_equivalent_batches'] += 1
                 findings += checked
+                ordinal += 1
             report['contracts'].append(dict(id=group['id'], input_sha256=identity(payload),
                 findings=findings, claims=payload['claims'], sources=payload['sources'],
                 source_aliases=payload['source_aliases'], excluded_navigation=payload['excluded_navigation'],
@@ -540,7 +571,7 @@ def _enforce_configured(cfg, model, configured, execution):
                 raise ValueError('Consistency review lacks current source-bound CLI receipts')
             saved, _ = cached
             checked += validate(batch, saved['raw'])
-            origin = review_origin(batch, request_data, saved, index)
+            origin = review_origin(batch, request_data, saved, index, store.calls)
             origins.append(origin)
             expected_units[f"consistency_{group['id']}_{index}"] = origin
             source_equivalent += origin['reviewed_source_commit'] != batch['source_commit']
@@ -557,14 +588,27 @@ def _enforce_configured(cfg, model, configured, execution):
         raise ValueError('Consistency unresolved findings changed; run audit-consistency')
     if type(report.get('source_equivalent_batches')) is not int or report['source_equivalent_batches'] != source_equivalent:
         raise ValueError('Consistency source-equivalent reuse count changed; run audit-consistency')
+    _enforce_audit_run(cfg, path, report, expected_units, source_equivalent)
+
+
+def _enforce_audit_run(cfg, path, report, expected_units, source_equivalent):
     run = report.get('audit_run')
-    if not isinstance(run, dict) or not isinstance(run.get('path'), str):
+    if not isinstance(run, dict) or not re.fullmatch('[0-9a-f]{32}', str(run.get('id', ''))):
         raise ValueError('Consistency audit run reference is missing; run audit-consistency')
-    journal = load_json(contained_path(cfg.build_dir, run['path']))
+    journal = load_json(contained_path(cfg.build_dir/'generation-runs', run['id']+'.json'))
     index = run.get('document')
-    if type(index) is not int or index < 0 or index >= len(journal.get('documents', [])):
+    phase_index = run.get('phase')
+    documents = journal.get('documents', [])
+    phases = journal.get('phases', [])
+    if (type(index) is not int or not 0 <= index < len(documents)
+            or type(phase_index) is not int or not 0 <= phase_index < len(phases)):
         raise ValueError('Consistency audit run reference changed; run audit-consistency')
-    document = journal['documents'][index]
+    document, phase = documents[index], phases[phase_index]
+    start = document['started_seconds']
+    end = start + document['seconds']
+    if (phase.get('name') != 'contract-audit' or phase.get('status') != 'completed'
+            or not phase['started_seconds'] <= start <= end <= phase['started_seconds'] + phase['seconds']):
+        raise ValueError('Consistency audit phase is incomplete; run audit-consistency')
     units = document.get('units', {})
     if (document.get('section') != 'consistency' or document.get('status') != 'passed'
             or set(units) != set(expected_units) or document.get('details') != expected_units
@@ -575,5 +619,18 @@ def _enforce_configured(cfg, model, configured, execution):
             or report['reused_batches'] != sum(value == 'checkpoint-reused' for value in units.values())
             or source_equivalent > report['reused_batches']):
         raise ValueError('Consistency batch counts differ from their audit run; run audit-consistency')
+    fresh_tags = []
+    for ordinal, (key, origin) in enumerate(expected_units.items()):
+        tag = _audit_tag(run, ordinal)
+        fresh = units[key] == 'completed'
+        if fresh != (origin['receipt_tag'] == tag):
+            raise ValueError('Consistency batch status differs from its original CLI call; run audit-consistency')
+        if fresh:
+            fresh_tags.append(tag)
+    calls = [call for call in journal.get('calls', []) if call.get('section') == 'consistency'
+             and start <= call['started_seconds'] <= end]
+    if ([call.get('tag') for call in calls] != fresh_tags
+            or any(call.get('status') != 'completed' for call in calls)):
+        raise ValueError('Consistency audit run calls differ from completed CLI receipts; run audit-consistency')
     if document.get('artifacts', {}).get('consistency_report_sha256') != hashlib.sha256(read_bytes(path)).hexdigest():
         raise ValueError('Consistency report differs from its completed audit run; run audit-consistency')

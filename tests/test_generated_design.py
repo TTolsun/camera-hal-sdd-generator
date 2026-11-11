@@ -14,6 +14,27 @@ from sdd.facts.model import KnowledgeModel
 from sdd.impact import compute
 
 
+def test_contract_audit_checks_generated_answer_in_actual_manuscript(generated, tmp_cfg):
+    from sdd.config import section_output
+    from sdd.consistency import request
+    from sdd.document_metadata import split_frontmatter
+
+    section, model, _, agent = generated
+    Generator(tmp_cfg, model, agent).run()
+    name = section_output(section)
+    path = tmp_cfg.sdd_dir/name
+    group = dict(id='audit', question='What does the document say?', primary=name, documents=[name], match='.')
+    assert request(tmp_cfg, model, group)['claims']
+    meta, body = split_frontmatter(path.read_text(encoding='utf-8'))
+    first_answer = next(iter(meta['generated_design']['answers'].values()))[0]['text']
+    assert first_answer in body
+    body = body.replace(first_answer, 'Changed completion responsibility in the visible body.', 1)
+    meta['generated_design']['body_sha256'] = hashlib.sha256(body.strip().encode()).hexdigest()
+    path.write_text('---\n'+yaml.safe_dump(meta, allow_unicode=True)+'---\n'+body, encoding='utf-8')
+    with pytest.raises(ValueError, match='답변이 원고에 없습니다'):
+        request(tmp_cfg, model, group)
+
+
 @pytest.mark.parametrize('focused', [False, True])
 def test_writer_guidance_reaches_model_without_replacing_reader_question(generated, focused):
     from sdd.generated_design import _unit_request

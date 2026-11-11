@@ -245,3 +245,35 @@ def test_batch_counters_are_bound_to_completed_invocation_journal(review_case, f
     (cfg.build_dir/'consistency-review.json').write_text(json.dumps(report), encoding='utf-8')
     with pytest.raises(ValueError, match='batch counts'):
         enforce(cfg, model)
+
+
+def test_same_revision_reuse_cannot_be_relabelled_with_a_rehashed_journal(review_case):
+    cfg, model, *_ = review_case
+    run_review(review_case)
+    report = run_review(review_case)
+    run = report['audit_run']
+    path = cfg.build_dir/'consistency-review.json'
+    journal_path = cfg.build_dir/'generation-runs'/f"{run['id']}.json"
+    journal = json.loads(journal_path.read_bytes())
+    document = journal['documents'][run['document']]
+    key, = document['units']
+    document['units'][key] = 'completed'
+    report.update(fresh_batches=1, reused_batches=0)
+    path.write_text(json.dumps(report), encoding='utf-8')
+    document['artifacts']['consistency_report_sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
+    journal['calls'].append(dict(tag=f"contract-{run['id']}-{run['document']}-0", section='consistency',
+        started_seconds=document['started_seconds'], status='completed'))
+    journal_path.write_text(json.dumps(journal), encoding='utf-8')
+    with pytest.raises(ValueError, match='original CLI call'):
+        enforce(cfg, model)
+
+
+def test_audit_report_cannot_publish_after_its_enclosing_phase_fails(review_case):
+    cfg, model, *_ = review_case
+    run = run_review(review_case)['audit_run']
+    path = cfg.build_dir/'generation-runs'/f"{run['id']}.json"
+    journal = json.loads(path.read_bytes())
+    journal['phases'][run['phase']]['status'] = 'failed'
+    path.write_text(json.dumps(journal), encoding='utf-8')
+    with pytest.raises(ValueError, match='audit phase is incomplete'):
+        enforce(cfg, model)
