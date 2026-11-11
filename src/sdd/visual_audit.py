@@ -360,6 +360,14 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
     active = None
     visual_owner, visual_stack = None, None
 
+    def record_citations(row, node, *, subtree=True):
+        links = list(node.all('a')) if subtree else []
+        if node.tag == 'a':
+            links.append(node)
+        row['available_source_windows'].extend(
+            link.attrs.get('href', '') for link in links
+            if 'citation' in link.attrs.get('class', '').split())
+
     def add(anchor, title, level, node=None):
         locator = anchor or '$heading-'+str(len(rows))
         if locator in seen:
@@ -373,6 +381,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                    paragraphs=[], loose_text=[], summaries=[], content_blocks=[], tables=[], figures=[], available_source_windows=[], excluded=[], children=[], presentation_contexts={}, heading_contexts={})
         if node is not None:
             bind(row, node, presentation, subtree=True)
+            record_citations(row, node)
             row['heading_contexts'] = dict(row['presentation_contexts'])
         for parent in stack:
             row['presentation_contexts'].update(parent['heading_contexts'])
@@ -504,9 +513,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                                             markup_sha256=digest(canonical(node)),
                                             presentation_context=presentation[id(node)]))
             current['content_blocks'].append(binding)
-            current['available_source_windows'].extend(
-                link.attrs.get('href', '') for link in node.all('a')
-                if 'citation' in link.attrs.get('class', '').split())
+            record_citations(current, node)
             return
         descendants = [child for child in all_nodes(node) if child is not node]
         heading_children = any(re.fullmatch(r'h[1-6]', child.tag) for child in descendants)
@@ -520,6 +527,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
             bind(current, node, presentation, subtree=True)
             current['summaries'].append(plain(node))
             current['content_blocks'].append(digest(node_window(node, root, page)))
+            record_citations(current, node)
             return
         if node is page_title:
             if heading_children:
@@ -536,6 +544,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
             bind(current, node, presentation, subtree=True)
             current['tables'].append(plain(node))
             current['content_blocks'].append(digest(node_window(node, root, page)))
+            record_citations(current, node)
             return
         simple_container = node.tag in {'div', 'blockquote', 'section', 'figcaption'} and not any(
             n.tag in {'p', 'li', 'table', 'details', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'} for n in descendants)
@@ -545,10 +554,10 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
             value = plain(node)
             if value:
                 current['paragraphs'].append(value)
-            for link in node.all('a'):
-                if 'citation' in link.attrs.get('class', '').split():
-                    current['available_source_windows'].append(link.attrs.get('href', ''))
+            record_citations(current, node)
             return
+        if node.tag == 'a':
+            record_citations(current, node, subtree=False)
         if not node.children:
             bind(current, node, presentation)
             current['content_blocks'].append(digest(node_window(node, root, page)))

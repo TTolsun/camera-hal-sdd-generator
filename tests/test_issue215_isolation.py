@@ -166,7 +166,8 @@ def test_dangling_preview_plan_cannot_write_into_public_inputs(run_layout):
     assert 'Preserve the previous catalog/plan' in result.stderr
 
 
-def test_raw_line_anchor_evidence_reaches_native_plan_without_html_parsing(run_layout,monkeypatch):
+@pytest.mark.parametrize('citation_container',['p','h2','td','summary','source-excerpts'])
+def test_native_plan_separates_vocabulary_navigation_from_source_evidence(run_layout,monkeypatch,citation_container):
     import importlib.util
     import json
     from sdd.visual_audit import inspect_site,policy
@@ -174,9 +175,25 @@ def test_raw_line_anchor_evidence_reaches_native_plan_without_html_parsing(run_l
     site=home/'site';(site/'en').mkdir(parents=True)
     for prefix,lang in (('','ko'),('en/','en')):
         (site/(prefix+'source.cpp')).write_text('void stop() {}\n',encoding='utf-8')
+        (site/(prefix+'glossary.html')).write_text(
+            '<html lang="'+lang+'"><article><h2 id="term">Glossary</h2><p>Term definition.</p></article></html>',encoding='utf-8')
+        citation='<a class="citation" href="'+('source.cpp#L1' if citation_container=='p' else 'glossary.html')+'">source</a>'
+        heading='<h2 id="question">Stop</h2>'
+        paragraph='<p>One condition.</p>'
+        if citation_container=='p':
+            paragraph='<p>One condition. '+citation+'</p>'
+        elif citation_container=='h2':
+            heading='<h2 id="question">Stop '+citation+'</h2>'
+        elif citation_container=='td':
+            paragraph+='<table><tr><td>'+citation+'</td></tr></table>'
+        elif citation_container=='summary':
+            paragraph+='<details><summary>'+citation+'</summary></details>'
+        else:
+            paragraph+='<details class="source-excerpts"><summary>Code</summary><a href="glossary.html">Source</a></details>'
         (site/(prefix+'guide.html')).write_text(
-            '<html lang="'+lang+'"><article><h2 id="question">Stop</h2>'
-            '<p>One condition. <a class="citation" href="source.cpp#L1">source</a></p></article></html>',encoding='utf-8')
+            '<html lang="'+lang+'"><article>'+heading+paragraph+
+            '<details class="page-terms"><summary>Vocabulary</summary><p><a href="glossary.html">Glossary</a></p></details>'
+            '</article></html>',encoding='utf-8')
     report=inspect_site(site,policy(),source_commit='a'*40)
     inventory=home/'inventory.json';inventory.write_text(json.dumps(report),encoding='utf-8')
     out=home/'review'
@@ -192,7 +209,13 @@ def test_raw_line_anchor_evidence_reaches_native_plan_without_html_parsing(run_l
     monkeypatch.setattr(helper,'Execution',no_model)
     monkeypatch.setattr(sys,'argv',['review_inventory.py','--inventory',str(inventory),'--site',str(site),
         '--profile',str(TOOLS/'independent-review-profile.yaml'),'--page','guide.html','--out',str(out),'--plan-only'])
+    if citation_container!='p':
+        with pytest.raises(ValueError,match='whole-page HTML evidence needs an exact reviewed fragment'):
+            helper.main()
+        return
     helper.main()
     payload=json.loads((out/'inputs.json').read_bytes())
     assert payload['source_windows']['source.cpp#L1']['text']=='void stop() {}\n'
+    assert 'glossary.html' not in payload['source_windows']
+    assert payload['linked_document_dependencies']['glossary.html']['inspected'] is False
     assert json.loads((out/'input-plan.json').read_bytes())['native_call'] is False

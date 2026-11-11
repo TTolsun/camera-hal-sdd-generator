@@ -269,8 +269,67 @@ def render_values(cfg, model, section, values):
     return result
 
 
+def owned_spans(body):
+    marker = re.compile(r'<!-- (/?sdd:visual:)([a-z][a-z0-9_-]*) -->')
+    matches = list(marker.finditer(body))
+    if len(matches) != body.count('<!-- sdd:visual:') + body.count('<!-- /sdd:visual:'):
+        raise ValueError('Malformed owned visual marker')
+    from .next_steps import _outside_fence
+    ids, spans = [], []
+    for index in range(0, len(matches), 2):
+        if index + 1 >= len(matches):
+            raise ValueError('Owned visual markers must be complete and unique')
+        start, end = matches[index:index + 2]
+        if (start[1] != 'sdd:visual:' or end[1] != '/sdd:visual:'
+                or start[2] != end[2] or start[2] in ids
+                or not _outside_fence(body[:start.start()])
+                or not _outside_fence(body[:end.start()])):
+            raise ValueError('Owned visual markers must be complete, unique and outside code fences')
+        ids.append(start[2])
+        spans.append((start.start(), end.end(), start[2]))
+    return spans
+
+
+def verify_stage_placement(body, rendered, section):
+    """Bind complete current figure blocks to their declared H2/H3 owner."""
+    staged=[row for row in rendered if 'stage' in row[0]]
+    if not staged:
+        return
+    body=body.replace('\r\n','\n').replace('\r','\n')
+    spans={ident:(start,end) for start,end,ident in owned_spans(body)}
+    from .next_steps import _outside_fence
+    headings=[match for match in re.finditer(r'^(#{2,3}) (.+)\n',body,re.M)
+              if _outside_fence(body[:match.start()])]
+    topics={topic['id']:topic for topic in section.get('design_topics',[])}
+    def owner(position):
+        topic_title=stage_title=None
+        for heading in headings:
+            if heading.start()>=position:
+                break
+            if heading[1]=='##':
+                topic_title,stage_title=heading[2],None
+            else:
+                stage_title=heading[2]
+        return topic_title,stage_title
+    for visual,block,_ in staged:
+        if visual['id'] not in spans:
+            raise ValueError('Visual stage block missing; regenerate')
+        start,end=spans[visual['id']]
+        if body[start:end]!=block:
+            raise ValueError('Visual stage block differs from its source-bound rendering; regenerate')
+        topic=topics[visual['topic']]
+        title=next(stage['title'] for stage in topic['explanation'] if stage['id']==visual['stage'])
+        if owner(start)!=(topic['title'],title) or owner(end-1)!=(topic['title'],title):
+            raise ValueError('Visual is outside its declared explanation stage; use normal generation')
+
+
 def strip_blocks(body):
     return re.sub(r'<!-- sdd:visual:([a-z][a-z0-9_-]*) -->.*?<!-- /sdd:visual:\1 -->\s*', '', body, flags=re.S)
+
+
+def placement_stage(visual, topic):
+    stages = topic.get('explanation', [])
+    return visual.get('stage') or (stages[0]['id'] if stages else None)
 
 
 def place(body, rendered, section):
@@ -279,8 +338,7 @@ def place(body, rendered, section):
     topics = {t['id']: t for t in section.get('design_topics', [])}
     grouped = {}
     for visual, block, _ in rendered:
-        stages = topics[visual['topic']].get('explanation', [])
-        stage = visual.get('stage') or (stages[0]['id'] if stages else None)
+        stage = placement_stage(visual, topics[visual['topic']])
         grouped.setdefault((visual['topic'], stage), []).append(block)
     for (tid, stage), blocks in grouped.items():
         heading = '## ' + topics[tid]['title']

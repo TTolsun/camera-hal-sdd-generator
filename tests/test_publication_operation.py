@@ -758,7 +758,10 @@ def test_independent_audit_keeps_original_config_snapshot_under_same_revision(tm
         if edit_original:
             original = tmp_cfg.root/'sdd.yaml'
             original.write_bytes(original.read_bytes()+b'\n# changed during independent review\n')
-        return dict(status='passed', revision=execution.report['publication']['revision'])
+        with execution.document('consistency', []):
+            return dict(status='passed', revision=execution.report['publication']['revision'],
+                        audit_run=dict(id=execution.path.stem, document=len(execution.report['documents'])-1,
+                                       phase=len(execution.report['phases'])-1))
     monkeypatch.setattr(checks, '_audit', audit)
     if edit_original:
         with pytest.raises(InputChanged):

@@ -1,0 +1,51 @@
+schema: 1
+scope: public libcamera common request path with one concrete UVC/V4L2 boundary
+source_commit: 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+observed_official_head: be7e83e91348250c015aad6d6f59f1468555bae8
+owner: request-lifecycle.md
+questions:
+- id: Q1
+  question: queueRequest가 0을 반환했는데 완료가 없으면 어느 큐·조건·콜백부터 좁혀야 합니까?
+  required: [queued invocation, waitingRequests_, prepared_, acquire fences, timeout, queue limit, queuedRequests_, head ordering]
+  before_gap: 기존 문서는 대기 조건을 설명하지만 prepare 생산자·타임아웃·재진입과 구체 장치의 다음 분기를 한 조사 경로로 연결하지 않습니다.
+  topics: [journey, preparation-depth, uvc-depth]
+- id: Q2
+  question: UVC 장치 제출의 어느 실패가 취소로 이어지며 어떤 부작용이 이미 발생했을 수 있습니까?
+  required: [findBuffer, processControls, queueBuffer, VIDIOC_QBUF, cancelRequest, sequence]
+  before_gap: UVC의 구체 queueRequestDevice와 V4L2 실패 분기는 기존 요청 수명 문서의 근거 범위 밖입니다.
+  topics: [uvc-depth]
+- id: Q3
+  question: 버퍼 완료·요청 상태 갱신·제출 순서 반환·촬영 성공은 각각 언제 확인합니까?
+  required: [bufferCompleted before pending erase, FrameError versus RequestComplete, explicit completeRequest, head ordering, requestCompleted]
+  before_gap: 공통 완료 책임은 설명하지만 UVC의 DQBUF 오류 메타데이터와 요청 상태가 서로 다른 성공 조건이라는 반례는 없습니다.
+  topics: [journey, uvc-depth, callback-order, callback-depth]
+- id: Q4
+  question: 요청·버퍼·fence는 누가 언제까지 유지하며 콜백에서 언제 재사용할 수 있습니까?
+  required: [caller ownership, buffer lifetime, releaseFence, reuse, pending bookkeeping, queued pointer lifetime]
+  before_gap: 기존 자원 계약은 보존합니다. 버퍼 신호의 내부 처리 전 시점과 지연된 포인터 인자 수명을 연결하는 설명은 보완합니다.
+  topics: [resources, callback-order, callback-depth]
+- id: Q5
+  question: 정지가 대기·장치 요청을 어떤 순서로 반환하며 STREAMOFF 실패 때 무엇을 보장할 수 없습니까?
+  required: [waiting queue swap, stopDevice, STREAMOFF early return, ignored UVC return, releaseBuffers, assertions, CameraStopping]
+  before_gap: 기존 stopDevice는 미검토 조사 대상으로 남았으며 실제 UVC STREAMOFF 실패와 반환값 미전달 경로를 검사하지 않았습니다.
+  topics: [stopping, stop-depth]
+- id: Q6
+  question: 직접·자동·큐 콜백의 스레드와 재진입은 어떻게 다르며 정지 반환으로 무엇을 판단할 수 있습니까?
+  required: [CameraManager thread, ConnectionTypeAuto, Direct, Queued, Blocking, event loop, caller synchronization, callback drain]
+  before_gap: 기존 가상 프로브 관찰은 보존합니다. 신호 구현·접속 종류·중첩 콜백과 상태 변경 동기화의 소스 계약을 연결해 확장합니다.
+  topics: [callback-depth, preparation-depth, stop-depth]
+- id: Q7
+  question: 제출·완료·취소·정지 코드를 바꾸기 전에 어느 불변조건과 반례를 다시 검사해야 합니까?
+  required: [pop before recursive dispatch, one buffer completion, no pending at completion, no access after completeRequest, no requeue during stop, fault injection matrix]
+  before_gap: 기존 기록 항목에 더해 선택 경로의 안전한 변경 조건과 실패 주입별 예상 분기를 연결해야 합니다.
+  topics: [preparation-depth, uvc-depth, stop-depth, callback-depth]
+excluded:
+- Other pipeline implementations, IPA processing and the kernel UVC driver implementation.
+- Physical UVC capture, DMA correctness, latency/performance and internal Camera HAL validation.
+- Full document visual coverage in issue 215 and real reader evaluation in issues 163/253.
+review_rules:
+- Sentence accuracy and question evidence sufficiency are separate independent native CLI calls.
+- Sufficiency review reads complete related source files, including boundaries not used as generation excerpts.
+- A missing mandatory branch blocks completion; marking it unknown does not pass the question.
+- Source facts, API contracts, investigation plans and retained historical runtime observations remain distinct.
+- Automated/author assessment is not actual non-author human evaluation.
