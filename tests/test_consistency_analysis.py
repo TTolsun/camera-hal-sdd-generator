@@ -28,7 +28,8 @@ def test_analysis_evidence_is_bound_to_real_schema_extractor_and_extracted_scena
     assert row['kind'] == 'analysis-definition'
     assert row['sha256'] == hashlib.sha256(row['text'].encode()).hexdigest()
     data = json.loads(row['text'])
-    assert data['project_source_commit'] == model.meta['source_commit']
+    assert row['project_source_commit'] == model.meta['source_commit']
+    assert 'project_source_commit' not in data
     assert data['scenario']['messages_total'] == data['scenario']['deferred'] == 1
     assert {d['name'] for d in data['generator_definitions']} == {'Message', 'Scenario', '_deferred_targets', 'trace', 'build'}
     assert all(hashlib.sha256(d['text'].encode()).hexdigest() == d['sha256'] for d in data['generator_definitions'])
@@ -43,6 +44,17 @@ def test_analysis_proof_cannot_be_attached_to_arbitrary_product_claims_or_stale_
         paragraph_refs(tmp_cfg, model, meta, note)
     with pytest.raises(ValueError, match='Unknown scenario'):
         evidence(model, '@analysis/scenario/../../private')
+
+
+def test_analysis_revision_provenance_is_separate_from_exact_representation_content(tmp_cfg):
+    model, _, _ = scenario_case(tmp_cfg)
+    first = evidence(model, '@analysis/scenario/flow')
+    model.meta['source_commit'] = 'b'*40
+    second = evidence(model, '@analysis/scenario/flow')
+    assert first['text'] == second['text'] and first['sha256'] == second['sha256']
+    assert first['project_source_commit'] != second['project_source_commit']
+    model.scenarios['flow'].deferred += 1
+    assert evidence(model, '@analysis/scenario/flow')['text'] != second['text']
 
 
 def test_source_question_scenario_preserves_only_exact_analysis_note_domain(tmp_cfg):
