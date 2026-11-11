@@ -459,7 +459,8 @@ def test_atomic_source_opt_in_regenerates_then_reuses_with_normal_export(tmp_cfg
 ])
 def test_published_figure_deep_links_follow_the_moved_evidence(previous, anchor, target):
     from pathlib import Path
-    from sdd.markdown_text import slugify
+    import html5lib
+    from sdd.site_markdown import _render
     root = Path(__file__).resolve().parents[1]/'examples/libcamera/config'
     sections = {s['id']: s for s in yaml.safe_load((root/'sections.yaml').read_text(encoding='utf-8'))['sections']}
     figures = yaml.safe_load((root/'visuals.yaml').read_text(encoding='utf-8'))['sections']
@@ -472,7 +473,11 @@ def test_published_figure_deep_links_follow_the_moved_evidence(previous, anchor,
         assert len(aliases) == 1
         assert aliases[0]['to'].startswith('#')
         anchor = aliases[0]['to'][1:]
-    moved = [v for v in figures[target] if slugify(v['title']) == anchor]
+    def heading_ids(figure):
+        rendered, _, _ = _render('### '+figure['title'], target+'.md', set(), None, '', '')
+        return {node.attrib['id'] for node in html5lib.parseFragment(rendered).iter()
+                if node.tag.rsplit('}', 1)[-1] == 'h3' and 'id' in node.attrib}
+    moved = [v for v in figures[target] if anchor in heading_ids(v)]
     assert len(moved) == 1
     assert moved[0]['topic'] in {t['id'] for t in sections[target]['design_topics']}
 
