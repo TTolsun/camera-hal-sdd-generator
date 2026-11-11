@@ -115,13 +115,15 @@ def test_context_counts_towards_the_unchanged_input_budget(tmp_cfg):
     translation_context.collect(document, model, contexts, pool)
     key = next(iter(contexts))
     tmp_cfg.agent.kind = 'ollama'
-    tmp_cfg.agent.max_input_chars = 1050
     tmp_cfg.raw['site'] = {'translation_batch_size': 2}
+    from sdd.translation import _batch_system, _payload
+    # The same exact allowance covers both calls; only source context changes.
+    tmp_cfg.agent.max_input_chars = len(_batch_system({key:''})) + len(_payload({}, {'0':key}))
     class Agent:
         calls = 0
         def chat(self, system, user, **kwargs):
             self.calls += 1
-            assert len(system) + len(user) <= 1050
+            assert len(system) + len(user) <= tmp_cfg.agent.max_input_chars
             return json.dumps({'translations': {'0': '{{0}} first moves the waiting requests.'}})
     agent = Agent()
     assert translate_missing(tmp_cfg, {'strings': {key: ''}}, agent)['strings'][key]

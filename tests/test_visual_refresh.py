@@ -10,13 +10,41 @@ from sdd.document_metadata import split_frontmatter
 from sdd.export_site import export_site
 from sdd.generate import Generator
 from sdd.generated_design import verify
-from sdd.visual_refresh import refresh
+from sdd.visual_refresh import _reassemble, refresh
 from sdd.visuals import strip_blocks
 from test_generated_design import cli_units, generated, scenario_prose
 
 
 def digest(raw):
     return hashlib.sha256(raw).hexdigest()
+
+
+@pytest.mark.parametrize('second_stage', ['first', 'second'])
+def test_existing_figure_order_is_checked_within_its_stage(second_stage):
+    def block(ident, title):
+        return f'<!-- sdd:visual:{ident} -->\n#### {title}\n<!-- /sdd:visual:{ident} -->'
+
+    section = {'id': 'device', 'design_topics': [
+        {'id': 'shutdown', 'title': 'Shutdown', 'explanation': [
+            {'id': 'first', 'title': 'First'}, {'id': 'second', 'title': 'Second'},
+        ]},
+    ]}
+    first = block('a', 'Original A')
+    second = block('b', 'Original B')
+    between = '\n\n### Second\n\nSecond explanation.\n\n' if second_stage == 'second' else '\n\n'
+    body = f'## Shutdown\n\n### First\n\nFirst explanation.\n\n{first}{between}{second}\n'
+    updated_first = block('a', 'Updated A')
+    updated_second = block('b', 'Updated B')
+    rendered = [
+        ({'id': 'b', 'topic': 'shutdown', 'stage': second_stage}, updated_second, ''),
+        ({'id': 'a', 'topic': 'shutdown', 'stage': 'first'}, updated_first, ''),
+    ]
+    if second_stage == 'first':
+        with pytest.raises(ValueError, match='Reordering existing figures'):
+            _reassemble(body, body, lambda offset: offset, rendered, section)
+    else:
+        updated, _, _, _ = _reassemble(body, body, lambda offset: offset, rendered, section)
+        assert updated == body.replace(first, updated_first).replace(second, updated_second)
 
 
 @pytest.fixture

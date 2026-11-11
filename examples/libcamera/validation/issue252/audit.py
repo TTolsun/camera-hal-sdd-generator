@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT/'src'))
 from sdd.config import load
 from sdd.llm import Agent
 from sdd.generation_run import Execution
+from sdd.next_steps import _outside_fence
 
 HERE = Path(__file__).resolve().parent
 WORK = ROOT/'build/issue252'
@@ -33,6 +34,41 @@ def document_items(text):
         if fence is None and heading:
             items.append(dict(anchor=f'item-{len(items)+1:02}',title=heading[2],level=len(heading[1])))
     return items
+
+
+def deduplicate_source_blocks(text, windows):
+    """Reference only exact, uniquely located excerpts already supplied in full."""
+    pattern = re.compile(
+        r'^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})text[ \t]*\n'
+        r'(?P<code>.*?)^(?P=indent)(?P=fence)[ \t]*(?:\n|$)', re.M | re.S)
+    records = []
+    def replace(match):
+        if not _outside_fence(text[:match.start()]):
+            return match[0]
+        indent = match['indent']
+        code = ''.join(line[len(indent):] if line.startswith(indent) else line
+                       for line in match['code'].splitlines(keepends=True))
+        if not code:
+            return match[0]
+        locations = []
+        for file, window in windows.items():
+            source = window['text']
+            start = source.find(code)
+            if start < 0:
+                continue
+            if source.find(code, start + 1) >= 0:
+                return match[0]
+            locations.append((file, start, source))
+        if len(locations) != 1:
+            return match[0]
+        file, start, source = locations[0]
+        digest = hashlib.sha256(code.encode()).hexdigest()
+        line = source.count('\n', 0, start) + 1
+        records.append(dict(file=file, line=line, source_start=start, source_end=start+len(code),
+                            code_sha256=digest, original_block_sha256=hashlib.sha256(match[0].encode()).hexdigest()))
+        return (indent + f'[Exact source excerpt already supplied in full: {file}:{line}; SHA-256 {digest}]'
+                + ('\n' if match[0].endswith('\n') else ''))
+    return pattern.sub(replace, text), records
 
 
 def main():
@@ -85,6 +121,13 @@ Return only JSON matching the schema. Findings must identify concrete erroneous/
     rules = {p.name:p.read_text(encoding='utf-8') for p in (ROOT/'style').glob('*.md')}
     payload = dict(phase=args.phase,purpose=purpose,scope=scope,writing_rules=rules,document=text,
                    complete_boundary_source_windows=windows,expected_h2_h3_items=expected_items)
+    if args.phase == 'bilingual':
+        deduplicated, records = deduplicate_source_blocks(text, windows)
+        assert document_items(deduplicated) == expected_items
+        payload['document'] = deduplicated
+        payload['document_source_deduplication'] = dict(
+            scope='Lossless source-corpus deduplication only. Reader claims, diagrams, headings and every complete source window remain. Each replaced excerpt is byte-identical and uniquely located in an included full source file.',
+            original_body_sha256=hashlib.sha256(text.encode()).hexdigest(), excerpts=records)
     previous = [p for p in (RUN/'audits').glob(args.phase+'-*/review.json')
                 if p.parent != folder]
     if previous:

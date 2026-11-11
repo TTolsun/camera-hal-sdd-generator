@@ -68,8 +68,19 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
     for _, _, ident in spans:
         old_by_topic.setdefault(current[ident][0]['topic'], []).append(ident)
     groups = {ident: [ident] for ident in old_ids}
+
+    def stage_orders(ids):
+        orders = {}
+        for ident in ids:
+            orders.setdefault(current[ident][0].get('stage'), []).append(ident)
+        return orders
+
     for topic, old_order in old_by_topic.items():
-        if [ident for ident in by_topic[topic] if ident in old_ids] != old_order:
+        # Production placement orders explicit stages by their H3 positions,
+        # independently of definition order. Keep every physical span in place
+        # and still reject any changed order within the same stage.
+        configured_order = [ident for ident in by_topic[topic] if ident in old_ids]
+        if stage_orders(configured_order) != stage_orders(old_order):
             raise ValueError('Reordering existing figures requires normal generation')
         pending = []
         for ident in by_topic[topic]:

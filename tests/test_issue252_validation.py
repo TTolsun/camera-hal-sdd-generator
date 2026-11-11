@@ -18,6 +18,56 @@ def _native_verifier():
     return module
 
 
+def _source_auditor():
+    path=Path(__file__).parents[1]/'examples/libcamera/validation/issue252/audit.py'
+    spec=importlib.util.spec_from_file_location('issue252_source_auditor',path)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module
+
+
+def test_bilingual_dedup_references_only_unique_exact_source_bytes():
+    module=_source_auditor();snippet='return 73;\n'
+    windows={'source.cpp':dict(text='before\n'+snippet+'after\n')}
+    original='## Question\nA reader condition remains.\n```text\n'+snippet+'```\n```mermaid\nflowchart LR\nA-->B\n```\n'
+    text,records=module.deduplicate_source_blocks(original,windows)
+    assert len(records)==1 and records[0]['file']=='source.cpp'
+    row=records[0]
+    assert windows[row['file']]['text'][row['source_start']:row['source_end']]==snippet
+    assert row['code_sha256']==hashlib.sha256(snippet.encode()).hexdigest()
+    assert 'A reader condition remains.' in text and 'flowchart LR\nA-->B' in text
+    assert module.document_items(text)==module.document_items(original)
+    assert windows['source.cpp']['text']=='before\n'+snippet+'after\n'
+
+
+def test_bilingual_dedup_keeps_changed_or_ambiguously_located_excerpt():
+    module=_source_auditor();original='```text\nreturn 73;\n```\n'
+    for windows in [
+        {'a.cpp':dict(text='return 74;\n')},
+        {'a.cpp':dict(text='return 73;\nreturn 73;\n')},
+        {'a.cpp':dict(text='return 73;\n'),'b.cpp':dict(text='return 73;\n')},
+    ]:
+        assert module.deduplicate_source_blocks(original,windows)==(original,[])
+
+
+def test_bilingual_dedup_preserves_real_code_indentation():
+    module=_source_auditor();snippet='    return 73;\n'
+    original='    ```text\n    '+snippet+'    ```\n'
+    _,records=module.deduplicate_source_blocks(original,{'a.cpp':dict(text='before\n'+snippet+'after\n')})
+    assert len(records)==1
+    assert records[0]['code_sha256']==hashlib.sha256(snippet.encode()).hexdigest()
+
+
+@pytest.mark.parametrize('language',['mermaid','json','cpp'])
+def test_bilingual_dedup_does_not_remove_other_display_blocks(language):
+    module=_source_auditor();original='```'+language+'\nreturn 73;\n```\n'
+    assert module.deduplicate_source_blocks(original,{'a.cpp':dict(text='return 73;\n')})==(original,[])
+
+
+def test_bilingual_dedup_keeps_literal_nested_fence():
+    module=_source_auditor();original='````md\n```text\nreturn 73;\n```\n````\n'
+    assert module.deduplicate_source_blocks(original,{'a.cpp':dict(text='return 73;\n')})==(original,[])
+
+
 def _historical_import(tmp_path):
     rel='build/prompts/calls/historical/001.receipt.json'
     receipt=tmp_path/rel;receipt.parent.mkdir(parents=True)
