@@ -1887,19 +1887,20 @@ sections:
     - completion
     parts:
     - id: buffer
-      question: completeBuffer가 버퍼 완료 알림과 요청의 내부 버퍼 추적에 수행하는 역할만 설명하세요.
+      question: 일반 버퍼 완료 경로에서 파이프라인 핸들러가 completeBuffer를 호출해야 한다는 의무와 이 함수의 버퍼 완료 알림·내부 추적 역할을 설명하세요. 대기 버퍼를 내부에서 취소하는 cancelRequest 경로까지 개별 completeBuffer 호출 의무로 일반화하지 마세요.
       sources:
       - buffer-contract
+      - cancel-contract
       answer_contract:
         basis: description
         required_terms:
         - - completeBuffer
         - - 버퍼
     - id: buffer-not-request
-      question: 마지막 버퍼가 끝났을 때 completeBuffer가 요청을 자동 완료하는지와 구현자가 별도로 호출해야 하는 요청 완료
-        함수만 설명하세요.
+      question: 일반 완료 처리에서 마지막 버퍼의 completeBuffer 호출이 요청을 자동 완료하는지와 구현자가 별도로 호출해야 하는 completeRequest를 구분하세요. cancelRequest의 내부 취소·요청 완료 경로는 별도 답변에서 다루므로 정상 버퍼 완료와 같은 개별 호출 의무로 묶지 마세요.
       sources:
       - buffer-contract
+      - cancel-contract
       answer_contract:
         basis: contract
         required_terms:
@@ -1951,8 +1952,8 @@ sections:
         - - completeRequest
         - - doQueueRequests
     - id: thread
-      question: completeBuffer와 completeRequest 호출자가 지켜야 할 CameraManager 스레드 문맥만 설명하세요.
-        잘못된 스레드의 결과는 추정하지 마세요.
+      question: completeBuffer와 completeRequest를 호출하는 경우 지켜야 할 CameraManager 스레드 문맥만 한 문장으로 설명하세요.
+        이 항목에 모든 버퍼 완료나 정지 취소에서 두 함수를 호출해야 한다는 의무를 덧붙이지 마세요. 일반 완료와 cancelRequest의 호출 순서는 각각의 기존 답변에서 설명합니다.
       sources:
       - request-contract
       - buffer-contract
@@ -1962,6 +1963,7 @@ sections:
         - - completeBuffer
         - - completeRequest
         - - CameraManager
+      max_statements: 1
     - id: cancel
       question: cancelRequest 구현이 직접 수행하는 호출과 호출 순서만 설명하세요. completeRequest의 접근 금지·반환
         순서·스레드 계약은 이 절의 다른 답변에서 설명하므로 다시 나열하지 마세요.
@@ -4834,9 +4836,10 @@ sections:
         - - 버퍼
       max_statements: 1
     - id: queue-owner
-      question: 이 if는 요청이 어느 카메라에서 생성됐는지 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
+      question: Camera::queueRequest의 접근 검사를 통과해 생성 카메라 검사에 도달한 경우라는 적용 조건과, 생성 카메라가 다를 때 -EXDEV를 반환하는 분기를 한 문장으로 연결하세요.
       sources:
       - queue-owner-guard
+      - queue-code
       answer_contract:
         basis: implementation
         required_terms:
@@ -4846,7 +4849,7 @@ sections:
       max_statements: 1
       prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-status
-      question: Camera::queueRequest의 RequestPending 상태 비교와 일치하지 않을 때의 반환값만 설명하세요.
+      question: Camera::queueRequest의 접근·생성 카메라 검사를 통과해 상태 검사에 도달한 경우라는 적용 조건과, RequestPending 비교가 일치하지 않을 때의 -EINVAL 반환을 한 문장으로 연결하세요.
       sources:
       - queue-code
       answer_contract:
@@ -4857,9 +4860,10 @@ sections:
       max_statements: 1
       prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-controls
-      question: 이 if에서 Request::controls().infoMap()과 Camera::controls()의 주소를 어떻게 비교하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? infoMap 이름을 사용하고 조건과 반환값을 한 문장으로 연결하세요.
+      question: Camera::queueRequest의 접근·생성 카메라·요청 상태 검사를 통과해 controls 검사에 도달한 경우라는 적용 조건과, Request::controls().infoMap()이 Camera::controls()의 주소와 다를 때 -EINVAL을 반환하는 분기를 한 문장으로 연결하세요.
       sources:
       - queue-controls-guard
+      - queue-code
       answer_contract:
         basis: implementation
         required_terms:
@@ -4868,25 +4872,31 @@ sections:
       max_statements: 1
       prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-buffers
-      question: 이 if는 buffers에 어떤 조건을 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
+      question: Camera::queueRequest의 앞선 접근·생성 카메라·요청 상태·controls 검사를 통과해 이 if에 도달한 경우라는 적용 조건을 먼저 밝히고, buffers의 빈 목록 검사와 -EINVAL 반환을 한 문장으로 연결하세요. 앞선 검사에서 다른 오류로 반환할 수 있다는 경계를 생략하지 마세요.
       sources:
       - queue-buffers-guard
+      - queue-code
       answer_contract:
         basis: implementation
         required_terms:
         - - buffers
         - - -EINVAL
+        - - 통과
+          - 도달
       max_statements: 1
       prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: queue-stream
-      question: 이 if는 activeStreams_의 스트림 포함 여부를 어떻게 검사하며, 조건에 해당하면 어떤 오류 코드를 반환합니까? 조건과 반환값을 한 문장으로 연결하세요.
+      question: Camera::queueRequest의 앞선 검사와 빈 버퍼 검사를 통과해 스트림 순회에 도달한 경우라는 적용 조건을 먼저 밝히고, activeStreams_의 포함 여부 검사와 -EINVAL 반환을 한 문장으로 연결하세요. 모든 호출이 이 검사에 도달한다고 쓰지 마세요.
       sources:
       - queue-stream-guard
+      - queue-code
       answer_contract:
         basis: implementation
         required_terms:
         - - activeStreams_
         - - -EINVAL
+        - - 통과
+          - 도달
       max_statements: 1
       prompt: 조건·결과·책임을 질문의 범위에 맞춰 한 문장으로 설명하세요. 같은 내용을 다른 표현으로 반복하지 마세요.
     - id: completion-signal
@@ -6269,20 +6279,10 @@ sections:
           message: 앞 질문의 조정 결과를 반복하지 말고 소스에 명시된 호출자의 확인 의무만 한 문장으로 설명하세요. 근거에 없는 인과
             표현을 덧붙이지 마세요.
     - id: validation-result
-      question: 이 validate 호출의 결과를 Valid와 비교하는 조건과, Valid가 아닐 때 반환하는 오류 코드를 함께 기록하는
-        조사 항목을 한 문단으로 제안하세요. 같은 분기를 결과 확인과 오류 확인으로 되풀이하지 마세요.
+      question: 아직 수행하지 않은 조사 계획의 기록 항목으로, Camera::configure의 validate 결과와 Valid 비교 및 다를 때의 -EINVAL 반환을 함께 확인하도록 한 문장으로 제안하세요. 소스가 조사자의 기록을 의무화하거나 실제 기록이 완료됐다고 쓰지 마세요.
+      statement_kind: limitation
       sources:
       - validation-check
-      answer_contract:
-        basis: investigation
-        required_terms:
-        - - validate
-        - - Valid
-        - - -EINVAL
-        reject_patterns:
-        - pattern: '[.!?]\s+\S'
-          message: 질문에 맞게 필요한 조건과 결과를 한 문장으로 설명하고 같은 분기를 확인·기록하거나 변경 가능성을 끝에서 되풀이하지
-            마세요.
       max_statements: 1
     - id: device-configure
       question: 기존 config->validate() 호출 스택에서 config의 실제 동적 타입과 validate 구현을 어떻게 기록하며,
