@@ -277,3 +277,33 @@ def test_audit_report_cannot_publish_after_its_enclosing_phase_fails(review_case
     path.write_text(json.dumps(journal), encoding='utf-8')
     with pytest.raises(ValueError, match='audit phase is incomplete'):
         enforce(cfg, model)
+
+
+def test_audit_does_not_commit_a_report_when_phase_exit_fails(review_case, monkeypatch):
+    from contextlib import contextmanager
+    from sdd.generation_run import Execution
+
+    cfg, model, *_ = review_case
+    original = Execution.phase
+
+    @contextmanager
+    def failed_close(self, name):
+        with original(self, name):
+            yield
+            if name == 'contract-audit':
+                raise ValueError('Audit operation close failed')
+
+    monkeypatch.setattr(Execution, 'phase', failed_close)
+    with pytest.raises(ValueError, match='Audit operation close failed'):
+        run_review(review_case)
+    report = json.loads((cfg.build_dir/'consistency-review.json').read_bytes())
+    assert report.get('status') != 'passed'
+    run = report['audit_run']
+    path = cfg.build_dir/'generation-runs'/f"{run['id']}.json"
+    journal = json.loads(path.read_bytes())
+    assert journal['documents'][run['document']]['status'] == 'passed'
+    assert 'consistency_report_sha256' not in journal['documents'][run['document']].get('artifacts', {})
+    journal['phases'][run['phase']]['status'] = 'completed'
+    path.write_text(json.dumps(journal), encoding='utf-8')
+    with pytest.raises(ValueError, match='failed or is incomplete'):
+        enforce(cfg, model)

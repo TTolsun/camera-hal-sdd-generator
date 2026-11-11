@@ -441,7 +441,17 @@ def audit(cfg, model, agent):
         agent = Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts')
     agent = agent if isinstance(agent, Execution) else Execution(cfg, agent, model=model)
     with agent.track('contract-audit'):
-        return _audit(cfg, model, agent, configured)
+        report = _audit(cfg, model, agent, configured)
+    # The phase closes its own input/operation checks on exit. Persist a final
+    # report only after that boundary succeeds, not when a document alone ends.
+    path = cfg.build_dir/'consistency-review.json'
+    raw = (json.dumps(report, ensure_ascii=False, indent=2)+'\n').encode('utf-8')
+    document = agent.report['documents'][report['audit_run']['document']]
+    document.setdefault('artifacts', {})['consistency_report_sha256'] = hashlib.sha256(raw).hexdigest()
+    agent.persist()
+    inputs = current()
+    save(path, report, newline='\n', before_replace=inputs.verify if inputs is not None else None)
+    return report
 
 
 def _audit(cfg, model, agent, configured):
@@ -517,11 +527,6 @@ def _audit_prepared(cfg, model, agent, prepared):
     report['status'] = 'failed' if any(f['status']=='contradiction' for c in report['contracts'] for f in c['findings']) else 'passed'
     report['unresolved'] = [dict(contract=c['id'], **f) for c in report['contracts'] for f in c['findings']
                             if f['status'] in ('ambiguous', 'insufficient-evidence')]
-    save(path, report, newline='\n')
-    # The durable invocation journal certifies which units made new calls and
-    # which reused a checkpoint. Bind the exact completed report to that record.
-    agent.current.setdefault('artifacts', {})['consistency_report_sha256'] = hashlib.sha256(read_bytes(path)).hexdigest()
-    agent.persist()
     return report
 
 
