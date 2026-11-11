@@ -381,6 +381,7 @@ def cmd_audit_consistency(args: argparse.Namespace) -> int:
     agent = Execution(cfg, Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts'))
     report = audit(cfg, _load_model(cfg), agent)
     print(f"{report['status']}: {cfg.build_dir/'consistency-review.json'}")
+    print(f"계약 대조 배치 {report['fresh_batches']}개 신규, {report['reused_batches']}개 재사용")
     print(f"Automatic unresolved findings: {len(report['unresolved'])}; human review remains pending")
     return 1 if report['status'] != 'passed' else 0
 
@@ -438,6 +439,19 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
     sub.add_parser("audit-docs", help="문서 분량·증가·중복·Feature 범위·폐기 계획을 검사한다 (기준선 변경 없음)").set_defaults(fn=cmd_audit_docs)
     sub.add_parser('audit-consistency', help='선택한 CLI로 문서·언어 사이의 계약과 소스를 대조한다 (사람 승인 아님)').set_defaults(fn=cmd_audit_consistency)
+
+    from .progress_watch import command as watch_progress
+    s = sub.add_parser('watch-progress', help='실행과 별도로 진행 파일을 감시하고 갱신 중단을 알린다')
+    source = s.add_mutually_exclusive_group(required=True)
+    source.add_argument('--activity', help='이 실행의 채팅 로그 또는 실행 장부')
+    source.add_argument('--codex-thread', help='로컬 Codex 채팅 ID')
+    s.add_argument('--stop-file', required=True, help='이 실행이 끝났을 때 생성할 종료 표식')
+    s.add_argument('--alerts', required=True, help='알림과 재개 기록을 추가할 JSONL 파일')
+    s.add_argument('--idle-seconds', type=int, default=600)
+    s.add_argument('--interval', type=int, default=30)
+    s.add_argument('--max-seconds', type=int, default=86400)
+    s.add_argument('--desktop', action='store_true', help='Windows의 현재 사용자 데스크톱에 경고 표시')
+    s.set_defaults(fn=watch_progress)
 
     s = sub.add_parser("compdb", help="compile DB 확보와 정규화")
     s.add_argument("--regenerate", action="store_true")

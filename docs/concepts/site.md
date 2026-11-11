@@ -64,6 +64,25 @@ uv run sdd --config examples/libcamera/sdd.yaml verify-site
 Git push는 생성 명령에 포함하지 않습니다. 검증된 출력 디렉터리를 `libcamera-sdd/docs`로 지정해 만들고 해당 저장소에서 커밋·push하면 기존 Pages가 게시합니다. 생성기 CI는 push/PR마다 Windows·Linux, Python 3.11·3.14에서 회귀 검사를 실행하도록 구성했습니다. 원격 CI 통과 여부는 실제 실행 결과로 확인해야 합니다.
 
 
+## 실행 중 진행 기록을 감시하기
+
+장시간 작업을 시작할 때 현재 실행의 진행 파일을 별도 프로세스로 감시하세요. 기본 30초마다 파일 갱신을 확인합니다. 10분 동안 갱신이 없으면 표준 오류와 JSONL 파일에 한 번 기록합니다. 갱신이 재개되면 재개 이벤트를 남기고, 다시 중단되면 다음 경고를 보냅니다. `--desktop`을 지정하면 Windows의 현재 사용자 화면에도 경고가 표시됩니다. 감시는 종료 표식이 생기거나 실행 한도에 도달하면 종료됩니다. 기본 실행 한도는 24시간입니다.
+
+Windows의 Codex 채팅에서 생성기 저장소 루트를 작업 디렉터리로 사용한다면 다음처럼 시작할 수 있습니다.
+
+```powershell
+$watch = 'build/watch-' + $env:CODEX_THREAD_ID + '-' + [guid]::NewGuid().ToString('N')
+New-Item -Path build -ItemType Directory -Force | Out-Null
+$observer = Start-Process -FilePath python -WindowStyle Hidden -PassThru -RedirectStandardError "$watch.stderr.log" -ArgumentList @(
+    'tools/run_sdd.py', 'watch-progress', '--codex-thread', $env:CODEX_THREAD_ID,
+    '--stop-file', "$watch.done", '--alerts', "$watch.jsonl", '--desktop'
+)
+# 작업 완료 또는 명시적 중단 시 실행합니다.
+New-Item -Path "$watch.done" -ItemType File
+```
+
+진행 장부를 직접 지정하려면 `--codex-thread` 대신 `--activity`와 해당 파일 경로를 사용하세요. 채팅 로그를 감시하면 채팅 기록 중단을 확인할 수 있고, `build/generation-runs/`의 현재 실행 장부를 감시하면 해당 CLI 작업의 기록 중단을 확인할 수 있습니다. 알림은 감시하는 컴퓨터와 프로세스가 실행 중일 때 전달됩니다. 진행 파일이 갱신되지 않았다는 관측을 남기므로, 실제 작업 상태는 원래 실행 장부에서 확인하세요.
+
 ## 디자인 기준
 
 [libcamera 공식 문서](https://docs.libcamera.org/master/)의 좌측 탐색 메뉴·중앙 본문·우측 목차를 참고했습니다. OMM 저장소의 `DESIGN.md`, `docs/design.md`, `assets/reading.css`, `templates/jekyll/_layouts/default.html`에서 읽기 중심 배치와 다이어그램 상호작용 규칙을 적용했습니다. 참고한 로컬 OMM 기준 커밋은 `12a704c603136308b87b26c4081bd6102d42395e`입니다.

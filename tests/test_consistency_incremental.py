@@ -174,6 +174,23 @@ def test_changed_primary_invalidates_every_batch_that_compares_with_it(review_ca
     assert run_review(review_case)['fresh_batches'] == 3 and len(calls) == 6
 
 
+def test_edit_only_reviews_the_contract_with_changed_inputs(review_case):
+    cfg, model, group, revision, calls, _, texts = review_case
+    other = dict(group, id='ownership', question='Who owns the request?',
+                 primary='owner.md', documents=['owner.md'])
+    cfg.paths['consistency_file'].write_text(yaml.safe_dump(dict(contracts=[group, other])), encoding='utf-8')
+    texts['owner'] = 'The request belongs to the caller.'
+    revision('a'*40)
+    first = run_review(review_case)
+    texts['peer'] += ' A request follows the completion path.'
+    revision('a'*40)
+    second = run_review(review_case)
+    assert (second['fresh_batches'], second['reused_batches']) == (1, 1)
+    assert [payload['contract']['id'] for payload in calls] == ['completion', 'ownership', 'completion']
+    assert first['contracts'][1]['review_units'] == second['contracts'][1]['review_units']
+    enforce(cfg, model)
+
+
 def test_cross_revision_reuse_cannot_hide_damaged_original_receipt_binding(review_case):
     from sdd.cli_checkpoint import checksum
     cfg, model, group, revision, calls, *_ = review_case
