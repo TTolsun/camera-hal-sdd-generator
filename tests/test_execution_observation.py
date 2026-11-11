@@ -1,3 +1,4 @@
+import errno
 import json
 import os
 import threading
@@ -37,8 +38,9 @@ def test_heartbeat_updates_a_silent_stage_and_records_failure(tmp_cfg):
                 return json.loads(execution.path.read_bytes())
             except PermissionError as exc:
                 # Windows can briefly deny a reader during atomic replacement.
-                if (os.name != 'nt' or getattr(exc, 'winerror', None) not in (5, 32, 33)
-                        or time.monotonic() >= deadline):
+                winerror = getattr(exc, 'winerror', None)
+                sharing_denied = winerror in (5, 32, 33) or (winerror is None and exc.errno == errno.EACCES)
+                if os.name != 'nt' or not sharing_denied or time.monotonic() >= deadline:
                     raise
                 time.sleep(.01)
     with pytest.raises(KeyboardInterrupt):
