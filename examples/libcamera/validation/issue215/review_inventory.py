@@ -19,12 +19,13 @@ from sdd.cli_agent import command, arguments, build_prompt
 from sdd.generation_run import Execution
 from sdd.llm import Agent
 from sdd.visual_audit import (Document, digest, source_window, node_window, all_nodes,
-                              plain, inspect_site, without_navigation,
+                              plain, inspect_site, inventory_page, without_navigation,
                               source_container, _generated_route_alias, canonical,
                               WINDOW_BINDING)
 from review_contract import SYSTEM, response_schema
 from sdd.visual_presentation import paths as presentation_paths
 from sdd.site_fragments import fragment_id
+from sdd.site_paths import owned_path
 
 
 def validate_presentation(contexts, ident):
@@ -67,6 +68,48 @@ def literal_label(value):
                   html.unescape(re.sub(r'<br\s*/?>', '', value)))
 
 
+def selected_site_rows(site, report, pages):
+    """Recalculate complete item fingerprints for the selected pages and their linked windows."""
+    from sdd.document_metadata import split_frontmatter
+
+    rows = {}
+    root = site.resolve()
+    commit = report['source_commit']
+    for page in sorted(pages):
+        manuscript = owned_path(root, page.removeprefix('en/')).with_suffix('.md')
+        if manuscript.is_file():
+            recorded = split_frontmatter(manuscript.read_text(encoding='utf-8'))[0].get('source_commit')
+            if recorded and recorded != commit:
+                raise ValueError('Visualization manuscript and facts commits differ: '+page)
+        html = owned_path(root, page).read_text(encoding='utf-8')
+        rows.update((row['id'], row) for row in inventory_page(html,page,report['policy'],source_commit=commit,root=root))
+    return rows
+
+
+def explicit_source_windows(source, commit, selectors):
+    if selectors and source is None:
+        raise ValueError('Explicit review windows require the immutable source checkout')
+    windows = {}
+    files = {}
+    for selector in selectors:
+        name, separator, fragment = selector.rpartition('#')
+        bounds = re.fullmatch(r'L([1-9][0-9]*)-L([1-9][0-9]*)',fragment)
+        if not separator or not bounds:
+            raise ValueError('An explicit review window needs file#Lstart-Lend: '+selector)
+        owned_path(source.resolve(),name)
+        if name not in files:
+            files[name] = subprocess.check_output(['git','show',commit+':./'+name],cwd=source.resolve())
+        raw = files[name]
+        lines = raw.splitlines(keepends=True)
+        first, last = map(int,bounds.groups())
+        if not first <= last <= len(lines):
+            raise ValueError('Explicit review source window is outside the pinned file: '+selector)
+        window = b''.join(lines[first-1:last])
+        windows[f'git:{commit}:{selector}'] = dict(file=name,source_commit=commit,first_line=first,last_line=last,
+            sha256=hashlib.sha256(window).hexdigest(),file_sha256=hashlib.sha256(raw).hexdigest(),text=window.decode('utf-8'))
+    return windows
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--inventory', type=Path, required=True)
@@ -78,6 +121,10 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--plan-only', action='store_true', help='Archive exact payload and measured input size without calling the CLI')
     parser.add_argument('--source', type=Path, help='Matching official checkout used for immutable git-show source windows')
+    parser.add_argument('--source-window', action='append', default=[],
+                        help='Additional immutable source selector file#Lstart-Lend for the selected item group')
+    parser.add_argument('--explicit-source-only',action='store_true',
+                        help='Use explicit additional Git windows instead of whole files inferred from links')
     parser.add_argument('--facts', type=Path, help='Matching immutable structural facts for locating every displayed class declaration')
     parser.add_argument('--facts-sha256', help='Pinned digest from the separately retained extraction/integration provenance; required with --facts')
     parser.add_argument('--style-dir', type=Path, help='Actual writing rules matching the inventory policy; default ./style')
@@ -90,10 +137,22 @@ def main():
     parser.add_argument('--fit-input', action='store_true', help='Execution-local character boundary equals the measured complete prompt')
     parser.add_argument('--compact-input', action='store_true',
                         help='Losslessly share repeated JSON values; archive and round-trip the complete original input')
+    parser.add_argument('--structured-window-input', action='store_true',
+                        help='Share exact ancestry paths for large linked source windows')
+    parser.add_argument('--compact-json',action='store_true',
+                        help='Remove JSON separator whitespace from the structured-window input')
+    parser.add_argument('--checked-presentation-input',action='store_true',
+                        help='Keep the complete checked HTML paths in the archive and send their hashes with the source text')
     parser.add_argument('--native-input-cap', type=int, default=1000000,
                         help='Conservative execution-local CLI input cap; split groups instead of truncating evidence')
     parser.add_argument('--input-rationale', help='Required explanation for an execution-local input boundary adjustment')
     args = parser.parse_args()
+    if args.explicit_source_only and not args.source_window:
+        parser.error('--explicit-source-only needs at least one --source-window')
+    if args.compact_json and not args.structured_window_input:
+        parser.error('--compact-json needs --structured-window-input')
+    if args.checked_presentation_input and not args.compact_json:
+        parser.error('--checked-presentation-input needs --structured-window-input and --compact-json')
     args.out = args.out.resolve()
     for immutable in [args.site, *([args.source] if args.source else []),
                       *([args.historical_artifacts] if args.historical_artifacts else [])]:
@@ -133,8 +192,13 @@ def main():
         raise ValueError('Every selected item needs exactly two language peers')
     if any(row['page'] in report['policy']['deferred_pages'] for row in selected):
         raise ValueError('Another session owns a selected item; wait for integration')
-    actual = {row['id']:row for row in inspect_site(
-        args.site, report['policy'], source_commit=report['source_commit'])['items']}
+    selected_pages = {row['page'] for row in selected}
+    if args.reader_models:
+        # Preliminary models can explicitly name document items on other pages.
+        actual = {row['id']:row for row in inspect_site(
+            args.site,report['policy'],source_commit=report['source_commit'])['items']}
+    else:
+        actual = selected_site_rows(args.site,report,selected_pages)
     derived = {'status', 'reason', 'judgment', 'source_windows', 'unreviewed_scope'}
     for row in selected:
         current = actual.get(row['id'])
@@ -145,7 +209,8 @@ def main():
         if 'presentation_contexts' not in row:
             raise ValueError('Current item presentation context is missing; collect a fresh inventory')
         validate_presentation(row['presentation_contexts'], row['id'])
-    windows, additional, document_windows, structural_classes, structural_scenarios = {}, {}, {}, {}, {}
+    windows, document_windows, structural_classes, structural_scenarios = {}, {}, {}, {}
+    additional = explicit_source_windows(args.source,report['source_commit'],args.source_window)
     linked_dependencies = {}
     excluded_by_page = {}
     wanted_by_page = {}
@@ -270,7 +335,7 @@ def main():
             if parts.scheme or parts.netloc:
                 marker = '/'+report['source_commit']+'/'
                 git_path = parts.scheme == 'git' and parts.path.startswith(report['source_commit']+':')
-                if args.source and (git_path or marker in parts.path):
+                if args.source and not args.explicit_source_only and (git_path or marker in parts.path):
                     name = unquote(parts.path.split(':', 1)[1] if git_path else parts.path.split(marker, 1)[1])
                     from sdd.site_paths import owned_path
                     owned_path(args.source.resolve(), name)
@@ -380,9 +445,8 @@ def main():
             windows[key] = dict(text=text, sha256=digest(text), inventory_sha256=actual_hash)
         if not set(row['source_window_hashes']) <= windows.keys() | linked_dependencies.keys():
             raise ValueError('Inventory evidence was not completely collected: '+row['id'])
-    current = {row['id']:row['fingerprint'] for row in inspect_site(
-        args.site, report['policy'], source_commit=report['source_commit'])['items']}
-    if any(current.get(row['id']) != row['fingerprint'] for row in selected):
+    current = selected_site_rows(args.site,report,selected_pages)
+    if any(current.get(row['id'],{}).get('fingerprint') != row['fingerprint'] for row in selected):
         raise ValueError('Selected site items changed since inventory; make a new inventory')
     schema = response_schema([f for row in selected for f in row['figures']])
     figures, item_inputs = {}, []
@@ -519,9 +583,10 @@ def main():
         argv=command(cfg.agent)+arguments(cfg.agent, schema)), ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     system = SYSTEM
     user = json.dumps(payload, ensure_ascii=False)
-    if args.compact_input:
-        from sdd.review_context import prepare
-        user, context, proof = prepare(payload)
+    if args.compact_input or args.structured_window_input:
+        from review_window_transport import prepare_review
+        user, context, proof = prepare_review(payload, structured=args.structured_window_input,
+            compact_json=args.compact_json,checked_presentation=args.checked_presentation_input)
         (args.out/'native-context-proof.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
         if context is not None:
             (args.out/'native-context.json').write_text(json.dumps(context,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

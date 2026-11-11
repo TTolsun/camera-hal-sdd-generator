@@ -136,6 +136,7 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
     from .config import section_output
     from .document_metadata import split_frontmatter
     from .evidence import fingerprint
+    from . import generated_visuals
     changed: dict[str, list[str]] = {}
     for sec in cfg.sections():
         if sec.get('index_only'):
@@ -155,18 +156,26 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
             changed[sec["id"]] = ["원고가 아직 없음"]
             continue
         text = path.read_text(encoding="utf-8")
-        recorded = str(split_frontmatter(text)[0].get("evidence_fingerprint", ""))
+        meta, body = split_frontmatter(text)
+        recorded = str(meta.get("evidence_fingerprint", ""))
         if recorded != fingerprint(model, sec):
             changed[sec["id"]] = ["설계 질문·근거 지정이 원고를 만든 입력과 다름" if recorded else "원고에 입력 지문이 없음"]
             continue
         if sec.get('scenario'):
             from .scenario_sections import verify
-            meta, body = split_frontmatter(text)
             try:
                 verify(cfg, model, sec, meta, body)
             except (ValueError, RuntimeError) as exc:
                 changed[sec['id']] = [str(exc)]
                 continue
+        try:
+            artifact = meta.get('generated_visuals')
+            if artifact and not generated_visuals.plans(cfg, sec):
+                raise ValueError('Generated visual record remains after its plan was removed')
+            generated_visuals.from_manuscript(cfg, model, sec, text)
+        except (ValueError, TypeError, KeyError) as exc:
+            changed[sec['id']] = ['그림 입력·배치가 원고의 기록과 다름: ' + str(exc)[:120]]
+            continue
         if sec.get("design_generation") == "llm":
             # 입력은 같아도 저장된 답변이 현재 검사(중복 문장, 문장 형태)나 표시 형식을 통과하지 못하면
             # 같은 답변으로 다시 만들거나 해당 주제만 다시 쓰게 한다.
@@ -174,7 +183,7 @@ def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
             try:
                 if cfg.agent.kind == 'cli':
                     from .design_request import prepare_requests
-                    previous = split_frontmatter(text)[0].get('generated_design', {})
+                    previous = meta.get('generated_design', {})
                     current_inputs = prepare_requests(cfg, model, sec, text).inputs
                     if previous.get('topic_inputs') != current_inputs:
                         changed[sec['id']] = ['LLM 모델·실행 인자·집필 입력이 원고의 기록과 다름']

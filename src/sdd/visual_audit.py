@@ -935,6 +935,10 @@ def publication_gate(cfg, stage):
     if contract := baseline_contract(cfg,options):
         retain_baseline_items(report,contract)
     enforce(report)
+    # The fingerprint already commits to these complete DOM paths. Repeating
+    # them in the public report can exceed the size limit for a Pages file.
+    for row in report['items']:
+        row.pop('presentation_contexts', None)
     (stage/REPORT).write_text(json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2)+'\n', encoding='utf-8', newline='\n')
 
 
