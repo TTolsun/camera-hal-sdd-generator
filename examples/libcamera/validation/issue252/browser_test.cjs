@@ -73,7 +73,13 @@ if (!/^https?:\/\//.test(base)) throw Error('Supply an exact local or public sit
       }
       await local.first().click();
       const destination = page.locator(target);
-      await destination.waitFor({state:'visible'});
+      await page.waitForFunction(fragment=>location.hash===fragment,target);
+      await destination.waitFor({state:'attached'});
+      const excerpt = destination.locator('xpath=parent::p/following-sibling::details[1]');
+      const excerptSummary = excerpt.locator(':scope > summary');
+      await excerptSummary.waitFor({state:'visible'});
+      if (!await excerpt.evaluate(element=>element.open)) await excerptSummary.click();
+      await excerpt.locator('pre').waitFor({state:'visible'});
       run.evidence_anchor = target;
       const sourceLink = page.locator('article a[href*="/blob/be7e83e91348250c015aad6d6f59f1468555bae8/"]').first();
       assert.ok(await sourceLink.count());
