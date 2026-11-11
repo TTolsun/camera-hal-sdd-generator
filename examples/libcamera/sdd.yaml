@@ -102,7 +102,6 @@ documentation:
     sections:
     - ipu3-lsc-prepare
 site:
-  reader_paths: reader-paths.yaml
   topic_links:
     request-diagnosis.md:
       diagnosis:

@@ -6,7 +6,7 @@
 
 ## 설정과 근거 소유권
 
-공개 설정은 [reader-paths.yaml](../../examples/libcamera/reader-paths.yaml), 입력이 없으면 게시를 막는 사내 양식은 [사내 설정](../../examples/inhouse-template/config/reader-paths.yaml)에 있습니다.
+선택 적용을 위한 libcamera 예제는 [reader-paths.yaml](../../examples/libcamera/reader-paths.yaml), 입력이 없으면 게시를 막는 사내 양식은 [사내 설정](../../examples/inhouse-template/config/reader-paths.yaml)에 있습니다. 기본 공개 사이트는 Vendor·Developer 메뉴에서 상세 문서로 연결합니다.
 
 ```yaml
 site:
