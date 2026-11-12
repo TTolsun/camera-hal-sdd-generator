@@ -444,12 +444,13 @@ def audit(cfg, model, agent):
         agent = Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts')
     agent = agent if isinstance(agent, Execution) else Execution(cfg, agent, model=model)
     path = cfg.build_dir/'consistency-review.json'
+    attempt_path = cfg.build_dir/'consistency-attempts'/f'{agent.path.stem}.json'
+    agent.report['review_attempt'] = str(attempt_path)
     try:
         with agent.track('contract-audit'):
             report = _audit(cfg, model, agent, configured)
     except BaseException as exc:
-        if attempt := agent.report.get('review_attempt'):
-            attempt_path = Path(attempt)
+        if attempt_path.is_file():
             failed = json.loads(attempt_path.read_bytes())
             failed.update(status='incomplete', error=str(exc))
             save(attempt_path, failed, newline='\n')
@@ -464,8 +465,7 @@ def audit(cfg, model, agent):
     document['artifacts']['consistency_report'] = str(path)
     agent.persist()
     inputs = current()
-    save(Path(agent.report['review_attempt']), report, newline='\n',
-         before_replace=inputs.verify if inputs is not None else None)
+    save(attempt_path, report, newline='\n', before_replace=inputs.verify if inputs is not None else None)
     save(path, report, newline='\n', before_replace=inputs.verify if inputs is not None else None)
     return report
 
@@ -485,9 +485,8 @@ def _audit_prepared(cfg, model, agent, prepared):
                   assessment=ASSESSMENT, comparison_scope=COMPARISON_SCOPE)
     report['audit_run'] = dict(id=agent.path.stem, document=len(agent.report['documents'])-1,
                               phase=len(agent.report['phases'])-1)
-    attempt_path = cfg.build_dir/'consistency-attempts'/f'{agent.path.stem}.json'
+    attempt_path = Path(agent.report['review_attempt'])
     save(attempt_path, report, newline='\n')
-    agent.report['review_attempt'] = str(attempt_path)
     current_key = None
     ordinal = 0
     try:
