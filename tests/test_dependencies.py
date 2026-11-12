@@ -90,7 +90,7 @@ def test_raw_configuration_access_stays_at_documented_boundaries():
               'publication_operation': 1}  # Lossless operation input snapshot; no policy interpretation.
     receipt_text = {'design_replay': {'loaded'}, 'provenance': {'record'},
                     'reader_loop': {'record'}, 'repair_reader': {'record'},
-                    'cli_checkpoint': {'row', 'record'},
+                    'cli_checkpoint': {'row', 'record'}, 'design_checkpoint': {'record'},
                     'translation_provenance': {'record'}}  # CallRecord.raw, not configuration.
     for path in root.glob('*.py'):
         accesses = [n for n in ast.walk(ast.parse(path.read_text(encoding='utf-8')))

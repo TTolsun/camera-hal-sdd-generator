@@ -249,6 +249,70 @@ def test_cli_unit_resume_preserves_validated_prefix_and_old_manuscript(cli_units
     assert any('checkpoint-reused' in d['units'].values() for r in reports for d in r['documents'])
 
 
+@pytest.mark.parametrize('outcome', ['reuse', 'damaged-receipt', 'style-changed', 'semantic-rejection'])
+def test_cli_resume_after_grounding_transport_failure(cli_units, tmp_cfg, monkeypatch, outcome):
+    import subprocess
+    from sdd import cli_agent
+
+    section, model, _, calls, state, agent = cli_units
+    state['interrupt'] = False
+    tmp_cfg.raw['review']['design_grounding'] = True
+    run = cli_agent.run
+    review_attempts = 0
+
+    def interrupt_review(argv, **kwargs):
+        nonlocal review_attempts
+        prompt = kwargs['prompt']
+        if 'Audit factual entailment' in prompt and 'void prepare()' in prompt:
+            review_attempts += 1
+            if review_attempts == 1:
+                calls.append('grounding-failed')
+                raise RuntimeError('fixture grounding transport interrupted')
+            if outcome == 'semantic-rejection' and review_attempts == 2:
+                calls.append('grounding-rejected')
+                raw = json.dumps({'reviews': [dict(index=0, supported=False, reason='Fixture rejects the draft.')]})
+                return subprocess.CompletedProcess(argv, 0, json.dumps(dict(subtype='success', is_error=False, result=raw)), '')
+        return run(argv, **kwargs)
+
+    monkeypatch.setattr(cli_agent, 'run', interrupt_review)
+    target = tmp_cfg.sdd_dir / 'device.md'
+    target.parent.mkdir(parents=True)
+    target.write_text('previous published manuscript', encoding='utf-8')
+
+    with pytest.raises(ValueError, match='grounding transport interrupted'):
+        Generator(tmp_cfg, model, agent()).run()
+    assert target.read_text(encoding='utf-8') == 'previous published manuscript'
+    assert calls == ['stop', 'grounding', 'prepare', 'grounding-failed']
+
+    calls.clear()
+    if outcome == 'damaged-receipt':
+        checkpoint, = (tmp_cfg.build_dir / 'cli-pending-reviews').glob('*.json')
+        name = json.loads(checkpoint.read_bytes())['payload']['receipt']
+        receipt = tmp_cfg.build_dir / 'prompts' / 'calls' / name
+        receipt.write_text('{}', encoding='utf-8')
+        with pytest.raises(ValueError, match='pending review is damaged'):
+            Generator(tmp_cfg, model, agent()).run()
+        assert calls == []
+        assert target.read_text(encoding='utf-8') == 'previous published manuscript'
+        return
+    if outcome == 'style-changed':
+        tmp_cfg.style_dir.mkdir(exist_ok=True)
+        (tmp_cfg.style_dir / 'README.md').write_text('Changed fixture style.', encoding='utf-8')
+    if outcome == 'semantic-rejection':
+        tmp_cfg.max_retries = 0
+        with pytest.raises(ValueError, match='Fixture rejects the draft'):
+            Generator(tmp_cfg, model, agent()).run()
+        assert calls == ['grounding-rejected']
+        assert target.read_text(encoding='utf-8') == 'previous published manuscript'
+        calls.clear()
+
+    Generator(tmp_cfg, model, agent()).run()
+    expected = {'reuse': ['grounding'], 'style-changed': ['stop', 'grounding', 'prepare', 'grounding'],
+                'semantic-rejection': ['prepare', 'grounding']}
+    assert calls == expected[outcome]
+    assert verify(model, section, target.read_text(encoding='utf-8'))['human_review'] == 'pending'
+
+
 @pytest.mark.parametrize('embedded_marker', [False, True])
 def test_cli_focused_retry_checkpoint_retains_exact_source_request(cli_units, tmp_cfg, embedded_marker):
     section, model, save, calls, state, agent = cli_units
