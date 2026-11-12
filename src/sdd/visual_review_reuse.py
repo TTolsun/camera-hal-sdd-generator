@@ -107,9 +107,11 @@ def reuse_published(baseline, current, reviews, options, *, source_commit, sourc
             raise ValueError('Different visualization source commits require immutable Git source proof')
         from .visual_source_reuse import SourceProof
         source_proof = SourceProof(source_root, source_settings, previous_commit, source_commit)
-    for key in ('thresholds', 'signals', 'style_policy', 'require_provenance', 'deferred_pages'):
+    for key in ('thresholds', 'signals', 'style_policy', 'deferred_pages'):
         if published['policy'][key] != options[key]:
             raise ValueError('Position reuse requires the same visual policy: ' + key)
+    if published['policy'].get('require_provenance', False) != options.get('require_provenance', False):
+        raise ValueError('Position reuse requires the same visual policy: require_provenance')
 
     def assets(manifest):
         return {path: sha for path, sha in manifest['outputs'].items()

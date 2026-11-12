@@ -79,8 +79,10 @@ def test_carried_sibling_figure_must_still_be_adjacent():
     assert 'guide.html#second' in stats['pending']
 
 
-def test_cross_revision_reuse_checks_source_blobs_and_rendered_review_scope(tmp_path):
+@pytest.mark.parametrize('source_link', ['github', 'gitiles'])
+def test_cross_revision_reuse_checks_source_blobs_and_rendered_review_scope(tmp_path, source_link):
     from sdd.config import SiteConfig
+    from sdd.source_links import source_link_template
     from sdd.visual_audit import REPORT, inspect_site
 
     def git(*args):
@@ -99,14 +101,17 @@ def test_cross_revision_reuse_checks_source_blobs_and_rendered_review_scope(tmp_
     git('commit', '-qam', 'Source update')
     new = git('rev-parse', 'HEAD')
     url = 'https://example.test/project'
-    options = {**policy(), 'require_provenance': False}
+    settings = SiteConfig(source_url=url, source_link=source_link)
+    template = source_link_template(settings)
+    options = policy()
     baseline, current = tmp_path / 'baseline', tmp_path / 'current'
     for folder in (baseline, current):
         folder.mkdir()
 
     def body(commit, figure, explanation, local):
         def citation(file, revision):
-            return f'<a class="citation" href="{url}/blob/{revision}/{file}#L1"><code>{file}:1</code></a>'
+            link = template.format(url=url, commit=revision, file=file, line=1)
+            return f'<a class="citation" href="{link}"><code>{file}:1</code></a>'
 
         stable = citation('stable.cpp', commit)
         evidence = html.escape(json.dumps([['stable.cpp:1', stable]]), quote=True)
@@ -143,7 +148,7 @@ def test_cross_revision_reuse_checks_source_blobs_and_rendered_review_scope(tmp_
     with pytest.raises(ValueError, match='immutable Git source proof'):
         reuse_published(baseline, current, review_path, options, source_commit=new)
     retained, result = reuse_published(baseline, current, review_path, options, source_commit=new,
-                                       source_root=tmp_path, source_settings=SiteConfig(source_url=url))
+                                       source_root=tmp_path, source_settings=settings)
     assert set(retained['items']) == {'guide.html#stable'}
     row = retained['items']['guide.html#stable']
     assert row['review_record'] == 'original-receipt'
