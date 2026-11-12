@@ -353,10 +353,14 @@ def test_separate_review_profile_uses_independent_cli_and_original_inputs_and_ar
     def unavailable(_):
         raise RuntimeError('Selected review CLI is unavailable')
     monkeypatch.setattr('sdd.cli_agent.command', unavailable)
+    report_path = cfg.build_dir/'consistency-review.json'
+    last_good = report_path.read_bytes()
     with pytest.raises(AgentError, match='Selected review CLI is unavailable'):
         audit(cfg, model, supplied)
-    report = json.loads((cfg.build_dir/'consistency-review.json').read_text(encoding='utf-8'))
-    assert report['status'] == 'incomplete' and len(calls) == 1
+    attempts = [json.loads(path.read_bytes()) for path in (cfg.build_dir/'consistency-attempts').glob('*.json')]
+    failed, = [attempt for attempt in attempts if attempt['status'] == 'incomplete']
+    assert report_path.read_bytes() == last_good and len(calls) == 1
+    assert 'Selected review CLI is unavailable' in failed['error']
 
 
 @pytest.mark.parametrize('agent', [dict(kind='cli', runner='unsupported'), dict(kind='cli', args='--bad')])
