@@ -189,7 +189,7 @@ def node_window(node, root, page, *, heading_context=None, exclude_navigation=Fa
                          heading_context=heading_context)
 
 
-def source_window(document, fragment, *, root=None, page='', presentation=False):
+def source_window(document, fragment, *, root=None, page='', presentation=False, section_relative=False):
     """Resolve readable evidence and its owning headings as the browser does."""
     nodes = list(all_nodes(document.root))
     from .site_fragments import fragment_id
@@ -233,7 +233,7 @@ def source_window(document, fragment, *, root=None, page='', presentation=False)
         if not presentation:
             return text
         from .visual_presentation import paths, bind
-        ancestry = paths(document.root)
+        ancestry = paths(document.root, section_relative=section_relative)
         row = dict(presentation_contexts={})
         for node in [*selected, *(n for h in context_nodes for n in all_nodes(h))]:
             if not inside_navigation(node):
@@ -328,7 +328,7 @@ def outline_nodes(node):
         yield from outline_nodes(child)
 
 
-def inventory_page(source, page, options, *, source_commit='', root=None, draft=False):
+def inventory_page(source, page, options, *, source_commit='', root=None, draft=False, section_relative=False):
     doc = Document(source)
     readable = without_navigation(doc.root)
     articles = list(readable.all('article'))
@@ -352,7 +352,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
     controls = {id(node) for node in reading.children if not isinstance(node,str) and
                 (node.tag,node.attrs.get('class')) in {('p','breadcrumb'),('div','page-state'),('details','mobile-toc')}} if mains else set()
     from .visual_presentation import paths, bind, bind_text
-    presentation = paths(readable)
+    presentation = paths(readable, section_relative=section_relative)
     html = next(doc.root.all('html'), Node('html'))
     lang = html.attrs.get('lang', 'ko')
     thresholds = options['thresholds'].get(lang, options['thresholds']['default'])
@@ -612,7 +612,8 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 key = target+'#'+fragment
                 if key not in window_hashes:
                     if target == page:
-                        selected = source_window(doc, fragment, root=root, page=page, presentation=True)
+                        selected = source_window(doc, fragment, root=root, page=page, presentation=True,
+                                                 section_relative=section_relative)
                         window_hashes[key] = digest(selected)
                         window_references[key] = json.loads(selected.rsplit(WINDOW_BINDING, 1)[1])['references']
                     elif root is not None:
@@ -622,7 +623,8 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                             continue
                         raw = path.read_text(encoding='utf-8')
                         if path.suffix == '.html':
-                            selected = source_window(Document(raw), fragment, root=root, page=target, presentation=True)
+                            selected = source_window(Document(raw), fragment, root=root, page=target, presentation=True,
+                                                     section_relative=section_relative)
                         else:
                             lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', unquote(fragment))
                             if not lines:
@@ -699,7 +701,7 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
     return rows
 
 
-def inspect_site(root, options, *, manifest=None, source_commit=''):
+def inspect_site(root, options, *, manifest=None, source_commit='', section_relative=False):
     """The manifest is authoritative when supplied; staging uses every HTML file."""
     root = Path(root).resolve()
     files = sorted(rel for rel in manifest['outputs'] if rel.endswith('.html')) if manifest else sorted(p.relative_to(root).as_posix() for p in root.rglob('*.html'))
@@ -717,7 +719,8 @@ def inspect_site(root, options, *, manifest=None, source_commit=''):
         # Rendered HTML is a staging output, not an immutable source input.
         # Pinning it as an input would reject the normal temporary-dir cleanup.
         rows.extend(inventory_page(owned_path(root, rel).read_text(encoding='utf-8'), rel, options,
-                                   source_commit=recorded_commit or source_commit, root=root))
+                                   source_commit=recorded_commit or source_commit, root=root,
+                                   section_relative=section_relative))
     if len(commits) > 1:
         raise ValueError('Visualization inventory contains manuscripts from different source commits')
     pairs = {}
@@ -818,7 +821,7 @@ def apply_reviews(report, reviews):
             row.update({k: record[k] for k in ('status', 'reason', 'question', 'source_windows', 'unreviewed_scope')})
             row['reviewed_figures'] = record.get('figures', [])
             row['review_method'] = record.get('review_method', 'editorial-record')
-            for key in ('adjacent_item', 'adjacent_fingerprint'):
+            for key in ('adjacent_item', 'adjacent_fingerprint', 'position_reuse'):
                 if key in record:
                     row[key] = record[key]
     peers = {}

@@ -52,6 +52,14 @@ H2 이하의 보존 대상 질문에는 지속적인 명시 앵커가 필요합�
 
 ## 판정과 검토 범위
 
+직전 공개 장부와 새 사이트가 같은 소스 커밋을 사용할 때 위치만 바뀐 항목의 판정을 이어갈 수 있습니다. 새 사이트는 내용과 링크를 검사할 수 있는 manifest가 있는 미리보기입니다.
+
+```powershell
+python -m sdd.visual_review_reuse --baseline previous/site --site build/preview --config sdd.yaml --source-commit <facts의-커밋> --reviews previous/reviews.json --out build/retained-reviews.json
+```
+
+직전 공개 사이트와 장부가 manifest의 체크섬과 일치해야 합니다. 명시 앵커가 있는 절은 본문 내 절 시작점을 기준으로 위치를 다시 계산합니다. 절 내부 순서와 표시 속성, 상위 제목, 자식 항목, 그림, 근거 창과 정책이 같고, 인접 그림을 사용했다면 현재도 같은 그림이 인접해야 판정을 이어갑니다. 결과 장부에는 원래 판정과 검토 범위, 직전 빌드와 재사용을 확인한 지문이 남습니다. 출력의 `pending` 항목을 검토해 장부에 추가한 뒤 일반 발행 검사를 실행합니다. 일반 발행 검사는 최종 사이트의 절대 위치를 포함한 지문을 확인합니다.
+
 장부의 `schema`는 1이며 `items`는 최종 HTML 항목 ID를 키로 사용합니다. 아래는 표로 충분하다고 검토한 항목의 형식 예시입니다. 해시와 사유는 실제 조사 결과로 작성합니다.
 
 ```json

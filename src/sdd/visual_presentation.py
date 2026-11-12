@@ -6,17 +6,23 @@ import hashlib
 import json
 
 
-def paths(root):
+def paths(root, *, section_relative=False):
     result = {}
 
-    def visit(node, parents, position=0):
+    def visit(node, parents, position=0, section=None):
         if isinstance(node, str):
             return
-        here = parents + ([dict(tag=node.tag, attrs=dict(node.attrs), position=position)]
-                          if node.tag != 'document' else [])
+        entry = dict(tag=node.tag, attrs=dict(node.attrs), position=position)
+        if section is not None:
+            entry['section'] = section
+        here = parents + ([entry] if node.tag != 'document' else [])
         result[id(node)] = here
-        for index,child in enumerate(node.children):
-            visit(child, here, index)
+        start, anchor = 0, None
+        for index, child in enumerate(node.children):
+            if (section_relative and node.tag in {'article', 'main'} and not isinstance(child, str)
+                    and child.tag in {'h2', 'h3', 'h4', 'h5', 'h6'}):
+                start, anchor = (index, child.attrs['id']) if child.attrs.get('id') else (0, None)
+            visit(child, here, index - start, anchor)
 
     visit(root, [])
     return result
