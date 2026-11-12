@@ -443,17 +443,29 @@ def audit(cfg, model, agent):
         from .llm import Agent
         agent = Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts')
     agent = agent if isinstance(agent, Execution) else Execution(cfg, agent, model=model)
-    with agent.track('contract-audit'):
-        report = _audit(cfg, model, agent, configured)
+    path = cfg.build_dir/'consistency-review.json'
+    try:
+        with agent.track('contract-audit'):
+            report = _audit(cfg, model, agent, configured)
+    except BaseException as exc:
+        if attempt := agent.report.get('review_attempt'):
+            attempt_path = Path(attempt)
+            failed = json.loads(attempt_path.read_bytes())
+            failed.update(status='incomplete', error=str(exc))
+            save(attempt_path, failed, newline='\n')
+            if not path.exists():
+                save(path, failed, newline='\n')
+        raise
     # The phase closes its own input/operation checks on exit. Persist a final
     # report only after that boundary succeeds, not when a document alone ends.
-    path = cfg.build_dir/'consistency-review.json'
     raw = (json.dumps(report, ensure_ascii=False, indent=2)+'\n').encode('utf-8')
     document = agent.report['documents'][report['audit_run']['document']]
     document.setdefault('artifacts', {})['consistency_report_sha256'] = hashlib.sha256(raw).hexdigest()
     document['artifacts']['consistency_report'] = str(path)
     agent.persist()
     inputs = current()
+    save(Path(agent.report['review_attempt']), report, newline='\n',
+         before_replace=inputs.verify if inputs is not None else None)
     save(path, report, newline='\n', before_replace=inputs.verify if inputs is not None else None)
     return report
 
@@ -473,8 +485,8 @@ def _audit_prepared(cfg, model, agent, prepared):
                   assessment=ASSESSMENT, comparison_scope=COMPARISON_SCOPE)
     report['audit_run'] = dict(id=agent.path.stem, document=len(agent.report['documents'])-1,
                               phase=len(agent.report['phases'])-1)
-    path = cfg.build_dir/'consistency-review.json'
     attempt_path = cfg.build_dir/'consistency-attempts'/f'{agent.path.stem}.json'
+    save(attempt_path, report, newline='\n')
     agent.report['review_attempt'] = str(attempt_path)
     current_key = None
     ordinal = 0
@@ -527,15 +539,10 @@ def _audit_prepared(cfg, model, agent, prepared):
     except BaseException as exc:
         if current_key is not None:
             agent.unit(current_key, 'failed', error=str(exc))
-        report.update(status='incomplete', error=str(exc))
-        save(attempt_path, report, newline='\n')
-        if not path.exists():
-            save(path, report, newline='\n')
         raise
     report['status'] = 'failed' if any(f['status']=='contradiction' for c in report['contracts'] for f in c['findings']) else 'passed'
     report['unresolved'] = [dict(contract=c['id'], **f) for c in report['contracts'] for f in c['findings']
                             if f['status'] in ('ambiguous', 'insufficient-evidence')]
-    save(attempt_path, report, newline='\n')
     return report
 
 
