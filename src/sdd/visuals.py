@@ -143,16 +143,23 @@ def _caption(cfg, model, section, value):
     if not isinstance(value, dict) or set(value) - {'text', 'text_en', 'section', 'evidence'}:
         raise ValueError('Invalid visual caption')
     ko, en = (_text(value.get(key), 'caption '+key) for key in ('text', 'text_en'))
-    section_id = value.get('section', section['id'])
-    source_section = section if section_id == section['id'] else next(
-        (item for item in cfg.sections() if item['id'] == section_id), None)
-    if source_section is None:
-        raise ValueError('Unknown visual caption evidence section')
-    records = _records(model, source_section, value)
+    refs = value.get('evidence')
+    if not isinstance(refs, list) or not refs or any(not isinstance(ref, dict) for ref in refs):
+        raise ValueError('Visual caption needs source evidence')
     settings = cfg.site
     template = source_link_template(settings)
+    sections = {section['id']: section}
     links = []
-    for record, evidence in zip(records, value['evidence'], strict=True):
+    for ref in refs:
+        section_id = ref.get('section', value.get('section', section['id']))
+        if not isinstance(section_id, str):
+            raise ValueError('Visual caption evidence section must be a section ID')
+        if section_id not in sections:
+            sections.update((item['id'], item) for item in cfg.sections() if item['id'] != section['id'])
+        if section_id not in sections:
+            raise ValueError('Unknown visual caption evidence section')
+        evidence = {key: item for key, item in ref.items() if key != 'section'}
+        record, = _records(model, sections[section_id], {'evidence': [evidence]})
         file = PurePosixPath(record['file'])
         if file.is_absolute() or '..' in file.parts or record.get('origin') == 'product-material':
             raise ValueError('Visual caption requires a repository source file')
