@@ -112,6 +112,23 @@ def test_visual_caption_follows_diagram_and_links_to_the_quoted_line(tmp_cfg, vi
     assert 'data-sdd-label-en="Check for cancellation."' in block
 
 
+def test_visual_caption_links_to_each_pinned_quote(tmp_cfg, visual):
+    section, model, graph, write = visual
+    tmp_cfg.raw.setdefault('site', {})['source_url'] = 'https://example.com/project'
+    first = graph['nodes'][0]['evidence'][0]
+    second = dict(first, source='shutdown/check')
+    selector = dict(section['design_topics'][0]['sources'][0], id='check', file='check.cpp')
+    section['design_topics'][0]['sources'].append(selector)
+    model.evidence['device/shutdown/check'] = dict(model.evidence['device/shutdown/stop'],
+                                                   selector=selector, file='check.cpp', line=20, end_line=20)
+    graph['caption'] = dict(text='취소를 확인하세요.', text_en='Check for cancellation.', evidence=[first, second, first])
+    write()
+    caption = next(line for line in render(tmp_cfg, model, section)[0][1].splitlines()
+                   if 'Check for cancellation.' in line)
+    assert caption.count('data-sdd-caption-source') == 2
+    assert caption.index('/device.cpp#L10') < caption.index('/check.cpp#L20')
+
+
 @pytest.mark.parametrize('explicit_placement', [False, True])
 def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_cfg, visual, explicit_placement):
     import json
