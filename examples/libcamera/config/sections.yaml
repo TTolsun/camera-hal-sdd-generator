@@ -5783,6 +5783,27 @@ sections:
       max_statements: 2
       answer_contract:
         basis: investigation
+    - id: submission-correlation
+      question: >
+        완료가 오지 않는 요청의 같은 제출 회차를 어떻게 추적할지 두 문장으로 안내하세요.
+        앱의 추가 계측으로 제출 API 시작마다 회차 표식을 만들고, 같은 표식으로
+        API 반환(0 또는 오류), 메시지 큐 등록, PipelineHandler::queueRequest 진입을 연결합니다.
+        성공 반환을 봤지만 진입 기록이 없으면 메시지 전달을 조사합니다.
+        진입 기록이 있으면 기존 대기 큐 조사로 이어갑니다.
+        같은 Request 주소와 나중에 doQueueRequest가 부여하는 sequence는
+        진입 전의 회차 표식을 대신할 수 없습니다.
+        기존 API가 표식을 제공하거나 시험을 실행했다고 쓰지 마세요.
+        큐 등록과 진입은 근거에서 확인하되 Thread 이름과 콜백 동기화 설명은 기존 절에 맡기세요.
+      sources:
+      - submit-message
+      - post-order
+      - dispatch
+      max_statements: 1
+      answer_contract:
+        basis: investigation
+        reject_patterns:
+        - pattern: '(?i)thread|스레드|콜백|재사용'
+          message: 제출 회차 표식과 관측 지점 연결에 집중하고 스레드·콜백·재사용 설명은 해당 절에 맡기세요.
   - id: uvc-depth
     title: UVC의 장치 제출과 완료를 추적하기
     question: 선택한 UVC 구체 경로의 실패·장치 큐잉·버퍼 및 요청 완료를 연결하세요. 다른 파이프라인이나 실제 장치 관찰로 확대하지 마세요.
