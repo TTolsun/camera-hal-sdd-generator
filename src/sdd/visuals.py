@@ -149,22 +149,23 @@ def _caption(cfg, model, section, value):
     if source_section is None:
         raise ValueError('Unknown visual caption evidence section')
     records = _records(model, source_section, value)
-    if len(records) != 1:
-        raise ValueError('A visual caption must link to one source excerpt')
-    record = records[0]
-    file = PurePosixPath(record['file'])
-    if file.is_absolute() or '..' in file.parts or record.get('origin') == 'product-material':
-        raise ValueError('Visual caption requires a repository source file')
-    line = record['line'] + record['text'][:record['text'].index(value['evidence'][0]['quote'])].count('\n')
     settings = cfg.site
-    url = source_link_template(settings).format(url=settings.source_url.rstrip('/'), commit=record['commit'],
-                                               file=quote(file.as_posix(), safe='/'), line=line)
-    target = urlsplit(url)
-    if target.scheme not in {'https', 'http'} or not target.netloc:
-        raise ValueError('Visual caption requires a configured repository source URL')
+    template = source_link_template(settings)
+    links = []
+    for record, evidence in zip(records, value['evidence'], strict=True):
+        file = PurePosixPath(record['file'])
+        if file.is_absolute() or '..' in file.parts or record.get('origin') == 'product-material':
+            raise ValueError('Visual caption requires a repository source file')
+        line = record['line'] + record['text'][:record['text'].index(evidence['quote'])].count('\n')
+        url = template.format(url=settings.source_url.rstrip('/'), commit=record['commit'],
+                              file=quote(file.as_posix(), safe='/'), line=line)
+        target = urlsplit(url)
+        if target.scheme not in {'https', 'http'} or not target.netloc:
+            raise ValueError('Visual caption requires a configured repository source URL')
+        links.append('<a data-sdd-caption-source="true" href="'+html.escape(url, quote=True)+'">'
+                     '<code>'+html.escape(file.name+':'+str(line))+'</code></a>')
     return ('<span data-sdd-label-en="'+html.escape(en, quote=True)+'">'+html.escape(ko)+'</span> '
-            '<a data-sdd-caption-source="true" href="'+html.escape(url, quote=True)+'">'
-            '<code>'+html.escape(file.name+':'+str(line))+'</code></a>\n\n')
+            +' · '.join(dict.fromkeys(links))+'\n\n')
 
 
 def render_values(cfg, model, section, values):
