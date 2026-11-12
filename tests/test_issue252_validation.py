@@ -25,6 +25,31 @@ def _source_auditor():
     return module
 
 
+def test_reader_output_limit_is_scoped_to_route(tmp_path, monkeypatch):
+    path = Path(__file__).parents[1] / 'examples/libcamera/validation/issue252/run_reader.py'
+    spec = importlib.util.spec_from_file_location('issue252_reader', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    prompt = tmp_path / 'prompt.txt'
+    prompt.write_text('Verify evidence delivery.', encoding='utf-8')
+    out = tmp_path / 'run'
+    seen = {}
+
+    def transport(argv, **kwargs):
+        seen.update(argv=argv, **kwargs)
+        return subprocess.CompletedProcess(argv, 0, '{"type":"turn.completed"}\n', '')
+
+    monkeypatch.setattr(module, 'command', lambda profile: ['codex'])
+    monkeypatch.setattr(module, 'run', transport)
+    assert module.main(['--reader', str(tmp_path / 'reader.py'), '--site', str(tmp_path / 'site'),
+                        '--prompt', str(prompt), '--out', str(out)]) == 0
+    assert 'mcp_servers.public_sdd.tools.route.output_token_limit=65536' in seen['argv']
+    assert 'mcp_servers.public_sdd.enabled_tools=["route"]' in seen['argv']
+    assert not any(arg.startswith('tool_output_token_limit=') for arg in seen['argv'])
+    assert seen['prompt'] == 'Verify evidence delivery.'
+    assert (out / 'stdout.jsonl').is_file()
+
+
 def test_bilingual_dedup_references_only_unique_exact_source_bytes():
     module=_source_auditor();snippet='return 73;\n'
     windows={'source.cpp':dict(text='before\n'+snippet+'after\n')}
