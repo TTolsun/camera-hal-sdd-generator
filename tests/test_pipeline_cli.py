@@ -14,6 +14,35 @@ from sdd.provenance import verify_calls
 from test_evaluate_pipeline import configure
 
 
+def test_first_run_plan_has_no_transport_and_keeps_inputs(cli_trial, monkeypatch):
+    from sdd import cli
+
+    cfg = cli_trial('codex', model='fixture-model')
+    facts = cfg.facts_path.read_bytes()
+    review_profile = cfg.root/'review.yaml'
+    review_profile.write_text('agent: {kind: cli, runner: claude, model: reviewer}', encoding='utf-8')
+    contracts = cfg.root/'contracts.yaml'
+    contracts.write_text('contracts: [{id: entry, question: Where, primary: overview.md, '
+                         'documents: [overview.md], match: initialize}]', encoding='utf-8')
+    cfg.paths.update(consistency_profile=review_profile, consistency_file=contracts)
+    monkeypatch.setattr(cli, '_cfg', lambda args: cfg)
+    monkeypatch.setattr(Agent, 'chat', lambda *a, **k: pytest.fail('Preparation cannot call the model'))
+
+    assert cli.main(['generate', '--sections', 'entry', '--plan-only']) == 0
+    plan = json.loads((cfg.build_dir/'publication-plan.json').read_bytes())
+    assert plan['model_calls'] == 0
+    assert plan['execution']['runner'] == 'codex'
+    assert plan['independent_review']['profile']['runner'] == 'claude'
+    assert plan['independent_review']['status'] == 'depends-on-final-manuscripts'
+    assert plan['units'][0]['action'] == 'generate' and plan['units'][0]['base_prompt_chars'] > 0
+    assert plan['visuals'][0]['action'] == 'generate'
+    assert cfg.facts_path.read_bytes() == facts and not cfg.sdd_dir.exists()
+    assert not (cfg.build_dir/'generation-runs').exists()
+
+    assert cli.main(['generate', '--sections', 'missing', '--plan-only']) == 1
+    assert json.loads((cfg.build_dir/'publication-plan.json').read_bytes()) == plan
+
+
 def test_cached_cli_generate_from_impact_has_no_outside_budget_summary_call(cli_trial, tmp_path, monkeypatch):
     from types import SimpleNamespace
     from sdd import cli

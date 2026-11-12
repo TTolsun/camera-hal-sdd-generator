@@ -1,0 +1,12 @@
+# 독립 근거 대조용 예시. sdd.review.yaml로 복사하고 사내에서 승인한 CLI를 선택한다.
+# 생성 설정의 paths.consistency_profile이 그 파일을 가리킨다.
+# runner를 바꾸면 command·model·args도 함께 교체한다.
+# 호출·재시도 예산은 첫 실행의 주 설정 review 블록에 둔다.
+agent:
+  kind: cli
+  runner: codex
+  command: []
+  model: gpt-6.1-terra
+  args: [-c, 'model_reasoning_effort="high"']
+  timeout_sec: 300
+  max_input_chars: 30000

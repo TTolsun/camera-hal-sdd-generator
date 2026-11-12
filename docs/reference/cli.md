@@ -18,9 +18,10 @@
 
 | 명령 | 하는 일 | 종료 코드 |
 |---|---|---|
-| `sdd doctor` | 도구·compile DB·모델 연결을 점검합니다. | 0 정상, 1 문제 있음 |
+| `sdd doctor [--header <파일>]` | 로컬 입력과 도구를 확인합니다. `--header`는 반복할 수 있습니다. 직접 API 설정의 모델 목록 접근은 `--check-endpoint`를 지정할 때 확인합니다. | 0 로컬 필수 항목 확인, 1 문제 있음 |
 | `sdd extract` | compile DB로 `facts.json`을 만듭니다. 파싱 오류나 진입점 누락이 있으면 기존 facts를 지키고 멈춥니다. | 0, 실패 시 1 |
 | `sdd generate` | 원고를 만듭니다. `--sections a,b`로 일부만, `--from-impact`로 영향 받은 섹션만 만듭니다. | 0, `--from-impact`인데 `impact.json`이 없으면 2 |
+| `sdd generate --plan-only` | 기존 facts와 현재 설정으로 선택한 문서·질문·그림과 검토 의존성을 확인합니다. 모델 호출, 원고 생성과 승인을 수행하지 않습니다. | 0 계획 확인, 입력 누락·불일치 시 1 또는 2 |
 | `sdd export-site` / `sdd verify-site` | 정적 사이트를 만들고, 링크와 산출물 해시를 검사합니다. | 0, 실패 시 1 |
 | `sdd update --to <ref>` | 기준 커밋 이후 커밋을 하나씩 갱신합니다. [종료 코드 표](#update-종료-코드)를 봅니다. | 0·1·2·3 |
 | `sdd accept` | 사람 검토 승인을 장부에 기록합니다. 인자 없이 실행하면 상태만 봅니다. | 0 |

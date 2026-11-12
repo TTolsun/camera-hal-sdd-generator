@@ -200,7 +200,7 @@ Meson 설정만으로 멈추지 않고 빌드까지 수행하는 이유는 분�
 | 근거와 생략 | 문장의 인용을 실제 파일과 대조하고 `facts_omitted`를 확인합니다. 인용 검증 통과만으로 문장의 의미가 맞다고 판단하지 않습니다. |
 | 리뷰 상태 | `needs-review`를 별도 검토합니다. CLI 종료 코드 0은 모든 문서의 승인 상태를 뜻하지 않습니다. |
 
-현재 `doctor`는 NDK 도구와 clang-uml이 없어도 실패를 표시합니다. 이 예제는 두 도구를 사용하지 않으므로 `doctor`의 종료 코드만으로 실험을 판정하지 않습니다. 또한 facts의 `build_config`는 Meson 입력에도 `simple_compdb`라고 기록되므로 실제 빌드 방식은 별도 실행 기록에 남깁니다.
+`doctor`는 Meson 예제에서 compile DB와 libclang을 확인합니다. 생성 헤더는 `--header`로 지정할 수 있으며, 실제 파싱은 `extract`에서 확인합니다. facts의 `build_config`는 Meson 입력에도 `simple_compdb`라고 기록하므로 실제 빌드 방식은 별도 실행 기록에 남깁니다.
 
 ### 3-3. 두 커밋의 문서 비교
 
