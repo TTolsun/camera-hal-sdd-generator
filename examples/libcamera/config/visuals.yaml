@@ -7985,6 +7985,16 @@ sections:
     kind: flow
     title: 타임아웃 뒤 펜스 회수
     question: 신호되지 않은 펜스로 타임아웃이 나면 다른 요청에 재사용하기 전에 무엇을 해야 합니까?
+    caption:
+      text: 버퍼의 상태가 FrameSuccess일 때만 프레임 데이터를 사용하세요.
+      text_en: Use frame data only when the buffer status is FrameSuccess.
+      section: request-lifecycle
+      evidence:
+      - source: uvc-depth/frame-validity
+        sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+        quote: |-
+          \var FrameMetadata::FrameSuccess
+           * The frame has been captured with success and contains valid data.
     nodes:
     - id: timeout
       label: '펜스 미신호: 요청 타임아웃'

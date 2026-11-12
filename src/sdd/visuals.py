@@ -11,12 +11,14 @@ import json
 import re
 import unicodedata
 from pathlib import PurePosixPath
+from urllib.parse import quote, urlsplit
 
 from .mermaid_text import wrapped_html_label
 
 import yaml
 
 from .config import section_output
+from .source_links import source_link_template
 from .validation_stage import load_yaml
 
 
@@ -137,6 +139,34 @@ def render(cfg, model, section):
     return render_values(cfg, model, section, values)
 
 
+def _caption(cfg, model, section, value):
+    if not isinstance(value, dict) or set(value) - {'text', 'text_en', 'section', 'evidence'}:
+        raise ValueError('Invalid visual caption')
+    ko, en = (_text(value.get(key), 'caption '+key) for key in ('text', 'text_en'))
+    section_id = value.get('section', section['id'])
+    source_section = section if section_id == section['id'] else next(
+        (item for item in cfg.sections() if item['id'] == section_id), None)
+    if source_section is None:
+        raise ValueError('Unknown visual caption evidence section')
+    records = _records(model, source_section, value)
+    if len(records) != 1:
+        raise ValueError('A visual caption must link to one source excerpt')
+    record = records[0]
+    file = PurePosixPath(record['file'])
+    if file.is_absolute() or '..' in file.parts or record.get('origin') == 'product-material':
+        raise ValueError('Visual caption requires a repository source file')
+    line = record['line'] + record['text'][:record['text'].index(value['evidence'][0]['quote'])].count('\n')
+    settings = cfg.site
+    url = source_link_template(settings).format(url=settings.source_url.rstrip('/'), commit=record['commit'],
+                                               file=quote(file.as_posix(), safe='/'), line=line)
+    target = urlsplit(url)
+    if target.scheme not in {'https', 'http'} or not target.netloc:
+        raise ValueError('Visual caption requires a configured repository source URL')
+    return ('<span data-sdd-label-en="'+html.escape(en, quote=True)+'">'+html.escape(ko)+'</span> '
+            '<a data-sdd-caption-source="true" href="'+html.escape(url, quote=True)+'">'
+            '<code>'+html.escape(file.name+':'+str(line))+'</code></a>\n\n')
+
+
 def render_values(cfg, model, section, values):
     if not values:
         return []
@@ -155,7 +185,7 @@ def render_values(cfg, model, section, values):
         if ident in seen:
             raise ValueError('Duplicate visual ID')
         seen.add(ident)
-        if set(visual) - {'id', 'topic', 'stage', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display'}:
+        if set(visual) - {'id', 'topic', 'stage', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display', 'caption'}:
             raise ValueError('Unknown visual setting')
         if visual.get('condition_display','inline') not in ('inline','evidence'):
             raise ValueError('Visual condition_display must be inline or evidence')
@@ -245,6 +275,14 @@ def render_values(cfg, model, section, values):
                 raise ValueError('Visual edge references an unknown node')
             rows.append(f'  v_{edge["from"]} -->|"{label(edge)}"| v_{edge["to"]}')
             evidence(edge, edge['label'])
+        caption = ''
+        if 'caption' in visual:
+            try:
+                caption = _caption(cfg, model, section, visual['caption'])
+            except StaleVisualEvidence as exc:
+                if cfg.visuals.on_stale != 'omit':
+                    raise
+                stale.append(str(exc))
         if stale:
             # Validate all nodes and edges above, even after the first stale pin.
             # Do not emit the old interpretation, its links, or a Mermaid file.
@@ -264,7 +302,7 @@ def render_values(cfg, model, section, values):
         note = '??? note "그림 근거와 확인 범위"\n' + '\n'.join('    ' + line for line in [*metadata, '', *proof])
         download = PurePosixPath(section_output(section)).stem + '.' + ident + '.mmd'
         block = (f'<!-- sdd:visual:{ident} -->\n{title_prefix}{title}\n\n'
-                 f'```mermaid\n{source}\n```\n\n[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
+                 f'```mermaid\n{source}\n```\n\n{caption}[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
         result.append((visual, block, source))
     return result
 

@@ -98,6 +98,20 @@ def test_visual_provenance_and_question_remain_in_collapsed_evidence(tmp_cfg, vi
     assert '```mermaid' in visible and 'Mermaid 원문' in visible
 
 
+def test_visual_caption_follows_diagram_and_links_to_the_quoted_line(tmp_cfg, visual):
+    section, model, graph, write = visual
+    tmp_cfg.raw.setdefault('site', {})['source_url'] = 'https://example.com/project'
+    graph['caption'] = dict(text='취소를 확인하세요.', text_en='Check for cancellation.',
+                            evidence=graph['nodes'][0]['evidence'])
+    write()
+    block = render(tmp_cfg, model, section)[0][1]
+    record = model.evidence['device/shutdown/stop']
+    line = record['line'] + record['text'].split('cancelPending();')[0].count('\n')
+    url = f"https://example.com/project/blob/{record['commit']}/{record['file']}#L{line}"
+    assert block.index('```\n\n<span') < block.index(url) < block.index('[Mermaid 원문]')
+    assert 'data-sdd-label-en="Check for cancellation."' in block
+
+
 @pytest.mark.parametrize('explicit_placement', [False, True])
 def test_index_reuses_a_source_bound_visual_without_changing_its_definition(tmp_cfg, visual, explicit_placement):
     import json

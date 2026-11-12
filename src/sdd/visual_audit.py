@@ -473,9 +473,14 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                     current['paragraphs'].append(plain(node))
             if node.tag == 'a':
                 href = node.attrs.get('href', '')
-                if node.attrs.get('data-sdd-convenience') == 'true':
-                    active['convenience_designations'].append(href)
-                active['downloads' if urlsplit(href).path.endswith('.mmd') else 'evidence'].append(href)
+                if node.attrs.get('data-sdd-caption-source') == 'true':
+                    # The caption has its own pinned source in the visual definition.
+                    # It cannot satisfy the diagram's evidence requirements.
+                    active.setdefault('caption_sources', []).append(href)
+                else:
+                    if node.attrs.get('data-sdd-convenience') == 'true':
+                        active['convenience_designations'].append(href)
+                    active['downloads' if urlsplit(href).path.endswith('.mmd') else 'evidence'].append(href)
             if node.tag == 'details':
                 bind(current, node, presentation, subtree=True)
                 bind(visual_owner, node, presentation, subtree=True)
