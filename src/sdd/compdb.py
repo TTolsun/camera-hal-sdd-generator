@@ -103,13 +103,21 @@ def _write_atomic(path: Path, text: str) -> None:
         raise
 
 
+def _simple_settings(cfg: Config) -> dict:
+    return (cfg.raw.get("source", {}) or {}).get("simple_compdb") or {}
+
+
+def can_generate(cfg: Config) -> bool:
+    return bool(cfg.ndk_build.get("enabled") or _simple_settings(cfg))
+
+
 def generate_simple(cfg: Config) -> Path:
     """ndk-build 없이 compile DB 를 만든다. source.simple_compdb.flags 를 모든 .cpp 에 같은 플래그로 적용한다.
 
     NDK 트리가 아닌 디렉터리(예: AOSP 에서 떼어 낸 HAL, examples/)를 돌릴 때 쓴다.
     -D 와 -I 를 사람이 적어야 하므로 실제 빌드 구성과 어긋날 수 있다. 가능하면 ndk-build 경로를 쓴다.
     """
-    simple = (cfg.raw.get("source", {}) or {}).get("simple_compdb") or {}
+    simple = _simple_settings(cfg)
     compiler = str(simple.get("compiler", "clang++"))
     root = cfg.source_root.resolve()
     # -I / -isystem 뒤의 상대 경로는 소스 루트 기준으로 절대 경로로 바꾼다. libclang 은 directory 로 chdir 하지 않는다.
@@ -247,7 +255,7 @@ def ensure(cfg: Config, regenerate: bool = False) -> Path:
         if cfg.ndk_build.get("enabled") and not is_normalized(load_entries(cfg.compile_commands)):
             return normalize_ndk(cfg, cfg.compile_commands)
         return cfg.compile_commands
-    if (cfg.raw.get("source", {}) or {}).get("simple_compdb"):
+    if _simple_settings(cfg):
         return generate_simple(cfg)
     return generate_with_ndk(cfg)
 

@@ -36,11 +36,13 @@ class Agent:
         self._run_id = uuid.uuid4().hex
         self._transport_metadata = {}
         self.last_receipt = None
+        self.last_cli_attempt = None
 
     def chat(self, system: str, user: str, tag: str = "prompt", response_schema: dict | None = None) -> str:
         self._counter += 1
         self._transport_metadata = {}
         self.last_receipt = None
+        self.last_cli_attempt = None
         request = {'system': system, 'user': user, 'response_schema': response_schema}
         request_hash = hashlib.sha256(json.dumps(request, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if self.dump_dir:
@@ -59,8 +61,14 @@ class Agent:
             from . import cli_agent
             try:
                 text, self._transport_metadata = cli_agent.chat(self.cfg, system, user, response_schema, self.dump_dir)
-            except (OSError, ValueError, RuntimeError) as exc:
-                raise AgentError(str(exc)) from exc
+            except BaseException as exc:
+                self.last_cli_attempt = getattr(exc, 'cli_attempt', None)
+                if not isinstance(exc, (OSError, ValueError, RuntimeError)):
+                    raise
+                error = AgentError(str(exc))
+                error.category = getattr(exc, 'category', None)
+                raise error from exc
+            self.last_cli_attempt = self._transport_metadata.pop('_attempt', None)
         elif kind == "ollama":
             text = self._ollama(system, user, response_schema) if response_schema else self._ollama(system, user)
         elif kind == "openai-compatible":

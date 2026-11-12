@@ -6,7 +6,7 @@ import re
 
 from .config import load, section_output
 from .state_io import save
-from .validation_stage import current, load_json, read_bytes, read_text
+from .validation_stage import current, load_json, read_bytes, read_text, staged as input_staged
 from .validation_execution import staged
 from .publication_reports import check_reports
 
@@ -86,14 +86,24 @@ def check_catalog(cfg):
 
 @staged
 def prepare(cfg, model, section_ids=None, impact=None):
+    return _prepare(cfg, model, section_ids, impact, plan_only=False)
+
+
+@input_staged
+def preview(cfg, model, section_ids=None, impact=None):
+    return _prepare(cfg, model, section_ids, impact, plan_only=True)
+
+
+def _prepare(cfg, model, section_ids, impact, *, plan_only):
     from . import generated_design
     from .design_request import prepare_requests, _design_units
     from .design_reuse import reusable
-    from .design_response import _validate_retained
+    from .design_response import _validate_retained, response_schema
     from .design_checkpoint import store_for, changes
     from .design_execution import _validate_unit_response
     from .design_request import _unit_request, _unit_tag
-    from . import duplicates
+    from . import cli_agent, duplicates, generated_visuals
+    from .consistency import groups, _review_config
     baseline = check_baseline(cfg)
     from .generation_run import observed
     execution = observed()
@@ -103,7 +113,7 @@ def prepare(cfg, model, section_ids=None, impact=None):
             if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)])
     check_catalog(cfg)
     check_reports(cfg, 'before-generation')
-    selected, units, carryover = [], [], []
+    selected, units, visuals, carryover = [], [], [], []
     for section in cfg.sections():
         if ((section_ids and section['id'] not in section_ids)
                 or (impact and section['id'] not in impact.sections)):
@@ -111,11 +121,21 @@ def prepare(cfg, model, section_ids=None, impact=None):
                                   reason='outside selected impact; current evidence must be revalidated'))
             continue
         selected.append(section)
+        path = cfg.sdd_dir/section_output(section)
+        if plan_only:
+            for visual in generated_visuals.definitions(cfg, section):
+                uses_model = visual.get('generation') == 'llm'
+                action, reason = 'render-configured', 'configured graph passed local source checks'
+                if uses_model:
+                    action, reason = (('resolve-at-generation', 'current graph must pass runtime source checks')
+                                      if path.is_file() else
+                                      ('generate', 'no existing manuscript for the configured graph'))
+                visuals.append(dict(section=section['id'], id=visual['id'], question=visual.get('question'),
+                                    action=action, reason=reason))
         if not generated_design.enabled(section):
             continue
         from .design_response import preflight
         preflight(model, section)
-        path = cfg.sdd_dir/section_output(section)
         previous = read_text(path) if impact and path.exists() else None
         plan = prepare_requests(cfg, model, section, previous)
         retained, _ = reusable(model, section, plan.previous, plan.inputs, _validate_retained)
@@ -164,35 +184,64 @@ def prepare(cfg, model, section_ids=None, impact=None):
                 # later draft. Never publish a guessed final reuse verdict.
                 action = 'resolve-after-dependencies'
                 reason = 'earlier answers/reviews are pending; runtime must resolve current checks'
+            details = {}
+            if plan_only:
+                focus, system, _ = plan.prompts[unit['id']]
+                request = _unit_request(model, section, unit, focus)
+                chars = (len(cli_agent.build_prompt(system, request.user, response_schema(unit, request.passages)))
+                         if cfg.agent.kind == 'cli' else len(system) + len(request.user))
+                details = dict(source_ids=sorted(request.sources), base_prompt_chars=chars,
+                               base_prompt_over_limit=chars > cfg.agent.max_input_chars,
+                               grounding_during_generation=plan.policy['design_grounding'])
             units.append(dict(section=section['id'], topic=unit['id'], part=unit.get('_part_id'),
                 subpart=unit.get('_subpart_id'), unit=key,
                 question=unit['question'], input_sha256=plan.inputs[unit['id']],
                 action=action, forecast=forecast, certainty='conditional' if dependencies else 'input-bound',
                 depends_on=dependencies,
-                reason=reason, receipts=receipts, explanation=explanation))
+                reason=reason, receipts=receipts, explanation=explanation, **details))
     inputs = current()
-    inputs.verify()
     report = dict(schema=1, source_commit=model.meta.get('source_commit'),
-        baseline=baseline, execution=dict(kind=cfg.agent.kind, runner=cfg.agent.runner,
-        model=cfg.agent.model, args=cfg.agent.args, command=cfg.agent.identity_command),
+        baseline=baseline, execution=cli_agent.execution_profile(cfg.agent),
         limits={key: getattr(cfg.review, key) for key in
                 ('max_calls', 'max_seconds', 'document_max_calls', 'document_max_seconds')},
         sections=[s['id'] for s in selected], units=units, carryover=carryover,
         inputs=inputs.manifest(), human_review='pending')
+    if plan_only:
+        review_groups = groups(cfg)
+        review = _review_config(cfg) if review_groups else None
+        report.update(
+            phase='plan-only', model_calls=0,
+            facts=dict(path=str(cfg.facts_path), classes=len(model.classes), scenarios=len(model.scenarios),
+                       translation_units=model.meta.get('translation_units'),
+                       compile_commands=str(cfg.compile_commands), source_exclude=cfg.exclude),
+            documents=[dict(section=s['id'], path=section_output(s), narration=s.get('narration', 'default'),
+                            kind=s.get('kind', 'prose')) for s in selected],
+            visuals=visuals,
+            independent_review=dict(
+                profile=cli_agent.execution_profile(review.agent) if review else None,
+                separate_profile=bool(cfg.paths.get('consistency_profile')),
+                contracts=[dict(id=g['id'], question=g['question'], documents=g['documents']) for g in review_groups],
+                status='depends-on-final-manuscripts' if review else 'not-configured'),
+            validation_retries=cfg.max_retries,
+            operation_limits=cfg.publication.get('budget', {}),
+            estimates=dict(status='unavailable', reason='no comparable sample selected', time=None, tokens=None,
+                           price=None),
+            next_steps=['generate with the same selection and inputs', 'audit-consistency if configured',
+                        'export-site and verify-site locally', 'human review before authorized publication'])
+        report['inputs'] = inputs.manifest()
+    inputs.verify()
     from .publication_operation import archive_plan
-    archive_plan(cfg, report, execution)
+    path = archive_plan(cfg, report, execution)
     from .generation_run import observed
     execution = observed()
     if execution is not None:
-        references = execution.report.get('publication_plans', [])
-        execution.report['publication_plan'] = dict(
-            path=references[-1]['path'] if references else str(cfg.build_dir/'publication-plan.json'),
-            input_sha256=report['input_sha256'])
+        execution.report['publication_plan'] = dict(path=str(path), input_sha256=report['input_sha256'])
+        execution.report['planned_units'] = [unit['unit'] for unit in units]
         for unit in units:
             execution.decision(unit['unit'], dict(action=unit['action'], stage='forecast',
                 forecast=unit['forecast'], certainty=unit['certainty'], depends_on=unit['depends_on'],
                 **unit['explanation']))
     from collections import Counter
-    print('Publication plan: ' + str(cfg.build_dir/'publication-plan.json') + '; ' +
+    print('Publication plan: ' + str(path) + '; ' +
           ', '.join(f'{action}={count}' for action, count in sorted(Counter(u['action'] for u in units).items())))
     return report

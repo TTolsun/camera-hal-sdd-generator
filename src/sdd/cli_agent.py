@@ -18,6 +18,47 @@ from .cli_schema import schema_bytes, schema_hash, validate_original
 RUNNERS = ('hermes', 'opencode', 'claude', 'codex')
 
 
+def execution_profile(agent):
+    return dict(kind=agent.kind, runner=agent.runner, model=agent.model, args=agent.args,
+                command=agent.identity_command, executable=(agent.command or [agent.runner])[0]
+                if agent.kind == 'cli' else None, timeout_sec=agent.timeout_sec,
+                max_input_chars=agent.max_input_chars,
+                token_measurement='native-events-if-reported' if agent.kind == 'cli'
+                and agent.runner == 'codex' else 'unmeasured-in-journal')
+
+
+def token_usage(runner, stdout):
+    """Use a single native total. Cached input and reasoning are subsets."""
+    if runner != 'codex':
+        return None
+    events = []
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(event, dict) and event.get('type') == 'turn.completed':
+            events.append(event.get('usage'))
+    if len(events) != 1 or not isinstance(events[0], dict):
+        return None
+    usage = events[0]
+    fields = ('input_tokens', 'output_tokens')
+    if any(type(usage.get(key)) is not int or usage[key] < 0 for key in fields):
+        return None
+    return dict(input=usage['input_tokens'], output=usage['output_tokens'])
+
+
+def failed_status(output):
+    for status, pattern in (
+        ('usage-limit', r'usage.?limit|rate.?limit|quota|사용량'),
+        ('authentication', r'not logged in|authentication failed|unauthorized|invalid.api.key|\b401\b|\b403\b'),
+        ('network', r'connection (refused|reset)|network (error|unreachable)|failed to connect|dns error'),
+    ):
+        if re.search(pattern, output, re.I):
+            return status
+    return 'cli-failure'
+
+
 def command(cfg):
     if cfg.runner not in RUNNERS:
         raise ValueError('agent.runner must be hermes, opencode, claude or codex')
@@ -26,7 +67,9 @@ def command(cfg):
         raise ValueError('CLI command and args must contain nonempty strings')
     executable = shutil.which(prefix[0])
     if not executable:
-        raise RuntimeError(f'{cfg.runner} CLI를 찾지 못했습니다. agent.command 또는 PATH를 확인하세요. 다른 실행기로 대체하지 않습니다.')
+        exc = RuntimeError(f'{cfg.runner} CLI를 찾지 못했습니다. agent.command 또는 PATH를 확인하세요.')
+        exc.category = 'cli-missing'
+        raise exc
     return [executable, *prefix[1:]]
 
 
@@ -217,6 +260,15 @@ def chat(cfg, system, user, schema, dump_dir):
     if parent:
         parent.mkdir(parents=True, exist_ok=True)
     with call_workspace(parent) as (work, cleanup):
+        def preserve_output(stdout, stderr):
+            record = {'tokens': token_usage(cfg.runner, stdout)}
+            if parent:
+                for suffix, content in [('stdout', stdout), ('stderr', stderr)]:
+                    path = parent / f'{work.name}.{suffix}.txt'
+                    path.write_text(content, encoding='utf-8', newline='\n')
+                    record[f'{suffix}_path'] = str(path)
+            return record
+
         env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1', 'NO_COLOR': '1'}
         call_started = time.monotonic()
         try:
@@ -241,12 +293,12 @@ def chat(cfg, system, user, schema, dump_dir):
                 raise RuntimeError('CLI 실행 시간이 초과됐습니다. 버전 확인 이후 남은 실행 시간이 없습니다.')
             result = run(argv, cwd=work, prompt=prompt, timeout=remaining, env=env)
         except BaseException as exc:
+            streams = []
+            for suffix in ('stdout', 'stderr'):
+                value = getattr(exc, suffix, b'')
+                streams.append(value.decode('utf-8', errors='replace') if isinstance(value, bytes) else value)
+            exc.cli_attempt = preserve_output(*streams)
             if dump_dir:
-                for suffix in ('stdout', 'stderr'):
-                    value = getattr(exc, suffix, b'')
-                    if isinstance(value, bytes):
-                        value = value.decode('utf-8', errors='replace')
-                    (parent / (work.name + '.' + suffix + '.txt')).write_text(value, encoding='utf-8')
                 failure_status = ('interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else
                                   'timeout' if '초과' in str(exc) or isinstance(exc, subprocess.TimeoutExpired) else 'cli-failure')
                 (parent / (work.name + '.failure.json')).write_text(json.dumps({
@@ -254,26 +306,29 @@ def chat(cfg, system, user, schema, dump_dir):
                     'model': cfg.model, 'arguments': argv[1:], 'cli_version': cli_version, 'error': str(exc)}), encoding='utf-8')
             raise
         # Preserve raw output locally even when a CLI exits nonzero or emits bad JSON.
-        if dump_dir:
-            raw = Path(dump_dir) / 'cli' / (work.name + '.stdout.txt')
-            raw.write_text(result.stdout, encoding='utf-8', newline='\n')
-            (parent / (work.name + '.stderr.txt')).write_text(result.stderr, encoding='utf-8', newline='\n')
+        record = preserve_output(result.stdout, result.stderr)
         if result.returncode:
-            limited = bool(re.search(r'usage.?limit|rate.?limit|quota|사용량', result.stdout+'\n'+result.stderr, re.I))
-            status = 'usage-limit' if limited else 'cli-failure'
+            status = failed_status(result.stdout+'\n'+result.stderr)
             if dump_dir:
                 (parent/(work.name+'.failure.json')).write_text(json.dumps(dict(
                     runner=cfg.runner, model=cfg.model, arguments=argv[1:],
                     cli_version=cli_version, status=status, exit_code=result.returncode)), encoding='utf-8')
-            raise RuntimeError(f'{cfg.runner} CLI가 실패했습니다 (exit {result.returncode}, {status}). 로컬 실행 기록을 확인하세요. 다른 실행기로 대체하지 않습니다.')
+            failure = RuntimeError(f'{cfg.runner} CLI가 실패했습니다 (exit {result.returncode}, {status}). 로컬 실행 기록을 확인하세요.')
+            failure.cli_attempt = record
+            failure.category = f'cli-{status}' if status in ('authentication', 'network') else status
+            raise failure
         try:
             response, provider = decode_response(cfg.runner, result.stdout)
             if cfg.runner == 'codex':
                 validate_original(response, schema)
         except (KeyError, TypeError, ValueError) as exc:
-            raise RuntimeError(f'{cfg.runner} CLI 응답 형식 또는 완료 상태를 확인할 수 없습니다.') from exc
+            failure = RuntimeError(f'{cfg.runner} CLI 응답 형식 또는 완료 상태를 확인할 수 없습니다.')
+            failure.cli_attempt = record
+            raise failure from exc
         if not response:
-            raise RuntimeError(f'{cfg.runner} CLI 응답이 비었습니다.')
+            failure = RuntimeError(f'{cfg.runner} CLI 응답이 비었습니다.')
+            failure.cli_attempt = record
+            raise failure
         metadata = {'runner': cfg.runner, 'executable': Path(argv[0]).name,
                     'workspace_cleanup': cleanup,
                     'arguments': argv[1:],
@@ -284,7 +339,8 @@ def chat(cfg, system, user, schema, dump_dir):
                     'provider': provider}
         metadata['cli_version'] = cli_version
         if dump_dir:
-            metadata['stdout_path'] = str(raw.relative_to(dump_dir).as_posix())
+            metadata['stdout_path'] = Path(record['stdout_path']).relative_to(dump_dir).as_posix()
+        metadata['_attempt'] = record
         if cfg.runner == 'codex':
             metadata['native_schema_sha256'] = schema_hash(schema)
         return response, metadata

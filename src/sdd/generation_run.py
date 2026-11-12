@@ -14,6 +14,16 @@ from .llm import AgentError
 from .state_io import save
 
 _observed = ContextVar('sdd_observed_execution', default=None)
+_cli_resume = ContextVar('sdd_cli_resume', default=None)
+
+
+@contextmanager
+def cli_feedback(resume_argv):
+    token = _cli_resume.set(resume_argv)
+    try:
+        yield
+    finally:
+        _cli_resume.reset(token)
 
 
 def observed():
@@ -41,6 +51,8 @@ class BudgetExceeded(AgentError):
 
 
 def failure_kind(exc):
+    if isinstance(exc.__cause__, AgentError) and not isinstance(exc, AgentError):
+        return failure_kind(exc.__cause__)
     message = str(exc)
     category = getattr(exc, 'category', None)
     if category in ('format', 'evidence-scope', 'review-format'):
@@ -53,6 +65,8 @@ def failure_kind(exc):
     if 'checkpoint' in message:
         return 'checkpoint-integrity'
     if isinstance(exc, AgentError):
+        if category in ('cli-missing', 'cli-authentication', 'cli-network'):
+            return category
         if 'CLI 입력 한도' in message:
             return 'cli-input-limit'
         if '출력 토큰 한도' in message:
@@ -95,6 +109,10 @@ class Execution:
         self.report.update(operation_id=self.operation, operation_limits=self.operation_limits,
                            phases=[], owner_pid=os.getpid(), started_at=time.time())
         self.report['publication_plans'] = []
+        if resume := _cli_resume.get():
+            from .cli_agent import execution_profile
+            self.report.update(resume_argv=resume, execution=execution_profile(cfg.agent),
+                               source_commit=model.meta.get('source_commit') if model else None)
         if cfg.publication.get('operation_file'):
             self.report.update(publication=None, publication_attempt=None, publication_revision=None)
 
@@ -118,6 +136,8 @@ class Execution:
             self.report['seconds'] = round(self.clock() - self.started, 3)
             self.report['updated_at'] = time.time()
             units = Counter(status for doc in self.report['documents'] for status in doc['units'].values())
+            tracked = {key for doc in self.report['documents'] for key in doc['units']}
+            units['not-started'] += len(set(self.report.get('planned_units', ())) - tracked)
             self.report['counts'] = dict(completed=sum(units[s] for s in ('newly-generated', 'replayed', 'completed')),
                 reused=sum(units[s] for s in ('manuscript-reused', 'checkpoint-reused')),
                 revalidated=units['checkpoint-revalidated'], failed=units['failed'],
@@ -126,6 +146,11 @@ class Execution:
             self.report['cumulative'] = dict(calls=len(self.report['calls'])+sum(len(r.get('calls', [])) for r in prior),
                 elapsed_seconds=self.report['seconds']+sum(r.get('seconds', 0) for r in prior),
                 cli_seconds=sum(c.get('seconds', 0) for r in [*prior, self.report] for c in r.get('calls', [])))
+            measured = [row['tokens'] for row in self.report['calls'] if row.get('tokens') is not None]
+            self.report['tokens'] = dict(measured_attempts=len(measured),
+                unmeasured_attempts=len(self.report['calls'])-len(measured),
+                input=sum(row['input'] for row in measured) if measured else None,
+                output=sum(row['output'] for row in measured) if measured else None)
             save(self.path, self.report, newline='\n')
 
     @contextmanager
@@ -267,11 +292,28 @@ class Execution:
     @contextmanager
     def track(self, phase):
         token = _observed.set(self)
+        resume = self.report.get('resume_argv')
+        if resume:
+            print(f'실행 장부: {self.path}')
         try:
             with self.phase(phase):
                 yield
         finally:
             _observed.reset(token)
+            if resume:
+                tokens = self.report.get('tokens', {})
+                counts = self.report.get('counts', {})
+                print(f"실행 {self.report.get('seconds', 0):.3f}초, 호출 시도 {len(self.report['calls'])}회, "
+                      f"단위 완료 {counts.get('completed', 0)}, 재사용 {counts.get('reused', 0)}, "
+                      f"재검증 {counts.get('revalidated', 0)}, 실패 {counts.get('failed', 0)}, "
+                      f"미시작 {counts.get('not_started', 0)}")
+                measured = (f"{tokens['input']}/{tokens['output']}" if tokens.get('measured_attempts') else '미계측')
+                print(f"계측된 토큰 (입력/출력): {measured}, "
+                      f"미계측 시도 {tokens.get('unmeasured_attempts', 0)}회")
+                if self.report['phases'] and self.report['phases'][-1]['status'] == 'failed':
+                    kind = self.report['phases'][-1]['failure_kind']
+                    print(f'중단 원인: {kind}. 기록을 보존한 뒤 같은 입력에서 재개할 명령 인자: '
+                          + json.dumps(resume, ensure_ascii=False))
 
     def chat(self, system, user, **kwargs):
         return self._dispatch(self.agent.chat, system, user, **kwargs)
@@ -320,6 +362,7 @@ class Execution:
         timeout = self.cfg.agent.timeout_sec
         if remaining:
             self.cfg.agent.timeout_sec = min(timeout, *remaining)
+        row['timeout_seconds'] = self.cfg.agent.timeout_sec
         try:
             with self.heartbeat():
                 raw = transport(system, user, **kwargs)
@@ -335,5 +378,11 @@ class Execution:
         finally:
             self.cfg.agent.timeout_sec = timeout
             row['seconds'] = self.clock()-now
+            sender = getattr(transport, '__self__', None)
+            if getattr(sender, 'cfg', None) is self.cfg.agent:
+                if receipt := getattr(sender, 'last_receipt', None):
+                    row['receipt'] = str(receipt)
+                if record := getattr(sender, 'last_cli_attempt', None):
+                    row.update(record)
             self.report['current_task'] = previous_task
             self.persist()

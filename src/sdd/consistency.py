@@ -422,7 +422,10 @@ def _review_config(cfg):
     from copy import copy
     from .config import load
     selected = copy(cfg)
-    selected.agent = load(profile).agent
+    review_profile = load(profile)
+    if inputs := current():
+        inputs.pin(review_profile)
+    selected.agent = review_profile.agent
     return selected
 
 
@@ -448,6 +451,7 @@ def audit(cfg, model, agent):
     raw = (json.dumps(report, ensure_ascii=False, indent=2)+'\n').encode('utf-8')
     document = agent.report['documents'][report['audit_run']['document']]
     document.setdefault('artifacts', {})['consistency_report_sha256'] = hashlib.sha256(raw).hexdigest()
+    document['artifacts']['consistency_report'] = str(path)
     agent.persist()
     inputs = current()
     save(path, report, newline='\n', before_replace=inputs.verify if inputs is not None else None)
@@ -470,6 +474,8 @@ def _audit_prepared(cfg, model, agent, prepared):
     report['audit_run'] = dict(id=agent.path.stem, document=len(agent.report['documents'])-1,
                               phase=len(agent.report['phases'])-1)
     path = cfg.build_dir/'consistency-review.json'
+    attempt_path = cfg.build_dir/'consistency-attempts'/f'{agent.path.stem}.json'
+    agent.report['review_attempt'] = str(attempt_path)
     current_key = None
     ordinal = 0
     try:
@@ -517,16 +523,19 @@ def _audit_prepared(cfg, model, agent, prepared):
                 findings=findings, claims=payload['claims'], sources=payload['sources'],
                 source_aliases=payload['source_aliases'], excluded_navigation=payload['excluded_navigation'],
                 review_units=origins))
-            save(path, report, newline='\n')
+            save(attempt_path, report, newline='\n')
     except BaseException as exc:
         if current_key is not None:
             agent.unit(current_key, 'failed', error=str(exc))
         report.update(status='incomplete', error=str(exc))
-        save(path, report, newline='\n')
+        save(attempt_path, report, newline='\n')
+        if not path.exists():
+            save(path, report, newline='\n')
         raise
     report['status'] = 'failed' if any(f['status']=='contradiction' for c in report['contracts'] for f in c['findings']) else 'passed'
     report['unresolved'] = [dict(contract=c['id'], **f) for c in report['contracts'] for f in c['findings']
                             if f['status'] in ('ambiguous', 'insufficient-evidence')]
+    save(attempt_path, report, newline='\n')
     return report
 
 

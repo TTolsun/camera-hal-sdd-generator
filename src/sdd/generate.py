@@ -129,7 +129,23 @@ class Generator:
             self.agent = original
             self.narrator.agent = original
 
-    def _prepare(self, section_ids, impact):
+    @locked('generation')
+    def plan(self, section_ids, impact):
+        from .generation_run import Execution
+        from .publication_plan import preview
+        from .validation_stage import stage
+        if unknown := set(section_ids or ()) - {s['id'] for s in self.cfg.sections()}:
+            raise ValueError('Unknown section IDs: ' + ', '.join(sorted(unknown)))
+        Execution(self.cfg, None)  # Validate budgets without opening a run or charging the operation.
+        with stage() as inputs:
+            inputs.pin(self.cfg, self.model)
+            selected = self._preflight(section_ids, impact)
+            reports = self._manual_reports(selected)
+            if problems := [note for report in reports.values() for note in report['findings']]:
+                raise ValueError('설계 항목 검증 실패:\n' + '\n'.join(problems))
+            return preview(self.cfg, self.model, section_ids, impact)
+
+    def _preflight(self, section_ids, impact):
         # Validate every selected contract before replacing any manuscript.
         selected = [s for s in self.cfg.sections()
                     if (not section_ids or s['id'] in section_ids) and (not impact or s['id'] in impact.sections)]
@@ -148,11 +164,20 @@ class Generator:
             existing = self.cfg.sdd_dir / section_output(section)
             validate_change(existing.read_text(encoding='utf-8') if existing.exists() else None, section)
             generated_visuals.preflight(self.cfg, self.model, section)
-        reports = {s['id']: audit_design(self.model, s) for s in selected
-                   if (s.get('design_requirements') or s.get('reader_profile')) and not generated_design.enabled(s)}
+        return selected
+
+    def _manual_reports(self, selected):
+        return {s['id']: audit_design(self.model, s) for s in selected
+                if (s.get('design_requirements') or s.get('reader_profile')) and not generated_design.enabled(s)}
+
+    def _prepare(self, section_ids, impact):
+        from . import generated_visuals
+        selected = self._preflight(section_ids, impact)
+        reports = self._manual_reports(selected)
         # Generate and validate every required LLM answer before replacing any page.
         # Failed responses remain in the agent's prompt logs; old manuscripts survive.
         self.generated_designs = {}
+        agent_failure = None
         for sec in selected:
             if generated_design.enabled(sec):
                 try:
@@ -165,6 +190,9 @@ class Generator:
                 except (ValueError, AgentError) as exc:
                     reports[sec['id']] = {'status': 'incomplete', 'requirements': [],
                                           'findings': [str(exc)], 'human_review': 'pending'}
+                    if isinstance(exc, AgentError):
+                        agent_failure = exc
+                        break
         if reports:
             self.cfg.build_dir.mkdir(parents=True, exist_ok=True)
             (self.cfg.build_dir / 'design-review.json').write_text(json.dumps(
@@ -172,7 +200,7 @@ class Generator:
                 ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
             problems = [f"{sid}: {note}" for sid, report in reports.items() for note in report['findings']]
             if problems:
-                raise ValueError('설계 항목 검증 실패:\n' + '\n'.join(problems))
+                raise ValueError('설계 항목 검증 실패:\n' + '\n'.join(problems)) from agent_failure
         # Draft and bind every selected graph before replacing any manuscript.
         self.generated_visuals = {}
         for sec in selected:

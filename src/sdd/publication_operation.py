@@ -432,19 +432,19 @@ def archive_plan(cfg, report, execution=None):
         report['publication'] = contract.reference
     report['operation_id'] = cfg.publication.get('operation_id')
     report['input_sha256'] = checksum({k: v for k, v in report.items() if k != 'input_sha256'})
-    if report['operation_id']:
-        base = directory(cfg)
-        path = base/'plans'/(report['input_sha256'][:16]+'.json')
-        with (nullcontext() if contract and contract.output_lease is not None
-              else lease(cfg, 'publication-history-'+base.name)):
+    base = directory(cfg) if report['operation_id'] else cfg.build_dir/'publication-operations'
+    path = base/'plans'/(report['input_sha256'][:16]+'.json')
+    with (nullcontext() if contract and contract.output_lease is not None
+          else lease(cfg, 'publication-history-'+base.name)):
+        if report['operation_id']:
             _immutable(base/'identity.json', dict(operation_id=report['operation_id']))
-            _immutable(path, report)
-            if contract and json.loads(contract.watch.read(path)) != report:
-                raise InputChanged('Publication plan changed while being preserved')
-        if execution:
-            execution.report.setdefault('publication_plans', []).append(dict(
-                path=str(path), input_sha256=report['input_sha256']))
-            execution.persist()
+        _immutable(path, report)
+        if contract and json.loads(contract.watch.read(path)) != report:
+            raise InputChanged('Publication plan changed while being preserved')
+    if execution:
+        execution.report.setdefault('publication_plans', []).append(dict(
+            path=str(path), input_sha256=report['input_sha256']))
+        execution.persist()
     # Preserve the pre-adoption latest view too. Older plans do not contain an
     # operation_id, so retain exact bytes without inventing an association.
     latest = cfg.build_dir/'publication-plan.json'
@@ -459,3 +459,4 @@ def archive_plan(cfg, report, execution=None):
             if latest.read_bytes() != previous:
                 raise InputChanged('Latest publication plan changed while being preserved')
         save(latest, report, newline='\n')
+    return path

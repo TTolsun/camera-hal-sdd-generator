@@ -10,6 +10,25 @@ from sdd.config import AgentConfig, load
 from sdd.llm import Agent, AgentError
 
 
+def test_failed_cli_attempt_retains_raw_output_and_native_token_totals(tmp_cfg, tmp_path):
+    from sdd.generation_run import Execution
+
+    output = json.dumps(dict(type='turn.completed', usage=dict(
+        input_tokens=12, cached_input_tokens=9, output_tokens=8, reasoning_output_tokens=3)))
+    agent = tmp_cfg.agent
+    agent.kind, agent.runner = 'cli', 'codex'
+    agent.command = fake_cli(tmp_path, output, code=1)
+    execution = Execution(tmp_cfg, Agent(agent, dump_dir=tmp_path/'prompts'))
+    with pytest.raises(AgentError, match='cli-failure'):
+        execution.chat('system', 'user', tag='question')
+
+    journal = json.loads(execution.path.read_bytes())
+    attempt = journal['calls'][0]
+    assert attempt['status'] == 'failed' and Path(attempt['stdout_path']).read_text().strip() == output
+    assert 'receipt' not in attempt
+    assert journal['tokens'] == dict(measured_attempts=1, unmeasured_attempts=0, input=12, output=8)
+
+
 def test_default_and_local_runner_selection(tmp_path):
     path = tmp_path / 'sdd.yaml'
     path.write_text('{}', encoding='utf-8')

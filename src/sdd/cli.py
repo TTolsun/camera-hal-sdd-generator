@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
@@ -36,35 +35,13 @@ def _cfg(args: argparse.Namespace) -> Config:
     return load(Path(args.config).resolve() if args.config else None)
 
 
+def _command(cfg, name):
+    return ['sdd', '--config', str(next(iter(cfg._loaded_inputs))), name]
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
-    cfg = _cfg(args)
-    ok = True
-
-    def line(label: str, good: bool, detail: str) -> None:
-        nonlocal ok
-        ok = ok and good
-        print(f"[{'OK' if good else '!!'}] {label}: {detail}")
-
-    line("소스 루트", cfg.source_root.exists(), cfg.source_root.as_posix())
-    line("git", (cfg.source_root / ".git").exists(), "소스 루트가 git 저장소인지")
-    line("compile DB", cfg.compile_commands.exists(),
-         cfg.compile_commands.as_posix() + ("" if cfg.compile_commands.exists() else "  (sdd compdb 로 생성)"))
-    # clang-uml 은 없어도 libclang 대체 분석으로 동작하므로 경고만 남긴다 (관계·다이어그램 일부가 빠진다).
-    uml = shutil.which(cfg.clang_uml_bin)
-    print(f"[{'OK' if uml else '..'}] clang-uml: {uml or f'{cfg.clang_uml_bin} 없음. libclang 대체 분석으로 동작 (템플릿 관계, include 그래프 제외)'}")
-    # ndk-build 는 그 경로로 compile DB 를 만들 때만 필요하다. Soong/CMake 등 다른 빌드가 만든
-    # DB 를 쓰는 프로젝트에서 이 점검이 항상 실패하면 안 된다.
-    if cfg.ndk_build.get("enabled"):
-        path = shutil.which("ndk-build")
-        line("ndk-build", path is not None, path or "ndk-build 를 PATH 에서 찾지 못함")
-    try:
-        line("agent", True, Agent(cfg.agent).ping())
-    except AgentError as e:
-        line("agent", False, str(e))
-    if cfg.compile_commands.exists():
-        for w in compdb.check(compdb.load_entries(cfg.compile_commands)):
-            print(f"[..] compile DB 경고: {w}")
-    return 0 if ok else 1
+    from .preflight import doctor
+    return doctor(_cfg(args), args.header, check_endpoint=args.check_endpoint)
 
 
 def cmd_compdb(args: argparse.Namespace) -> int:
@@ -227,13 +204,17 @@ def cmd_accept(args: argparse.Namespace) -> int:
 
 def cmd_generate(args: argparse.Namespace) -> int:
     cfg = _cfg(args)
+    plan_only = getattr(args, 'plan_only', False)
+    sections = args.sections.split(',') if args.sections else None
     from . import document_health
-    document_health.prepare(cfg)
     model = _load_model(cfg)
+    if plan_only and model.meta.get('source_commit') != extract.git_head(cfg.source_root):
+        raise ValueError('facts의 소스 커밋이 현재 체크아웃과 다릅니다. 대상 커밋에서 sdd extract를 실행하세요.')
     if any(s.get("design_topics") for s in cfg.sections()):
         from .evidence import collect as collect_evidence
         collect_evidence(cfg, model)
-        model.save(cfg.facts_path)
+        if not plan_only:
+            model.save(cfg.facts_path)
     report = None
     if args.from_impact:
         p = cfg.build_dir / "impact.json"
@@ -243,9 +224,21 @@ def cmd_generate(args: argparse.Namespace) -> int:
         report = impact_mod.ImpactReport.load(p)
         if report.coverage.get("findings"):
             print(f"문서 범위 검토 {len(report.coverage['findings'])}개가 남아 있습니다. build/impact-review.md를 확인하세요.")
+    if plan_only:
+        Generator(cfg, model, None).plan(sections, report)
+        print('계획 확인 완료. 모델 호출 0회. 원고 생성, 독립 검토, 사람 승인, 게시는 대기 중입니다.')
+        return 0
+    document_health.prepare(cfg)
     agent = Agent(cfg.agent, dump_dir=cfg.build_dir / "prompts")
     gen = Generator(cfg, model, agent)
-    written = gen.run(section_ids=args.sections.split(",") if args.sections else None, impact=report)
+    from .generation_run import cli_feedback
+    resume = _command(cfg, 'generate')
+    if sections:
+        resume += ['--sections', ','.join(sections)]
+    if args.from_impact:
+        resume.append('--from-impact')
+    with cli_feedback(resume):
+        written = gen.run(section_ids=sections, impact=report)
     for w in written:
         print(f"-> {w.relative_to(cfg.root).as_posix()}")
     if report:
@@ -378,8 +371,11 @@ def cmd_audit_consistency(args: argparse.Namespace) -> int:
     from .consistency import audit
     from .generation_run import Execution
     cfg = _cfg(args)
-    agent = Execution(cfg, Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts'))
-    report = audit(cfg, _load_model(cfg), agent)
+    model = _load_model(cfg)
+    from .generation_run import cli_feedback
+    with cli_feedback(_command(cfg, 'audit-consistency')):
+        agent = Execution(cfg, Agent(cfg.agent, dump_dir=cfg.build_dir/'prompts'), model=model)
+        report = audit(cfg, model, agent)
     print(f"{report['status']}: {cfg.build_dir/'consistency-review.json'}")
     print(f"계약 대조 배치 {report['fresh_batches']}개 신규, {report['reused_batches']}개 재사용")
     print(f"Automatic unresolved findings: {len(report['unresolved'])}; human review remains pending")
@@ -436,7 +432,10 @@ def main(argv: list[str] | None = None) -> int:
                    "(기본: 현재 디렉터리에서 위로 sdd.yaml 탐색). 로컬 덮어쓰기는 같은 이름의 .local.yaml")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
+    s = sub.add_parser("doctor", help="모델을 호출하지 않고 로컬 입력과 실행 프로필을 점검한다")
+    s.add_argument('--header', action='append', default=[], help='확인할 생성 헤더 경로. 반복 지정 가능')
+    s.add_argument('--check-endpoint', action='store_true', help='직접 API 프로필에 한해 모델 목록 접근을 점검한다')
+    s.set_defaults(fn=cmd_doctor)
     sub.add_parser("audit-docs", help="문서 분량·증가·중복·Feature 범위·폐기 계획을 검사한다 (기준선 변경 없음)").set_defaults(fn=cmd_audit_docs)
     sub.add_parser('audit-consistency', help='선택한 CLI로 문서·언어 사이의 계약과 소스를 대조한다 (사람 승인 아님)').set_defaults(fn=cmd_audit_consistency)
 
@@ -481,6 +480,7 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("generate")
     s.add_argument("--sections", help="섹션 id 를 쉼표로 나열. 생략하면 전체")
     s.add_argument("--from-impact", action="store_true", help="build/impact.json 의 섹션만 재생성")
+    s.add_argument('--plan-only', action='store_true', help='모델 호출이나 원고 변경 없이 입력과 예상 작업을 기록한다')
     s.set_defaults(fn=cmd_generate)
 
     s = sub.add_parser("accept", help="사람 검토 승인을 장부(sdd/approvals.json)에 기록한다. 인자 없이 실행하면 상태를 보여 준다")
