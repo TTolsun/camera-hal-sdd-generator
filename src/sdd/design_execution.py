@@ -56,13 +56,16 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                               system=system, unit_policy=unit_policy, profile=profile)
     rejected = rejected_reviews(tag, diagnostic_context)
     pending_checkpoint_raw, carried_receipts = None, []
-    store = None
+    draft_receipt = None
+    store, pending = None, None
     from .reuse_decision import record as decision
     explanation = dict(reason_codes=['checkpoint-unavailable'])
     if cfg.agent.kind == 'cli' and cfg.agent.model and cfg.review.cli_checkpoint:
         from .cli_checkpoint import Capture
-        from .design_checkpoint import store_for
+        from .design_checkpoint import PendingReview, store_for
         store, identity = store_for(cfg, model, section, topic, prompt, grounding, answers, schema=schema)
+        if grounding:
+            pending = PendingReview(store)
         agent.unit(tag, 'running', input_sha256=store.path.stem,
                    dependencies={key: value for key, value in identity.items() if key not in ('request', 'topic')})
         cached_unit = store.read()
@@ -130,6 +133,13 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                                         revalidated=grounding_changed or validation_changed,
                                         new_grounding_review=grounding_changed,
                                         receipts=receipt_names))
+        elif pending is not None and (pending_review := pending.read()) is not None:
+            pending_checkpoint_raw, draft_receipt = pending_review
+            carried_receipts = [draft_receipt]
+            # Consume before trying a new verdict. Only another observed
+            # transport failure may make this draft eligible again.
+            pending.write(None)
+            explanation = dict(reason_codes=['grounding-transport-failed-draft-receipt-verified'])
         agent = Capture(agent)
         agent.receipts = carried_receipts
     replayed = replay_unit(archive, system, base_user, schema, tag, topic,
@@ -140,7 +150,12 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
         decision(agent, tag, 'replay-archive', dict(reason_codes=['historical-archive-passes-current-checks']),
                  stage='validated', origin=replayed.replayed)
         return replayed
-    decision(agent, tag, 'generate', explanation)
+    resuming_review = draft_receipt is not None
+    if resuming_review:
+        decision(agent, tag, 'review-existing', explanation,
+                 receipts=[draft_receipt.relative_to(store.calls).as_posix()], current_receipts_verified=True)
+    else:
+        decision(agent, tag, 'generate', explanation)
     user = base_user
     last, last_category = None, None
     options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in SCHEMA_KINDS else {}
@@ -155,6 +170,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
         # use the portable prompt + parser/validator and need no schema API.
         review_retry = pending_raw is not None
         from_cache = not review_retry and cached is not None and attempt == 0
+        receipt_count = len(agent.receipts) if pending is not None else 0
         raw = pending_raw if review_retry else cached if from_cache else agent.chat(
             system, user, tag=f"{tag}_{attempt}", **options)
         drafted_live |= not review_retry and not from_cache
@@ -169,6 +185,8 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
             if len(system) + len(revision) > cfg.agent.max_input_chars:
                 raise ValueError(f"{section['id']}/{topic['id']}: 재검토 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
             raw = agent.chat(system, revision, tag=f"{tag}_{attempt}_revision", **options)
+        if not review_retry and not from_cache and pending is not None:
+            draft_receipt = agent.receipts[-1] if len(agent.receipts) > receipt_count else None
         review_attempt = ReviewAttempt(agent, rejected, profile)
         try:
             statements = _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages,
@@ -180,6 +198,8 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 observe_attempt(tag, 'design', attempt, context=diagnostic_context, raw=raw,
                     category='review-agent-failure', error=exc,
                     action='Inspect the original selected-agent failure; no semantic verdict was returned and no substitute is used.')
+                if draft_receipt is not None:
+                    pending.write(draft_receipt)
                 raise
             if not isinstance(exc, (ValueError, TypeError, KeyError)):
                 raise
@@ -210,6 +230,9 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 pending_raw = raw
                 continue
             pending_raw = None
+            if resuming_review and review_retry and not drafted_live:
+                explanation = dict(reason_codes=['resumed-draft-rejected-by-current-checks'])
+                decision(agent, tag, 'generate', explanation)
             # Retry with the validation error and original evidence.
             # Standard mode also retains the last rejected draft.
             if focused_system is not None:
@@ -230,7 +253,9 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 store.write(raw, statements, agent)
             receipts = ([path.resolve().relative_to(store.calls.resolve()).as_posix() for path in agent.receipts]
                         if store is not None else [str(getattr(agent, 'last_receipt', '') or '')])
-            decision(agent, tag, 'revalidate-answer-cache' if from_cache else 'generate', explanation,
+            action = ('review-existing' if resuming_review and not drafted_live else
+                      'revalidate-answer-cache' if from_cache else 'generate')
+            decision(agent, tag, action, explanation,
                      stage='validated', receipts=receipts)
             observe_attempt(tag, 'design', attempt, context=diagnostic_context, raw=raw,
                 status='accepted-current-checks', receipt=review_attempt.receipt,

@@ -90,7 +90,7 @@ def prepare(cfg, model, section_ids=None, impact=None):
     from .design_request import prepare_requests, _design_units
     from .design_reuse import reusable
     from .design_response import _validate_retained
-    from .design_checkpoint import store_for, changes
+    from .design_checkpoint import PendingReview, store_for, changes
     from .design_execution import _validate_unit_response
     from .design_request import _unit_request, _unit_tag
     from . import duplicates
@@ -154,6 +154,13 @@ def prepare(cfg, model, section_ids=None, impact=None):
                         action = 'review-existing' if grounding_changed else 'revalidate-checkpoint' if changed else 'reuse-checkpoint'
                         reason = ('grounding policy changed; new automatic review required' if grounding_changed else
                                   'completed receipt-bound draft passes current checks; original provenance retained')
+                elif store is not None and plan.policy['design_grounding']:
+                    pending_review = PendingReview(store).read()
+                    if pending_review is not None:
+                        _, receipt = pending_review
+                        action, reason = 'review-existing', 'draft receipt verified; interrupted grounding must run'
+                        receipts = [receipt.relative_to(store.calls).as_posix()]
+                        explanation = dict(reason_codes=['grounding-transport-failed-draft-receipt-verified'])
                 # A checkpoint's final outcome still belongs to execution.
                 # Even a forecast hit can be rejected under current checks.
                 pending.append(key)
