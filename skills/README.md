@@ -8,10 +8,12 @@
 
 ## 설치
 
-1. [반입 패키지](../docs/inhouse/package.md)를 사용하거나 생성기 저장소 전체를 사내에 반입하고 사용할 커밋을 고정합니다. `skills/`만 복사하면 연결된 가이드·집필 규칙·예제와 CLI가 없습니다.
+1. [GitHub Releases](https://github.com/TTolsun/camera-hal-sdd-generator/releases/latest)에서 반입 ZIP을 받아 [무결성 검사](../docs/inhouse/package.md#반입-확인과-설치)를 먼저 수행합니다. 생성기 저장소 전체를 직접 반입한다면 커밋을 고정하고 반입 패키지를 만듭니다. `skills/`만 복사하면 연결된 가이드·집필 규칙·예제와 CLI가 없습니다.
 2. 스킬을 설치하지 않을 때는 에이전트에게 `<생성기 루트>/skills/camera-hal-sdd/SKILL.md`를 직접 읽도록 지시합니다. [전달용 지시문](../docs/inhouse/agent.md#전달할-지시문)을 사용할 수 있습니다.
 3. 반복 사용 시 `camera-hal-sdd/`를 사용하는 에이전트의 스킬 경로에 복사합니다. 경로는 사내에 설치된 에이전트의 문서를 따릅니다. 생성기 저장소 절대 경로도 함께 전달합니다.
 4. 복사한 스킬의 링크는 생성기 루트에서 해석합니다. 가이드는 생성기 저장소에서만 관리하며 설치된 스킬에 따로 복제하지 않습니다. 생성기 버전을 갱신할 때 스킬도 같은 커밋의 것으로 갱신합니다.
+
+반입본의 `START_PROMPT.txt`를 사용하면 스킬 설치 없이 같은 절차로 시작할 수 있습니다. Hermes를 선택했다면 `START_PROMPT_HERMES.txt`를 사용합니다. 두 파일은 패키지 안에 포함되며 릴리스 첨부 사본과 바이트가 같아야 합니다. `metadata.version`은 스킬 개정 번호이고 정확한 패키지 버전은 `IMPORT-MANIFEST.json`의 `source_commit`입니다.
 
 스킬은 터미널에서 `uv run sdd ...`를 실행할 수 있는 에이전트를 전제로 합니다. 문서 생성 CLI는 [선택 안내](../docs/inhouse/cli-agents.md)에 따라 Hermes, OpenCode, Claude Code 또는 Codex로 지정합니다. `sdd automate`가 부르는 검토 CLI는 선택한 실행기의 도구 제한을 적용한 별도 실행이므로, 이 스킬과 같은 작업 권한을 주지 않습니다([예약 게시 절차](../docs/inhouse/03-update-system.md)).
 
