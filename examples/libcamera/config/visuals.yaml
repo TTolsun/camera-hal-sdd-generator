@@ -8008,8 +8008,8 @@ sections:
         sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
         quote: applications must retrieve with FrameBuffer::releaseFence()
     - id: reuse
-      label: 그 뒤 다른 요청에서 버퍼 재사용
-      label_en: Then reuse the buffer in another request
+      label: 다른 요청에 넣기 전에 확인할 펜스 조건
+      label_en: Fence condition to check before adding the buffer to another request
       evidence:
       - source: lifetime/fence-expiry
         sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104
@@ -8033,8 +8033,8 @@ sections:
         quote: "If the \\a fence associated with \\a buffer isn't signalled, the request will\n * fail after a timeout. The buffer will still contain the fence, which\n * applications must retrieve with FrameBuffer::releaseFence() before the buffer\n * can be reused in another request."
     - from: retrieve
       to: reuse
-      label: 회수 후 재사용 가능
-      label_en: Reuse after retrieval
+      label: 회수는 재사용의 선행 조건
+      label_en: Retrieval is a prerequisite for reuse
       evidence:
       - source: lifetime/fence-expiry
         sha256: ebb24de716cdebb7c0c82cfddf05e91d7d2fb938eda24fe5027d3e9efcf62104

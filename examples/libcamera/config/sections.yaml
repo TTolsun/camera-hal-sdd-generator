@@ -5702,6 +5702,25 @@ sections:
       - invocation
       - dispatch
       max_statements: 1
+    - id: submission-correlation
+      question: >
+        제출은 성공했는데 완료가 오지 않을 때, 같은 Request를 재사용하더라도
+        어느 제출 회차가 파이프라인에 들어왔는지 확인하는 추가 계측 계획을 설명하세요.
+        Camera::queueRequest의 호출 시작에 회차 표식을 붙이고, 0 또는 오류 반환과
+        실제 메시지 게시 및 PipelineHandler::queueRequest 진입을 같은 표식으로 연결합니다.
+        성공 반환이 기록된 회차에서 진입이 관찰되지 않으면 메시지 전달을 조사하고,
+        진입이 기록되면 waitingRequests_의 준비·한도 분기로 이동합니다.
+        앱이 추가한 계측 표식이며 기존 로그나 API의 식별자는 아닙니다.
+        재사용되는 Request 주소나 cookie는 회차를 구분하지 못하고,
+        Request sequence는 doQueueRequest에서 뒤에 부여되므로 진입 전 회차에는 사용할 수 없습니다.
+        이 내용을 짧은 조사 계획으로 답하고 실제 시험 결과를 주장하지 마세요.
+      sources:
+      - submit-message
+      - post-order
+      - dispatch
+      max_statements: 2
+      answer_contract:
+        basis: investigation
     - id: fence
       question: 완료 누락을 조사할 때 waitingRequests_ 선두의 prepared_와 각 fence의 notifiers_, prepare(300ms), notifierActivated
         및 timeout을 연결하세요. fence가 없으면 동기 prepared 신호를 내고, 모두 신호되거나 타임아웃되면 prepared_를 참으로 바꾼 뒤 신호를 냅니다. 타임아웃은 취소
