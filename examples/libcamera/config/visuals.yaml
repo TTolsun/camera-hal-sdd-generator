@@ -810,6 +810,22 @@ sections:
     kind: flow
     title: 선두 요청을 전달하거나 반복을 멈추는 조건
     question: waitingRequests_ 순회에서 준비 상태와 queuedRequests_ 소프트웨어 큐 크기는 어떻게 전달을 제한합니까?
+    caption:
+      text: PipelineHandler::queueRequest()는 요청 준비의 타임아웃 인자로 300 ms를 전달합니다. 전달이 멈추면 queuedRequests_.size()가
+        maxQueuedRequestsDevice_와 같은지와 waitingRequests_의 맨 앞 요청이 준비되었는지를 각각 확인하세요.
+      text_en: PipelineHandler::queueRequest() passes 300 ms as the timeout argument for request preparation.
+        If forwarding stops, check separately whether queuedRequests_.size() equals maxQueuedRequestsDevice_
+        and whether the request at the front of waitingRequests_ is prepared.
+      evidence:
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: prepare(300ms)
+      - source: journey/device-queue
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        quote: if (data->queuedRequests_.size() == maxQueuedRequestsDevice_)
+      - source: journey/waiting-prepared
+        sha256: f655f79ce0ac9e9361d1759b2974e6f382b7fe1e9e3aa35b51952572af8d5a6f
+        quote: if (!request->_d()->prepared_)
     nodes:
     - id: waiting
       label: waitingRequests_에 항목이 있는가?
@@ -1002,6 +1018,19 @@ sections:
     kind: flow
     title: 버퍼 완료와 명시적 요청 완료의 경계
     question: 마지막 버퍼가 끝났을 때 completeBuffer의 반환과 핸들러의 요청 완료 의무는 어떻게 구분됩니까?
+    caption:
+      text: completeBuffer()가 true를 반환하면 요청에 포함된 모든 버퍼가 완료된 것입니다. 마지막 버퍼가 완료되어도 요청은 자동으로 완료되지 않으므로, 요청이 완료되지
+        않았다면 파이프라인 핸들러가 completeRequest()를 명시적으로 호출하는지 확인하세요.
+      text_en: A true return from completeBuffer() means all buffers in the request have completed. The request
+        does not complete automatically when its last buffer completes, so if it remains incomplete, check
+        whether the pipeline handler explicitly calls completeRequest().
+      evidence:
+      - source: journey/request-duty
+        sha256: 957ec8f5090b25e8e97e61a6390c77c799eb5e696028a5674ca4717473b6d42d
+        quote: They shall complete requests explicitly with completeRequest().
+      - source: journey/buffer-notice
+        sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
+        quote: True if all buffers contained in the request have completed
     nodes:
     - id: call
       label: CameraManager 스레드에서 completeBuffer
@@ -1077,6 +1106,19 @@ sections:
     kind: flow
     title: 제출 큐의 선두 상태와 반환 순서
     question: CameraManager 스레드의 completeRequest는 어느 조건에서 반환 반복을 멈추고 어느 요청을 애플리케이션에 알립니까?
+    caption:
+      text: 파이프라인 핸들러는 완료된 요청에 대해 순서 제약 없이 completeRequest()를 호출할 수 있지만, 요청은 제출 순서대로 애플리케이션에 반환됩니다. 앞선 요청의
+        상태가 Request::RequestPending이면 뒤에 있는 완료된 요청도 반환되지 않습니다.
+      text_en: The pipeline handler may call completeRequest() on completed requests in any order, but requests
+        are returned to the application in submission order. If an earlier request has status Request::RequestPending,
+        a later completed request is not returned yet.
+      evidence:
+      - source: journey/request-notice
+        sha256: 6ad80c6800e8b980c2a6146d7dcc5648de9db2b0ca408711a896c4e46a624684
+        quote: request->_d()->complete();
+      - source: journey/completed-head
+        sha256: 103a09a61422ec5ef5b879512b00b4194d428eb70ce8bbe292ded0be5382caf6
+        quote: if (req->status() == Request::RequestPending)
     nodes:
     - id: entry
       label: 'CameraManager 스레드: 현재 요청 complete()'
@@ -1238,6 +1280,16 @@ sections:
     kind: flow
     title: Camera::stop의 미실행·오류·정상 경로
     question: isRunning과 접근 검사 결과에 따라 Camera::stop은 어떤 경로로 반환합니까?
+    caption:
+      text: 실행 중인 카메라가 접근 검사를 통과하면 Camera::stop()은 촬영과 요청 처리를 즉시 중단하며, 모든 미완료 요청을 취소하고 오류 상태로 동기적으로 완료하는 것이
+        공개 API 계약입니다. !d->isRunning()이면 이 함수는 아무 작업도 하지 않고 0을 반환합니다.
+      text_en: When the running camera passes the access check, the public API contract for Camera::stop()
+        is to stop capture and request processing immediately and cancel and complete all pending requests
+        synchronously in an error state. If !d->isRunning(), the function does nothing and returns 0.
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: pending requests are cancelled and complete synchronously in an error state.
     nodes:
     - id: running
       label: d->isRunning()인가?
@@ -10800,6 +10852,22 @@ sections:
     title: 파이프라인 정지와 대기 요청 취소
     question: 정지는 대기 큐를 어떻게 분리하고 stopDevice 뒤 취소 요청을 순번과 함께 완료합니까?
     condition_display: evidence
+    caption:
+      text: PipelineHandler::stop()은 대기열의 요청을 따로 보관하고 stopDevice()를 호출한 뒤 그 요청을 취소하며, completeRequest()는 요청을
+        제출 순서대로 애플리케이션에 반환합니다. 코드에는 data->queuedRequests_.empty()와 data->waitingRequests_.empty()를 확인하는 두
+        ASSERT가 있으며 평가 여부는 빌드에 따라 달라지고, 그다음 data->requestSequence_를 0으로 초기화합니다.
+      text_en: PipelineHandler::stop() sets the waiting queue requests aside, calls stopDevice(), and then
+        cancels those requests, while completeRequest() returns requests to the application in submission
+        order. The code contains two ASSERT checks for data->queuedRequests_.empty() and data->waitingRequests_.empty(),
+        whose evaluation depends on the build, and then resets data->requestSequence_ to 0.
+      evidence:
+      - source: cancellation/pipeline-stop
+        sha256: 956220c79c4d6c71b49e6af0c06af322f392187b2b7ffbcfb272d03b5b8c5442
+        quote: "ASSERT(data->queuedRequests_.empty());\n\tASSERT(data->waitingRequests_.empty());\n\n\tdata->requestSequence_\
+          \ = 0;"
+      - source: cancellation/ordered-completion
+        sha256: b250ffb8ca77d7fd55df385a63f73ffa5b5fba5bbff4c79f5bd5edd8278fb6ee
+        quote: if (req->status() == Request::RequestPending)
     nodes:
     - id: swap
       label: waitingRequests_를 로컬 큐로 옮겨 stopDevice 내부의 completeRequest 때문에 대기 요청이 다시
