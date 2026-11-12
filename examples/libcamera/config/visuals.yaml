@@ -7733,6 +7733,23 @@ sections:
     kind: ownership
     title: 요청과 버퍼를 유지할 기간
     question: 요청의 소유권은 호출자에게 있습니다. 버퍼 참조를 연결해도 호출자의 버퍼 유지 책임은 계속됩니다.
+    caption:
+      text: createRequest()로 만든 요청은 앱이 소유합니다. addBuffer()가 저장하는 버퍼 참조와 queueRequest()가 전달하는 raw 포인터는 객체 수명을 연장하지 않습니다. 앱은 버퍼를 요청 완료 콜백까지, 큐에 넘긴 요청은 적어도 메서드가 호출될 때까지 유효하게 유지해야 합니다.
+      text_en: The app owns the request created by createRequest(). The buffer reference stored by addBuffer() and the raw pointer passed by queueRequest() do not extend object lifetimes. Keep the buffer valid until the request completion callback and the queued request valid at least until the method is invoked.
+      evidence:
+      - source: request/create
+        sha256: 9f251ecf5ba569606e9753d3619b88e1aef5a4ce15f816ae97efd283e34b823b
+        quote: The ownership of the returned request is passed to the caller
+      - source: lifetime/buffer
+        sha256: 65cd8b0501b7f6545dd10eaaec4a4fe46c52a096a3bbd94ea6b4813e4a670876
+        quote: A reference to the buffer is stored in the request.
+      - source: request/queue-code
+        sha256: b375a7828af46db11a4e6308cc634ebb265619e76e9f173907d16d9009fe2c51
+        quote: ConnectionTypeQueued, request);
+      - section: request-lifecycle
+        source: preparation-depth/invocation
+        sha256: bef3eb5f0caf5f2d341c72196bafab193f5def9fc31969191c2a798c5b0bd357
+        quote: are passed untouched. The caller shall ensure that any pointer argument
     nodes:
     - id: caller
       label: 호출자가 Request를 소유
