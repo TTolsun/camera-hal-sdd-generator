@@ -131,6 +131,7 @@ def test_dependency_list_contains_locked_runtime_and_test_closure():
 def test_prompt_variants_preserve_every_instruction_except_cli_selection():
     guide = (ROOT / "docs/inhouse/package.md").read_text(encoding="utf-8")
     prompts = builder.start_prompts(guide)
+    assert builder.start_prompts(guide.replace("\n", "\r\n")) == prompts
     generic = prompts["START_PROMPT.txt"].decode().splitlines()
     hermes = prompts["START_PROMPT_HERMES.txt"].decode().splitlines()
     assert len(generic) == len(hermes)

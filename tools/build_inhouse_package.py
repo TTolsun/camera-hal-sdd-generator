@@ -16,6 +16,7 @@ PREFIX = "camera-hal-sdd-generator/"
 
 def start_prompts(guide):
     """Keep release attachments and the offline kit on the same instructions."""
+    guide = guide.replace("\r\n", "\n")
     sections = re.findall(r"^## 시작 프롬프트\n(.*?)(?=^## |\Z)", guide, re.M | re.S)
     if len(sections) != 1:
         raise ValueError("Expected one start prompt section in docs/inhouse/package.md")
