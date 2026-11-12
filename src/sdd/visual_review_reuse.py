@@ -1,4 +1,4 @@
-"""Carry published item judgments to a verified site after position-only changes."""
+"""Carry published judgments when position or source revision changes are proved equivalent."""
 from __future__ import annotations
 
 import argparse
@@ -19,7 +19,8 @@ def indexed(report):
     return {row['id']: row for row in report['items']}
 
 
-def carry_reviews(ledger, previous, current, previous_relative, current_relative, *, baseline_build, stable_pages):
+def carry_reviews(ledger, previous, current, previous_relative, current_relative, *, baseline_build, stable_pages,
+                  source_proof=None, trace_proofs=None):
     before, after = indexed(previous), indexed(current)
     relative_before, relative_after = indexed(previous_relative), indexed(current_relative)
 
@@ -27,9 +28,13 @@ def carry_reviews(ledger, previous, current, previous_relative, current_relative
         old, new = before.get(key), after.get(key)
         if old is None or new is None or new['page'] not in stable_pages:
             return False
+        if source_proof is not None:
+            return (key in trace_proofs and key in relative_before and key in relative_after
+                    and relative_before[key]['fingerprint'] == relative_after[key]['fingerprint'])
         if old['fingerprint'] == new['fingerprint']:
             return True
         return (bool(old['anchor']) and old['anchor'] == new['anchor']
+                and key in relative_before and key in relative_after
                 and relative_before[key]['fingerprint'] == relative_after[key]['fingerprint'])
 
     kept, counts = {}, Counter()
@@ -43,7 +48,16 @@ def carry_reviews(ledger, previous, current, previous_relative, current_relative
         candidate = {**record, 'fingerprint': new['fingerprint']}
         if adjacent:
             candidate['adjacent_fingerprint'] = after[adjacent]['fingerprint']
-        if record != candidate:
+        if source_proof is not None:
+            candidate['source_reuse'] = dict(
+                schema=1, baseline_build_id=baseline_build,
+                previous_commit=source_proof.previous_commit, current_commit=source_proof.current_commit,
+                previous_fingerprint=old['fingerprint'], comparison_fingerprint=relative_after[key]['fingerprint'],
+                **trace_proofs[key],
+            )
+            if adjacent:
+                candidate['source_reuse']['adjacent_comparison_fingerprint'] = relative_after[adjacent]['fingerprint']
+        elif record != candidate:
             candidate['position_reuse'] = dict(
                 schema=1, baseline_build_id=baseline_build,
                 previous_fingerprint=old['fingerprint'],
@@ -60,11 +74,12 @@ def carry_reviews(ledger, previous, current, previous_relative, current_relative
         if after[key]['status'] != candidate['status']:
             del kept[key]
             continue
-        counts['position_only' if candidate != ledger['items'][key] else 'exact'] += 1
+        method = 'source_revision' if source_proof is not None else 'position_only' if candidate != ledger['items'][key] else 'exact'
+        counts[method] += 1
     pending = sorted(set(after) - set(kept))
     return {**ledger, 'items': kept}, dict(
         baseline_build_id=baseline_build, exact=counts['exact'], position_only=counts['position_only'],
-        pending=pending, deleted=sorted(set(before) - set(after)),
+        source_revision=counts['source_revision'], pending=pending, deleted=sorted(set(before) - set(after)),
     )
 
 
@@ -75,7 +90,7 @@ def presentation_environment(root, page):
             if node.tag in {'html', 'body', 'base', 'style', 'script', 'link'}]
 
 
-def reuse_published(baseline, current, reviews, options, *, source_commit):
+def reuse_published(baseline, current, reviews, options, *, source_commit, source_root=None, source_settings=None):
     previous_manifest = load_json(baseline / MANIFEST)
     current_manifest = load_json(current / MANIFEST)
     verify_site(baseline)
@@ -83,11 +98,20 @@ def reuse_published(baseline, current, reviews, options, *, source_commit):
     if hashlib.sha256(reviews.read_bytes()).hexdigest() != previous_manifest['inputs'].get('item_visual_reviews'):
         raise ValueError('Baseline reviews do not match the published manifest')
     published = load_json(baseline / REPORT)
-    if not source_commit or published['source_commit'] != source_commit:
-        raise ValueError('Position reuse requires the same source commit')
-    for key in ('thresholds', 'signals', 'style_policy', 'require_provenance', 'deferred_pages'):
+    previous_commit = published['source_commit']
+    if not source_commit or not previous_commit:
+        raise ValueError('Visualization reuse requires pinned source commits')
+    source_proof = None
+    if previous_commit != source_commit:
+        if source_root is None or source_settings is None:
+            raise ValueError('Different visualization source commits require immutable Git source proof')
+        from .visual_source_reuse import SourceProof
+        source_proof = SourceProof(source_root, source_settings, previous_commit, source_commit)
+    for key in ('thresholds', 'signals', 'style_policy', 'deferred_pages'):
         if published['policy'][key] != options[key]:
             raise ValueError('Position reuse requires the same visual policy: ' + key)
+    if published['policy'].get('require_provenance', False) != options.get('require_provenance', False):
+        raise ValueError('Position reuse requires the same visual policy: require_provenance')
 
     def assets(manifest):
         return {path: sha for path, sha in manifest['outputs'].items()
@@ -98,7 +122,8 @@ def reuse_published(baseline, current, reviews, options, *, source_commit):
     enforce(published)
     new = inspect_site(current, options, manifest=current_manifest, source_commit=source_commit)
     stable_pages = set()
-    if assets(previous_manifest) == assets(current_manifest):
+    if (assets(previous_manifest) == assets(current_manifest) and
+            (source_proof is None or previous_manifest.get('dependencies') == current_manifest.get('dependencies'))):
         stable_pages = {page for page in set(published['pages']) & set(new['pages'])
                         if (previous_manifest['outputs'][page] == current_manifest['outputs'][page]
                             or presentation_environment(baseline, page) == presentation_environment(current, page))}
@@ -106,13 +131,34 @@ def reuse_published(baseline, current, reviews, options, *, source_commit):
     moved_pages = {after[key]['page'] for key in before.keys() & after.keys()
                    if after[key]['page'] in stable_pages and before[key]['fingerprint'] != after[key]['fingerprint']}
 
-    def relative_report(root, manifest):
+    def comparison_report(root, manifest, commit):
         selected = {'outputs': {page: manifest['outputs'][page] for page in moved_pages}}
-        return inspect_site(root, options, manifest=selected, source_commit=source_commit, section_relative=True)
+        transform = None if source_proof is None else lambda doc, page, root: source_proof.normalize(doc, commit, page, root)
+        return inspect_site(root, options, manifest=selected, source_commit=commit,
+                            section_relative=source_proof is None, comparison_transform=transform,
+                            comparison_commit=previous_commit if source_proof is not None else None)
 
-    return carry_reviews(ledger, published, new, relative_report(baseline, previous_manifest),
-                         relative_report(current, current_manifest),
-                         baseline_build=previous_manifest['build_id'], stable_pages=stable_pages)
+    traces = None
+    if source_proof is not None:
+        from .visual_source_reuse import trace_proof
+        traces = {}
+        for key, record in ledger['items'].items():
+            if key not in after or after[key]['page'] not in stable_pages:
+                continue
+            if source_proof.additional_sources_unchanged(record):
+                checked = trace_proof(record, baseline, current, after[key]['page'], previous_commit, source_commit)
+                if checked is not None:
+                    traces[key] = checked
+
+    updated, report = carry_reviews(ledger, published, new, comparison_report(baseline, previous_manifest, previous_commit),
+                                   comparison_report(current, current_manifest, source_commit),
+                                   baseline_build=previous_manifest['build_id'], stable_pages=stable_pages,
+                                   source_proof=source_proof, trace_proofs=traces)
+    if source_proof is not None:
+        report['source_proof'] = dict(previous_commit=previous_commit, current_commit=source_commit,
+            files=[dict(commit=commit, path=path, sha256=checksum)
+                   for (commit, path), checksum in sorted(source_proof.checked.items())])
+    return updated, report
 
 
 def main():
@@ -125,8 +171,10 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
     from .config import load
-    ledger, report = reuse_published(args.baseline, args.site, args.reviews, policy(load(args.config)),
-                                     source_commit=args.source_commit)
+    cfg = load(args.config)
+    ledger, report = reuse_published(args.baseline, args.site, args.reviews, policy(cfg),
+                                    source_commit=args.source_commit, source_root=cfg.source_root,
+                                    source_settings=cfg.site)
     args.out.write_text(json.dumps(ledger, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(report, ensure_ascii=False, indent=2))
 

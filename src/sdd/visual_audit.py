@@ -328,8 +328,15 @@ def outline_nodes(node):
         yield from outline_nodes(child)
 
 
-def inventory_page(source, page, options, *, source_commit='', root=None, draft=False, section_relative=False):
-    doc = Document(source)
+def inventory_page(source, page, options, *, source_commit='', root=None, draft=False, section_relative=False,
+                   comparison_transform=None):
+    def read_document(text, name):
+        document = Document(text)
+        if comparison_transform is not None:
+            comparison_transform(document, name, root)
+        return document
+
+    doc = read_document(source, page)
     readable = without_navigation(doc.root)
     articles = list(readable.all('article'))
     if len(articles) != 1:
@@ -628,7 +635,8 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                             continue
                         raw = path.read_text(encoding='utf-8')
                         if path.suffix == '.html':
-                            selected = source_window(Document(raw), fragment, root=root, page=target, presentation=True,
+                            document = read_document(raw, target)
+                            selected = source_window(document, fragment, root=root, page=target, presentation=True,
                                                      section_relative=section_relative)
                         else:
                             lines = re.fullmatch(r'L([1-9][0-9]*)(?:-L([1-9][0-9]*))?', unquote(fragment))
@@ -642,7 +650,14 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                         # Keep the existing conservative cross-file byte pin.
                         # The separately supplied selected window is the actual
                         # review scope; a file hash never claims whole-file review.
-                        window_hashes[key] = digest([path.read_bytes().hex(), selected] if path.suffix == '.html' else path.read_bytes().hex())
+                        file_identity = path.read_bytes().hex()
+                        if path.suffix == '.html':
+                            if comparison_transform is not None:
+                                # Keep the complete HTML tree, including the
+                                # page outside the selected evidence window.
+                                file_identity = canonical(document.root)
+                            file_identity = [file_identity, selected]
+                        window_hashes[key] = digest(file_identity)
                         window_references[key] = json.loads(selected.rsplit(WINDOW_BINDING, 1)[1])['references'] if path.suffix == '.html' else []
                     else:
                         row['unresolved_source_windows'].append(href)
@@ -706,7 +721,8 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
     return rows
 
 
-def inspect_site(root, options, *, manifest=None, source_commit='', section_relative=False):
+def inspect_site(root, options, *, manifest=None, source_commit='', section_relative=False,
+                 comparison_transform=None, comparison_commit=None):
     """The manifest is authoritative when supplied; staging uses every HTML file."""
     root = Path(root).resolve()
     files = sorted(rel for rel in manifest['outputs'] if rel.endswith('.html')) if manifest else sorted(p.relative_to(root).as_posix() for p in root.rglob('*.html'))
@@ -724,8 +740,8 @@ def inspect_site(root, options, *, manifest=None, source_commit='', section_rela
         # Rendered HTML is a staging output, not an immutable source input.
         # Pinning it as an input would reject the normal temporary-dir cleanup.
         rows.extend(inventory_page(owned_path(root, rel).read_text(encoding='utf-8'), rel, options,
-                                   source_commit=recorded_commit or source_commit, root=root,
-                                   section_relative=section_relative))
+                                   source_commit=comparison_commit or recorded_commit or source_commit, root=root,
+                                   section_relative=section_relative, comparison_transform=comparison_transform))
     if len(commits) > 1:
         raise ValueError('Visualization inventory contains manuscripts from different source commits')
     pairs = {}
@@ -826,7 +842,7 @@ def apply_reviews(report, reviews):
             row.update({k: record[k] for k in ('status', 'reason', 'question', 'source_windows', 'unreviewed_scope')})
             row['reviewed_figures'] = record.get('figures', [])
             row['review_method'] = record.get('review_method', 'editorial-record')
-            for key in ('adjacent_item', 'adjacent_fingerprint', 'position_reuse'):
+            for key in ('adjacent_item', 'adjacent_fingerprint', 'position_reuse', 'source_reuse'):
                 if key in record:
                     row[key] = record[key]
     peers = {}
