@@ -14,11 +14,12 @@ from urllib.parse import quote, urlsplit
 
 
 from . import glossary
-from .config import Config, SiteConfig, section_output
+from .config import Config, section_output
 from .diagrams import section_diagram, diagram_block
 from .document_metadata import generation_info, reader_label, split_frontmatter
 from .export_html import _nav_entries, _title_of_text
-from .site_markdown import SOURCE_LINK_TEMPLATES, _href, _html_path, _render
+from .site_markdown import _href, _html_path, _render
+from .source_links import source_link_template
 from .facts.model import KnowledgeModel
 from .validation_stage import read_text
 
@@ -28,31 +29,6 @@ ASSETS = Path(__file__).parent / "site_assets"
 
 # 소스 열람 호스트별 인용 링크 형식. 커밋 확인(40자리 hex)과 경로 검증은 형식과 무관하게 적용된다.
 
-
-
-def source_link_template(settings: SiteConfig | dict) -> str:
-    """site 설정에서 인용 링크 템플릿을 정한다.
-
-    `site.source_link_template` 이 있으면 그대로 쓰고, 없으면 `site.source_link` 가 가리키는
-    호스트 형식(github 기본, gitiles)을 쓴다. 자리표시자가 어긋난 템플릿은 게시 시점에 조용히
-    깨진 링크를 만들므로 여기서 즉시 실패시킨다.
-    """
-    if isinstance(settings, dict):
-        settings = SiteConfig.from_mapping(settings)
-    template = str(settings.source_link_template or "")
-    if not template:
-        host = str(settings.source_link)
-        template = SOURCE_LINK_TEMPLATES.get(host, "")
-        if not template:
-            raise RuntimeError(f"site.source_link 값을 모릅니다: {host} "
-                               f"(지원: {', '.join(sorted(SOURCE_LINK_TEMPLATES))}. "
-                               "다른 호스트는 site.source_link_template 로 형식을 지정하세요)")
-    try:
-        template.format(url="u", commit="c", file="f", line=1)
-    except (KeyError, IndexError, ValueError) as e:
-        raise RuntimeError("site.source_link_template 의 자리표시자는 {url} {commit} {file} {line} "
-                           f"만 쓸 수 있습니다: {e}")
-    return template
 
 
 def _class_diagram_markers(body, rel):

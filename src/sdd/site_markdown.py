@@ -9,10 +9,7 @@ import markdown
 from .evidence_navigation import compact_evidence, fold_source_details
 from .export_html import _mermaid_fence
 from .facts.model import KnowledgeModel
-SOURCE_LINK_TEMPLATES = {
-    "github": "{url}/blob/{commit}/{file}#L{line}",
-    "gitiles": "{url}/+/{commit}/{file}#{line}",
-}
+from .source_links import SOURCE_LINK_TEMPLATES
 
 def _remove_route_tables(document: str) -> str:
     """Drop redundant reading choices; keep old row fragments usable without JS."""

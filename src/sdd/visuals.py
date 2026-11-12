@@ -18,6 +18,7 @@ from .mermaid_text import wrapped_html_label
 import yaml
 
 from .config import section_output
+from .source_links import source_link_template
 from .validation_stage import load_yaml
 
 
@@ -155,7 +156,6 @@ def _caption(cfg, model, section, value):
     if file.is_absolute() or '..' in file.parts or record.get('origin') == 'product-material':
         raise ValueError('Visual caption requires a repository source file')
     line = record['line'] + record['text'][:record['text'].index(value['evidence'][0]['quote'])].count('\n')
-    from .export_site import source_link_template
     settings = cfg.site
     url = source_link_template(settings).format(url=settings.source_url.rstrip('/'), commit=record['commit'],
                                                file=quote(file.as_posix(), safe='/'), line=line)
