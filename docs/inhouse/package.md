@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**[2026-11-04 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-04) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[2026-11-12 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-12) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -12,7 +12,7 @@
 | 결과를 인수인계합니다. | [완료 기록](#완료-기록) |
 | 새 버전의 반입 파일을 만듭니다. | [패키지 재생성](#패키지-재생성) |
 
-[이번 릴리스 노트](release-2026-11-04.md)에서 CLI 선택 안내의 변경점, 검증 범위와 사내 적용·업그레이드 절차를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
+[이번 릴리스 노트](release-2026-11-12.md)에서 반입 절차와 스킬의 변경점, 검증 범위와 사내 적용·업그레이드 절차를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
 
 ## 반입 확인과 설치
 
@@ -22,20 +22,33 @@
 
 ### GitHub에서 받기
 
-`inhouse-2026-11-04` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+`inhouse-2026-11-12` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
 
 | 파일 | 용도 |
 |---|---|
-| [camera-hal-sdd-inhouse-2026-11-04.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-04/camera-hal-sdd-inhouse-2026-11-04.zip) | 생성기·가이드·스킬·설정 템플릿 |
-| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-04/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
-| [camera-hal-sdd-inhouse-2026-11-04.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-04/camera-hal-sdd-inhouse-2026-11-04.zip.sha256) | 반입 ZIP의 SHA-256 |
-| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-04/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
+| [camera-hal-sdd-inhouse-2026-11-12.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/camera-hal-sdd-inhouse-2026-11-12.zip) | 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [START_PROMPT_HERMES.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/START_PROMPT_HERMES.txt) | Hermes를 선택한 경우에 사용하는 같은 프롬프트 |
+| [camera-hal-sdd-inhouse-2026-11-12.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/camera-hal-sdd-inhouse-2026-11-12.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
 
-프롬프트 파일은 이 검증 버전과 함께 보관하는 사본입니다. 이후 버전의 절차는 해당 버전의 이 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
+두 프롬프트는 이 문서의 [시작 프롬프트](#시작-프롬프트)에서 자동 생성하여 ZIP 안에도 넣습니다. Hermes 사본은 CLI 선택 한 줄만 다르며 승인 모델·제공자를 고정하지 않습니다. 릴리스 첨부 사본은 ZIP 안의 파일과 바이트가 같아야 합니다. `RELEASE_NOTES.md`와 전체 첨부 체크섬인 `SHA256SUMS.txt`도 함께 보관하세요. 이후 버전의 절차는 해당 버전의 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
 
 GitHub가 자동 제공하는 `Source code (zip)`이나 일반 clone에는 반입용 `IMPORT-MANIFEST.json`과 대체 `AGENTS.md`가 없습니다. 그 상태에서 `verify_import.py`를 실행하면 검증할 수 없습니다. 저장소로부터 직접 준비하려면 승인된 준비 환경에서 위 기준 커밋을 받아 [패키지 재생성](#패키지-재생성)을 실행하세요. 사내 에이전트는 생성된 반입 디렉터리에서 시작합니다.
 
 ZIP 안의 `camera-hal-sdd-generator/START_HERE.md`가 입구입니다. `IMPORT-MANIFEST.json`에는 생성기 기준 커밋과 파일별 SHA-256이 있습니다. 함께 전달된 `.zip.sha256`과 ZIP 해시를 대조한 뒤 압축을 풉니다. 해시는 전달 중 변경을 검출하며 출처 인증을 대신하지 않습니다. 승인된 전달 경로의 파일·체크섬을 사용하세요.
+
+Windows PowerShell에서는 다운로드 폴더에서 다음 명령으로 검사합니다. 불일치하면 압축을 풀지 말고 같은 릴리스의 파일을 다시 받습니다.
+
+```powershell
+$zip = 'camera-hal-sdd-inhouse-2026-11-12.zip'
+$expected = ((Get-Content "$zip.sha256" -Raw).Trim() -split '\s+')[0]
+if ((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected.ToLowerInvariant()) {
+    throw 'ZIP SHA-256 mismatch'
+}
+```
+
+Linux에서는 `sha256sum -c camera-hal-sdd-inhouse-2026-11-12.zip.sha256`를 실행합니다. Windows 압축 해제는 짧은 경로와 긴 경로를 지원하는 도구를 사용하세요.
 
 **의존성을 설치하거나 파일을 수정하기 전에** 압축을 푼 생성기 루트에서 실행합니다. Python 3.11 이상이 필요합니다.
 
@@ -127,6 +140,9 @@ Vendor 문서는 제품 개요(vendor-overview), 연동 가이드(vendor), 지�
 기본 템플릿의 design_generation: llm으로 질문·covers·sources를 작성하고 사내 LLM이 답변을 생성하게 해줘.
 config/visuals.yaml에는 generation: llm 질문을 실제 근거와 연결해줘. 노드·화살표를 정답으로 미리 작성하지 마.
 실제 모델 호출 영수증, 그림 근거·문서 배치, 별도 소스 변경 후 재생성과 실패 보존을 검증해줘.
+최종 조립 문서의 독립 질문마다 그림을 점검하고 긴 설명·상태·순서·분기·책임·소유권에는 질문에 답하는 그림을 보완해줘.
+짧거나 표로 충분하면 항목별 생략 사유를 남기고 페이지 전체 그림 수로 대신 판단하지 마.
+docs/reference/visual-audit.md에 따라 원고와 최종 사이트의 판정·입력 지문·실제 검토 창·미검토 범위를 구분해줘.
 요청 제출·완료·정지 경로를 먼저 연결한 뒤, 확인한 제품 범위에 확장해줘.
 한 계약은 한 문서에서 자세히 설명하고 다른 문서는 요약과 링크로 연결해줘.
 
@@ -142,6 +158,9 @@ config/visuals.yaml에는 generation: llm 질문을 실제 근거와 연결해�
 게시와 예약 설치는 이미 허용된 사내 대상·범위에서만 진행해줘.
 대상이 없으면 검증된 로컬 산출물과 남은 게시 단계를 남겨줘.
 끝나면 사내 설정 저장소에 handoff.md를 작성하고 단계별 완료 증거를 보고해줘.
+장시간 작업은 docs/concepts/site.md의 watch-progress 절차로 감시하고 완료·명시적 중단 시 종료 표식을 남겨줘.
+사내 진행 장부에 기준 커밋·build_id·항목별 판정과 근거·남은 발행 단계·다음 명령을 보존해줘.
+재개할 때 기존 장부와 실행 중인 CLI를 먼저 확인하고 입력 동일성이 검증된 결과만 재사용해줘.
 ```
 
 ## 실행 순서
@@ -149,6 +168,19 @@ config/visuals.yaml에는 generation: llm 질문을 실제 근거와 연결해�
 제품 하나·빌드 변형 하나·요청 경로 하나의 실제 적용 가능성을 확인할 때는 [파일럿 절차](pilot.md)에 따라 실행 전 기준과 단계별 증거를 고정합니다. 실제 입력이 없으면 준비 작업과 실제 사내 검증을 구분합니다.
 
 **각 단계가 통과한 뒤 다음으로 이동합니다.** 생성기 루트에서 실행하며 `<CFG>`는 실제 사내 `sdd.yaml`의 절대 경로입니다. 명령과 종료 코드는 [CLI 참조](../reference/cli.md)가 기준입니다.
+
+```mermaid
+flowchart TD
+  kit[ZIP 해시와 반입 파일 검사] --> env[의존성 및 승인 CLI 준비]
+  env --> source[제품 설정과 소스 추출]
+  source --> draft[질문과 근거 작성 및 생성]
+  draft --> review[문서 및 항목별 그림 검토]
+  review --> site[사이트와 복구 검증]
+  site --> publish[허용된 사내 게시와 인수인계]
+  review -->|미해결 항목| draft
+```
+
+그림은 설치부터 게시까지의 순서와 검토 실패 시 돌아갈 위치를 보여 줍니다. 각 관문의 명령과 통과 조건은 다음 표를 따릅니다.
 
 | 순서 | 할 일과 실행 명령 | 다음 단계로 넘어갈 조건 |
 |---|---|---|

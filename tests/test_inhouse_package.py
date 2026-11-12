@@ -28,7 +28,7 @@ def kit_repo(tmp_path):
     repo = tmp_path / "source repo"
     repo.mkdir()
     files = {
-        "docs/inhouse/package.md": "Start here.",
+        "docs/inhouse/package.md": '# Start here\n\n## 시작 프롬프트\n\n```text\n반입한 생성기: <경로>\n문서 생성·번역 CLI: <hermes | opencode | claude | codex; 기존 사내 설정을 유지하려면 명시>\n소스는 사내에 보관합니다.\n```\n',
         "docs/inhouse/import-agent.md": "Internal destinations only.",
         "skills/camera-hal-sdd/SKILL.md": "Skill.",
         "examples/inhouse-template/sdd.yaml": "agent: {kind: dry-run}",
@@ -80,6 +80,9 @@ def test_package_is_committed_allowlisted_deterministic_and_relocatable(kit_repo
     assert (root / "AGENTS.md").read_text() == "Internal destinations only."
     assert not (root / ".git").exists()
     assert verifier.verify(root)["source_commit"] == info["source_commit"]
+    prompts = builder.start_prompts((root / "docs/inhouse/package.md").read_text(encoding="utf-8"))
+    for name, expected in prompts.items():
+        assert (root / name).read_bytes() == expected
     result = subprocess.run([sys.executable, str(root / "tools/verify_import.py")], cwd=tmp_path, capture_output=True)
     assert result.returncode == 0, result.stdout
     # Run outside the package, without installing it, and retain a failed CLI exit.
@@ -123,6 +126,22 @@ def test_dependency_list_contains_locked_runtime_and_test_closure():
     assert {"libclang", "markdown", "pymdown-extensions", "pyyaml", "tzdata", "pytest", "pluggy", "packaging"} <= pins
     assert "mkdocs-material" not in pins
     assert not any("http" in line or line.startswith("-e") for line in lines)
+
+
+def test_prompt_variants_preserve_every_instruction_except_cli_selection():
+    guide = (ROOT / "docs/inhouse/package.md").read_text(encoding="utf-8")
+    prompts = builder.start_prompts(guide)
+    assert builder.start_prompts(guide.replace("\n", "\r\n")) == prompts
+    generic = prompts["START_PROMPT.txt"].decode().splitlines()
+    hermes = prompts["START_PROMPT_HERMES.txt"].decode().splitlines()
+    assert len(generic) == len(hermes)
+    changes = [(a, b) for a, b in zip(generic, hermes) if a != b]
+    assert len(changes) == 1
+    assert changes[0][1].startswith("문서 생성·번역 CLI: hermes ")
+    # A missing/ambiguous authoring block must fail packaging, not publish stale text.
+    for broken in ("", guide + "\n## 시작 프롬프트\n", guide.replace("```text", "```bash")):
+        with pytest.raises(ValueError, match="Expected"):
+            builder.start_prompts(broken)
 
 
 def test_real_import_runs_task_navigation(tmp_path):

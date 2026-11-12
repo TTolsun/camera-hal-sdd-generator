@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import io
 import json
+import re
 import subprocess
 import tomllib
 import zipfile
@@ -11,6 +12,23 @@ from pathlib import Path, PurePosixPath
 ROOT_FILES = {"README.md", "DESIGN.md", "LICENSE", "pyproject.toml", "uv.lock", ".gitignore", ".gitattributes", "mkdocs.yml", "sdd.yaml"}
 DIRECTORIES = {"src", "docs", "skills", "style", "templates", "prompts", "examples", "config", "tests", "ci", "tools"}
 PREFIX = "camera-hal-sdd-generator/"
+
+
+def start_prompts(guide):
+    """Keep release attachments and the offline kit on the same instructions."""
+    guide = guide.replace("\r\n", "\n")
+    sections = re.findall(r"^## 시작 프롬프트\n(.*?)(?=^## |\Z)", guide, re.M | re.S)
+    if len(sections) != 1:
+        raise ValueError("Expected one start prompt section in docs/inhouse/package.md")
+    blocks = re.findall(r"^```text\n(.*?)^```[ \t]*$", sections[0], re.M | re.S)
+    if len(blocks) != 1 or not blocks[0].strip():
+        raise ValueError("Expected one nonempty text block in start prompt section")
+    prompt = blocks[0].rstrip() + "\n"
+    selection = "문서 생성·번역 CLI: <hermes | opencode | claude | codex; 기존 사내 설정을 유지하려면 명시>"
+    if prompt.count(selection) != 1:
+        raise ValueError("Expected one CLI selection in start prompt")
+    hermes = prompt.replace(selection, "문서 생성·번역 CLI: hermes (승인된 기존 Hermes 모델·제공자 설정을 유지)")
+    return {"START_PROMPT.txt": prompt.encode(), "START_PROMPT_HERMES.txt": hermes.encode()}
 
 
 def selected(name):
@@ -58,14 +76,20 @@ def build(repo, output, ref="HEAD"):
     if missing := required - files.keys():
         raise ValueError(f"Missing committed package inputs: {sorted(missing)}")
     files["AGENTS.md"] = files.pop("docs/inhouse/import-agent.md")
+    files.update(start_prompts(files["docs/inhouse/package.md"].decode("utf-8")))
     files["START_HERE.md"] = ("# 사내 에이전트 반입 패키지\n\n"
         "**[시작 안내](docs/inhouse/package.md)를 여세요.** 시작 프롬프트, 실행 순서, 합격 기준, 복구 절차가 한 곳에 있습니다.\n\n"
-        "먼저 `python tools/verify_import.py`로 반입 파일을 검증하세요. 의존성과 제품 툴체인은 별도 준비합니다.\n").encode()
+        "먼저 `python tools/verify_import.py`로 반입 파일을 검증하세요. 의존성과 제품 툴체인은 별도 준비합니다.\n\n"
+        "검증 후 `START_PROMPT.txt`의 경로와 승인 설정을 채워 에이전트에게 전달하세요. "
+        "Hermes를 선택했다면 `START_PROMPT_HERMES.txt`를 사용합니다. 두 파일은 같은 시작 안내에서 생성됩니다.\n").encode()
     files["requirements-inhouse.txt"] = requirements(files["uv.lock"])
     manifest = {"schema": 1, "source_commit": revision, "entry": "START_HERE.md",
                 "scope": "Public generator source, guides, skill and templates; no internal inputs or execution outputs.",
                 "excluded": ["Git history/remotes", "local configuration", "generated documents/facts/logs", "historical raw model responses/prompts", "public deployment agent instructions", "Python wheels", "product toolchain", "Mermaid distribution"],
-                "generated": {"AGENTS.md": "docs/inhouse/import-agent.md", "START_HERE.md": "tools/build_inhouse_package.py", "requirements-inhouse.txt": "uv.lock runtime/dev dependency closure"},
+                "generated": {"AGENTS.md": "docs/inhouse/import-agent.md", "START_HERE.md": "tools/build_inhouse_package.py",
+                              "START_PROMPT.txt": "docs/inhouse/package.md#시작-프롬프트",
+                              "START_PROMPT_HERMES.txt": "docs/inhouse/package.md#시작-프롬프트 (Hermes selection)",
+                              "requirements-inhouse.txt": "uv.lock runtime/dev dependency closure"},
                 "files": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())}}
     files["IMPORT-MANIFEST.json"] = (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode()
     output.parent.mkdir(parents=True, exist_ok=True)
