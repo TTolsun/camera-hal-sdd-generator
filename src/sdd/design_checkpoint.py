@@ -68,7 +68,8 @@ class PendingReview:
                 raise ValueError('pending draft identity or checksum mismatch')
             name = payload['receipt']
             if name is not None:
-                return self._record(name).raw, self.store.calls / name
+                record = self._record(name)
+                return record.raw, self.store.calls / name
         except (ValueError, OSError, KeyError, TypeError) as exc:
             raise ValueError(f'CLI pending review is damaged; previous output preserved: {self.path}: {exc}') from exc
         return None
