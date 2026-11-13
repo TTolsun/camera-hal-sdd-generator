@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**[2026-11-12 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-12) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[2026-11-13 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-13) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -12,7 +12,7 @@
 | 결과를 인수인계합니다. | [완료 기록](#완료-기록) |
 | 새 버전의 반입 파일을 만듭니다. | [패키지 재생성](#패키지-재생성) |
 
-[이번 릴리스 노트](release-2026-11-12.md)에서 반입 절차와 스킬의 변경점, 검증 범위와 사내 적용·업그레이드 절차를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
+[이번 릴리스 노트](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-13)에서 환경 점검·모델 호출 없는 실행 계획과 첫 실행용 프롬프트, 검증 범위를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
 
 ## 반입 확인과 설치
 
@@ -22,33 +22,38 @@
 
 ### GitHub에서 받기
 
-`inhouse-2026-11-12` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`에 기록합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+`inhouse-2026-11-13` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 생성기 기준 커밋은 `dc4ffa3aebd9b92a3fa3c1e36a90397413848ea2`이며 ZIP의 `IMPORT-MANIFEST.json`에서 대조합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
 
 | 파일 | 용도 |
 |---|---|
-| [camera-hal-sdd-inhouse-2026-11-12.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/camera-hal-sdd-inhouse-2026-11-12.zip) | 생성기·가이드·스킬·설정 템플릿 |
-| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
-| [START_PROMPT_HERMES.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/START_PROMPT_HERMES.txt) | Hermes를 선택한 경우에 사용하는 같은 프롬프트 |
-| [camera-hal-sdd-inhouse-2026-11-12.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/camera-hal-sdd-inhouse-2026-11-12.zip.sha256) | 반입 ZIP의 SHA-256 |
-| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-12/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
+| [camera-hal-sdd-inhouse-2026-11-13.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/camera-hal-sdd-inhouse-2026-11-13.zip) | 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT_ISSUE251.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/START_PROMPT_ISSUE251.txt) | 제품·빌드 변형·캡처 요청 경로 하나의 첫 실행을 검증하는 프롬프트 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [START_PROMPT_HERMES.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/START_PROMPT_HERMES.txt) | Hermes를 선택한 경우에 사용하는 같은 프롬프트 |
+| [camera-hal-sdd-inhouse-2026-11-13.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/camera-hal-sdd-inhouse-2026-11-13.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
 
-두 프롬프트는 이 문서의 [시작 프롬프트](#시작-프롬프트)에서 자동 생성하여 ZIP 안에도 넣습니다. Hermes 사본은 CLI 선택 한 줄만 다르며 승인 모델·제공자를 고정하지 않습니다. 릴리스 첨부 사본은 ZIP 안의 파일과 바이트가 같아야 합니다. `RELEASE_NOTES.md`와 전체 첨부 체크섬인 `SHA256SUMS.txt`도 함께 보관하세요. 이후 버전의 절차는 해당 버전의 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
+범용·Hermes 프롬프트는 이 문서의 [시작 프롬프트](#시작-프롬프트)에서 자동 생성하여 ZIP 안에도 넣습니다. Hermes 사본은 CLI 선택 한 줄만 다르며 승인 모델·제공자를 고정하지 않습니다. 릴리스 첨부 사본은 ZIP 안의 파일과 바이트가 같아야 합니다. `RELEASE_NOTES.md`와 전체 첨부 체크섬인 `SHA256SUMS.txt`도 함께 보관하세요. 이후 버전의 절차는 해당 버전의 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
 
-GitHub가 자동 제공하는 `Source code (zip)`이나 일반 clone에는 반입용 `IMPORT-MANIFEST.json`과 대체 `AGENTS.md`가 없습니다. 그 상태에서 `verify_import.py`를 실행하면 검증할 수 없습니다. 저장소로부터 직접 준비하려면 승인된 준비 환경에서 위 기준 커밋을 받아 [패키지 재생성](#패키지-재생성)을 실행하세요. 사내 에이전트는 생성된 반입 디렉터리에서 시작합니다.
+11월 13일 릴리스의 첫 실행용 `START_PROMPT_ISSUE251.txt`는 해당 릴리스 ZIP과 첨부 파일에 들어 있습니다. [파일럿](pilot.md)과 [질문 하나의 첫 실행](02-first-run.md)을 따르며, CLI 선택은 사내 승인 설정으로 채웁니다. 이 파일은 11월 13일 릴리스 조립 시 추가된 것으로, 일반 패키지 생성 명령이 자동으로 만드는 범용·Hermes 프롬프트와 구분합니다. 저장소에서 새로 만든 패키지에는 이 파일이 자동으로 포함되지 않습니다.
+
+11월 13일 배포 ZIP에는 스킬 v11이 들어 있습니다. 저장소의 v12 개정은 해당 ZIP에 포함되지 않았으므로, v12만 기존 반입본에 덮어쓰지 말고 [같은 커밋으로 갱신하는 절차](../../skills/README.md#설치)를 따르세요. v12가 있는 커밋으로 새로 만든 패키지는 그 커밋의 스킬·가이드를 포함합니다. 이 문서를 새 패키지 안에서 읽더라도 위 다운로드 표와 v11 설명은 11월 13일 배포본에 관한 정보입니다. 실제 반입본은 `IMPORT-MANIFEST.json`의 `source_commit`과 동봉 스킬의 `metadata.version`으로 식별합니다. 기존 릴리스 안의 이전 안내와 첨부 검증 기록은 당시 파일로 보존합니다.
+
+GitHub가 자동 제공하는 `Source code (zip)`이나 일반 clone에는 반입용 `IMPORT-MANIFEST.json`과 대체 `AGENTS.md`가 없습니다. 그 상태에서 `verify_import.py`를 실행하면 검증할 수 없습니다. 저장소로부터 직접 준비하려면 승인된 준비 환경에서 사용할 생성기 커밋을 검토·고정한 뒤 [패키지 재생성](#패키지-재생성)을 실행하세요. 사내 에이전트는 생성된 반입 디렉터리에서 시작합니다.
 
 ZIP 안의 `camera-hal-sdd-generator/START_HERE.md`가 입구입니다. `IMPORT-MANIFEST.json`에는 생성기 기준 커밋과 파일별 SHA-256이 있습니다. 함께 전달된 `.zip.sha256`과 ZIP 해시를 대조한 뒤 압축을 풉니다. 해시는 전달 중 변경을 검출하며 출처 인증을 대신하지 않습니다. 승인된 전달 경로의 파일·체크섬을 사용하세요.
 
 Windows PowerShell에서는 다운로드 폴더에서 다음 명령으로 검사합니다. 불일치하면 압축을 풀지 말고 같은 릴리스의 파일을 다시 받습니다.
 
 ```powershell
-$zip = 'camera-hal-sdd-inhouse-2026-11-12.zip'
+$zip = 'camera-hal-sdd-inhouse-2026-11-13.zip'
 $expected = ((Get-Content "$zip.sha256" -Raw).Trim() -split '\s+')[0]
 if ((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected.ToLowerInvariant()) {
     throw 'ZIP SHA-256 mismatch'
 }
 ```
 
-Linux에서는 `sha256sum -c camera-hal-sdd-inhouse-2026-11-12.zip.sha256`를 실행합니다. Windows 압축 해제는 짧은 경로와 긴 경로를 지원하는 도구를 사용하세요.
+Linux에서는 `sha256sum -c camera-hal-sdd-inhouse-2026-11-13.zip.sha256`를 실행합니다. Windows 압축 해제는 짧은 경로와 긴 경로를 지원하는 도구를 사용하세요.
 
 **의존성을 설치하거나 파일을 수정하기 전에** 압축을 푼 생성기 루트에서 실행합니다. Python 3.11 이상이 필요합니다.
 
@@ -188,12 +193,12 @@ flowchart TD
 | 2. 빌드 근거 | NDK-build면 `<PY> tools/run_sdd.py --config <CFG> compdb`를 실행합니다. 다른 빌드는 제품의 DB 생성 명령을 실행하고 `ndk_build.enabled: false`로 둡니다. | 제품과 같은 매크로·헤더·TU를 담은 DB가 있습니다. |
 | 3. 환경·추출 | `doctor` → `extract` 순서로 실행합니다. 두 명령에도 `--config <CFG>`를 지정합니다. | 필수 환경 오류, 파싱 오류, 미해결 필수 진입점이 없습니다. |
 | 4. 질문·근거 작성 | [계약 작성 절차](contract-authoring.md)에 따라 실제 `sources`, 질문·`covers`와 LLM 그림 계획을 연결합니다. 고정 계약을 선택한 섹션에서만 `statements`·해시를 직접 작성합니다. 약어도 정의합니다. | 질문·조건·예외·수명이 실제 소스로 뒷받침됩니다. |
-| 5. 생성·검사 | `generate` → `audit-docs`를 실행합니다. | 자동 검사를 통과하고 미해결 필수 계약이 없습니다. |
+| 5. 계획·생성·검토 | 첫 질문은 [호출 없는 계획과 한도 확인](02-first-run.md#5-호출-없이-계획을-확인한-뒤-질문-하나를-실행하기) 후 `generate` → `audit-docs` → 별도 승인 프로필의 `audit-consistency`를 실행합니다. | 계획의 실행 설정·범위·한도를 확인했고, 자동 검사와 독립 근거 대조에 미해결 필수 계약이 없습니다. |
 | 6. 로컬 사이트 | `fetch-mermaid --tarball <승인된 파일>`로 자산을 준비한 뒤 `export-site` → `verify-site`를 실행합니다. | 내부 링크 오류 0, manifest 검증 성공, 외부 자산 의존 없음 또는 승인된 사내 자산입니다. |
 | 7. 독자·복구 시험 | 아래 품질 기준으로 대조하고 별도 시험 사본에서 반복·실패 보존·수정 후 재개를 확인합니다. | 자동 검사와 의미 검토의 증거, 실패 전후 해시가 있습니다. |
 | 8. 인수인계·게시 | `handoff.md`를 작성합니다. 허용된 사내 게시와 승인 절차가 있으면 수행하고 원격 해시를 대조합니다. | 로컬 완료·게시·사람 승인·실기기 시험을 각각 보고합니다. |
 
-상세 실행은 [에이전트 가이드](agent.md), NDK 사례는 [첫 실행](02-first-run.md)을 따릅니다. 다른 빌드에 NDK 설정을 강제로 적용하지 않습니다. `site.intro`는 본문 문자열이 아니라 Markdown 파일 경로입니다. 템플릿의 비어 있는 계약은 정상적인 작성 출발점이며, 그대로 실행해 실패한 것을 생성기 고장으로 판단하지 않습니다.
+처음에는 [질문 하나의 첫 실행](02-first-run.md)으로 계획·생성·재개를 검증하고, 범위 확장은 [에이전트 가이드](agent.md)를 따릅니다. 다른 빌드에 NDK 설정을 강제로 적용하지 않습니다. `site.intro`는 본문 문자열이 아니라 Markdown 파일 경로입니다. 템플릿의 비어 있는 계약은 정상적인 작성 출발점이며, 그대로 실행해 실패한 것을 생성기 고장으로 판단하지 않습니다.
 
 ## 품질 합격 기준
 
@@ -222,6 +227,8 @@ flowchart TD
 | 막힌 지점 | 돌아갈 단계 |
 |---|---|
 | ZIP 무결성·의존성 | 원본 ZIP 재확인 → 대상 OS·CPU·Python과 wheel 확인. 제품 소스를 바꾸지 않습니다. |
+| 생성·검토 CLI 중단·실행별 호출 또는 시간 한도 | [실행 장부와 재개 명령](02-first-run.md#6-결과를-확인하고-중단-지점에서-재개하기)을 확인합니다. 원인을 해결한 뒤 같은 입력과 `resume_argv`로 재개하고 새 호출과 재사용을 기록합니다. |
+| 누적 `publication.budget` 소진 | 기존 한도로는 더 호출할 수 없습니다. 추가 작업·예산이 승인되면 같은 작업 ID와 장부를 유지한 채 예산을 조정하고 계획을 다시 확인한 뒤 재개합니다. 승인되지 않았으면 남은 일을 기록하고 멈춥니다. 작업 ID나 장부를 지워 누적 한도를 초기화하지 않습니다. |
 | compile DB·헤더·진입점 | 실행 순서 1~3. 제품 빌드 근거를 고쳐 다시 추출합니다. |
 | 필수 답변·근거 해시·서로 다른 커밋 | 실행 순서 4. 이전 설명과 바뀐 소스를 대조한 뒤 추출·계약·생성을 함께 갱신합니다. |
 | 중복·한도·깨진 링크·자산 | 실행 순서 5~6. 설정 또는 생성기를 수정하고 다시 생성합니다. |
