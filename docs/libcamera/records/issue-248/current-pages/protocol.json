@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "build_id": "48c4f23e4b9c3246b3d365d07ddbf032944450cf5a133e3dcec1824b248055d3",
+  "manifest_sha256": "c67448d2360d59a6e861c6f80ff62089d9acf8d6b2014e3bdd376e2c682c4055",
+  "protocol_text_sha256": "d03135e255cdc35961a06e65d87b1903eb702ac72c90a201c32e2808f27aeffb",
+  "baseline_sha256": "b2b431d1f937b18ce121c5e181583950a04e04fb8203d7e64f898901a7e91bcf",
+  "base_tasks": [
+    "index",
+    "overview",
+    "vendor_overview",
+    "vendor_assurance",
+    "vendor_integration",
+    "queue_request"
+  ],
+  "participants": [
+    {
+      "id": "P01",
+      "perspective": "new_developer",
+      "tasks": [
+        "index",
+        "overview",
+        "S",
+        "R",
+        "X"
+      ]
+    },
+    {
+      "id": "P02",
+      "perspective": "other_team",
+      "tasks": [
+        "vendor_overview",
+        "vendor_assurance",
+        "S",
+        "R",
+        "X"
+      ]
+    },
+    {
+      "id": "P03",
+      "perspective": "non_author",
+      "tasks": [
+        "vendor_integration",
+        "queue_request",
+        "S",
+        "R",
+        "X"
+      ]
+    }
+  ],
+  "minimum_base_successes": 5,
+  "minimum_ease_median": 4,
+  "task_timeout_seconds": 600,
+  "interruption_seconds": 300,
+  "artifacts": {
+    "instructions": {
+      "path": "instructions.md",
+      "sha256": "d03135e255cdc35961a06e65d87b1903eb702ac72c90a201c32e2808f27aeffb"
+    },
+    "participant": {
+      "path": "../final-automatic/participant-inputs/participant.md",
+      "sha256": "19dd7883ffbe4e54df66175bd995229fc76830c5a91a7066f795e18fee79a255"
+    },
+    "rubric": {
+      "path": "../facilitator.md",
+      "sha256": "7270c3d3bd49247d5ba14784d120a18f2c3560d479d30f803894e2a2f1103625"
+    },
+    "baseline": {
+      "path": "baseline.json",
+      "sha256": "b2b431d1f937b18ce121c5e181583950a04e04fb8203d7e64f898901a7e91bcf"
+    },
+    "legacy_rubric": {
+      "path": "../rubric-163.md",
+      "sha256": "ca04759666607c3a8938e66d9da4bbd38f76c462d95710f95cbeaac0db053cb5"
+    },
+    "baseline_instructions": {
+      "path": "../protocol.md",
+      "sha256": "6c51d1b367aea0a36a99b99a605a6dc073d0228650868e674b4c78b07006e015"
+    },
+    "new_developer_tasks": {
+      "path": "../final-automatic/participant-inputs/P01-tasks.md",
+      "sha256": "5c7114fcbd36b19d67f8ac3dfeb6f0d726bf6d0f3de9c95d5b8320be4217f2f8"
+    },
+    "other_team_tasks": {
+      "path": "../final-automatic/participant-inputs/P02-tasks.md",
+      "sha256": "c1cff3069b9327300b7bc1d58fe29f720d111ad2b4795ca00b019c29c04ede19"
+    },
+    "non_author_tasks": {
+      "path": "../final-automatic/participant-inputs/P03-tasks.md",
+      "sha256": "f51573b3c489f30f3ce3390a12ac9acf0cee28e4c85de3e4df70bb3f0b71072b"
+    }
+  }
+}

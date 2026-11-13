@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "build_id": "48c4f23e4b9c3246b3d365d07ddbf032944450cf5a133e3dcec1824b248055d3",
+  "public_url": "https://ttolsun.github.io/libcamera-sdd/",
+  "public_commit": "be012aa897dd2562e55c842c996ef41cf45bd1a8",
+  "source_commit": "da6a6ed33ed0ab305f10b6f8b44736150d39cef4",
+  "manifest_sha256": "c67448d2360d59a6e861c6f80ff62089d9acf8d6b2014e3bdd376e2c682c4055",
+  "generator_commit": "13facb30acde25ba0151af1474a4f683dee64b03",
+  "generator_configuration_pr": 310,
+  "pages_run": 43296145459,
+  "pages": {
+    "index.html": "9bf2dc3ed94ddfd8176d79b44fe800f807dd67ab143e1650b9ca73678814ecf1",
+    "overview.html": "a2d0f7471d1afd6a0c3616044874f79a905663b30acfd1c34c1d13caaf7fa82e",
+    "vendor-overview.html": "bc45ed19718bf9ae3457f5ae059d50017461cac26764cb623846db421881a337",
+    "vendor-assurance.html": "f8e9f0d47008fe232b71ee63c08ca4630cfae6d275c22b8f4c0126173497e3e3",
+    "vendor-integration.html": "798735588d3303ff88163f78cb29871e29346f094df42c57c605338ed8c6eb46",
+    "scenarios/queue_request.html": "63283a53f180e76bc63c8c05eccbfdc7fc9209edad412dc314b538cb48505d3b",
+    "request-diagnosis.html": "7676f9f22ce59ab17ba03ef91175dbb5288687a8989a8d514cb06930c0c9b18c",
+    "request-lifecycle.html": "25c14ec2c04e54d5303b92647384095cad3eb9bc705cd5f77e6158a1361ab7be",
+    "pipeline-requests.html": "265fed00b601d426c9aa7c8e8b13ce1d0e15ceda6134f9e2898e73227845d775",
+    "en/index.html": "b91f8100a6614b59ea7d3055d647381577731fefb9dadc25fb8a8821f80968d6",
+    "en/overview.html": "d6ba7fc7b56d9a20e70e64ac6c5a11815d7f4e605a183b46d9fc73252b4e1165",
+    "en/vendor-overview.html": "f569bc3545637132b54dd91909ab46ed2afba23af54434bd2715184d9ee2eeb9",
+    "en/vendor-assurance.html": "baff73754533e2e414d6250e83de45b656bcb6761cc45694c822e9c1aab48f0f",
+    "en/vendor-integration.html": "685fca3ed0c87fbab6e72c99d3fb2ea7fe9140b6a1b9e897138712c169b0093e",
+    "en/scenarios/queue_request.html": "230e775d2f8809a4b26d11048393ab4968d6efc8d1f3d9df9942e25f70cabaf8",
+    "en/request-diagnosis.html": "543c30b0ac2df16d87ca4647a00b3a82612ea43a4156c349dfa3a8c328d40a41",
+    "en/request-lifecycle.html": "bff994d798cba7f6353a8fda34e569054864cb81966f3f848c602580459087e8",
+    "en/pipeline-requests.html": "4f87a6d085ada735ffec3884ede8a31719f55349f6471670a48d810dddaef736"
+  },
+  "prior_baseline_build_id": "10b23c926b880b542f12e88ef22352f75b5cb7271cdb52f3bb5020eb4e0e4a93",
+  "human_study": "unmeasured"
+}
