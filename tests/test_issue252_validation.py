@@ -25,7 +25,8 @@ def _source_auditor():
     return module
 
 
-def test_reader_output_limit_is_scoped_to_route(tmp_path, monkeypatch):
+@pytest.mark.parametrize('combined', [False, True])
+def test_reader_output_limits_are_scoped_to_exposed_tools(tmp_path, monkeypatch, combined):
     path = Path(__file__).parents[1] / 'examples/libcamera/validation/issue252/run_reader.py'
     spec = importlib.util.spec_from_file_location('issue252_reader', path)
     module = importlib.util.module_from_spec(spec)
@@ -41,13 +42,63 @@ def test_reader_output_limit_is_scoped_to_route(tmp_path, monkeypatch):
 
     monkeypatch.setattr(module, 'command', lambda profile: ['codex'])
     monkeypatch.setattr(module, 'run', transport)
-    assert module.main(['--reader', str(tmp_path / 'reader.py'), '--site', str(tmp_path / 'site'),
-                        '--prompt', str(prompt), '--out', str(out)]) == 0
-    assert 'mcp_servers.public_sdd.tools.route.output_token_limit=65536' in seen['argv']
-    assert 'mcp_servers.public_sdd.enabled_tools=["route"]' in seen['argv']
+    args = ['--reader', str(tmp_path / 'reader.py'), '--site', str(tmp_path / 'site'),
+            '--prompt', str(prompt), '--out', str(out)]
+    if combined:
+        args.append('--combined-route')
+    assert module.main(args) == 0
+    settings = {arg.removeprefix('mcp_servers.public_sdd.').split('=', 1)[0]:
+                json.loads(arg.split('=', 1)[1]) for arg in seen['argv']
+                if arg.startswith('mcp_servers.public_sdd.')}
+    tools = ['route'] if combined else ['route', 'route_source']
+    assert settings['enabled_tools'] == tools
+    assert {key for key in settings if key.endswith('.output_token_limit')} == {
+        f'tools.{tool}.output_token_limit' for tool in tools}
+    assert all(settings[f'tools.{tool}.output_token_limit'] == 65536 for tool in tools)
+    assert settings['args'][-3:] == [str(tmp_path / name)
+                                    for name in ('reader.py', 'site', 'run/navigation.jsonl')]
+    assert settings['args'][:-3] == ([] if combined else [str(path.with_name('split_reader.py'))])
     assert not any(arg.startswith('tool_output_token_limit=') for arg in seen['argv'])
     assert seen['prompt'] == 'Verify evidence delivery.'
     assert (out / 'stdout.jsonl').is_file()
+
+
+@pytest.mark.parametrize('first', ['route', 'route_source'])
+def test_split_reader_returns_independent_evidence_without_a_second_archive_call(tmp_path, first):
+    reader = tmp_path / 'reader.py'
+    reader.write_text(
+        "import json, sys\n"
+        "calls = 0\n"
+        "for line in sys.stdin:\n"
+        "    message = json.loads(line)\n"
+        "    if message['method'] == 'tools/list':\n"
+        "        result = {'tools': [{'name': 'route', 'inputSchema': {'type': 'object'}}]}\n"
+        "    else:\n"
+        "        assert message['params'] == {'name': 'route', 'arguments': {'question': 'Q2'}}\n"
+        "        calls += 1\n"
+        "        assert calls == 1\n"
+        "        bundle = {'sections': [{'excerpt': '문서'}], 'code_links_opened': ["
+        "{'href': 'https://example.com/source.cpp#L42', 'code': '42: finish();'}]}\n"
+        "        result = {'content': [{'type': 'text', 'text': json.dumps(bundle)}]}\n"
+        "    print(json.dumps({'jsonrpc': '2.0', 'id': message['id'], 'result': result}), flush=True)\n",
+        encoding='utf-8',
+    )
+    expected = {'route': {'sections': [{'excerpt': '문서'}]}, 'route_source': {
+        'code_links_opened': [{'href': 'https://example.com/source.cpp#L42', 'code': '42: finish();'}]}}
+    names = [first, next(name for name in expected if name != first), first]
+    messages = [{'jsonrpc': '2.0', 'id': 0, 'method': 'tools/list'}]
+    messages.extend({'jsonrpc': '2.0', 'id': index, 'method': 'tools/call',
+                     'params': {'name': name, 'arguments': {'question': 'Q2'}}}
+                    for index, name in enumerate(names, 1))
+    path = Path(__file__).parents[1] / 'examples/libcamera/validation/issue252/split_reader.py'
+    run = subprocess.run([sys.executable, str(path), str(reader), str(tmp_path), str(tmp_path / 'log')],
+                         input='\n'.join(map(json.dumps, messages)).encode(), capture_output=True,
+                         timeout=15, check=True)
+    replies = [json.loads(line) for line in run.stdout.splitlines()]
+    assert [reply['id'] for reply in replies] == list(range(len(messages)))
+    assert [tool['name'] for tool in replies[0]['result']['tools']] == ['route', 'route_source']
+    for name, reply in zip(names, replies[1:], strict=True):
+        assert json.loads(reply['result']['content'][0]['text']) == expected[name]
 
 
 def test_bilingual_dedup_references_only_unique_exact_source_bytes():
