@@ -137,7 +137,7 @@ docs/inhouse/02-first-run.md와 스킬의 첫 실행·재개 절차를 따라 �
 생성과 별도 승인 프로필의 audit-consistency, 로컬 사이트 확인을 마친 뒤 범위를 넓혀줘.
 중단되면 실행 장부의 resume_argv와 원본 증거를 보존하고 새 호출과 검증된 재사용을 구분해줘.
 누적 예산을 소진하면 추가 작업·예산이 승인된 경우에만 같은 작업 ID에서 예산을 조정하고 계획을 다시 확인해줘.
-승인되지 않았다면 남은 일을 기록하고 멈춰줘. 실제 제품의 파일럿 판정은 docs/inhouse/pilot.md와 handoff.md에 남겨줘.
+승인되지 않았다면 남은 일을 기록하고 멈춰줘. docs/inhouse/pilot.md의 절차를 따르고 실제 제품의 파일럿 판정은 사내 설정 저장소의 handoff.md에 남겨줘.
 For Vendor는 기술 채택·연동·구현 담당자, For Developer는 신입·타팀 개발자를 대상으로 해줘.
 왼쪽 메뉴는 독자 → 수행할 작업 → 문서 순서로 구성해줘. group은 유지하고 작업은 sections.yaml의 nav_section으로 지정해줘.
 새 설정은 사내 템플릿의 분류를 사용하고, 기존 설정은 실제 문서 목적에 맞게 이전한 뒤 generate·export-site·verify-site로 재생성해줘.
