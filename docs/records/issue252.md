@@ -2,6 +2,22 @@
 
 이 기록은 [이슈 #252](https://github.com/TTolsun/camera-hal-sdd-generator/issues/252)의 생성기 변경과 공개 libcamera 소스·빌드 증거를 소유합니다. 최종 원고·한영 검토·사이트와 배포 증거는 [공개 publication/issue252](https://github.com/TTolsun/libcamera-sdd/tree/main/publication/issue252)에 연결합니다. 생성기 PR 병합만으로 이슈 전체를 완료하지 않습니다.
 
+## 완료 조건 확인
+
+공통 요청 처리와 UVC/V4L2 경로의 고정 질문 일곱 개를 모두 확인했습니다. #297의 독립 읽기 세 건은 실제 루트 Pages에서 각각 6개 기준을 충족했습니다. 기존 판정에 결합한 manifest가 현재 배포본과 일치하고, 독해가 연 소스 창 66개의 파일 해시도 공식 커밋과 일치해 세 판정을 재사용했습니다. [#297 질문별 독해와 원본 기록](../libcamera/records/issue297/split-reader.md)
+
+| 완료 조건 | 확인 결과 |
+| --- | --- |
+| 질문·기준·검토 창과 기존 공백 | #252의 Q1~Q7과 전체 소스 파일 27개를 생성 전에 고정했습니다. 공개 전용 빌드의 소스 `be7e83e91348250c015aad6d6f59f1468555bae8`과 확인 시점의 공식 HEAD `da6a6ed33ed0ab305f10b6f8b44736150d39cef4`에서 27개 파일의 바이트가 모두 일치했습니다. [고정 질문과 범위](https://github.com/TTolsun/libcamera-sdd/blob/65c98dcdac697856c1e5edad0453046ef4759c10/publication/issue252/scope.json) |
+| 필수 질문과 확인 방법 | #252의 기존 근거 충분성 검토에서 7/7을 충족했습니다. 답변 위치, 관찰값, 다음 분기, 변경 후 확인 방법과 관련 소스 창을 질문별로 대조했습니다. [근거 충분성 원본](https://github.com/TTolsun/libcamera-sdd/blob/65c98dcdac697856c1e5edad0453046ef4759c10/publication/issue252/independent-sufficiency.json) |
+| 정상·실패·취소·정지와 비동기 경계 | #297의 완료 누락 진단은 `prepare(300ms)`와 명시적 `completeRequest()`를 설명했습니다. 정지 답변은 동기 취소·오류 완료 계약, 선두가 `RequestPending`일 때의 반환 대기, 두 큐 검사와 순번 초기화, 직접·지연 수신의 수명과 재진입을 설명했습니다. [후속 독해 판정](../libcamera/records/issue297/split-reader.md) |
+| 생성과 별도 근거 검토의 원본 | 최종 원고 SHA-256 `2f29d21f77cee74d659389621323ff17b037aba9df91032d6dce2beee8bc118f`가 실제 Pages manifest와 정확성 35·충분성 31·한영 09의 판정에 모두 일치합니다. 세 검토의 별도 Codex CLI Terra High 요청·응답·출력·영수증과 마지막 QBUF 보완 생성·근거 대조·번역 영수증을 아카이브에서 대조했습니다. [검증 장부](https://github.com/TTolsun/libcamera-sdd/blob/65c98dcdac697856c1e5edad0453046ef4759c10/publication/issue252/native-call-verification.json) |
+| 질문별 그림·생략 사유·한영 화면·링크 | 원본 검토는 43개 항목 각각에 그림 또는 생략 사유를 기록했습니다. 두 생략은 짧은 수명 도입과 소스 참조 목록입니다. 현재 공개 한국어·영어의 데스크톱 1440px와 모바일 390px에서 선정한 그림 14개의 렌더링·원본·확대·검색·초점 복귀를 다시 확인했습니다. 두 언어에서 진단 문서가 요청 수명 문서의 상세 계약으로 연결되고, 실제 고정 소스 링크가 열리는 것도 확인했습니다. [한영 검토 원본](https://github.com/TTolsun/libcamera-sdd/blob/65c98dcdac697856c1e5edad0453046ef4759c10/publication/issue252/independent-bilingual.json) |
+| 개선 전후 비교 | #252의 일곱 질문은 기준 원고에서 필수 조건이 각각 빠져 있었고, 보완 원고의 근거 충분성 검토에서는 모두 답할 수 있었습니다. 비교 기준은 판단 조건과 조사 방법입니다. [질문별 전후 기록](https://github.com/TTolsun/libcamera-sdd/blob/65c98dcdac697856c1e5edad0453046ef4759c10/publication/issue252/answerability-comparison.json) |
+| 병합·Pages·실제 산출물 | 생성기 #266·#310·#312·#313과 공개 SDD #104·#112의 병합을 확인했습니다. #252 전용 Pages `513092ba14c8…`의 산출물 374개와 현재 루트 Pages `48c4f23e4b9c…`의 산출물 487개를 실제 URL에서 다시 내려받아 manifest의 SHA-256과 대조했습니다. 이번에는 완료 기록을 보완했으므로 새 Pages 배포는 필요하지 않았습니다. [전용 Pages 배포](https://github.com/TTolsun/libcamera-sdd/actions/runs/43089854955) · [루트 Pages 배포](https://github.com/TTolsun/libcamera-sdd/actions/runs/43296145459) |
+
+표준 계약 검사에서 남은 두 건은 `completeRequest()` 반환 뒤 접근 여부를 확인할 계측과 UVC 플레인 실패 시험의 실제 진입 확인입니다. 두 경우의 소스 계약과 조사 절차는 확인했습니다. 물리 UVC 촬영, 오류 주입 결과, DMA·성능, 다른 파이프라인과 사내 HAL은 이 이슈의 검토 범위 밖입니다. 사람 검토 상태는 대기 중입니다. [자동 미판정의 범위와 확인 방법](https://github.com/TTolsun/libcamera-sdd/blob/65c98dcdac697856c1e5edad0453046ef4759c10/publication/issue252/standard-unresolved-disposition.json)
+
 ## 고정 질문과 선택 범위
 
 생성 전 질문은 제출 0 뒤의 미진입·준비 대기, 부분 제어 적용과 QBUF 실패, 요청 완료와 프레임 유효성, 소유권·수명, 정지 실패, 콜백 문맥·재진입, 변경 후 검증의 Q1–Q7입니다. 원래 기본 설명은 유지하며 답의 조건·관찰값·다음 분기·변경 검증 조건을 보완합니다.
