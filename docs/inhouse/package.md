@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**[2026-11-13 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-13) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[2026-11-14 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-14) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -12,7 +12,7 @@
 | 결과를 인수인계합니다. | [완료 기록](#완료-기록) |
 | 새 버전의 반입 파일을 만듭니다. | [패키지 재생성](#패키지-재생성) |
 
-[이번 릴리스 노트](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-13)에서 환경 점검·모델 호출 없는 실행 계획과 첫 실행용 프롬프트, 검증 범위를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
+[이번 릴리스 노트](release-2026-11-14.md)에서 환경 점검·모델 호출 없는 실행 계획과 첫 실행용 프롬프트, 검증 범위를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
 
 ## 반입 확인과 설치
 
@@ -22,22 +22,21 @@
 
 ### GitHub에서 받기
 
-`inhouse-2026-11-13` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 생성기 기준 커밋은 `dc4ffa3aebd9b92a3fa3c1e36a90397413848ea2`이며 ZIP의 `IMPORT-MANIFEST.json`에서 대조합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+`inhouse-2026-11-14` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`과 같은 릴리스의 `release-validation.json`에서 대조합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
 
 | 파일 | 용도 |
 |---|---|
-| [camera-hal-sdd-inhouse-2026-11-13.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/camera-hal-sdd-inhouse-2026-11-13.zip) | 생성기·가이드·스킬·설정 템플릿 |
-| [START_PROMPT_ISSUE251.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/START_PROMPT_ISSUE251.txt) | 제품·빌드 변형·캡처 요청 경로 하나의 첫 실행을 검증하는 프롬프트 |
-| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
-| [START_PROMPT_HERMES.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/START_PROMPT_HERMES.txt) | Hermes를 선택한 경우에 사용하는 같은 프롬프트 |
-| [camera-hal-sdd-inhouse-2026-11-13.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/camera-hal-sdd-inhouse-2026-11-13.zip.sha256) | 반입 ZIP의 SHA-256 |
-| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-13/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
+| [camera-hal-sdd-inhouse-2026-11-14.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-14/camera-hal-sdd-inhouse-2026-11-14.zip) | 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-14/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [START_PROMPT_HERMES.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-14/START_PROMPT_HERMES.txt) | Hermes를 선택한 경우에 사용하는 같은 프롬프트 |
+| [camera-hal-sdd-inhouse-2026-11-14.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-14/camera-hal-sdd-inhouse-2026-11-14.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-14/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
 
 범용·Hermes 프롬프트는 이 문서의 [시작 프롬프트](#시작-프롬프트)에서 자동 생성하여 ZIP 안에도 넣습니다. Hermes 사본은 CLI 선택 한 줄만 다르며 승인 모델·제공자를 고정하지 않습니다. 릴리스 첨부 사본은 ZIP 안의 파일과 바이트가 같아야 합니다. `RELEASE_NOTES.md`와 전체 첨부 체크섬인 `SHA256SUMS.txt`도 함께 보관하세요. 이후 버전의 절차는 해당 버전의 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
 
-11월 13일 릴리스의 첫 실행용 `START_PROMPT_ISSUE251.txt`는 해당 릴리스 ZIP과 첨부 파일에 들어 있습니다. [파일럿](pilot.md)과 [질문 하나의 첫 실행](02-first-run.md)을 따르며, CLI 선택은 사내 승인 설정으로 채웁니다. 이 파일은 11월 13일 릴리스 조립 시 추가된 것으로, 일반 패키지 생성 명령이 자동으로 만드는 범용·Hermes 프롬프트와 구분합니다. 저장소에서 새로 만든 패키지에는 이 파일이 자동으로 포함되지 않습니다.
+11월 14일 반입본은 스킬 v12와 같은 커밋의 생성기·가이드·템플릿을 포함합니다. 범용·Hermes 시작 프롬프트 모두 [질문 하나의 첫 실행](02-first-run.md)과 [파일럿](pilot.md)에 연결됩니다. 기존 11월 13일 릴리스의 `START_PROMPT_ISSUE251.txt`는 해당 릴리스와 함께 보존하며 이번 ZIP에는 별도 사본을 넣지 않습니다.
 
-11월 13일 배포 ZIP에는 스킬 v11이 들어 있습니다. 저장소의 v12 개정은 해당 ZIP에 포함되지 않았으므로, v12만 기존 반입본에 덮어쓰지 말고 [같은 커밋으로 갱신하는 절차](../../skills/README.md#설치)를 따르세요. v12가 있는 커밋으로 새로 만든 패키지는 그 커밋의 스킬·가이드를 포함합니다. 이 문서를 새 패키지 안에서 읽더라도 위 다운로드 표와 v11 설명은 11월 13일 배포본에 관한 정보입니다. 실제 반입본은 `IMPORT-MANIFEST.json`의 `source_commit`과 동봉 스킬의 `metadata.version`으로 식별합니다. 기존 릴리스 안의 이전 안내와 첨부 검증 기록은 당시 파일로 보존합니다.
+기존 반입본에 스킬만 덮어쓰지 말고 [같은 커밋으로 갱신하는 절차](../../skills/README.md#설치)를 따르세요. 이 다운로드 표는 11월 14일 배포본을 가리킵니다. 이후 다른 커밋으로 직접 만든 패키지는 해당 `IMPORT-MANIFEST.json`의 `source_commit`과 동봉 스킬의 `metadata.version`으로 식별합니다.
 
 GitHub가 자동 제공하는 `Source code (zip)`이나 일반 clone에는 반입용 `IMPORT-MANIFEST.json`과 대체 `AGENTS.md`가 없습니다. 그 상태에서 `verify_import.py`를 실행하면 검증할 수 없습니다. 저장소로부터 직접 준비하려면 승인된 준비 환경에서 사용할 생성기 커밋을 검토·고정한 뒤 [패키지 재생성](#패키지-재생성)을 실행하세요. 사내 에이전트는 생성된 반입 디렉터리에서 시작합니다.
 
@@ -46,14 +45,14 @@ ZIP 안의 `camera-hal-sdd-generator/START_HERE.md`가 입구입니다. `IMPORT-
 Windows PowerShell에서는 다운로드 폴더에서 다음 명령으로 검사합니다. 불일치하면 압축을 풀지 말고 같은 릴리스의 파일을 다시 받습니다.
 
 ```powershell
-$zip = 'camera-hal-sdd-inhouse-2026-11-13.zip'
+$zip = 'camera-hal-sdd-inhouse-2026-11-14.zip'
 $expected = ((Get-Content "$zip.sha256" -Raw).Trim() -split '\s+')[0]
 if ((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected.ToLowerInvariant()) {
     throw 'ZIP SHA-256 mismatch'
 }
 ```
 
-Linux에서는 `sha256sum -c camera-hal-sdd-inhouse-2026-11-13.zip.sha256`를 실행합니다. Windows 압축 해제는 짧은 경로와 긴 경로를 지원하는 도구를 사용하세요.
+Linux에서는 `sha256sum -c camera-hal-sdd-inhouse-2026-11-14.zip.sha256`를 실행합니다. Windows 압축 해제는 짧은 경로와 긴 경로를 지원하는 도구를 사용하세요.
 
 **의존성을 설치하거나 파일을 수정하기 전에** 압축을 푼 생성기 루트에서 실행합니다. Python 3.11 이상이 필요합니다.
 
@@ -133,6 +132,12 @@ CLI 누락·실패를 다른 CLI·직접 API·저장 응답·수동 원고로 �
 
 환경에서 소스·제품 빌드·compile DB·생성 헤더·기준 커밋을 조사하고,
 찾을 수 없는 필수 정보만 질문해줘. 나머지 독립적인 작업은 계속해줘.
+처음에는 제품·빌드 변형·캡처 요청 경로 하나에서 질문 하나의 통과 조건을 고정해줘.
+docs/inhouse/02-first-run.md와 스킬의 첫 실행·재개 절차를 따라 한도를 정한 뒤 generate --sections <ID> --plan-only로 계획을 확인해줘.
+생성과 별도 승인 프로필의 audit-consistency, 로컬 사이트 확인을 마친 뒤 범위를 넓혀줘.
+중단되면 실행 장부의 resume_argv와 원본 증거를 보존하고 새 호출과 검증된 재사용을 구분해줘.
+누적 예산을 소진하면 추가 작업·예산이 승인된 경우에만 같은 작업 ID에서 예산을 조정하고 계획을 다시 확인해줘.
+승인되지 않았다면 남은 일을 기록하고 멈춰줘. docs/inhouse/pilot.md의 절차를 따르고 실제 제품의 파일럿 판정은 사내 설정 저장소의 handoff.md에 남겨줘.
 For Vendor는 기술 채택·연동·구현 담당자, For Developer는 신입·타팀 개발자를 대상으로 해줘.
 왼쪽 메뉴는 독자 → 수행할 작업 → 문서 순서로 구성해줘. group은 유지하고 작업은 sections.yaml의 nav_section으로 지정해줘.
 새 설정은 사내 템플릿의 분류를 사용하고, 기존 설정은 실제 문서 목적에 맞게 이전한 뒤 generate·export-site·verify-site로 재생성해줘.
