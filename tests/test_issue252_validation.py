@@ -78,8 +78,10 @@ def test_split_reader_paginates_complete_source_windows_from_one_archive_call(tm
         "        assert message['params'] == {'name': 'route', 'arguments': {'question': 'Q2'}}\n"
         "        calls += 1\n"
         "        assert calls == 1\n"
-        "        windows = [{'href': f'https://example.com/source.cpp#L{i}', 'code': '가' * 2800}"
-        " for i in range(3)]\n"
+        "        windows = [{'href': f'https://example.com/blob/commit/source.cpp#L{i}',"
+        " 'path': 'source.cpp', 'raw_sha256': 'a' * 64, 'start': i, 'end': i,"
+        " 'code': f'{i}: ' + '가' * 2800} for i in range(1, 4)]\n"
+        "        windows.append({'not_linked': 'missing.cpp', 'start': 2, 'end': 4})\n"
         "        bundle = {'sections': [{'excerpt': '문서'}], 'code_links_opened': windows}\n"
         "        result = {'content': [{'type': 'text', 'text': json.dumps(bundle)}]}\n"
         "    print(json.dumps({'jsonrpc': '2.0', 'id': message['id'], 'result': result}), flush=True)\n",
@@ -89,7 +91,12 @@ def test_split_reader_paginates_complete_source_windows_from_one_archive_call(tm
     spec = importlib.util.spec_from_file_location('issue252_split_reader', path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    windows = [{'href': f'https://example.com/source.cpp#L{i}', 'code': '가' * 2800} for i in range(3)]
+    windows = [
+        {'href': f'https://example.com/blob/commit/source.cpp#L{i}', 'path': 'source.cpp',
+         'raw_sha256': 'a' * 64, 'start': i, 'end': i, 'code': f'{i}: ' + '가' * 2800}
+        for i in range(1, 4)
+    ]
+    windows.append({'not_linked': 'missing.cpp', 'start': 2, 'end': 4})
     first, pages = module.paginate_source(windows)
     assert module.paginate_source([]) == (None, {})
     with pytest.raises(ValueError, match='exceeds'):
@@ -121,7 +128,22 @@ def test_split_reader_paginates_complete_source_windows_from_one_archive_call(tm
     payloads = [json.loads(reply['content'][0]['text']) for reply in replies[2:]]
     assert payloads[0] == payloads[-1] == {'source_cursor': 'a' * 22, 'sections': [{'excerpt': '문서'}]}
     assert [payload['next_cursor'] for payload in payloads[1:-1]] == ['b' * 22, 'c' * 22, None]
-    assert [window for payload in payloads[1:-1] for window in payload['code_links_opened']] == windows
+    files = {'1': {'href_prefix': 'https://example.com/blob/commit/', 'path': 'source.cpp',
+                   'raw_sha256': 'a' * 64}}
+    assert [payload['files'] for payload in payloads[1:-1]] == [files, {}, {}]
+    restored = []
+    for payload in payloads[1:-1]:
+        for window in payload['code_links_opened']:
+            if 'file_id' not in window:
+                restored.append(window)
+                continue
+            assert not {'path', 'href', 'raw_sha256'} & window.keys()
+            window = window.copy()
+            file = files[window.pop('file_id')]
+            suffix = window.pop('href_suffix')
+            restored.append({**window, 'path': file['path'], 'raw_sha256': file['raw_sha256'],
+                             'href': file['href_prefix'] + file['path'] + suffix})
+    assert restored == windows
     assert all(len(reply['content'][0]['text'].encode()) <= module.SOURCE_BATCH_BYTES for reply in replies[3:-1])
     assert first in pages and len(pages) == 3
 

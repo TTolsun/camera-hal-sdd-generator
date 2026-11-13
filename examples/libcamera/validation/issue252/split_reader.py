@@ -14,7 +14,10 @@ DESCRIPTIONS = {
              'Wait for its source_cursor, then call route_source with that cursor and the same question.',
     'route_source': 'Read one batch of numbered source lines reached through the document links. '
                     'Use the source_cursor from route or the next_cursor from the previous batch. '
-                    'Wait for each result and continue until next_cursor is null.',
+                    'Wait for each result and continue until next_cursor is null. '
+                    'Keep the files table entries across batches. For a source window with file_id, '
+                    'look up that ID in files and reconstruct the exact clickable href as '
+                    'href_prefix + path + href_suffix. The file entry also gives raw_sha256.',
 }
 
 
@@ -28,27 +31,48 @@ def write_message(stream, message: dict) -> None:
 
 
 def paginate_source(windows: list[dict]) -> tuple[str | None, dict[str, dict]]:
-    """Keep complete source windows and cap the serialized size of each tool response."""
+    """Keep complete windows and send file metadata once across all source batches."""
+    file_ids = {}
     batches = []
-    batch = []
+    batch = {'files': {}, 'code_links_opened': []}
+
     # A 16-byte cursor is always 22 ASCII characters. Reserve its serialized space on every page.
-    def fits(items):
-        payload = {'next_cursor': 'x' * 22, 'code_links_opened': items}
+    def fits(page):
+        payload = {'next_cursor': 'x' * 22, **page}
         return len(json.dumps(payload, ensure_ascii=False).encode('utf-8')) <= SOURCE_BATCH_BYTES
 
     for window in windows:
-        if not fits([window]):
-            raise ValueError('One archived source window exceeds the source batch size.')
-        if batch and not fits([*batch, window]):
+        path, href, digest = (window.get(key) for key in ('path', 'href', 'raw_sha256'))
+        files = {}
+        if all(isinstance(value, str) and value for value in (path, href, digest)):
+            url, anchor, line = href.partition('#')
+            if url.endswith('/' + path):
+                prefix = url.removesuffix(path)
+                identity = (prefix, path, digest)
+                if identity not in file_ids:
+                    file_id = str(len(file_ids) + 1)
+                    file_ids[identity] = file_id
+                    files[file_id] = {'href_prefix': prefix, 'path': path, 'raw_sha256': digest}
+                window = {key: value for key, value in window.items()
+                          if key not in ('path', 'href', 'raw_sha256')}
+                window.update(file_id=file_ids[identity], href_suffix=anchor + line)
+
+        candidate = {'files': {**batch['files'], **files},
+                     'code_links_opened': [*batch['code_links_opened'], window]}
+        if not fits(candidate):
+            if not batch['code_links_opened']:
+                raise ValueError('One archived source window exceeds the source batch size.')
             batches.append(batch)
-            batch = []
-        batch.append(window)
-    if batch:
+            candidate = {'files': files, 'code_links_opened': [window]}
+            if not fits(candidate):
+                raise ValueError('One archived source window exceeds the source batch size.')
+        batch = candidate
+    if batch['code_links_opened']:
         batches.append(batch)
 
     cursors = [token_urlsafe(16) for _ in batches]
     pages = {
-        cursor: {'next_cursor': next_cursor, 'code_links_opened': batch}
+        cursor: {'next_cursor': next_cursor, **batch}
         for cursor, next_cursor, batch in zip(cursors, [*cursors[1:], None], batches)
     }
     return (cursors[0] if cursors else None), pages
