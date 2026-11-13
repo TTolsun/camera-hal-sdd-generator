@@ -1,8 +1,8 @@
 # camera-hal-sdd-generator
 
-사내에 전달하려면 [검증된 GitHub 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-12) 링크를 공유하세요. 메일에 ZIP을 첨부할 필요 없이 반입 파일·시작 프롬프트·체크섬·검증 기록을 각각 받을 수 있습니다. [시작 안내](docs/inhouse/package.md)에 실행 순서, 품질 합격 기준과 복구 절차를 모았습니다.
+사내에 전달하려면 [2026-11-13 GitHub 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-13) 링크를 공유하세요. 메일에 ZIP을 첨부할 필요 없이 반입 파일·시작 프롬프트·체크섬·검증 기록을 각각 받을 수 있습니다. [시작 안내](docs/inhouse/package.md)에 실행 순서, 품질 합격 기준과 복구 절차를 모았습니다.
 
-[2026-11-12 릴리스 노트](docs/inhouse/release-2026-11-12.md)에서 반입 절차와 스킬의 변경점과 사내 적용 조건을 확인하세요.
+[2026-11-13 릴리스 노트](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-13)에서 환경 점검·모델 호출 없는 실행 계획과 첫 실행용 `START_PROMPT_ISSUE251.txt`를 확인하세요. 배포 ZIP의 스킬은 v11이며, 저장소에서 개정한 v12와의 사용 범위는 [스킬 안내](skills/README.md)를 따릅니다.
 
 **사내 Camera HAL에 처음 적용한다면 [1단계: 준비물](docs/inhouse/01-prepare.md)을 여세요.** 전체 문서 지도는 [docs/README.md](docs/README.md)에 있습니다.
 

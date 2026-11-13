@@ -15,6 +15,8 @@
 
 반입본의 `START_PROMPT.txt`를 사용하면 스킬 설치 없이 같은 절차로 시작할 수 있습니다. Hermes를 선택했다면 `START_PROMPT_HERMES.txt`를 사용합니다. 두 파일은 패키지 안에 포함되며 릴리스 첨부 사본과 바이트가 같아야 합니다. `metadata.version`은 스킬 개정 번호이고 정확한 패키지 버전은 `IMPORT-MANIFEST.json`의 `source_commit`입니다.
 
+[2026-11-13 반입본](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-13)은 스킬 v11과 첫 실행용 `START_PROMPT_ISSUE251.txt`를 포함합니다. 저장소의 v12는 질문 하나의 실행 계획·호출 한도·중단 후 재개 절차를 보완한 개정입니다. 기존 ZIP에 v12만 덮어쓰지 않습니다. 배포본은 동봉 v11과 해당 프롬프트·가이드를 사용하고, v12를 반입하려면 검토한 생성기 커밋 전체로 [새 패키지](../docs/inhouse/package.md#패키지-재생성)를 만듭니다. 이 개정으로 기존 릴리스 첨부 파일이 바뀌지는 않습니다.
+
 스킬은 터미널에서 `uv run sdd ...`를 실행할 수 있는 에이전트를 전제로 합니다. 문서 생성 CLI는 [선택 안내](../docs/inhouse/cli-agents.md)에 따라 Hermes, OpenCode, Claude Code 또는 Codex로 지정합니다. `sdd automate`가 부르는 검토 CLI는 선택한 실행기의 도구 제한을 적용한 별도 실행이므로, 이 스킬과 같은 작업 권한을 주지 않습니다([예약 게시 절차](../docs/inhouse/03-update-system.md)).
 
 ## 참고한 스킬
