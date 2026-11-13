@@ -58,10 +58,14 @@ flowchart TD
   plan --> run[질문 하나 생성과 독립 검토]
   run -->|완료| local[로컬 사이트와 결과 기록]
   run -->|실패 또는 중단| record[장부와 원본 증거 보존]
-  record --> fix[원인 해결과 입력 확인]
-  fix -->|같은 입력| resume[장부의 명령으로 재개]
+  record --> fix[원인 해결과 입력 및 잔여 예산 확인]
+  fix -->|재개 가능 및 같은 입력| resume[장부의 명령으로 재개]
   resume --> run
   fix -->|입력 변경| inputs
+  fix -->|누적 예산 소진| approval{추가 작업과 예산 승인}
+  approval -->|없음| stop[남은 일 기록 후 중단]
+  approval -->|있음| budget[같은 작업 ID로 예산 조정]
+  budget --> plan
 ```
 
 그림은 첫 실행 순서와 재개 경로를 보여 줍니다. 같은 입력이어도 재사용 여부는 생성기의 검증 결과로 판단하며, 로컬 확인은 사람 승인·사내 게시와 구분합니다.
