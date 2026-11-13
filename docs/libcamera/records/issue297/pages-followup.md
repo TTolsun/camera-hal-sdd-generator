@@ -1,5 +1,7 @@
 # #297 실제 Pages 후속 검증
 
+같은 Pages 빌드에서 질문을 하나씩 읽은 후속 결과는 [질문별 독립 읽기 재검증](split-reader.md)에 기록했습니다.
+
 공식 libcamera `da6a6ed33ed0ab305f10b6f8b44736150d39cef4`에서 요청 준비 300ms, 명시적 요청 완료, FIFO 반환과 공개 stop 계약을 해당 그림 바로 아래에 표시했습니다. 정지 시나리오에는 두 요청 큐의 검사와 순번 초기화를 표시했습니다. 영향받은 한영 항목 20개를 다시 검토했고 800개의 기존 판정을 재사용했습니다. [생성기 PR #310](https://github.com/TTolsun/camera-hal-sdd-generator/pull/310) · [공개 SDD PR #112](https://github.com/TTolsun/libcamera-sdd/pull/112)
 
 Pages 빌드 `48c4f23e4b9c3246b3d365d07ddbf032944450cf5a133e3dcec1824b248055d3`의 루트 산출물 487개와 ColourTemperature 하위 사이트 산출물 92개의 해시를 확인했습니다. 한영 HTML 62개의 내부 링크 검사도 통과했습니다. 기존 계약 보고서의 원본 CLI 영수증을 검증하는 `13facb30acde25ba0151af1474a4f683dee64b03` 렌더러에 새 설정을 적용해 조립하고 병합된 생성기의 사이트 검증 명령으로 출력을 확인했습니다. [배포 기록](https://github.com/TTolsun/libcamera-sdd/actions/runs/43296145459) · [실제 manifest](https://ttolsun.github.io/libcamera-sdd/site-manifest.json)
