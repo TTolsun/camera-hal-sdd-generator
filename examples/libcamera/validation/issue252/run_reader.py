@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--reader', type=Path, required=True, help='Archived reader.py')
     parser.add_argument('--site', type=Path, required=True, help='Verified public site snapshot')
     parser.add_argument('--prompt', type=Path, required=True,
-                        help='Prompt using route for documents and route_source for linked code')
+                        help='Prompt using route for documents and following its cursor through route_source')
     parser.add_argument('--out', type=Path, required=True, help='New directory for native output')
     parser.add_argument('--output-token-limit', type=int, default=ROUTE_OUTPUT_TOKEN_LIMIT)
     parser.add_argument('--combined-route', action='store_true',

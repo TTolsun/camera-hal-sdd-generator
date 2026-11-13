@@ -3,16 +3,18 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from secrets import token_urlsafe
 import subprocess
 import sys
 
 
-ROUTE_PARTS = {'route': 'sections', 'route_source': 'code_links_opened'}
+SOURCE_BATCH_BYTES = 12_000
 DESCRIPTIONS = {
     'route': 'Read the document excerpts and diagrams for one fixed question. '
-             'Call route_source with the same question for the linked source.',
-    'route_source': 'Read the numbered source lines reached through the document links '
-                    'for the same fixed question. Returns source windows without document excerpts.',
+             'Wait for its source_cursor, then call route_source with that cursor and the same question.',
+    'route_source': 'Read one batch of numbered source lines reached through the document links. '
+                    'Use the source_cursor from route or the next_cursor from the previous batch. '
+                    'Wait for each result and continue until next_cursor is null.',
 }
 
 
@@ -23,6 +25,33 @@ def text_result(value: dict) -> dict:
 def write_message(stream, message: dict) -> None:
     stream.write(json.dumps(message, ensure_ascii=False).encode('utf-8') + b'\n')
     stream.flush()
+
+
+def paginate_source(windows: list[dict]) -> tuple[str | None, dict[str, dict]]:
+    """Keep complete source windows and cap the serialized size of each tool response."""
+    batches = []
+    batch = []
+    # A 16-byte cursor is always 22 ASCII characters. Reserve its serialized space on every page.
+    def fits(items):
+        payload = {'next_cursor': 'x' * 22, 'code_links_opened': items}
+        return len(json.dumps(payload, ensure_ascii=False).encode('utf-8')) <= SOURCE_BATCH_BYTES
+
+    for window in windows:
+        if not fits([window]):
+            raise ValueError('One archived source window exceeds the source batch size.')
+        if batch and not fits([*batch, window]):
+            batches.append(batch)
+            batch = []
+        batch.append(window)
+    if batch:
+        batches.append(batch)
+
+    cursors = [token_urlsafe(16) for _ in batches]
+    pages = {
+        cursor: {'next_cursor': next_cursor, 'code_links_opened': batch}
+        for cursor, next_cursor, batch in zip(cursors, [*cursors[1:], None], batches)
+    }
+    return (cursors[0] if cursors else None), pages
 
 
 def serve(reader: subprocess.Popen, requests, responses) -> None:
@@ -36,26 +65,34 @@ def serve(reader: subprocess.Popen, requests, responses) -> None:
         params = message.get('params', {})
         if method == 'tools/call':
             name = params.get('name')
-            question = params.get('arguments', {}).get('question')
-            if name not in ROUTE_PARTS or question not in ('Q1', 'Q2', 'Q3'):
-                result = {**text_result({'error': 'Use route or route_source with Q1, Q2 or Q3.'}),
-                          'isError': True}
-                write_message(responses, {'jsonrpc': '2.0', 'id': message['id'], 'result': result})
-                continue
-            if question not in routes:
-                archived_call = {**message, 'params': {**params, 'name': 'route'}}
-                write_message(reader.stdin, archived_call)
-                reply = json.loads(reader.stdout.readline())
-                if 'error' in reply or reply['result'].get('isError'):
-                    write_message(responses, reply)
-                    continue
-                [content] = reply['result']['content']
-                bundle = json.loads(content['text'])
-                if not all(isinstance(bundle.get(part), list) for part in ROUTE_PARTS.values()):
-                    raise ValueError('Archived route must return document sections and source windows.')
-                routes[question] = bundle
-            part = ROUTE_PARTS[name]
-            result = text_result({part: routes[question][part]})
+            arguments = params.get('arguments', {})
+            question = arguments.get('question')
+            try:
+                if name not in DESCRIPTIONS or question not in ('Q1', 'Q2', 'Q3'):
+                    raise ValueError('Use route or route_source with Q1, Q2 or Q3.')
+                if name == 'route' and question not in routes:
+                    write_message(reader.stdin, message)
+                    reply = json.loads(reader.stdout.readline())
+                    if 'error' in reply or reply['result'].get('isError'):
+                        write_message(responses, reply)
+                        continue
+                    [content] = reply['result']['content']
+                    bundle = json.loads(content['text'])
+                    if not all(isinstance(bundle.get(part), list) for part in ('sections', 'code_links_opened')):
+                        raise ValueError('Archived route must return document sections and source windows.')
+                    first, pages = paginate_source(bundle['code_links_opened'])
+                    routes[question] = ({'source_cursor': first, 'sections': bundle['sections']}, pages)
+                document, pages = routes.get(question, (None, {}))
+                if name == 'route':
+                    payload = document
+                else:
+                    cursor = arguments.get('cursor')
+                    if not isinstance(cursor, str) or cursor not in pages:
+                        raise ValueError('Use the source_cursor from route or next_cursor from the previous batch.')
+                    payload = pages[cursor]
+                result = text_result(payload)
+            except ValueError as error:
+                result = {**text_result({'error': str(error)}), 'isError': True}
             write_message(responses, {'jsonrpc': '2.0', 'id': message['id'], 'result': result})
             continue
 
@@ -63,9 +100,13 @@ def serve(reader: subprocess.Popen, requests, responses) -> None:
         reply = json.loads(reader.stdout.readline())
         if method == 'tools/list' and 'result' in reply:
             [route] = [tool for tool in reply['result']['tools'] if tool['name'] == 'route']
+            schema = route['inputSchema']
+            source_schema = {**schema, 'properties': {**schema['properties'], 'cursor': {'type': 'string'}},
+                             'required': [*schema['required'], 'cursor']}
             reply['result'] = {'tools': [
-                {**route, 'name': name, 'description': description}
-                for name, description in DESCRIPTIONS.items()
+                {**route, 'description': DESCRIPTIONS['route']},
+                {**route, 'name': 'route_source', 'description': DESCRIPTIONS['route_source'],
+                 'inputSchema': source_schema},
             ]}
         write_message(responses, reply)
 

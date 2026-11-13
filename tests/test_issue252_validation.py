@@ -63,8 +63,7 @@ def test_reader_output_limits_are_scoped_to_exposed_tools(tmp_path, monkeypatch,
     assert (out / 'stdout.jsonl').is_file()
 
 
-@pytest.mark.parametrize('first', ['route', 'route_source'])
-def test_split_reader_returns_independent_evidence_without_a_second_archive_call(tmp_path, first):
+def test_split_reader_paginates_complete_source_windows_from_one_archive_call(tmp_path):
     reader = tmp_path / 'reader.py'
     reader.write_text(
         "import json, sys\n"
@@ -72,33 +71,59 @@ def test_split_reader_returns_independent_evidence_without_a_second_archive_call
         "for line in sys.stdin:\n"
         "    message = json.loads(line)\n"
         "    if message['method'] == 'tools/list':\n"
-        "        result = {'tools': [{'name': 'route', 'inputSchema': {'type': 'object'}}]}\n"
+        "        schema = {'type': 'object', 'properties': {'question': {'type': 'string'}},"
+        "'required': ['question']}\n"
+        "        result = {'tools': [{'name': 'route', 'inputSchema': schema}]}\n"
         "    else:\n"
         "        assert message['params'] == {'name': 'route', 'arguments': {'question': 'Q2'}}\n"
         "        calls += 1\n"
         "        assert calls == 1\n"
-        "        bundle = {'sections': [{'excerpt': '문서'}], 'code_links_opened': ["
-        "{'href': 'https://example.com/source.cpp#L42', 'code': '42: finish();'}]}\n"
+        "        windows = [{'href': f'https://example.com/source.cpp#L{i}', 'code': '가' * 2800}"
+        " for i in range(3)]\n"
+        "        bundle = {'sections': [{'excerpt': '문서'}], 'code_links_opened': windows}\n"
         "        result = {'content': [{'type': 'text', 'text': json.dumps(bundle)}]}\n"
         "    print(json.dumps({'jsonrpc': '2.0', 'id': message['id'], 'result': result}), flush=True)\n",
         encoding='utf-8',
     )
-    expected = {'route': {'sections': [{'excerpt': '문서'}]}, 'route_source': {
-        'code_links_opened': [{'href': 'https://example.com/source.cpp#L42', 'code': '42: finish();'}]}}
-    names = [first, next(name for name in expected if name != first), first]
-    messages = [{'jsonrpc': '2.0', 'id': 0, 'method': 'tools/list'}]
-    messages.extend({'jsonrpc': '2.0', 'id': index, 'method': 'tools/call',
-                     'params': {'name': name, 'arguments': {'question': 'Q2'}}}
-                    for index, name in enumerate(names, 1))
     path = Path(__file__).parents[1] / 'examples/libcamera/validation/issue252/split_reader.py'
-    run = subprocess.run([sys.executable, str(path), str(reader), str(tmp_path), str(tmp_path / 'log')],
+    spec = importlib.util.spec_from_file_location('issue252_split_reader', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    windows = [{'href': f'https://example.com/source.cpp#L{i}', 'code': '가' * 2800} for i in range(3)]
+    first, pages = module.paginate_source(windows)
+    assert module.paginate_source([]) == (None, {})
+    with pytest.raises(ValueError, match='exceeds'):
+        module.paginate_source([{'code': '가' * 5000}])
+
+    def call(request_id, name, **arguments):
+        return {'jsonrpc': '2.0', 'id': request_id, 'method': 'tools/call',
+                'params': {'name': name, 'arguments': {'question': 'Q2', **arguments}}}
+
+    # Fixed cursors let this stdio regression exercise the full session in one bounded run.
+    adapter = tmp_path / 'adapter.py'
+    adapter.write_text(
+        f"import runpy\n"
+        f"adapter = runpy.run_path({str(path)!r})\n"
+        "tokens = iter(['a' * 22, 'b' * 22, 'c' * 22])\n"
+        "adapter['main'].__globals__['token_urlsafe'] = lambda _: next(tokens)\n"
+        "adapter['main']()\n", encoding='utf-8')
+    messages = [{'jsonrpc': '2.0', 'id': 0, 'method': 'tools/list'},
+                call(1, 'route_source', cursor='a' * 22), call(2, 'route'),
+                call(3, 'route_source', cursor='a' * 22), call(4, 'route_source', cursor='b' * 22),
+                call(5, 'route_source', cursor='c' * 22), call(6, 'route')]
+    run = subprocess.run([sys.executable, str(adapter), str(reader), str(tmp_path), str(tmp_path / 'log')],
                          input='\n'.join(map(json.dumps, messages)).encode(), capture_output=True,
                          timeout=15, check=True)
-    replies = [json.loads(line) for line in run.stdout.splitlines()]
-    assert [reply['id'] for reply in replies] == list(range(len(messages)))
-    assert [tool['name'] for tool in replies[0]['result']['tools']] == ['route', 'route_source']
-    for name, reply in zip(names, replies[1:], strict=True):
-        assert json.loads(reply['result']['content'][0]['text']) == expected[name]
+    replies = [json.loads(line)['result'] for line in run.stdout.splitlines()]
+    assert [tool['name'] for tool in replies[0]['tools']] == ['route', 'route_source']
+    assert replies[0]['tools'][1]['inputSchema']['required'] == ['question', 'cursor']
+    assert replies[1]['isError']
+    payloads = [json.loads(reply['content'][0]['text']) for reply in replies[2:]]
+    assert payloads[0] == payloads[-1] == {'source_cursor': 'a' * 22, 'sections': [{'excerpt': '문서'}]}
+    assert [payload['next_cursor'] for payload in payloads[1:-1]] == ['b' * 22, 'c' * 22, None]
+    assert [window for payload in payloads[1:-1] for window in payload['code_links_opened']] == windows
+    assert all(len(reply['content'][0]['text'].encode()) <= module.SOURCE_BATCH_BYTES for reply in replies[3:-1])
+    assert first in pages and len(pages) == 3
 
 
 def test_bilingual_dedup_references_only_unique_exact_source_bytes():
