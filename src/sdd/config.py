@@ -14,6 +14,15 @@ import math
 from .validation_stage import load_yaml, staged
 
 
+DEFAULT_CONTRACT_BATCH_SIZE = 24
+
+
+def contract_batch_size(value):
+    if type(value) is not int or value < 1:
+        raise ValueError(f'review.contract_batch_size는 1 이상의 정수여야 합니다: {value!r}')
+    return value
+
+
 @dataclass(frozen=True)
 class ReviewConfig:
     design_prompt: str = 'standard'
@@ -25,8 +34,13 @@ class ReviewConfig:
     max_seconds: int = 0
     document_max_calls: int = 0
     document_max_seconds: int = 0
+    # 교차 문서 계약 검토 한 호출이 판정하는 대상 주장 수(내용 정의 분할의 목표 크기).
+    contract_batch_size: int = DEFAULT_CONTRACT_BATCH_SIZE
     reader_loop: dict[str, Any] = field(default_factory=dict)
     coverage_triage: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        contract_batch_size(self.contract_batch_size)
 
     def prompt_mode(self, override=None):
         mode = self.design_prompt if override is None else override
@@ -494,6 +508,7 @@ def load(path: Path | None = None, *, manuscript_profile: bool = False) -> Confi
         response_dir=str(rel(agent_raw['response_dir'], '.')) if agent_raw.get('response_dir') else '',
     )
 
+    contract_batch_size(review.get('contract_batch_size', DEFAULT_CONTRACT_BATCH_SIZE))
     cfg = Config(
         root=root,
         source_root=rel(src.get("root"), "../hal-camera"),
