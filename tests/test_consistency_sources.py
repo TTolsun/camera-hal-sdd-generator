@@ -41,11 +41,13 @@ def test_source_contract_and_unexecuted_callback_plan_keep_distinct_kinds_in_bot
     tmp_cfg.raw.setdefault('site', {})['english_catalog'] = str(catalog)
     payload = request(tmp_cfg, model, dict(id='c', question='Who completes?', primary='primary.md',
         documents=['primary.md'], match='요청'))
-    for index, expected in enumerate(('behavior', 'limitation')):
-        source = payload['claims'][f'primary.md/q/{index}']
+    statements = [key for key in payload['claims'] if key.startswith('primary.md/q/')]
+    assert len(statements) == 2
+    for key, expected in zip(statements, ('behavior', 'limitation')):
+        source = payload['claims'][key]
         assert source['statement_kinds'] == [expected]
         displayed = [c for k,c in payload['claims'].items() if k.startswith('catalog/')
-                     and f'primary.md/q/{index}' in c['origin_claims']]
+                     and key in c['origin_claims']]
         assert {c['language'] for c in displayed} == {'ko', 'en'}
         assert all(c['statement_kinds'] == [expected] for c in displayed)
 

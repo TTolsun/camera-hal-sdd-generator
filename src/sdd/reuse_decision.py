@@ -8,7 +8,7 @@ import json
 from .call_records import canonical_request_hash
 
 
-def differences(previous, current, prefix=''):
+def differences(previous, current, prefix='', *, contract=False):
     if isinstance(previous, dict) and isinstance(current, dict):
         result = []
         for key in sorted(previous.keys() | current.keys()):
@@ -18,7 +18,13 @@ def differences(previous, current, prefix=''):
                     previous_sha256=canonical_request_hash(previous[key]) if key in previous else None,
                     current_sha256=canonical_request_hash(current[key]) if key in current else None))
             else:
-                result.extend(differences(previous[key], current[key], path))
+                before, after = previous[key], current[key]
+                if contract and path == 'request.user':
+                    parsed = _consistency_user(before, after)
+                    if parsed is not None:
+                        result.extend(parsed)
+                        continue
+                result.extend(differences(before, after, path, contract=contract))
         return result
     if canonical_request_hash(previous) == canonical_request_hash(current):
         return []
@@ -26,7 +32,25 @@ def differences(previous, current, prefix=''):
                  current_sha256=canonical_request_hash(current))]
 
 
+CONSISTENCY_USER = dict(claims='target-claims-changed', peer_claims='primary-peer-claims-changed',
+                        sources='contract-sources-changed', contract='contract-question-changed')
+
+
+def _consistency_user(previous, current):
+    """Compare the JSON `request.user` by sub-key so the cause is visible."""
+    try:
+        before, after = json.loads(previous), json.loads(current)
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(before, dict) or not isinstance(after, dict):
+        return None
+    return differences(before, after, 'request.user')
+
+
 def reason(path):
+    parts = path.split('.')
+    if parts[:2] == ['request', 'user'] and len(parts) > 2:
+        return CONSISTENCY_USER.get(parts[2], 'request-or-schema-changed')
     root = path.split('.')[0]
     if root == 'topic':
         if path == 'topic.question':
@@ -62,7 +86,7 @@ def scope(identity):
             source = payload.get('source', payload.get('texts'))
             return ('translation', canonical_request_hash(source)) if source is not None else None
         if identity.get('purpose') == 'cross-document-consistency':
-            return ('consistency', payload['contract']['id'], tuple(sorted(payload['claims'])))
+            return ('consistency', payload['contract']['id'])
     except (KeyError, TypeError, ValueError):
         pass  # Legacy/retry records without a comparable scope remain explicit.
     return None
@@ -71,7 +95,8 @@ def scope(identity):
 def explain(identity, candidates=(), *, verified=False):
     comparisons = []
     for path, payload in candidates:
-        changes = differences(payload['identity'], identity)
+        changes = differences(payload['identity'], identity,
+                              contract=identity.get('purpose') == 'cross-document-consistency')
         comparisons.append(dict(checkpoint=path.name,
             identity_sha256=canonical_request_hash(payload['identity']),
             receipts=list(payload.get('receipts', [])), receipts_verified=verified,

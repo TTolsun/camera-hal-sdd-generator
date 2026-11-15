@@ -82,15 +82,21 @@ SYSTEM = (
 )
 
 
+POLICY_FILES = ('consistency.py', 'consistency_sources.py', 'consistency_analysis.py', 'cli_schema.py')
+
+
 def policy_hash():
+    """Hash only code that interprets responses or decides verdicts.
+
+    Request bytes and execution identity (runner/model/command/arguments) are
+    already in the checkpoint key, and read() re-verifies every receipt with the
+    current code. So request-building and run-infrastructure files (config,
+    generation_run, site_localization, ...) need not invalidate a batch whose
+    model input is byte-identical. consistency.py holds SYSTEM, schema and
+    validate; the others define source evidence, analysis notes and the schema.
+    """
     root = Path(__file__).parent
-    parts = {name: hashlib.sha256((root/name).read_bytes()).hexdigest()
-             for name in ('consistency.py', 'consistency_sources.py', 'consistency_analysis.py', 'next_steps.py',
-                          'validation_stage.py', 'input_watch.py', 'consistency_profile.py', 'document_metadata.py',
-                          'validation_execution.py',
-                          'cli_checkpoint.py', 'cli_provenance.py', 'call_records.py',
-                          'generated_design.py', 'render_profiles.py', 'generation_run.py',
-                          'site_localization.py', 'config.py', 'cli_schema.py')}
+    parts = {name: hashlib.sha256((root/name).read_bytes()).hexdigest() for name in POLICY_FILES}
     return canonical_request_hash(parts)
 
 
@@ -131,6 +137,17 @@ def _request(cfg, model, group):
     excluded_navigation = []
     display = []
     catalog = {}
+    seen = {}
+
+    def claim_id(prefix, *parts):
+        """Content-derived ID: inserting unrelated text never renames other claims.
+
+        Repeats of identical content get ~2, ~3 in order of appearance.
+        """
+        digest = hashlib.sha256('\x00'.join(parts).encode()).hexdigest()[:12]
+        base = f'{prefix}/{digest}'
+        seen[base] = seen.get(base, 0) + 1
+        return base if seen[base] == 1 else f'{base}~{seen[base]}'
     sections = {section_output(section).replace('\\', '/'): section for section in cfg.sections()}
     site = cfg.site
     if site.english_catalog:
@@ -177,8 +194,8 @@ def _request(cfg, model, group):
             # topics. Mapping order is not contract content, but otherwise it
             # changes batches, literal CLI prompts and schema peer enums.
             for tid, statements in sorted(artifact['answers'].items()):
-                for index, statement in enumerate(statements):
-                    key = f'{name}/{tid}/{index}'
+                for statement in statements:
+                    key = claim_id(f'{name}/{tid}', statement['text'], statement.get('kind', 'behavior'))
                     refs = [f"{meta['section']}/{tid}/{sid}" for sid in statement['evidence']]
                     all_statements[key] = dict(document=name, topic=tid, language='ko', text=statement['text'], evidence=refs,
                                                statement_kinds=[statement.get('kind', 'behavior')])
@@ -203,7 +220,7 @@ def _request(cfg, model, group):
                 if artifact.get('answers') and not analysis_refs:
                     continue
                 refs = citation_refs(model, paragraph) + analysis_refs
-                key = f'{name}/paragraph/{index}'
+                key = claim_id(f'{name}/paragraph', paragraph)
                 claims[key] = dict(document=name, topic=None, language='ko', text=paragraph, evidence=refs)
                 if analysis_refs:
                     claims[key]['evidence_domain'] = 'analysis-representation'
@@ -342,6 +359,15 @@ def wire_payload(payload):
 
 
 def batches(payload, size=6, *, max_input_chars=None):
+    """Split target claims into review batches, keeping claim order.
+
+    Boundaries are content-defined, not positional: once a batch holds at least
+    size//2 claims, it ends after a claim whose ID hash is 0 mod
+    (size - size//2 + 1), or when it reaches 2*size claims. Adding or removing
+    one claim then only changes its own batch (and at most the next one), so
+    unchanged batches keep their checkpoint. The minimum keeps the average
+    batch near `size`, so a cold run makes about as many calls as fixed slices.
+    """
     if type(size) is not int or size < 1:
         raise ValueError('Consistency batch size must be positive')
     if max_input_chars is not None and (type(max_input_chars) is not int or max_input_chars < 1):
@@ -376,8 +402,17 @@ def batches(payload, size=6, *, max_input_chars=None):
                 return
         yield batch
 
-    for start in range(0, len(ids), size):
-        yield from split(ids[start:start+size])
+    minimum = max(1, size // 2)
+    modulus = size - minimum + 1
+    current = []
+    for key in ids:
+        current.append(key)
+        if ((len(current) >= minimum and int(hashlib.sha256(key.encode()).hexdigest(), 16) % modulus == 0)
+                or len(current) >= 2*size):
+            yield from split(current)
+            current = []
+    if current:
+        yield from split(current)
 
 
 def review_store(cfg, payload):

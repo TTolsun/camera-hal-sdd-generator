@@ -324,3 +324,87 @@ def test_audit_does_not_commit_a_report_when_phase_exit_fails(review_case, monke
     path.write_text(json.dumps(journal), encoding='utf-8')
     with pytest.raises(ValueError, match='failed or is incomplete'):
         enforce(cfg, model)
+
+
+def _batch_claims(case):
+    cfg, model, group, *_ = case
+    payload = request(cfg, model, group)
+    return [tuple(batch['claims']) for batch in batches(payload)]
+
+
+def test_unrelated_paragraph_before_matches_does_not_invalidate_checkpoints(review_case):
+    cfg, model, group, revision, calls, _, texts = review_case
+    texts['peer'] = 'Intro without the keyword.\n\n'+'\n\n'.join(f'A request {i} needs completion.' for i in range(12))
+    revision('a'*40)
+    assert run_review(review_case)['fresh_batches'] >= 2
+    texts['peer'] = 'New opening paragraph.\n\nIntro without the keyword.\n\n'+'\n\n'.join(
+        f'A request {i} needs completion.' for i in range(12))
+    revision('a'*40)
+    second = run_review(review_case)
+    assert second['fresh_batches'] == 0
+    enforce(cfg, model)
+
+
+def test_inserted_claim_only_renews_its_own_batch(review_case):
+    cfg, model, group, revision, calls, _, texts = review_case
+    lines = [f'A request {i} needs completion.' for i in range(14)]
+    texts['peer'] = '\n\n'.join(lines)
+    revision('a'*40)
+    before = _batch_claims(review_case)
+    first = run_review(review_case)
+    assert first['fresh_batches'] == len(before) and len(before) >= 2
+    lines.insert(7, 'A request inserted needs completion.')
+    texts['peer'] = '\n\n'.join(lines)
+    revision('a'*40)
+    after = _batch_claims(review_case)
+    expected = sum(batch not in before for batch in after)
+    assert 1 <= expected < len(after)
+    second = run_review(review_case)
+    assert second['fresh_batches'] == expected
+    assert second['reused_batches'] == len(after) - expected
+    enforce(cfg, model)
+
+
+def test_repeated_text_gets_distinct_content_based_claim_ids(review_case):
+    cfg, model, group, revision, calls, _, texts = review_case
+    texts['peer'] = 'Heading text.\n\nA request needs completion.\n\nA request needs completion.'
+    revision('a'*40)
+    keys = [k for k in request(cfg, model, group)['claims'] if k.startswith('peer.md/paragraph/')]
+    assert len(keys) == 2 and keys[0] != keys[1] and keys[1].endswith('~2')
+    assert not any(key.rsplit('/', 1)[1].isdigit() for key in keys)
+
+
+def test_batches_split_by_claim_hash_and_size_one_is_per_claim(review_case):
+    cfg, model, group, revision, calls, _, texts = review_case
+    texts['peer'] = '\n\n'.join(f'A request {i} needs completion.' for i in range(10))
+    revision('a'*40)
+    payload = request(cfg, model, group)
+    ids = list(payload['claims'])
+    assert [list(b['claims']) for b in batches(payload, size=1)] == [[key] for key in ids]
+    assert [key for b in batches(payload) for key in b['claims']] == ids
+    assert all(len(b['claims']) <= 12 for b in batches(payload))
+
+
+def test_policy_hash_covers_only_review_semantics(monkeypatch):
+    from sdd import consistency
+    assert consistency.POLICY_FILES == ('consistency.py', 'consistency_sources.py',
+                                        'consistency_analysis.py', 'cli_schema.py')
+    seen = []
+    original = consistency.Path.read_bytes
+    monkeypatch.setattr(consistency.Path, 'read_bytes', lambda self: seen.append(self.name) or original(self))
+    consistency.policy_hash()
+    assert seen == list(consistency.POLICY_FILES)
+
+
+def test_fresh_call_records_specific_reason_codes(review_case):
+    cfg, model, group, revision, calls, _, texts = review_case
+    run_review(review_case)
+    texts['peer'] += ' A request follows the completion path.'
+    revision('a'*40)
+    report = run_review(review_case)
+    assert report['fresh_batches'] == 1
+    run = report['audit_run']
+    journal = json.loads((cfg.build_dir/'generation-runs'/f"{run['id']}.json").read_bytes())
+    codes = {code for row in journal['decisions'] if row.get('action') == 'review-new' for code in row['reason_codes']}
+    assert 'target-claims-changed' in codes
+    enforce(cfg, model)
