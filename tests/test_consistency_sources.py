@@ -71,7 +71,7 @@ def test_recovered_topic_mapping_order_preserves_exact_audit_requests(tmp_cfg):
                         +json.dumps(artifact, ensure_ascii=False)+'\n---\n\n'+body, encoding='utf-8')
         payload = request(tmp_cfg, model, group)
         return [dict(system=SYSTEM, user=json.dumps(wire_payload(batch), ensure_ascii=False, separators=(',', ':')),
-                     response_schema=schema(batch)) for batch in batches(payload)]
+                     response_schema=schema(batch)) for batch in batches(payload, size=6)]
 
     before = requests(['zeta', 'alpha'])
     after = requests(['alpha', 'zeta'])

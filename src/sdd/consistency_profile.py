@@ -14,6 +14,8 @@ def resolve(cfg, model, groups, identity, request):
         raise ValueError('Consistency review profile changes the contract scope')
     if review.build_dir.resolve() != cfg.build_dir.resolve():
         raise ValueError('Consistency review profile changes the receipt directory')
+    if review.review.contract_batch_size != cfg.review.contract_batch_size:
+        raise ValueError('Consistency review profile changes the contract batch size')
     for group in groups(cfg):
         if identity(request(review, model, group)) != identity(request(cfg, model, group)):
             raise ValueError('Consistency review profile changes publication inputs')

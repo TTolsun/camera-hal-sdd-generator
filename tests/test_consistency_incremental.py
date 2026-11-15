@@ -17,6 +17,8 @@ from sdd.llm import Agent
 def review_case(tmp_cfg, monkeypatch):
     cfg = tmp_cfg
     cfg.agent = AgentConfig(kind='cli', runner='claude', model='fixture', max_input_chars=40000)
+    # 배치 분할을 관찰하는 테스트는 작은 크기(6)로 고정한다. 기본값은 24다.
+    cfg.raw['review'] = {**cfg.raw.get('review', {}), 'contract_batch_size': 6}
     cfg.sdd_dir.mkdir(parents=True)
     group = dict(id='completion', question='Who completes the request?', primary='primary.md',
                  documents=['primary.md', 'peer.md'], match='request', evidence=['s/t/source'])
@@ -196,7 +198,7 @@ def test_cross_revision_reuse_cannot_hide_damaged_original_receipt_binding(revie
     cfg, model, group, revision, calls, *_ = review_case
     run_review(review_case)
     revision('b'*40)
-    payload = next(batches(request(cfg, model, groups(cfg)[0])))
+    payload = next(batches(request(cfg, model, groups(cfg)[0]), size=6))
     store, _ = review_store(cfg, payload)
     data = json.loads(store.path.read_bytes())
     data['payload']['raw'] += '\n'  # Same parsed verdict, different completed output.
@@ -213,7 +215,7 @@ def test_original_revision_cannot_be_forged_by_rehashing_checkpoint(review_case,
     cfg, model, group, revision, calls, *_ = review_case
     run_review(review_case)
     revision('b'*40)
-    store, _ = review_store(cfg, next(batches(request(cfg, model, groups(cfg)[0]))))
+    store, _ = review_store(cfg, next(batches(request(cfg, model, groups(cfg)[0]), size=6)))
     data = json.loads(store.path.read_bytes())
     data['payload']['identity']['source_commit'] = 'c'*40
     if also_change_request:
@@ -231,7 +233,7 @@ def test_contract_review_does_not_accept_a_receipt_for_appended_instructions(rev
     from sdd.cli_checkpoint import checksum
     cfg, model, group, revision, calls, *_ = review_case
     run_review(review_case)
-    store, data = review_store(cfg, next(batches(request(cfg, model, groups(cfg)[0]))))
+    store, data = review_store(cfg, next(batches(request(cfg, model, groups(cfg)[0]), size=6)))
     # A real completed fixture transport for the longer prompt is still not
     # evidence that the shorter audit request received that answer.
     port = Agent(cfg.agent, cfg.build_dir/'prompts')
@@ -329,7 +331,7 @@ def test_audit_does_not_commit_a_report_when_phase_exit_fails(review_case, monke
 def _batch_claims(case):
     cfg, model, group, *_ = case
     payload = request(cfg, model, group)
-    return [tuple(batch['claims']) for batch in batches(payload)]
+    return [tuple(batch['claims']) for batch in batches(payload, size=6)]
 
 
 def test_unrelated_paragraph_before_matches_does_not_invalidate_checkpoints(review_case):
@@ -381,8 +383,8 @@ def test_batches_split_by_claim_hash_and_size_one_is_per_claim(review_case):
     payload = request(cfg, model, group)
     ids = list(payload['claims'])
     assert [list(b['claims']) for b in batches(payload, size=1)] == [[key] for key in ids]
-    assert [key for b in batches(payload) for key in b['claims']] == ids
-    assert all(len(b['claims']) <= 12 for b in batches(payload))
+    assert [key for b in batches(payload, size=6) for key in b['claims']] == ids
+    assert all(len(b['claims']) <= 12 for b in batches(payload, size=6))
 
 
 def test_policy_hash_covers_only_review_semantics(monkeypatch):
@@ -408,3 +410,48 @@ def test_fresh_call_records_specific_reason_codes(review_case):
     codes = {code for row in journal['decisions'] if row.get('action') == 'review-new' for code in row['reason_codes']}
     assert 'target-claims-changed' in codes
     enforce(cfg, model)
+
+
+@pytest.mark.parametrize('value', [0, -1, 2.5, '6', True, None])
+def test_contract_batch_size_rejects_non_positive_or_non_integer_values(tmp_path, value):
+    from sdd.config import load
+    path = tmp_path/'sdd.yaml'
+    path.write_text(yaml.safe_dump(dict(review=dict(contract_batch_size=value))), encoding='utf-8')
+    with pytest.raises(ValueError, match='contract_batch_size'):
+        load(path)
+
+
+def test_contract_batch_size_defaults_to_24_and_accepts_override(tmp_path):
+    from sdd.config import load
+    path = tmp_path/'sdd.yaml'
+    path.write_text('review: {}\n', encoding='utf-8')
+    assert load(path).review.contract_batch_size == 24
+    path.write_text(yaml.safe_dump(dict(review=dict(contract_batch_size=5))), encoding='utf-8')
+    assert load(path).review.contract_batch_size == 5
+
+
+def test_default_batches_size_matches_config_default():
+    import inspect
+    assert inspect.signature(batches).parameters['size'].default == 24
+
+
+def test_configured_batch_size_applies_to_audit_and_enforce_and_invalidates_checkpoints(review_case):
+    cfg, model, group, revision, calls, _, texts = review_case
+    texts['peer'] = '\n\n'.join(f'A request {i} needs completion.' for i in range(20))
+    revision('a'*40)
+    small = run_review(review_case)
+    assert small['fresh_batches'] == len(_batch_claims(review_case)) > 1
+    enforce(cfg, model)
+    before = len(calls)
+    cfg.raw['review']['contract_batch_size'] = 24
+    # The report was written for size 6; enforce must not accept it for another size.
+    with pytest.raises(ValueError):
+        enforce(cfg, model)
+    large = run_review(review_case)
+    assert large['reused_batches'] == 0
+    assert large['fresh_batches'] < small['fresh_batches']
+    assert len(calls) - before == large['fresh_batches']
+    enforce(cfg, model)
+    cfg.raw['review']['contract_batch_size'] = 6
+    again = run_review(review_case)
+    assert again['fresh_batches'] == 0 and again['reused_batches'] == small['fresh_batches']

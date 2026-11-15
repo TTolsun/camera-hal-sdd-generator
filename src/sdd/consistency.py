@@ -13,7 +13,7 @@ import re
 import yaml
 
 from .call_records import canonical_request_hash
-from .config import section_output
+from .config import section_output, DEFAULT_CONTRACT_BATCH_SIZE
 from .document_metadata import split_frontmatter
 from .state_io import save
 from .trial_workspace import contained_path
@@ -358,7 +358,7 @@ def wire_payload(payload):
     return result
 
 
-def batches(payload, size=6, *, max_input_chars=None):
+def batches(payload, size=DEFAULT_CONTRACT_BATCH_SIZE, *, max_input_chars=None):
     """Split target claims into review batches, keeping claim order.
 
     Boundaries are content-defined, not positional: once a batch holds at least
@@ -507,7 +507,7 @@ def audit(cfg, model, agent):
 
 def _audit(cfg, model, agent, configured):
     prepared = [(group, request(cfg, model, group)) for group in configured]
-    prepared = [(group, payload, list(batches(payload, max_input_chars=cfg.agent.max_input_chars)))
+    prepared = [(group, payload, list(batches(payload, size=cfg.review.contract_batch_size, max_input_chars=cfg.agent.max_input_chars)))
                 for group, payload in prepared]
     keys = [f"consistency_{group['id']}_{index}" for group, _, items in prepared for index in range(len(items))]
     with agent.document('consistency', keys):
@@ -619,7 +619,7 @@ def _enforce_configured(cfg, model, configured, execution):
         validate(payload, json.dumps(dict(findings=row['findings']), ensure_ascii=False), assembled=True)
         checked = []
         origins = []
-        for index, batch in enumerate(batches(payload, max_input_chars=cfg.agent.max_input_chars)):
+        for index, batch in enumerate(batches(payload, size=cfg.review.contract_batch_size, max_input_chars=cfg.agent.max_input_chars)):
             store, request_data = review_store(cfg, batch)
             cached = store.read()
             if cached is None:
