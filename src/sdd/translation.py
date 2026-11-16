@@ -78,9 +78,24 @@ def _validate_text(source, text):
 # "파일:줄 발췌" 라벨은 번역할 문장이 아니라 위치 표기다. 모델에 맡기면 파일 읽기 요청으로 오해해 실패하는 경우가 있어
 # (예: Documentation/introduction.rst:10 발췌) 기존 번역과 같은 형식으로 결정적으로 만든다.
 _LOCATION_LABEL = re.compile(r"^(\S+:\d+) 발췌$")
+# 발췌마다 하나씩 생기는 펼침 제목도 위치 표기다.
+_SOURCE_TITLE = re.compile(r"^소스 근거: (\S+:\d+)$")
+
+
+# 생성기가 모든 발췌·그림에 붙이는 고정 라벨이다. LLM에 맡기면 같은 라벨이 호출마다 다른 영어가 되고
+# 토큰만 쓰므로 결정적으로 만든다.
+_FIXED_LABELS = {
+    '발췌 범위: {{1}}': 'Excerpt range: {{1}}',
+    '소스 연결 해석 · 자동 연결 검사만 통과 · 의미와 기기 실행은 검증 전':
+        'Source-linked interpretation · automatic link check only · meaning and device execution not yet verified',
+}
 
 
 def fixed_translation(source):
+    if source in _FIXED_LABELS:
+        return _FIXED_LABELS[source]
+    if match := _SOURCE_TITLE.match(source):
+        return f"Source evidence: {match[1]}"
     match = _LOCATION_LABEL.match(source)
     return f"{match[1]} excerpt" if match else None
 

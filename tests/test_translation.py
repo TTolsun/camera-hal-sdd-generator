@@ -279,6 +279,26 @@ def test_translation_replay_does_not_adopt_invalid_batch_extra_fields(tmp_cfg, m
     assert len(calls) == before + 1 and replay.replayed_http_calls == 0
 
 
+def test_발췌와_그림_라벨은_줄_번호와_무관하게_번역_키_하나를_결정적으로_번역한다(tmp_cfg):
+    from sdd.contract_render import _source_detail
+    from sdd.facts.model import KnowledgeModel
+    from sdd.site_localization import display_strings
+    from sdd.site_markdown import _render
+    from sdd.translation import fixed_translation
+    from sdd.visuals import VISUAL_SCOPE_LABEL
+    details = '\n\n'.join(_source_detail(dict(file='device.cpp', line=line, end_line=line + 3,
+                                              sha256='a' * 64, text='void stop();'), f'device.cpp:{line}')
+                          for line in (10, 20, 1308))
+    rendered, _, _ = _render(details + '\n\n' + VISUAL_SCOPE_LABEL, 't.md', set(),
+                             KnowledgeModel(meta={'source_commit': 'a' * 40}), '', 'a' * 40)
+    keys = display_strings(rendered)
+    # One range label for every excerpt: end lines no longer create new strings.
+    assert [key for key in keys if '발췌' in key] == ['발췌 범위: {{1}}']
+    assert all(fixed_translation(key) for key in keys), keys
+    assert fixed_translation('소스 근거: device.cpp:1308') == 'Source evidence: device.cpp:1308'
+    assert fixed_translation('소스 근거: 설명 문장') is None
+
+
 def test_파일_줄_발췌_라벨은_모델을_부르지_않고_결정적으로_번역한다(tmp_cfg):
     from sdd.translation import fixed_translation, translate_missing
     assert fixed_translation('Documentation/introduction.rst:10 발췌') == 'Documentation/introduction.rst:10 excerpt'

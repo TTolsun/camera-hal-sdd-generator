@@ -55,6 +55,8 @@ def paragraphs(text):
     # boilerplate is evidence metadata, not an expanding reader explanation.
     # Match only generated lines, retaining any real prose inside a note.
     body = re.sub(r'(?m)^\?\?\? note "소스 근거: [^"\n]+"\s*$', '', body)
+    body = re.sub(r'(?m)^    발췌 범위: `[^`\n]+:\d+-\d+`\s*$', '', body)
+    # Pages generated before the label form keep the older sentence until rebuilt.
     body = re.sub(r'(?m)^    `[^`\n]+:\d+`에서 시작하는 발췌입니다\. '
                   r'종료 줄은 \d+이며, 아래 원문을 설명과 대조할 수 있습니다\.\s*$', '', body)
     body = re.sub(r'(?m)^    SHA-256: `[0-9a-f]{64}`\s*$', '', body)

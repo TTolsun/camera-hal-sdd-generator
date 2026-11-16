@@ -5,6 +5,8 @@ from .design_contracts import enforce
 from .facts.model import KnowledgeModel
 from .markdown_text import slugify
 
+EXCERPT_RANGE_LABEL = "발췌 범위:"
+
 def coverage_table(model: KnowledgeModel, section: dict) -> str:
     report = enforce(model, section)
     topics = {t["id"]: t for t in section["design_topics"]}
@@ -59,8 +61,10 @@ def _source_detail(record: dict, title: str) -> str:
     raw = record["text"]
     fence = "`" * max(3, 1 + max((len(m[0]) for m in re.finditer(r"`+", raw)), default=0))
     title = title.replace('"', "'").replace("\n", " ")
-    body = (f"`{record['file']}:{record['line']}`에서 시작하는 발췌입니다. "
-            f"종료 줄은 {record['end_line']}이며, 아래 원문을 설명과 대조할 수 있습니다.\n\n"
+    # Location metadata is a label, not a sentence: one excerpt per source used
+    # to repeat the same two sentences hundreds of times per site, and the end
+    # line outside a code span made every excerpt a separate translation string.
+    body = (f"{EXCERPT_RANGE_LABEL} `{record['file']}:{record['line']}-{record['end_line']}`\n\n"
             f"SHA-256: `{record['sha256']}`\n\n{fence}text\n{raw}\n{fence}")
     label = '소스 근거'
     if record.get('origin') == 'product-material':
