@@ -308,7 +308,7 @@ def test_발췌와_그림_문장은_원고를_바꾸지_않고_라벨로_표시�
                                                      ' · meaning and device execution not yet verified')
     assert fixed_translation('소스 근거: device.cpp:1308') == 'Source evidence: device.cpp:1308'
     assert fixed_translation('소스 근거: My Docs/a b.cpp:7') == 'Source evidence: My Docs/a b.cpp:7'
-    assert fixed_translation('제품 자료: vendor.pdf:3') == 'Product material: vendor.pdf:3'
+    assert fixed_translation('제품 자료: vendor.pdf:3') == 'Product evidence: vendor.pdf:3'
     assert fixed_translation('소스 근거: 설명 문장') is None
 
 

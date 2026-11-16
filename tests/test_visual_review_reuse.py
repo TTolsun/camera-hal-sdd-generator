@@ -159,3 +159,62 @@ def test_cross_revision_reuse_checks_source_blobs_and_rendered_review_scope(tmp_
             'guide.html#product'} <= set(result['pending'])
     assert result['source_proof']['files'] == [dict(commit=old, path='stable.cpp',
                                                     sha256=hashlib.sha256(b'original\n').hexdigest())]
+
+
+def _note_page(location_line, scope_line, *, source='void stop();', question='누가 요청을 완료합니까?',
+               cite='camera.cpp:10'):
+    return ('<h2 id="stop">정지</h2><p>요청을 취소합니다. <a class="citation" href="#source-1">camera.cpp:10</a></p>'
+            '<h2 id="figure-item">그림</h2>' + FIGURE.replace(
+                '<details class="note"><summary>Figure evidence</summary>',
+                f'<details class="note"><summary>그림 근거와 확인 범위</summary><p>{question}</p><p>{scope_line}</p>')
+            + '<h2 id="evidence">소스 근거</h2><p><a id="source-1"></a></p>'
+            f'<details class="note"><summary>소스 근거: camera.cpp:10</summary>'
+            f'<p>{location_line.format(cite=cite)}</p><p>SHA-256: <code>{"a" * 64}</code></p>'
+            f'<pre id="source-excerpt">{source}</pre></details>')
+
+
+_OLD_LOCATION = '<a class="citation" href="https://example.test/camera.cpp#L10"><code>{cite}</code></a>에서 시작하는 발췌입니다. 종료 줄은 12이며, 아래 원문을 설명과 대조할 수 있습니다.'
+_NEW_LOCATION = '발췌 범위: <a class="citation" href="https://example.test/camera.cpp#L10"><code>{cite}</code></a> ~ <code>12</code>'
+
+
+def _presentation_reuse(before, after):
+    from sdd.reading_cleanup import VISUAL_SCOPE_LABEL, VISUAL_SCOPE_SENTENCE
+    from sdd.visual_review_reuse import normalize_presentation
+    options = policy()
+
+    def items(body, **kwargs):
+        return dict(items=inventory_page(document(body), 'guide.html', options, source_commit='a' * 40, **kwargs),
+                    policy=options, errors=[])
+
+    old = before.replace('{SCOPE}', VISUAL_SCOPE_SENTENCE)
+    new = after.replace('{SCOPE}', VISUAL_SCOPE_LABEL)
+    original = items(old)
+    return carry_reviews(ledger(original), original, items(new), items(old, section_relative=True),
+                         items(new, section_relative=True), baseline_build='old-build', stable_pages={'guide.html'},
+                         presentation=(items(old, comparison_transform=normalize_presentation),
+                                       items(new, comparison_transform=normalize_presentation)))
+
+
+def test_generator_note_label_changes_carry_reviews_with_presentation_provenance():
+    updated, stats = _presentation_reuse(_note_page(_OLD_LOCATION, '{SCOPE}'), _note_page(_NEW_LOCATION, '{SCOPE}'))
+    assert stats['pending'] == [] and stats['presentation_only'] >= 1
+    carried = [row for row in updated['items'].values() if 'presentation_reuse' in row]
+    assert carried and all(row['presentation_reuse']['normalization'] == 'generator-note-labels-v1'
+                           and row['presentation_reuse']['baseline_build_id'] == 'old-build' for row in carried)
+
+
+@pytest.mark.parametrize(('field', 'value'), [
+    ('source', 'void start();'),
+    ('question', '누가 요청을 시작합니까?'),
+    ('cite', 'camera.cpp:11'),
+])
+def test_note_normalization_never_hides_excerpt_figure_or_citation_changes(field, value):
+    _, stats = _presentation_reuse(_note_page(_OLD_LOCATION, '{SCOPE}'),
+                                   _note_page(_NEW_LOCATION, '{SCOPE}', **{field: value}))
+    assert stats['pending'], field
+
+
+def test_unknown_korean_scope_wording_is_not_normalized():
+    _, stats = _presentation_reuse(_note_page(_OLD_LOCATION, '{SCOPE}'),
+                                   _note_page(_OLD_LOCATION, '사람이 의미를 승인했습니다.'))
+    assert stats['pending']
