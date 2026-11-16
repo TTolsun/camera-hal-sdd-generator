@@ -80,7 +80,8 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
     md = markdown.Markdown(extensions=["tables", "toc", "attr_list", "pymdownx.details", "pymdownx.superfences"],
                            extension_configs={"toc": {"slugify": slug}, "pymdownx.superfences": {"custom_fences": [
                                {"name": "mermaid", "class": "mermaid", "format": _mermaid_fence}]}})
-    rendered = md.convert(body)
+    from .reading_cleanup import label_boilerplate
+    rendered = md.convert(label_boilerplate(body))
 
     def link(match: re.Match) -> str:
         href = html.unescape(match[1])

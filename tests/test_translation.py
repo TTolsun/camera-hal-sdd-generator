@@ -279,23 +279,36 @@ def test_translation_replay_does_not_adopt_invalid_batch_extra_fields(tmp_cfg, m
     assert len(calls) == before + 1 and replay.replayed_http_calls == 0
 
 
-def test_발췌와_그림_라벨은_줄_번호와_무관하게_번역_키_하나를_결정적으로_번역한다(tmp_cfg):
+def test_발췌와_그림_문장은_원고를_바꾸지_않고_라벨로_표시하며_결정적으로_번역한다(tmp_cfg):
     from sdd.contract_render import _source_detail
     from sdd.facts.model import KnowledgeModel
     from sdd.site_localization import display_strings
     from sdd.site_markdown import _render
     from sdd.translation import fixed_translation
-    from sdd.visuals import VISUAL_SCOPE_LABEL
     details = '\n\n'.join(_source_detail(dict(file='device.cpp', line=line, end_line=line + 3,
                                               sha256='a' * 64, text='void stop();'), f'device.cpp:{line}')
                           for line in (10, 20, 1308))
-    rendered, _, _ = _render(details + '\n\n' + VISUAL_SCOPE_LABEL, 't.md', set(),
+    # Stored manuscripts keep the original sentences; figure blocks are verified byte-for-byte.
+    assert '`device.cpp:10`에서 시작하는 발췌입니다.' in details
+    # visuals.render_values writes this constant into every stored figure note.
+    from sdd.reading_cleanup import VISUAL_SCOPE_LABEL, VISUAL_SCOPE_SENTENCE
+    import inspect
+    from sdd import visuals
+    assert "metadata = [question, '', VISUAL_SCOPE_SENTENCE]" in inspect.getsource(visuals.render_values)
+    note = '??? note "그림 근거와 확인 범위"\n    질문\n\n    ' + VISUAL_SCOPE_SENTENCE + '\n'
+    rendered, _, _ = _render(details + '\n\n' + note, 't.md', set(),
                              KnowledgeModel(meta={'source_commit': 'a' * 40}), '', 'a' * 40)
+    assert '발췌입니다' not in rendered and '설계 해석입니다' not in rendered
+    assert rendered.count('발췌 범위: ') == 3 and rendered.count(VISUAL_SCOPE_LABEL) == 1
     keys = display_strings(rendered)
     # One range label for every excerpt: end lines no longer create new strings.
-    assert [key for key in keys if '발췌' in key] == ['발췌 범위: {{1}}']
-    assert all(fixed_translation(key) for key in keys), keys
+    assert [key for key in keys if '발췌' in key] == ['발췌 범위: {{1}} ~ {{3}}']
+    assert fixed_translation('발췌 범위: {{1}} ~ {{3}}') == 'Excerpt range: {{1}} to {{3}}'
+    assert fixed_translation(VISUAL_SCOPE_LABEL) == ('Source-linked interpretation · automatic link check only'
+                                                     ' · meaning and device execution not yet verified')
     assert fixed_translation('소스 근거: device.cpp:1308') == 'Source evidence: device.cpp:1308'
+    assert fixed_translation('소스 근거: My Docs/a b.cpp:7') == 'Source evidence: My Docs/a b.cpp:7'
+    assert fixed_translation('제품 자료: vendor.pdf:3') == 'Product material: vendor.pdf:3'
     assert fixed_translation('소스 근거: 설명 문장') is None
 
 

@@ -20,10 +20,7 @@ import yaml
 from .config import section_output
 from .source_links import source_link_template
 from .validation_stage import load_yaml
-
-# Automatic link checks are not semantic approval or device validation; keep
-# that boundary visible in every diagram note without repeating a sentence.
-VISUAL_SCOPE_LABEL = '소스 연결 해석 · 자동 연결 검사만 통과 · 의미와 기기 실행은 검증 전'
+from .reading_cleanup import VISUAL_SCOPE_SENTENCE
 
 
 class StaleVisualEvidence(ValueError):
@@ -307,8 +304,7 @@ def render_values(cfg, model, section, values):
         rows.insert(1, '%% sdd:translations ' + json.dumps(translations, ensure_ascii=False, sort_keys=True))
         source = '\n'.join(rows)
         proof = ['| 요소·전이 | 소스 근거 |', '|---|---|'] + proof
-        # Status label, not a repeated sentence: every diagram note carries it.
-        metadata = [question, '', VISUAL_SCOPE_LABEL]
+        metadata = [question, '', VISUAL_SCOPE_SENTENCE]
         if visual.get('producer'):
             producer = _text(visual['producer'], 'producer')
             metadata += ['', 'LLM 그림 초안 · 사람 검토 전', '', '작성 모델: `' + html.escape(producer) + '`']

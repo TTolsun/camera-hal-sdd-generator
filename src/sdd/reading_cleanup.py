@@ -9,6 +9,29 @@ from html.parser import HTMLParser
 from urllib.parse import quote
 
 
+# Manuscripts store these generated sentences byte-for-byte, and figure blocks
+# are verified against a fresh rendering, so the stored text must not change.
+# Readers see them once per excerpt or figure, hundreds of times per site, so
+# the page shows the same information as a short label instead. Code spans
+# keep the location linkable and keep one translation string for every excerpt.
+_EXCERPT_SENTENCE = re.compile(
+    r'(?m)^([ \t]*)`([^`\n]+:\d+)`에서 시작하는 발췌입니다\. '
+    r'종료 줄은 (\d+)이며, 아래 원문을 설명과 대조할 수 있습니다\.[ \t]*$')
+# visuals.py writes this exact sentence into every stored figure note.
+VISUAL_SCOPE_SENTENCE = '소스에 연결한 설계 해석입니다. 자동 연결 검사는 의미 승인이나 기기 실행 검증이 아닙니다.'
+_VISUAL_SCOPE_LINE = re.compile(r'(?m)^([ \t]*)' + re.escape(VISUAL_SCOPE_SENTENCE) + r'[ \t]*$')
+EXCERPT_RANGE_LABEL = '발췌 범위:'
+# Automatic link checks are not semantic approval or device validation.
+VISUAL_SCOPE_LABEL = '소스 연결 해석 · 자동 연결 검사만 통과 · 의미와 기기 실행은 검증 전'
+
+
+def label_boilerplate(markdown_text: str) -> str:
+    """Show generated excerpt and figure-scope sentences as labels."""
+    markdown_text = _EXCERPT_SENTENCE.sub(
+        lambda m: f'{m[1]}{EXCERPT_RANGE_LABEL} `{m[2]}` ~ `{m[3]}`', markdown_text)
+    return _VISUAL_SCOPE_LINE.sub(lambda m: m[1] + VISUAL_SCOPE_LABEL, markdown_text)
+
+
 def fold_scope_notices(document: str) -> str:
     """Retain generated virtual-test scope once, with links to every scoped H2.
 

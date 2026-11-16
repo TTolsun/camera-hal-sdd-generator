@@ -154,11 +154,6 @@ def test_scoped_source_inspectors_do_not_count_as_prose_growth(tmp_cfg, sample_m
     page(tmp_cfg, body=text + '\n\n' + details)
     assert health.paragraphs((tmp_cfg.sdd_dir/'overview.md').read_text(encoding='utf-8')) == [text]
     assert health.audit(tmp_cfg)['status'] == 'ok'
-    # Pages built with the older sentence form stay excluded until rebuilt.
-    legacy = ('??? note "소스 근거: device.cpp:3"\n    `device.cpp:3`에서 시작하는 발췌입니다. '
-              '종료 줄은 4이며, 아래 원문을 설명과 대조할 수 있습니다.\n\n    SHA-256: `' + 'a' * 64 + '`')
-    page(tmp_cfg, body=text + '\n\n' + legacy)
-    assert health.paragraphs((tmp_cfg.sdd_dir/'overview.md').read_text(encoding='utf-8')) == [text]
     # Extra prose and total artifact size remain checked.
     page(tmp_cfg, body=text + '\n\n' + details + '\n\n    Real explanation. ' * 200)
     assert 'page-growth' in rules(health.audit(tmp_cfg))
