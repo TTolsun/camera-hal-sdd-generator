@@ -20,6 +20,7 @@ import yaml
 from .config import section_output
 from .source_links import source_link_template
 from .validation_stage import load_yaml
+from .reading_cleanup import VISUAL_SCOPE_SENTENCE
 
 
 class StaleVisualEvidence(ValueError):
@@ -303,7 +304,7 @@ def render_values(cfg, model, section, values):
         rows.insert(1, '%% sdd:translations ' + json.dumps(translations, ensure_ascii=False, sort_keys=True))
         source = '\n'.join(rows)
         proof = ['| 요소·전이 | 소스 근거 |', '|---|---|'] + proof
-        metadata = [question, '', '소스에 연결한 설계 해석입니다. 자동 연결 검사는 의미 승인이나 기기 실행 검증이 아닙니다.']
+        metadata = [question, '', VISUAL_SCOPE_SENTENCE]
         if visual.get('producer'):
             producer = _text(visual['producer'], 'producer')
             metadata += ['', 'LLM 그림 초안 · 사람 검토 전', '', '작성 모델: `' + html.escape(producer) + '`']
