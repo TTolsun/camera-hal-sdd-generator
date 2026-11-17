@@ -11,8 +11,95 @@ from .site_build import MANIFEST, verify_site
 from .site_paths import owned_path
 from .validation_stage import load_json
 from .visual_audit import (
-    Document, REPORT, all_nodes, apply_reviews, canonical, enforce, inspect_site, policy,
+    Document, Node, REPORT, all_nodes, apply_reviews, canonical, enforce, inspect_site, policy,
 )
+
+# Generator-owned lines inside source-excerpt and diagram notes. Their wording
+# changes with site presentation and with each translation, never with an
+# item's explanation, figure or source. Comparing them would send every item
+# with an excerpt back to review after a pure label change.
+#
+# A line is normalized only when its complete text is one of the exact forms
+# the generator (Korean) or that build's English catalog (English) produces.
+# The excerpt start citation and end line are kept in the normalized token,
+# so a changed range, added prose or edited translation still differs.
+PRESENTATION_NORMALIZATION = 'generator-note-labels-v2'
+_EXCERPT_TITLES = {'소스 근거: ': 'source', 'Source evidence: ': 'source', '제품 자료: ': 'product',
+                   'Product evidence: ': 'product', 'Product material: ': 'product'}
+_SCOPE_TITLES = {'그림 근거와 확인 범위', 'Diagram evidence and verification scope'}
+_LEGACY_EXCERPT_KEY = '{{0}}에서 시작하는 발췌입니다. 종료 줄은 {end}이며, 아래 원문을 설명과 대조할 수 있습니다.'
+_RANGE_KEY = '발췌 범위: {{1}} ~ {{3}}'
+
+
+def _excerpt_end(text, location, english, catalog):
+    """End line of an exact generated location line, or None."""
+    import re
+    from .reading_cleanup import EXCERPT_RANGE_LABEL
+    from .translation import fixed_translation
+    if not english:
+        for pattern in (re.escape(location) + r'에서 시작하는 발췌입니다\. 종료 줄은 (\d+)이며, '
+                                              r'아래 원문을 설명과 대조할 수 있습니다\.',
+                        re.escape(EXCERPT_RANGE_LABEL) + ' ' + re.escape(location) + r' ~ (\d+)'):
+            if match := re.fullmatch(pattern, text):
+                return match[1]
+        return None
+    for end in sorted(set(re.findall(r'\d+', text))):
+        legacy = catalog.get(_LEGACY_EXCERPT_KEY.replace('{end}', end))
+        if legacy and legacy.replace('{{0}}', location) == text:
+            return end
+        label = catalog.get(_RANGE_KEY) or fixed_translation(_RANGE_KEY)
+        if label and label.replace('{{1}}', location).replace('{{3}}', end) == text:
+            return end
+    return None
+
+
+def _scope_lines(english, catalog):
+    from .reading_cleanup import VISUAL_SCOPE_LABEL, VISUAL_SCOPE_SENTENCE
+    from .translation import fixed_translation
+    if not english:
+        return {VISUAL_SCOPE_SENTENCE, VISUAL_SCOPE_LABEL}
+    return {value for value in (catalog.get(VISUAL_SCOPE_SENTENCE), catalog.get(VISUAL_SCOPE_LABEL),
+                                fixed_translation(VISUAL_SCOPE_LABEL)) if value}
+
+
+def presentation_normalizer(catalog=None):
+    """Comparison transform; ``catalog`` is the English catalog the site was built with."""
+    strings = (catalog or {}).get('strings', {})
+
+    def normalize(document, page, root=None):
+        english = page.startswith('en/')
+        if english and not strings:
+            return  # Without the build's catalog no English line can be proved generated.
+        scope_lines = _scope_lines(english, strings)
+        for details in document.root.all('details'):
+            if 'note' not in details.attrs.get('class', '').split():
+                continue
+            nodes = [child for child in details.children if isinstance(child, Node)]
+            if not nodes or nodes[0].tag != 'summary':
+                continue
+            title = nodes[0].text().strip()
+            paragraphs = [node for node in nodes[1:] if node.tag == 'p']
+            prefix = next((p for p in _EXCERPT_TITLES if title.startswith(p)), None)
+            if prefix is not None:
+                location = title[len(prefix):]
+                # Product material puts a provenance notice before the location line.
+                for line in paragraphs[:2]:
+                    cited = [child for child in line.children if isinstance(child, Node)
+                             and any(code.text() == location
+                                     for code in ([child] if child.tag == 'code' else list(child.all('code'))))]
+                    end = _excerpt_end(line.text().strip(), location, english, strings) if len(cited) == 1 else None
+                    if end is not None:
+                        line.children = ['[excerpt location] ', cited[0], f' [end {end}]']
+                        nodes[0].children = [f'[{_EXCERPT_TITLES[prefix]} excerpt] {location}']
+                        break
+            elif title in _SCOPE_TITLES and len(paragraphs) >= 2 and paragraphs[1].text().strip() in scope_lines:
+                paragraphs[1].children = ['[diagram scope]']
+
+    return normalize
+
+
+# Korean-only comparison, for callers without an English catalog.
+normalize_presentation = presentation_normalizer()
 
 
 def indexed(report):
@@ -20,14 +107,23 @@ def indexed(report):
 
 
 def carry_reviews(ledger, previous, current, previous_relative, current_relative, *, baseline_build, stable_pages,
-                  source_proof=None, trace_proofs=None):
+                  source_proof=None, trace_proofs=None, presentation=None):
     before, after = indexed(previous), indexed(current)
     relative_before, relative_after = indexed(previous_relative), indexed(current_relative)
+    labeled_before, labeled_after = (indexed(presentation[0]), indexed(presentation[1])) if presentation else ({}, {})
+
+    def label_only(key):
+        """The same absolute item once generator note labels are normalized on both sides."""
+        old, new = labeled_before.get(key), labeled_after.get(key)
+        return (old is not None and new is not None and before[key]['fingerprint'] != after[key]['fingerprint']
+                and old['fingerprint'] == new['fingerprint'])
 
     def equivalent(key):
         old, new = before.get(key), after.get(key)
         if old is None or new is None or new['page'] not in stable_pages:
             return False
+        if source_proof is None and label_only(key):
+            return True
         if source_proof is not None:
             return (key in trace_proofs and key in relative_before and key in relative_after
                     and relative_before[key]['fingerprint'] == relative_after[key]['fingerprint'])
@@ -48,6 +144,10 @@ def carry_reviews(ledger, previous, current, previous_relative, current_relative
         candidate = {**record, 'fingerprint': new['fingerprint']}
         if adjacent:
             candidate['adjacent_fingerprint'] = after[adjacent]['fingerprint']
+        if old['fingerprint'] != new['fingerprint']:
+            # Provenance describes this carry; an earlier carry's method no longer applies.
+            for field in ('presentation_reuse', 'position_reuse', 'source_reuse'):
+                candidate.pop(field, None)
         if source_proof is not None:
             candidate['source_reuse'] = dict(
                 schema=1, baseline_build_id=baseline_build,
@@ -57,7 +157,14 @@ def carry_reviews(ledger, previous, current, previous_relative, current_relative
             )
             if adjacent:
                 candidate['source_reuse']['adjacent_comparison_fingerprint'] = relative_after[adjacent]['fingerprint']
-        elif record != candidate:
+        elif label_only(key):
+            candidate['presentation_reuse'] = dict(
+                schema=1, baseline_build_id=baseline_build, normalization=PRESENTATION_NORMALIZATION,
+                previous_fingerprint=old['fingerprint'], normalized_fingerprint=labeled_after[key]['fingerprint'],
+            )
+            if adjacent:
+                candidate['presentation_reuse']['adjacent_normalized_fingerprint'] = labeled_after[adjacent]['fingerprint']
+        elif old['fingerprint'] != new['fingerprint']:
             candidate['position_reuse'] = dict(
                 schema=1, baseline_build_id=baseline_build,
                 previous_fingerprint=old['fingerprint'],
@@ -74,12 +181,16 @@ def carry_reviews(ledger, previous, current, previous_relative, current_relative
         if after[key]['status'] != candidate['status']:
             del kept[key]
             continue
-        method = 'source_revision' if source_proof is not None else 'position_only' if candidate != ledger['items'][key] else 'exact'
+        # Decide from this run's comparison, never from provenance copied out of the ledger.
+        method = ('source_revision' if source_proof is not None
+                  else 'exact' if before[key]['fingerprint'] == after[key]['fingerprint']
+                  else 'presentation_only' if label_only(key) else 'position_only')
         counts[method] += 1
     pending = sorted(set(after) - set(kept))
     return {**ledger, 'items': kept}, dict(
         baseline_build_id=baseline_build, exact=counts['exact'], position_only=counts['position_only'],
-        source_revision=counts['source_revision'], pending=pending, deleted=sorted(set(before) - set(after)),
+        presentation_only=counts['presentation_only'], source_revision=counts['source_revision'],
+        pending=pending, deleted=sorted(set(before) - set(after)),
     )
 
 
@@ -90,9 +201,22 @@ def presentation_environment(root, page):
             if node.tag in {'html', 'body', 'base', 'style', 'script', 'link'}]
 
 
-def reuse_published(baseline, current, reviews, options, *, source_commit, source_root=None, source_settings=None):
+def _catalog(path, manifest, side):
+    """The English catalog a site was built with, proved by its manifest input."""
+    if path is None:
+        return None
+    data = Path(path).read_bytes()
+    if hashlib.sha256(data).hexdigest() != manifest.get('inputs', {}).get('english_catalog'):
+        raise ValueError(f'{side} English catalog does not match its site manifest')
+    return json.loads(data)
+
+
+def reuse_published(baseline, current, reviews, options, *, source_commit, source_root=None, source_settings=None,
+                    baseline_catalog=None, current_catalog=None):
     previous_manifest = load_json(baseline / MANIFEST)
     current_manifest = load_json(current / MANIFEST)
+    catalogs = (_catalog(baseline_catalog, previous_manifest, 'Baseline'),
+                _catalog(current_catalog, current_manifest, 'Current'))
     verify_site(baseline)
     verify_site(current)
     if hashlib.sha256(reviews.read_bytes()).hexdigest() != previous_manifest['inputs'].get('item_visual_reviews'):
@@ -150,10 +274,20 @@ def reuse_published(baseline, current, reviews, options, *, source_commit, sourc
                 if checked is not None:
                     traces[key] = checked
 
+    # Presentation normalization is not combined with a source revision: both
+    # changing at once leaves the item pending, the conservative outcome.
+    presentation = None
+    if source_proof is None:
+        def labeled(root, manifest, catalog):
+            selected = {'outputs': {page: manifest['outputs'][page] for page in moved_pages}}
+            return inspect_site(root, options, manifest=selected, source_commit=source_commit,
+                                comparison_transform=presentation_normalizer(catalog))
+        presentation = (labeled(baseline, previous_manifest, catalogs[0]),
+                        labeled(current, current_manifest, catalogs[1]))
     updated, report = carry_reviews(ledger, published, new, comparison_report(baseline, previous_manifest, previous_commit),
                                    comparison_report(current, current_manifest, source_commit),
                                    baseline_build=previous_manifest['build_id'], stable_pages=stable_pages,
-                                   source_proof=source_proof, trace_proofs=traces)
+                                   source_proof=source_proof, trace_proofs=traces, presentation=presentation)
     if source_proof is not None:
         report['source_proof'] = dict(previous_commit=previous_commit, current_commit=source_commit,
             files=[dict(commit=commit, path=path, sha256=checksum)
@@ -169,12 +303,17 @@ def main():
     parser.add_argument('--source-commit', required=True)
     parser.add_argument('--reviews', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--baseline-catalog', type=Path,
+                        help='English catalog the baseline site was built with (checked against its manifest)')
+    parser.add_argument('--current-catalog', type=Path,
+                        help='English catalog the current site was built with (checked against its manifest)')
     args = parser.parse_args()
     from .config import load
     cfg = load(args.config)
     ledger, report = reuse_published(args.baseline, args.site, args.reviews, policy(cfg),
                                     source_commit=args.source_commit, source_root=cfg.source_root,
-                                    source_settings=cfg.site)
+                                    source_settings=cfg.site, baseline_catalog=args.baseline_catalog,
+                                    current_catalog=args.current_catalog)
     args.out.write_text(json.dumps(ledger, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(report, ensure_ascii=False, indent=2))
 

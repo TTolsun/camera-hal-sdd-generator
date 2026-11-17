@@ -842,7 +842,7 @@ def apply_reviews(report, reviews):
             row.update({k: record[k] for k in ('status', 'reason', 'question', 'source_windows', 'unreviewed_scope')})
             row['reviewed_figures'] = record.get('figures', [])
             row['review_method'] = record.get('review_method', 'editorial-record')
-            for key in ('adjacent_item', 'adjacent_fingerprint', 'position_reuse', 'source_reuse'):
+            for key in ('adjacent_item', 'adjacent_fingerprint', 'position_reuse', 'source_reuse', 'presentation_reuse'):
                 if key in record:
                     row[key] = record[key]
     peers = {}
