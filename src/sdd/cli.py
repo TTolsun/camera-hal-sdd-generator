@@ -352,6 +352,15 @@ def cmd_export_site(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_replay(args: argparse.Namespace) -> int:
+    from .replay import replay, summary
+    report = replay(_cfg(args), Path(args.baseline), Path(args.out))
+    for line in summary(report):
+        print(line)
+    print(f"-> {Path(args.out).resolve() / 'replay.json'}")
+    return 2 if report["model_work_required"] else 0
+
+
 def cmd_audit_docs(args: argparse.Namespace) -> int:
     from .document_health import audit
     cfg = _cfg(args)
@@ -528,6 +537,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--out", help="출력 디렉터리 (기본: build/site)")
     s.add_argument("--mermaid", help="Mermaid ESM URL 또는 사이트 루트 기준 로컬 경로")
     s.set_defaults(fn=cmd_export_site)
+
+    s = sub.add_parser("replay", help="게시된 입력을 현재 생성기로 다시 빌드해 다시 할 모델 작업을 센다")
+    s.add_argument("--baseline", required=True, help="직전 게시 사이트 디렉터리 (site-manifest.json 포함)")
+    s.add_argument("--out", required=True, help="새로 만들 결과 디렉터리")
+    s.set_defaults(fn=cmd_replay)
 
     s = sub.add_parser("verify-site", help="사이트 산출물 해시와 내부 링크를 검사한다")
     s.add_argument("--out", help="검사할 사이트 디렉터리 (기본: build/site)")
