@@ -11,7 +11,7 @@ contracts:
   primary: request-lifecycle.md
   documents: [vendor-overview.md, onboarding.md, vendor-integration.md, overview.md, pipeline-handler.md, request-lifecycle.md, camera-requests.md, pipeline-requests.md, request-diagnosis.md, scenarios/queue_request.md]
   match: 'stop(?:Device)?|Stopping|취소|cancelRequest'
-  evidence: [vendor-integration/shutdown/stop, vendor-integration/shutdown/device, request-lifecycle/resources/cancel-rules, request-lifecycle/journey/completion, vendor-overview/benefits/completion, request-lifecycle/stopping/stop, request-lifecycle/stopping/disconnect-internal, request-lifecycle/stopping/disconnect-todo-owner]
+  evidence: [vendor-integration/shutdown/stop, vendor-integration/shutdown/device, request-lifecycle/resources/cancel-rules, request-lifecycle/journey/completion, vendor-overview/benefits/completion, request-lifecycle/stopping/stop, request-lifecycle/stopping/disconnect-internal, request-lifecycle/stopping/disconnect-todo-owner, request-lifecycle/stop-depth/streamoff, request-lifecycle/stop-depth/uvc-stop, request-lifecycle/uvc-depth/uvc-wiring, request-lifecycle/uvc-depth/uvc-ready]
 - id: ownership-reuse
   question: 생성된 Request의 소유자·삭제 책임, 완료 통지 전후 접근·재사용의 조건과 금지 범위가 문서와 언어판 사이에서 같은지 확인하세요.
   primary: request-lifecycle.md

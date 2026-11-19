@@ -176,6 +176,25 @@ def _caption(cfg, model, section, value):
             +' · '.join(dict.fromkeys(links))+'\n\n')
 
 
+def _branch_table(cfg, model, section, nodes, edges):
+    """Read the decision graph one observation at a time, with links to the source."""
+    def cell(ko, en):
+        return ('<span data-sdd-label-en="' + html.escape(en, quote=True) + '">'
+                + html.escape(ko) + '</span>').replace('|', '&#124;')
+
+    headers = [cell('현재 확인 지점', 'Current check'), cell('관찰 결과', 'Observation'),
+               cell('다음 확인 지점', 'Next check')]
+    rows = ['| ' + ' | '.join(headers) + ' |', '|---|---|---|']
+    by_id = {node['id']: node for node in nodes}
+    for edge in edges:
+        start, end = by_id[edge['from']], by_id[edge['to']]
+        action = _caption(cfg, model, section, dict(text=end['label'], text_en=end['label_en'],
+                          evidence=edge['evidence'] + end['evidence'])).strip().replace('|', '&#124;')
+        cells = [cell(start['label'], start['label_en']), cell(edge['label'], edge['label_en']), action]
+        rows.append('| ' + ' | '.join(cells) + ' |')
+    return '\n'.join(rows) + '\n\n'
+
+
 def render_values(cfg, model, section, values):
     if not values:
         return []
@@ -194,8 +213,10 @@ def render_values(cfg, model, section, values):
         if ident in seen:
             raise ValueError('Duplicate visual ID')
         seen.add(ident)
-        if set(visual) - {'id', 'topic', 'stage', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display', 'caption'}:
+        if set(visual) - {'id', 'topic', 'stage', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display', 'caption', 'branch_table'}:
             raise ValueError('Unknown visual setting')
+        if not isinstance(visual.get('branch_table', False), bool):
+            raise ValueError('Visual branch_table must be boolean')
         if visual.get('condition_display','inline') not in ('inline','evidence'):
             raise ValueError('Visual condition_display must be inline or evidence')
         if visual.get('kind') not in {'state', 'flow', 'ownership', 'decision'} or visual.get('topic') not in topics:
@@ -310,8 +331,9 @@ def render_values(cfg, model, section, values):
             metadata += ['', 'LLM 그림 초안 · 사람 검토 전', '', '작성 모델: `' + html.escape(producer) + '`']
         note = '??? note "그림 근거와 확인 범위"\n' + '\n'.join('    ' + line for line in [*metadata, '', *proof])
         download = PurePosixPath(section_output(section)).stem + '.' + ident + '.mmd'
+        table = _branch_table(cfg, model, section, nodes, edges) if visual.get('branch_table') else ''
         block = (f'<!-- sdd:visual:{ident} -->\n{title_prefix}{title}\n\n'
-                 f'```mermaid\n{source}\n```\n\n{caption}[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
+                 f'```mermaid\n{source}\n```\n\n{caption}{table}[Mermaid 원문]({download})\n\n{note}\n<!-- /sdd:visual:{ident} -->')
         result.append((visual, block, source))
     return result
 

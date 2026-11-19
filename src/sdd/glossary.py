@@ -102,6 +102,9 @@ def prose(markdown: str) -> str:
     text = "\n".join(line for line in text.splitlines()
                      if not re.match(r"( {4}|\t)", line) or re.match(r"\s*([-*+]|\d+\.)\s+\S", line))
     text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+    # Source URLs and English alternatives live in generated HTML attributes.
+    # Keep their visible link/label text when scanning the Korean manuscript.
+    text = re.sub(r'<(?:a data-sdd-caption-source|span data-sdd-label-en)="[^"]*"[^>]*>', '', text)
     text = re.sub(r"`[^`\n]*`", " ", text)
     text = re.sub(r"\]\([^)]*\)", "]", text)
     return re.sub(r"\{[#.][^}]*\}", "", text)
