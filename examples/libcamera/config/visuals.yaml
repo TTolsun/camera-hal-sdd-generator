@@ -1698,8 +1698,11 @@ sections:
         sha256: 9f2abbe8924d827817b713327c79f1969027ab7e97185060e6b98970b169c689
     - id: baseline
       shape: box
-      label: 연결 해제가 관찰되지 않았다면 이 기록을 기준 촬영으로 표시한다.
-      label_en: If no disconnect was observed, mark this record as a reference capture.
+      label: '기준 촬영: 이 카메라의 해당 구간 전체에서 연결 해제 관찰이 활성화되어 있고 이벤트 유실이 없는지 확인한다. 관찰 범위가 완전하고 연결 해제 이벤트가 없는 일반 촬영만
+        기준으로 기록한다. 관찰 범위가 불완전하거나 이벤트가 유실되면 연결 해제 여부는 미확인으로 둔다.'
+      label_en: 'Reference capture: Verify that the disconnect observer was active for this camera throughout
+        the relevant interval with no lost events. Record an ordinary capture as a reference only if coverage
+        is complete and no disconnect event occurred; otherwise, disconnect status remains unknown.'
       evidence:
       - *uvcObservation004
       - *uvcObservation005
@@ -1841,9 +1844,9 @@ sections:
       - *uvcObservation006
     - from: head
       to: gap
-      label: 다른 req가 전달되었거나 전달 여부를 알 수 없음 또는 관찰하지 못함. 요청별 추적 범위를 확인
-      label_en: A different req was forwarded, or forwarding is unknown or unobserved. Check per-request trace
-        coverage
+      label: 다른 req가 전달되었다면 ID를 기록하고 대상 req의 이후 큐 헤드 반복을 추적한다. 전달 여부를 알 수 없으면 추적 범위를 확인한다.
+      label_en: If a different req was forwarded, record its ID and follow subsequent queue-head iterations
+        for the target req. If forwarding is unknown, inspect trace coverage.
       evidence:
       - *uvcObservation008
       - *uvcObservation006
