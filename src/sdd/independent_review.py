@@ -1,5 +1,6 @@
 """Reuse validated independent verdicts for the exact same question input."""
 from .call_records import canonical_request_hash
+from .change_review import change_review_instructions
 from .cli_checkpoint import Capture, UnitStore, execution_identity
 from .cli_schema import validate_original
 
@@ -8,10 +9,14 @@ def review_workspace(cfg):
     return cfg.build_dir / 'review-prompts'
 
 
-def review_unit(cfg, execution, key, request, validate, *, policy):
+def review_unit(cfg, execution, key, request, validate, *, policy, change_sources=None):
     """Return the current verdict and its original native receipt provenance."""
     if cfg.agent.kind != 'cli' or not cfg.agent.model:
         raise ValueError('Independent review requires a selected CLI and explicit model')
+    if change_sources is not None:
+        prefix = change_review_instructions(*change_sources)
+        if prefix:
+            request = dict(request, user=prefix + '\n' + request['user'])
     schema = request['response_schema']
     identity = dict(purpose='independent-question-review', policy=policy, request=request,
                     execution=execution_identity(cfg.agent, schema))
