@@ -1,0 +1,145 @@
+{
+  "scope": "camera.cpp, request.cpp, pipeline_handler.cpp; UVC configuration, static only",
+  "normalized_compiler_inputs_sha256": "397568001f5db51ac46ddf6abd9da6ad6e80392808e990459f3f223a3f92d63b",
+  "model_inputs": "Git blob verified function excerpts; extracted call graphs independently corroborate the compiled source scope",
+  "builds": [
+    {
+      "source": "517b863bae2db2dd0c56366119318d6b2fb9ad52",
+      "facts_sha256": "402d42e1d14215d22df763c50b5b2c4680d57ed52287eedf20d4ee65cdbd1a68",
+      "translation_units": 3,
+      "parse_errors": 0,
+      "callgraph": {
+        "functions": 484,
+        "scenarios": 2,
+        "missing_entries": 0
+      },
+      "entries": [
+        "stop",
+        "pipeline_stop"
+      ],
+      "direct_stop_calls": [
+        {
+          "name": "_d",
+          "line": 372
+        },
+        {
+          "name": "stopDevice",
+          "line": 377
+        },
+        {
+          "name": "cancelRequest",
+          "line": 383
+        },
+        {
+          "name": "stream",
+          "line": 387
+        },
+        {
+          "name": "stream",
+          "line": 388
+        }
+      ],
+      "cpp_compiler": "c++ (gcc 15.2.0 \"c++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0\")",
+      "compile_commands": [
+        {
+          "file": "../src/libcamera/camera.cpp",
+          "directory": "<source>/out",
+          "command": "c++ -Isrc/libcamera/libcamera.so.0.5.2.p -Isrc/libcamera -I../src/libcamera -Iinclude -I../include -Iinclude/libcamera -Iinclude/libcamera/ipa -Iinclude/libcamera/internal -I/usr/include/p11-kit-1 -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=c++17 -O0 -g -Wnon-virtual-dtor -Wno-redundant-move -Wmissing-declarations -Wshadow -include <source>/out/config.h -fPIC -DLIBCAMERA_BASE_PRIVATE -MD -MQ src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o -MF src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o.d -o src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o -c ../src/libcamera/camera.cpp"
+        },
+        {
+          "file": "../src/libcamera/pipeline_handler.cpp",
+          "directory": "<source>/out",
+          "command": "c++ -Isrc/libcamera/libcamera.so.0.5.2.p -Isrc/libcamera -I../src/libcamera -Iinclude -I../include -Iinclude/libcamera -Iinclude/libcamera/ipa -Iinclude/libcamera/internal -I/usr/include/p11-kit-1 -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=c++17 -O0 -g -Wnon-virtual-dtor -Wno-redundant-move -Wmissing-declarations -Wshadow -include <source>/out/config.h -fPIC -DLIBCAMERA_BASE_PRIVATE -MD -MQ src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o -MF src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o.d -o src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o -c ../src/libcamera/pipeline_handler.cpp"
+        },
+        {
+          "file": "../src/libcamera/request.cpp",
+          "directory": "<source>/out",
+          "command": "c++ -Isrc/libcamera/libcamera.so.0.5.2.p -Isrc/libcamera -I../src/libcamera -Iinclude -I../include -Iinclude/libcamera -Iinclude/libcamera/ipa -Iinclude/libcamera/internal -I/usr/include/p11-kit-1 -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=c++17 -O0 -g -Wnon-virtual-dtor -Wno-redundant-move -Wmissing-declarations -Wshadow -include <source>/out/config.h -fPIC -DLIBCAMERA_BASE_PRIVATE -MD -MQ src/libcamera/libcamera.so.0.5.2.p/request.cpp.o -MF src/libcamera/libcamera.so.0.5.2.p/request.cpp.o.d -o src/libcamera/libcamera.so.0.5.2.p/request.cpp.o -c ../src/libcamera/request.cpp"
+        }
+      ],
+      "ninja_targets": [
+        "src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o",
+        "src/libcamera/libcamera.so.0.5.2.p/request.cpp.o",
+        "src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o"
+      ],
+      "ninja_log_evidence": [
+        "[10/12] Compiling C++ object src/libcamera/libcamera.so.0.5.2.p/request.cpp.o",
+        "[11/12] Compiling C++ object src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o",
+        "[12/12] Compiling C++ object src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o"
+      ],
+      "ninja_exit_code": 0,
+      "exit_evidence": "set -euo pipefail; ninja -C <source>/out -j3 with all three targets returned before the per-revision success marker; the two-revision script exited 0"
+    },
+    {
+      "source": "731a340c8064843075cb9a41e22908eadadbf1bd",
+      "facts_sha256": "c2eb6f66e2114ca578485b9149a6edc6e0d7fc8f3a7339f496c81deb02704757",
+      "translation_units": 3,
+      "parse_errors": 0,
+      "callgraph": {
+        "functions": 484,
+        "scenarios": 2,
+        "missing_entries": 0
+      },
+      "entries": [
+        "stop",
+        "pipeline_stop"
+      ],
+      "direct_stop_calls": [
+        {
+          "name": "_d",
+          "line": 372
+        },
+        {
+          "name": "stopDevice",
+          "line": 377
+        },
+        {
+          "name": "cancel",
+          "line": 391
+        },
+        {
+          "name": "doQueueRequest",
+          "line": 392
+        },
+        {
+          "name": "stream",
+          "line": 396
+        },
+        {
+          "name": "stream",
+          "line": 397
+        }
+      ],
+      "cpp_compiler": "c++ (gcc 15.2.0 \"c++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0\")",
+      "compile_commands": [
+        {
+          "file": "../src/libcamera/camera.cpp",
+          "directory": "<source>/out",
+          "command": "c++ -Isrc/libcamera/libcamera.so.0.5.2.p -Isrc/libcamera -I../src/libcamera -Iinclude -I../include -Iinclude/libcamera -Iinclude/libcamera/ipa -Iinclude/libcamera/internal -I/usr/include/p11-kit-1 -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=c++17 -O0 -g -Wnon-virtual-dtor -Wno-redundant-move -Wmissing-declarations -Wshadow -include <source>/out/config.h -fPIC -DLIBCAMERA_BASE_PRIVATE -MD -MQ src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o -MF src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o.d -o src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o -c ../src/libcamera/camera.cpp"
+        },
+        {
+          "file": "../src/libcamera/pipeline_handler.cpp",
+          "directory": "<source>/out",
+          "command": "c++ -Isrc/libcamera/libcamera.so.0.5.2.p -Isrc/libcamera -I../src/libcamera -Iinclude -I../include -Iinclude/libcamera -Iinclude/libcamera/ipa -Iinclude/libcamera/internal -I/usr/include/p11-kit-1 -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=c++17 -O0 -g -Wnon-virtual-dtor -Wno-redundant-move -Wmissing-declarations -Wshadow -include <source>/out/config.h -fPIC -DLIBCAMERA_BASE_PRIVATE -MD -MQ src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o -MF src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o.d -o src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o -c ../src/libcamera/pipeline_handler.cpp"
+        },
+        {
+          "file": "../src/libcamera/request.cpp",
+          "directory": "<source>/out",
+          "command": "c++ -Isrc/libcamera/libcamera.so.0.5.2.p -Isrc/libcamera -I../src/libcamera -Iinclude -I../include -Iinclude/libcamera -Iinclude/libcamera/ipa -Iinclude/libcamera/internal -I/usr/include/p11-kit-1 -fdiagnostics-color=always -D_GLIBCXX_ASSERTIONS=1 -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -std=c++17 -O0 -g -Wnon-virtual-dtor -Wno-redundant-move -Wmissing-declarations -Wshadow -include <source>/out/config.h -fPIC -DLIBCAMERA_BASE_PRIVATE -MD -MQ src/libcamera/libcamera.so.0.5.2.p/request.cpp.o -MF src/libcamera/libcamera.so.0.5.2.p/request.cpp.o.d -o src/libcamera/libcamera.so.0.5.2.p/request.cpp.o -c ../src/libcamera/request.cpp"
+        }
+      ],
+      "ninja_targets": [
+        "src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o",
+        "src/libcamera/libcamera.so.0.5.2.p/request.cpp.o",
+        "src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o"
+      ],
+      "ninja_log_evidence": [
+        "[10/12] Compiling C++ object src/libcamera/libcamera.so.0.5.2.p/request.cpp.o",
+        "[11/12] Compiling C++ object src/libcamera/libcamera.so.0.5.2.p/pipeline_handler.cpp.o",
+        "[12/12] Compiling C++ object src/libcamera/libcamera.so.0.5.2.p/camera.cpp.o"
+      ],
+      "ninja_exit_code": 0,
+      "exit_evidence": "set -euo pipefail; ninja -C <source>/out -j3 with all three targets returned before the per-revision success marker; the two-revision script exited 0"
+    }
+  ]
+}
