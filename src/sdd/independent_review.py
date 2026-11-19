@@ -1,8 +1,40 @@
-"""Reuse validated independent verdicts for the exact same question input."""
+"""Schedule independent work and reuse validated verdicts for exact question inputs."""
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+from itertools import islice
+
 from .call_records import canonical_request_hash
 from .change_review import change_review_instructions
 from .cli_checkpoint import Capture, UnitStore, execution_identity
 from .cli_schema import validate_original
+
+
+def schedule_reviews(function, items, *, workers=1):
+    """Run isolated calls with at most workers in flight and return results in input order."""
+    if workers < 1:
+        raise ValueError('workers must be at least 1')
+    if workers == 1:
+        return [function(item) for item in items]
+
+    items = iter(items)
+    results = []
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        pending = {}
+        slots = workers
+        try:
+            while True:
+                for item in islice(items, slots):
+                    pending[pool.submit(function, item)] = len(results)
+                    results.append(None)
+                if not pending:
+                    break
+                done, _ = wait(pending, return_when=FIRST_COMPLETED)
+                for future in done:
+                    results[pending.pop(future)] = future.result()
+                slots = len(done)
+        finally:
+            for future in pending:
+                future.cancel()
+    return results
 
 
 def review_workspace(cfg):
