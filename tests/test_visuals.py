@@ -141,7 +141,10 @@ def test_branch_table_uses_the_same_edges_and_pinned_next_steps(tmp_cfg, visual)
     assert table.count('\n|') == 2
     assert 'data-sdd-label-en="Condition A &#124; B">조건 A &#124; B</span>' in table
     assert 'data-sdd-label-en="Cancelled">취소됨</span>' in table
-    assert 'data-sdd-caption-source="true"' in table
+    record = model.evidence['device/shutdown/stop']
+    line = record['line'] + record['text'].split('cancelPending();')[0].count('\n')
+    link = f"https://example.com/project/blob/{record['commit']}/{record['file']}#L{line}"
+    assert f'data-sdd-caption-source="true" href="{link}"' in table
     assert 'v_pending -->' in diagram and 'v_cancelled' in diagram
 
 
