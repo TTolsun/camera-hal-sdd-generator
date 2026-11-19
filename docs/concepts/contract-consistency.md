@@ -78,4 +78,6 @@ flowchart LR
 
 검토자의 회귀 시험 제안은 실행 전 계획입니다. 실제 기기에서 관측한 결과는 별도 실행 근거가 있어야 기록할 수 있습니다. 변경 전후 자료를 연결하는 호출자가 간접 의존 파일까지 해당 질문의 근거에 포함해야 합니다. [실제 libcamera 대조 기록](../libcamera/records/stop-review-comparison/followup.md)
 
+서로의 결과가 필요 없는 질문은 `sdd.independent_review.schedule_reviews(review, items, workers=2)`로 동시에 검토할 수 있습니다. 각 호출은 자기 실행 기록과 출력 경로를 사용해야 합니다. 같은 질문이나 동일한 체크포인트를 쓰는 작업은 함께 제출하지 마세요. 기본값은 한 번에 한 질문이며 반환값은 입력 순서를 따릅니다. 공개 비교 실행기에서는 `--workers 2`로 이 동작을 선택하고 `--arm incremental` 또는 `--arm full`로 측정할 방식을 정합니다.
+
 다음으로 [재사용 경계](reuse-boundaries.md)에서 원고·체크포인트·검토 기록을 보존하는 조건을 확인하세요.

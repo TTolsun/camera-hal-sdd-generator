@@ -1,5 +1,6 @@
 """Run the pinned stop-review benchmark with change-aware child reviews."""
 import argparse
+import copy
 import hashlib
 import importlib.util
 from pathlib import Path
@@ -8,6 +9,7 @@ import sys
 from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / 'src'))
+from sdd import independent_review
 from sdd.change_review import change_review_instructions
 
 ORIGINAL = '53633e89a05720e23031a3985682a65f76681281a964db36097748c33a47642a'
@@ -48,6 +50,16 @@ def install_attempt(origin, target):
 
 
 def run(args, original):
+    workers = getattr(args, 'workers', 1)
+    arm = getattr(args, 'arm', 'both')
+    if workers < 1:
+        raise ValueError('--workers must be at least 1')
+    if arm not in ('both', 'incremental', 'full'):
+        raise ValueError('--arm must be both, incremental, or full')
+    arms = ('incremental', 'full') if arm == 'both' else (arm,)
+    phases = ('prepare', 'baseline', *arms)
+    original.PHASES = phases
+
     out, baseline, git = (getattr(args, name).resolve() for name in ('out', 'baseline_run', 'git'))
     for source in (baseline, git):
         if not source.is_dir() or source == out or source in out.parents or out in source.parents:
@@ -71,6 +83,20 @@ def run(args, original):
                     request = dict(request, prompt=prompt, record={'key_data': key_data,
                                    'key': original.sha256(original.json_bytes(key_data))})
             return request
+
+        def review_arm(self, phase):
+            if workers == 1:
+                return super().review_arm(phase)
+
+            candidates = self.frozen_candidates()
+
+            def review(item):
+                unit, candidate = item
+                worker = copy.copy(self)
+                worker.frozen_candidates = lambda: {unit: candidate}
+                return original.Benchmark.review_arm(worker, phase)
+
+            independent_review.schedule_reviews(review, candidates.items(), workers=workers)
 
         def baseline(self):
             historical = original.Benchmark(baseline, self.git, self.executable)
@@ -107,8 +133,10 @@ def run(args, original):
         identity = original.json_bytes({'execution': benchmark.identity, 'git': str(git),
                     'baseline': str(baseline), 'script': str(args.original_script.resolve()),
                     'original_sha256': ORIGINAL, 'indices': INDEXES,
+                    'workers': workers, 'arm': arm,
                     'adapter_sha256': original.file_sha256(Path(__file__)),
-                    'context_sha256': original.file_sha256(Path(sys.modules[change_review_instructions.__module__].__file__))})
+                    'context_sha256': original.file_sha256(Path(sys.modules[change_review_instructions.__module__].__file__)),
+                    'scheduler_sha256': original.file_sha256(Path(independent_review.__file__))})
         if args.resume:
             if marker.read_bytes() != identity:
                 raise ValueError('Run inputs or execution identity changed. Use a new --out.')
@@ -120,7 +148,7 @@ def run(args, original):
                 benchmark.baseline()
             else:
                 benchmark.execute_phase('baseline')
-            for phase in ('incremental', 'full'):
+            for phase in arms:
                 if benchmark.phase_done(phase):
                     for unit, candidate in benchmark.frozen_candidates().items():
                         request = benchmark.request('child', unit, candidate)
@@ -132,6 +160,8 @@ def run(args, original):
             original.write_report(benchmark)
             path = out / 'report.json'
             report = original.read_json(path)
+            report['phases'] = {phase: result for phase, result in report['phases'].items()
+                                if phase in phases}
             result = report['phases']['baseline']
             attempts = result['attempts']
             result.update(original.sum_calls_and_tokens([]), attempts=[], fresh_calls=0,
@@ -144,7 +174,11 @@ def main():
     for option in ('original-script', 'baseline-run', 'git', 'out'):
         parser.add_argument('--' + option, type=Path, required=True)
     parser.add_argument('--resume', action='store_true')
+    parser.add_argument('--workers', type=int, default=1)
+    parser.add_argument('--arm', choices=('both', 'incremental', 'full'), default='both')
     args = parser.parse_args()
+    if args.workers < 1:
+        parser.error('--workers must be at least 1')
     try:
         original = load_original(args.original_script.resolve())
     except (OSError, ImportError, ValueError) as error:
