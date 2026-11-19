@@ -6941,6 +6941,14 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: void PipelineHandler::registerRequest(Request *request)
       end: \fn PipelineHandler::queueRequestDevice()
+    - id: camera-completion-access
+      file: src/libcamera/camera.cpp
+      start: int Camera::Private::isAccessAllowed(State low, State high,
+      end: void Camera::Private::disconnect()
+    - id: camera-completion-states
+      file: include/libcamera/internal/camera.h
+      start: enum State {
+      end: bool isAcquired() const;
     - id: disconnect-release-state
       file: src/libcamera/camera.cpp
       start: int Camera::release()
@@ -7021,6 +7029,8 @@ sections:
       - disconnect
       - camera-stop
       - camera-complete
+      - camera-completion-access
+      - camera-completion-states
       max_statements: 3
       answer_contract:
         basis: investigation
