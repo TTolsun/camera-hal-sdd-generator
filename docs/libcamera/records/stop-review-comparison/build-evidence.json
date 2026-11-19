@@ -1,0 +1,85 @@
+{
+  "scope": "camera.cpp, request.cpp, pipeline_handler.cpp; UVC configuration, static only",
+  "normalized_compiler_inputs_sha256": "397568001f5db51ac46ddf6abd9da6ad6e80392808e990459f3f223a3f92d63b",
+  "model_inputs": "Git blob verified function excerpts; extracted call graphs independently corroborate the compiled source scope",
+  "builds": [
+    {
+      "source": "517b863bae2db2dd0c56366119318d6b2fb9ad52",
+      "facts_sha256": "402d42e1d14215d22df763c50b5b2c4680d57ed52287eedf20d4ee65cdbd1a68",
+      "translation_units": 3,
+      "parse_errors": 0,
+      "callgraph": {
+        "functions": 484,
+        "scenarios": 2,
+        "missing_entries": 0
+      },
+      "entries": [
+        "stop",
+        "pipeline_stop"
+      ],
+      "direct_stop_calls": [
+        {
+          "name": "_d",
+          "line": 372
+        },
+        {
+          "name": "stopDevice",
+          "line": 377
+        },
+        {
+          "name": "cancelRequest",
+          "line": 383
+        },
+        {
+          "name": "stream",
+          "line": 387
+        },
+        {
+          "name": "stream",
+          "line": 388
+        }
+      ]
+    },
+    {
+      "source": "731a340c8064843075cb9a41e22908eadadbf1bd",
+      "facts_sha256": "c2eb6f66e2114ca578485b9149a6edc6e0d7fc8f3a7339f496c81deb02704757",
+      "translation_units": 3,
+      "parse_errors": 0,
+      "callgraph": {
+        "functions": 484,
+        "scenarios": 2,
+        "missing_entries": 0
+      },
+      "entries": [
+        "stop",
+        "pipeline_stop"
+      ],
+      "direct_stop_calls": [
+        {
+          "name": "_d",
+          "line": 372
+        },
+        {
+          "name": "stopDevice",
+          "line": 377
+        },
+        {
+          "name": "cancel",
+          "line": 391
+        },
+        {
+          "name": "doQueueRequest",
+          "line": 392
+        },
+        {
+          "name": "stream",
+          "line": 396
+        },
+        {
+          "name": "stream",
+          "line": 397
+        }
+      ]
+    }
+  ]
+}
