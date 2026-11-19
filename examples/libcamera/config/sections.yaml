@@ -7034,7 +7034,7 @@ sections:
       max_statements: 3
       answer_contract:
         basis: investigation
-      prompt: 상태 열거값의 허용 판정과 실제 도달성을 구분하세요. allowDisconnected=true일 때도 상태 검사는 남으며, 검사 시점의 Stopping·Running이면 requestCompleted를
+      prompt: 접근 검사 isAccessAllowed()는 값만 반환합니다. 신호 발행 또는 Fatal 로그 분기는 호출자인 Camera::requestComplete()의 동작이라고 각각 별도 주어로 명시하세요. 상태 열거값의 허용 판정과 실제 도달성을 구분하세요. allowDisconnected=true일 때도 상태 검사는 남으며, 검사 시점의 Stopping·Running이면 requestCompleted를
         발생시키고 Available·Acquired·Configured이면 -EACCES와 Fatal 경계입니다. disconnect 직후 Running이 유지된다거나 다섯 상태 모두에서 잔여
         완료를 관측했다고 쓰지 마세요. 연결 해제 시 Running이었고 후속 완료 검사까지 Configured가 유지된 경우라고 명시하세요. stop이 이미 Stopping인 동안에는 disconnect
         자체가 그 상태를 변경하지 않고 stop 정상 끝에서 Configured를 저장합니다. 제출 식별자, 상태 전이, 실제 FIFO 선두 전달과 guard 읽기 및 반환값, emit과 앱
