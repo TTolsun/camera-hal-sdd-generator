@@ -45,8 +45,12 @@ flowchart TD
 
 기준 생성기는 `29a6412e326b470b5bad3a9b7f945566e1a5a162`, CLI는 `0.169.1`입니다. 증거 ZIP의 `sha256.json`은 원본 요청·응답, CLI 이벤트, 실행 설정, 비교 결과와 채점 자료를 파일별로 연결합니다. `run/report.json`의 단계별 합계는 14개 원본 영수증의 사용량과 대조했습니다. 채점의 L은 증분, M은 전체입니다. 기록을 다시 읽을 때는 모델 호출이 필요 없습니다. 새 측정에는 지정한 모델을 사용할 수 있는 Codex CLI와 두 공식 커밋이 있는 로컬 Git 저장소가 필요합니다.
 
+생성기 저장소 루트에서 다음 명령을 실행하세요. 첫 명령은 ZIP 최상위의 측정 도구와 원본 영수증을 새 폴더에 풉니다. 이미 공식 Git 이력이 있다면 두 번째 명령을 생략하고 `--git`에 해당 Git 디렉터리를 지정할 수 있습니다. 마지막 명령은 모델을 실제로 호출하므로 새 출력 경로를 사용하세요.
+
 ```powershell
-python paired_review.py --git <공개-libcamera의-Git-디렉터리> --out <새-실험-출력-디렉터리>
+python -m zipfile -e docs/libcamera/records/stop-review-comparison/evidence.zip build/stop-review-evidence
+git clone --bare https://gitlab.freedesktop.org/camera/libcamera.git build/stop-review-source.git
+python build/stop-review-evidence/paired_review.py --git build/stop-review-source.git --out build/stop-review-new-run
 ```
 
 2026년 11월 20일 확인한 공식 HEAD와 공개 SDD의 `upstream/master`는 모두 `5efdc682`였습니다. 공개 Pages 빌드 `5a305f234aa96743b2162c5a2bf097ba179ac035564ba9c00d2497ea19a1cccd`의 정지·요청 수명 HTML 두 개가 manifest에 기록된 해시와 일치했습니다. 해당 정지 페이지에는 취소 뒤 순서 큐 등록 동작이 이미 설명돼 있습니다. 이 비교는 역사적 변경에 대한 검토 실험이며 공개 원고나 배포 입력을 바꾸지 않아 별도 Pages 배포가 필요하지 않았습니다. [공개 정지 시나리오](https://ttolsun.github.io/libcamera-sdd/scenarios/camera_stop.html) · [공개 요청 수명 문서](https://ttolsun.github.io/libcamera-sdd/request-lifecycle.html)
