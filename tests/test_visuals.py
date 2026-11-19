@@ -129,6 +129,22 @@ def test_visual_caption_links_to_each_pinned_quote(tmp_cfg, visual):
     assert caption.index('/device.cpp#L10') < caption.index('/check.cpp#L20')
 
 
+def test_branch_table_uses_the_same_edges_and_pinned_next_steps(tmp_cfg, visual):
+    section, model, graph, write = visual
+    tmp_cfg.raw.setdefault('site', {})['source_url'] = 'https://example.com/project'
+    graph['branch_table'] = True
+    graph['edges'][0]['label'] = '조건 A | B'
+    graph['edges'][0]['label_en'] = 'Condition A | B'
+    write()
+    _, block, diagram = render(tmp_cfg, model, section)[0]
+    table = block[block.index('| <span'):block.index('[Mermaid 원문]')]
+    assert table.count('\n|') == 2
+    assert 'data-sdd-label-en="Condition A &#124; B">조건 A &#124; B</span>' in table
+    assert 'data-sdd-label-en="Cancelled">취소됨</span>' in table
+    assert 'data-sdd-caption-source="true"' in table
+    assert 'v_pending -->' in diagram and 'v_cancelled' in diagram
+
+
 def test_visual_caption_can_combine_local_and_cross_section_evidence(tmp_cfg, visual):
     section, model, graph, write = visual
     tmp_cfg.raw.setdefault('site', {})['source_url'] = 'https://example.com/project'
