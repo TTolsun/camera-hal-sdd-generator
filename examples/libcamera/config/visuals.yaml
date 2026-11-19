@@ -1614,12 +1614,13 @@ sections:
     question: 이 제출의 버퍼 반환은 어디까지 진행됐나요?
     branch_table: true
     caption:
-      text: 제출마다 식별자와 버퍼 포인터를 기록하고, 가능하면 같은 장치의 상태와 버퍼 인덱스도 기록하세요. completeBuffer가 buffer->request()를 지우기 전에 연결
-        관계를 기록하세요. FrameCancelled에서는 FrameMetadata의 상태 필드만 유효합니다. 분기는 확인할 관찰 지점이며 원인을 보장하지 않습니다.
+      text: 제출마다 식별자와 버퍼 포인터를 기록하고, 가능하면 같은 장치의 상태와 버퍼 인덱스도 기록하세요. completeBuffer는 bufferCompleted를 발생시킨 뒤 대기 버퍼
+        추적을 갱신하고 buffer->request()를 지우므로, 그 전에 연결 관계를 기록하세요. FrameCancelled에서는 FrameMetadata의 상태 필드만 유효합니다. 분기는
+        확인할 관찰 지점이며 원인을 보장하지 않습니다.
       text_en: Record a per-submission ID and buffer pointer, plus the same device's state and buffer index when
-        available. Record the association before completeBuffer clears buffer->request(). For FrameCancelled, only
-        the status field of FrameMetadata is valid. Branches suggest observations to check; they do not guarantee
-        a cause.
+        available. completeBuffer emits bufferCompleted before updating pending-buffer tracking and clearing buffer->request(),
+        so record the association before it is cleared. For FrameCancelled, only the status field of FrameMetadata
+        is valid. Branches suggest observations to check; they do not guarantee a cause.
       evidence:
       - source: uvc-depth/qbuf
         quote: queuedBuffers_[buf.index] = buffer;
@@ -1633,6 +1634,9 @@ sections:
       - source: stop-depth/frame-validity
         quote: "All\n * fields of the FrameMetadata structure but the status field are invalid."
         sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+      - source: uvc-depth/complete
+        quote: camera->bufferCompleted.emit(request, buffer);
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
     nodes:
     - id: entry
       label: streamOff 진입 시 같은 장치의 queuedBuffers_에 이 제출의 FrameBuffer가 있나요?
@@ -1666,8 +1670,8 @@ sections:
         quote: data->video_->streamOff();
         sha256: 971783f2897a5dd1f91787a28332f2603720ad6144c039c0deb2fd5463e087b2
     - id: streamoff_return
-      label: 이 장치의 VIDIOC_STREAMOFF 반환값은 음수인가요?
-      label_en: Is this device's VIDIOC_STREAMOFF return negative?
+      label: VIDIOC_STREAMOFF의 결과는 무엇인가요?
+      label_en: What was the VIDIOC_STREAMOFF result?
       shape: decision
       evidence:
       - source: stop-depth/streamoff
@@ -1689,8 +1693,10 @@ sections:
         quote: "data->video_->streamOff();\n\tdata->video_->releaseBuffers();"
         sha256: 971783f2897a5dd1f91787a28332f2603720ad6144c039c0deb2fd5463e087b2
     - id: ready
-      label: 같은 video_와 버퍼의 bufferReady 발생과 imageBufferReady 진입을 비교하세요.
-      label_en: Compare bufferReady emission and imageBufferReady entry for the same device and buffer.
+      label: 같은 video_와 버퍼의 bufferReady 발생과 imageBufferReady 진입을 비교하세요. ioctl이 성공하면 대기 버퍼의 bufferReady는 streamOff
+        안에서 함수가 반환되기 전에 발생합니다.
+      label_en: Compare bufferReady emission and imageBufferReady entry for the same device and buffer. If the ioctl
+        succeeds, bufferReady is emitted for queued buffers inside streamOff before the function returns.
       shape: decision
       evidence:
       - source: stop-depth/streamoff
@@ -1703,8 +1709,10 @@ sections:
         quote: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
         sha256: 06b7f1bab454d0e7271e6f145d0d1807416e4a44ef4f17b8ca2dc5c5266b4343
     - id: qbuf
-      label: 이 제출과 일치하는 QBUF 성공이 확인됐나요?
-      label_en: Was successful QBUF matched to this submission?
+      label: 장치 상태와 전체 큐, 이 제출의 QBUF 이력을 확인하세요. state_ != State::Streaming && queuedBuffers_.empty()이면 streamOff가
+        ioctl 없이 0을 반환합니다.
+      label_en: Check device state, the whole queue, and this submission's QBUF history. If state_ != State::Streaming
+        && queuedBuffers_.empty(), streamOff returns 0 without an ioctl.
       shape: decision
       evidence:
       - source: uvc-depth/qbuf
@@ -1713,6 +1721,9 @@ sections:
       - source: uvc-depth/qbuf
         quote: "queuedBuffers_[buf.index] = buffer;\n\n\tguard.release();\n\treturn 0;"
         sha256: 2e779f6b0173b449320faaa6955bc98f1fd87cddbf843aa5bd779a570dcb5163
+      - source: stop-depth/streamoff
+        quote: "if (state_ != State::Streaming && queuedBuffers_.empty())\n\t\treturn 0;"
+        sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
     - id: dequeue
       label: bufferAvailable 슬롯 진입부터 DQBUF 일치·맵 제거, bufferReady 발생, imageBufferReady 진입까지 순서대로 대조하세요.
       label_en: Trace slot entry, DQBUF match and erase, bufferReady, then UVC entry.
@@ -1783,8 +1794,9 @@ sections:
         quote: "queuedBuffers_[buf.index] = buffer;\n\n\tguard.release();"
         sha256: 2e779f6b0173b449320faaa6955bc98f1fd87cddbf843aa5bd779a570dcb5163
     - id: completion
-      label: bufferCompleted와 상태를 확인하세요. FrameCancelled 반환, 완료될 수 있는 FrameError, 콜백 미관찰을 구분하세요.
-      label_en: 'Check bufferCompleted and status: cancelled, FrameError or callback not observed.'
+      label: bufferCompleted 관찰 여부와 버퍼 상태를 각각 확인하세요. 상태에는 FrameSuccess, FrameError, FrameCancelled 등이 있습니다.
+      label_en: Check bufferCompleted observation and buffer status separately. Statuses include FrameSuccess, FrameError
+        and FrameCancelled.
       shape: decision
       evidence:
       - source: uvc-depth/uvc-ready
@@ -1802,10 +1814,12 @@ sections:
       - source: callback-order/bulk
         quote: camera_->bufferCompleted.emit(request, buffer);
         sha256: ab2c12813c3b84e720851c664946cf0fcf11cdf0816324ec446013b3ab51b342
+      - source: uvc-depth/dequeue
+        quote: FrameMetadata::FrameSuccess
+        sha256: b49fbd6c74b10d8d7e28d44854068de9100ea0dc6058d86d24a3f3a4f85f1fff
     - id: fifo
-      label: 앞선 선두 요청이 RequestPending이면 이 완료 루프에서 대상 요청의 requestCompleted 발생이 막힙니다. 발생했다면 앱 수신을 확인하세요.
-      label_en: An earlier pending FIFO head blocks the target request's emission through this completion loop.
-        If emitted, check the app receiver.
+      label: 선두 요청이 대기 중인지, 대상 requestCompleted가 발생·수신됐는지 확인하세요.
+      label_en: Check whether the FIFO head is pending and whether the target requestCompleted was emitted and received.
       shape: box
       evidence:
       - source: uvc-depth/complete
@@ -1878,8 +1892,8 @@ sections:
         sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
     - from: streamoff_return
       to: early_exit
-      label: 음수
-      label_en: Negative
+      label: ioctl 음수
+      label_en: Negative ioctl result
       evidence:
       - source: stop-depth/streamoff
         quote: "if (ret < 0) {\n\t\tLOG(V4L2, Error)"
@@ -1894,8 +1908,8 @@ sections:
         sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
     - from: streamoff_return
       to: callback_gap
-      label: ioctl 반환값 미관찰 또는 불명확
-      label_en: ioctl return not observed or inconclusive
+      label: ioctl 결과 미관찰 또는 불명확
+      label_en: ioctl result not observed or inconclusive
       evidence:
       - source: stop-depth/streamoff
         quote: ret = ioctl(VIDIOC_STREAMOFF, &bufferType_);
@@ -1998,8 +2012,8 @@ sections:
         sha256: ac6c427f79e1b7eb1728b9bd8b12aa20cfdf7a115b7330d132a433abb19bab85
     - from: completion
       to: callback_gap
-      label: 같은 제출의 bufferCompleted 발생 또는 앱 수신이 미관찰이거나 불명확
-      label_en: Same submission's bufferCompleted emission or app receipt not observed or inconclusive
+      label: bufferCompleted 발생 또는 앱 수신이 미관찰·불명확
+      label_en: bufferCompleted emission or app receipt not observed or inconclusive
       evidence:
       - source: uvc-depth/complete
         quote: camera->bufferCompleted.emit(request, buffer);
