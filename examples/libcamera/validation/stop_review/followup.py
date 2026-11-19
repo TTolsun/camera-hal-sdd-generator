@@ -49,7 +49,7 @@ def install_attempt(origin, target):
         staged.rename(target)
 
 
-def run(args, original):
+def run(args, original, *, indexes=None, policy_identity=None):
     workers = getattr(args, 'workers', 1)
     arm = getattr(args, 'arm', 'both')
     if workers < 1:
@@ -64,8 +64,11 @@ def run(args, original):
     for source in (baseline, git):
         if not source.is_dir() or source == out or source in out.parents or out in source.parents:
             raise ValueError(f'Expected an existing input directory disjoint from --out: {source}')
+    digests = INDEXES if indexes is None else dict(INDEXES, **indexes)
+    if digests.keys() != INDEXES.keys() or digests['candidates.json'] != INDEXES['candidates.json']:
+        raise ValueError('Only the parent assessment digest may be replaced')
     indices = {name: pinned_bytes(baseline / 'baseline' / name, digest)
-               for name, digest in INDEXES.items()}
+               for name, digest in digests.items()}
     drafts, reviews = (original.parse_json(indices[name]) for name in INDEXES)
     if any(not isinstance(index, dict) or set(index) != set(original.QUESTIONS)
            for index in (drafts, reviews)):
@@ -130,13 +133,16 @@ def run(args, original):
     with original.run_lock(out / 'run.lock'):
         benchmark = Followup(out, original.LocalGit(git), original.codex_executable())
         benchmark.record_execution()
-        identity = original.json_bytes({'execution': benchmark.identity, 'git': str(git),
+        identity = {'execution': benchmark.identity, 'git': str(git),
                     'baseline': str(baseline), 'script': str(args.original_script.resolve()),
-                    'original_sha256': ORIGINAL, 'indices': INDEXES,
+                    'original_sha256': ORIGINAL, 'indices': digests,
                     'workers': workers, 'arm': arm,
                     'adapter_sha256': original.file_sha256(Path(__file__)),
                     'context_sha256': original.file_sha256(Path(sys.modules[change_review_instructions.__module__].__file__)),
-                    'scheduler_sha256': original.file_sha256(Path(independent_review.__file__))})
+                    'scheduler_sha256': original.file_sha256(Path(independent_review.__file__))}
+        if policy_identity is not None:
+            identity['quality_policy'] = policy_identity
+        identity = original.json_bytes(identity)
         if args.resume:
             if marker.read_bytes() != identity:
                 raise ValueError('Run inputs or execution identity changed. Use a new --out.')
