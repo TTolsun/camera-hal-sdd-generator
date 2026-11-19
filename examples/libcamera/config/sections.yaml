@@ -6941,6 +6941,30 @@ sections:
       file: src/libcamera/pipeline_handler.cpp
       start: void PipelineHandler::registerRequest(Request *request)
       end: \fn PipelineHandler::queueRequestDevice()
+    - id: camera-completion-access
+      file: src/libcamera/camera.cpp
+      start: int Camera::Private::isAccessAllowed(State low, State high,
+      end: void Camera::Private::disconnect()
+    - id: camera-completion-states
+      file: include/libcamera/internal/camera.h
+      start: enum State {
+      end: bool isAcquired() const;
+    - id: disconnect-release-state
+      file: src/libcamera/camera.cpp
+      start: int Camera::release()
+      end: d->setState(Private::CameraAvailable);
+    - id: disconnect-start-state
+      file: src/libcamera/camera.cpp
+      start: int Camera::start(const ControlList *controls)
+      end: d->setState(Private::CameraRunning);
+    - id: disconnect-default-access
+      file: include/libcamera/internal/camera.h
+      start: int isAccessAllowed(State state, bool allowDisconnected = false,
+      end: void disconnect();
+    - id: disconnect-single-access
+      file: src/libcamera/camera.cpp
+      start: int Camera::Private::isAccessAllowed(State state, bool allowDisconnected,
+      end: int Camera::Private::isAccessAllowed(State low, State high,
     parts:
     - id: order
       question: PipelineHandler::stop가 waitingRequests_를 지역 큐로 swap해 stopDevice 내부 완료에서 재투입되지 않게 하고, 장치 정지 후
@@ -6998,17 +7022,23 @@ sections:
       - camera-stop
       max_statements: 2
     - id: disconnect-stop
-      question: 실행 중 Camera::Private::disconnect는 Running을 Configured로 바꾸고 disconnected_를 설정합니다. 이후 Camera::stop은
-        isRunning이 거짓이면 즉시 0을 반환하고 PipelineHandler::stop을 호출하지 않으므로 연결 해제 뒤 정리·완료 배출을 보장하지 않습니다. 이 상태에서 잔여 요청이
-        Camera::requestComplete에 실제 도달한다는 조건이면 Configured는 허용 범위 밖이어서 Fatal 경계에 도달합니다. 이 세 분기를 명시하고 상태 전이·stop
-        진입과 반환·잔여 완료 진입의 상대 순서와 수명을 변경 검증에서 기록하도록 세 문장으로 설명하세요. 실제 장치 분리·후속 완료 발생·정상 복구를 관측했다고 쓰지 마세요.
+      question: 연결 해제 시점과 잔여 요청 완료의 상태 검사 시점을 구분하세요. disconnect()가 읽은 상태가 Running이면 Configured를 저장하고 다른 상태에서는
+        해당 함수가 상태를 바꾸지 않으며 disconnected_를 설정합니다. 그 뒤 stop의 isRunning() 단축 반환과 잔여 요청 진입 미보장을 설명하세요. 완료 함수가 실제로
+        진입하면 검사에서 읽은 상태에 따른 분기를 답하세요.
       sources:
       - disconnect
       - camera-stop
       - camera-complete
-      max_statements: 2
+      - camera-completion-access
+      - camera-completion-states
+      max_statements: 3
       answer_contract:
         basis: investigation
+      prompt: 접근 검사 isAccessAllowed()는 값만 반환합니다. 신호 발행 또는 Fatal 로그 분기는 호출자인 Camera::requestComplete()의 동작이라고 각각 별도 주어로 명시하세요. 상태 열거값의 허용 판정과 실제 도달성을 구분하세요. allowDisconnected=true일 때도 상태 검사는 남으며, 검사 시점의 Stopping·Running이면 requestCompleted를
+        발생시키고 Available·Acquired·Configured이면 -EACCES와 Fatal 경계입니다. disconnect 직후 Running이 유지된다거나 다섯 상태 모두에서 잔여
+        완료를 관측했다고 쓰지 마세요. 연결 해제 시 Running이었고 후속 완료 검사까지 Configured가 유지된 경우라고 명시하세요. stop이 이미 Stopping인 동안에는 disconnect
+        자체가 그 상태를 변경하지 않고 stop 정상 끝에서 Configured를 저장합니다. 제출 식별자, 상태 전이, 실제 FIFO 선두 전달과 guard 읽기 및 반환값, emit과 앱
+        수신의 개별 시점은 관찰 계획입니다.
     - id: cancel-timestamp
       question: 정상 UVC 정지에서 streamOff가 버퍼를 FrameCancelled로 표시하여 bufferReady를 발생시키는 경로를 한정하세요. UVCCameraData::imageBufferReady는
         상태 검사 없이 버퍼 timestamp를 요청 SensorTimestamp로 복사하지만 FrameCancelled에서는 status 이외 metadata가 유효하지 않다는 API 계약
@@ -7018,6 +7048,19 @@ sections:
       - uvc-ready
       - frame-validity
       max_statements: 1
+    - id: post-disconnect-state
+      question: 연결 해제가 끝난 뒤 직렬화된 공개 API에서 어떤 상태 변화가 가능한가요? release는 연결 해제를 허용하는 Available부터 Configured 범위라 성공하면
+        Available을 저장하고, start는 기본 연결 해제 검사에서 거부되므로 새 호출로 Running을 회복할 수 없습니다. Acquired와 Available은 검사 결과를 분류하는
+        열거값이며 정상 잔여 촬영 요청이 그 상태에서 실제로 도착했다는 증거는 없습니다. disconnect가 Stopping을 그대로 두는 경우와 Running을 Configured로 바꾸는
+        경우를 구별하고 호출 시점별 관찰이 필요함을 간결히 정리하세요.
+      sources:
+      - disconnect
+      - camera-completion-states
+      - disconnect-release-state
+      - disconnect-start-state
+      - disconnect-default-access
+      - disconnect-single-access
+      max_statements: 2
   - id: review
     title: 변경 검토와 실행 확인
     question: 기존 호출의 기록과 함께 준비·제출·완료·정지의 실패 주입별 예상 분기와 변경 불변조건을 연결하는 검증 계획을 제시하세요. 실행 결과를 만들지 마세요. 완료 횟수는 신호

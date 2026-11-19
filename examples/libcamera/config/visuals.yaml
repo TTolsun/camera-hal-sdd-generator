@@ -1607,6 +1607,254 @@ sections:
     - complete
     - dispatch
     - set-controls
+  - id: disconnect-completion-state
+    topic: stop-depth
+    kind: decision
+    title: 연결 해제와 요청 완료 상태
+    question: 어느 시점에 읽은 상태가 요청 완료에 영향을 주나요?
+    branch_table: true
+    caption:
+      text: 같은 카메라와 제출된 요청을 식별하고, 순번·시간·스레드, 상태가 바뀐 시점와 각 검사에서 실제로 읽은 값, 반환값과 신호 발행·수신을 함께 기록하세요. 발행은 앱의 수신과
+        별개입니다.
+      text_en: Identify the same camera and submitted request. Record sequence, time, thread, state writes,
+        values actually read by each check, return values, and signal emission and receipt. Emission is separate
+        from application receipt.
+      evidence:
+      - source: stop-depth/disconnect
+        quote: if (state_.load(std::memory_order_acquire) == Private::CameraRunning)
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+      - source: uvc-depth/complete
+        quote: camera->requestComplete(req);
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: stop-depth/camera-completion-access
+        quote: if (currentState >= low && currentState <= high)
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+      - source: stop-depth/camera-complete
+        quote: requestCompleted.emit(request);
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
+    nodes:
+    - id: disconnect
+      shape: decision
+      label: disconnect가 읽은 상태. disconnected_ 설정
+      label_en: State read by disconnect. disconnected_ set
+      evidence:
+      - source: stop-depth/disconnect
+        quote: if (state_.load(std::memory_order_acquire) == Private::CameraRunning)
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+      - source: stop-depth/disconnect
+        quote: disconnected_ = true;
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+      - source: stopping/notification
+        quote: disconnected.emit();
+        sha256: cbc12aaba21898e519c8599faec5e998b408162912a507880b162ee6787cf8b0
+    - id: configured
+      shape: box
+      label: Running이면 Configured 저장
+      label_en: If Running, store Configured
+      evidence:
+      - source: stop-depth/disconnect
+        quote: if (state_.load(std::memory_order_acquire) == Private::CameraRunning)
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+      - source: stop-depth/camera-stop
+        quote: d->setState(Private::CameraConfigured);
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+      - source: stop-depth/disconnect-release-state
+        quote: d->setState(Private::CameraAvailable);
+        sha256: 9f2abbe8924d827817b713327c79f1969027ab7e97185060e6b98970b169c689
+    - id: unchanged
+      shape: box
+      label: 그 밖의 값은 유지. Stopping도 그대로
+      label_en: Otherwise retain the value, including Stopping
+      evidence:
+      - source: stop-depth/disconnect
+        quote: if (state_.load(std::memory_order_acquire) == Private::CameraRunning)
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+      - source: stop-depth/camera-stop
+        quote: d->setState(Private::CameraStopping);
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+      - source: stop-depth/camera-stop
+        quote: d->setState(Private::CameraConfigured);
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+    - id: handoff
+      shape: decision
+      label: 같은 제출 요청이 제출 순서 큐의 선두에서 requestComplete에 전달됐는지 확인
+      label_en: Check whether the same submitted request reached requestComplete at the FIFO head
+      evidence:
+      - source: uvc-depth/complete
+        quote: if (req->status() == Request::RequestPending)
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: uvc-depth/complete
+        quote: camera->requestComplete(req);
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: stopping/notification
+        quote: disconnected.emit();
+        sha256: cbc12aaba21898e519c8599faec5e998b408162912a507880b162ee6787cf8b0
+    - id: unseen
+      shape: box
+      label: '호출 미진입 또는 미관측: 구별 필요'
+      label_en: 'Not entered or not observed: distinguish the two'
+      evidence:
+      - source: uvc-depth/complete
+        quote: if (req->status() == Request::RequestPending)
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: uvc-depth/complete
+        quote: camera->requestComplete(req);
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: stopping/notification
+        quote: disconnected.emit();
+        sha256: cbc12aaba21898e519c8599faec5e998b408162912a507880b162ee6787cf8b0
+    - id: sample
+      shape: decision
+      label: isAccessAllowed가 현재 상태를 읽음
+      label_en: isAccessAllowed reads the current state
+      evidence:
+      - source: stop-depth/camera-complete
+        quote: "Private::CameraRunning,\n\t\t\t\t  true)"
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
+      - source: stop-depth/camera-completion-access
+        quote: if (currentState >= low && currentState <= high)
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+      - source: stop-depth/camera-completion-states
+        quote: CameraStopping,
+        sha256: eecafa507332af0cb9b4d28b88059af8063d320acb56ac021dcc4c7022e23819
+    - id: signal
+      shape: box
+      label: 'Stopping 또는 Running: 가드 통과 후 requestCompleted 발행'
+      label_en: 'Stopping or Running: guard passes, then requestCompleted is emitted'
+      evidence:
+      - source: stop-depth/camera-completion-access
+        quote: if (currentState >= low && currentState <= high)
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+      - source: stop-depth/camera-complete
+        quote: requestCompleted.emit(request);
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
+      - source: stop-depth/camera-complete
+        quote: "Private::CameraRunning,\n\t\t\t\t  true)"
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
+    - id: rejected
+      shape: box
+      label: 'Available·Acquired·Configured: -EACCES, Fatal. 정상 발행 근거 없음'
+      label_en: 'Available, Acquired, or Configured: -EACCES, Fatal. no basis for normal emission'
+      evidence:
+      - source: stop-depth/camera-completion-access
+        quote: if (currentState >= low && currentState <= high)
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+      - source: stop-depth/camera-completion-access
+        quote: return -EACCES;
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+      - source: stop-depth/camera-complete
+        quote: LOG(Camera, Fatal)
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
+      - source: stop-depth/camera-completion-states
+        quote: CameraStopping,
+        sha256: eecafa507332af0cb9b4d28b88059af8063d320acb56ac021dcc4c7022e23819
+    edges:
+    - from: disconnect
+      to: configured
+      label: 읽은 값이 Running
+      label_en: Read Running
+      evidence:
+      - source: stop-depth/disconnect
+        quote: if (state_.load(std::memory_order_acquire) == Private::CameraRunning)
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+      - source: stop-depth/disconnect
+        quote: disconnected_ = true;
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+    - from: disconnect
+      to: unchanged
+      label: 읽은 값이 Running 외
+      label_en: Read a value other than Running
+      evidence:
+      - source: stop-depth/disconnect
+        quote: if (state_.load(std::memory_order_acquire) == Private::CameraRunning)
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+      - source: stop-depth/disconnect
+        quote: disconnected_ = true;
+        sha256: c7aa2d0027188dfd85fa972beeebed3e262fbac1cbcdcec7a008c8d95704fbc6
+    - from: configured
+      to: handoff
+      label: '다음 조사: 같은 요청 확인'
+      label_en: 'Next check: the same request'
+      evidence:
+      - source: stop-depth/disconnect-release-state
+        quote: d->setState(Private::CameraAvailable);
+        sha256: 9f2abbe8924d827817b713327c79f1969027ab7e97185060e6b98970b169c689
+      - source: uvc-depth/complete
+        quote: camera->requestComplete(req);
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+    - from: unchanged
+      to: handoff
+      label: '다음 조사: 같은 요청 확인'
+      label_en: 'Next check: the same request'
+      evidence:
+      - source: stop-depth/camera-stop
+        quote: d->setState(Private::CameraStopping);
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+      - source: stop-depth/camera-stop
+        quote: d->setState(Private::CameraConfigured);
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+      - source: uvc-depth/complete
+        quote: camera->requestComplete(req);
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+    - from: handoff
+      to: unseen
+      label: 호출이 없거나 관측되지 않음
+      label_en: Call did not occur or was not observed
+      evidence:
+      - source: uvc-depth/complete
+        quote: if (req->status() == Request::RequestPending)
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: uvc-depth/complete
+        quote: camera->requestComplete(req);
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: stopping/notification
+        quote: disconnected.emit();
+        sha256: cbc12aaba21898e519c8599faec5e998b408162912a507880b162ee6787cf8b0
+    - from: handoff
+      to: sample
+      label: 실제 호출됨
+      label_en: Actually called
+      evidence:
+      - source: uvc-depth/complete
+        quote: camera->requestComplete(req);
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - source: stop-depth/camera-complete
+        quote: "Private::CameraRunning,\n\t\t\t\t  true)"
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
+      - source: stop-depth/camera-completion-access
+        quote: if (currentState >= low && currentState <= high)
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+    - from: sample
+      to: signal
+      label: 읽은 값이 허용 범위
+      label_en: Read value is in the allowed range
+      evidence:
+      - source: stop-depth/camera-completion-access
+        quote: if (currentState >= low && currentState <= high)
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+      - source: stop-depth/camera-completion-states
+        quote: CameraStopping,
+        sha256: eecafa507332af0cb9b4d28b88059af8063d320acb56ac021dcc4c7022e23819
+      - source: stop-depth/camera-complete
+        quote: requestCompleted.emit(request);
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
+    - from: sample
+      to: rejected
+      label: 읽은 값이 허용 범위 밖
+      label_en: Read value is outside the allowed range
+      evidence:
+      - source: stop-depth/camera-completion-access
+        quote: if (currentState >= low && currentState <= high)
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+      - source: stop-depth/camera-completion-states
+        quote: CameraStopping,
+        sha256: eecafa507332af0cb9b4d28b88059af8063d320acb56ac021dcc4c7022e23819
+      - source: stop-depth/camera-completion-access
+        quote: return -EACCES;
+        sha256: 4652821b0f8cfd78a0a4b8ec372fe45eb5ed2fc9b2280a765c3dc47bcc13767b
+      - source: stop-depth/camera-complete
+        quote: LOG(Camera, Fatal)
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
   - id: uvc-stop-missing-buffer
     topic: stop-depth
     kind: decision
