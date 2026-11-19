@@ -87,7 +87,9 @@ def test_용어집이_없으면_경고만_하고_설정으로_정책을_바꿀_�
 def test_약어_검사는_코드_발췌와_식별자를_뺀다():
     g = glossary.Glossary([], set(), True)
     text = ("IPA는 모듈입니다. IPAManager 와 V4L2_CID, RGB.\n\n```cpp\nASSERT(x);\n```\n\n"
-            "    \tTODO(code);\n\n[링크](HTTP.md) `LSC`\n")
+            "    \tTODO(code);\n\n[링크](HTTP.md) `LSC`\n"
+            '<a data-sdd-caption-source="true" href="https://example.com/a.cpp#L1234">줄</a> '
+            '<span data-sdd-label-en="Check FIFO">RGB</span>')
     assert glossary.undefined(g, {"a.md": text}) == {"IPA": ["a.md"], "RGB": ["a.md"]}
 
 

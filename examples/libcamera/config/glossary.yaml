@@ -211,6 +211,9 @@ terms:
 - term: ROI
   full: Return on Investment
   definition: ROI(투자 수익률)는 수익을 투자 비용과 비교하는 개념이며, 이 공개 libcamera 문서의 예시에서는 측정하지 않습니다.
+- term: FIFO
+  full: First In, First Out
+  definition: 먼저 들어온 항목을 먼저 꺼내는 큐 처리 순서입니다.
 - term: QBUF
   aliases:
   - VIDIOC_QBUF
