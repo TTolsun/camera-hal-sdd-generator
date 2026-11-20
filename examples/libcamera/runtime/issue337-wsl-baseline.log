@@ -1,0 +1,42 @@
+Host-specific directory prefixes and ANSI styling have been removed.
+
+<issue211-runtime>
+293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+6.18.33.2-microsoft-standard-WSL2
+# CONFIG_UDMABUF is not set
+# CONFIG_DMABUF_HEAPS is not set
+ls: cannot access '/dev/udmabuf': No such file or directory
+ls: cannot access '/dev/dma_heap': No such file or directory
+COMMAND <issue211-runtime>/build/src/apps/cam/cam --list
+[0:01:35.270435711] [603]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-293d751a
+[0:01:35.270849618] [604]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '<issue211-runtime>/build/src/ipa' to the IPA search path
+[0:01:35.270906999] [604]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:01:35.271196603] [604] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+[0:01:35.271473851] [604]  INFO Pipeline pipeline_handler.cpp:657 libcamera is not installed. Loading platform configuration file from '<issue211-runtime>/source/src/libcamera/pipeline/virtual/data/virtual.yaml'
+[0:01:35.272501752] [604]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:01:35.272558619] [604]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:01:35.272568681] [604]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:01:35.272577236] [604]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+[0:01:35.272634543] [604] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+Available cameras:
+1: Internal front camera (Virtual0)
+2: Internal back camera (Virtual1)
+3: Internal front camera (Virtual2)
+4: Internal front camera (Virtual3)
+list_exit=0
+COMMAND <issue211-runtime>/build/src/apps/cam/cam --camera Virtual2 --stream role=video,width=400,height=300,pixelformat=NV12 --capture=3
+[0:01:35.280423882] [606]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-293d751a
+[0:01:35.280863641] [607]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '<issue211-runtime>/build/src/ipa' to the IPA search path
+[0:01:35.280925545] [607]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:01:35.281153515] [607] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+[0:01:35.281380560] [607]  INFO Pipeline pipeline_handler.cpp:657 libcamera is not installed. Loading platform configuration file from '<issue211-runtime>/source/src/libcamera/pipeline/virtual/data/virtual.yaml'
+[0:01:35.281886767] [607]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:01:35.281929106] [607]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:01:35.281938400] [607]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:01:35.281945940] [607]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+[0:01:35.281967436] [607] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+Using camera Virtual2 as cam0
+[0:01:35.282518468] [606]  INFO Camera camera.cpp:1216 configuring streams: (0) 400x300-NV12/SMPTE170M
+Can't allocate buffers
+Failed to start camera session
+capture_exit=1
