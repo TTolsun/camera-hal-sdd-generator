@@ -24,14 +24,14 @@ PRINT_PAGE = 'full.html'
 MARKDOWN = 'full.md'
 
 LABELS = {
-    'ko': dict(menu='Download', menu_label='Download the whole document', pdf='PDF', markdown='Markdown',
+    'ko': dict(menu='⤓', menu_label='Download the whole document', pdf='PDF', markdown='Markdown',
                heading='전체 문서', pages='{count}편', commit='분석 기준 커밋', site='원본 사이트', contents='목차',
                notice=('이 파일은 사이트의 모든 문서를 하나로 묶은 사본입니다. 만든 뒤에 바뀐 코드와 문서는 반영되지 않으므로 '
                        '분석 기준 커밋을 함께 확인하세요. 인용 검사 같은 자동 검사 결과는 사람 검토 승인이 아닙니다. '
                        '문서별 검토 상태는 각 문서 끝의 문서 생성·검토 정보에 있습니다.'),
                back='사이트로 돌아가기', save='Save as PDF', save_markdown='Download Markdown', preparing='그림을 그리는 중입니다.',
                hint='인쇄 창에서 대상을 PDF로 저장(Save as PDF)으로 선택하세요.'),
-    'en': dict(menu='Download', menu_label='Download the whole document', pdf='PDF',
+    'en': dict(menu='⤓', menu_label='Download the whole document', pdf='PDF',
                markdown='Markdown', heading='Whole document', pages='{count} pages',
                commit='Analyzed source commit', site='Source site', contents='Contents',
                notice=('This file combines every page of the site into one copy. Code and documents changed after it '
@@ -253,10 +253,13 @@ def _menu(page: str, english: bool, site_title: str) -> str:
     md = posixpath.relpath(markdown_path, here)
     # The language selector's existing style is reused: a new or changed shared CSS/JS asset marks every
     # page's presentation as changed and sends all reviewed visual items back to review.
+    # An icon, not the word: on a 375px phone the existing header leaves about 58px beside the
+    # language menu and search button, and the shared CSS cannot change (see STYLE).
     # The outer nav keeps the menu label out of the page's first reviewed item: the visual
     # audit reads everything except nav, aside and footer as page content.
     return (f'<nav class="download-nav" aria-label="{text["menu_label"]}" style="display:flex">'
-            f'<details class="language-selector download-menu"><summary>{text["menu"]} ▾</summary>'
+            f'<details class="language-selector download-menu"><summary title="Download" aria-label="{text["menu_label"]}">'
+            f'{text["menu"]} ▾</summary>'
             f'<nav><a href="{html.escape(pdf, quote=True)}">{text["pdf"]}</a>'
             f'<a href="{html.escape(md, quote=True)}" download="{html.escape(download_name(site_title, english), quote=True)}">'
             f'{text["markdown"]}</a></nav></details></nav>')
