@@ -1552,7 +1552,8 @@ def test_libcamera_design_documents_have_no_fixed_answers():
         # through the same binding step used by generation/publication.
         assert not configuration_errors(bound[section['id']])
         assert all('statements' not in topic for topic in section['design_topics'])
-        assert all('sha256' not in source for topic in section['design_topics'] for source in topic['sources'])
+        assert all('sha256' not in source or source.get('whole_file') is True
+                   for topic in section['design_topics'] for source in topic['sources'])
 
 
 @pytest.mark.parametrize('profile', ['architecture', 'vendor', 'vendor-overview', 'vendor-assurance'])

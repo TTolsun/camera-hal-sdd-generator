@@ -46,7 +46,7 @@
 | `answers` | 모델 설명이 답해야 할 질문 목록. |
 | `semantic_review` | `true`이면 모델 설명의 구조 주장(상속·필드)을 facts와 대조합니다. |
 | `show_evidence` | `true`이면 설명 아래에서 소스 발췌 원문을 펼쳐 볼 수 있습니다. |
-| `design_generation` | `llm`이면 필수 설계 질문의 답변을 LLM이 작성합니다. 주제마다 `covers`로 질문을 연결하고 `statements`와 고정 `sha256`은 작성하지 않습니다. |
+| `design_generation` | `llm`이면 필수 설계 질문의 답변을 LLM이 작성합니다. 주제마다 `covers`로 질문을 연결하며 `statements`를 미리 작성할 수 없습니다. `sha256`은 `whole_file: true`로 지정한 Git 파일에 사용할 수 있습니다. |
 | `needs_human` | `true`이면 실행 확인이 필요하다는 안내를 붙입니다. |
 | `prose_heading` | 설명 절의 제목. 기본은 "구조 설명". |
 | `design_grounding` | 선택적 boolean. 이 LLM 섹션의 별도 모델 근거 대조 여부를 지정합니다. 생략하면 `review.design_grounding`을 따릅니다. 판정 통과는 사람 승인이 아닙니다. |
@@ -98,6 +98,7 @@ design_topics:
 | `sources[].start`, `end` | 발췌의 시작·끝 문자열. 시작 문자열은 파일 안에서 유일해야 합니다. `scope`를 지정하면 그 범위 안에서 유일해야 합니다. |
 | `sources[].scope` | 선택할 문맥의 `start`, `end` 문자열. 범위 시작은 파일 안에서 유일해야 하며, 범위 끝을 넘어 발췌를 찾지 않습니다. 같은 문구가 여러 함수에 있을 때 담당 함수의 계약 안으로 검색을 한정합니다. |
 | `sources[].sha256` | 사람이 본문을 대조한 발췌의 해시. 코드가 바뀌면 달라져서 다시 검토하게 합니다. 해시만 바꿔 통과시키지 않습니다. |
+| `sources[].whole_file` | `true`이면 앵커가 공백을 제외한 Git 파일 전체를 포함해야 합니다. `sha256`이 필요하며, 파일의 일부만 포함하거나 해시가 달라지면 근거를 재검토해야 합니다. |
 | `sources[].max_chars` | 발췌 길이 상한(기본 12000). |
 | (파일 전체 발췌) | 발췌 앞뒤에 공백만 있으면 파일 전체를 고정한 근거입니다. 코드가 아닌 파일(튜닝 YAML, 설정 XML)이 바뀌어도 이 문서가 다시 만들어지고 해시가 맞으면 범위 검토에서 자동 분류합니다([범위 검사](../concepts/coverage.md#1단계-의미-없는-변경과-빌드-밖-파일의-자동-분류)). |
 | `statements[].kind` | 생략하면 설명, `limitation`이면 실행 확인이 필요한 항목. limitation만으로는 질문의 답이 되지 않습니다. |

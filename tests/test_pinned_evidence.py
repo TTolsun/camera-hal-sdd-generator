@@ -1,5 +1,6 @@
 """설계 근거가 파일 전체를 현재 해시로 고정한 비코드 파일은 다시 만드는 문서가 다루는 변경으로 분류한다."""
 
+import hashlib
 import subprocess
 
 import yaml
@@ -67,6 +68,31 @@ def test_범위_검사용_표시는_원고_지문을_바꾸지_않는다(tmp_cfg
     before = fingerprint(model, sec)
     del model.evidence["ipa/t/tuning"]["whole_file"]       # 이 표시가 없던 생성기로 만든 원고
     assert fingerprint(model, sec) == before
+
+
+def test_llm_whole_file_pin_requires_the_full_current_source(tmp_cfg):
+    root = tmp_cfg.source_root
+    _git(root, "init", "-q")
+    head = _commit(root, TEXT)
+    source = {
+        "id": "tuning", "file": "data/tuning.yaml", "start": "# header", "end": "...",
+        "whole_file": True, "sha256": hashlib.sha256(TEXT.rstrip().encode()).hexdigest(),
+    }
+    section = {
+        "id": "ipa", "design_generation": "llm", "design_requirements": [{"id": "t"}],
+        "design_topics": [{"id": "t", "covers": ["t"], "sources": [source]}],
+    }
+
+    def collect_status():
+        tmp_cfg.sections_file.write_text(yaml.safe_dump({"sections": [section]}), encoding="utf-8")
+        return _model(tmp_cfg, head).evidence["ipa/t/tuning"]["status"]
+
+    assert collect_status() == "available"
+    source["start"] = "algorithms:"
+    source["sha256"] = hashlib.sha256(TEXT[TEXT.index("algorithms:"):].rstrip().encode()).hexdigest()
+    assert collect_status() == "needs-review"
+    source["start"] = "# header"
+    assert collect_status() == "needs-review"
 
 
 def test_일부만_발췌했거나_해시가_없거나_어긋나거나_문서를_다시_만들지_않으면_검토로_남긴다(tmp_cfg):

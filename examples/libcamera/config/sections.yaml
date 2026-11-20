@@ -2677,7 +2677,8 @@ sections:
   - id: tuning
     title: 보정 전 튜닝 파일
     question: RKISP1과 Mali-C55의 센서별 파일 이름과 fallback 요청, IPAProxy::configurationFile()의
-      대체 파일 검색, 두 uncalibrated.yaml의 알고리즘 목록을 설명하세요. 목록에 없는 보정 알고리즘이 활성화된다고 추정하지 마세요.
+      대체 파일 검색, 두 uncalibrated.yaml의 알고리즘 목록을 설명하세요. RKISP1의 IMX219 센서별 파일에
+      GammaOutCorrection 항목이 있다는 점도 확인하세요. 이 항목으로 실제 장치의 밝기나 실행 결과를 추정하지 마세요.
     sources:
     - id: rkisp1-tuning
       file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
@@ -2696,6 +2697,12 @@ sections:
       file: src/ipa/rkisp1/data/uncalibrated.yaml
       start: '# SPDX-License-Identifier: CC0-1.0'
       end: '...'
+    - id: rkisp1-imx219
+      file: src/ipa/rkisp1/data/imx219.yaml
+      start: '# SPDX-License-Identifier: CC0-1.0'
+      end: '...'
+      sha256: 481ce90625969b74388d6a4dfceb898e2595daa9a40ed271589fd7ae42c3f477
+      whole_file: true
     - id: mali-c55-uncalibrated
       file: src/ipa/mali-c55/data/uncalibrated.yaml
       start: '# SPDX-License-Identifier: CC0-1.0'
