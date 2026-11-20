@@ -51,6 +51,21 @@ def test_malformed_namespace_citation_cannot_hide_beside_valid_citations():
     assert verdict.invalid == ["libcamera::ipa::lsc.h:27"]
 
 
+def test_doxygen_citation_is_validated_against_pinned_lines():
+    citation = "Documentation/thread-safety.dox:28"
+    text = f"같은 스레드에서 호출한 콜백이 동일 함수에 중첩 진입하려면 별도의 허용 문서가 필요합니다 `{citation}`."
+    assert extract_citations(text) == [citation]
+    assert check(text, {citation}).ok
+    verdict = check(text.replace(":28", ":29") + " `src/libcamera/base/thread.cpp:613`.",
+                    {citation, "src/libcamera/base/thread.cpp:613"})
+    assert not verdict.ok
+    assert verdict.invalid == ["Documentation/thread-safety.dox:29"]
+    malformed = "libcamera::Documentation/thread-safety.dox:28"
+    verdict = check(f"{text} 소스 경로를 `{malformed}`로 잘못 표기했습니다.", {citation})
+    assert not verdict.ok
+    assert verdict.invalid == [malformed]
+
+
 def test_missing_citation_fails_when_required():
     v = check("클래스 설명만 있고 인용이 없습니다.", {"x.cpp:1"}, require=True)
     assert not v.ok
