@@ -334,7 +334,7 @@ sections:
   title: 지원 범위와 검증
   output: vendor-assurance.md
   kind: prose
-  lead: 지원 조건과 구성 제약을 확인하고 제품 도입 전에 검증할 범위를 정하세요.
+  lead: WSL2 가상 캡처 기록을 읽고 고객 보드에 남은 첫 촬영 시험을 정하세요. 현재 분석한 커밋은 페이지 하단의 문서 생성·검토 정보에 있습니다.
   reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
   design_generation: llm
   semantic_review: true
@@ -359,7 +359,14 @@ sections:
   - include/libcamera/internal/ipa_manager.h
   - src/libcamera/camera.cpp
   - Documentation/software-isp-benchmarking.rst
+  - include/libcamera/camera.h
+  - include/libcamera/framebuffer.h
+  - include/libcamera/request.h
   design_requirements:
+  - id: first-capture
+    question: 이 기록으로 고객 보드의 첫 촬영이 검증됐다고 보고할 수 있습니까?
+    aspects:
+    - verification
   - id: constraints
     question: 지원 전제와 제약은 무엇이며 별도 검증할 항목은 무엇입니까?
     aspects:
@@ -369,6 +376,75 @@ sections:
     aspects:
     - verification
   design_topics:
+  - id: first-capture
+    title: 고객 보드의 첫 촬영을 검증했습니까?
+    question: WSL2 가상 캡처의 적용 환경, 관측 결과, 근거 종류와 고객의 물리 센서 보드에서 남은 첫 촬영 시험을 설명하세요.
+    covers:
+    - first-capture
+    design_prompt: focused
+    product:
+      id: libcamera-first-capture-trial
+      feature: virtual-first-capture
+    sources:
+    - id: upstream-virtual-guide
+      file: src/libcamera/pipeline/virtual/README.md
+      start: '# Virtual Pipeline Handler'
+      end: Virtual pipeline handler emulates fake external camera(s) for testing.
+    - id: virtual-config
+      file: src/libcamera/pipeline/virtual/data/virtual.yaml
+      start: '"Virtual2":'
+      end: 'model: "Virtual Video Device2"'
+    - id: board-camera-api
+      file: include/libcamera/camera.h
+      start: Signal<Request *, FrameBuffer *> bufferCompleted;
+      end: int stop();
+    - id: request-status
+      file: include/libcamera/request.h
+      start: enum Status {
+      end: RequestCancelled,
+    - id: frame-status
+      file: include/libcamera/framebuffer.h
+      start: enum Status {
+      end: FrameCancelled,
+    parts:
+    - id: decision
+      role: summary
+      question: 첫 문장에서 이 기록으로 고객 보드의 첫 촬영을 검증했다고 보고할 수 없다고 답하세요. 시험 프로그램은 물리 센서 대신 가상 카메라를 사용했고, 고객 보드의 물리 센서로 촬영한 기록은 없다고 짧게 설명하세요.
+      sources: [upstream-virtual-guide]
+    - id: official-scope
+      question: libcamera 공식 프로젝트 문서에서 확인할 수 있는 범위라는 점을 먼저 밝히고, Virtual Pipeline Handler가 테스트용 가상 카메라를 모사한다고 한 문장으로 설명하세요. 고객 보드의 공식 지원 판정과 연결하지 마세요.
+      sources: [upstream-virtual-guide]
+      answer_contract:
+        basis: description
+    - id: source-implementation
+      question: 현재 분석한 소스의 예제 YAML은 Virtual2에 400×300 크기와 `lines` 테스트 패턴을 지정한다고 한 문장으로 설명하세요. YAML이 NV12를 지정하거나 실물 센서를 선택한다고 설명하지 마세요.
+      sources: [virtual-config]
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - [Virtual2]
+        - [lines]
+    - id: observed-run
+      question: 과거 실행 관측으로 소개하세요. 실행 당시의 전체 소스 커밋과 WSL2 시험 커널 이름, 내장 udmabuf, Virtual2의 400×300 NV12, 각각 별도 프로세스에서 실행한 3회 모두 매회 3프레임 완료를 명시하세요. 현재 분석 소스에서 다시 실행한 결과로 쓰지 마세요.
+      sources: []
+      answer_contract:
+        basis: measurement
+        required_terms:
+        - [293d751a814e0d4c34e85ad457ccd9d5eefd1a61]
+        - [6.18.33.2-microsoft-standard-WSL2-issue211]
+        - [udmabuf]
+        - [Virtual2]
+        - [NV12]
+        - ['3회', '세 번']
+        - ['3프레임', '3 프레임']
+    - id: board-trial
+      question: 고객 보드에 남은 첫 촬영 시험을 계획으로 두세 문장에 제시하세요. 보드·물리 센서·커널/드라이버·libcamera 빌드와 대상 애플리케이션을 기록한 뒤 실제 센서를 열어 적용한 스트림 형식과 크기를 확인합니다. 첫 요청의 RequestComplete와 버퍼의 FrameSuccess를 확인하고, 센서에서 들어온 프레임도 저장하거나 화면에서 확인하도록 안내하세요. 실행 결과나 제품 승인으로 쓰지 마세요.
+      sources: [board-camera-api, request-status, frame-status]
+      answer_contract:
+        basis: investigation
+        required_terms:
+        - [RequestComplete]
+        - [FrameSuccess]
   - id: constraints
     title: 지원 조건과 제약
     question: CameraConfiguration::validate의 Invalid·Adjusted·Valid를 구분하고 Adjusted이면
