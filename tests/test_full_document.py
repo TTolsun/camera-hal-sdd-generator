@@ -23,7 +23,7 @@ def test_whole_document_holds_every_page_with_internal_links(tmp_cfg, sample_mod
     # Folded review records and source excerpts are printed open.
     assert re.search(r'<details(?![^>]*\sopen)', combined) is None
     assert 'a' * 40 in combined and 'Test &lt;Site&gt; · 전체 문서' in combined
-    assert 'src="../assets/print.js?v=' in combined and 'href="../assets/reading.css?v=' in combined
+    assert 'href="../assets/reading.css?v=' in combined and 'mermaid.render(`sdd-print-' in combined
     # Every diagram on the site is in the copy.
     diagrams = sum(p.read_text(encoding='utf-8').count('class="mermaid"')
                    for p in out.rglob('*.html') if p.parent.name != 'download')
@@ -44,7 +44,7 @@ def test_whole_document_markdown_and_download_menu(tmp_cfg, sample_model):
     assert targets and targets <= anchors
     assert 'https://github.com/example/source/blob/' + 'a' * 40 + '/device/CameraDevice.h#L40' in markdown
     page = (out / 'nested/detail.html').read_text(encoding='utf-8')
-    assert page.count('class="download-menu"') == 1
+    assert page.count('class="language-selector download-menu"') == 1
     assert 'href="../download/full.html?print"' in page and 'href="../download/full.md" download="Test-Site.md"' in page
 
 
@@ -96,3 +96,37 @@ def test_markdown_conversion_refuses_to_drop_text(monkeypatch):
     monkeypatch.setattr(full_document._Markdown, 'definitions', lambda self, node: [])
     with pytest.raises(RuntimeError, match='omit text: Commit'):
         to_markdown('<dl><dt>Commit</dt><dd>abc</dd></dl>')
+
+
+def test_whole_document_keeps_shared_site_assets_unchanged(tmp_cfg, sample_model):
+    """Changing shared CSS/JS would send every reviewed visual item back to review."""
+    prepare(tmp_cfg, sample_model)
+    tmp_cfg.raw['site']['full_document'] = False
+    out = export_site(tmp_cfg)
+    before = {p.relative_to(out).as_posix(): p.read_bytes() for p in (out / 'assets').rglob('*') if p.is_file()}
+    tmp_cfg.raw['site']['full_document'] = True
+    export_site(tmp_cfg)
+    after = {p.relative_to(out).as_posix(): p.read_bytes() for p in (out / 'assets').rglob('*') if p.is_file()}
+    assert before == after
+
+
+def test_visual_review_reuse_ignores_only_the_exact_download_menu(tmp_cfg, sample_model):
+    """The menu is page chrome; a changed menu or extra content must still count as a change."""
+    from sdd.visual_audit import Document, canonical
+    from sdd.visual_review_reuse import presentation_normalizer
+    prepare(tmp_cfg, sample_model)
+    tmp_cfg.raw['site']['full_document'] = False
+    out = export_site(tmp_cfg)
+    without = (out / 'device.html').read_text(encoding='utf-8')
+    tmp_cfg.raw['site']['full_document'] = True
+    export_site(tmp_cfg)
+    with_menu = (out / 'device.html').read_text(encoding='utf-8')
+
+    def normalized(text):
+        document = Document(text)
+        presentation_normalizer()(document, 'device.html')
+        return canonical(document.root)
+
+    assert without != with_menu and normalized(without) == normalized(with_menu)
+    edited = with_menu.replace('>PDF</a>', '>PDF copy</a>', 1)
+    assert normalized(edited) != normalized(without)

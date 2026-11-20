@@ -6,33 +6,20 @@
   const english = config.language === 'en';
   const t = (ko, en) => english ? en : ko;
   const root = new URL(config.root, location.href);
-  // Header disclosure menus (language, whole-document download) close like a menu.
-  document.querySelectorAll('.language-selector, .download-menu').forEach(menu => {
-    menu.addEventListener('keydown', event => {
+  const languages = document.querySelector('.language-selector');
+  if (languages) {
+    languages.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
-        menu.open = false;
-        menu.querySelector('summary').focus();
+        languages.open = false;
+        languages.querySelector('summary').focus();
       }
     });
     document.addEventListener('click', event => {
-      if (!menu.contains(event.target)) menu.open = false;
+      if (!languages.contains(event.target)) languages.open = false;
     });
-    menu.addEventListener('focusout', event => {
-      if (!menu.contains(event.relatedTarget)) menu.open = false;
+    languages.addEventListener('focusout', event => {
+      if (!languages.contains(event.relatedTarget)) languages.open = false;
     });
-  });
-  // Printing one page must not drop folded content; restore the reader's folds afterwards.
-  let printedOpen = [];
-  window.addEventListener('beforeprint', () => {
-    printedOpen = [...document.querySelectorAll('main details:not([open])')];
-    printedOpen.forEach(item => { item.open = true; });
-  });
-  window.addEventListener('afterprint', () => {
-    printedOpen.forEach(item => { item.open = false; });
-    printedOpen = [];
-  });
-  const languages = document.querySelector('.language-selector');
-  if (languages) {
     languages.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
       const target = new URL(link.href);
       target.hash = location.hash;

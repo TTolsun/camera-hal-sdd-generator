@@ -58,14 +58,13 @@ dialog{color:var(--ink);background:#fff;border:1px solid var(--line);border-radi
 /* Keep the close action readable beside a multiline diagram title. */
 .dialog-head button{flex:0 0 auto;white-space:nowrap}
 /* The native disclosure keeps language switching available without JavaScript. */
-:is(.language-selector,.download-menu) { position: relative; font-size: 14px; margin: 0; padding: 0; align-self: center; }
-:is(.language-selector,.download-menu) summary { cursor: pointer; padding: .4rem .65rem; white-space: nowrap; }
-:is(.language-selector,.download-menu) nav { position: absolute; right: 0; top: 100%; min-width: 130px; padding: .4rem; background: white; border: 1px solid #cbd8d2; border-radius: 6px; z-index: 50; box-shadow: 0 4px 12px #17201e18; }
-:is(.language-selector,.download-menu) nav a { display: block; padding: .4rem .65rem; }
-.download-menu nav { min-width: 210px; }
+.language-selector { position: relative; font-size: 14px; margin: 0; padding: 0; align-self: center; }
+.language-selector summary { cursor: pointer; padding: .4rem .65rem; white-space: nowrap; }
+.language-selector nav { position: absolute; right: 0; top: 100%; min-width: 130px; padding: .4rem; background: white; border: 1px solid #cbd8d2; border-radius: 6px; z-index: 50; box-shadow: 0 4px 12px #17201e18; }
+.language-selector nav a { display: block; padding: .4rem .65rem; }
 .language-selector [aria-current] { font-weight: 700; background: #edf5f1; }
 .translation-note { font-size: 13px; color: #52635c; border-left: 3px solid #8ba99e; padding-left: 12px; }
-@media(max-width:760px){.site-header{height:auto;min-height:60px;flex-wrap:wrap;padding:10px 18px;gap:8px}.brand{flex:1 1 100%}.header-actions{margin-left:auto}:is(.language-selector,.download-menu){font-size:12px}}
+@media(max-width:760px){.site-header{height:auto;min-height:60px;flex-wrap:wrap;padding:10px 18px;gap:8px}.brand{flex:1 1 100%}.header-actions{margin-left:auto}.language-selector{font-size:12px}}
 /* Glossary terms: folded per-page list, underlined first use in the text and an in-place meaning box. */
 details.page-terms{margin:18px 0 26px;padding:10px 14px;background:var(--soft);font-size:14px}details.page-terms summary{font-weight:600;color:#33433c}details.page-terms[open] summary{margin-bottom:8px}
 button.term{display:inline;font:inherit;color:inherit;background:none;border:0;border-radius:0;padding:0;margin:0;cursor:help;text-decoration:underline dotted #6f8b80;text-decoration-thickness:1.5px;text-underline-offset:4px}button.term:hover,button.term[aria-expanded=true]{background:#edf5f1;text-decoration-color:var(--accent)}
@@ -135,14 +134,3 @@ text.actor.is-match{fill:#865000!important;paint-order:stroke;stroke:#fff1ce!imp
 .reader-start>section{border:1px solid var(--line);border-radius:8px;padding:18px 20px;min-width:0}
 .reader-start h3{font-size:17px;margin:0 0 8px}.reader-start p{margin:0 0 12px;color:var(--muted);font-size:14px}.reader-start a{font-weight:600;font-size:14px}
 @media(max-width:600px){.reader-start{grid-template-columns:1fr;gap:12px}.reader-start>section{padding:16px}.reader-start a{display:inline-block;min-height:44px;align-content:center}}
-
-/* Printing never hides content: long code wraps and wide diagrams shrink to the page instead of being clipped. */
-@media print{pre{white-space:pre-wrap;overflow:visible}pre code{overflow-wrap:anywhere}.mermaid{overflow:visible;break-inside:avoid}.mermaid svg{max-width:100%!important;height:auto!important}.download-menu{display:none!important}}
-/* Whole-document copy (download/full.html): one page holding every document, printed or saved as PDF. */
-.full-document-bar{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:10px max(16px,calc((100vw - 900px)/2));background:#fff;border-bottom:1px solid var(--line);font-size:14px}
-.full-document-bar p{margin:0;color:var(--muted)}.full-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-left:auto}.full-document-bar .full-hint{flex:1 1 100%;font-size:12px}
-#print-document{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}#print-document:disabled{background:var(--soft);border-color:var(--line);color:var(--muted);cursor:progress}
-.full-document main{max-width:900px;margin:0 auto;padding:32px 16px 64px}.full-cover dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;font-size:14px}.full-cover dd{margin:0}
-.full-notice{border-left:3px solid #8ba99e;padding:4px 0 4px 14px;color:var(--muted);font-size:14px}.full-contents ol ol{padding-left:20px}
-.full-page{border-top:2px solid var(--line);margin-top:56px;padding-top:8px}.full-page>.breadcrumb{margin-bottom:0}
-@media print{.full-document-bar{display:none}.full-document main{padding:0;max-width:none}.full-cover{break-after:page}.full-page{break-before:page;border:0;margin:0;padding:0}.full-page details>summary{list-style:none}.full-page details>summary::-webkit-details-marker{display:none}}

@@ -23,7 +23,7 @@ from .visual_audit import (
 # the generator (Korean) or that build's English catalog (English) produces.
 # The excerpt start citation and end line are kept in the normalized token,
 # so a changed range, added prose or edited translation still differs.
-PRESENTATION_NORMALIZATION = 'generator-note-labels-v2'
+PRESENTATION_NORMALIZATION = 'generator-note-labels-v3'
 _EXCERPT_TITLES = {'소스 근거: ': 'source', 'Source evidence: ': 'source', '제품 자료: ': 'product',
                    'Product evidence: ': 'product', 'Product material: ': 'product'}
 _SCOPE_TITLES = {'그림 근거와 확인 범위', 'Diagram evidence and verification scope'}
@@ -62,11 +62,48 @@ def _scope_lines(english, catalog):
                                 fixed_translation(VISUAL_SCOPE_LABEL)) if value}
 
 
+def _download_menu(node):
+    """The generator's exact whole-document Download menu (full_document._menu), or nothing else."""
+    from .full_document import LABELS, paths
+    if node.tag != 'nav' or node.attrs.get('class') != 'download-nav':
+        return False
+    children = [child for child in node.children if not (isinstance(child, str) and not child.strip())]
+    if len(children) != 1 or not isinstance(children[0], Node):
+        return False
+    details = children[0]
+    if details.tag != 'details' or details.attrs.get('class') != 'language-selector download-menu':
+        return False
+    parts = [child for child in details.children if not (isinstance(child, str) and not child.strip())]
+    if (len(parts) != 2 or not all(isinstance(part, Node) for part in parts)
+            or [part.tag for part in parts] != ['summary', 'nav']):
+        return False
+    summary, links = parts
+    labels = {label['menu'] + ' ▾' for label in LABELS.values()}
+    anchors = [child for child in links.children if isinstance(child, Node)]
+    if (summary.text() not in labels or any(isinstance(child, str) and child.strip() for child in links.children)
+            or len(anchors) != 2 or any(anchor.tag != 'a' or list(anchor.all('a'))[1:] for anchor in anchors)):
+        return False
+    print_page, markdown_file = paths(False)
+    pdf, markdown = anchors
+    return (pdf.text() in {label['pdf'] for label in LABELS.values()}
+            and markdown.text() in {label['markdown'] for label in LABELS.values()}
+            and set(pdf.attrs) == {'href'} and set(markdown.attrs) == {'href', 'download'}
+            and pdf.attrs['href'].endswith(print_page + '?print')
+            and markdown.attrs['href'].endswith(markdown_file)
+            and markdown.attrs['download'].endswith('.md'))
+
+
 def presentation_normalizer(catalog=None):
     """Comparison transform; ``catalog`` is the English catalog the site was built with."""
     strings = (catalog or {}).get('strings', {})
 
     def normalize(document, page, root=None):
+        # The whole-document Download menu is page chrome added to every page; it carries no
+        # explanation, figure or source. Remove it only in the generator's exact form.
+        for actions in document.root.all('div'):
+            if actions.attrs.get('class') == 'header-actions':
+                actions.children = [child for child in actions.children
+                                    if not (isinstance(child, Node) and _download_menu(child))]
         english = page.startswith('en/')
         if english and not strings:
             return  # Without the build's catalog no English line can be proved generated.

@@ -616,7 +616,11 @@ def inventory_page(source, page, options, *, source_commit='', root=None, draft=
                 if not path.is_file():
                     row['unresolved_source_windows'].append(href)
                     continue
-                row['source_window_hashes'][target] = digest(path.read_bytes().hex())
+                identity = path.read_bytes().hex()
+                if comparison_transform is not None and path.suffix == '.html':
+                    # Comparison only: the same normalized tree as fragment links use below.
+                    identity = canonical(read_document(path.read_text(encoding='utf-8'), target).root)
+                row['source_window_hashes'][target] = digest(identity)
                 continue
             if not parts.scheme and not parts.netloc and parts.fragment:
                 fragment = parts.fragment

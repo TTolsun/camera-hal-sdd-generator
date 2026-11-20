@@ -43,6 +43,77 @@ LABELS = {
 }
 
 
+# Inline so the shared site assets (reading.css, site.js) stay byte-identical; changing them
+# invalidates reuse of every reviewed visual item on every page (visual_review_reuse).
+STYLE = (
+    '.full-document-bar{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;'
+    'padding:10px max(16px,calc((100vw - 900px)/2));background:#fff;border-bottom:1px solid var(--line);font-size:14px}'
+    '.full-document-bar p{margin:0;color:var(--muted)}.full-actions{display:flex;flex-wrap:wrap;align-items:center;'
+    'gap:8px 16px;margin-left:auto}.full-document-bar .full-hint{flex:1 1 100%;font-size:12px}'
+    '#print-document{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}'
+    '#print-document:disabled{background:var(--soft);border-color:var(--line);color:var(--muted);cursor:progress}'
+    '.full-document main{max-width:900px;margin:0 auto;padding:32px 16px 64px}'
+    '.full-cover dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;font-size:14px}'
+    '.full-cover dd{margin:0}.full-notice{border-left:3px solid #8ba99e;padding:4px 0 4px 14px;color:var(--muted);'
+    'font-size:14px}.full-contents ol ol{padding-left:20px}'
+    '.full-page{border-top:2px solid var(--line);margin-top:56px;padding-top:8px}.full-page>.breadcrumb{margin-bottom:0}'
+    # Printing never hides content: long code wraps and wide diagrams shrink to the page.
+    '@media print{.full-document-bar{display:none}.full-document main{padding:0;max-width:none}'
+    '.full-cover{break-after:page}.full-page{break-before:page;border:0;margin:0;padding:0}'
+    'pre{white-space:pre-wrap;overflow:visible}pre code{overflow-wrap:anywhere}'
+    '.mermaid{overflow:visible;break-inside:avoid}.mermaid svg{max-width:100%!important;height:auto!important}'
+    '.full-page details>summary{list-style:none}.full-page details>summary::-webkit-details-marker{display:none}}'
+)
+
+# Draw every diagram before printing; printing earlier would put Mermaid source text in the PDF.
+# The Mermaid settings match the site pages (site_assets/site.js).
+SCRIPT = """(() => {
+  'use strict';
+  const config = JSON.parse(document.querySelector('#site-config').textContent);
+  const english = config.language === 'en';
+  const t = (ko, en) => english ? en : ko;
+  const root = new URL(config.root, location.href);
+  const button = document.querySelector('#print-document');
+  const status = document.querySelector('#print-status');
+  const diagrams = [...document.querySelectorAll('.mermaid')];
+  button.addEventListener('click', () => window.print());
+  function finish(failed) {
+    button.disabled = false;
+    status.textContent = failed
+      ? t(`그림 ${failed}개를 그리지 못해 Mermaid 원문으로 표시합니다. 원문도 PDF에 포함됩니다.`,
+          `${failed} diagram(s) could not be drawn and are shown as Mermaid source, which the PDF includes.`)
+      : t(`인쇄 준비가 끝났습니다. 그림 ${diagrams.length}개를 모두 그렸습니다.`,
+          `Ready to print. All ${diagrams.length} diagram(s) are drawn.`);
+    if (new URLSearchParams(location.search).has('print')) window.print();
+  }
+  if (!diagrams.length) { finish(0); return; }
+  import(new URL(config.mermaid, root).href).then(async ({default: mermaid}) => {
+    mermaid.initialize({startOnLoad: false, securityLevel: 'strict', theme: 'base',
+      themeVariables: {background: '#ffffff', primaryColor: '#edf5f1', primaryTextColor: '#17201e',
+        primaryBorderColor: '#8ba99e', lineColor: '#66766f', secondaryColor: '#f6f7f8',
+        tertiaryColor: '#ffffff', edgeLabelBackground: '#ffffff',
+        fontFamily: 'Geist, Malgun Gothic, system-ui, sans-serif', fontSize: '14px'},
+      flowchart: {htmlLabels: false, curve: 'basis', nodeSpacing: 38, rankSpacing: 65, padding: 16}});
+    let failed = 0;
+    for (const [i, diagram] of diagrams.entries()) {
+      status.textContent = t(`그림을 그리는 중입니다 (${i + 1}/${diagrams.length}).`,
+                             `Drawing diagrams (${i + 1}/${diagrams.length}).`);
+      const source = diagram.textContent;
+      try {
+        const {svg} = await mermaid.render(`sdd-print-${i}`, source);
+        diagram.innerHTML = svg;
+        diagram.dataset.ready = 'true';
+      } catch (_) {
+        failed += 1;
+        diagram.textContent = source;
+        diagram.classList.add('diagram-error');
+      }
+    }
+    finish(failed);
+  }).catch(() => finish(diagrams.length));
+})();"""
+
+
 def paths(english: bool) -> tuple[str, str]:
     prefix = ('en/' if english else '') + DIRECTORY + '/'
     return prefix + PRINT_PAGE, prefix + MARKDOWN
@@ -118,12 +189,11 @@ def _config(document: str, page: str, directory: str) -> dict:
     return {key: data[key] for key in ('root', 'mermaid', 'language') if key in data}
 
 
-def _assets(document: str, page: str, directory: str) -> tuple[str, str]:
+def _stylesheet(document: str, page: str, directory: str) -> str:
     href = html.unescape(_single(r'<link rel="stylesheet" href="([^"]+)">', document, page, 'stylesheet')[1])
     parts = urlsplit(href)
     target = posixpath.normpath(posixpath.join(posixpath.dirname(page), parts.path))
-    css = posixpath.relpath(target, directory) + ('?' + parts.query if parts.query else '')
-    return css, css.replace('reading.css', 'print.js', 1)
+    return posixpath.relpath(target, directory) + ('?' + parts.query if parts.query else '')
 
 
 def _combined(pages, *, english, site_title, source_commit, public_url):
@@ -148,7 +218,7 @@ def _combined(pages, *, english, site_title, source_commit, public_url):
     if contents:
         contents.append('</ol></li>')
     first = pages[0][1]
-    css, script = _assets(first, pages[0][0], directory)
+    css = _stylesheet(first, pages[0][0], directory)
     config = _config(first, pages[0][0], directory)
     site_link = ''
     if public_url:
@@ -164,11 +234,11 @@ def _combined(pages, *, english, site_title, source_commit, public_url):
     back = posixpath.relpath('en/index.html' if english else 'index.html', directory)
     document = f'''<!doctype html>
 <html lang="{'en' if english else 'ko'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{heading}</title><link rel="stylesheet" href="{html.escape(css, quote=True)}"></head>
+<title>{heading}</title><link rel="stylesheet" href="{html.escape(css, quote=True)}"><style>{STYLE}</style></head>
 <body class="full-document"><div class="full-document-bar"><a href="{back}">← {text["back"]}</a><p id="print-status" role="status">{text["preparing"]}</p>
 <div class="full-actions"><button id="print-document" type="button" disabled>{text["save"]}</button><a href="{posixpath.basename(markdown_path)}" download="{html.escape(name, quote=True)}">{text["save_markdown"]}</a></div><p class="full-hint">{text["hint"]}</p></div>
 <main id="main">{content}</main>
-<script id="site-config" type="application/json">{json.dumps(config, ensure_ascii=False).replace("<", chr(92) + "u003c")}</script><script defer src="{html.escape(script, quote=True)}"></script></body></html>
+<script id="site-config" type="application/json">{json.dumps(config, ensure_ascii=False).replace("<", chr(92) + "u003c")}</script><script>{SCRIPT}</script></body></html>
 '''
     base = public_url.rstrip('/') + '/' + directory + '/' if public_url else ''
     markdown = to_markdown(content, base_url=base)
@@ -181,10 +251,15 @@ def _menu(page: str, english: bool, site_title: str) -> str:
     here = posixpath.dirname(page) or '.'
     pdf = posixpath.relpath(print_path, here) + '?print'
     md = posixpath.relpath(markdown_path, here)
-    return (f'<details class="download-menu"><summary aria-label="{text["menu_label"]}">{text["menu"]} ▾</summary>'
-            f'<nav aria-label="{text["menu_label"]}"><a href="{html.escape(pdf, quote=True)}">{text["pdf"]}</a>'
+    # The language selector's existing style is reused: a new or changed shared CSS/JS asset marks every
+    # page's presentation as changed and sends all reviewed visual items back to review.
+    # The outer nav keeps the menu label out of the page's first reviewed item: the visual
+    # audit reads everything except nav, aside and footer as page content.
+    return (f'<nav class="download-nav" aria-label="{text["menu_label"]}" style="display:flex">'
+            f'<details class="language-selector download-menu"><summary>{text["menu"]} ▾</summary>'
+            f'<nav><a href="{html.escape(pdf, quote=True)}">{text["pdf"]}</a>'
             f'<a href="{html.escape(md, quote=True)}" download="{html.escape(download_name(site_title, english), quote=True)}">'
-            f'{text["markdown"]}</a></nav></details>')
+            f'{text["markdown"]}</a></nav></details></nav>')
 
 
 def publish(out: Path, entries, *, site_title: str, source_commit: str = '', public_url: str = '') -> None:

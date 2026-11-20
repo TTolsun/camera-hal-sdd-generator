@@ -216,7 +216,7 @@ def test_generator_note_label_changes_carry_reviews_with_presentation_provenance
     updated, stats = _presentation_reuse(_note_page(_OLD_LOCATION, '{SCOPE}'), _note_page(_NEW_LOCATION, '{SCOPE}'))
     assert stats['pending'] == [] and stats['presentation_only'] >= 1
     carried = [row for row in updated['items'].values() if 'presentation_reuse' in row]
-    assert carried and all(row['presentation_reuse']['normalization'] == 'generator-note-labels-v2'
+    assert carried and all(row['presentation_reuse']['normalization'] == 'generator-note-labels-v3'
                            and row['presentation_reuse']['baseline_build_id'] == 'old-build' for row in carried)
     # Published audit rows keep the provenance: apply_reviews copies it.
     applied = apply_reviews(_items(_note_page(_NEW_LOCATION, VISUAL_SCOPE_LABEL)), updated)
