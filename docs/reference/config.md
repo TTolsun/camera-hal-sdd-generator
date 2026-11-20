@@ -168,6 +168,8 @@ agent:
 | `nav_groups` | `[]` | 왼쪽 메뉴 그룹 순서. |
 | `undefined_terms` | 용어집이 있으면 `fail`, 없으면 `warn` | 뜻을 적지 않은 약어의 처리. `fail`, `warn`, `off`. [약어 검사](glossary.md#약어-검사). |
 | `english_catalog` | 없음 | 영어판 번역 목록. 공개 libcamera에서만 씁니다. |
+| `full_document` | `true` | 상단 `Download` 메뉴와 전체 문서 사본(`download/full.html`, `download/full.md`)을 만듭니다. 외부로 문서를 내보내면 안 되는 사이트는 `false`로 끕니다. [전체 문서 내려받기](../concepts/site.md#전체-문서-내려받기) |
+| `public_url` | 없음 | 게시된 사이트 주소. 지정하면 사본 표지에 원본 사이트를 적고, Markdown 사본의 사이트 파일 링크를 이 주소 기준의 절대 주소로 바꿉니다. 지정하지 않으면 그 링크는 글자만 남깁니다. |
 | `translation_batch_size` | `1` | 번역 호출당 문장 수. 1~16을 허용하며 입력 예산에 맞게 묶음을 줄입니다. 각 문장의 ID·코드 자리표시자·영어 응답을 검사하고 실패한 묶음은 반영하지 않습니다. |
 
 ## update

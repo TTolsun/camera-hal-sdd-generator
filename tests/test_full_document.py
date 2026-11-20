@@ -1,0 +1,98 @@
+import re
+
+import pytest
+
+from sdd.export_site import export_site
+from sdd.full_document import is_combined, to_markdown
+from sdd.site_build import verify_site
+
+from test_export_site import prepare
+
+
+def test_whole_document_holds_every_page_with_internal_links(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    out = export_site(tmp_cfg)
+    combined = (out / 'download/full.html').read_text(encoding='utf-8')
+    pages = re.findall(r'<section class="full-page" id="doc-(\d+)">', combined)
+    assert len(pages) == 3  # index, device, nested/detail
+    # Links between pages land inside the one document; IDs stay unique per page.
+    device = next(n for n in pages if f'id="d{n}-evidence"' in combined)
+    nested = next(n for n in pages if f'id="d{n}-methods"' in combined)
+    assert f'href="#d{nested}-methods"' in combined and f'href="#d{device}-evidence"' in combined
+    assert 'href="nested/detail.html' not in combined and 'id="한글-목차"' not in combined
+    # Folded review records and source excerpts are printed open.
+    assert re.search(r'<details(?![^>]*\sopen)', combined) is None
+    assert 'a' * 40 in combined and 'Test &lt;Site&gt; · 전체 문서' in combined
+    assert 'src="../assets/print.js?v=' in combined and 'href="../assets/reading.css?v=' in combined
+    # Every diagram on the site is in the copy.
+    diagrams = sum(p.read_text(encoding='utf-8').count('class="mermaid"')
+                   for p in out.rglob('*.html') if p.parent.name != 'download')
+    assert diagrams and combined.count('class="mermaid"') == diagrams
+    verify_site(out)
+
+
+def test_whole_document_markdown_and_download_menu(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    out = export_site(tmp_cfg)
+    markdown = (out / 'download/full.md').read_text(encoding='utf-8')
+    assert markdown.startswith('# Test <Site> · 전체 문서'.replace('<', '\\<').replace('>', '\\>'))
+    assert '# Device' in markdown and '# Details' in markdown
+    assert markdown.count('```mermaid') == (out / 'download/full.html').read_text(encoding='utf-8').count('class="mermaid"')
+    # In-document links keep a visible target.
+    targets = set(re.findall(r'\]\(#([^)]+)\)', markdown))
+    anchors = set(re.findall(r'<a id="([^"]+)"></a>', markdown))
+    assert targets and targets <= anchors
+    assert 'https://github.com/example/source/blob/' + 'a' * 40 + '/device/CameraDevice.h#L40' in markdown
+    page = (out / 'nested/detail.html').read_text(encoding='utf-8')
+    assert page.count('class="download-menu"') == 1
+    assert 'href="../download/full.html?print"' in page and 'href="../download/full.md" download="Test-Site.md"' in page
+
+
+def test_whole_document_can_be_turned_off(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    tmp_cfg.raw['site']['full_document'] = False
+    out = export_site(tmp_cfg)
+    assert not (out / 'download').exists()
+    assert 'download-menu' not in (out / 'device.html').read_text(encoding='utf-8')
+
+
+def test_combined_page_is_excluded_from_per_page_audits():
+    assert is_combined('download/full.html') and is_combined('en/download/full.html')
+    assert not is_combined('download.html') and not is_combined('scenarios/full.html')
+
+
+def test_markdown_conversion_keeps_structure_and_text():
+    source = '''<h2 id="x">Title *star* snake_case _lead</h2>
+<p>See <a href="#x">here</a> and <a href="https://e.com/a b">out</a> and <a href="local.json">file</a>.</p>
+<div class="table-scroll"><table><thead><tr><th>Name</th><th>Note</th></tr></thead>
+<tbody><tr><td><code>a|b</code></td><td>one<br>two</td></tr></tbody></table></div>
+<table><tr><td><ul><li>nested</li></ul></td></tr></table>
+<ul><li>first<ul><li>child</li></ul></li><li><p>para</p><pre><code class="language-cpp">int x;</code></pre></li></ul>
+<details class="note"><summary>Folded</summary><p>hidden text</p></details>
+<dl><dt>Commit</dt><dd><code>abc</code></dd></dl>
+<pre class="mermaid">flowchart LR
+  A[Start] --> B</pre>
+<pre><code>has ``` fence</code></pre>
+<p>1. not a list</p>'''
+    markdown = to_markdown(source)
+    assert '## <a id="x"></a>Title \\*star\\* snake_case \\_lead' in markdown
+    assert '[here](#x)' in markdown and '[out](<https://e.com/a b>)' in markdown
+    assert 'file.' in markdown and 'local.json' not in markdown
+    assert '| `a\\|b` | one<br>two |' in markdown
+    assert '<table><tbody><tr><td><ul><li>nested</li></ul></td></tr></tbody></table>' in markdown
+    assert '- first\n\n  - child\n- para' in markdown and '```cpp\n  int x;\n  ```' in markdown
+    assert '<details open>\n<summary>Folded</summary>\n\nhidden text\n\n</details>' in markdown
+    assert '- **Commit**: `abc`' in markdown
+    assert '```mermaid\nflowchart LR\n  A[Start] --> B\n```' in markdown
+    assert '````\nhas ``` fence\n````' in markdown
+    assert '1\\. not a list' in markdown
+    assert to_markdown('<p>x</p>', base_url='https://s.example/site/download/').strip() == 'x'
+    assert '[file](https://s.example/site/local.json)' in to_markdown(
+        '<a href="../local.json">file</a>', base_url='https://s.example/site/download/')
+
+
+def test_markdown_conversion_refuses_to_drop_text(monkeypatch):
+    from sdd import full_document
+    monkeypatch.setattr(full_document._Markdown, 'definitions', lambda self, node: [])
+    with pytest.raises(RuntimeError, match='omit text: Commit'):
+        to_markdown('<dl><dt>Commit</dt><dd>abc</dd></dl>')

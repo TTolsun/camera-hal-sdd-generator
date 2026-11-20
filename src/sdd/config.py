@@ -92,6 +92,9 @@ class SiteConfig:
     coverage_question_edits: dict = field(default_factory=dict)
     topic_links: dict = field(default_factory=dict)
     reading_checkpoints: dict = field(default_factory=dict)
+    # Whole-document print page and Markdown file for sharing outside the site.
+    full_document: bool = True
+    public_url: str = ''
 
     @classmethod
     def from_mapping(cls, values):

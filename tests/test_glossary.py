@@ -189,7 +189,10 @@ def test_영어판_뜻_상자_자료도_번역한다(tmp_cfg, sample_model):
     prepare(tmp_cfg, sample_model)
     write_glossary(tmp_cfg, GLOSSARY)
     add_prose(tmp_cfg, "IPA를 씁니다.")
+    # Like `prepare_catalog`, hash pages before the whole-document copy and its menu are added.
+    tmp_cfg.raw['site']['full_document'] = False
     out = export_site(tmp_cfg)
+    tmp_cfg.raw['site']['full_document'] = True
     pages, units = {}, set()
     for path in out.rglob("*.html"):
         text = path.read_text(encoding="utf-8")
