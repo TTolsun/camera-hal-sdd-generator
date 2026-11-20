@@ -5327,6 +5327,27 @@ sections:
         message: Distinguish already submitted unfinished requests from the detached waitingRequests_ handled by stop afterward.
     max_nodes: 12
   vendor-assurance:
+  - id: first-capture-boundary
+    topic: first-capture
+    kind: flow
+    title: 가상 캡처 관측과 고객 보드 시험
+    question: WSL2에서 확인한 범위는 어디까지이며 고객 보드에서는 어떤 순서로 첫 촬영을 확인합니까?
+    generation: llm
+    max_nodes: 5
+    prompt: >-
+      정확히 다섯 노드와 네 연결선을 반환하세요. 노드 ID는 decision, observed, configure, complete, inspect입니다.
+      decision에는 고객 보드 첫 촬영 미검증을, observed에는 WSL2 시험 커널의 Virtual2 400×300 NV12와 독립 실행
+      3회에서 매회 3프레임 완료를 씁니다. configure는 물리 센서와 적용 스트림 확인, complete는 첫 요청과 버퍼의
+      정상 완료 확인, inspect는 센서 프레임 저장 및 확인입니다. 연결선은 decision→observed(과거 관측),
+      decision→configure(고객 보드 시험 계획), configure→complete, complete→inspect를 모두 포함하세요.
+      뒤의 두 연결선에는 API 실행 결과가 아닌 시험 계획의 순서를 표시합니다. 머리 노드와 각 가지에 해당하는
+      실행 기록·API 선언·README를 근거로 인용하세요. 한국어와 영어 라벨은 짧게 같은 의미를 전달하세요.
+    sources:
+    - product-virtual-first-capture-run
+    - board-camera-api
+    - request-status
+    - frame-status
+    - capture-output-guide
   - id: validation-results
     topic: constraints
     kind: decision

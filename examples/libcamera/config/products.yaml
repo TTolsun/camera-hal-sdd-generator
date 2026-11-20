@@ -58,6 +58,28 @@ products:
     evidence:
     - callback-run
     claims: []
+- id: libcamera-first-capture-trial
+  scope: project
+  release: 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+  configuration: wsl2-virtual2-official-cam-udmabuf
+  simulation: true
+  as_of: '2026-10-31'
+  features:
+  - id: virtual-first-capture
+    need: Determine whether the virtual capture record qualifies a customer board.
+    usage: Scope a first capture trial on a board with a physical camera sensor.
+    availability: unknown
+    conditions: &first_capture_conditions
+    - WSL2 trial kernel with built-in udmabuf
+    - Unmodified official cam at the recorded source commit
+    - Virtual2, 400x300 NV12
+    exclusions:
+    - Physical sensor, board DMA, production application and internal HAL qualification
+    implementation:
+    - virtual-config
+    evidence:
+    - virtual-first-capture-run
+    claims: []
 evidence:
 - id: official-stack
   type: project-document
@@ -88,3 +110,17 @@ evidence:
   availability: unknown
   file: product-evidence/callback-observation.json
   sha256: f78e369710f01e2740a79e5b32a9035d66792ac52f51bdbea9050bb5ebafca8c
+- id: virtual-first-capture-run
+  type: measurement
+  supplier: Public official cam trial archive, selected run fields
+  version: '2026-10-31'
+  date: '2026-10-31'
+  valid_until: '2026-10-31'
+  product: libcamera-first-capture-trial
+  release: 293d751a814e0d4c34e85ad457ccd9d5eefd1a61
+  configuration: wsl2-virtual2-official-cam-udmabuf
+  feature: virtual-first-capture
+  conditions: *first_capture_conditions
+  availability: unknown
+  file: product-evidence/virtual-first-capture.json
+  sha256: 2284397098a8a2871f76f695264af00a36c57a8fc324630367a26e598ee165e8
