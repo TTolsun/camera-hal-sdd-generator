@@ -1,0 +1,105 @@
+Host-specific directory prefixes have been removed.
+
+adfa719f8ed67d18fd8a0739fc088a1f8b9e7252
+cf23bf492a00a5c7517e221b0d8f742ea3cffa9351823191a5ba5c476ba15460  <issue211-kernel>/WSL2-Linux-Kernel-linux-msft-wsl-6.18.33.2/arch/x86/boot/bzImage
+763bc837c21f902d3f7373a9af045c89e64442e7ec0971ae81bd25a50a1cca23  <generator>/build/issue337-vm/upstream-build/src/apps/cam/cam
+QEMU emulator version 10.2.1 (Debian 1:10.2.1+ds-1ubuntu3.3)
+Copyright (c) 2003-2025 Fabrice Bellard and the QEMU Project developers
+Linux 6.18.33.2-microsoft-standard-WSL2-issue211 #1 SMP PREEMPT_DYNAMIC Sat Oct 31 15:15:48 KST 2026 x86_64 GNU/Linux
+crw-------    1 0        0          10, 258 Nov 20 15:31 /dev/udmabuf
+COMMAND cam --list
+[0:00:05.588500693] [81]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-adfa719f
+[0:00:05.615535495] [82]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '//src/ipa' to the IPA search path
+[0:00:05.618515695] [82]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:00:05.736883564] [82]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:00:05.742818204] [82]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:00:05.743907713] [82]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:00:05.745067955] [82]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+Available cameras:
+1: Internal front camera (Virtual0)
+2: Internal back camera (Virtual1)
+3: Internal front camera (Virtual2)
+4: Internal front camera (Virtual3)
+list_exit=0
+COMMAND cam --camera Virtual2 --stream role=video,width=400,height=300,pixelformat=NV12 --capture=1 --strict-formats --file=/tmp/frame.bin
+[0:00:05.893181812] [83]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-adfa719f
+[0:00:05.897145548] [84]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '//src/ipa' to the IPA search path
+[0:00:05.898060477] [84]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:00:05.913005455] [84]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:00:05.913998840] [84]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:00:05.914619137] [84]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:00:05.915096011] [84]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+Using camera Virtual2 as cam0
+[0:00:05.955801074] [83]  INFO Camera camera.cpp:1216 configuring streams: (0) 400x300-NV12/SMPTE170M
+cam0: Capture 1 frames
+6.040998 (0.00 fps) cam0-stream0 seq: 000000 bytesused: 120000/60000
+capture_exit=0
+180000 /tmp/frame.bin
+6bf451189eef346ed73f8b61ae404ae9208caaac5c3e5fad9f67adc3bbc423f5  /tmp/frame.bin
+COMMAND gdb -nx -batch --return-child-result -D /trial/gdb-data -x /trial/observe.gdb --args cam --camera Virtual2 --stream role=video,width=400,height=300,pixelformat=NV12 --capture=1 --strict-formats
+warning: could not convert 'CameraSession::queueRequest' from the host encoding (ANSI_X3.4-1968) to UTF-32.
+This normally should not happen, please file a bug report.
+Breakpoint 1 at 0x33b91: file ../upstream/src/apps/cam/camera_session.cpp, line 455.
+Breakpoint 2 at 0x33c9b: file ../upstream/src/apps/cam/camera_session.cpp, line 468.
+Breakpoint 3 at 0x340bb: file ../upstream/src/apps/cam/camera_session.cpp, line 512.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/x86_64-linux-gnu/libthread_db.so.1".
+[0:00:13.722165885] [93]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-adfa719f
+[New Thread 0x7ffff696c6c0 (LWP 96)]
+[0:00:13.733461161] [96]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '//src/ipa' to the IPA search path
+[0:00:13.734373864] [96]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:00:13.748686213] [96]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:00:13.749870394] [96]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:00:13.750420553] [96]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:00:13.751347624] [96]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+Using camera Virtual2 as cam0
+[0:00:13.758497241] [93]  INFO Camera camera.cpp:1216 configuring streams: (0) 400x300-NV12/SMPTE170M
+[New Thread 0x7ffff60f56c0 (LWP 97)]
+
+Thread 1 "cam" hit Breakpoint 1, CameraSession::queueRequest (this=0x55555566e930, request=0x5555556790d0) at ../upstream/src/apps/cam/camera_session.cpp:455
+warning: 455	../upstream/src/apps/cam/camera_session.cpp: No such file or directory
+0x000055555558792a in CameraSession::startCapture (this=0x55555566e930) at ../upstream/src/apps/cam/camera_session.cpp:431
+431	in ../upstream/src/apps/cam/camera_session.cpp
+Value returned is $1 = 0
+cam0: Capture 1 frames
+[Switching to Thread 0x7ffff696c6c0 (LWP 96)]
+CALLBACK request=0x5555556790d0 status=libcamera::Request::RequestComplete
+[Switching to Thread 0x7ffff6974e40 (LWP 93)]
+FRAME request=0x5555556790d0 sequence=0 status=libcamera::FrameMetadata::FrameSuccess
+13.841566 (0.00 fps) cam0-stream0 seq: 000000 bytesused: 120000/60000
+[Thread 0x7ffff60f56c0 (LWP 97) exited]
+[Thread 0x7ffff696c6c0 (LWP 96) exited]
+[Inferior 1 (process 93) exited normally]
+NEGATIVE cam --list
+[0:00:15.125565930] [99]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-adfa719f
+[0:00:15.129729082] [100]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '//src/ipa' to the IPA search path
+[0:00:15.130652926] [100]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:00:15.135002619] [100] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+[0:00:15.145628883] [100]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:00:15.146541785] [100]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:00:15.146972152] [100]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:00:15.147333338] [100]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+[0:00:15.147870273] [100] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+Available cameras:
+1: Internal front camera (Virtual0)
+2: Internal back camera (Virtual1)
+3: Internal front camera (Virtual2)
+4: Internal front camera (Virtual3)
+negative_list_exit=0
+NEGATIVE cam --camera Virtual2 --stream role=video,width=400,height=300,pixelformat=NV12 --capture=1 --strict-formats
+[0:00:15.198278158] [101]  INFO Camera camera_manager.cpp:340 libcamera v0.0.0+1-adfa719f
+[0:00:15.201485979] [102]  INFO IPAManager ipa_manager.cpp:147 libcamera is not installed. Adding '//src/ipa' to the IPA search path
+[0:00:15.202178160] [102]  WARN IPAManager ipa_manager.cpp:158 No IPA found in '/usr/local/lib/x86_64-linux-gnu/libcamera/ipa'
+[0:00:15.205496646] [102] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+[0:00:15.214827401] [102]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual0' for pipeline handler virtual
+[0:00:15.215645984] [102]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual1' for pipeline handler virtual
+[0:00:15.216213190] [102]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual2' for pipeline handler virtual
+[0:00:15.216702544] [102]  INFO Camera camera_manager.cpp:223 Adding camera 'Virtual3' for pipeline handler virtual
+[0:00:15.217204383] [102] ERROR DmaBufAllocator dma_buf_allocator.cpp:119 Could not open any dma-buf provider
+Using camera Virtual2 as cam0
+[0:00:15.222723301] [101]  INFO Camera camera.cpp:1216 configuring streams: (0) 400x300-NV12/SMPTE170M
+Can't allocate buffers
+Failed to start camera session
+negative_capture_exit=1
+TRIAL_FINISHED
+[   15.287565] reboot: Power down
