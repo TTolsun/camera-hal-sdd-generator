@@ -166,7 +166,7 @@ def main():
     parser.add_argument('--plan-only', action='store_true', help='Archive exact payload and measured input size without calling the CLI')
     parser.add_argument('--source', type=Path, help='Matching official checkout used for immutable git-show source windows')
     parser.add_argument('--source-mirror', type=Path,
-                        help='Fetched public source mirror for caption links; defaults to --source')
+                        help='Public checkout with origin/upstream/master fetched for caption links; defaults to --source')
     parser.add_argument('--source-window', action='append', default=[],
                         help='Additional immutable source selector file#Lstart-Lend for the selected item group')
     parser.add_argument('--explicit-source-only',action='store_true',
@@ -201,6 +201,7 @@ def main():
         parser.error('--checked-presentation-input needs --structured-window-input and --compact-json')
     args.out = args.out.resolve()
     for immutable in [args.site, *([args.source] if args.source else []),
+                      *([args.source_mirror] if args.source_mirror else []),
                       *([args.historical_artifacts] if args.historical_artifacts else [])]:
         target = immutable.resolve()
         if args.out.is_relative_to(target) or target.is_relative_to(args.out):
