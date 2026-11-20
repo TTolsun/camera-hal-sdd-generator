@@ -9855,13 +9855,13 @@ sections:
         source: diagnosis/device-queue
         quote: "request->_d()->sequence_ = data->requestSequence_++;"
         sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
-        section: request-lifecycle
       - &completionNoticeReset
+        section: request-lifecycle
         source: stop-depth/common-stop
         quote: "data->requestSequence_ = 0;"
         sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
-        section: request-lifecycle
       - &completionNoticeReuse
+        section: request-lifecycle
         source: resources/reuse
         quote: "void Request::reuse(ReuseFlag flags)"
         sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
@@ -9885,8 +9885,8 @@ sections:
         source: diagnosis/completion
         quote: "request->_d()->complete();"
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        section: request-lifecycle
       - &completionNoticeStatus
+        section: request-lifecycle
         source: callback-order/status
         quote: "request->status_ = cancelled_ ? RequestCancelled : RequestComplete;"
         sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
@@ -9902,13 +9902,13 @@ sections:
         source: diagnosis/completion
         quote: "camera->requestComplete(req);"
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
-        section: request-lifecycle
       - &completionNoticeEmit
+        section: request-lifecycle
         source: stop-depth/camera-complete
         quote: "requestCompleted.emit(request);"
         sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
-        section: request-lifecycle
       - &completionNoticeReceiver
+        section: request-lifecycle
         source: callback-depth/connections
         quote: "Invoke the receiver asynchronously in its thread"
         sha256: 04956c19f096c82f498c2810692af3c0d858e99cb1072c0c359c3b3910a87cd3
