@@ -95,9 +95,15 @@ SCRIPT = """(() => {
         fontFamily: 'Geist, Malgun Gothic, system-ui, sans-serif', fontSize: '14px'},
       flowchart: {htmlLabels: false, curve: 'basis', nodeSpacing: 38, rankSpacing: 65, padding: 16}});
     let failed = 0;
+    // Hide the long body while drawing: otherwise every render re-lays out the whole document
+    // (31 pages took over six minutes for 164 diagrams; hidden, about five seconds).
+    // Mermaid measures text in its own container under body, so sizes are unaffected.
+    const body = document.querySelector('main');
+    body.style.display = 'none';
+    try {
     for (const [i, diagram] of diagrams.entries()) {
-      status.textContent = t(`그림을 그리는 중입니다 (${i + 1}/${diagrams.length}).`,
-                             `Drawing diagrams (${i + 1}/${diagrams.length}).`);
+      status.textContent = t(`그림을 그리는 중입니다 (${i + 1}/${diagrams.length}). 다 그리면 본문을 표시합니다.`,
+                             `Drawing diagrams (${i + 1}/${diagrams.length}). The document appears when they are done.`);
       const source = diagram.textContent;
       try {
         const {svg} = await mermaid.render(`sdd-print-${i}`, source);
@@ -108,6 +114,9 @@ SCRIPT = """(() => {
         diagram.textContent = source;
         diagram.classList.add('diagram-error');
       }
+    }
+    } finally {
+      body.style.display = '';
     }
     finish(failed);
   }).catch(() => finish(diagrams.length));

@@ -24,6 +24,9 @@ def test_whole_document_holds_every_page_with_internal_links(tmp_cfg, sample_mod
     assert re.search(r'<details(?![^>]*\sopen)', combined) is None
     assert 'a' * 40 in combined and 'Test &lt;Site&gt; · 전체 문서' in combined
     assert 'href="../assets/reading.css?v=' in combined and 'mermaid.render(`sdd-print-' in combined
+    # The long body is hidden while drawing and always shown again afterwards.
+    assert "body.style.display = 'none'" in combined
+    assert re.search(r"finally \{\s*body\.style\.display = '';", combined)
     # Every diagram on the site is in the copy.
     diagrams = sum(p.read_text(encoding='utf-8').count('class="mermaid"')
                    for p in out.rglob('*.html') if p.parent.name != 'download')
