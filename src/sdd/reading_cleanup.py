@@ -278,7 +278,8 @@ def promote_coverage(document: str) -> str:
     remaining = document[:guide.start()] + document[guide.end():]
     lead = re.match(r'\s*<p>.*?</p>', remaining, re.S)
     position = lead.end() if lead else 0
-    return remaining[:position] + guide[0] + remaining[position:]
+    coverage = guide[0].replace('<details class="note">', '<details class="note scope-notices">', 1)
+    return remaining[:position] + coverage + remaining[position:]
 
 
 def class_targets(indexes: dict[str, str]) -> dict[tuple[str, ...], str]:

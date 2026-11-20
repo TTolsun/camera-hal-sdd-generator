@@ -130,15 +130,22 @@ def test_question_guide_follows_lead_before_terms_with_content_and_links_intact(
     body = '<h2 id="life">수명</h2><p>본문</p><h2 id="verify">검증</h2>'
     guide = compact_tables(coverage())
     result = promote_coverage(lead + terms + body + guide)
-    assert result == lead + guide + terms + body
+    marked = guide.replace('<details class="note">', '<details class="note scope-notices">', 1)
+    assert result == lead + marked + terms + body
     assert promote_coverage(result) == result
     assert ' open' not in result
+    from sdd.visual_audit import inventory_page, policy
+    english = result.replace("설계 질문과 검증 범위", "Design questions and validation scope")
+    intro = inventory_page(f'<html lang="en"><article>{english}</article></html>', 'guide.html', policy())[0]
+    assert intro["body"] == "도입할 범위를 판단하세요."
+    assert len(intro["excluded"]) == 2
 
 
 def test_question_guide_without_lead_precedes_body_but_examples_and_custom_notes_stay():
     guide = compact_tables(coverage())
     body = '<h2 id="life">수명</h2>'
-    assert promote_coverage(body + guide) == guide + body
+    marked = guide.replace('<details class="note">', '<details class="note scope-notices">', 1)
+    assert promote_coverage(body + guide) == marked + body
     for source in ('<pre>' + guide + '</pre>', coverage('사용자 정의 검증 조건'),
                    body + guide + guide):
         assert promote_coverage(source) == source
