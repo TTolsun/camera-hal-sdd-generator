@@ -9841,6 +9841,196 @@ sections:
         quote: "The request is no longer managed by the pipeline\n * handler and shall\
           \ not be accessed once this function returns."
   request-diagnosis:
+  - id: completion-notice-diagnosis
+    topic: diagnosis
+    kind: decision
+    title: "마지막 버퍼가 끝났는데 요청 완료 통지가 오지 않을 때"
+    question: "마지막 버퍼 완료 후 어디에서 멈췄나요?"
+    branch_table: true
+    caption:
+      text: "다음은 소스 기반 조사 예시입니다. 각 제출을 camera, stop/start로 구분한 run, 제출마다 새로 부여한 generation, Request*로 추적하세요. doQueueRequest에서 sequence_를 할당한 뒤에는 Request::sequence()도 기록하세요. sequence는 run 사이에 초기화되고 오버플로로 순환합니다. Request::reuse()로 같은 객체를 다시 제출할 수 있으므로 cookie나 주소만으로 제출을 구분하지 마세요. 예시 A: 대상 제출 42의 마지막 completeBuffer가 true를 반환했습니다. 핸들러가 의도한 완료 경로를 지연된 분기까지 빠진 기록 없이 계속 관찰했는데도 completeRequest 진입이 없었다면, 콜백 분기와 조건을 살펴보고 메타데이터 처리나 완료 작업을 미루는 경로가 있는지 확인하세요. 특정 핸들러에 그런 경로가 반드시 있다고 가정하지 마세요. bufferCompleted.emit만으로 completeBuffer의 반환값을 판단하지 마세요. 예시 B: 대상 제출 42가 completeRequest에 진입하고 complete() 후 RequestComplete가 되었지만, queuedRequests_.front()의 앞선 제출 41은 RequestPending입니다. 관측된 break는 이번 큐 처리에서 대상이 큐에 남게 할 뿐, 영원히 남는다는 뜻은 아닙니다. 제출 41의 남은 버퍼와 완료 경로를 추적하고, 이후 큐 앞을 다시 확인하면서 대상의 Camera::requestComplete 호출을 관찰하세요. 이어 실제 requestCompleted.emit 발생과 앱 슬롯 진입을 각각 확인하세요. 대상이 이미 큐 앞에 있다면 대상의 상태와 큐 처리 흐름을 확인하세요. RequestCancelled는 별도로 구분하세요. 제출의 식별이나 필요한 관찰 범위가 불완전하면 판단을 보류하세요. 관찰을 위해 상태를 바꾸는 함수를 다시 호출하지 마세요."
+      text_en: "These are source-based investigation examples. Track each submission using the camera, a run separated by stop/start, a new per-submission generation, and Request*. Also record Request::sequence() after doQueueRequest assigns sequence_. The sequence resets between runs and wraps on overflow. Request::reuse() can resubmit the same object, so neither cookie nor address alone identifies a submission. Example A: the last completeBuffer for target submission 42 returned true. If continuous observation covered the handler's intended completion path, including delayed branches, with no dropped records, yet no completeRequest entry was observed, inspect the callback branches and conditions for any deferred metadata or completion work. Do not assume a particular handler requires such work. Do not infer the completeBuffer return value from bufferCompleted.emit alone. Example B: target submission 42 entered completeRequest and became RequestComplete after complete(), but earlier submission 41 at queuedRequests_.front() is RequestPending. The observed break keeps the target queued in this pass; it does not mean the target stays queued forever. Trace submission 41's pending buffers and completion path, recheck subsequent queue heads, and observe the target's Camera::requestComplete call. Then separately confirm the actual requestCompleted.emit and entry into the application slot. If the target is already at the front, check its status and the queue-processing flow. Distinguish RequestCancelled separately. Withhold judgment if submission identity or the required observation coverage is incomplete. Do not re-invoke state-mutating functions to observe them."
+      evidence:
+      - &completionNoticeQueue
+        source: diagnosis/device-queue
+        quote: "request->_d()->sequence_ = data->requestSequence_++;"
+        sha256: 5a7a3397a6034a73fe348ae44eb1e2568d2823e95542fe43386e16359d627180
+        section: request-lifecycle
+      - &completionNoticeReset
+        source: stop-depth/common-stop
+        quote: "data->requestSequence_ = 0;"
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        section: request-lifecycle
+      - &completionNoticeReuse
+        source: resources/reuse
+        quote: "void Request::reuse(ReuseFlag flags)"
+        sha256: 22294a6809bd4c6655824af9603fb3879603cec256c6845e00d3d2a0e6bf7679
+      - &completionNoticeLast
+        source: diagnosis/completion
+        quote: "return request->_d()->completeBuffer(buffer);"
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - &completionNoticeBuffer
+        source: diagnosis/completion
+        quote: "camera->bufferCompleted.emit(request, buffer);"
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - &completionNoticeEntry
+        source: diagnosis/completion
+        quote: "void PipelineHandler::completeRequest(Request *request)"
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - &completionNoticeCaller
+        source: diagnosis/completion
+        quote: "They shall complete requests explicitly with completeRequest()."
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - &completionNoticeComplete
+        source: diagnosis/completion
+        quote: "request->_d()->complete();"
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        section: request-lifecycle
+      - &completionNoticeStatus
+        source: callback-order/status
+        quote: "request->status_ = cancelled_ ? RequestCancelled : RequestComplete;"
+        sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
+      - &completionNoticeHead
+        source: diagnosis/completion
+        quote: "Request *req = data->queuedRequests_.front();"
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - &completionNoticeHeld
+        source: diagnosis/completion
+        quote: "if (req->status() == Request::RequestPending)"
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+      - &completionNoticeHandoff
+        source: diagnosis/completion
+        quote: "camera->requestComplete(req);"
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        section: request-lifecycle
+      - &completionNoticeEmit
+        source: stop-depth/camera-complete
+        quote: "requestCompleted.emit(request);"
+        sha256: aadfd6b4fdf910083a3d97fb11c623145f71553c9240f8e882d619fce61c43bb
+        section: request-lifecycle
+      - &completionNoticeReceiver
+        source: callback-depth/connections
+        quote: "Invoke the receiver asynchronously in its thread"
+        sha256: 04956c19f096c82f498c2810692af3c0d858e99cb1072c0c359c3b3910a87cd3
+    nodes:
+    - id: check
+      shape: decision
+      label: "같은 제출 추적"
+      label_en: "Track same submission"
+      evidence:
+      - *completionNoticeQueue
+    - id: last
+      shape: decision
+      label: "completeBuffer 반환"
+      label_en: "completeBuffer return"
+      evidence:
+      - *completionNoticeLast
+      - *completionNoticeBuffer
+    - id: entry
+      shape: decision
+      label: "completeRequest 진입"
+      label_en: "completeRequest entry"
+      evidence:
+      - *completionNoticeEntry
+    - id: caller
+      shape: box
+      label: "핸들러 경로 확인"
+      label_en: "Check handler path"
+      evidence:
+      - *completionNoticeCaller
+    - id: head
+      shape: decision
+      label: "대상 상태와 큐 앞 확인"
+      label_en: "Check target status and queue front"
+      evidence:
+      - *completionNoticeComplete
+      - *completionNoticeHead
+    - id: held
+      shape: box
+      label: "앞선 요청 대기"
+      label_en: "Earlier request pending"
+      evidence:
+      - *completionNoticeHeld
+    - id: emit
+      shape: box
+      label: "emit과 앱 슬롯 확인"
+      label_en: "Check emit and app slot"
+      evidence:
+      - *completionNoticeHandoff
+    - id: unknown
+      shape: box
+      label: "판단 보류"
+      label_en: "Withhold judgment"
+      evidence:
+      - *completionNoticeEntry
+      - *completionNoticeHead
+    edges:
+    - from: check
+      to: last
+      label: "식별 완료"
+      label_en: "Identity confirmed"
+      evidence:
+      - *completionNoticeQueue
+    - from: check
+      to: unknown
+      label: "제출 식별 불일치·미확인"
+      label_en: "Submission identity unmatched or unconfirmed"
+      evidence:
+      - *completionNoticeQueue
+    - from: last
+      to: entry
+      label: "true 반환"
+      label_en: "Returned true"
+      evidence:
+      - *completionNoticeLast
+      - *completionNoticeCaller
+    - from: last
+      to: unknown
+      label: "false 반환·반환값 미확인"
+      label_en: "Returned false or return unknown"
+      evidence:
+      - *completionNoticeLast
+    - from: entry
+      to: caller
+      label: "완료 경로 전체 관찰 중 진입 없음"
+      label_en: "No entry during complete path observation"
+      evidence:
+      - *completionNoticeEntry
+      - *completionNoticeCaller
+    - from: entry
+      to: head
+      label: "진입 확인"
+      label_en: "Entry observed"
+      evidence:
+      - *completionNoticeEntry
+      - *completionNoticeComplete
+      - *completionNoticeHead
+    - from: entry
+      to: unknown
+      label: "관찰 범위 부족"
+      label_en: "Coverage incomplete"
+      evidence:
+      - *completionNoticeEntry
+    - from: head
+      to: held
+      label: "다른 front가 Pending"
+      label_en: "Other front is Pending"
+      evidence:
+      - *completionNoticeHead
+      - *completionNoticeHeld
+    - from: head
+      to: emit
+      label: "대상의 requestComplete 관측"
+      label_en: "Target requestComplete observed"
+      evidence:
+      - *completionNoticeHandoff
+    - from: head
+      to: unknown
+      label: "상태·흐름 미확인"
+      label_en: "Status or flow unknown"
+      evidence:
+      - *completionNoticeHead
+      - *completionNoticeHeld
   - id: queue-gates
     topic: diagnosis
     kind: flow
