@@ -105,7 +105,9 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
                         first = text[:left].count('\n') + 1
                         record['context'] = {'text': context, 'sha256': hashlib.sha256(context.encode()).hexdigest(),
                                              'line': first, 'end_line': first + context.count('\n')}
-                    if source.get("sha256") and record["sha256"] != source["sha256"]:
+                    if source.get("whole_file") and not record["whole_file"]:
+                        record.update(status="needs-review", reason="설계 근거가 파일 전체를 포함하지 않습니다.")
+                    elif source.get("sha256") and record["sha256"] != source["sha256"]:
                         record.update(status="needs-review", reason="근거 본문이 변경됐습니다. 연결된 설계 설명을 재검토하세요.")
                 except (OSError, ValueError) as exc:
                     record["reason"] = str(exc)

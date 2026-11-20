@@ -1,4 +1,6 @@
 """Validate contract configuration without reading evidence or rendering pages."""
+import re
+
 from .reader_profiles import profile_errors
 from .answer_contracts import configuration_errors as answer_contract_errors
 
@@ -34,6 +36,13 @@ def configuration_errors(section: dict) -> list[str]:
             for field in ('file', 'start', 'end'):
                 if not isinstance(source.get(field), str) or not source[field].strip():
                     errors.append(f"{topic['id']}/{source['id']}: {field}는 비어 있지 않은 문자열이어야 합니다.")
+            if 'whole_file' in source and (
+                source['whole_file'] is not True
+                or source.get('kind') == 'product'
+                or not isinstance(source.get('sha256'), str)
+                or not re.fullmatch(r'[0-9a-f]{64}', source['sha256'])
+            ):
+                errors.append(f"{topic['id']}/{source['id']}: whole_file: true에는 Git 소스와 SHA-256이 필요합니다.")
             if 'scope' in source:
                 scope = source['scope']
                 if (not isinstance(scope, dict) or set(scope) != {'start', 'end'}
@@ -68,7 +77,7 @@ def generated_errors(section):
             covered.extend(covers)
         if 'statements' in topic:
             errors.append(f"{topic['id']}: LLM 모드에서는 statements를 미리 작성할 수 없습니다.")
-        if any('sha256' in source for source in topic.get('sources', [])):
+        if any('sha256' in source and source.get('whole_file') is not True for source in topic.get('sources', [])):
             errors.append(f"{topic['id']}: LLM 모드의 근거 해시는 현재 커밋에서 수집합니다.")
         if 'parts' in topic:
             parts = topic['parts']
