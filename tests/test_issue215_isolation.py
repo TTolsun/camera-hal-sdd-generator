@@ -245,6 +245,85 @@ def test_explicit_source_windows_bind_exact_lines_and_commit(tmp_path,monkeypatc
     with pytest.raises(ValueError,match='outside the pinned file'):
         helper.explicit_source_windows(tmp_path,commit,['source.cpp#L2-L4'])
 
+    repository = 'https://example.test/project'
+    caption = f'{repository}/blob/{commit}/source.cpp#L2'
+    citations = helper.caption_citations(dict(caption_sources=[caption]), repository, commit)
+    full = 'git:'+commit+':source.cpp'
+    extra = {**windows, full: dict(windows[next(iter(windows))], first_line=1)}
+    assert helper.bind_caption_citations(citations, commit, extra) == {
+        caption: dict(line=2, additional_source_window='git:'+commit+':source.cpp#L2-L3'),
+    }
+    for invalid in (caption.replace(commit, 'b'*40), caption.replace('example.test', 'other.test'),
+                    caption.replace('/project/', '/other/'), caption.removesuffix('#L2')):
+        with pytest.raises(ValueError, match='configured repository and current Git line'):
+            helper.caption_citations(dict(caption_sources=[invalid]), repository, commit)
+    with pytest.raises(ValueError, match='missing its pinned Git line'):
+        helper.bind_caption_citations({caption: ('source.cpp', 4)}, commit, extra)
+
+
+def test_native_plan_supplies_pinned_caption_source(tmp_path, monkeypatch):
+    import importlib.util
+    import json
+    from sdd.visual_audit import inspect_site, policy
+
+    site = tmp_path/'site'
+    (site/'en').mkdir(parents=True)
+    source = tmp_path/'source'
+    source.mkdir()
+    (source/'request.cpp').write_text('Uncommitted file content', encoding='utf-8')
+    commit = 'a'*40
+    link = f'https://github.com/TTolsun/libcamera-sdd/blob/{commit}/request.cpp#L2'
+    for prefix, language in (('', 'ko'), ('en/', 'en')):
+        (site/(prefix+'guide.html')).write_text(
+            f'<html lang="{language}"><article><h2 id="question">Question</h2>'
+            '<p><a href="unrelated.html">Read more</a></p>'
+            '<!-- sdd:visual:state --><pre class="mermaid">flowchart TB\n a --> b</pre>'
+            f'<p><a data-sdd-caption-source="true" href="{link}">request.cpp:2</a></p>'
+            '<!-- /sdd:visual:state --></article></html>', encoding='utf-8')
+    inventory = tmp_path/'inventory.json'
+    inventory.write_text(json.dumps(inspect_site(site, policy(), source_commit=commit)), encoding='utf-8')
+    out = tmp_path/'review'
+    monkeypatch.syspath_prepend(str(TOOLS))
+    spec = importlib.util.spec_from_file_location('caption_review', TOOLS/'review_inventory.py')
+    helper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(helper)
+
+    def git(command, *, cwd=None):
+        if command[1:3] == ['-C', str(source)]:
+            if command[3:] == ['remote', 'get-url', 'origin']:
+                return b'https://github.com/TTolsun/libcamera-sdd.git\n'
+            assert command[3:] == ['for-each-ref', '--contains', commit,
+                                   '--format=%(objectname)', 'refs/remotes/origin/upstream/master']
+            return (commit+'\n').encode()
+        assert command == ['git', 'show', commit+':./request.cpp'] and cwd == source
+        return b'first\nvoid cancel() {}\n'
+
+    monkeypatch.setattr(helper.subprocess, 'check_output', git)
+    monkeypatch.setattr(helper, 'command', lambda config: ['synthetic-plan-only-not-executed'])
+    monkeypatch.setattr(sys, 'argv', [
+        'review_inventory.py', '--inventory', str(inventory), '--site', str(site),
+        '--profile', str(TOOLS/'independent-review-profile.yaml'), '--item', 'guide.html#question',
+        '--source', str(source), '--out', str(out), '--plan-only',
+    ])
+    helper.main()
+    payload = json.loads((out/'inputs.json').read_bytes())
+    key = f'git:{commit}:request.cpp'
+    assert payload['additional_source_windows'][key]['text'] == 'first\nvoid cancel() {}\n'
+    assert payload['figures']['guide.html/state']['external_caption_citations'] == {
+        link: {'line': 2, 'additional_source_window': key},
+    }
+    assert payload['caption_mirror']['branch_tip'] == commit
+    assert not any('unrelated.html' in name for name in payload['source_windows'])
+
+    def unmirrored(command, *, cwd=None):
+        return b'' if 'for-each-ref' in command else git(command, cwd=cwd)
+
+    monkeypatch.setattr(helper.subprocess, 'check_output', unmirrored)
+    monkeypatch.setattr(sys, 'argv',
+                        [str(tmp_path/'missing-review') if value == str(out) else value for value in sys.argv])
+    with pytest.raises(ValueError, match='outside the fetched public upstream branch'):
+        helper.main()
+
 
 def test_compact_structured_window_input_keeps_original_records(monkeypatch):
     import json

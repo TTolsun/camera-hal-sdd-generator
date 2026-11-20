@@ -6,3 +6,5 @@ agent:
   args: [-c, 'model_reasoning_effort="high"']
   max_input_chars: 48000
   timeout_sec: 600
+site:
+  source_url: https://github.com/TTolsun/libcamera-sdd
