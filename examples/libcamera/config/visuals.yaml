@@ -9896,7 +9896,7 @@ sections:
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
       - &completionNoticeHeld
         source: diagnosis/completion
-        quote: "if (req->status() == Request::RequestPending)"
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
         sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
       - &completionNoticeHandoff
         source: diagnosis/completion
@@ -10013,8 +10013,8 @@ sections:
       - *completionNoticeEntry
     - from: head
       to: held
-      label: "다른 front가 Pending"
-      label_en: "Other front is Pending"
+      label: "대상 RequestComplete, 앞선 front RequestPending, 이번 처리에서 break 관측"
+      label_en: "Target RequestComplete, earlier front RequestPending, break observed this pass"
       evidence:
       - *completionNoticeHead
       - *completionNoticeHeld
