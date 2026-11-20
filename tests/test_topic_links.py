@@ -85,7 +85,10 @@ def test_duplicate_heading_is_not_guessed(tmp_cfg, cli_units):
 def test_topic_routes_join_the_normal_english_catalog(tmp_cfg, linked):
     """Synthetic translation fixtures verify routing, never model quality."""
     tmp_cfg.raw['site']['reading_checkpoints'] = {'device.md': ['stop']}
+    # Like `prepare_catalog`, hash pages before the whole-document copy and its menu are added.
+    tmp_cfg.raw['site']['full_document'] = False
     out = export_site(tmp_cfg)
+    tmp_cfg.raw['site']['full_document'] = True
     pages, units = {}, set()
     for path in out.rglob('*.html'):
         text = path.read_text(encoding='utf-8')

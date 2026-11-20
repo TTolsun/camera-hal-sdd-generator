@@ -255,7 +255,7 @@ def test_repeated_builds_update_relationships_without_duplicate_diagrams(tmp_cfg
     export_site(tmp_cfg)
     diagram = (out / 'nested/detail.mmd').read_text(encoding='utf-8')
     assert 'NewThreadBase' in diagram and '["Thread"]' not in diagram
-    assert verify_site(out)['html_pages'] == 3
+    assert verify_site(out)['html_pages'] == 4  # three pages and the whole-document copy
 
 
 def test_removed_sections_clean_owned_artifacts_and_keep_unrelated_files(tmp_cfg, sample_model):

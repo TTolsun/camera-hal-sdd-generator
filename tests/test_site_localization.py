@@ -11,7 +11,10 @@ from test_export_site import prepare
 
 def bilingual(cfg, model):
     prepare(cfg, model)
+    # Like `prepare_catalog`, hash pages before the whole-document copy and its menu are added.
+    cfg.raw['site']['full_document'] = False
     out = export_site(cfg)
+    cfg.raw['site']['full_document'] = True
     pages, units = {}, set()
     for path in out.rglob('*.html'):
         text = path.read_text(encoding='utf-8')
@@ -45,7 +48,7 @@ def test_bilingual_routes_search_sources_and_repeatability(tmp_cfg, sample_model
     search = json.loads((out / 'en/assets/search.json').read_text())
     assert any(x['url'].endswith('#%ED%95%9C%EA%B8%80-%EB%AA%A9%EC%B0%A8') for x in search)
     assert all(not re.search('[가-힣]', x['title']) for x in search)
-    assert verify_site(out)['html_pages'] == 6
+    assert verify_site(out)['html_pages'] == 8  # six pages and one whole-document copy per edition
     first = {p: p.read_bytes() for p in out.rglob('*') if p.is_file()}
     export_site(tmp_cfg)
     assert all(p.read_bytes() == data for p, data in first.items())
@@ -92,10 +95,12 @@ def test_mermaid_asset_resolution(tmp_cfg, sample_model, mermaid):
     # Catalog binding includes the Mermaid setting; refresh it deliberately.
     tmp_cfg.raw['site'].pop('english_catalog')
     tmp_cfg.raw['site']['mermaid'] = mermaid
+    tmp_cfg.raw['site']['full_document'] = False
     export_site(tmp_cfg)
     catalog['pages'] = {p.relative_to(out).as_posix(): source_hash(p.read_text(encoding='utf-8')) for p in out.rglob('*.html')}
     path.write_text(json.dumps(catalog), encoding='utf-8')
     tmp_cfg.raw['site']['english_catalog'] = 'english.json'
+    tmp_cfg.raw['site']['full_document'] = True
     export_site(tmp_cfg)
     en = (out / 'en/index.html').read_text(encoding='utf-8')
     config = json.loads(re.search(r'id="site-config" type="application/json">(.*?)</script>', en)[1])

@@ -167,8 +167,11 @@ def export_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = 
     check_reports(cfg, 'before-export')
     from .document_health import enforce
     enforce(cfg)
+    from functools import partial
     from .site_build import build_site
-    return build_site(cfg, out or cfg.build_dir / "site", _render_site, mermaid_src)
+    # Translation preparation renders without these copies, so its page hashes match localize_site.
+    render = partial(_render_site, full_document=bool(cfg.site.full_document))
+    return build_site(cfg, out or cfg.build_dir / "site", render, mermaid_src)
 
 
 def _site_navigation(cfg, settings, retired):
@@ -643,7 +646,8 @@ def _write_search(out, rendered_pages, search, terms):
     (out / "assets" / "search.json").write_text(json.dumps(search, ensure_ascii=False), encoding="utf-8")
 
 
-def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None, *, check_consistency=True) -> Path:
+def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None, *, check_consistency=True,
+                 full_document=False) -> Path:
     from .document_health import retired_paths
     retired = retired_paths(cfg)
     settings = cfg.site
@@ -703,4 +707,10 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
                 assessment='Private preparation only; independent review has not run.'))+'\n', encoding='utf-8')
     from .site_localization import localize_site
     localize_site(cfg, out)
+    if full_document:
+        # Built from the final, translated pages so the copies show exactly what the site shows.
+        from .full_document import publish
+        publish(out, entries, site_title=title, public_url=str(settings.public_url or ''),
+                source_commit=str(model.meta.get('source_commit', '')) if model else '')
+    return out
     return out
