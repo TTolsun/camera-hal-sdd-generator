@@ -215,9 +215,15 @@ def test_vendor_overview_rejects_implementation_only_contract():
 
 
 def test_public_and_portable_vendor_entry_pages_require_adoption_answers():
+    from sdd.config import load
+
     for filename in ('libcamera/config/sections.yaml', 'inhouse-template/config/sections.yaml',
                      'mini-hal/config/reader-sections.yaml'):
-        sections = yaml.safe_load((ROOT / 'examples' / filename).read_text(encoding='utf-8'))['sections']
+        if filename.startswith('libcamera/'):
+            # The measurement part receives its evidence from the configured product.
+            sections = load(ROOT / 'examples/libcamera/sdd.yaml').sections()
+        else:
+            sections = yaml.safe_load((ROOT / 'examples' / filename).read_text(encoding='utf-8'))['sections']
         entry = next(s for s in sections if s.get('reader_profile') == 'vendor-overview')
         assert configuration_errors(entry) == []
         assert {'capabilities', 'benefits'} <= {
