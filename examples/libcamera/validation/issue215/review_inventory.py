@@ -12,7 +12,7 @@ import subprocess
 import hashlib
 import html
 import time
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 from sdd.config import load
 from sdd.cli_agent import command, arguments, build_prompt
@@ -110,6 +110,50 @@ def explicit_source_windows(source, commit, selectors):
     return windows
 
 
+def caption_citations(figure, source_url, commit):
+    """Resolve only renderer-designated citations in the public source repository."""
+    prefix = source_url.rstrip('/') + '/blob/' + commit + '/'
+    citations = {}
+    for href in figure.get('caption_sources', []):
+        match = re.fullmatch(re.escape(prefix) + r'([^?#]+)#L([1-9][0-9]*)', href)
+        if not match or not source_url:
+            raise ValueError('Caption source must point to the configured repository and current Git line: '+href)
+        name, number = unquote(match[1]), int(match[2])
+        if quote(name, safe='/') != match[1]:
+            raise ValueError('Noncanonical caption source file: '+href)
+        citations[href] = name, number
+    return citations
+
+
+def bind_caption_citations(citations, commit, additional):
+    result = {}
+    for href, (name, number) in citations.items():
+        matches = [key for key, window in additional.items()
+                   if window['source_commit'] == commit and window['file'] == name
+                   and window['first_line'] <= number <= window['last_line']]
+        if not matches:
+            raise ValueError('Caption source is missing its pinned Git line: '+href)
+        result[href] = dict(line=number, additional_source_window=min(
+            matches, key=lambda key: additional[key]['last_line'] - additional[key]['first_line']))
+    return result
+
+
+def verify_caption_mirror(mirror, source_url, commit):
+    """Check reachability from the fetched source branch without a network request."""
+    if mirror is None:
+        raise ValueError('Caption review requires a fetched public source mirror')
+    command = ['git', '-C', str(mirror.resolve())]
+    upstream = subprocess.check_output([*command, 'remote', 'get-url', 'origin']).decode('utf-8').strip()
+    if upstream.rstrip('/').removesuffix('.git') != source_url.rstrip('/'):
+        raise ValueError('Caption mirror origin differs from the configured source repository')
+    raw = subprocess.check_output([*command, 'for-each-ref', '--contains', commit,
+                                   '--format=%(objectname)', 'refs/remotes/origin/upstream/master'])
+    tips = raw.decode('ascii').splitlines()
+    if len(tips) != 1 or not re.fullmatch(r'[0-9a-f]{40}', tips[0]):
+        raise ValueError('Caption source commit is outside the fetched public upstream branch')
+    return dict(repository=source_url, branch='upstream/master', branch_tip=tips[0], source_commit=commit)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--inventory', type=Path, required=True)
@@ -121,6 +165,8 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--plan-only', action='store_true', help='Archive exact payload and measured input size without calling the CLI')
     parser.add_argument('--source', type=Path, help='Matching official checkout used for immutable git-show source windows')
+    parser.add_argument('--source-mirror', type=Path,
+                        help='Public checkout with origin/upstream/master fetched for caption links; defaults to --source')
     parser.add_argument('--source-window', action='append', default=[],
                         help='Additional immutable source selector file#Lstart-Lend for the selected item group')
     parser.add_argument('--explicit-source-only',action='store_true',
@@ -155,6 +201,7 @@ def main():
         parser.error('--checked-presentation-input needs --structured-window-input and --compact-json')
     args.out = args.out.resolve()
     for immutable in [args.site, *([args.source] if args.source else []),
+                      *([args.source_mirror] if args.source_mirror else []),
                       *([args.historical_artifacts] if args.historical_artifacts else [])]:
         target = immutable.resolve()
         if args.out.is_relative_to(target) or target.is_relative_to(args.out):
@@ -212,6 +259,7 @@ def main():
     windows, document_windows, structural_classes, structural_scenarios = {}, {}, {}, {}
     additional = explicit_source_windows(args.source,report['source_commit'],args.source_window)
     linked_dependencies = {}
+    caption_mirror = None
     excluded_by_page = {}
     wanted_by_page = {}
     for row in selected:
@@ -330,7 +378,13 @@ def main():
                 document_windows[name+'#'+parts.fragment] = dict(text=text, sha256=digest(text),
                     purpose='Exact class declaration row linked by this page; not explanatory length')
                 structural_hrefs.extend(a.attrs.get('href', '') for a in found[0].all('a'))
-        for href in row['available_source_windows'] + [u for f in row['figures'] for u in f['evidence']] + structural_hrefs:
+        figure_hrefs = [href for figure in row['figures'] for href in figure['evidence']]
+        caption_hrefs = [href for figure in row['figures']
+                         for href in caption_citations(figure, cfg.site.source_url, report['source_commit'])]
+        if caption_hrefs and caption_mirror is None:
+            caption_mirror = verify_caption_mirror(args.source_mirror or args.source,
+                                                   cfg.site.source_url, report['source_commit'])
+        for href in row['available_source_windows'] + figure_hrefs + caption_hrefs + structural_hrefs:
             parts = urlsplit(href)
             if parts.scheme or parts.netloc:
                 marker = '/'+report['source_commit']+'/'
@@ -368,7 +422,7 @@ def main():
         # An already-inventoried vocabulary route in the generated page-terms
         # control is a byte dependency, not inspected behavioral evidence.
         # Other whole-page evidence retains the exact-fragment requirement.
-        evidence_hrefs = [href for figure in row['figures'] for href in figure['evidence']] + structural_hrefs
+        evidence_hrefs = figure_hrefs + structural_hrefs
         vocabulary_hrefs = set()
         excluded_details = {digest(record['presentation_context'])
                             for record in row['excluded'] if record['kind'] == 'details'}
@@ -455,6 +509,10 @@ def main():
         compact['figures'] = []
         for figure in row['figures']:
             key = row['page']+'/'+figure['id']
+            if figure.get('caption_sources'):
+                citations = caption_citations(figure, cfg.site.source_url, report['source_commit'])
+                figure = {**figure, 'external_caption_citations': bind_caption_citations(
+                    citations, report['source_commit'], additional)}
             if key in figures and figures[key] != figure:
                 raise ValueError('One page has conflicting figure definitions: '+key)
             figures[key] = figure
@@ -468,6 +526,8 @@ def main():
                    structural_facts_sha256=hashlib.sha256(args.facts.read_bytes()).hexdigest() if args.facts else None,
                    visual_policy=report['policy'], writing_rules=style_texts,
                    inventory_sha256=digest(report), source_commit=report.get('source_commit'))
+    if caption_mirror:
+        payload['caption_mirror'] = caption_mirror
     if args.reader_models:
         preliminary, provenance = {}, []
         wanted = {row['id'].removeprefix('en/') for row in selected}
