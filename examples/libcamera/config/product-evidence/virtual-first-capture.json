@@ -4,7 +4,7 @@
   "source_commit": "293d751a814e0d4c34e85ad457ccd9d5eefd1a61",
   "source_tracked_clean": true,
   "kernel": "6.18.33.2-microsoft-standard-WSL2-issue211",
-  "allocator": "udmabuf",
+  "allocator": "udmabuf (built into the WSL2 trial kernel, CONFIG_UDMABUF=y)",
   "camera": "Virtual2",
   "requested_stream": "role=video,width=400,height=300,pixelformat=NV12",
   "runs": [
@@ -43,5 +43,6 @@
   "physical_dma": "not-validated",
   "production_application": "not-run",
   "internal_hal": "not-run",
-  "applied_stream": "(0) 400x300-NV12/SMPTE170M"
+  "applied_stream": "(0) 400x300-NV12/SMPTE170M",
+  "kernel_evidence": "https://github.com/TTolsun/camera-hal-sdd-generator/blob/6adb29515c6a250d05e06ad0cf3b047205380be9/examples/libcamera/validation/issue211/runs/20261031-after-kernel-inventory/stdout"
 }

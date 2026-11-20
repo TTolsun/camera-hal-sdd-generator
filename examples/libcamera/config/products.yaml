@@ -123,4 +123,4 @@ evidence:
   conditions: *first_capture_conditions
   availability: unknown
   file: product-evidence/virtual-first-capture.json
-  sha256: 6c8c433a44e50a38cae3423c20164cada9f75b3e9c94d8995a8a1e252260a623
+  sha256: 2284397098a8a2871f76f695264af00a36c57a8fc324630367a26e598ee165e8

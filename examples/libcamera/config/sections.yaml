@@ -362,6 +362,7 @@ sections:
   - include/libcamera/camera.h
   - include/libcamera/framebuffer.h
   - include/libcamera/request.h
+  - README.rst
   design_requirements:
   - id: first-capture
     question: 이 기록으로 고객 보드의 첫 촬영이 검증됐다고 보고할 수 있습니까?
@@ -406,6 +407,10 @@ sections:
       file: include/libcamera/framebuffer.h
       start: enum Status {
       end: FrameCancelled,
+    - id: capture-output-guide
+      file: README.rst
+      start: The ``cam`` utility can be used for basic testing.
+      end: for more information about the ``cam`` tool.
     parts:
     - id: decision
       role: summary
@@ -438,8 +443,8 @@ sections:
         - ['3회', '세 번']
         - ['3프레임', '3 프레임']
     - id: board-trial
-      question: 고객 보드에 남은 첫 촬영 시험을 계획으로 두세 문장에 제시하세요. 보드·물리 센서·커널/드라이버·libcamera 빌드와 대상 애플리케이션을 기록한 뒤 실제 센서를 열어 적용한 스트림 형식과 크기를 확인합니다. 첫 요청의 RequestComplete와 버퍼의 FrameSuccess를 확인하고, 센서에서 들어온 프레임도 저장하거나 화면에서 확인하도록 안내하세요. 실행 결과나 제품 승인으로 쓰지 마세요.
-      sources: [board-camera-api, request-status, frame-status]
+      question: 고객 보드에 남은 첫 촬영 시험을 계획으로 두세 문장에 제시하세요. 보드·물리 센서·커널/드라이버·libcamera 빌드와 대상 애플리케이션을 기록한 뒤 실제 센서를 열어 적용한 스트림 형식과 크기를 확인합니다. 첫 요청의 RequestComplete와 버퍼의 FrameSuccess를 확인하고, 센서에서 들어온 프레임을 저장해 확인하도록 안내하세요. 공식 README의 cam 저장 기능은 기본 시험 도구의 예시로만 사용하세요. 실행 결과나 제품 승인으로 쓰지 마세요.
+      sources: [board-camera-api, request-status, frame-status, capture-output-guide]
       answer_contract:
         basis: investigation
         required_terms:
