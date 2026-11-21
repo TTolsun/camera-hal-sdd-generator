@@ -23,7 +23,9 @@ def add_scope(section):
 
 def test_configured_part_heading_is_presentation_not_an_uncited_paragraph(cli_units, tmp_cfg):
     section, model, save, _, state, agent = cli_units
-    section['design_topics'][0]['parts'][0]['heading'] = 'Integration condition'
+    topic = section['design_topics'][0]
+    topic['parts'] = [{'id': 'conditions', 'question': topic['question'],
+                       'sources': [source['id'] for source in topic['sources']], 'heading': 'Integration condition'}]
     save()
     state['interrupt'] = False
     path = Generator(tmp_cfg, model, agent()).run()[0]
