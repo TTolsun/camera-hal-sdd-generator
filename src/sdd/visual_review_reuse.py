@@ -68,11 +68,11 @@ def _download_menu(node, page):
     if node.tag != 'nav' or node.attrs.get('class') != 'download-nav':
         return False
     links = list(node.all('a'))
-    if len(links) == 2 and list(node.all('button')):
-        filename = links[1].attrs.get('download', '')
+    if len(links) in (2, 4) and list(node.all('button')):
+        filename = links[-1].attrs.get('download', '')
         if not filename.endswith('.md'):
             return False
-        expected = Document(_menu(page, page.startswith('en/'), filename))
+        expected = Document(_menu(page, page.startswith('en/'), filename, whole_only=len(links) == 2))
         return node == next(expected.root.all('nav'))
 
     # Previously published sites used a details disclosure with a text arrow.

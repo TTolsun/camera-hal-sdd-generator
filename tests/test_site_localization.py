@@ -41,6 +41,12 @@ def test_bilingual_routes_search_sources_and_repeatability(tmp_cfg, sample_model
     assert 'href="../../assets/reading.css?v=' in en
     assert 'href="../../nested/detail.md"' in en
     assert 'src="../../assets/site.js?v=' in en
+    assert 'Current page' in en and 'Whole document' in en
+    assert 'href="../download/pages/nested/detail.md" download="detail.en.md"' in en
+    assert 'human review pending' in (out / 'en/download/pages/nested/detail.md').read_text(encoding='utf-8')
+    single = (out / 'en/download/pages/nested/detail.html').read_text(encoding='utf-8')
+    assert 'lang="en"' in single and 'href="../../../nested/detail.html"' in single
+    assert 'href="../../../../assets/reading.css?v=' in single
     assert 'human review pending' in en
     assert 'class="language-selector"' in en
     assert 'href="en/device.html"' in (out / 'device.html').read_text(encoding='utf-8')
@@ -48,7 +54,7 @@ def test_bilingual_routes_search_sources_and_repeatability(tmp_cfg, sample_model
     search = json.loads((out / 'en/assets/search.json').read_text())
     assert any(x['url'].endswith('#%ED%95%9C%EA%B8%80-%EB%AA%A9%EC%B0%A8') for x in search)
     assert all(not re.search('[가-힣]', x['title']) for x in search)
-    assert verify_site(out)['html_pages'] == 8  # six pages and one whole-document copy per edition
+    assert verify_site(out)['html_pages'] == 14  # reader pages, their print views and both whole documents
     first = {p: p.read_bytes() for p in out.rglob('*') if p.is_file()}
     export_site(tmp_cfg)
     assert all(p.read_bytes() == data for p, data in first.items())

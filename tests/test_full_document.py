@@ -29,7 +29,7 @@ def test_whole_document_holds_every_page_with_internal_links(tmp_cfg, sample_mod
     assert re.search(r"finally \{\s*body\.style\.display = '';", combined)
     # Every diagram on the site is in the copy.
     diagrams = sum(p.read_text(encoding='utf-8').count('class="mermaid"')
-                   for p in out.rglob('*.html') if p.parent.name != 'download')
+                   for p in out.rglob('*.html') if 'download' not in p.relative_to(out).parts)
     assert diagrams and combined.count('class="mermaid"') == diagrams
     verify_site(out)
 
@@ -49,6 +49,15 @@ def test_whole_document_markdown_and_download_menu(tmp_cfg, sample_model):
     page = (out / 'nested/detail.html').read_text(encoding='utf-8')
     assert page.count('popovertarget="download-menu"') == 1
     assert 'id="download-menu" popover="auto"' in page and 'aria-hidden="true"' in page
+    assert '현재 페이지' in page and 'href="../download/pages/nested/detail.html?print"' in page
+    assert 'href="../download/pages/nested/detail.md" download="detail.md"' in page
+    current = (out / 'download/pages/nested/detail.html').read_text(encoding='utf-8')
+    current_md = (out / 'download/pages/nested/detail.md').read_text(encoding='utf-8')
+    assert current.count('class="full-page"') == 1 and '<h1>Details</h1>' in current
+    assert '<h1>Device</h1>' not in current and '# Details' in current_md and '# Device' not in current_md
+    assert 'href="../../../device.html#evidence"' in current
+    assert 'href="../../../nested/detail.html"' in current
+    assert 'href="../../../assets/reading.css?v=' in current
     assert 'href="../download/full.html?print"' in page and 'href="../download/full.md" download="Test-Site.md"' in page
 
 

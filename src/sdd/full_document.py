@@ -1,4 +1,4 @@
-"""Whole-document copies of the published site: one print page (saved as PDF) and one Markdown file.
+"""Print and Markdown copies of each published page and the whole document.
 
 Both copies are assembled from the final page HTML, after review records, navigation links and
 translation have been applied, so they contain exactly what a reader sees on the site. Nothing is
@@ -18,6 +18,7 @@ from pathlib import Path
 from urllib.parse import quote, unquote, urljoin, urlsplit
 
 from .site_markdown import _html_path
+from .site_paths import owned_path
 
 DIRECTORY = 'download'
 PRINT_PAGE = 'full.html'
@@ -133,6 +134,26 @@ def is_combined(rel: str) -> bool:
     return rel in {paths(False)[0], paths(True)[0]}
 
 
+def page_paths(page: str, english: bool) -> tuple[str, str]:
+    prefix = 'en/' if english else ''
+    printable = prefix + DIRECTORY + '/pages/' + page.removeprefix(prefix)
+    return printable, posixpath.splitext(printable)[0] + '.md'
+
+
+def reader_html_files(root, files):
+    """Exclude generated print views from reader inventories, while still checking their links."""
+    files = set(files)
+    copies = {rel for rel in files if is_combined(rel)}
+    for page in files:
+        english = page.startswith('en/')
+        printable, _ = page_paths(page, english)
+        if paths(english)[0] in files and printable in files:
+            with owned_path(root, printable).open('rb') as stream:
+                if stream.read(96).startswith(b'<!doctype html>\n<html data-sdd-page-copy '):
+                    copies.add(printable)
+    return files - copies
+
+
 def download_name(title: str, english: bool) -> str:
     stem = re.sub(r'[\\/:*?"<>|\s]+', '-', title).strip('-.') or 'sdd'
     return stem + ('.en' if english else '') + '.md'
@@ -205,6 +226,37 @@ def _stylesheet(document: str, page: str, directory: str) -> str:
     return posixpath.relpath(target, directory) + ('?' + parts.query if parts.query else '')
 
 
+def _print_view(original, page, print_path, english, heading, content, back, md_href, name, *, single=False):
+    text = LABELS['en' if english else 'ko']
+    directory = posixpath.dirname(print_path)
+    css = _stylesheet(original, page, directory)
+    config = _config(original, page, directory)
+    marker = ' data-sdd-page-copy' if single else ''
+    page_style = '.full-page{margin:0;border:0;padding:0;break-before:auto}' if single else ''
+    return f'''<!doctype html>
+<html{marker} lang="{'en' if english else 'ko'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{heading}</title><link rel="stylesheet" href="{html.escape(css, quote=True)}"><style>{STYLE}{page_style}</style></head>
+<body class="full-document"><div class="full-document-bar"><a href="{html.escape(back, quote=True)}">← {text["back"]}</a><p id="print-status" role="status">{text["preparing"]}</p>
+<div class="full-actions"><button id="print-document" type="button" disabled>{text["save"]}</button><a href="{html.escape(md_href, quote=True)}" download="{html.escape(name, quote=True)}">{text["save_markdown"]}</a></div><p class="full-hint">{text["hint"]}</p></div>
+<main id="main">{content}</main>
+<script id="site-config" type="application/json">{json.dumps(config, ensure_ascii=False).replace("<", chr(92) + "u003c")}</script><script>{SCRIPT}</script></body></html>
+'''
+
+
+def _page_copy(original, page, english, public_url):
+    print_path, markdown_path = page_paths(page, english)
+    directory = posixpath.dirname(print_path)
+    _, title, body = _page_parts(original, page)
+    content = ('<section class="full-page" id="doc-1">'
+               + _rewrite(body, page, 1, {page: 1}, directory) + '</section>')
+    back = quote(posixpath.relpath(page, directory))
+    md_href = quote(posixpath.basename(markdown_path))
+    filename = download_name(posixpath.splitext(posixpath.basename(page))[0], english)
+    document = _print_view(original, page, print_path, english, title, content, back, md_href, filename, single=True)
+    base = public_url.rstrip('/') + '/' + quote(directory) + '/' if public_url else ''
+    return document, to_markdown(content, base_url=base)
+
+
 def _combined(pages, *, english, site_title, source_commit, public_url):
     """pages: [(out-relative html path, page document)] in reading order."""
     text = LABELS['en' if english else 'ko']
@@ -226,9 +278,6 @@ def _combined(pages, *, english, site_title, source_commit, public_url):
                         + _rewrite(body, rel, number, numbers, directory) + '</section>')
     if contents:
         contents.append('</ol></li>')
-    first = pages[0][1]
-    css = _stylesheet(first, pages[0][0], directory)
-    config = _config(first, pages[0][0], directory)
     site_link = ''
     if public_url:
         site = public_url.rstrip('/') + '/' + ('en/' if english else '')
@@ -241,14 +290,8 @@ def _combined(pages, *, english, site_title, source_commit, public_url):
                f'<nav class="full-contents" aria-labelledby="full-contents-title"><h2 id="full-contents-title">'
                f'{text["contents"]}</h2><ol>{"".join(contents)}</ol></nav></section>' + ''.join(sections))
     back = posixpath.relpath('en/index.html' if english else 'index.html', directory)
-    document = f'''<!doctype html>
-<html lang="{'en' if english else 'ko'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{heading}</title><link rel="stylesheet" href="{html.escape(css, quote=True)}"><style>{STYLE}</style></head>
-<body class="full-document"><div class="full-document-bar"><a href="{back}">← {text["back"]}</a><p id="print-status" role="status">{text["preparing"]}</p>
-<div class="full-actions"><button id="print-document" type="button" disabled>{text["save"]}</button><a href="{posixpath.basename(markdown_path)}" download="{html.escape(name, quote=True)}">{text["save_markdown"]}</a></div><p class="full-hint">{text["hint"]}</p></div>
-<main id="main">{content}</main>
-<script id="site-config" type="application/json">{json.dumps(config, ensure_ascii=False).replace("<", chr(92) + "u003c")}</script><script>{SCRIPT}</script></body></html>
-'''
+    document = _print_view(pages[0][1], pages[0][0], print_path, english, heading, content, back,
+                           posixpath.basename(markdown_path), name)
     base = public_url.rstrip('/') + '/' + directory + '/' if public_url else ''
     markdown = to_markdown(content, base_url=base)
     return document, markdown
@@ -264,31 +307,43 @@ _DOWNLOAD_ICON = _icon('M10 2h4v8h4l-6 6-6-6h4z M3 15h3v4h12v-4h3v5a2 2 0 0 1-2 
 _FILE_ICON = _icon('M5 2h9l5 5v15H5z M13 4v5h5z M8 13v2h8v-2z M8 17v2h6v-2z', 16)
 
 
-def _menu(page: str, english: bool, filename: str) -> str:
+def _menu(page: str, english: bool, filename: str, *, whole_only=False) -> str:
     text = LABELS['en' if english else 'ko']
     print_path, markdown_path = paths(english)
     here = posixpath.dirname(page) or '.'
-    pdf = html.escape(posixpath.relpath(print_path, here) + '?print', quote=True)
-    md = html.escape(posixpath.relpath(markdown_path, here), quote=True)
+    label = text['menu_label'] if whole_only else 'Download'
     # The native popover provides keyboard activation, Escape and outside-click dismissal.
     # With no anchor positioning support, the popover uses the browser's centered placement.
     row = 'display:flex;align-items:center;gap:.65rem;padding:.35rem .65rem;color:inherit;text-decoration:none'
-    return (f'<nav class="download-nav" aria-label="{text["menu_label"]}" style="display:flex;align-items:center">'
-            f'<button type="button" popovertarget="download-menu" title="{text["menu_label"]}" '
-            f'aria-label="{text["menu_label"]}" style="anchor-name:--sdd-download;display:grid;place-items:center;'
+
+    def group(heading, printable, markdown, name, pdf_label, md_label):
+        pdf = html.escape(quote(posixpath.relpath(printable, here)) + '?print', quote=True)
+        md = html.escape(quote(posixpath.relpath(markdown, here)), quote=True)
+        return (f'<strong style="display:block;padding:.2rem .65rem;color:var(--muted);font-size:12px">{heading}</strong>'
+                f'<a href="{pdf}" title="{pdf_label}" aria-label="{pdf_label}" style="{row}">{_FILE_ICON}.pdf</a>'
+                f'<a href="{md}" download="{html.escape(name, quote=True)}" title="{md_label}" '
+                f'aria-label="{md_label}" style="{row}">{_FILE_ICON}.md</a>')
+
+    groups = group(text['heading'], print_path, markdown_path, filename, text['pdf_action'], text['md_action'])
+    if not whole_only:
+        this_page = group('Current page' if english else '현재 페이지', *page_paths(page, english),
+                          download_name(posixpath.splitext(posixpath.basename(page))[0], english),
+                          'Print this page to PDF' if english else '현재 페이지를 PDF로 인쇄',
+                          'Download this page as Markdown' if english else '현재 페이지를 Markdown으로 다운로드')
+        groups = this_page + '<hr style="border:0;border-top:1px solid var(--line);margin:.25rem 0">' + groups
+    return (f'<nav class="download-nav" aria-label="{label}" style="display:flex;align-items:center">'
+            f'<button type="button" popovertarget="download-menu" title="{label}" '
+            f'aria-label="{label}" style="anchor-name:--sdd-download;display:grid;place-items:center;'
             f'width:40px;height:40px;padding:0;border:0;color:var(--muted)">{_DOWNLOAD_ICON}</button>'
             f'<div id="download-menu" popover="auto" style="position-anchor:--sdd-download;'
             f'inset:auto anchor(right) auto auto;top:anchor(bottom);margin:auto;padding:.4rem;'
             f'min-width:9rem;background:white;color:var(--ink);border:1px solid var(--line);'
             f'border-radius:6px;box-shadow:0 4px 12px #17201e20;font-size:14px">'
-            f'<strong style="display:block;padding:.2rem .65rem;color:var(--muted);font-size:12px">{text["heading"]}</strong>'
-            f'<a href="{pdf}" title="{text["pdf_action"]}" aria-label="{text["pdf_action"]}" style="{row}">{_FILE_ICON}.pdf</a>'
-            f'<a href="{md}" download="{html.escape(filename, quote=True)}" title="{text["md_action"]}" '
-            f'aria-label="{text["md_action"]}" style="{row}">{_FILE_ICON}.md</a></div></nav>')
+            f'{groups}</div></nav>')
 
 
 def publish(out: Path, entries, *, site_title: str, source_commit: str = '', public_url: str = '') -> None:
-    """Write both editions' combined copies and add the download menu to every page."""
+    """Write current-page and whole-document exports for every available edition."""
     for english in (False, True):
         prefix = 'en/' if english else ''
         if english and not (out / 'en').is_dir():
@@ -311,6 +366,13 @@ def publish(out: Path, entries, *, site_title: str, source_commit: str = '', pub
         (out / print_path).write_text(document, encoding='utf-8', newline='\n')
         (out / markdown_path).write_text(markdown, encoding='utf-8', newline='\n')
         for page, original in pages:
+            printable, md = page_paths(page, english)
+            if (out / printable).exists() or (out / md).exists():
+                raise RuntimeError(f'Page download path already in use: {printable} or {md}')
+            page_html, page_markdown = _page_copy(original, page, english, public_url)
+            (out / printable).parent.mkdir(parents=True, exist_ok=True)
+            (out / printable).write_text(page_html, encoding='utf-8', newline='\n')
+            (out / md).write_text(page_markdown, encoding='utf-8', newline='\n')
             marker = '<button id="search-open"'
             if original.count(marker) != 1:
                 raise RuntimeError(f'Whole document: header actions are missing in {page}')

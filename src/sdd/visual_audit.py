@@ -742,8 +742,8 @@ def inspect_site(root, options, *, manifest=None, source_commit='', section_rela
     root = Path(root).resolve()
     files = sorted(rel for rel in manifest['outputs'] if rel.endswith('.html')) if manifest else sorted(p.relative_to(root).as_posix() for p in root.rglob('*.html'))
     # The whole-document copy repeats every page; its items are audited on their own pages.
-    from .full_document import is_combined
-    files = [rel for rel in files if not is_combined(rel)]
+    from .full_document import reader_html_files
+    files = sorted(reader_html_files(root, files))
     # Compatibility pages preserve earlier evidence and fragment URLs. Audit
     # the current reader pages where the selected explanations now appear.
     from .reader_edition import REPORT as READER_EDITION, read_inventory
