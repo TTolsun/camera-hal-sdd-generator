@@ -3,10 +3,8 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import re
 
-from . import source_git
-from .evidence import fingerprint, select_span
+from .evidence import fingerprint
 
 
 def subset(model, section, ids):
@@ -42,59 +40,6 @@ def topic_inputs(model, section, policy):
         inputs[topic['id']] = hashlib.sha256(
             (fingerprint(evidence_only, selected) + policy).encode()).hexdigest()
     return inputs
-
-
-def earlier_scope_positions(cfg, model, section, previous):
-    """Recover old coordinates for identical enclosing windows in both Git revisions."""
-    if not previous:
-        return None
-    from .document_metadata import split_frontmatter
-    metadata, _ = split_frontmatter(previous)
-    base = metadata.get('source_commit')
-    head = model.meta.get('source_commit')
-    if base == head or any(not isinstance(commit, str) or not re.fullmatch(r'[0-9a-f]{40}', commit)
-                           for commit in (base, head)):
-        return None
-    files, relocated = {}, {}
-
-    def scope_line(commit, path, scope, expected):
-        key = (commit, path)
-        if key not in files:
-            files[key] = source_git.file_at(cfg.source_root, commit, path)
-        text = files[key]
-        if text is None:
-            return None
-        try:
-            start, end = select_span(text, scope)
-        except ValueError:
-            return None
-        if text[start:end] == expected:
-            return text.count('\n', 0, start) + 1
-        return None
-
-    for topic in section['design_topics']:
-        for source in topic['sources']:
-            scope = source.get('scope')
-            if not scope:
-                continue
-            key = f"{section['id']}/{topic['id']}/{source['id']}"
-            record = model.evidence.get(key, {})
-            context = record.get('context')
-            if not context or record.get('status') != 'available' or record.get('commit') != head:
-                continue
-            path = source['file']
-            line = scope_line(base, path, scope, context['text'])
-            if line is None or line == context['line']:
-                continue
-            if scope_line(head, path, scope, context['text']) == context['line']:
-                relocated[key] = {**record, 'context': {
-                    **context, 'line': line, 'end_line': line + context['text'].count('\n'),
-                }}
-    if not relocated:
-        return None
-    earlier = copy.copy(model)
-    earlier.evidence = {**model.evidence, **relocated}
-    return earlier
 
 
 def reusable(model, section, previous, inputs, validate=None, *, compatible_inputs=None):
