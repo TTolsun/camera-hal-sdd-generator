@@ -552,7 +552,7 @@ sections:
       evidence:
       - source: stopping/app-notice
         sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
-        quote: "_d()->isAccessAllowed(Private::CameraStopping, Private::CameraRunning,\n\t\t\t\t\t  true)"
+        quote: "if (_d()->isAccessAllowed(Private::CameraStopping, Private::CameraRunning,"
       - source: stopping/app-notice
         sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
         quote: "requestCompleted.emit(request);"
