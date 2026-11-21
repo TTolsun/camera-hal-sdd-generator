@@ -716,7 +716,7 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     localize_site(cfg, out)
     if publish_reader and settings.reader_edition:
         from .reader_edition import publish as publish_reader_edition
-        entries = publish_reader_edition(cfg, out)
+        entries = publish_reader_edition(cfg, out, model=model)
     if full_document:
         # Built from the final, translated pages so the copies show exactly what the site shows.
         from .full_document import publish

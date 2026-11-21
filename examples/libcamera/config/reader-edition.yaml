@@ -47,7 +47,10 @@ pages:
       - {path: features-and-support.md, ko: 플랫폼과 빌드 조건 확인, en: Check platform and build support}
       - {path: device-integration.md, ko: 첫 촬영과 정지 시험 준비, en: Plan first capture and stop tests}
     sections:
-      - {source: index.md, fragment: vendor가-먼저-확인할-내용, id: adoption-check}
+      - source: index.md
+        fragment: vendor가-먼저-확인할-내용
+        id: adoption-check
+        figure_views: [{section: request-lifecycle, figure: stop-notification-boundary, view: vendor}]
       - {source: vendor-integration.md, fragment: 하드웨어와-공통-계층의-경계, id: vendor-responsibilities}
   - path: features-and-support.md
     group: vendor

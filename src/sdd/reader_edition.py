@@ -107,7 +107,8 @@ def load(cfg):
         _require(isinstance(page.get('sections'), list) and page['sections'],
                  'page needs sections for ' + name)
         for part in page['sections']:
-            _require(isinstance(part, dict) and not set(part) - {'source', 'fragment', 'id', 'ko', 'en', 'children'}
+            _require(isinstance(part, dict) and not set(part) - {
+                'source', 'fragment', 'id', 'ko', 'en', 'children', 'figure_views'}
                      and _route(part.get('source')), 'invalid section source in ' + name)
             for key in ('fragment', 'id'):
                 if key in part:
@@ -121,6 +122,10 @@ def load(cfg):
                 _require(part.get('fragment') not in (None, '@intro') and isinstance(children, list)
                          and all(_label(child) and not re.search(r'[\s#]', child) for child in children)
                          and len(children) == len(set(children)), 'children need distinct IDs under a section in ' + name)
+            views = part.get('figure_views', [])
+            _require(isinstance(views, list) and all(isinstance(view, dict)
+                     and set(view) == {'section', 'figure', 'view'} and all(map(_label, view.values()))
+                     and view['view'] != 'default' for view in views), 'invalid figure views in ' + name)
         if 'table_source' in page:
             binding = page['table_source']
             _require(any(part.get('source') == binding['source'] and part.get('fragment') == binding['fragment']
@@ -729,10 +734,14 @@ def _search(out, edition, selections, prefix, routes, archives, old_ids):
     location.write_text(json.dumps(values, ensure_ascii=False), encoding='utf-8', newline='\n')
 
 
-def _edition(out, edition, prefix, raw, *, bilingual):
+def _edition(out, edition, prefix, raw, *, bilingual, figures=None):
     trees = {rel: _parse(text) for rel, text in raw.items()}
     old_ids = {rel: _ids(tree) for rel, tree in trees.items()}
     selections, origins = _selected(prefix, edition, trees)
+    if figures is not None:
+        for parts in selections.values():
+            for part, source, fragment, _ in parts:
+                figures.attach(part.get('figure_views', []), prefix, source, fragment, raw, old_ids)
     selected = set(selections)
     archives = {rel: prefix + ARCHIVE + rel.removeprefix(prefix) for rel in raw}
     routes = dict(origins)
@@ -783,7 +792,75 @@ def _edition(out, edition, prefix, raw, *, bilingual):
     return report, archives, origins
 
 
-def publish(cfg, out):
+class _FigureViews:
+    """Mount evidence-checked projections of a source visual after localization."""
+
+    def __init__(self, cfg, out, model):
+        self.cfg, self.out, self.model = cfg, out, model
+        self.sections = {section['id']: section for section in cfg.sections()}
+        self.cache = {}
+        self.catalog = {}
+        if cfg.site.english_catalog:
+            from .validation_stage import load_json
+            self.catalog = load_json(owned_path(cfg.root, cfg.site.english_catalog))['strings']
+
+    def _render(self, spec, prefix, raw):
+        from .config import section_output
+        from .site_localization import DisplayText, english_diagram, KOREAN
+        from .site_markdown import _render
+        from .visuals import render_view
+
+        owner = self.sections.get(spec['section'])
+        _require(owner is not None, 'unknown figure owner: ' + spec['section'])
+        manuscript = section_output(owner)
+        origin = prefix + _html_path(manuscript)
+        marker = f'<!-- sdd:visual:{spec["figure"]} -->'
+        _require(raw.get(origin, '').count(marker) == 1, 'source visual is not uniquely rendered: ' + origin)
+        base = PurePosixPath(manuscript).with_suffix('')
+        original_download = owned_path(self.out, prefix + str(base) + '.' + spec['figure'] + '.mmd')
+        _require(original_download.is_file(), 'source visual is omitted or lacks Mermaid: ' + origin)
+        projected, labels = render_view(self.cfg, self.model, owner, spec['figure'], spec['view'])
+        visual, markdown, mermaid = projected
+        _require(bool(mermaid), 'projected visual has stale evidence: ' + visual['id'])
+        document, _, _ = _render(markdown, manuscript, {manuscript}, self.model, '',
+                                  str(self.model.meta.get('source_commit', '')))
+        if prefix:
+            explicit = {labels['title']: labels['title_en'], labels['question']: labels['question_en']}
+            def translate(value):
+                key = value.strip()
+                if not KOREAN.search(key):
+                    return value
+                result = explicit.get(key, self.catalog.get(key))
+                _require(isinstance(result, str) and bool(result.strip()) and not KOREAN.search(result),
+                         'figure view English translation is missing: ' + key)
+                return value[:len(value) - len(value.lstrip())] + result + value[len(value.rstrip()):]
+            parser = DisplayText(translate)
+            parser.feed(document)
+            document = ''.join(parser.output)
+            mermaid = english_diagram(mermaid)
+        dest = owned_path(self.out, prefix + str(base) + '.' + visual['id'] + '.mmd')
+        _require(not dest.exists(), 'figure view download collides with an existing artifact: ' + dest.name)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(mermaid + '\n', encoding='utf-8', newline='\n')
+        return origin, document
+
+    def attach(self, specs, prefix, source, fragment, raw, old_ids):
+        for spec in specs:
+            key = (prefix, spec['section'], spec['figure'], spec['view'])
+            if key not in self.cache:
+                self.cache[key] = self._render(spec, prefix, raw)
+            origin, document = self.cache[key]
+            nodes = html5lib.parseFragment(document, treebuilder='dom', namespaceHTMLElements=False)
+            _require(not (_ids(nodes) & _ids(fragment)), 'figure view heading collides with a selected heading')
+            # These links use the source figure's exact excerpt IDs. First
+            # rebase them onto the selected manuscript's location, then let
+            # ordinary reader routing resolve any relocated source fragments.
+            _rewrite(nodes, origin, source, {}, {}, old_ids)
+            for node in list(nodes.childNodes):
+                fragment.appendChild(node)
+
+
+def publish(cfg, out, *, model=None):
     edition = load(cfg)
     if edition is None:
         return None
@@ -792,9 +869,13 @@ def publish(cfg, out):
                 for file in sorted(out.rglob('*.html'))}
     korean = {rel: document for rel, document in original.items() if not rel.startswith('en/')}
     english = {rel: document for rel, document in original.items() if rel.startswith('en/')}
-    recordings, archives, origins = _edition(out, edition, '', korean, bilingual=bool(english))
+    figures = None
+    if any(part.get('figure_views') for page in edition.pages for part in page['sections']):
+        figures = _FigureViews(cfg, out, model)
+    recordings, archives, origins = _edition(out, edition, '', korean, bilingual=bool(english), figures=figures)
     if english:
-        localized, translated_archives, localized_origins = _edition(out, edition, 'en/', english, bilingual=True)
+        localized, translated_archives, localized_origins = _edition(out, edition, 'en/', english, bilingual=True,
+                                                                      figures=figures)
         _require({(source.removeprefix('en/'), anchor): (page.removeprefix('en/'), dest)
                   for (source, anchor), (page, dest) in localized_origins.items()} == origins,
                   'Korean and English source fragments differ')
