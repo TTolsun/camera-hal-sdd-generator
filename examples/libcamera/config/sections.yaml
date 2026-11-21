@@ -5379,7 +5379,7 @@ sections:
   - q: 실패 위치별 확인 순서의 조건과 근거를 대조하세요.
     to: request-diagnosis.md#실패-위치별-확인-순서
     anchor: 실패-위치별-확인-순서
-  - q: 정지와 연결 해제의 차이를 확인합니다.
+  - q: 촬영을 멈췄는데 왜 완료 알림이 오는가?
     to: '#정지와-연결-해제를-구분하기'
   - q: “요청이 대기하거나 장치로 가는 조건” 그림을 확인하세요.
     to: request-diagnosis.md#요청이-대기하거나-장치로-가는-조건
@@ -6713,7 +6713,7 @@ sections:
         basis: investigation
   - id: stopping
     title: 정지와 연결 해제를 구분하기
-    question: 정지 문제를 조사하는 순서와 파일·함수·관측값을 짧은 문단으로 설명하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을
+    question: 촬영을 멈췄는데 왜 완료 알림이 오는지 먼저 설명하세요. 이어서 정지 문제를 조사하는 순서와 파일·함수·관측값을 연결하세요. Camera::stop 미실행 상태의 0 반환과 실행 중 Stopping·blocking 호출을
       구분하세요. PipelineHandler::stop의 waitingRequests_ 분리, stopDevice 진입/복귀 여부, 대기 요청 취소, queuedRequests_/waitingRequests_
       ASSERT를 조사 지점에 연결하세요. stopDevice 내부에서 멎음과 반환 후 큐가 남음, 별도 스레드 콜백 미처리를 구분하고 disconnect TODO를 보장으로 바꾸지 마세요.
       실행 시험 결과나 보장된 타임아웃을 만들지 마세요.
@@ -6807,11 +6807,75 @@ sections:
       file: src/libcamera/v4l2_videodevice.cpp
       start: int V4L2VideoDevice::streamOff()
       end: \brief Set the dequeue timeout value
+    - id: app-notice
+      file: src/libcamera/camera.cpp
+      start: void Camera::requestComplete(Request *request)
+      end: requestCompleted.emit(request);
+    - id: request-result
+      file: src/libcamera/request.cpp
+      start: bool Request::Private::completeBuffer(FrameBuffer *buffer)
+      end: void Request::Private::doCancelRequest()
+    - id: frame-result
+      file: src/libcamera/framebuffer.cpp
+      start: \enum FrameMetadata::Status
+      end: "\n */"
+    - id: frame-cancel
+      file: include/libcamera/internal/framebuffer.h
+      start: 'void cancel() {'
+      end: metadata_.status = FrameMetadata::FrameCancelled;
+    - id: uvc-ready
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: void UVCCameraData::imageBufferReady(FrameBuffer *buffer)
+      end: REGISTER_PIPELINE_HANDLER
+    - id: uvc-signal
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: 'video_->bufferReady.connect(this, &UVCCameraData::imageBufferReady);'
+      end: '/* Generate the camera ID. */'
+    - id: waiting-completion
+      file: src/libcamera/pipeline_handler.cpp
+      start: void PipelineHandler::doQueueRequest(Request *request)
+      end: \brief Queue prepared requests to the device
+    - id: dequeue-notice
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: void V4L2VideoDevice::bufferAvailable()
+      end: \brief Start the video stream
     covers:
     - stopping
     parts:
-    - id: summary
+    - id: stop-notification
       role: summary
+      question: >-
+        “촬영을 멈췄는데 왜 완료 알림이 오는가?”에 답하는 네 문장을 500자 안에 작성하세요.
+        첫 문장은 UVC 정상 반환과 STREAMOFF 성공 시 남은 버퍼의 취소가 imageBufferReady에서
+        completeBuffer·completeRequest를 거쳐 같은 requestCompleted로 이어진다고 설명하세요.
+        둘째 문장은 Developer가 이 슬롯에서 RequestComplete·RequestCancelled를 구별하고
+        버퍼별 FrameSuccess로 영상 사용 여부를 판단하도록 하세요. RequestComplete에도 FrameError가 있을 수 있고
+        취소 버퍼는 FrameCancelled입니다. 함수 이름을 반복하거나 전체 시그니처를 쓰지 마세요.
+        셋째 문장은 Vendor의 장치 검증 계획입니다. 첫 실행은 정상 촬영, 둘째 실행은 미완료 요청을 남긴 stop()이며,
+        수신 루프를 처리하며 제출별 알림 횟수(미수신 포함)와 요청·버퍼 상태를 기록합니다.
+        넷째 문장은 다른 스레드에 큐잉된 슬롯이 stop() 반환 뒤에도 실행될 수 있음을 설명하세요.
+        장치 결과와 보장된 콜백 시간을 만들지 마세요.
+      sources: [stop, app-notice, uvc-ready, uvc-signal, dequeue-notice, streamoff-implementation, frame-cancel, request-result, frame-result, completion, queued-connection]
+      max_statements: 1
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - [requestCompleted]
+        - [imageBufferReady]
+        - [completeBuffer]
+        - [completeRequest]
+        - [RequestComplete]
+        - [RequestCancelled]
+        - [FrameError]
+        - [FrameSuccess]
+        - [FrameCancelled]
+        - [stop()]
+        - [첫 실행]
+        - [둘째 실행]
+        - [큐잉]
+        - [Developer]
+        - [Vendor]
+    - id: summary
       question: 첫 문장을 PipelineHandler::stop의 문서 계약이라고 명시하고 모든 미완료 요청의 취소·즉시 오류 완료를 요구하는 내용을 설명하세요. Camera::disconnect의
         Running 중 연결 해제에서 대기 요청 처리가 TODO라는 점을 둘째 문장으로 비교합니다. 다음 짧은 문단은 선택 UVC 구현의 실패 범위입니다. STREAMOFF가 장치 버퍼
         반환 전에 실패하면 UVC stopDevice는 음수를 검사하지 않고 releaseBuffers를 계속 호출하므로 위 계약이 모든 실패에서 자동 충족되거나 모든 요청이 반환된다고 보장하지
@@ -6890,6 +6954,7 @@ sections:
         제안하는 한국어 한 문장만 쓰세요.
       sources:
       - pending-requeue
+      - waiting-completion
       answer_contract:
         basis: investigation
         required_terms:

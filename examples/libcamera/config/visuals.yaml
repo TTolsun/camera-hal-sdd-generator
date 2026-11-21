@@ -452,6 +452,245 @@ sections:
       - source: journey/buffer-notice
         sha256: 096784b4798b3156e88e3acf84577f60a27f0bf0e2422ae7850e44b081eb9d3a
         quote: "false\n * otherwise"
+  - id: stop-notification-boundary
+    topic: stopping
+    kind: flow
+    title: 촬영을 멈췄는데 왜 완료 알림이 오는가?
+    question: 정상 촬영과 정지 중 취소가 어떤 경로를 거쳐 같은 완료 신호로 앱에 전달됩니까?
+    caption:
+      text: 완료 시 상태 검사는 연결 해제도 허용합니다. Running과 Stopping 범위를 벗어나면 Fatal 로그 경로에 들어갑니다.
+      text_en: The completion state check allows a disconnected camera. A state outside Running and Stopping triggers the Fatal log path.
+      evidence:
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: "/* Disconnected cameras are still able to complete requests. */"
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: 'LOG(Camera, Fatal) << "Trying to complete a request when stopped";'
+    nodes:
+    - id: app-stop
+      label: "앱에서 Camera::stop() 호출"
+      label_en: "App calls Camera::stop()"
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "int Camera::stop()"
+    - id: camera-stop
+      label: "Camera API가 CameraStopping으로 전환"
+      label_en: "Camera API enters CameraStopping"
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "d->setState(Private::CameraStopping);"
+    - id: pipe-stop
+      label: "Pipeline Handler가 대기열을 분리하고 장치를 정지"
+      label_en: "Pipeline Handler detaches the waiting queue and stops the device"
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "waitingRequests.swap(data->waitingRequests_);"
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "stopDevice(camera);"
+    - id: device-frame
+      label: "UVC 촬영 중 회수한 버퍼: FrameSuccess 또는 FrameError"
+      label_en: "Buffer dequeued during UVC capture: FrameSuccess or FrameError"
+      evidence:
+      - source: stopping/dequeue-notice
+        sha256: b49fbd6c74b10d8d7e28d44854068de9100ea0dc6058d86d24a3f3a4f85f1fff
+        quote: "FrameBuffer *buffer = dequeueBuffer();"
+      - source: stopping/dequeue-notice
+        sha256: b49fbd6c74b10d8d7e28d44854068de9100ea0dc6058d86d24a3f3a4f85f1fff
+        quote: "bufferReady.emit(buffer);"
+      - source: stopping/dequeue-notice
+        sha256: b49fbd6c74b10d8d7e28d44854068de9100ea0dc6058d86d24a3f3a4f85f1fff
+        quote: "metadata.status = buf.flags & V4L2_BUF_FLAG_ERROR\n\t\t\t? FrameMetadata::FrameError\n\t\t\t: FrameMetadata::FrameSuccess;"
+    - id: streamoff-error
+      label: "장치 버퍼 반환 루프를 건너뛰고 오류 반환"
+      label_en: "Return an error before the device-buffer return loop"
+      evidence:
+      - source: stopping/streamoff-implementation
+        sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
+        quote: "if (ret < 0) {\n\t\tLOG(V4L2, Error)\n\t\t\t<< \"Failed to stop streaming: \" << strerror(-ret);\n\t\treturn ret;\n\t}"
+    - id: device-cancel
+      label: "UVC 정지 중 장치에 남은 버퍼를 FrameCancelled로 반환"
+      label_en: "During UVC stop, return buffers still queued on the device as FrameCancelled"
+      evidence:
+      - source: stopping/streamoff-implementation
+        sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
+        quote: "buffer->_d()->cancel();\n\t\tbufferReady.emit(buffer);"
+      - source: stopping/frame-cancel
+        sha256: 4ee32fcaa773d545e62f29b6655ab3874f73ea267af1d307e6b08c32a9af821c
+        quote: "metadata_.status = FrameMetadata::FrameCancelled;"
+    - id: uvc-ready
+      label: "UVC 핸들러가 버퍼 완료 뒤 요청 완료를 명시적으로 호출"
+      label_en: "UVC handler explicitly completes the request after completing the buffer"
+      evidence:
+      - source: stopping/uvc-ready
+        sha256: 06b7f1bab454d0e7271e6f145d0d1807416e4a44ef4f17b8ca2dc5c5266b4343
+        quote: "pipe()->completeBuffer(request, buffer);\n\tpipe()->completeRequest(request);"
+    - id: waiting-cancel
+      label: "공통 핸들러가 분리했던 대기 요청을 취소해 완료"
+      label_en: "Common handler cancels and completes the detached waiting requests"
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "request->_d()->cancel();\n\t\tdoQueueRequest(request);"
+      - source: stopping/waiting-completion
+        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}"
+    - id: request-result
+      label: "cancelled_에 따라 RequestCancelled 또는 RequestComplete"
+      label_en: "cancelled_ selects RequestCancelled or RequestComplete"
+      evidence:
+      - source: stopping/request-result
+        sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
+        quote: "request->status_ = cancelled_ ? RequestCancelled : RequestComplete;"
+    - id: camera-notify
+      label: "Camera API: Running 또는 Stopping에서 requestCompleted 발행"
+      label_en: "Camera API: emit requestCompleted in Running or Stopping"
+      evidence:
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: "if (_d()->isAccessAllowed(Private::CameraStopping, Private::CameraRunning,"
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: "requestCompleted.emit(request);"
+    - id: app-result
+      label: "앱이 요청 상태와 버퍼별 FrameSuccess 여부를 확인"
+      label_en: "App checks request status and whether each buffer reports FrameSuccess"
+      evidence:
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: "requestCompleted.emit(request);"
+      - source: stopping/request-result
+        sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
+        quote: "request->status_ = cancelled_ ? RequestCancelled : RequestComplete;"
+      - source: stopping/frame-result
+        sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+        quote: "The frame has been captured with success"
+    edges:
+    - from: app-stop
+      to: camera-stop
+      label: "실행 중이고 접근 검사 통과"
+      label_en: "Running and access check passes"
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "if (!d->isRunning())\n\t\treturn 0;"
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: "if (ret < 0)\n\t\treturn ret;"
+    - from: camera-stop
+      to: pipe-stop
+      label: "블로킹 호출"
+      label_en: "Blocking invocation"
+      evidence:
+      - source: stopping/stopping-call
+        sha256: a75876cfb66d256185fe7085444cbe91f726b87bdceca83cb6b243514f03c1ed
+        quote: "&PipelineHandler::stop, ConnectionTypeBlocking,"
+    - from: pipe-stop
+      to: device-cancel
+      label: "UVC의 VIDIOC_STREAMOFF 성공"
+      label_en: "VIDIOC_STREAMOFF succeeds in UVC"
+      evidence:
+      - source: stopping/uvc-stop-implementation
+        sha256: 971783f2897a5dd1f91787a28332f2603720ad6144c039c0deb2fd5463e087b2
+        quote: "data->video_->streamOff();"
+      - source: stopping/streamoff-implementation
+        sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
+        quote: "ret = ioctl(VIDIOC_STREAMOFF, &bufferType_);\n\tif (ret < 0) {"
+      - source: stopping/streamoff-implementation
+        sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
+        quote: "for (const auto &[id, buffer] : queuedBuffers_) {"
+    - from: pipe-stop
+      to: waiting-cancel
+      label: "장치 정지 호출이 반환한 뒤"
+      label_en: "After the device stop call returns"
+      evidence:
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: "stopDevice(camera);\n\n\t/* Cancel and signal as complete all waiting requests. */"
+    - from: pipe-stop
+      to: streamoff-error
+      label: "UVC의 VIDIOC_STREAMOFF 실패"
+      label_en: "VIDIOC_STREAMOFF fails in UVC"
+      evidence:
+      - source: stopping/uvc-stop-implementation
+        sha256: 971783f2897a5dd1f91787a28332f2603720ad6144c039c0deb2fd5463e087b2
+        quote: "data->video_->streamOff();"
+      - source: stopping/streamoff-implementation
+        sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
+        quote: "ret = ioctl(VIDIOC_STREAMOFF, &bufferType_);\n\tif (ret < 0) {"
+    - from: device-frame
+      to: uvc-ready
+      label: "bufferReady → imageBufferReady"
+      label_en: "bufferReady → imageBufferReady"
+      evidence:
+      - source: stopping/uvc-signal
+        sha256: 191e90296f7e7b99ab596be4720ec7fe1d44a882b4955e7a55bb23f822e331b1
+        quote: "video_->bufferReady.connect(this, &UVCCameraData::imageBufferReady);"
+    - from: device-cancel
+      to: uvc-ready
+      label: "같은 bufferReady 신호"
+      label_en: "Same bufferReady signal"
+      evidence:
+      - source: stopping/streamoff-implementation
+        sha256: 9ff153d1c6299f3ef69456e6b777236497df9a87683f125d287017317a9a954e
+        quote: "bufferReady.emit(buffer);"
+      - source: stopping/uvc-signal
+        sha256: 191e90296f7e7b99ab596be4720ec7fe1d44a882b4955e7a55bb23f822e331b1
+        quote: "video_->bufferReady.connect(this, &UVCCameraData::imageBufferReady);"
+    - from: uvc-ready
+      to: request-result
+      label: "버퍼 상태를 반영한 뒤 요청 완료"
+      label_en: "Apply the buffer status, then complete the request"
+      evidence:
+      - source: stopping/request-result
+        sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
+        quote: "if (buffer->metadata().status == FrameMetadata::FrameCancelled)\n\t\tcancelled_ = true;"
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "request->_d()->complete();"
+    - from: waiting-cancel
+      to: request-result
+      label: "취소 표시 후 소프트웨어 큐에서 완료"
+      label_en: "Complete in the software queue after marking cancelled"
+      evidence:
+      - source: stopping/waiting-completion
+        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+        quote: "data->queuedRequests_.push_back(request);"
+      - source: stopping/waiting-completion
+        sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
+        quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}"
+    - from: request-result
+      to: camera-notify
+      label: "제출 순서대로 반환, 선두가 Pending이면 대기"
+      label_en: "Return in submission order; wait if the head is pending"
+      evidence:
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "if (req->status() == Request::RequestPending)\n\t\t\tbreak;"
+      - source: stopping/completion
+        sha256: 514288cc958de9ff5fd19d46393cec3bb3088f4f08486528d4559071138638c9
+        quote: "camera->requestComplete(req);"
+    - from: camera-notify
+      to: app-result
+      label: "큐에 들어간 슬롯은 stop() 반환 뒤에도 실행 가능"
+      label_en: "A queued slot may run after stop() returns"
+      evidence:
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: "requestCompleted.emit(request);"
+      - source: stopping/queued-connection
+        sha256: 9d139a7558500489b81d2ef8b83d3b1a3b143d252992c91f56331bc1e6d1b327
+        quote: "object_->postMessage(std::move(msg));\n\t\treturn false;"
+      - source: stopping/queued-connection
+        sha256: 9d139a7558500489b81d2ef8b83d3b1a3b143d252992c91f56331bc1e6d1b327
+        quote: "semaphore.acquire();"
+      - source: stopping/stopping-call
+        sha256: a75876cfb66d256185fe7085444cbe91f726b87bdceca83cb6b243514f03c1ed
+        quote: "&PipelineHandler::stop, ConnectionTypeBlocking,"
   - id: stop-order
     topic: stopping
     kind: flow
