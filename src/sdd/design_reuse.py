@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import json
 import re
 
 from .evidence import contract_text, fingerprint
@@ -128,22 +127,10 @@ def _part_scope(model, section, topic, parts):
     return pinned, selected, narrowed
 
 
-def _part_identity(cfg, model, section, topic, parts, plan):
-    from .design_request import bind_native_topic
-
-    pinned, scoped, narrowed = _part_scope(model, section, topic, parts)
-    tid = topic['id']
-    prompt = plan.prompts[tid]
-    identity = topic_inputs(pinned, scoped, prompt.policy + json.dumps(plan.policy))[tid]
-    return bind_native_topic(cfg, pinned, section, narrowed, prompt, identity)
-
-
-def reusable_prefixes(cfg, model, section, plan, reused, validate):
+def reusable_prefixes(model, section, previous, reused, validate, identity):
     """Retain a proved, separately rendered lead before the first changed part."""
-    if cfg.agent.kind != 'cli':
-        return {}, {}
     from .document_metadata import split_frontmatter
-    meta, body = split_frontmatter(plan.previous or '')
+    meta, body = split_frontmatter(previous or '')
     old = meta.get('generated_design', {})
     if not isinstance(old, dict) or old.get('body_sha256') != hashlib.sha256(body.strip().encode()).hexdigest():
         old = {}
@@ -152,7 +139,7 @@ def reusable_prefixes(cfg, model, section, plan, reused, validate):
         if not topic.get('reuse_parts'):
             continue
         tid, parts = topic['id'], topic['parts']
-        keys = {part['id']: _part_identity(cfg, model, section, topic, [part], plan) for part in parts}
+        keys = {part['id']: identity(topic, [part]) for part in parts}
         bindings[tid] = keys
         statements = old.get('answers', {}).get(tid)
         if tid in reused or not isinstance(statements, list):
@@ -171,7 +158,7 @@ def reusable_prefixes(cfg, model, section, plan, reused, validate):
             prior_ids = list(dict.fromkeys(row.get('part_id') for row in statements if isinstance(row, dict)))
             selected = parts[:len(prior_ids)]
             if ([part['id'] for part in selected] != prior_ids or len(selected) == len(parts)
-                    or not selected or _part_identity(cfg, model, section, topic, selected, plan)
+                    or not selected or identity(topic, selected)
                     != old.get('topic_inputs', {}).get(tid)):
                 continue
         # The unchanged lead must have a real rendering boundary so adding or

@@ -96,8 +96,7 @@ def preview(cfg, model, section_ids=None, impact=None):
 
 def _prepare(cfg, model, section_ids, impact, *, plan_only):
     from . import generated_design
-    from .design_request import prepare_requests, _design_units
-    from .design_reuse import reusable_prefixes
+    from .design_request import prepare_requests, reusable_prefixes, _design_units
     from .design_reuse import reusable
     from .design_response import _validate_retained, response_schema
     from .design_checkpoint import PendingReview, store_for, changes

@@ -1,5 +1,6 @@
 """Actual checkpoint paths preserve identical scoped manuscript bytes."""
 import json
+import hashlib
 
 import pytest
 import yaml
@@ -24,12 +25,67 @@ def add_scope(section):
 def test_configured_part_heading_is_presentation_not_an_uncited_paragraph(cli_units, tmp_cfg):
     section, model, save, _, state, agent = cli_units
     topic = section['design_topics'][0]
+    topic['reuse_parts'] = True
     topic['parts'] = [{'id': 'conditions', 'question': topic['question'],
                        'sources': [source['id'] for source in topic['sources']], 'heading': 'Integration condition'}]
     save()
     state['interrupt'] = False
     path = Generator(tmp_cfg, model, agent()).run()[0]
     assert '### Integration condition\n\n' in path.read_text(encoding='utf-8')
+
+
+def test_incremental_topic_reuses_proved_lead_on_addition_and_followup(cli_units, tmp_cfg, monkeypatch):
+    from sdd.design_request import prepare_requests, reusable_prefixes
+    from sdd.design_response import _validate_retained
+
+    section, model, save, _, state, agent = cli_units
+    topic = section['design_topics'][0]
+    tid = topic['id']
+    topic['parts'] = [{'id': 'lead', 'question': topic['question'],
+                       'sources': [source['id'] for source in topic['sources']]}]
+    save()
+    state['interrupt'] = False
+    path = Generator(tmp_cfg, model, agent()).run()[0]
+    original = path.read_text(encoding='utf-8')
+    before, _ = split_frontmatter(original)
+    assert 'part_inputs' not in before['generated_design']
+
+    source = {'id': 'limit', 'file': 'device.cpp', 'start': 'void bounded()', 'end': '}'}
+    topic['sources'].append(source)
+    topic['reuse_parts'] = True
+    topic['parts'].append({'id': 'limit', 'question': 'Which extra guard limits capture?',
+                           'sources': ['limit'], 'heading': 'Integration condition'})
+    key = f"{section['id']}/{tid}/limit"
+    def evidence(text):
+        model.evidence[key] = {'selector': source, 'commit': model.meta['source_commit'], 'file': 'device.cpp',
+                               'line': 30, 'end_line': 30, 'status': 'available', 'text': text,
+                               'sha256': hashlib.sha256(text.encode()).hexdigest()}
+    evidence('void bounded() { clampExposure(8); }')
+    save()
+
+    requests = []
+    def answer(cfg, model, agent, section, unit, *args):
+        requests.append(unit['_part_id'])
+        return [{'text': '노출 시간은 가드의 제한을 받습니다.', 'quote': model.evidence[key]['text'],
+                 'evidence': ['limit'], 'covers': topic['covers'], 'kind': 'behavior', 'part_id': 'limit'}], None
+    monkeypatch.setattr('sdd.generated_design._request_unit', answer)
+    report = ImpactReport('b' * 40, model.meta['source_commit'], sections={section['id']: ['new excerpt']})
+    Generator(tmp_cfg, model, agent()).run(impact=report)
+    assert requests == ['limit']
+    first, _ = split_frontmatter(path.read_text(encoding='utf-8'))
+    assert first['generated_design']['answers'][tid][:-1] == before['generated_design']['answers'][tid]
+    assert 'part_inputs' in first['generated_design']
+
+    evidence('void bounded() { clampExposure(9); }')
+    save()
+    Generator(tmp_cfg, model, agent()).run(impact=report)
+    assert requests == ['limit', 'limit']
+    current = path.read_text(encoding='utf-8')
+    current_meta, _ = split_frontmatter(current)
+    assert current_meta['generated_design']['answers'][tid][:-1] == before['generated_design']['answers'][tid]
+    (tmp_cfg.style_dir/'README.md').write_text('Changed shared writing guide.', encoding='utf-8')
+    plan = prepare_requests(tmp_cfg, model, section, current)
+    assert reusable_prefixes(tmp_cfg, model, section, plan, {}, _validate_retained)[1] == {}
 
 
 def test_plain_generate_retains_bytes_after_all_cli_units_revalidated(cli_units, tmp_cfg):

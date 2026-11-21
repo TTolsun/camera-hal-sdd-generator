@@ -184,6 +184,21 @@ def bind_native_topic(cfg, model, section, topic, prompt, identity):
                                              cli_protocol='native-schema-v1'), ensure_ascii=False, sort_keys=True))
 
 
+def reusable_prefixes(cfg, model, section, plan, reused, validate):
+    if cfg.agent.kind != 'cli':
+        return {}, {}
+    from .design_reuse import _part_scope, reusable_prefixes as retain, topic_inputs
+
+    def identity(topic, parts):
+        pinned, scoped, narrowed = _part_scope(model, section, topic, parts)
+        tid = topic['id']
+        prompt = plan.prompts[tid]
+        base = topic_inputs(pinned, scoped, prompt.policy + json.dumps(plan.policy))[tid]
+        return bind_native_topic(cfg, pinned, section, narrowed, prompt, base)
+
+    return retain(model, section, plan.previous, reused, validate, identity)
+
+
 def _design_units(section, retained, retained_parts=None):
     units = []
     for topic in section['design_topics']:
@@ -209,6 +224,7 @@ def _design_units(section, retained, retained_parts=None):
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']
             unit.pop('parts')
+            unit.pop('reuse_parts', None)
             if topic.get('explanation'):
                 from .explanation import context
                 unit['_explanation_context'] = context(topic, part['id'])

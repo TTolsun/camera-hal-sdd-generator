@@ -12,7 +12,7 @@ from .design_response import (
     response_schema, materialize, source_names, normalize_answer, validate_answers,
     decode_unit, _validate_retained,
 )
-from .design_request import prepare_requests, _design_units, _unit_request, _unit_tag
+from .design_request import prepare_requests, reusable_prefixes, _design_units, _unit_request, _unit_tag
 from .design_execution import _request_unit, _UnitRejected, _validate_unit_response
 from .design_types import DesignResult
 from .design_trials import open_archive
@@ -29,7 +29,7 @@ def _prepare_generation(cfg, model, section, previous):
     if cfg.agent.kind == 'dry-run':
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     plan = prepare_requests(cfg, model, section, previous)
-    from .design_reuse import reusable, reusable_prefixes
+    from .design_reuse import reusable
     answers, origins = reusable(model, section, plan.previous, plan.inputs, _validate_retained,
                                 compatible_inputs=plan.compatible_inputs)
     for tid in duplicates.repeated_topics(model, section, answers):
