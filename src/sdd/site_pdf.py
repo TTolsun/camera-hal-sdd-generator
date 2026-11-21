@@ -14,14 +14,23 @@ def _stable_table_headers(pdf, pikepdf):
     tree = pdf.Root.get('/StructTreeRoot')
     if tree is None or '/IDTree' not in tree:
         return
-    ids = pikepdf.NameTree(tree.IDTree)
     stable = pikepdf.NameTree.new(pdf)
     names = {}
-    for index, (key, element) in enumerate(ids.items()):
-        name = f'header-{index:08d}'
-        names[key] = name
-        element.ID = name
-        stable[name] = element
+    # The ID tree is sorted by transient browser IDs. Two adjacent headers can
+    # trade IDs between runs, while their order in the structure tree is stable.
+    pending = [tree.K]
+    while pending:
+        element = pending.pop()
+        if isinstance(element, pikepdf.Array):
+            pending.extend(reversed(list(element)))
+        elif isinstance(element, pikepdf.Dictionary):
+            if '/ID' in element:
+                name = f'header-{len(names):08d}'
+                names[str(element.ID)] = name
+                element.ID = name
+                stable[name] = element
+            if '/K' in element:
+                pending.append(element.K)
     tree.IDTree = stable.obj
     for obj in pdf.objects:
         if not isinstance(obj, pikepdf.Dictionary) or obj.get('/S') not in ('/TH', '/TD'):

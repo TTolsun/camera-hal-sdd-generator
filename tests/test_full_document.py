@@ -171,3 +171,26 @@ def test_static_pdf_downloads_link_to_both_scopes(tmp_cfg, sample_model, monkeyp
         assert f'href="../download/{path}.pdf" download="{name}{ext}"' in menu
         assert (out / (prefix + 'download') / (path + '.pdf')).is_file()
     assert '?print' not in menu
+
+
+def test_pdf_table_ids_follow_reading_order_with_reversed_browser_ids():
+    pdf_lib = pytest.importorskip('pikepdf')
+    from sdd.site_pdf import _stable_table_headers
+
+    with pdf_lib.Pdf.new() as pdf:
+        ids = pdf_lib.NameTree.new(pdf)
+        headers = []
+        for browser_id in ('node20', 'node10'):
+            header = pdf.make_indirect(pdf_lib.Dictionary(S=pdf_lib.Name.TH, ID=browser_id))
+            ids[browser_id] = header
+            headers.append(header)
+        cell = pdf.make_indirect(pdf_lib.Dictionary(S=pdf_lib.Name.TD,
+                                  A=pdf_lib.Dictionary(Headers=['node20', 'node10'])))
+        pdf.Root.StructTreeRoot = pdf_lib.Dictionary(IDTree=ids.obj, K=[*headers, cell])
+
+        _stable_table_headers(pdf, pdf_lib)
+
+        assert [str(h.ID) for h in headers] == ['header-00000000', 'header-00000001']
+        assert list(cell.A.Headers) == [h.ID for h in headers]
+        stable = pdf_lib.NameTree(pdf.Root.StructTreeRoot.IDTree)
+        assert stable['header-00000000'].objgen == headers[0].objgen
