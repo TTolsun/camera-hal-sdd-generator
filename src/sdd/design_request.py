@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+from dataclasses import asdict, replace
 
 from .design_response import source_passages, response_schema, digest
 from .design_types import RequestPlan, TopicPrompt, UnitRequest
@@ -10,15 +11,25 @@ from .design_compat import generation_policy
 
 
 def prepare_requests(cfg, model, section, previous):
+    def build():
+        from .design_reuse import earlier_scope_positions
+        plan = _prepare_requests(cfg, model, section, previous)
+        earlier = earlier_scope_positions(cfg, model, section, plan.previous)
+        if earlier is None:
+            return plan
+        earlier_inputs = _prepare_requests(cfg, earlier, section, None).inputs
+        return replace(plan, compatible_inputs={
+            tid: value for tid, value in earlier_inputs.items() if value != plan.inputs[tid]
+        })
+
     from .validation_stage import current
-    from dataclasses import asdict
     inputs = current()
     if inputs is None:
-        return _prepare_requests(cfg, model, section, previous)
+        return build()
     key = ('design-request-plan', id(model), digest(json.dumps(dict(
         section=section, previous=previous, agent=asdict(cfg.agent), review=asdict(cfg.review),
-        prompts=str(cfg.prompts_dir), style=str(cfg.style_dir)), sort_keys=True)))
-    return inputs.memo(key, lambda: _prepare_requests(cfg, model, section, previous))
+        prompts=str(cfg.prompts_dir), style=str(cfg.style_dir), source_root=str(cfg.source_root)), sort_keys=True)))
+    return inputs.memo(key, build)
 
 
 def _prepare_requests(cfg, model, section, previous):

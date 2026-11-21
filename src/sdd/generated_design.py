@@ -30,7 +30,8 @@ def _prepare_generation(cfg, model, section, previous):
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     plan = prepare_requests(cfg, model, section, previous)
     from .design_reuse import reusable
-    answers, origins = reusable(model, section, plan.previous, plan.inputs, _validate_retained)
+    answers, origins = reusable(model, section, plan.previous, plan.inputs, _validate_retained,
+                                compatible_inputs=plan.compatible_inputs)
     for tid in duplicates.repeated_topics(model, section, answers):
         answers.pop(tid), origins.pop(tid, None)
     return plan, answers, origins

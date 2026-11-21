@@ -1,7 +1,7 @@
 """Small in-process contracts; manuscript schema and CLI remain unchanged."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, NamedTuple
 
 
@@ -27,6 +27,7 @@ class RequestPlan:
     policy: dict
     inputs: dict[str, str]
     previous: str | None
+    compatible_inputs: dict[str, str] = field(default_factory=dict)
 
 
 class UnitResult(NamedTuple):
