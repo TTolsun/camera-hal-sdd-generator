@@ -65,6 +65,8 @@ def test_incremental_facts_generation_does_not_call_model_for_summary(tmp_cfg, s
 def test_system_prompt_includes_style_readme_only_by_default(tmp_cfg):
     system = compose_system_prompt(tmp_cfg)
     assert "개발자 가이드 집필 규칙:" in system and "1. 각 페이지는 독자가 먼저 할 일이나" in system
+    assert '질문에 필요한 조건을 사실로 판단할 수 없을 때만 "확인 필요: 해당 조건"을 씁니다.' in system
+    assert '질문 밖의 조사거리와 기술 정보는 생략합니다.' in system
     assert "brief.mjs" not in system                          # README 의 설명 문단은 넣지 않는다
     assert "Lead with the next action" not in system       # i-have-adhd 원문은 기본 제외
     tmp_cfg.agent.full_style_guides = True
@@ -84,6 +86,17 @@ def test_structured_prompt_is_optional_and_keeps_style(tmp_cfg):
         assert '단답·구조화 응답·긴 문서는 각 형식을 따릅니다.' in prompt
         assert '“공식 예제를 보면” 같은 말은 빼고' in prompt
     assert compose_system_prompt(tmp_cfg) == original
+
+
+def test_libcamera_narration_limits_missing_evidence_to_the_question(tmp_cfg, sample_model):
+    public_prompts = Path(__file__).resolve().parents[1] / 'examples/libcamera/prompts'
+    for name in ('system.md', 'section.md'):
+        (tmp_cfg.prompts_dir / name).write_bytes((public_prompts / name).read_bytes())
+    system = compose_system_prompt(tmp_cfg)
+    assert '질문에 필요한 조건을 사실로 판단할 수 없을 때만 "확인 필요: 해당 조건"을 씁니다.' in system
+    assert '질문 밖의 조사거리와 기술 정보는 생략합니다.' in system
+    _, _, agent = _ask(tmp_cfg, sample_model, [_GOOD])
+    assert '질문에 답하는 데 필요한 조건을 근거로 판단할 수 없을 때만 그 조건을 밝힙니다.' in agent.users[0]
 
 
 def test_dry_run_generates_all_pages_with_frame(tmp_cfg, sample_model):
