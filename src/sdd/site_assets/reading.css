@@ -133,4 +133,4 @@ text.actor.is-match{fill:#865000!important;paint-order:stroke;stroke:#fff1ce!imp
 .reader-start{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0 24px}
 .reader-start>section{border:1px solid var(--line);border-radius:8px;padding:18px 20px;min-width:0}
 .reader-start h3{font-size:17px;margin:0 0 8px}.reader-start p{margin:0 0 12px;color:var(--muted);font-size:14px}.reader-start a{font-weight:600;font-size:14px}
-@media(max-width:600px){.reader-start{grid-template-columns:1fr;gap:12px}.reader-start>section{padding:16px}.reader-start a{display:inline-block;min-height:44px;align-content:center}}
+@media(max-width:600px){.reader-start{grid-template-columns:1fr;gap:12px}.reader-start>section{padding:10px 14px}.reader-start h3{margin-bottom:0}.reader-start a{display:inline-block;min-height:44px;align-content:center}}

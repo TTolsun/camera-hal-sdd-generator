@@ -171,7 +171,12 @@ def block(terms: list[Term], glossary_href: str, shown: int = SHOWN) -> str:
 
 
 def insert(body: str, section: str) -> str:
-    """첫 문단(문서의 요약) 바로 뒤에 넣는다. 처음 읽는 사람이 본문보다 먼저 보게 한다."""
+    """Place the terms at the author's marker or after the opening paragraph."""
+    marker = '<!-- sdd:page-terms -->'
+    if body.count(marker) > 1:
+        raise ValueError('Page terms placement marker must be unique')
+    if marker in body:
+        return body.replace(marker, section)
     if not section:
         return body
     match = re.search(r"\S.*?(?:\n[ \t]*\n|\Z)", body, re.S)
