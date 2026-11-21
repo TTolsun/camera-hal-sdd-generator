@@ -88,9 +88,9 @@ def verify_site(root: Path, manifest: bool = True) -> dict:
         raise RuntimeError("Site verification failed:\n" + "\n".join(errors))
     from .reader_edition import REPORT as READER_EDITION, verify as verify_reader_edition
     if (manifest and READER_EDITION in data['outputs']) or (not manifest and (root / READER_EDITION).is_file()):
-        from .full_document import is_combined
-        verify_reader_edition(root, {path.relative_to(root).as_posix(): page for path, page in pages.items()
-                                     if not is_combined(path.relative_to(root).as_posix())})
+        from .full_document import reader_html_files
+        by_name = {path.relative_to(root).as_posix(): page for path, page in pages.items()}
+        verify_reader_edition(root, {name: by_name[name] for name in reader_html_files(root, by_name)})
     if manifest:
         from .visual_audit import verify_published
         verify_published(root, data)
