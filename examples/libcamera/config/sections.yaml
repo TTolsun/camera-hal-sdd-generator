@@ -6852,9 +6852,11 @@ sections:
         Developer에게는 Camera::requestCompleted 슬롯에서 Request::status()의 RequestComplete/RequestCancelled를 구별하고
         영상 사용 전에 개별 FrameBuffer::metadata().status의 FrameSuccess를 확인할 조건을 주세요.
         RequestComplete 상태에서도 FrameError가 나올 수 있음을 짧게 연결하세요.
-        Vendor에게는 대상 보드의 정상 촬영과 미완료 요청을 확인한 뒤의 정지를 비교하는 검증을 제시하세요.
+        Vendor가 대상 보드에서 비교할 두 실행을 문장 안에서 구별하세요.
+        첫 실행은 정상 촬영을 계속하고, 둘째 실행은 미완료 요청이 남은 상태에서 stop()을 호출합니다.
         수신 이벤트 루프를 계속 처리하며 같은 제출 회차마다 알림 횟수(미수신 포함)와 요청·버퍼 상태 쌍을 기록하도록 하세요.
-        블로킹 정지의 반환과 별도 스레드 앱 슬롯의 진입을 구분하세요. 장치에서 측정한 결과나 보장된 콜백 시간을 쓰지 마세요.
+        별도 스레드에 큐잉된 앱 슬롯은 블로킹 stop()이 반환한 뒤에도 실행될 수 있다고 명시하세요.
+        장치에서 측정한 결과나 보장된 콜백 시간을 쓰지 마세요.
         이미 반환된 버퍼가 취소된다고 쓰지 마세요. 세부 큐 조건과 STREAMOFF 실패는 뒤 설명에 맡기세요.
       sources: [stop, app-notice, uvc-ready, uvc-signal, dequeue-notice, streamoff-implementation, frame-cancel, request-result, frame-result, completion, queued-connection]
       max_statements: 1
@@ -6871,6 +6873,9 @@ sections:
         - [FrameSuccess]
         - [FrameCancelled]
         - [stop()]
+        - [첫 실행]
+        - [둘째 실행]
+        - [큐잉]
         - [Developer]
         - [Vendor]
     - id: summary
