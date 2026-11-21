@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 
@@ -36,6 +37,20 @@ def test_scope_excludes_editorial_and_validator_instructions():
     assert 'forbidden-regex' not in prompt and topic['title'] not in prompt
     assert '실패 반환은 무엇입니까?' in focused_prompt.user_prompt(
         topic, sources, {'failure': '실패 반환은 무엇입니까?'})
+
+
+@pytest.mark.parametrize('prompt_dir', ['prompts', 'examples/libcamera/prompts'])
+def test_shipped_focused_guidance_keeps_the_structured_answer_unit(tmp_cfg, prompt_dir):
+    root = Path(__file__).resolve().parents[1]
+    path = enable(tmp_cfg)
+    path.write_bytes((root / prompt_dir / path.name).read_bytes())
+
+    system = focused_prompt.system_prompt(tmp_cfg)
+    user = focused_prompt.user_prompt({'question': '무엇을 받습니까?', 'covers': ['completion']}, {})
+    assert '독자가 할 일이나 반환값의 의미부터' in system
+    assert '지정된 JSON과 각 설명의 길이' in system
+    assert '한 문단은 600자·4문장 이내' in user
+    assert user.endswith('형식의 JSON만 반환하세요.')
 
 
 def test_style_and_project_prompt_changes_invalidate_reuse(tmp_cfg):

@@ -78,6 +78,11 @@ def test_structured_prompt_is_optional_and_keeps_style(tmp_cfg):
     structured = compose_system_prompt(tmp_cfg, structured=True)
     assert structured.startswith('Return structured JSON.')
     assert '개발자 가이드 집필 규칙:' in structured
+    for prompt in (original, structured):
+        assert '한 주제의 짧은 자유 형식 해설은 세 문단 정도로 씁니다.' in prompt
+        assert '문단마다 두세 문장이면 대개 충분합니다.' in prompt
+        assert '단답·구조화 응답·긴 문서는 각 형식을 따릅니다.' in prompt
+        assert '“공식 예제를 보면” 같은 말은 빼고' in prompt
     assert compose_system_prompt(tmp_cfg) == original
 
 
