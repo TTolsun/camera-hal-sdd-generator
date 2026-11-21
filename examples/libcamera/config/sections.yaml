@@ -6845,13 +6845,15 @@ sections:
     - id: stop-notification
       role: summary
       question: >-
-        “촬영을 멈췄는데 왜 완료 알림이 오는가?”에 답하는 첫 한 문단을 작성하세요.
+        “촬영을 멈췄는데 왜 완료 알림이 오는가?”에 답하는 첫 문단을 600자 미만의 네 문장으로 작성하세요.
+        첫 문장은 공통 알림과 UVC 경로, 둘째 문장은 Developer의 요청·버퍼 상태 확인,
+        셋째 문장은 Vendor의 두 장치 실행과 기록 항목, 넷째 문장은 큐잉된 슬롯의 실행 시점을 설명하세요.
         촬영 중 처리한 요청과 정지 중 취소한 요청 모두 같은 완료 신호를 통해 앱에 반환될 수 있다는 답부터 쓰세요.
         UVC에서 정상 장치 반환과 성공한 STREAMOFF의 미반환 버퍼 취소가 같은 imageBufferReady로 들어가
         completeBuffer 뒤 명시적으로 completeRequest를 호출한다는 사례를 사용하세요.
         Developer에게는 Camera::requestCompleted 슬롯에서 Request::status()의 RequestComplete/RequestCancelled를 구별하고
         영상 사용 전에 개별 FrameBuffer::metadata().status의 FrameSuccess를 확인할 조건을 주세요.
-        RequestComplete 상태에서도 FrameError가 나올 수 있음을 짧게 연결하세요.
+        둘째 문장 안에서 RequestComplete의 FrameError 가능성과 취소 버퍼의 FrameCancelled를 함께 설명하세요.
         Vendor가 대상 보드에서 비교할 두 실행을 문장 안에서 구별하세요.
         첫 실행은 정상 촬영을 계속하고, 둘째 실행은 미완료 요청이 남은 상태에서 stop()을 호출합니다.
         수신 이벤트 루프를 계속 처리하며 같은 제출 회차마다 알림 횟수(미수신 포함)와 요청·버퍼 상태 쌍을 기록하도록 하세요.
