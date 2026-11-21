@@ -686,12 +686,13 @@ class Generator:
             artifact['body_sha256'] = generated_design.digest(split_frontmatter(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_visuals: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             from_manuscript(self.cfg, self.model, sec, page)
-        if (self.incremental or sec.get('reader_scope')) and generated_design.enabled(sec) and path.exists():
+        native_rerun = self.incremental and self.cfg.agent.kind == 'cli'
+        if (native_rerun or sec.get('reader_scope')) and generated_design.enabled(sec) and path.exists():
             current = self.generated_designs[sec['id']][3]
             previous = path.read_text(encoding='utf-8')
             from .design_checkpoint import verify_reused_origins
             def verify_origins(rows):
-                return self.incremental and verify_reused_origins(self.cfg, self.model, sec, current, previous, rows)
+                return native_rerun and verify_reused_origins(self.cfg, self.model, sec, current, previous, rows)
             if _cached_scope_page(sec, current, previous, page, verify_origins):
                 generated_design.verify(self.model, sec, previous, cfg=self.cfg)
                 return self._write(path, previous, preserve=True)

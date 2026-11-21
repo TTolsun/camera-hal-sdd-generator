@@ -187,20 +187,21 @@ def test_impact_reuses_scoped_answer_only_after_verifying_moved_context(generate
     verify(model, section, path.read_text(encoding='utf-8'), cfg=tmp_cfg)
 
 
-def test_same_incremental_run_revalidates_and_preserves_original_manuscript(generated, tmp_cfg, monkeypatch):
+def test_same_incremental_run_revalidates_and_preserves_original_manuscript(cli_units, tmp_cfg, monkeypatch):
     from sdd.impact import ImpactReport
 
-    section, model, _, agent = generated
+    section, model, _, calls, state, agent = cli_units
+    state['interrupt'] = False
     head = model.meta['source_commit']
     report = ImpactReport('b' * 40, head, sections={section['id']: ['changed excerpt']})
-    path = Generator(tmp_cfg, model, agent).run(impact=report)[0]
+    path = Generator(tmp_cfg, model, agent()).run(impact=report)[0]
     original = path.read_bytes()
     seen = []
     tmp_cfg.raw['visual_audit'] = {'enabled': True}
     monkeypatch.setattr('sdd.visual_audit.manuscript_gate', lambda cfg, model, path, text: seen.append(text))
-    Generator(tmp_cfg, model, agent).run(impact=report)
+    Generator(tmp_cfg, model, agent()).run(impact=report)
     assert path.read_bytes() == original
-    assert len(agent.calls) == 1
+    assert calls == ['stop', 'prepare']
     assert seen == [original.decode()]
 
 
