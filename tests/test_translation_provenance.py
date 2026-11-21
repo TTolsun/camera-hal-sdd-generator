@@ -82,6 +82,18 @@ def test_other_instructions_cannot_certify_a_translation(archived):
     assert verified_catalog_units(agent, catalog, [calls]) == {}
 
 
+@pytest.mark.parametrize('builder', [_single_system, _batch_system])
+def test_archived_response_under_previous_english_style_is_ineligible(archived, builder):
+    from sdd.prompting import ENGLISH_TRANSLATION_STYLE
+
+    agent, catalog, _, calls, write = archived
+    system = builder(catalog['strings'])
+    previous = system.replace(ENGLISH_TRANSLATION_STYLE, '')
+    assert previous != system
+    write(system=previous, single=builder is _single_system)
+    assert verified_catalog_units(agent, catalog, [calls]) == {}
+
+
 def test_original_call_cannot_skip_a_new_catalog_instruction_policy(archived):
     agent,catalog,source,calls,write=archived
     write()

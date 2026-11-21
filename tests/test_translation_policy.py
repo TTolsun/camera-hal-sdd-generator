@@ -17,6 +17,8 @@ def test_prompt_contract_supports_repeated_tokens_and_shared_subjects(builder):
     assert 'exactly once' not in prompt
     assert 'exact source occurrence count' in prompt
     assert 'shared subject' in prompt
+    assert 'Recast Korean word order and sentence structure' in prompt
+    assert 'Make clear which actions a shared verb governs' in prompt
     translation._validate_text(source,
         'Under condition A, {{0}} is recorded; under condition B, {{0}} is checked. '
         '{{1}} returns under condition C and emits a signal under condition D.')

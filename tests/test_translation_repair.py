@@ -8,6 +8,8 @@ from sdd.translation_repair import repair
 class Writer:
     def __init__(self,value):self.value=value;self.request=None;self.calls=[]
     def chat(self,system,user,**kwargs):
+        assert 'Recast Korean word order and sentence structure' in system
+        assert 'Make clear which actions a shared verb governs' in system
         self.request=json.JSONDecoder().raw_decode(user)[0];self.calls.append(user)
         return json.dumps(self.value.pop(0) if isinstance(self.value,list) else self.value)
 
