@@ -82,6 +82,20 @@ def test_configured_editorial_removal_is_source_bound_and_preserves_previous_sit
     assert snapshot == {p.relative_to(out): p.read_bytes() for p in out.rglob('*') if p.is_file()}
 
 
+def test_home_can_place_the_mobile_table_of_contents_after_reader_choices(tmp_cfg, sample_model):
+    prepare(tmp_cfg, sample_model)
+    tmp_cfg.raw['site']['intro'] = 'intro.md'
+    marker = '<!-- sdd:mobile-toc -->'
+    intro = '# Home\n\n## Paths\n\n[Find camera code](device.md#evidence)\n\n' + marker + '\n\n## More\n'
+    (tmp_cfg.root / 'intro.md').write_text(intro, encoding='utf-8')
+    out = export_site(tmp_cfg)
+    home = (out / 'index.html').read_text(encoding='utf-8')
+    document = (out / 'device.html').read_text(encoding='utf-8')
+    assert home.count('<details class="mobile-toc">') == 1
+    assert home.index('Find camera code') < home.index('<details class="mobile-toc">') < home.index('<h2 id="more">')
+    assert document.index('<details class="mobile-toc">') < document.index('<article>')
+
+
 @pytest.mark.parametrize('existing_diagram', [False, True])
 def test_class_diagram_precedes_source_evidence_without_changing_manuscript(tmp_cfg, sample_model, existing_diagram):
     prepare(tmp_cfg, sample_model)
