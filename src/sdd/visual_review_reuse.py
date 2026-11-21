@@ -62,11 +62,20 @@ def _scope_lines(english, catalog):
                                 fixed_translation(VISUAL_SCOPE_LABEL)) if value}
 
 
-def _download_menu(node):
-    """The generator's exact whole-document Download menu (full_document._menu), or nothing else."""
-    from .full_document import LABELS, paths
+def _download_menu(node, page):
+    """Remove only known generator menus from the review comparison."""
+    from .full_document import LABELS, _menu, paths
     if node.tag != 'nav' or node.attrs.get('class') != 'download-nav':
         return False
+    links = list(node.all('a'))
+    if len(links) == 2 and list(node.all('button')):
+        filename = links[1].attrs.get('download', '')
+        if not filename.endswith('.md'):
+            return False
+        expected = Document(_menu(page, page.startswith('en/'), filename))
+        return node == next(expected.root.all('nav'))
+
+    # Previously published sites used a details disclosure with a text arrow.
     children = [child for child in node.children if not (isinstance(child, str) and not child.strip())]
     if len(children) != 1 or not isinstance(children[0], Node):
         return False
@@ -78,7 +87,7 @@ def _download_menu(node):
             or [part.tag for part in parts] != ['summary', 'nav']):
         return False
     summary, links = parts
-    labels = {label['menu'] + ' ▾' for label in LABELS.values()}
+    labels = {'⤓ ▾'}
     anchors = [child for child in links.children if isinstance(child, Node)]
     if (summary.text() not in labels or any(isinstance(child, str) and child.strip() for child in links.children)
             or len(anchors) != 2 or any(anchor.tag != 'a' or list(anchor.all('a'))[1:] for anchor in anchors)):
@@ -103,7 +112,7 @@ def presentation_normalizer(catalog=None):
         for actions in document.root.all('div'):
             if actions.attrs.get('class') == 'header-actions':
                 actions.children = [child for child in actions.children
-                                    if not (isinstance(child, Node) and _download_menu(child))]
+                                    if not (isinstance(child, Node) and _download_menu(child, page))]
         english = page.startswith('en/')
         if english and not strings:
             return  # Without the build's catalog no English line can be proved generated.

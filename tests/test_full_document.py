@@ -47,7 +47,8 @@ def test_whole_document_markdown_and_download_menu(tmp_cfg, sample_model):
     assert targets and targets <= anchors
     assert 'https://github.com/example/source/blob/' + 'a' * 40 + '/device/CameraDevice.h#L40' in markdown
     page = (out / 'nested/detail.html').read_text(encoding='utf-8')
-    assert page.count('class="language-selector download-menu"') == 1
+    assert page.count('popovertarget="download-menu"') == 1
+    assert 'id="download-menu" popover="auto"' in page and 'aria-hidden="true"' in page
     assert 'href="../download/full.html?print"' in page and 'href="../download/full.md" download="Test-Site.md"' in page
 
 
@@ -131,5 +132,5 @@ def test_visual_review_reuse_ignores_only_the_exact_download_menu(tmp_cfg, sampl
         return canonical(document.root)
 
     assert without != with_menu and normalized(without) == normalized(with_menu)
-    edited = with_menu.replace('>PDF</a>', '>PDF copy</a>', 1)
+    edited = with_menu.replace('.pdf</a>', '.pdf copy</a>', 1)
     assert normalized(edited) != normalized(without)
