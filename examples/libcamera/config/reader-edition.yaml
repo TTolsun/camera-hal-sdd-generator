@@ -9,8 +9,8 @@ pages:
     ko: 시작하기
     en: Start Here
     intro:
-      ko: 대상 장치에서 무엇을 검증해야 할까요? ForVendor에서 확인하세요. 취소 상태는 어느 코드에서 확인할까요? ForDeveloper에서 해당 코드를 찾아보세요.
-      en: What should you verify on your target device? Open ForVendor to find out. Where does the code check cancellation status? Open ForDeveloper to find it.
+      ko: 장치를 처음 연동한다면 ForVendor에서 첫 촬영과 정지를 어떻게 시험할지 살펴보세요. 촬영을 멈춘 뒤에도 완료 알림이 온다면 ForDeveloper에서 요청의 취소 상태를 확인하는 코드를 따라가세요.
+      en: If you’re integrating a device for the first time, use ForVendor to test the first capture and test stopping capture. If completion notifications arrive after you stop capture, follow the code in ForDeveloper that checks the request’s cancellation status.
     links:
       - {path: for-vendor.md, ko: ForVendor, en: ForVendor}
       - {path: for-developer.md, ko: ForDeveloper, en: ForDeveloper}
