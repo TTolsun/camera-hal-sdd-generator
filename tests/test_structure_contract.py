@@ -79,8 +79,12 @@ def test_explicit_null_optional_objects_keep_existing_rejection(tmp_cfg, group):
 def test_frozen_generation_requests_results_and_origin(tmp_cfg, generated, kind, mode):
     # Historical request hashes include the editorial policy used at capture time.
     # New standing rules must not rewrite that historical fixture.
-    old_style = Path(__file__).parent / 'fixtures' / 'style-before-215.txt'
+    fixtures = Path(__file__).parent / 'fixtures'
+    old_style = fixtures / 'style-before-215.txt'
     (tmp_cfg.style_dir / 'README.md').write_bytes(old_style.read_bytes())
+    # Replay with the prompts that produced the archived hashes as well.
+    for name in ('system.md', 'focused-design-system.md'):
+        (tmp_cfg.prompts_dir / name).write_bytes((fixtures / 'generation-138-prompts' / name).read_bytes())
     section, model, _, draft = generated
     tmp_cfg.agent.kind = kind
     tmp_cfg.agent.model = 'test-model'
