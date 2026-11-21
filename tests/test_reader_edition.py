@@ -98,6 +98,21 @@ def test_edition_table_pin_rejects_stale_displayed_conditions(tmp_cfg):
     assert (root / 'site-manifest.json').read_bytes() == before
 
 
+def test_overlapping_address_keeps_scripts_outside_readable_main(tmp_cfg):
+    data, _ = configure(tmp_cfg)
+    tmp_cfg.raw['site']['intro'] = 'intro.md'
+    (tmp_cfg.root / 'intro.md').write_text('# Earlier home\n\n## Earlier detail {#earlier}\n\nPreserved detail.\n',
+                                           encoding='utf-8')
+    save(tmp_cfg, data)
+    root = export_site(tmp_cfg)
+    home = (root / 'index.html').read_text(encoding='utf-8')
+    readable, after = home.split('</main>', 1)
+    assert 'id="earlier"><a href="reader-archive/index.html#earlier"' in readable
+    assert 'data-reader-compatibility' not in readable and 'reader-compatibility.js' not in readable
+    assert 'data-reader-compatibility' in after and 'async' not in after
+    assert '<script defer src="assets/reader-compatibility.js"></script>' in after
+
+
 def test_section_cuts_preserve_adjacent_mermaid_markers_and_selected_children():
     source = '''<article>
 <h2 id="parent">Parent</h2><p>Lead.</p>

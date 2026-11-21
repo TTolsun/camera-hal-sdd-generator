@@ -522,7 +522,7 @@ def _canonical(out, edition, page, parts, raw, trees, prefix, routes, legacy, ol
     reserved.update(_ids(_parse(document[:old_main.start()] + document[old_main.end():])))
     old_footer = _part(r'<footer>.*?</footer>', old_main[0], 'footer')
     evidence = _evidence(trees, parts, current, prefix, legacy, old_ids)
-    compatibility = _overlapping_fragments(current, prefix, routes, legacy, old_ids, reserved)
+    compatibility, redirect = _overlapping_fragments(current, prefix, routes, legacy, old_ids, reserved)
     lead = intro + _links(page, current, prefix, language)
     article = lead + _table(page, language) + ''.join(content)
     markdown_target = prefix + page['path']
@@ -542,6 +542,8 @@ def _canonical(out, edition, page, parts, raw, trees, prefix, routes, legacy, ol
             f'<h1>{heading}</h1>{mobile_toc}{note}<article>{article_html}</article>{evidence}'
             f'<nav class="pagination" aria-label="{nav_label}">{pagination}</nav>{compatibility}{old_footer[0]}</main>')
     document = document[:old_main.start()] + main + document[old_main.end():]
+    if redirect:
+        document = document.replace('</body>', redirect + '</body>', 1)
     document = _replace(r'<aside class="page-toc">.*?</aside>', document,
                         f'<aside class="page-toc"><nav aria-label="{table_title}"><p>{table_title}</p>{toc}</nav></aside>',
                         'desktop table of contents')
@@ -584,7 +586,7 @@ def _evidence(trees, parts, current, prefix, legacy, old_ids):
 
 def _overlapping_fragments(current, prefix, routes, legacy, old_ids, reserved):
     if current not in legacy:
-        return ''
+        return '', ''
     moved = 'Open earlier detail' if prefix else '이전 주소의 상세 내용 열기'
     links = []
     destinations = {}
@@ -594,8 +596,10 @@ def _overlapping_fragments(current, prefix, routes, legacy, old_ids, reserved):
         destinations[anchor] = href
         links.append(f'<li id="{html.escape(anchor, quote=True)}"><a href="'
                      f'{href}">{html.escape(anchor)}</a></li>')
+    if not links:
+        return '', ''
     return (f'<details class="reader-old-fragments"><summary>{moved}</summary><ul>'
-            + ''.join(links) + '</ul></details>' + _compatibility_data(current, destinations)) if links else ''
+            + ''.join(links) + '</ul></details>', _compatibility_data(current, destinations))
 
 
 def _archive(edition, raw, source, destination, prefix, routes, legacy, old_ids, projected):

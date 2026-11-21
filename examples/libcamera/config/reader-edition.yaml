@@ -157,7 +157,8 @@ pages:
     sections:
       - {source: pipeline-handler.md, fragment: 장치-매칭과-객체-수명, id: device-matching}
       - {source: pipeline-requests.md, fragment: 장치-요청-한도와-대기-큐, id: queue-limit}
-      - {source: ipa.md, fragment: 모듈-탐색과-격리-조건, id: ipa-extensions}
+      - {source: ipa.md, fragment: 프레임-입력과-결과-인터페이스, id: ipa-frame-interface}
+      - {source: vendor-integration.md, fragment: ipa-모듈-선택과-실패-조건, id: ipa-extensions}
       - {source: ipu3-lsc-flow.md, fragment: 빌드와-상태-연결, id: ipu3-lsc}
       - source: rkisp1-dewarp.md
         fragment: 스트림-적용과-실행-확인-범위
