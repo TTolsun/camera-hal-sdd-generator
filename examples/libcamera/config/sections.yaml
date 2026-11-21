@@ -9225,7 +9225,7 @@ sections:
   output: component-index.md
   kind: per-package
   narration: facts
-  lead: 빌드한 모든 파이프라인·IPA·앱의 클래스와 함수를 패키지별로 찾으세요. 표는 추출 사실에서 만들었고 동작은 설명하지 않습니다.
+  lead: 패키지별로 추출된 클래스와 자유 함수를 찾아보세요. 표에는 추출된 값이 있는 경우 클래스 선언 위치와 함수 선언 또는 정의 위치가 표시됩니다.
   reader: 클래스가 어느 패키지에 선언되어 있는지 찾는 개발자
   facts:
     classes:

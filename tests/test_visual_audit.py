@@ -196,12 +196,27 @@ def test_failed_publication_preserves_every_previous_owned_byte(tmp_cfg):
 
 def test_manuscript_gate_requires_separate_draft_reviews(tmp_cfg, sample_model):
     tmp_cfg.raw['visual_audit'] = dict(enabled=True, reviews='reviews.json')
-    (tmp_cfg.root/'reviews.json').write_text(json.dumps(dict(schema=1, items={}, manuscripts={})), encoding='utf-8')
+    review_path = tmp_cfg.root/'reviews.json'
+    review_path.write_text(json.dumps(dict(schema=1, items={}, manuscripts={})), encoding='utf-8')
     text = '---\nsource_commit: abc123\n---\n## Question\n\nIf cancelled, return ownership after completion.\n'
+    path = tmp_cfg.sdd_dir/'guide.md'
+    with pytest.raises(ValueError, match='draft source-review packet:'):
+        manuscript_gate(tmp_cfg, sample_model, path, text)
+    packet, = (tmp_cfg.build_dir/'draft-visual-review').iterdir()
+    inventory = json.loads((packet/'inventory.json').read_bytes())
+    assert inventory['review_stage'] == 'manuscript'
+    assert 'If cancelled' in (packet/'site'/'guide.html').read_text(encoding='utf-8')
+    assert not path.exists()
+    records = ledger(inventory)
+    review_path.write_text(json.dumps(records), encoding='utf-8')
     with pytest.raises(ValueError, match='incomplete'):
-        manuscript_gate(tmp_cfg, sample_model, tmp_cfg.sdd_dir/'guide.md', text)
+        manuscript_gate(tmp_cfg, sample_model, path, text)
+    assert list((tmp_cfg.build_dir/'draft-visual-review').iterdir()) == [packet]
+    review_path.write_text(json.dumps(dict(schema=1, items={}, manuscripts=records['items'])), encoding='utf-8')
+    manuscript_gate(tmp_cfg, sample_model, path, text)
+    manuscript_gate(tmp_cfg, sample_model, path, text)
     with pytest.raises(ValueError, match='commits differ'):
-        manuscript_gate(tmp_cfg, sample_model, tmp_cfg.sdd_dir/'guide.md', text.replace('abc123', 'different'))
+        manuscript_gate(tmp_cfg, sample_model, path, text.replace('abc123', 'different'))
 
 
 def test_publication_style_is_independent_from_draft_and_pinned(tmp_cfg):
