@@ -3,8 +3,39 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import re
 
-from .evidence import fingerprint
+from .evidence import contract_text, fingerprint
+
+
+def _matches_previous_topic(body, pinned, section):
+    """Check unchanged prose and citation files while allowing current line numbers."""
+    from .product_context import scope_notice
+    from .validate import extract_citations
+    from .visuals import strip_blocks
+
+    def without_line_numbers(text):
+        for citation in set(extract_citations(text)):
+            text = text.replace(f'`{citation}`', f"`{citation.rsplit(':', 1)[0]}`")
+        return text
+
+    topic = section['design_topics'][0]
+    title = topic['title'] + '\n'
+    blocks = re.split(r'^(?:## |\?\?\? note "설계 질문과 검증 범위"\s*$)', strip_blocks(body), flags=re.M)
+    previous = [block.removeprefix(title).strip() for block in blocks[1:] if block.startswith(title)]
+    if len(previous) != 1:
+        return False
+    previous_text = previous[0]
+    prose, _, navigation = previous_text.rpartition('\n\n')
+    link = r'\[[^\]\n]+:\d+\]\(#source-[0-9a-f]{16}\)'
+    if re.fullmatch(rf'근거 원문: {link}(?: · {link})*', navigation):
+        previous_text = prose
+    current = without_line_numbers(previous_text)
+    for layout in ({}, {'grouped': False}, {'preserve_lists': False}):
+        rendered, gaps = contract_text(pinned, section['id'], topic, **layout)
+        if not gaps and current == without_line_numbers((scope_notice(topic) + rendered).strip()):
+            return True
+    return False
 
 
 def subset(model, section, ids):
@@ -63,7 +94,8 @@ def reusable(model, section, previous, inputs, validate=None, *, compatible_inpu
         recorded = old_inputs.get(tid)
         if tid not in answers or recorded is None:
             continue
-        if recorded != current and recorded != (compatible_inputs or {}).get(tid):
+        relocated = recorded != current
+        if relocated and recorded != (compatible_inputs or {}).get(tid):
             continue
         pinned, selected = subset(model, section, [tid])
         selected.pop('reader_profile', None)
@@ -71,8 +103,9 @@ def reusable(model, section, previous, inputs, validate=None, *, compatible_inpu
         selected.pop('reader_scope', None)
         selected_answers = copy.deepcopy(answers[tid])
         try:
-            if validate:
-                validate(pinned, selected, {tid: selected_answers})
+            checked = validate(pinned, selected, {tid: selected_answers}) if validate else None
+            if relocated and (checked is None or not _matches_previous_topic(body, checked[0], checked[1])):
+                continue
         except (ValueError, TypeError, KeyError):
             continue
         retained[tid] = selected_answers

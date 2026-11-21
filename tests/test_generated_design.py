@@ -141,7 +141,7 @@ def test_scoped_draft_receives_verified_enclosing_context(generated, focused, ex
         _unit_request(model, section, topic, 'focused' if focused else None)
 
 
-@pytest.mark.parametrize('change', ['line-only', 'context-edited', 'base-unavailable', 'head-unavailable'])
+@pytest.mark.parametrize('change', ['line-only', 'context-edited', 'base-unavailable', 'head-unavailable', 'metadata-edited'])
 def test_impact_reuses_scoped_answer_only_after_verifying_moved_context(generated, tmp_cfg, monkeypatch, change):
     from sdd.document_metadata import split_frontmatter
     from sdd.impact import ImpactReport
@@ -155,7 +155,12 @@ def test_impact_reuses_scoped_answer_only_after_verifying_moved_context(generate
     record['context'] = dict(text=context, sha256=hashlib.sha256(context.encode()).hexdigest(), line=9, end_line=11)
     save()
     path = Generator(tmp_cfg, model, agent).run()[0]
-    previous, _ = split_frontmatter(path.read_text(encoding='utf-8'))
+    previous, previous_body = split_frontmatter(path.read_text(encoding='utf-8'))
+    if change == 'metadata-edited':
+        previous['generated_design']['answers']['stop'][0]['text'] = (
+            '`stop()`은 종료 시 대기 중인 요청의 취소 처리를 시작합니다.')
+        path.write_text('---\n' + yaml.safe_dump(previous, allow_unicode=True) + '---\n' + previous_body,
+                        encoding='utf-8')
     base = model.meta['source_commit']
     current_commit = 'b' * 40
     current_context = context.replace('namespace libcamera {', 'namespace libcamera { /* revised */') if change == 'context-edited' else context
