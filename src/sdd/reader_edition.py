@@ -97,7 +97,9 @@ def load(cfg):
             _require(len(table['ko']) == len(table['en']) and len(table['ko'][0]) == len(table['en'][0]),
                      'table shapes differ between languages in ' + name)
             binding = page.get('table_source')
-            _require(isinstance(binding, dict) and set(binding) == {'source', 'fragment', 'sha256'}
+            _require(isinstance(binding, dict) and {'source', 'fragment', 'sha256'} <= set(binding)
+                     and not set(binding) - {'source', 'fragment', 'sha256', 'lead_only'}
+                     and type(binding.get('lead_only', False)) is bool
                      and _route(binding['source']) and _label(binding['fragment'])
                      and isinstance(binding['sha256'], dict) and set(binding['sha256']) == {'ko', 'en'}
                      and all(isinstance(value, str) and re.fullmatch(r'[0-9a-f]{64}', value)
@@ -273,7 +275,12 @@ def _selected(prefix, edition, trees):
             binding = page.get('table_source', {})
             if part.get('source') == binding.get('source') and part.get('fragment') == binding.get('fragment'):
                 language = 'en' if prefix else 'ko'
-                actual = section_digest(fragment)
+                evidence = fragment
+                if binding.get('lead_only'):
+                    evidence = _fragment()
+                    for node in _section(article, {**part, 'children': []}):
+                        evidence.appendChild(node.cloneNode(deep=True))
+                actual = section_digest(evidence)
                 _require(actual == binding['sha256'][language],
                          f'{language} table evidence changed: {source}#{part["fragment"]}; actual sha256 {actual}')
             selected_id = part.get('fragment')

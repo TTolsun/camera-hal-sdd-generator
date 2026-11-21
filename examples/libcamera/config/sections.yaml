@@ -44,6 +44,8 @@ sections:
     class_table: false
   diagram:
     max_nodes: 24
+  watch_exclude:
+  - src/ipa/rpi/cam_helper/cam_helper_starvis2.cpp
   watch:
   - src/libcamera/pipeline/**
   - src/libcamera/pipeline_handler.cpp
@@ -158,6 +160,16 @@ sections:
       file: meson_options.txt
       start: option('pipelines',
       end: precedence.')
+    - id: rpi-sensor-helpers
+      file: src/ipa/rpi/cam_helper/cam_helper_starvis2.cpp
+      start: 'class CamHelperStarvis2 : public CamHelper'
+      end: '} /* namespace */'
+      impact: excerpt
+    - id: rpi-integration-limit
+      file: src/ipa/rpi/cam_helper/cam_helper.cpp
+      start: 'uint32_t exposureLines = std::min(CamHelper::exposureLines(exposure, lineLength),'
+      end: 'return { vblank, hblank };'
+      impact: excerpt
     parts:
     - id: dedicated
       question: 전용 파이프라인 핸들러로 지원한다고 문서가 적은 하드웨어 플랫폼을 모두 나열하세요. 지원 기종이나 성능은 보장하지 마세요.
@@ -195,6 +207,20 @@ sections:
         - - auto
         - - all
         reject_patterns: []
+    - id: rpi-sensor-registration
+      heading: Raspberry Pi 센서의 연동 조건
+      question: Raspberry Pi용 Starvis 2 헬퍼에서 기본 적분 시간 여유와 다른 값을 쓰는 센서가 현재 소스에 있으면 등록 이름, 공통 이득 계산, 특례 값과 SHR0 근거를 설명하세요. 해당 값이 프레임 길이와 적분 시간 사이의 여유로 노출 제한 계산에 어떻게 쓰이는지 연결하세요. 등록된 모델과 특례는 발췌에 실제로 있는 내용만 적으세요. 특례가 없으면 존재하는 기본 동작만 답하세요. 센서 실측 결과나 다른 플랫폼의 동작은 추정하지 마세요.
+      sources:
+      - rpi-sensor-helpers
+      - rpi-integration-limit
+      max_statements: 3
+    - id: rpi-board-verification
+      question: 소스에서 RPi 헬퍼를 선택하는 등록과 대상 보드에서 실제 촬영·노출이 동작한다는 검증을 구분하세요. 등록이 확인되어도 대상 파이프라인과 커널 드라이버가 잡은 센서 모드에서 프레임 및 노출 제약을 확인해야 한다는 한 문장으로 답하세요. 이미 실측했다고 주장하지 마세요.
+      sources:
+      - rpi-sensor-helpers
+      - rpi-integration-limit
+      statement_kind: limitation
+      max_statements: 1
   - id: capabilities
     title: 제공 기능과 지원 범위
     question: Camera가 하나의 이미지 소스에서 하나 이상의 스트림을 제공하는 기능을 설명하세요. 하드웨어 지원은 장치별 PipelineHandler 구현과 등록에 달려 있습니다. 지원 기종이나 성능 수치를 추정하지 마세요.
@@ -349,6 +375,8 @@ sections:
     class_table: false
   diagram:
     max_nodes: 24
+  watch_exclude:
+  - src/ipa/rpi/cam_helper/cam_helper_starvis2.cpp
   watch:
   - src/libcamera/pipeline/**
   - src/libcamera/pipeline_handler.cpp
@@ -672,6 +700,8 @@ sections:
     class_table: false
   diagram:
     max_nodes: 24
+  watch_exclude:
+  - src/ipa/rpi/cam_helper/cam_helper_starvis2.cpp
   watch:
   - src/libcamera/pipeline/**
   - src/libcamera/pipeline_handler.cpp
@@ -2153,6 +2183,8 @@ sections:
     - libcamera::IPAProxy
     - libcamera::ipa::ipu3::IPAIPU3
     - libcamera::ipa::rkisp1::IPARkISP1
+  watch_exclude:
+  - src/ipa/rpi/cam_helper/cam_helper_starvis2.cpp
   watch:
   - src/ipa/**
   - src/libcamera/ipa*
@@ -2656,6 +2688,8 @@ sections:
     - libcamera::IPAProxy
     - libcamera::ipa::ipu3::IPAIPU3
     - libcamera::ipa::rkisp1::IPARkISP1
+  watch_exclude:
+  - src/ipa/rpi/cam_helper/cam_helper_starvis2.cpp
   watch:
   - src/ipa/**
   - src/libcamera/ipa*
@@ -3903,6 +3937,8 @@ sections:
   - q: 장치 요청 수의 기본 한도와 대기 큐를 확인합니다.
     to: pipeline-requests.md#장치-요청-한도와-대기-큐
     anchor: 장치-요청-한도와-대기-큐
+  watch_exclude:
+  - src/ipa/rpi/cam_helper/cam_helper_starvis2.cpp
   watch:
   - src/**
   - include/libcamera/**
@@ -9212,6 +9248,8 @@ sections:
   - 어디서 분기하고, 어디서 정적 추적이 끊기는가?
   facts:
     scenarios: '*'
+  watch_exclude:
+  - src/ipa/rpi/cam_helper/cam_helper_starvis2.cpp
   watch:
   - src/libcamera/**
   - src/ipa/**

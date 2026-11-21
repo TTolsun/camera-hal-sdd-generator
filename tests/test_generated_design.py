@@ -187,6 +187,23 @@ def test_impact_reuses_scoped_answer_only_after_verifying_moved_context(generate
     verify(model, section, path.read_text(encoding='utf-8'), cfg=tmp_cfg)
 
 
+def test_same_incremental_run_revalidates_and_preserves_original_manuscript(generated, tmp_cfg, monkeypatch):
+    from sdd.impact import ImpactReport
+
+    section, model, _, agent = generated
+    head = model.meta['source_commit']
+    report = ImpactReport('b' * 40, head, sections={section['id']: ['changed excerpt']})
+    path = Generator(tmp_cfg, model, agent).run(impact=report)[0]
+    original = path.read_bytes()
+    seen = []
+    tmp_cfg.raw['visual_audit'] = {'enabled': True}
+    monkeypatch.setattr('sdd.visual_audit.manuscript_gate', lambda cfg, model, path, text: seen.append(text))
+    Generator(tmp_cfg, model, agent).run(impact=report)
+    assert path.read_bytes() == original
+    assert len(agent.calls) == 1
+    assert seen == [original.decode()]
+
+
 def test_opt_in_answer_checkpoint_is_bound_to_revision_and_question(generated, tmp_cfg, monkeypatch):
     monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'original-weights')
     section, model, save, agent = generated

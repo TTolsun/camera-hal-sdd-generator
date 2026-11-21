@@ -6,6 +6,9 @@ from .answer_contracts import configuration_errors as answer_contract_errors
 
 def configuration_errors(section: dict) -> list[str]:
     errors = []
+    excluded = section.get('watch_exclude', [])
+    if not isinstance(excluded, list) or any(not isinstance(g, str) or not g.strip() for g in excluded):
+        errors.append('watch_exclude must be a list of nonempty path globs.')
     if 'reader_family' in section and (not isinstance(section['reader_family'], str)
                                        or not section['reader_family'].strip()
                                        or not section.get('reader_profile')):
@@ -33,6 +36,8 @@ def configuration_errors(section: dict) -> list[str]:
         if any(not isinstance(s.get('id'), str) or not s['id'].strip() for s in topic.get('sources', [])):
             return [f"{topic['id']}: 소스 id가 비었거나 문자열이 아닙니다."]
         for source in topic.get('sources', []):
+            if 'impact' in source and (source['impact'] != 'excerpt' or source.get('kind') == 'product'):
+                errors.append(f"{topic['id']}/{source['id']}: impact: excerpt requires a Git source.")
             for field in ('file', 'start', 'end'):
                 if not isinstance(source.get(field), str) or not source[field].strip():
                     errors.append(f"{topic['id']}/{source['id']}: {field}는 비어 있지 않은 문자열이어야 합니다.")
@@ -84,9 +89,16 @@ def generated_errors(section):
             if not isinstance(parts, list) or not parts or any(not isinstance(p, dict) for p in parts):
                 errors.append(f"{topic['id']}: parts는 비어 있지 않은 객체 목록이어야 합니다.")
                 continue
-            seen, used = set(), set()
+            seen, used, headings = set(), set(), set()
             source_ids = {s['id'] for s in topic.get('sources', [])}
             for part in parts:
+                if 'heading' in part:
+                    heading = part['heading']
+                    if ('explanation' in topic or not isinstance(heading, str) or not heading.strip()
+                            or re.search(r'[<>\[\]`*_{}#\\\x00-\x1f\x7f]', heading) or heading in headings):
+                        errors.append(f"{topic['id']}: part headings must be distinct plain text and cannot be combined with explanation stages.")
+                    else:
+                        headings.add(heading)
                 if 'prompt' in part and (not isinstance(part['prompt'], str) or not part['prompt'].strip()):
                     errors.append(f"{topic['id']}: parts prompt는 비어 있지 않은 문자열이어야 합니다.")
                 errors.extend(answer_contract_errors(part))
@@ -121,7 +133,7 @@ def generated_errors(section):
                         errors.append(f"{topic['id']}: role: summary는 상세 part가 뒤에 있는 첫 part에만 쓰며 "
                                       "max_statements는 1 또는 2, subquestions·statement_kind는 쓸 수 없습니다.")
                 if set(part) - {'id', 'question', 'sources', 'answer_contract', 'subquestions', 'max_statements',
-                                'statement_kind', 'role', 'prompt'}:
+                                'statement_kind', 'role', 'prompt', 'heading'}:
                     errors.append(f"{topic['id']}: 지원하지 않는 parts 필드입니다.")
             if all(part.get('statement_kind') == 'limitation' for part in parts if isinstance(part, dict)):
                 # 실행 확인 항목만으로는 필수 질문에 답한 것이 아니다. 모델을 부르기 전에 설정 오류로 막는다.

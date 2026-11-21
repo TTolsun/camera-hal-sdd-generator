@@ -81,3 +81,22 @@ def test_설계_질문이_바뀌면_소스_diff_없이도_영향_섹션이_된�
     section['design_topics'][0]['question'] = '종료 책임과 호출자 의무를 설명하세요.'
     tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section]}, allow_unicode=True), encoding='utf-8')
     assert list(config_changes(tmp_cfg, model)) == ['device']
+
+
+@pytest.mark.parametrize('head, selected', [
+    ('scope metadata edit start registered end close', False),
+    ('scope start registered updated end close', True),
+    ('scope start removed anchor close', True),
+    (None, True),
+])
+def test_excerpt_impact_selects_only_bound_question(tmp_cfg, sample_model, monkeypatch, head, selected):
+    path = 'platform/helper.cc'
+    section = {'id': 'support', 'watch': ['platform/**'], 'watch_exclude': [path],
+               'design_topics': [{'id': 'limits', 'sources': [dict(id='rule', file=path,
+                   start='start', end='end', scope={'start': 'scope', 'end': 'close'}, impact='excerpt')]}]}
+    broad = {'id': 'unrelated', 'watch': ['platform/**'], 'watch_exclude': [path]}
+    tmp_cfg.sections_file.write_text(yaml.safe_dump({'sections': [section, broad]}), encoding='utf-8')
+    snapshots = {'base': 'scope start registered end close', 'head': head}
+    monkeypatch.setattr('sdd.source_git.file_at', lambda root, revision, name: snapshots[revision])
+    report = compute(tmp_cfg, sample_model, [path], 'base', 'head', non_semantic={})
+    assert report.sections == ({'support': [f'설계 근거 발췌 변경: limits/rule ({path})']} if selected else {})

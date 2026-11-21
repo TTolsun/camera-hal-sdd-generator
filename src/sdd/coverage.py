@@ -6,7 +6,7 @@ from pathlib import PurePosixPath as Path
 
 from .change_kind import CXX_SUFFIXES
 from .facts.model import KnowledgeModel
-from .matching import is_anonymous, match_any, matches_symbol, package_of, package_selected
+from .matching import is_anonymous, match_any, matches_symbol, package_of, package_selected, watches
 
 
 def _select_sections(kind: str, name: str, snapshot: KnowledgeModel, sections: list[dict],
@@ -194,7 +194,7 @@ def audit(model: KnowledgeModel, files: list[str],
 
     file_items = []
     for file in sorted(active):
-        watch = sorted(s["id"] for s in sections if match_any(file, s.get("watch") or []))
+        watch = sorted(s["id"] for s in sections if watches(s, file))
         manual = sorted(s["id"] for s in sections if s.get("kind") == "manual"
                         and file in manual_evidence.get(s["id"], []))
         related = [item for item in items if file in item["files"]]

@@ -60,6 +60,7 @@ pages:
       - {path: 'features-and-support.md#platform-support', ko: 전체 플랫폼과 빌드 선택 근거, en: Full platform list and build options}
       - {path: device-integration.md, ko: 대상 보드 검증 절차, en: Verification procedure for the target board}
     table_source:
+      lead_only: true
       source: vendor-overview.md
       fragment: 지원하는-하드웨어와-빌드-선택
       sha256:

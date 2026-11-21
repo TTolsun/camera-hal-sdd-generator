@@ -23,7 +23,7 @@ from .facts.model import KnowledgeModel
 #   routes - "지금 확인할 내용" 표
 #   next   - 페이지 끝의 다음 문서 링크
 #   watch  - 재생성 대상을 고르는 경로 glob
-_PRESENTATION_KEYS = ("group", "nav_section", "routes", "next", "watch")
+_PRESENTATION_KEYS = ("group", "nav_section", "routes", "next", "watch", "watch_exclude")
 
 
 def requires_fingerprint(section: dict) -> bool:
@@ -200,6 +200,25 @@ def contract_text(model: KnowledgeModel, section: str, topic: dict, *, grouped: 
             return text
         text = render(topic, topic.get('statements', []), render_part)
         return text, gaps
+    headings = {part['id']: part['heading'] for part in topic.get('parts', []) if 'heading' in part}
+    if headings:
+        groups = [('', [])]
+        for statement in topic.get('statements', []):
+            part_id = statement.get('part_id')
+            if part_id in headings and groups[-1][0] != headings[part_id]:
+                groups.append((headings[part_id], []))
+            groups[-1][1].append(statement)
+        rendered, findings = [], []
+        # Reuse ordinary statement rendering and citations for each visible block.
+        unheaded = [{k: v for k, v in part.items() if k != 'heading'} for part in topic['parts']]
+        for heading, statements in groups:
+            if not statements:
+                continue
+            text, gaps = contract_text(model, section, {**topic, 'parts': unheaded, 'statements': statements},
+                                       grouped=grouped, preserve_lists=preserve_lists)
+            rendered.append(f'### {heading}\n\n{text}' if heading else text)
+            findings.extend(gaps)
+        return '\n\n'.join(rendered), findings or ([] if rendered else ['설계 설명이 없습니다.'])
     entries, gaps = [], []
     sources = {s['id']: s for s in topic.get('sources', [])}
     summaries = summary_parts(topic)

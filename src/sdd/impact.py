@@ -17,7 +17,7 @@ from .change_kind import classify
 from .config import Config
 from .coverage import audit, outside_build
 from .document_metadata import manual_evidence_files
-from .matching import match_any, matches_symbol
+from .matching import match_any, matches_symbol, watches
 from .facts.model import KnowledgeModel
 
 
@@ -64,15 +64,29 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
 
     # 1. 경로 규칙. 분석한 빌드가 읽지 않은 C/C++ 파일은 문서 내용을 바꾸지 않으므로 다시 만들 계기로 보지 않는다.
     unbuilt = outside_build(files, model, base_model)
+    revisions = {}
     for sec in sections:
-        hits = [f for f in files if f not in unbuilt and match_any(f, sec.get("watch", []) or [])]
+        hits = [f for f in files if f not in unbuilt and watches(sec, f)]
         if hits:
             report.sections.setdefault(sec["id"], []).append(f"watch 일치: {', '.join(hits[:5])}")
         # Authored and model-generated contracts depend on excerpts without selected
         # symbols or watch globs. Explicit evidence can also be outside the
         # compile DB (for example build configuration or interface headers).
-        evidence_files = {PurePosixPath(source["file"]).as_posix() for topic in sec.get("design_topics", [])
-                          for source in topic.get("sources", []) if isinstance(source.get("file"), str)}
+        evidence_files = set()
+        for topic in sec.get('design_topics', []):
+            for source in topic.get('sources', []):
+                if not isinstance(source.get('file'), str):
+                    continue
+                name = PurePosixPath(source['file']).as_posix()
+                if name not in fileset:
+                    continue
+                if source.get('impact') != 'excerpt':
+                    evidence_files.add(name)
+                elif _changed_excerpt(cfg, source, name, base, head, revisions):
+                    reason = f"설계 근거 발췌 변경: {topic['id']}/{source['id']} ({name})"
+                    reasons = report.sections.setdefault(sec['id'], [])
+                    if reason not in reasons:
+                        reasons.append(reason)
         evidence_hits = sorted(fileset.intersection(evidence_files))
         if evidence_hits:
             report.sections.setdefault(sec["id"], []).append(f"설계 근거 파일 변경: {', '.join(evidence_hits[:5])}")
@@ -125,6 +139,24 @@ def compute(cfg: Config, model: KnowledgeModel, files: list[str], base: str, hea
                             manual_evidence=manual_evidence, impacted_sections=set(report.sections),
                             non_semantic=non_semantic, package_depth=cfg.package_depth)
     return report
+
+
+def _changed_excerpt(cfg, source, name, base, head, revisions):
+    from .evidence import select_span
+    windows = []
+    for revision in (base, head):
+        key = (revision, name)
+        if key not in revisions:
+            revisions[key] = source_git.file_at(cfg.source_root, revision, name)
+        content = revisions[key]
+        if content is None:
+            return True  # Unknown or removed evidence requires current validation.
+        try:
+            start, end = select_span(content, source)
+        except ValueError:
+            return True
+        windows.append(content[start:end])
+    return windows[0] != windows[1]
 
 
 def config_changes(cfg: Config, model: KnowledgeModel) -> dict[str, list[str]]:
