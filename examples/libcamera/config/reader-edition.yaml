@@ -9,8 +9,8 @@ pages:
     ko: 시작하기
     en: Start Here
     intro:
-      ko: libcamera는 Linux 카메라를 위한 공통 API를 제공합니다. 우리 장치에서 무엇을 검증해야 하는지 확인하려면 ForVendor를 여세요. 취소 상태를 어느 코드에서 확인하는지 알아보려면 ForDeveloper를 여세요.
-      en: libcamera provides a common API for cameras on Linux. Open ForVendor to find out what to verify on your device. Open ForDeveloper to find where the code checks cancellation status.
+      ko: 대상 장치에서 무엇을 검증해야 할까요? ForVendor에서 확인하세요. 취소 상태는 어느 코드에서 확인할까요? ForDeveloper에서 해당 코드를 찾아보세요.
+      en: What should you verify on your target device? Open ForVendor to find out. Where does the code check cancellation status? Open ForDeveloper to find it.
     links:
       - {path: for-vendor.md, ko: ForVendor, en: ForVendor}
       - {path: for-developer.md, ko: ForDeveloper, en: ForDeveloper}
@@ -85,7 +85,11 @@ pages:
     sections:
       - {source: vendor-overview.md, fragment: 지원하는-하드웨어와-빌드-선택, id: platform-support}
       - {source: vendor-overview.md, fragment: 제공-기능과-지원-범위, id: feature-scope}
-      - {source: vendor-assurance.md, fragment: 지원-조건과-제약, id: configuration-constraints}
+      - source: vendor-assurance.md
+        fragment: 지원-조건과-제약
+        id: configuration-constraints
+        children: [validate-결과별-호출자의-책임]
+      - {source: vendor-integration.md, fragment: 구현할-설정-인터페이스, id: handler-configuration}
       - {source: vendor-assurance.md, fragment: 성능-근거를-읽는-기준, id: measurement}
   - path: device-integration.md
     group: vendor
@@ -105,7 +109,7 @@ pages:
         ko: 공개 WSL 가상 카메라 첫 촬영 시험 재현
         en: Reproduce the public WSL virtual camera first-capture trial
       - {source: vendor-integration.md, fragment: 정지와-오류-처리의-책임, id: stop-tests}
-      - {source: vendor-integration.md, fragment: 구현-뒤-확인할-계약과-실행-한계, id: verification-limits}
+      - {source: pipeline-requests.md, fragment: 버퍼-완료와-요청-반환, id: verification-limits}
   - path: for-developer.md
     group: developer
     ko: ForDeveloper

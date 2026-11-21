@@ -313,6 +313,8 @@ class Contract:
             if name:
                 self.watch.read(self.cfg.root/name)
         directories = [(Path(__file__).parent/'site_assets', '*')]
+        if isinstance(self.cfg.visual_audit, dict) and 'style' in self.cfg.visual_audit:
+            directories.append((self.cfg.visual_audit_style_dir, '*.md'))
         if self.cfg.site.reader_edition:
             directories.append((Path(__file__).parent/'reader_assets', '*'))
         for page, path in paths(self.cfg).items():

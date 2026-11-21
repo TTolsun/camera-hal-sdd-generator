@@ -26,6 +26,7 @@ python -m sdd.visual_audit --site build/site --config sdd.yaml --source-commit <
 visual_audit:
   enabled: true
   reviews: config/item-visual-reviews.json
+  style: style
   baseline:
     file: config/previous-item-inventory.json.gz
     sha256: <직전 공개 조사 파일의 SHA-256>
@@ -43,6 +44,8 @@ visual_audit:
 ```
 
 `enabled`의 기본값은 `false`입니다. 언어별 수치를 지정하면 `rationale`이 필요합니다. `signals`에는 기본 신호를 보완하거나 교체할 이름별 정규식을 지정할 수 있습니다. 프로젝트·언어 설정을 바꾸면 해당 정책에 연결된 지문을 다시 검토합니다. `deferred_pages`에 남아 있는 페이지는 장부에 통과 판정이 있어도 발행할 수 없습니다.
+
+`style`에는 최종 발행 검토에 사용할 집필 규칙 디렉터리를 설정 파일 기준 상대 경로로 지정할 수 있습니다. 이 디렉터리의 바로 아래에 있는 Markdown 규칙이 최종 항목 지문과 `item_visual_style` 입력 지문에 반영됩니다. 생략하면 `paths.style`의 규칙을 사용합니다. 원고 생성과 초안 검토에는 `paths.style`이 계속 적용됩니다.
 
 `baseline`은 선택 설정이며 직전 배포의 `schema: 1` 조사 JSON 또는 gzip 파일과 원본 바이트의 SHA-256을 고정합니다. 캡션 보조 항목을 제외한 모든 기존 질문 ID가 현재 사이트에 남아 있어야 합니다. 새 장부가 현재 항목을 모두 승인했더라도 기존 질문이 사라지거나 그림 제목으로 바뀌면 발행을 차단합니다. 의도적으로 항목을 통합하거나 앵커를 바꿀 때는 삭제 영향을 검토한 뒤 기준 파일을 명시적으로 갱신합니다. 기준 파일의 과거 지문은 식별 기록이며 현재 내용의 검토를 대신하지 않습니다. 발행 보고서는 이 보존 계약을 기록하고 `verify-site`도 다시 검사합니다.
 

@@ -378,6 +378,20 @@ class Config:
     def style_dir(self) -> Path:
         return self.paths.get("style", self.root / "style")
 
+    @property
+    def visual_audit_style_dir(self) -> Path:
+        settings = self.visual_audit
+        if not isinstance(settings, dict) or 'style' not in settings:
+            return self.style_dir
+        name = settings['style']
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError('visual_audit.style must name a configuration-relative directory')
+        from .site_paths import owned_path
+        path = owned_path(self.root, name)
+        if not path.is_dir() or not any(item.is_file() for item in path.glob('*.md')):
+            raise ValueError('visual_audit.style must contain at least one Markdown guide')
+        return path
+
     def sections(self) -> list[dict[str, Any]]:
         from .validation_stage import current
         inputs = current()
