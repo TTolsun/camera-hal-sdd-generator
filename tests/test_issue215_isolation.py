@@ -367,3 +367,25 @@ def test_checked_presentation_keeps_semantic_content_and_raw_paths_in_archive(mo
     _,_,proof = prepare_review(payload,structured=True,compact_json=True,checked_presentation=True)
     assert proof['complete_input_sha256']==digest(payload)
     assert not proof['complete_input_round_trip']
+
+
+def test_extracted_index_proof_binds_all_cells_and_git_positions(monkeypatch, tmp_path):
+    monkeypatch.syspath_prepend(str(TOOLS))
+    import draft_index_evidence as check
+
+    code = b'int present();'
+    git_hash = hashlib.sha256(code).hexdigest()
+    monkeypatch.setattr(check, 'git_blobs', lambda source, commit, names: {'camera.h': ([code], git_hash)})
+    html = ('<article><h2 id="camera">camera</h2><div class="table-scroll"><table>'
+            '<tr><th>함수</th><th>선언 위치</th><th>정의 위치</th><th>설명 (주석)</th></tr>'
+            '<tr><td><code>present</code></td><td><code>camera.h:1</code></td><td>–</td>'
+            '<td>Available</td></tr></table></div></article>')
+    facts = {'functions': {'present': {'loc': {'file': 'camera.h', 'line': 1}, 'brief': 'Available'}}}
+    proof = check.verify_index(html, 'index.html', facts, tmp_path, 'a'*40)
+    assert proof['packages']['index.html#camera']['rows'] == [['functions', 'present', ['camera.h', 1, git_hash], None]]
+    assert proof['blob_sha256'] == {'camera.h': git_hash}
+    with pytest.raises(ValueError, match='differs from extracted facts'):
+        check.verify_index(html.replace('Available', 'Missing'), 'index.html', facts, tmp_path, 'a'*40)
+    facts['functions']['present']['loc']['line'] = 2
+    with pytest.raises(ValueError, match='outside the pinned file'):
+        check.verify_index(html.replace('camera.h:1', 'camera.h:2'), 'index.html', facts, tmp_path, 'a'*40)

@@ -175,6 +175,8 @@ def main():
                         help='Use explicit additional Git windows instead of whole files inferred from links')
     parser.add_argument('--facts', type=Path, help='Matching immutable structural facts for locating every displayed class declaration')
     parser.add_argument('--facts-sha256', help='Pinned digest from the separately retained extraction/integration provenance; required with --facts')
+    parser.add_argument('--verify-extracted-index', action='store_true',
+                        help='Check every draft package table row and Git location against the pinned extracted facts')
     parser.add_argument('--style-dir', type=Path, help='Actual writing rules matching the inventory policy; default ./style')
     parser.add_argument('--reader-models', type=Path, action='append', default=[],
                         help='Preliminary source-bound model ledger; context only, never item approval')
@@ -223,6 +225,8 @@ def main():
     draft = report.get('review_stage') == 'manuscript'
     if draft and (args.source is None or not args.source_window or args.reader_models or args.previous_inventory):
         raise ValueError('Manuscript review requires immutable source windows and its own current item evidence')
+    if args.verify_extracted_index and (not draft or not args.facts):
+        raise ValueError('Extracted index verification requires a manuscript packet and pinned structural facts')
     if not re.fullmatch(r'[0-9a-f]{40}', report.get('source_commit', '')):
         raise ValueError('Immutable source review requires a full source commit')
     facts = json.loads(args.facts.read_bytes()) if args.facts else None
@@ -372,7 +376,6 @@ def main():
                 if (parts.scheme or parts.netloc or not parts.path.endswith('.html')
                         or not parts.fragment.startswith('symbol-')):
                     continue
-                from sdd.site_paths import owned_path
                 name = ((args.site/row['page']).parent/unquote(parts.path)).resolve().relative_to(args.site.resolve()).as_posix()
                 target = owned_path(args.site.resolve(), name)
                 symbols = Document(target.read_text(encoding='utf-8'))
@@ -397,7 +400,6 @@ def main():
                 git_path = parts.scheme == 'git' and parts.path.startswith(report['source_commit']+':')
                 if args.source and not args.explicit_source_only and (git_path or marker in parts.path):
                     name = unquote(parts.path.split(':', 1)[1] if git_path else parts.path.split(marker, 1)[1])
-                    from sdd.site_paths import owned_path
                     owned_path(args.source.resolve(), name)
                     key = 'git:'+report['source_commit']+':'+name
                     if key not in additional:
@@ -473,7 +475,6 @@ def main():
                 text = json.dumps(document, ensure_ascii=False, sort_keys=True)
                 actual_hash = document_hash
             elif '#' not in key:
-                from sdd.site_paths import owned_path
                 path = owned_path(args.site.resolve(), key)
                 raw = path.read_bytes()
                 actual_hash = digest(raw.hex())
@@ -492,7 +493,6 @@ def main():
                     raise ValueError('Text-only native review cannot inspect this binary window: '+key) from exc
             else:
                 target, fragment = key.rsplit('#', 1)
-                from sdd.site_paths import owned_path
                 path = owned_path(args.site.resolve(), target)
                 raw = path.read_text(encoding='utf-8')
                 if path.suffix == '.html':
@@ -534,6 +534,21 @@ def main():
                    inventory_sha256=digest(report), source_commit=report.get('source_commit'))
     if draft:
         payload['review_stage'] = 'manuscript'
+    if args.verify_extracted_index:
+        from draft_index_evidence import verify_index
+
+        page, = selected_pages
+        proof = verify_index(owned_path(args.site.resolve(), page).read_text(encoding='utf-8'), page,
+                             facts, args.source.resolve(), report['source_commit'])
+        packages = {row['id']: proof['packages'][row['id']] for row in selected if row['id'] in proof['packages']}
+        files = {position[0] for value in packages.values() for row in value['rows']
+                 for position in row[2:] if position}
+        payload['extracted_index_verification'] = dict(source_commit=proof['source_commit'], packages=packages,
+            all_package_row_counts={key: len(value['rows']) for key,value in proof['packages'].items()},
+            blob_sha256={name: proof['blob_sha256'][name] for name in sorted(files)},
+            scope='Every displayed index cell compared with the pinned extracted facts. Each reported declaration '
+                  'or definition position was resolved to a line of the pinned Git blob. This does not establish '
+                  'the completeness of extraction, the meaning of comments, or runtime behavior.')
     if caption_mirror:
         payload['caption_mirror'] = caption_mirror
     if args.reader_models:
@@ -594,7 +609,6 @@ def main():
                     if args.historical_artifacts is None:
                         raise ValueError('Historical artifact references require --historical-artifacts')
                     name = reference.removeprefix('artifact:')
-                    from sdd.site_paths import owned_path
                     owned_path(args.historical_artifacts.resolve(), name)
                     if historical_commit is None:
                         historical_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
@@ -611,7 +625,6 @@ def main():
             if args.source is None:
                 raise ValueError('Source-bound preliminary models require --source')
             name = match[1]
-            from sdd.site_paths import owned_path
             owned_path(args.source.resolve(), name)
             key = 'git:'+report['source_commit']+':'+name
             reference_map[reference] = key
@@ -654,6 +667,12 @@ def main():
         system += ('\nReview this Korean manuscript before translation. Assess only the actual draft and supplied '
                    'immutable source, not the eventual site or language parity. For each technical item answer '
                    'using current source windows. Only an individual source-supported status and reason is sufficient.')
+    if args.verify_extracted_index:
+        system += ('\nThe extracted-index verification supplies the mechanically checked index cell values and '
+                   'their exact declaration/definition positions. You independently decide whether the specific '
+                   'index question is answered with these tables or another figure is necessary. Do not claim to '
+                   'have read source outside the actual supplied Git windows. An index of extracted facts does '
+                   'not warrant verifying that unlisted source symbols are absent.')
     user = json.dumps(payload, ensure_ascii=False)
     if args.compact_input or args.structured_window_input:
         from review_window_transport import prepare_review

@@ -49,6 +49,8 @@ site:
 
 공개 libcamera에서는 `examples/libcamera/validation/issue215/review_inventory.py`에 패킷의 `--inventory`와 `--site`, 독립 Terra High `--profile`, 실제 초안 집필 규칙의 `--style-dir`, 고정한 `--source`를 전달합니다. `--source-window '파일#L시작-L끝'`으로 비교할 소스 창을 공급하고 `--item`을 반복하거나 `--page`로 같은 원고를 검토합니다. 구조 그림에는 클래스 선언을 확인할 `--facts`와 추출 기록의 `--facts-sha256`을 함께 사용합니다. 결과인 `draft-review-records.json`의 `manuscripts`를 설정된 검토 장부에 합치고 같은 입력으로 생성 명령을 다시 실행합니다. 남은 `needs_visual` 또는 `unreviewed` 항목에는 연관된 그림이나 근거를 보완하고 재검토합니다.
 
+추출한 구성 요소 색인은 `--verify-extracted-index`로 표의 모든 셀을 고정된 facts와 비교합니다. 선언과 정의의 줄 위치를 해당 커밋의 Git 파일에서 확인하고 각 파일 및 줄의 지문을 검토 입력에 남깁니다. 이 대조를 마쳐도 표가 해당 질문에 충분한지는 지정 CLI가 항목마다 판단합니다.
+
 한영 사이트의 최종 검토는 게시 후보에서 별도로 실행하여 장부의 `items`에 저장합니다. 초안 판정은 `manuscripts`로 보존하며 최종 검토와 사람 승인 상태를 각각 기록합니다.
 
 ## 반복 실행 계약
