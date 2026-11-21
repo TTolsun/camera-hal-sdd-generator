@@ -75,6 +75,9 @@ def generated_errors(section):
     ids = [r['id'] for r in requirements]
     covered = []
     for topic in topics:
+        if 'reuse_parts' in topic and (topic['reuse_parts'] is not True or not topic.get('parts')
+                                      or topic.get('explanation')):
+            errors.append(f"{topic['id']}: reuse_parts requires plain source-bound parts without explanation stages.")
         covers = topic.get('covers')
         if not isinstance(covers, list) or not covers or any(not isinstance(c, str) for c in covers):
             errors.append(f"{topic['id']}: covers는 비어 있지 않은 문자열 목록이어야 합니다.")

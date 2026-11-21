@@ -29,12 +29,15 @@ def _prepare_generation(cfg, model, section, previous):
     if cfg.agent.kind == 'dry-run':
         raise ValueError(f"{section['id']}: 필수 LLM 답변은 dry-run으로 생성할 수 없습니다.")
     plan = prepare_requests(cfg, model, section, previous)
-    from .design_reuse import reusable
+    from .design_reuse import reusable, reusable_prefixes
     answers, origins = reusable(model, section, plan.previous, plan.inputs, _validate_retained,
                                 compatible_inputs=plan.compatible_inputs)
     for tid in duplicates.repeated_topics(model, section, answers):
         answers.pop(tid), origins.pop(tid, None)
-    return plan, answers, origins
+    part_inputs, prefixes = reusable_prefixes(cfg, model, section, plan, answers, _validate_retained)
+    for tid in duplicates.repeated_topics(model, section, {**answers, **prefixes}):
+        prefixes.pop(tid, None)
+    return plan, answers, origins, part_inputs, prefixes
 
 
 def _assemble_generation(cfg, model, section, answers, inputs, reused, replayed, origins, policy):
@@ -66,16 +69,18 @@ def generate(cfg, model, agent, section, previous=None, *, replay_http=False, al
 
 
 def _generate(cfg, model, agent, section, previous=None, *, replay_http=False, all_design_units=False):
-    plan, answers, origins = _prepare_generation(cfg, model, section, previous)
+    plan, answers, origins, part_inputs, prefixes = _prepare_generation(cfg, model, section, previous)
     topic_prompts, policy, inputs = plan.prompts, plan.policy, plan.inputs
     reused = list(answers)
+    retained_parts = {topic: {row['part_id'] for row in rows} for topic, rows in prefixes.items()}
+    answers.update(prefixes)
     for unit in _design_units(section, {}):
-        if unit['id'] in answers:
+        if unit['id'] in reused or unit.get('_part_id') in retained_parts.get(unit['id'], ()):
             agent.unit(_unit_tag(section, unit), 'manuscript-reused')
             from .reuse_decision import record
             record(agent, _unit_tag(section, unit), 'reuse-manuscript',
                    dict(reason_codes=['identical-manuscript-inputs-current-checks-passed']), stage='validated')
-    units = _design_units(section, answers)
+    units = _design_units(section, reused, retained_parts)
     replayed, resumed, failures = [], [], []
     archive = open_archive(cfg, replay_http)
     for topic in units:
@@ -106,12 +111,16 @@ def _generate(cfg, model, agent, section, previous=None, *, replay_http=False, a
     if failures:
         raise ValueError('\n'.join(failures))
     result = _assemble_generation(cfg, model, section, answers, inputs, reused, replayed, origins, policy)
-    if reused and previous:
+    if part_inputs:
+        result[3]['part_inputs'] = part_inputs
+    if (reused or retained_parts) and previous:
         from .document_metadata import split_frontmatter
         old_meta, _ = split_frontmatter(previous)
         result[3]['reuse_lineage'] = dict(source_commit=old_meta.get('source_commit'),
             body_sha256=old_meta.get('generated_design', {}).get('body_sha256'),
             topics=list(reused), validation='current source, contract and editorial checks; human review pending')
+        if retained_parts:
+            result[3]['reuse_lineage']['parts'] = {topic: sorted(parts) for topic, parts in retained_parts.items()}
     if resumed:
         result[3]['checkpoint_units'] = resumed
     return result

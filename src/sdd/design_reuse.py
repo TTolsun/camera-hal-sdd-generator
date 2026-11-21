@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import re
 
 from .evidence import contract_text, fingerprint
 
 
-def _matches_previous_topic(body, pinned, section):
+def _matches_previous_topic(body, pinned, section, *, prefix=False):
     """Check unchanged prose and citation files while allowing current line numbers."""
     from .product_context import scope_notice
     from .validate import extract_citations
@@ -33,8 +34,10 @@ def _matches_previous_topic(body, pinned, section):
     current = without_line_numbers(previous_text)
     for layout in ({}, {'grouped': False}, {'preserve_lists': False}):
         rendered, gaps = contract_text(pinned, section['id'], topic, **layout)
-        if not gaps and current == without_line_numbers((scope_notice(topic) + rendered).strip()):
-            return True
+        if not gaps:
+            expected = without_line_numbers((scope_notice(topic) + rendered).strip())
+            if current == expected or (prefix and current.startswith(expected + '\n\n### ')):
+                return True
     return False
 
 
@@ -111,3 +114,79 @@ def reusable(model, section, previous, inputs, validate=None, *, compatible_inpu
         retained[tid] = selected_answers
         origins[tid] = artifact.get('topic_agents', {}).get(tid, meta.get('agent', 'unknown'))
     return retained, origins
+
+
+def _part_scope(model, section, topic, parts):
+    tid = topic['id']
+    pinned, selected = subset(model, section, [tid])
+    source_ids = {ref for part in parts for ref in part['sources']}
+    narrowed = {key: value for key, value in topic.items() if key != 'reuse_parts'}
+    narrowed.update(parts=parts, sources=[source for source in topic['sources'] if source['id'] in source_ids])
+    selected['design_topics'] = [narrowed]
+    pinned.evidence = {key: value for key, value in pinned.evidence.items()
+                       if key.rsplit('/', 1)[-1] in source_ids}
+    return pinned, selected, narrowed
+
+
+def _part_identity(cfg, model, section, topic, parts, plan):
+    from .design_request import bind_native_topic
+
+    pinned, scoped, narrowed = _part_scope(model, section, topic, parts)
+    tid = topic['id']
+    prompt = plan.prompts[tid]
+    identity = topic_inputs(pinned, scoped, prompt.policy + json.dumps(plan.policy))[tid]
+    return bind_native_topic(cfg, pinned, section, narrowed, prompt, identity)
+
+
+def reusable_prefixes(cfg, model, section, plan, reused, validate):
+    """Retain a proved, separately rendered lead before the first changed part."""
+    if cfg.agent.kind != 'cli':
+        return {}, {}
+    from .document_metadata import split_frontmatter
+    meta, body = split_frontmatter(plan.previous or '')
+    old = meta.get('generated_design', {})
+    if not isinstance(old, dict) or old.get('body_sha256') != hashlib.sha256(body.strip().encode()).hexdigest():
+        old = {}
+    prefixes, bindings = {}, {}
+    for topic in section['design_topics']:
+        if not topic.get('reuse_parts'):
+            continue
+        tid, parts = topic['id'], topic['parts']
+        keys = {part['id']: _part_identity(cfg, model, section, topic, [part], plan) for part in parts}
+        bindings[tid] = keys
+        statements = old.get('answers', {}).get(tid)
+        if tid in reused or not isinstance(statements, list):
+            continue
+        prior = old.get('part_inputs', {}).get(tid)
+        selected = []
+        if isinstance(prior, dict):
+            for part in parts:
+                if prior.get(part['id']) != keys[part['id']]:
+                    break
+                selected.append(part)
+            if len(selected) < len(parts):
+                while selected and 'heading' not in parts[len(selected)]:
+                    selected.pop()
+        else:
+            prior_ids = list(dict.fromkeys(row.get('part_id') for row in statements if isinstance(row, dict)))
+            selected = parts[:len(prior_ids)]
+            if ([part['id'] for part in selected] != prior_ids or len(selected) == len(parts)
+                    or not selected or _part_identity(cfg, model, section, topic, selected, plan)
+                    != old.get('topic_inputs', {}).get(tid)):
+                continue
+        # The unchanged lead must have a real rendering boundary so adding or
+        # changing a later part cannot regroup its paragraphs.
+        if not selected or len(selected) == len(parts) or 'heading' not in parts[len(selected)]:
+            continue
+        ids = {part['id'] for part in selected}
+        values = [copy.deepcopy(row) for row in statements if isinstance(row, dict) and row.get('part_id') in ids]
+        pinned, scoped, _ = _part_scope(model, section, topic, selected)
+        for field in ('reader_profile', 'reader_family', 'reader_scope'):
+            scoped.pop(field, None)
+        try:
+            checked = validate(pinned, scoped, {tid: values})
+            if _matches_previous_topic(body, checked[0], checked[1], prefix=True):
+                prefixes[tid] = values
+        except (ValueError, TypeError, KeyError):
+            continue
+    return bindings, prefixes

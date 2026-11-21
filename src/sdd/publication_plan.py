@@ -97,6 +97,7 @@ def preview(cfg, model, section_ids=None, impact=None):
 def _prepare(cfg, model, section_ids, impact, *, plan_only):
     from . import generated_design
     from .design_request import prepare_requests, _design_units
+    from .design_reuse import reusable_prefixes
     from .design_reuse import reusable
     from .design_response import _validate_retained, response_schema
     from .design_checkpoint import PendingReview, store_for, changes
@@ -142,12 +143,16 @@ def _prepare(cfg, model, section_ids, impact, *, plan_only):
                                compatible_inputs=plan.compatible_inputs)
         for tid in duplicates.repeated_topics(model, section, retained):
             retained.pop(tid)
-        answers = {tid: list(values) for tid, values in retained.items()}
+        _, prefixes = reusable_prefixes(cfg, model, section, plan, retained, _validate_retained)
+        for tid in duplicates.repeated_topics(model, section, {**retained, **prefixes}):
+            prefixes.pop(tid, None)
+        retained_parts = {topic: {row['part_id'] for row in rows} for topic, rows in prefixes.items()}
+        answers = {tid: list(values) for tid, values in {**retained, **prefixes}.items()}
         pending = []
         for unit in _design_units(section, {}):
             key = _unit_tag(section, unit)
             dependencies = list(pending)
-            reused = unit['id'] in retained
+            reused = unit['id'] in retained or unit.get('_part_id') in retained_parts.get(unit['id'], ())
             action, reason, receipts = 'reuse-manuscript', 'source/request/model/style identical; current checks passed', []
             explanation = dict(reason_codes=['identical-manuscript-inputs-current-checks-passed'])
             if not reused:
