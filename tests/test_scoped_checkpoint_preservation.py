@@ -21,6 +21,15 @@ def add_scope(section):
         optional=[], excluded=[], removed_requirements=[])
 
 
+def test_configured_part_heading_is_presentation_not_an_uncited_paragraph(cli_units, tmp_cfg):
+    section, model, save, _, state, agent = cli_units
+    section['design_topics'][0]['parts'][0]['heading'] = 'Integration condition'
+    save()
+    state['interrupt'] = False
+    path = Generator(tmp_cfg, model, agent()).run()[0]
+    assert '### Integration condition\n\n' in path.read_text(encoding='utf-8')
+
+
 def test_plain_generate_retains_bytes_after_all_cli_units_revalidated(cli_units, tmp_cfg):
     section, model, save, calls, state, agent = cli_units
     add_scope(section); save(); state['interrupt'] = False

@@ -234,11 +234,13 @@ def validate_answers(model, section, answers, allow_limited=False, enforce_repea
     pinned, resolved = materialize(model, section, answers, enforce_repeats)
     report = enforce(pinned, resolved, allow_limited)
     for topic in resolved['design_topics']:
-        text, _ = contract_text(pinned, section['id'], topic)
-        # Validate source-bound answers before adding editor-owned stage labels.
+        # Validate source-bound answers before adding editor-owned headings.
         # Never remove matching lines from generated statement text.
-        validation_text, _ = contract_text(pinned, section['id'], {
-            key: value for key, value in topic.items() if key != 'explanation'})
+        validation_topic = {key: value for key, value in topic.items() if key != 'explanation'}
+        if 'parts' in validation_topic:
+            validation_topic['parts'] = [{key: value for key, value in part.items() if key != 'heading'}
+                                         for part in validation_topic['parts']]
+        validation_text, _ = contract_text(pinned, section['id'], validation_topic)
         blocks, _ = topic_blocks(pinned, section['id'], topic)
         allowed = set(extract_citations('\n'.join(b.text for b in blocks)))
         # Structured answers already require nonempty text, source and coverage.

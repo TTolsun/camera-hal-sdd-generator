@@ -209,11 +209,21 @@ sections:
         reject_patterns: []
     - id: rpi-sensor-registration
       heading: Raspberry Pi 센서의 연동 조건
-      question: Raspberry Pi용 Starvis 2 헬퍼에서 기본 적분 시간 여유와 다른 값을 쓰는 센서가 현재 소스에 있으면 등록 이름, 공통 이득 계산, 특례 값과 SHR0 근거를 설명하세요. 해당 값이 프레임 길이와 적분 시간 사이의 여유로 노출 제한 계산에 어떻게 쓰이는지 연결하세요. 등록된 모델과 특례는 발췌에 실제로 있는 내용만 적으세요. 특례가 없으면 존재하는 기본 동작만 답하세요. 센서 실측 결과나 다른 플랫폼의 동작은 추정하지 마세요.
+      question: Raspberry Pi용 Starvis 2 헬퍼에서 기본 적분 시간 여유와 다른 값을 쓰는 센서가 있으면 특례가 적용되는 센서만 대표 두 모델까지, 특례 값과 기본값, 센서 문서에 근거한 SHR0 조건을 한두 문장으로 설명하세요. 그 값이 프레임 길이와 적분 시간 사이의 여유로 노출 제한 계산에 쓰인다는 점을 연결하세요. 기본 동작을 쓰는 모델의 목록과 이득 계산의 수식·코드·상한은 생략하세요. 발췌에서 특례가 빠졌으면 기본 동작만 설명하세요. 센서 실측 결과나 다른 플랫폼의 동작은 추정하지 마세요.
       sources:
       - rpi-sensor-helpers
       - rpi-integration-limit
-      max_statements: 3
+      max_statements: 2
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - [프레임 길이]
+        - [적분 시간, 노출 시간]
+        reject_patterns:
+        - pattern: '(?i)\b(?:gainCode|log10|pow|0xf0)\b|(?:이득|게인)\s*(?:계산|수식|상한)'
+          message: 이득 계산의 내부 수식, 식별자, 상한을 이 연동 답변에 넣지 마세요.
+        - pattern: '(?i)(?:\bimx\d+\b[\s\S]*?){3}'
+          message: 기본 등록 목록을 열거하지 마세요. 특례 대상 중 대표 두 모델까지만 설명하세요.
     - id: rpi-board-verification
       question: 소스에서 RPi 헬퍼를 선택하는 등록과 대상 보드에서 실제 촬영·노출이 동작한다는 검증을 구분하세요. 등록이 확인되어도 대상 파이프라인과 커널 드라이버가 잡은 센서 모드에서 프레임 및 노출 제약을 확인해야 한다는 한 문장으로 답하세요. 이미 실측했다고 주장하지 마세요.
       sources:
