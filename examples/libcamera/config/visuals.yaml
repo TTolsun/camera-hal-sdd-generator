@@ -6999,6 +6999,109 @@ sections:
       - source: benefits/completion
         quote: signalled by the pipeline handler using the completeRequest() function.
         sha256: c3d1253c0ef92dd7f0ef5fd41450b788e9aa00145ac2f65bf727bf6a11e08863
+  - id: starvis2-exposure-limit
+    topic: support
+    part: rpi-sensor-registration
+    kind: flow
+    title: Starvis2 노출 제한
+    question: 노출 여유값으로 요청 노출을 어떻게 제한할까?
+    nodes:
+    - id: selection
+      label: Starvis2 노출 여유값 선택
+      label_en: Select Starvis2 exposure margin
+      evidence:
+      - source: support/rpi-sensor-helpers
+        quote: CamHelperStarvis2(unsigned int frameIntegrationDiff = kFrameIntegrationDiff);
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+    - id: default
+      label: '기본값: 4라인'
+      label_en: 'Default: 4 lines'
+      evidence:
+      - source: support/rpi-sensor-helpers
+        quote: kFrameIntegrationDiff = 4
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+      - source: support/rpi-sensor-helpers
+        quote: return new CamHelperStarvis2();
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+    - id: specific
+      label: 'imx585·imx676 → create585: 8라인'
+      label_en: 'imx585 / imx676 → create585: 8 lines'
+      evidence:
+      - source: support/rpi-sensor-helpers
+        quote: return new CamHelperStarvis2(8);
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+      - source: support/rpi-sensor-helpers
+        quote: reg585("imx585", &create585)
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+      - source: support/rpi-sensor-helpers
+        quote: reg676("imx676", &create585)
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+    - id: available
+      label: 프레임 길이 − 선택한 여유값
+      label_en: Frame length − selected margin
+      evidence:
+      - source: support/rpi-integration-limit
+        quote: frameLengthLines - frameIntegrationDiff_
+        sha256: bc0b6e7ccd351d7d49f7da33c53d510297421c55ebc56dd8f5153e1625546666
+    - id: limit
+      label: 요청 노출 라인과 가용 라인 중 작은 값
+      label_en: Smaller of requested and available exposure lines
+      evidence:
+      - source: support/rpi-integration-limit
+        quote: "exposureLines = std::min(frameLengthLines - frameIntegrationDiff_,\n\
+          \t\t\t\t CamHelper::exposureLines(exposure, lineLength));"
+        sha256: bc0b6e7ccd351d7d49f7da33c53d510297421c55ebc56dd8f5153e1625546666
+    edges:
+    - from: selection
+      to: default
+      label: 기본 경로
+      label_en: Default path
+      evidence:
+      - source: support/rpi-sensor-helpers
+        quote: kFrameIntegrationDiff = 4
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+      - source: support/rpi-sensor-helpers
+        quote: return new CamHelperStarvis2();
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+    - from: selection
+      to: specific
+      label: 센서별 경로
+      label_en: Sensor-specific path
+      evidence:
+      - source: support/rpi-sensor-helpers
+        quote: return new CamHelperStarvis2(8);
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+      - source: support/rpi-sensor-helpers
+        quote: reg585("imx585", &create585)
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+      - source: support/rpi-sensor-helpers
+        quote: reg676("imx676", &create585)
+        sha256: fa9b19abf9ed1e7e7ba70a036934489f9193a1561c4077b620c0499356536566
+    - from: default
+      to: available
+      label: 여유 라인
+      label_en: Margin lines
+      evidence:
+      - source: support/rpi-integration-limit
+        quote: frameLengthLines - frameIntegrationDiff_
+        sha256: bc0b6e7ccd351d7d49f7da33c53d510297421c55ebc56dd8f5153e1625546666
+    - from: specific
+      to: available
+      label: 여유 라인
+      label_en: Margin lines
+      evidence:
+      - source: support/rpi-integration-limit
+        quote: frameLengthLines - frameIntegrationDiff_
+        sha256: bc0b6e7ccd351d7d49f7da33c53d510297421c55ebc56dd8f5153e1625546666
+    - from: available
+      to: limit
+      label: 작은 값 적용
+      label_en: Apply minimum
+      evidence:
+      - source: support/rpi-integration-limit
+        quote: "exposureLines = std::min(frameLengthLines - frameIntegrationDiff_,\n\
+          \t\t\t\t CamHelper::exposureLines(exposure, lineLength));"
+        sha256: bc0b6e7ccd351d7d49f7da33c53d510297421c55ebc56dd8f5153e1625546666
   ipa:
   - id: proxy-selection
     topic: selection

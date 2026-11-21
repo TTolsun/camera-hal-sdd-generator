@@ -260,7 +260,7 @@ def render_values(cfg, model, section, values):
         if ident in seen:
             raise ValueError('Duplicate visual ID')
         seen.add(ident)
-        if set(visual) - {'id', 'topic', 'stage', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display', 'caption', 'branch_table'}:
+        if set(visual) - {'id', 'topic', 'stage', 'part', 'kind', 'title', 'question', 'nodes', 'edges', 'producer', 'condition_display', 'caption', 'branch_table'}:
             raise ValueError('Unknown visual setting')
         if not isinstance(visual.get('branch_table', False), bool):
             raise ValueError('Visual branch_table must be boolean')
@@ -274,7 +274,7 @@ def render_values(cfg, model, section, values):
                 s['id'] for s in topics[visual['topic']].get('explanation', [])}):
             raise ValueError('Visual stage must belong to its topic explanation')
         title, question = (_text(visual.get(k), k) for k in ('title', 'question'))
-        title_prefix = '#### ' if topics[visual['topic']].get('explanation') else '### '
+        title_prefix = '#### ' if placement_heading(visual, topics[visual['topic']]) else '### '
         nodes, edges = visual.get('nodes'), visual.get('edges')
         if not isinstance(nodes, list) or not nodes or any(not isinstance(n, dict) for n in nodes):
             raise ValueError('Visual nodes must be a nonempty object list')
@@ -408,7 +408,7 @@ def owned_spans(body):
 
 def verify_stage_placement(body, rendered, section):
     """Bind complete current figure blocks to their declared H2/H3 owner."""
-    staged=[row for row in rendered if 'stage' in row[0]]
+    staged=[row for row in rendered if 'stage' in row[0] or 'part' in row[0]]
     if not staged:
         return
     body=body.replace('\r\n','\n').replace('\r','\n')
@@ -434,18 +434,29 @@ def verify_stage_placement(body, rendered, section):
         if body[start:end]!=block:
             raise ValueError('Visual stage block differs from its source-bound rendering; regenerate')
         topic=topics[visual['topic']]
-        title=next(stage['title'] for stage in topic['explanation'] if stage['id']==visual['stage'])
+        title=placement_heading(visual, topic)
         if owner(start)!=(topic['title'],title) or owner(end-1)!=(topic['title'],title):
-            raise ValueError('Visual is outside its declared explanation stage; use normal generation')
+            kind = 'answer part' if 'part' in visual else 'explanation stage'
+            raise ValueError(f'Visual is outside its declared {kind}; use normal generation')
 
 
 def strip_blocks(body):
     return re.sub(r'<!-- sdd:visual:([a-z][a-z0-9_-]*) -->.*?<!-- /sdd:visual:\1 -->\s*', '', body, flags=re.S)
 
 
-def placement_stage(visual, topic):
+def placement_heading(visual, topic):
     stages = topic.get('explanation', [])
-    return visual.get('stage') or (stages[0]['id'] if stages else None)
+    if 'part' in visual:
+        parts = topic.get('parts', [])
+        matches = [part.get('heading') for part in parts if part['id'] == visual['part']]
+        if (stages or 'stage' in visual or not isinstance(visual['part'], str)
+                or len(matches) != 1 or not matches[0]
+                or sum(part.get('heading') == matches[0] for part in parts) != 1):
+            raise ValueError('Visual part must name a unique headed answer part in its topic without an explanation stage')
+        return matches[0]
+    if stages:
+        stage = visual.get('stage', stages[0]['id'])
+        return next(item['title'] for item in stages if item['id'] == stage)
 
 
 def place(body, rendered, section):
@@ -453,29 +464,33 @@ def place(body, rendered, section):
     body = strip_blocks(body)
     topics = {t['id']: t for t in section.get('design_topics', [])}
     grouped = {}
+    from .next_steps import _outside_fence
     for visual, block, _ in rendered:
-        stage = placement_stage(visual, topics[visual['topic']])
-        grouped.setdefault((visual['topic'], stage), []).append(block)
-    for (tid, stage), blocks in grouped.items():
+        title = placement_heading(visual, topics[visual['topic']])
+        grouped.setdefault((visual['topic'], title), []).append(block)
+    for (tid, title), blocks in grouped.items():
         heading = '## ' + topics[tid]['title']
-        matches = list(re.finditer(r'^' + re.escape(heading) + r'\n+', body, re.M))
+        matches = [match for match in re.finditer(r'^' + re.escape(heading) + r'\n+', body, re.M)
+                   if _outside_fence(body[:match.start()])]
         if len(matches) != 1:
             raise ValueError(f'Visual target heading missing or ambiguous: {heading}')
         start = matches[0].end()
-        if stage:
-            title = next(s['title'] for s in topics[tid]['explanation'] if s['id'] == stage)
-            boundary = re.search(r'^## ', body[start:], re.M)
+        if title:
+            boundary = next((match for match in re.finditer(r'^## ', body[start:], re.M)
+                             if _outside_fence(body[:start + match.start()])), None)
             stop = start + boundary.start() if boundary else len(body)
-            targets = list(re.finditer(r'^### ' + re.escape(title) + r'\n+', body[start:stop], re.M))
+            targets = [match for match in re.finditer(r'^### ' + re.escape(title) + r'\n+', body[start:stop], re.M)
+                       if _outside_fence(body[:start + match.start()])]
             if len(targets) != 1:
-                raise ValueError('Visual explanation stage missing or ambiguous: ' + title)
+                kind = 'explanation stage' if topics[tid].get('explanation') else 'answer part'
+                raise ValueError(f'Visual {kind} missing or ambiguous: {title}')
             start += targets[0].end()
         from .product_context import scope_notice
         notice = scope_notice(topics[tid])
         if notice and body.startswith(notice,start):
             start += len(notice)
         end = re.search(r'\n\n|\n(?=## )', body[start:])
-        if end is None or not body[start:start + end.start()].strip():
+        if end is None or not body[start:start + end.start()].strip() or body.startswith(('## ', '### '), start):
             raise ValueError(f'Visual target has no explanation: {heading}')
         # Keep a procedure together and explain it before its diagram. Preserve
         # indented continuation paragraphs and stop at the next topic boundary.
@@ -493,4 +508,5 @@ def place(body, rendered, section):
             body = body[:position] + insertion + '\n\n' + body[position:]
         else:
             body = body[:position] + '\n\n' + insertion + body[position:]
+    verify_stage_placement(body, [row for row in rendered if 'part' in row[0]], section)
     return body

@@ -127,6 +127,43 @@ def test_stage_visual_stays_inside_its_question_after_first_explanation(tmp_cfg,
         render(tmp_cfg, model, section)
 
 
+def test_part_visual_preserves_topic_lead_and_fails_closed(tmp_cfg, visual):
+    from sdd.visuals import verify_stage_placement
+
+    section, model, graph, write = visual
+    topic = section['design_topics'][0]
+    topic['parts'] = [dict(id='integration', heading='Integration condition'),
+                      dict(id='unheaded')]
+    graph['part'] = 'integration'
+    write()
+    rendered = render(tmp_cfg, model, section)
+    _, block, _ = rendered[0]
+    prefix = f"## {topic['title']}\n\nFirst lead.\n\nSecond lead.\n\n"
+    body = prefix + '### Integration condition\n\nEvidence.\n\n### Other\n\nOther text.\n'
+    expected = body.replace('Evidence.', f'Evidence.\n\n{block}')
+    assert '#### ' + graph['title'] in block
+    assert place(body, rendered, section) == expected
+    assert place(expected, rendered, section) == expected
+    with pytest.raises(ValueError, match='block missing'):
+        verify_stage_placement(body, rendered, section)
+    with pytest.raises(ValueError, match='outside its declared answer part'):
+        verify_stage_placement(body + '\n' + block, rendered, section)
+    for wrong in ('## Different topic', '```markdown'):
+        with pytest.raises(ValueError, match='answer part missing'):
+            place(body.replace('### Integration condition', wrong + '\n\n### Integration condition')
+                  + '\n```\n', rendered, section)
+    tmp_cfg.raw['visuals']['on_stale'] = 'omit'
+    graph['nodes'][0]['evidence'][0]['sha256'] = '0' * 64
+    write()
+    _, stale_block, mermaid = render(tmp_cfg, model, section)[0]
+    assert not mermaid and '재검토가 필요' in stale_block and 'Mermaid 원문' not in stale_block
+    for invalid in ('unheaded', 'other-topic', []):
+        graph['part'] = invalid
+        write()
+        with pytest.raises(ValueError, match='unique headed answer part'):
+            render(tmp_cfg, model, section)
+
+
 def test_unstaged_visual_uses_first_stage_and_title_collision_is_not_a_stage(tmp_cfg, visual):
     from sdd.explanation import STAGES
     section, model, graph, write = visual
