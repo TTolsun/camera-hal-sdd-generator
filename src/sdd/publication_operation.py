@@ -308,10 +308,13 @@ class Contract:
         from .render_profiles import paths, for_page
         for path in input_paths(self.cfg):
             self.watch.read(path)
-        for name in (self.cfg.visuals.file, self.cfg.site.intro, self.cfg.site.guide_visuals):
+        for name in (self.cfg.visuals.file, self.cfg.site.intro, self.cfg.site.guide_visuals,
+                     self.cfg.site.reader_edition):
             if name:
                 self.watch.read(self.cfg.root/name)
         directories = [(Path(__file__).parent/'site_assets', '*')]
+        if self.cfg.site.reader_edition:
+            directories.append((Path(__file__).parent/'reader_assets', '*'))
         for page, path in paths(self.cfg).items():
             self.watch.read(path)
             directories.append((for_page(self.cfg, page).style_dir, '*.md'))

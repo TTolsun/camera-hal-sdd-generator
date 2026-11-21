@@ -63,8 +63,8 @@ pages:
       source: vendor-overview.md
       fragment: 지원하는-하드웨어와-빌드-선택
       sha256:
-        ko: 456d769e26a75d7af1b17e6baa2a157ef460a5a828b33485908604de8a75ec34
-        en: c8054611c48a8ce67ca4424716cd4951be065c419bcf5f20e25f3508eb0c8a46
+        ko: bffa43607de0eb879f1b7e60b30fecacd68b02f4c3da0519bd9a91f9fd7989cb
+        en: 5f5e292c2701e823f6571878c48239fa809d9ec2d5da02b0e325dadcd5718378
     table:
       ko:
         - [지원 범주, 대표 하드웨어 또는 용도, 확인할 핸들러]
@@ -132,10 +132,17 @@ pages:
     sections:
       - {source: overview.md, fragment: 요청-생성과-소유권, id: request-creation}
       - {source: overview.md, fragment: 요청-제출과-완료, id: submission}
-      - {source: request-lifecycle.md, fragment: 요청버퍼fence의-수명, id: resource-lifetime}
+      - source: request-lifecycle.md
+        fragment: 요청버퍼fence의-수명
+        id: resource-lifetime
+        children: [소유권과-두-완료-경계, 정상-완료와-다음-요청-준비]
+      - {source: request-lifecycle.md, fragment: 타임아웃-뒤-펜스-회수, id: fence-timeout}
       - {source: overview.md, fragment: 버퍼-완료와-요청-완료, id: completion}
       - {source: overview.md, fragment: 스레드-경계와-동기화, id: callback-thread}
-      - {source: request-lifecycle.md, fragment: 정지와-연결-해제를-구분하기, id: stop-and-disconnect}
+      - source: request-lifecycle.md
+        fragment: 정지와-연결-해제를-구분하기
+        id: stop-and-disconnect
+        children: [촬영을-멈췄는데-왜-완료-알림이-오는가, 정지-api-계약과-연결-해제-todo]
   - path: implementation.md
     group: developer
     ko: 구현·확장 지점
@@ -148,7 +155,10 @@ pages:
       - {source: pipeline-requests.md, fragment: 장치-요청-한도와-대기-큐, id: queue-limit}
       - {source: ipa.md, fragment: 모듈-탐색과-격리-조건, id: ipa-extensions}
       - {source: ipu3-lsc-flow.md, fragment: 빌드와-상태-연결, id: ipu3-lsc}
-      - {source: rkisp1-dewarp.md, fragment: 스트림-적용과-실행-확인-범위, id: rkisp1-dewarp}
+      - source: rkisp1-dewarp.md
+        fragment: 스트림-적용과-실행-확인-범위
+        id: rkisp1-dewarp
+        children: [출력별-맵과-선택적-보정값, 보정-경로가-앱-버퍼를-취소하는-두-경우]
   - path: troubleshooting.md
     group: developer
     ko: 주의점과 문제 진단
@@ -158,7 +168,10 @@ pages:
       en: Start at the last successful call or notification. Isolate where the result diverged during configuration, submission, completion, resource access, or module loading.
     sections:
       - {source: request-diagnosis.md, fragment: 구성-실패를-좁히는-순서, id: configuration-failure}
-      - {source: request-diagnosis.md, fragment: 실패-위치별-확인-순서, id: failure-location}
+      - source: request-diagnosis.md
+        fragment: 실패-위치별-확인-순서
+        id: failure-location
+        children: [마지막-버퍼가-끝났는데-요청-완료-통지가-오지-않을-때]
       - {source: framebuffer-allocator.md, fragment: 중복-할당과-내보내기-실패를-구분하기, id: allocation-failure}
       - {source: framebuffer-allocator.md, fragment: buffers-반환-참조의-유효기간, id: buffer-reference}
       - {source: ipa-module-validation.md, fragment: 메타데이터-오류를-구분하기, id: ipa-metadata}

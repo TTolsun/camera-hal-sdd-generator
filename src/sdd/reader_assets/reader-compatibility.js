@@ -8,7 +8,7 @@
     decoded = hash;
   }
   if (!hash) {
-    location.replace(data.page);
+    if (data.page) location.replace(data.page);
   } else {
     const fragments = data.fragments;
     const key = Object.hasOwn(fragments, hash) ? hash : decoded;

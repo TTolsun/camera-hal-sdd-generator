@@ -93,7 +93,7 @@ def load(cfg):
             for rows in table.values():
                 _require(isinstance(rows, list) and len(rows) >= 2 and isinstance(rows[0], list) and rows[0]
                          and all(isinstance(row, list) and len(row) == len(rows[0]) and all(map(_label, row))
-                                 for row in rows), 'table rows must have equal colum counts and text in ' + name)
+                                 for row in rows), 'table rows must have equal column counts and text in ' + name)
             _require(len(table['ko']) == len(table['en']) and len(table['ko'][0]) == len(table['en'][0]),
                      'table shapes differ between languages in ' + name)
             binding = page.get('table_source')
@@ -196,30 +196,55 @@ def _section(article, part):
     heading = _first(article, identifier=fragment)
     _require(heading is not None and heading.tagName in HEADINGS,
              f'{part["source"]} has no heading #{fragment}')
-    nodes = _following(heading, HEADINGS[heading.tagName])
+    level = HEADINGS[heading.tagName]
+    nodes = _following(heading, level)
     if 'children' not in part:
         return nodes
     expected = set(part['children'])
     found = set()
-    selected = []
-    include = True
+    child_ranges = []
     for item in nodes:
-        if item.nodeType == Node.ELEMENT_NODE and HEADINGS.get(item.tagName) == HEADINGS[heading.tagName] + 1:
+        if item.nodeType == Node.ELEMENT_NODE and HEADINGS.get(item.tagName) == level + 1:
             anchor = item.getAttribute('id')
             found.add(anchor)
-            include = anchor in expected
-        if include:
-            selected.append(item)
+            child_ranges.append((nodes.index(_heading_start(item)), anchor))
     _require(expected <= found, f'{part["source"]}#{fragment} is missing one or more configured child headings')
+    selected = nodes[:child_ranges[0][0]] if child_ranges else nodes
+    for (start, anchor), (end, _) in zip(child_ranges, child_ranges[1:] + [(len(nodes), '')]):
+        if anchor in expected:
+            selected.extend(nodes[start:end])
     return selected
 
 
+def _heading_start(heading):
+    """An opening diagram marker immediately before a heading owns that heading."""
+    first = heading
+    previous = heading.previousSibling
+    while previous is not None:
+        if previous.nodeType == Node.TEXT_NODE and not previous.data.strip():
+            previous = previous.previousSibling
+        elif previous.nodeType == Node.COMMENT_NODE and re.fullmatch(
+            r'sdd:(?:class-diagram|visual:[a-z][a-z0-9_-]*)', previous.data.strip()
+        ):
+            first = previous
+            previous = previous.previousSibling
+        else:
+            break
+    return first
+
+
 def _following(current, level, introductory=False):
+    first_heading = None if introductory else current
+    if first_heading is not None:
+        current = _heading_start(first_heading)
     nodes = []
     while current is not None:
-        if nodes or introductory:
-            if current.nodeType == Node.ELEMENT_NODE and HEADINGS.get(current.tagName, 8) <= level:
-                break
+        if (current is not first_heading and current.nodeType == Node.ELEMENT_NODE
+                and HEADINGS.get(current.tagName, 8) <= level):
+            next_start = _heading_start(current)
+            if next_start in nodes:
+                del nodes[nodes.index(next_start):]
+            break
         nodes.append(current)
         current = current.nextSibling
     return nodes
@@ -251,8 +276,8 @@ def _selected(prefix, edition, trees):
                 actual = section_digest(fragment)
                 _require(actual == binding['sha256'][language],
                          f'{language} table evidence changed: {source}#{part["fragment"]}; actual sha256 {actual}')
-            fragment_id = part.get('fragment')
-            heading = _first(fragment, identifier=fragment_id) if fragment_id not in (None, '@intro') else None
+            selected_id = part.get('fragment')
+            heading = _first(fragment, identifier=selected_id) if selected_id not in (None, '@intro') else None
             synthetic = None
             if heading is None and any(key in part for key in ('ko', 'en', 'id')):
                 heading = fragment.ownerDocument.createElement('h2')
@@ -305,10 +330,9 @@ def section_digest(fragment):
     def visible(node):
         if node.nodeType == Node.TEXT_NODE:
             return node.data
-        if node.nodeType == Node.ELEMENT_NODE and (
-            _of_class(node, 'citation') or _of_class(node, 'evidence')
-            or _of_class(node, 'source-details')
-        ):
+        if node.nodeType == Node.ELEMENT_NODE and set(node.getAttribute('class').split()) & {
+            'citation', 'evidence', 'evidence-links', 'source-excerpts', 'mermaid'
+        }:
             return ''
         return ' '.join(map(visible, node.childNodes))
     return hashlib.sha256(' '.join(visible(fragment).split()).encode()).hexdigest()
@@ -563,28 +587,77 @@ def _overlapping_fragments(current, prefix, routes, legacy, old_ids, reserved):
         return ''
     moved = 'Open earlier detail' if prefix else '이전 주소의 상세 내용 열기'
     links = []
+    destinations = {}
     for anchor in sorted(old_ids[current] - reserved):
         target, identifier = routes.get((current, anchor), (legacy[current], anchor))
+        href = _link(current, target, identifier)
+        destinations[anchor] = href
         links.append(f'<li id="{html.escape(anchor, quote=True)}"><a href="'
-                     f'{_link(current, target, identifier)}">{html.escape(anchor)}</a></li>')
+                     f'{href}">{html.escape(anchor)}</a></li>')
     return (f'<details class="reader-old-fragments"><summary>{moved}</summary><ul>'
-            + ''.join(links) + '</ul></details>') if links else ''
+            + ''.join(links) + '</ul></details>' + _compatibility_data(current, destinations)) if links else ''
 
 
-def _archive(edition, raw, source, destination, prefix, routes, legacy, old_ids):
+def _archive(edition, raw, source, destination, prefix, routes, legacy, old_ids, projected):
     language = 'en' if prefix else 'ko'
     document = _shell(raw[source], source, destination, prefix, edition, language, archived=True)
     old_main = _part(r'<main id="main".*?</main>', document, 'archive main')
     tree = _parse(_part(r'<main id="main".*?</main>', raw[source], 'original main')[0])
     main = _first(tree, identifier='main')
+    article = _first(main, tag='article')
+    for item in list(_elements(main)):
+        if _of_class(item, 'mobile-toc'):
+            item.parentNode.removeChild(item)
+    archive_sections = [(part, _section(article, part)) for part in projected]
     _rewrite(main, source, destination, routes, legacy, old_ids)
+    for part, selection in archive_sections:
+        _trim_selection(selection, source, destination, routes, language)
     back = routes.get((source, ''), (prefix + 'index.html', ''))
     text = 'Reader edition' if prefix else '독자용 문서로 이동'
     archive_note = 'Source material linked by earlier addresses' if prefix else '이전 주소에서 연결하는 원본 자료'
     notice = (f'<p class="translation-note">{archive_note} · <a href="'
               f'{_link(destination, *back)}">{text}</a></p>')
     doc = _render(main).replace('<article>', notice + '<article>', 1)
-    return document[:old_main.start()] + doc + document[old_main.end():]
+    document = document[:old_main.start()] + doc + document[old_main.end():]
+    return _replace(r'<aside class="page-toc">.*?</aside>', document, '<aside class="page-toc"></aside>',
+                    'archive table of contents')
+
+
+def _trim_selection(selection, source, destination, routes, language):
+    """Leave links and exact source-excerpt panels where duplicated prose was removed."""
+    for item in selection:
+        parent = item.parentNode
+        if parent is None:
+            continue
+        elements = list(_elements(item))
+        excerpts = set()
+        for element in elements:
+            if _of_class(element, 'source-excerpts') and not any(element in list(_elements(old)) for old in excerpts):
+                excerpts.add(element)
+        kept = {element for excerpt in excerpts for element in _elements(excerpt)}
+        for element in elements:
+            if element in excerpts:
+                if element is not item:
+                    parent.insertBefore(element, item)
+                continue
+            if element in kept or not element.hasAttribute('id'):
+                continue
+            anchor = element.getAttribute('id')
+            target = routes.get((source, anchor))
+            if target is None:
+                continue
+            marker = item.ownerDocument.createElement('p')
+            marker.setAttribute('id', anchor)
+            link = item.ownerDocument.createElement('a')
+            link.setAttribute('href', _link(destination, *target))
+            label = 'Open this section in the reader edition' if language == 'en' else '독자용 문서에서 이 내용 열기'
+            if element.tagName in HEADINGS:
+                label = ' '.join(_text(element).split()) or label
+            _set_text(link, label)
+            marker.appendChild(link)
+            parent.insertBefore(marker, item)
+        if item not in excerpts:
+            parent.removeChild(item)
 
 
 def _compatibility(source, archive, prefix, routes, anchors):
@@ -600,14 +673,18 @@ def _compatibility(source, archive, prefix, routes, anchors):
         destinations[anchor] = target
         content.append(f'<li id="{html.escape(anchor, quote=True)}"><a href="{target}">'
                        f'{html.escape(anchor)}</a></li>')
-    encoded = json.dumps({'page': primary, 'fragments': destinations}, ensure_ascii=False).replace('<', '\\u003c')
-    assets = _href('assets/reader-compatibility.js', source)
     return (f'<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
             f'<meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title></head><body>'
             f'<h1>{title}</h1><p><a href="{primary}">{orientation}</a></p>'
             f'<p><a href="{_link(source, archive)}">{details}</a></p><ul>{"".join(content)}</ul>'
-            f'<script type="application/json" data-reader-compatibility>{encoded}</script>'
-            f'<script defer src="{assets}"></script></body></html>')
+            + _compatibility_data(source, destinations, primary) + '</body></html>')
+
+
+def _compatibility_data(current, destinations, primary=None):
+    encoded = json.dumps({'page': primary, 'fragments': destinations}, ensure_ascii=False).replace('<', '\\u003c')
+    assets = _href('assets/reader-compatibility.js', current)
+    return (f'<script type="application/json" data-reader-compatibility>{encoded}</script>'
+            f'<script defer src="{assets}"></script>')
 
 
 def _write_html(out, documents):
@@ -656,9 +733,11 @@ def _edition(out, edition, prefix, raw, *, bilingual):
     archives = {rel: prefix + ARCHIVE + rel.removeprefix(prefix) for rel in raw}
     routes = dict(origins)
     canonical_for = {}
+    projected = {source: [] for source in raw}
     for canonical, selections_on_page in selections.items():
-        for _, source, _, _ in selections_on_page:
+        for part, source, _, _ in selections_on_page:
             canonical_for.setdefault(source, canonical)
+            projected[source].append(part)
     for source in raw:
         if source.removeprefix(prefix).removesuffix('.html') + '.md' in edition.aliases:
             source_key = source.removeprefix(prefix).removesuffix('.html') + '.md'
@@ -683,7 +762,8 @@ def _edition(out, edition, prefix, raw, *, bilingual):
     report = {}
     documents = {}
     for source, destination in archives.items():
-        documents[destination] = _archive(edition, raw, source, destination, prefix, routes, relocation, old_ids)
+        documents[destination] = _archive(edition, raw, source, destination, prefix, routes, relocation, old_ids,
+                                          projected[source])
         if source not in selected:
             documents[source] = _compatibility(source, destination, prefix, routes, old_ids[source])
     for page in edition.pages:

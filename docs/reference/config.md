@@ -169,6 +169,7 @@ agent:
 | `undefined_terms` | 용어집이 있으면 `fail`, 없으면 `warn` | 뜻을 적지 않은 약어의 처리. `fail`, `warn`, `off`. [약어 검사](glossary.md#약어-검사). |
 | `english_catalog` | 없음 | 영어판 번역 목록. 공개 libcamera에서만 씁니다. |
 | `full_document` | `true` | 상단 `⤓`(Download) 메뉴와 전체 문서 사본(`download/full.html`, `download/full.md`)을 만듭니다. 외부로 문서를 내보내면 안 되는 사이트는 `false`로 끕니다. [전체 문서 내려받기](../concepts/site.md#전체-문서-내려받기) |
+| `reader_edition` | 없음 | 검증을 마친 원고에서 독자에게 보여 줄 절과 페이지를 고르는 YAML 경로입니다. [독자용 문서 구성](#sitereader_edition) |
 | `public_url` | 없음 | 게시된 사이트 주소. 지정하면 사본 표지에 원본 사이트를 적고, Markdown 사본의 사이트 파일 링크를 이 주소 기준의 절대 주소로 바꿉니다. 지정하지 않으면 그 링크는 글자만 남깁니다. |
 | `translation_batch_size` | `1` | 번역 호출당 문장 수. 1~16을 허용하며 입력 예산에 맞게 묶음을 줄입니다. 각 문장의 ID·코드 자리표시자·영어 응답을 검사하고 실패한 묶음은 반영하지 않습니다. |
 
@@ -199,6 +200,32 @@ Windows의 로컬 Ollama와 WSL의 libcamera 빌드를 연결하는 공개 예�
 | `idle_review.enabled`, `sections`, `files`, `source_chars`, `revision` | 새 커밋이 없는 날 기존 문서의 누락을 한 항목씩 보완합니다. `hermes.enabled`가 필요합니다. |
 
 다음 단계: 섹션 정의는 [sections.yaml 참조](sections.md)를 읽습니다.
+
+## site.reader_edition
+
+`site.reader_edition`은 설정 파일 기준 상대 경로입니다. `sdd export-site`는 기존 원고와 번역의 검증을 먼저 마친 뒤 선택된 절로 사이트를 구성합니다. 번역 목록을 준비할 때는 검토할 원고 전체를 읽습니다.
+
+```yaml
+schema: 1
+groups:
+  - {id: start, ko: 시작하기, en: Start here}
+pages:
+  - path: index.md
+    group: start
+    ko: 시작하기
+    en: Start here
+    sections:
+      - {source: overview.md, fragment: camera-stack, id: architecture}
+aliases:
+  overview.md: index.md#architecture
+```
+
+- `groups`와 `pages`에 적은 순서가 메뉴와 전체 문서 사본의 순서입니다. 첫 페이지는 `index.md`입니다.
+- `fragment`는 기존 HTML 제목의 `id`입니다. `@intro`는 첫 제목 앞의 내용이며 `fragment`를 생략하면 짧은 원고 전체를 선택합니다. `children`에 바로 아래 제목을 지정하면 선택한 제목과 그 하위만 기존 순서대로 이어집니다.
+- `id`로 링크에 쓸 새 주소를 지정할 수 있습니다. 선택한 절의 제목을 바꿀 때는 `ko`와 `en`을 함께 적습니다. `intro`와 `links`에도 두 언어를 모두 제공합니다.
+- 새 `table`을 넣으려면 같은 페이지에 표시하는 근거 절을 `table_source`에 지정합니다. `sha256.ko`와 `sha256.en`은 인용 링크를 제외한 표시 문장의 해시입니다. 내용이 바뀌면 두 언어의 표를 근거와 다시 대조할 때까지 게시가 중단됩니다.
+- 예전 주소에서 옮긴 절은 새 위치로 연결합니다. 유지한 상세 내용과 검토 기록은 `reader-archive/`에서 확인할 수 있습니다. 공개 `reader-edition.json`에는 각 새 절의 원본과 이전 주소가 기록됩니다.
+- 시각화 감사를 사용하면 독자용 페이지의 절과 그림을 검사합니다. 주소나 문맥이 바뀐 항목은 새 인벤토리에서 검토합니다.
 
 ## site.manuscript_profiles
 

@@ -6,7 +6,7 @@ import pytest
 import yaml
 
 from sdd.export_site import export_site
-from sdd.reader_edition import _fragment, _parse, _first, section_digest
+from sdd.reader_edition import _fragment, _parse, _first, _section, _render, section_digest
 from sdd.site_build import verify_site
 
 
@@ -66,7 +66,10 @@ def test_edition_projects_sections_and_keeps_earlier_addresses(tmp_cfg):
     assert 'id="task"><a href="index.html#reader-task"' in old
     assert 'id="archived"><a href="reader-archive/base.html#archived"' in old
     assert '<article>' not in old
-    assert 'ARCHIVED TECHNICAL DETAILS' in (root / 'reader-archive/base.html').read_text(encoding='utf-8')
+    archived = (root / 'reader-archive/base.html').read_text(encoding='utf-8')
+    assert 'ARCHIVED TECHNICAL DETAILS' in archived
+    assert 'id="task"><a href="../index.html#reader-task"' in archived
+    assert '<h2 id="task">' not in archived and '<details class="mobile-toc"' not in archived
     report = json.loads((root / 'reader-edition.json').read_text(encoding='utf-8'))
     assert set(report['pages']) == {'index.html', 'tasks/support.html'}
     assert 'base.html' in report['compatibility']
@@ -93,3 +96,35 @@ def test_edition_table_pin_rejects_stale_displayed_conditions(tmp_cfg):
     with pytest.raises(ValueError, match='ko table evidence changed'):
         export_site(tmp_cfg)
     assert (root / 'site-manifest.json').read_bytes() == before
+
+
+def test_section_cuts_preserve_adjacent_mermaid_markers_and_selected_children():
+    source = '''<article>
+<h2 id="parent">Parent</h2><p>Lead.</p>
+<!-- sdd:visual:keep -->
+<h3 id="child">Keep child</h3><p>Keep explanation.</p>
+<!-- /sdd:visual:keep -->
+<!-- sdd:visual:omit -->
+<h3 id="omitted">Omitted</h3><p>Omitted explanation.</p>
+<!-- /sdd:visual:omit -->
+<!-- sdd:class-diagram -->
+<h2 id="next">Next</h2><p>Next explanation.</p>
+<!-- /sdd:class-diagram -->
+</article>'''
+    article = _first(_parse(source), tag='article')
+
+    def rendered(selection):
+        fragment = _fragment()
+        for node in _section(article, {'source': 'base.md', **selection}):
+            fragment.appendChild(node.cloneNode(deep=True))
+        return _render(fragment)
+
+    chosen = rendered({'fragment': 'parent', 'children': ['child']})
+    assert 'Lead.' in chosen and 'Keep explanation.' in chosen
+    assert '<!-- sdd:visual:keep -->' in chosen and '<!-- /sdd:visual:keep -->' in chosen
+    assert 'visual:omit' not in chosen and 'class-diagram' not in chosen
+    child = rendered({'fragment': 'child'})
+    assert '<!-- sdd:visual:keep -->' in child and '<!-- /sdd:visual:keep -->' in child
+    assert 'Lead.' not in child and 'visual:omit' not in child
+    following = rendered({'fragment': 'next'})
+    assert '<!-- sdd:class-diagram -->' in following and '<!-- /sdd:class-diagram -->' in following
