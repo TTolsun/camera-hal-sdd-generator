@@ -24,15 +24,15 @@ PRINT_PAGE = 'full.html'
 MARKDOWN = 'full.md'
 
 LABELS = {
-    'ko': dict(menu='⤓', menu_label='Download the whole document', pdf='PDF', markdown='Markdown',
-               heading='전체 문서', pages='{count}편', commit='분석 기준 커밋', site='원본 사이트', contents='목차',
+    'ko': dict(menu_label='Download the whole document', pdf='PDF', markdown='Markdown',
+               pdf_action='전체 문서를 PDF로 인쇄', md_action='전체 문서를 Markdown으로 다운로드', heading='전체 문서', pages='{count}편', commit='분석 기준 커밋', site='원본 사이트', contents='목차',
                notice=('이 파일은 사이트의 모든 문서를 하나로 묶은 사본입니다. 만든 뒤에 바뀐 코드와 문서는 반영되지 않으므로 '
                        '분석 기준 커밋을 함께 확인하세요. 인용 검사 같은 자동 검사 결과는 사람 검토 승인이 아닙니다. '
                        '문서별 검토 상태는 각 문서 끝의 문서 생성·검토 정보에 있습니다.'),
                back='사이트로 돌아가기', save='Save as PDF', save_markdown='Download Markdown', preparing='그림을 그리는 중입니다.',
                hint='인쇄 창에서 대상을 PDF로 저장(Save as PDF)으로 선택하세요.'),
-    'en': dict(menu='⤓', menu_label='Download the whole document', pdf='PDF',
-               markdown='Markdown', heading='Whole document', pages='{count} pages',
+    'en': dict(menu_label='Download the whole document', pdf='PDF',
+               markdown='Markdown', pdf_action='Print the whole document to PDF', md_action='Download the whole document as Markdown', heading='Whole document', pages='{count} pages',
                commit='Analyzed source commit', site='Source site', contents='Contents',
                notice=('This file combines every page of the site into one copy. Code and documents changed after it '
                        'was made are not included, so check the analyzed source commit. Automated checks such as '
@@ -254,24 +254,37 @@ def _combined(pages, *, english, site_title, source_commit, public_url):
     return document, markdown
 
 
-def _menu(page: str, english: bool, site_title: str) -> str:
+def _icon(path: str, size: int) -> str:
+    return (f'<svg aria-hidden="true" focusable="false" width="{size}" height="{size}" '
+            f'viewBox="0 0 24 24" fill="currentColor"><path d="{path}"></path></svg>')
+
+
+# Self-contained toolbar artwork stays available in offline copies.
+_DOWNLOAD_ICON = _icon('M10 2h4v8h4l-6 6-6-6h4z M3 15h3v4h12v-4h3v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', 20)
+_FILE_ICON = _icon('M5 2h9l5 5v15H5z M13 4v5h5z M8 13v2h8v-2z M8 17v2h6v-2z', 16)
+
+
+def _menu(page: str, english: bool, filename: str) -> str:
     text = LABELS['en' if english else 'ko']
     print_path, markdown_path = paths(english)
     here = posixpath.dirname(page) or '.'
-    pdf = posixpath.relpath(print_path, here) + '?print'
-    md = posixpath.relpath(markdown_path, here)
-    # The language selector's existing style is reused: a new or changed shared CSS/JS asset marks every
-    # page's presentation as changed and sends all reviewed visual items back to review.
-    # An icon, not the word: on a 375px phone the existing header leaves about 58px beside the
-    # language menu and search button, and the shared CSS cannot change (see STYLE).
-    # The outer nav keeps the menu label out of the page's first reviewed item: the visual
-    # audit reads everything except nav, aside and footer as page content.
-    return (f'<nav class="download-nav" aria-label="{text["menu_label"]}" style="display:flex">'
-            f'<details class="language-selector download-menu"><summary title="Download" aria-label="{text["menu_label"]}">'
-            f'{text["menu"]} ▾</summary>'
-            f'<nav><a href="{html.escape(pdf, quote=True)}">{text["pdf"]}</a>'
-            f'<a href="{html.escape(md, quote=True)}" download="{html.escape(download_name(site_title, english), quote=True)}">'
-            f'{text["markdown"]}</a></nav></details></nav>')
+    pdf = html.escape(posixpath.relpath(print_path, here) + '?print', quote=True)
+    md = html.escape(posixpath.relpath(markdown_path, here), quote=True)
+    # The native popover provides keyboard activation, Escape and outside-click dismissal.
+    # With no anchor positioning support, the popover uses the browser's centered placement.
+    row = 'display:flex;align-items:center;gap:.65rem;padding:.35rem .65rem;color:inherit;text-decoration:none'
+    return (f'<nav class="download-nav" aria-label="{text["menu_label"]}" style="display:flex;align-items:center">'
+            f'<button type="button" popovertarget="download-menu" title="{text["menu_label"]}" '
+            f'aria-label="{text["menu_label"]}" style="anchor-name:--sdd-download;display:grid;place-items:center;'
+            f'width:40px;height:40px;padding:0;border:0;color:var(--muted)">{_DOWNLOAD_ICON}</button>'
+            f'<div id="download-menu" popover="auto" style="position-anchor:--sdd-download;'
+            f'inset:auto anchor(right) auto auto;top:anchor(bottom);margin:auto;padding:.4rem;'
+            f'min-width:9rem;background:white;color:var(--ink);border:1px solid var(--line);'
+            f'border-radius:6px;box-shadow:0 4px 12px #17201e20;font-size:14px">'
+            f'<strong style="display:block;padding:.2rem .65rem;color:var(--muted);font-size:12px">{text["heading"]}</strong>'
+            f'<a href="{pdf}" title="{text["pdf_action"]}" aria-label="{text["pdf_action"]}" style="{row}">{_FILE_ICON}.pdf</a>'
+            f'<a href="{md}" download="{html.escape(filename, quote=True)}" title="{text["md_action"]}" '
+            f'aria-label="{text["md_action"]}" style="{row}">{_FILE_ICON}.md</a></div></nav>')
 
 
 def publish(out: Path, entries, *, site_title: str, source_commit: str = '', public_url: str = '') -> None:
@@ -301,7 +314,7 @@ def publish(out: Path, entries, *, site_title: str, source_commit: str = '', pub
             marker = '<button id="search-open"'
             if original.count(marker) != 1:
                 raise RuntimeError(f'Whole document: header actions are missing in {page}')
-            (out / page).write_text(original.replace(marker, _menu(page, english, site_title) + marker, 1),
+            (out / page).write_text(original.replace(marker, _menu(page, english, download_name(site_title, english)) + marker, 1),
                                     encoding='utf-8', newline='\n')
 
 
