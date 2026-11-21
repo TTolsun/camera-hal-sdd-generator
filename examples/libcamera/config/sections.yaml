@@ -6862,9 +6862,15 @@ sections:
         basis: implementation
         required_terms:
         - [requestCompleted]
+        - [imageBufferReady]
+        - [completeBuffer]
+        - [completeRequest]
         - [RequestComplete]
         - [RequestCancelled]
+        - [FrameError]
         - [FrameSuccess]
+        - [FrameCancelled]
+        - [stop()]
         - [Developer]
         - [Vendor]
     - id: summary
