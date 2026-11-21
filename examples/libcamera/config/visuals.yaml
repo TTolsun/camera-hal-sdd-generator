@@ -7783,6 +7783,21 @@ sections:
         message: This graph covers method-state inputs; the complete queue type remains
           in its adjacent body sentence and must not be reintroduced as a partial declaration.
   rkisp1-dewarp:
+  - id: cancelled-main-path-buffer
+    topic: application
+    kind: flow
+    title: 보정 경로가 앱 버퍼를 취소하는 두 경우
+    question: ISP가 취소한 버퍼와 dewarper 큐 등록 실패는 앱의 main-path 버퍼에 어떻게 전달됩니까?
+    generation: llm
+    max_nodes: 7
+    require_connected: true
+    sources: [dewarper-dispatch, cancelled-output, frame-cancel]
+    whole_sources: [dewarper-dispatch, cancelled-output]
+    prompt: >-
+      dewarper를 쓰는 RKISP1 경로에서 ISP 내부 버퍼의 FrameCancelled와 dewarper_->queueBuffers()의
+      음수 반환을 두 진입 조건으로 표시하세요. 두 경로가 cancelDewarpRequest()로 합쳐지고, 앱의 main-path
+      버퍼를 FrameCancelled로 표시하고 완료한 뒤 tryCompleteRequest()에서 완료 조건을 확인하도록 그리세요.
+      ISP 내부 버퍼를 앱에 반환하거나 요청 전체가 그 자리에서 항상 완료된다고 표시하지 마세요.
   - id: per-camera-parameters
     topic: ownership
     kind: ownership

@@ -138,7 +138,8 @@ def _prepare(cfg, model, section_ids, impact, *, plan_only):
         preflight(model, section)
         previous = read_text(path) if impact and path.exists() else None
         plan = prepare_requests(cfg, model, section, previous)
-        retained, _ = reusable(model, section, plan.previous, plan.inputs, _validate_retained)
+        retained, _ = reusable(model, section, plan.previous, plan.inputs, _validate_retained,
+                               compatible_inputs=plan.compatible_inputs)
         for tid in duplicates.repeated_topics(model, section, retained):
             retained.pop(tid)
         answers = {tid: list(values) for tid, values in retained.items()}

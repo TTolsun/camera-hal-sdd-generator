@@ -3328,6 +3328,7 @@ sections:
     title: 스트림 적용과 실행 확인 범위
     question: configure()에서 스트림마다 적용하는 크기·크롭·선택적 보정값, LensDewarpEnable 지원 제어와 metadata
       조건을 설명하세요. 미설정 스트림의 조기 반환과 실행 중 제어 변경에 필요한 커널 requests 지원을 구분하세요.
+      RKISP1에서 dewarper를 사용하는 경우 ISP 취소와 dewarper 큐 등록 실패가 앱 버퍼에 어떻게 표시되는지도 설명하세요.
     sources:
     - id: configure
       file: src/libcamera/converter/converter_dw100.cpp
@@ -3419,6 +3420,18 @@ sections:
       end: '
 
         }'
+    - id: cancelled-output
+      file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
+      start: void PipelineHandlerRkISP1::cancelDewarpRequest(
+      end: void PipelineHandlerRkISP1::imageBufferReady(
+    - id: dewarper-dispatch
+      file: src/libcamera/pipeline/rkisp1/rkisp1.cpp
+      start: void PipelineHandlerRkISP1::imageBufferReady(
+      end: 'dewarper_->populateMetadata(&data->mainPathStream_, request->_d()->metadata());'
+    - id: frame-cancel
+      file: include/libcamera/internal/framebuffer.h
+      start: void cancel()
+      end: 'FrameMetadata::FrameCancelled; }'
     covers:
     - application
     parts:
@@ -3515,6 +3528,24 @@ sections:
         - - hasDewarpParams_
         - - LensDewarpEnable
       max_statements: 2
+    - id: cancelled-output
+      question: dewarper를 쓰는 RKISP1 보드에서 ISP 반환 버퍼가 취소되거나 dewarper 큐 등록이 실패하면 두 경로 모두
+        cancelDewarpRequest()를 호출한다고 설명하세요. 이 함수가 앱의 main-path 버퍼를 FrameCancelled로 표시해 완료하고
+        tryCompleteRequest()를 호출한다는 점을 보드 확인 항목에 연결하세요. 내부 버퍼와 앱 버퍼를 구분하고, 실제 실행 결과나
+        요청 전체의 상태를 단정하지 마세요. 두 문장 이내로 쓰세요.
+      sources:
+      - cancelled-output
+      - dewarper-dispatch
+      - frame-cancel
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - - cancelDewarpRequest
+        - - FrameCancelled
+        - - tryCompleteRequest
+        - - main-path
+          - 메인 경로
+          - mainPathStream_
   design_requirements:
   - id: ownership
     question: 여러 카메라의 보정값이 섞이지 않도록 누가 값을 보관하고 전달합니까?

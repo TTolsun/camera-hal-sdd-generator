@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import copy
 import json
+import re
+from dataclasses import asdict, replace
 
 from .design_response import source_passages, response_schema, digest
 from .design_types import RequestPlan, TopicPrompt, UnitRequest
@@ -10,15 +12,79 @@ from .design_compat import generation_policy
 
 
 def prepare_requests(cfg, model, section, previous):
+    def build():
+        plan = _prepare_requests(cfg, model, section, previous)
+        earlier = _earlier_scope_positions(cfg, model, section, plan.previous)
+        if earlier is None:
+            return plan
+        earlier_inputs = _prepare_requests(cfg, earlier, section, None).inputs
+        return replace(plan, compatible_inputs={
+            tid: value for tid, value in earlier_inputs.items() if value != plan.inputs[tid]
+        })
+
     from .validation_stage import current
-    from dataclasses import asdict
     inputs = current()
     if inputs is None:
-        return _prepare_requests(cfg, model, section, previous)
+        return build()
     key = ('design-request-plan', id(model), digest(json.dumps(dict(
         section=section, previous=previous, agent=asdict(cfg.agent), review=asdict(cfg.review),
-        prompts=str(cfg.prompts_dir), style=str(cfg.style_dir)), sort_keys=True)))
-    return inputs.memo(key, lambda: _prepare_requests(cfg, model, section, previous))
+        prompts=str(cfg.prompts_dir), style=str(cfg.style_dir), source_root=str(cfg.source_root)), sort_keys=True)))
+    return inputs.memo(key, build)
+
+
+def _earlier_scope_positions(cfg, model, section, previous):
+    """Recover old coordinates for identical enclosing windows in both Git revisions."""
+    if not previous:
+        return None
+    from . import source_git
+    from .document_metadata import split_frontmatter
+    from .evidence import select_span
+    metadata, _ = split_frontmatter(previous)
+    base = metadata.get('source_commit')
+    head = model.meta.get('source_commit')
+    if base == head or any(not isinstance(commit, str) or not re.fullmatch(r'[0-9a-f]{40}', commit)
+                           for commit in (base, head)):
+        return None
+    files, relocated = {}, {}
+
+    def scope_line(commit, path, scope, expected):
+        key = (commit, path)
+        if key not in files:
+            files[key] = source_git.file_at(cfg.source_root, commit, path)
+        text = files[key]
+        if text is None:
+            return None
+        try:
+            start, end = select_span(text, scope)
+        except ValueError:
+            return None
+        if text[start:end] == expected:
+            return text.count('\n', 0, start) + 1
+        return None
+
+    for topic in section['design_topics']:
+        for source in topic['sources']:
+            scope = source.get('scope')
+            if not scope:
+                continue
+            key = f"{section['id']}/{topic['id']}/{source['id']}"
+            record = model.evidence.get(key, {})
+            context = record.get('context')
+            if not context or record.get('status') != 'available' or record.get('commit') != head:
+                continue
+            path = source['file']
+            line = scope_line(base, path, scope, context['text'])
+            if line is None or line == context['line']:
+                continue
+            if scope_line(head, path, scope, context['text']) == context['line']:
+                relocated[key] = {**record, 'context': {
+                    **context, 'line': line, 'end_line': line + context['text'].count('\n'),
+                }}
+    if not relocated:
+        return None
+    earlier = copy.copy(model)
+    earlier.evidence = {**model.evidence, **relocated}
+    return earlier
 
 
 def _prepare_requests(cfg, model, section, previous):

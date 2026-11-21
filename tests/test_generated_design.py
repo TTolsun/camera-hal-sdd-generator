@@ -141,6 +141,52 @@ def test_scoped_draft_receives_verified_enclosing_context(generated, focused, ex
         _unit_request(model, section, topic, 'focused' if focused else None)
 
 
+@pytest.mark.parametrize('change', ['line-only', 'context-edited', 'base-unavailable', 'head-unavailable', 'metadata-edited'])
+def test_impact_reuses_scoped_answer_only_after_verifying_moved_context(generated, tmp_cfg, monkeypatch, change):
+    from sdd.document_metadata import split_frontmatter
+    from sdd.impact import ImpactReport
+
+    section, model, save, agent = generated
+    record = model.evidence['device/stop/stop']
+    excerpt = record['text']
+    context = 'namespace libcamera {\n' + excerpt + '\n} // namespace libcamera'
+    source = section['design_topics'][0]['sources'][0]
+    source['scope'] = {'start': 'namespace libcamera {', 'end': '// namespace libcamera'}
+    record['context'] = dict(text=context, sha256=hashlib.sha256(context.encode()).hexdigest(), line=9, end_line=11)
+    save()
+    path = Generator(tmp_cfg, model, agent).run()[0]
+    previous, previous_body = split_frontmatter(path.read_text(encoding='utf-8'))
+    if change == 'metadata-edited':
+        previous['generated_design']['answers']['stop'][0]['text'] = (
+            '`stop()`은 종료 시 대기 중인 요청의 취소 처리를 시작합니다.')
+        path.write_text('---\n' + yaml.safe_dump(previous, allow_unicode=True) + '---\n' + previous_body,
+                        encoding='utf-8')
+    base = model.meta['source_commit']
+    current_commit = 'b' * 40
+    current_context = context.replace('namespace libcamera {', 'namespace libcamera { /* revised */') if change == 'context-edited' else context
+    files = {base: None if change == 'base-unavailable' else '\n' * 8 + context,
+             current_commit: None if change == 'head-unavailable' else '\n' * 11 + current_context}
+    monkeypatch.setattr('sdd.source_git.file_at', lambda root, revision, path: (
+        files.get(revision) if path == 'device.cpp' else None))
+    record.update(commit=current_commit, line=13, end_line=13,
+                  context=dict(text=current_context, sha256=hashlib.sha256(current_context.encode()).hexdigest(),
+                               line=12, end_line=14))
+    model.meta['source_commit'] = current_commit
+    save()
+    report = ImpactReport(base, current_commit, sections={'device': ['changed file']})
+    Generator(tmp_cfg, model, agent).run(impact=report)
+    current, body = split_frontmatter(path.read_text(encoding='utf-8'))
+
+    same_text = change == 'line-only'
+    assert len(agent.calls) == (1 if same_text else 2)
+    assert current['generated_design']['reused_topics'] == (['stop'] if same_text else [])
+    assert current['source_commit'] == current_commit and 'device.cpp:13' in body
+    if same_text:
+        assert current['generated_design']['answers'] == previous['generated_design']['answers']
+        assert current['generated_design']['topic_inputs'] != previous['generated_design']['topic_inputs']
+    verify(model, section, path.read_text(encoding='utf-8'), cfg=tmp_cfg)
+
+
 def test_opt_in_answer_checkpoint_is_bound_to_revision_and_question(generated, tmp_cfg, monkeypatch):
     monkeypatch.setattr('sdd.answer_cache.model_digest', lambda agent: 'original-weights')
     section, model, save, agent = generated
