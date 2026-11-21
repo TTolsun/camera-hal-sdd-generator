@@ -4,6 +4,8 @@
 
 ## 절차
 
+현재 한영 독자용 사이트는 [공개 예제 설정](../../examples/libcamera/sdd.yaml)의 `site.reader_edition`으로 [10페이지 구성과 기존 31개 주소](../../examples/libcamera/config/reader-edition.yaml)를 적용합니다. 원고와 번역을 검증한 뒤 `uv run sdd --config examples/libcamera/sdd.yaml export-site`로 구성하고 `verify-site`로 검증합니다. 커밋별 갱신 규칙과 함수 이동·장치별 변경·공통 계약 변경의 재현 방법은 [독자용 축약판 검증 기록](../../examples/libcamera/validation/issue353/README.md)을 참고하세요.
+
 | 문서 | 내용 |
 |---|---|
 | [작업과 함께 공개 문서 갱신하기](workflow.md) | upstream 동기화, 누락 보완, 동반 배포 절차 |

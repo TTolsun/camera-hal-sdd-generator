@@ -85,6 +85,7 @@ class SiteConfig:
     guide_source: dict | None = None
     english_catalog: str | None = None
     manuscript_profiles: dict[str, str] = field(default_factory=dict)
+    reader_edition: str | None = None
     mermaid_dir: str | None = None
     mermaid: str = ''
     undefined_terms: str | None = None

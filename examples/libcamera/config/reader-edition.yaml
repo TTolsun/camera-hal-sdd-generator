@@ -1,0 +1,200 @@
+schema: 1
+groups:
+  - {id: start, ko: 시작하기, en: Start Here}
+  - {id: vendor, ko: ForVendor, en: ForVendor}
+  - {id: developer, ko: ForDeveloper, en: ForDeveloper}
+pages:
+  - path: index.md
+    group: start
+    ko: 시작하기
+    en: Start Here
+    intro:
+      ko: libcamera는 Linux 카메라를 위한 공통 API를 제공합니다. 우리 장치에서 무엇을 검증해야 하는지 확인하려면 ForVendor를 여세요. 취소 상태를 어느 코드에서 확인하는지 알아보려면 ForDeveloper를 여세요.
+      en: libcamera provides a common API for cameras on Linux. Open ForVendor to find out what to verify on your device. Open ForDeveloper to find where the code checks cancellation status.
+    links:
+      - {path: for-vendor.md, ko: ForVendor, en: ForVendor}
+      - {path: for-developer.md, ko: ForDeveloper, en: ForDeveloper}
+    sections:
+      - {source: team-overview.md, fragment: 하는-일, id: project-purpose}
+      - {source: index.md, fragment: 문서를-읽는-방법, id: read-evidence}
+  - path: architecture.md
+    group: start
+    ko: Architecture
+    en: Architecture
+    intro:
+      ko: 카메라 스택의 계층과 각 구성 요소의 역할, 카메라 탐색 과정과 구성 요소 사이의 경계를 살펴보세요.
+      en: Explore the camera stack's layers, the roles of its components, camera discovery, and the boundaries between components.
+    sections:
+      - {source: index.md, fragment: 카메라-스택의-네-계층, id: camera-stack}
+      - {source: overview.md, fragment: 컴포넌트별-책임, id: responsibilities}
+      - {source: overview.md, fragment: 탐색과-파이프라인-선택, id: discovery}
+      - {source: team-overview.md, fragment: 다른-팀계층과의-경계, id: layer-boundaries}
+      - {source: overview.md, fragment: 선택한-시나리오의-코드-읽기-순서, id: reading-code}
+  - path: glossary.md
+    group: start
+    ko: 용어집
+    en: Glossary
+    sections:
+      - {source: glossary.md}
+  - path: for-vendor.md
+    group: vendor
+    ko: ForVendor
+    en: ForVendor
+    intro:
+      ko: 애플리케이션은 공통 Camera API로 장치를 구성하고 이미지를 촬영합니다. 장치별 PipelineHandler 구현은 필요한 미디어 장치를 시스템의 장치와 대응시키고 스트림 구성에 따라 하드웨어 파이프라인을 구성합니다. 도입을 검토할 때는 하드웨어와 빌드 조건을 확인하고 대상 보드에서 첫 촬영과 정지를 시험하세요.
+      en: Applications use the common Camera API to configure devices and capture images. A device-specific PipelineHandler implementation matches the required media devices with devices in the system and configures the hardware pipeline according to the stream configuration. To evaluate adoption, check the hardware and build conditions, then test first capture and stopping on the target board.
+    links:
+      - {path: features-and-support.md, ko: 플랫폼과 빌드 조건 확인, en: Check platform and build support}
+      - {path: device-integration.md, ko: 첫 촬영과 정지 시험 준비, en: Plan first capture and stop tests}
+    sections:
+      - {source: index.md, fragment: vendor가-먼저-확인할-내용, id: adoption-check}
+      - {source: vendor-integration.md, fragment: 하드웨어와-공통-계층의-경계, id: vendor-responsibilities}
+  - path: features-and-support.md
+    group: vendor
+    ko: 기능·지원 범위
+    en: Features and Support
+    intro:
+      ko: 아래 대표 예시에서 대상 하드웨어와 관련된 핸들러를 확인하세요. 더 많은 장치가 포함된 플랫폼 목록을 살펴보고 빌드 선택과 구성 결과도 따로 점검하세요.
+      en: Use the representative examples below to find handlers relevant to your hardware. Consult the platform list for more devices, and check the build options and configuration result separately.
+    links:
+      - {path: 'features-and-support.md#platform-support', ko: 전체 플랫폼과 빌드 선택 근거, en: Full platform list and build options}
+      - {path: device-integration.md, ko: 대상 보드 검증 절차, en: Verification procedure for the target board}
+    table_source:
+      source: vendor-overview.md
+      fragment: 지원하는-하드웨어와-빌드-선택
+      sha256:
+        ko: 456d769e26a75d7af1b17e6baa2a157ef460a5a828b33485908604de8a75ec34
+        en: c8054611c48a8ce67ca4424716cd4951be065c419bcf5f20e25f3508eb0c8a46
+    table:
+      ko:
+        - [지원 범주, 대표 하드웨어 또는 용도, 확인할 핸들러]
+        - [전용, Intel IPU3, ipu3]
+        - [전용, NXP i.MX8MP, imx8-isi 및 rkisp1]
+        - [전용, Rockchip RK3399, rkisp1]
+        - [범용, USB 비디오 장치 클래스 카메라, uvcvideo]
+        - [범용, iMX7·IPU6·Allwinner Sun6i, simple]
+        - [테스트, 가상 미디어 컨트롤러, vimc]
+      en:
+        - [Support category, Example hardware or use, Handler to check]
+        - [Dedicated, Intel IPU3, ipu3]
+        - [Dedicated, NXP i.MX8MP, imx8-isi and rkisp1]
+        - [Dedicated, Rockchip RK3399, rkisp1]
+        - [Generic, USB video device class camera, uvcvideo]
+        - [Generic, iMX7 / IPU6 / Allwinner Sun6i, simple]
+        - [Testing, Virtual media controller, vimc]
+    sections:
+      - {source: vendor-overview.md, fragment: 지원하는-하드웨어와-빌드-선택, id: platform-support}
+      - {source: vendor-overview.md, fragment: 제공-기능과-지원-범위, id: feature-scope}
+      - {source: vendor-assurance.md, fragment: 지원-조건과-제약, id: configuration-constraints}
+      - {source: vendor-assurance.md, fragment: 성능-근거를-읽는-기준, id: measurement}
+  - path: device-integration.md
+    group: vendor
+    ko: 장치 연동과 검증
+    en: Device Integration and Verification
+    intro:
+      ko: 장치를 연동한 뒤 첫 촬영과 미완료 요청이 있는 상태에서의 정지를 각각 시험하세요. 공개 가상 카메라에서 관찰한 결과와 대상 보드에서 확인할 항목을 구분해 기록하세요.
+      en: After integrating the device, test first capture and stopping with incomplete requests separately. Record observations from the public virtual camera separately from checks on the target board.
+    links:
+      - {path: 'request-flow.md#stop-and-disconnect', ko: 정지 뒤 완료 알림과 상태 판정, en: Completion notifications and status checks after stop}
+    sections:
+      - {source: vendor-integration.md, fragment: 연동-순서와-책임, id: integration-order}
+      - {source: vendor-assurance.md, fragment: 고객-보드의-첫-촬영을-검증했습니까, id: first-capture}
+      - source: official-cam-validation.md
+        fragment: 지원-커널과-장치-접근을-확인한-뒤-재현합니다
+        id: virtual-reproduction
+        ko: 공개 WSL 가상 카메라 첫 촬영 시험 재현
+        en: Reproduce the public WSL virtual camera first-capture trial
+      - {source: vendor-integration.md, fragment: 정지와-오류-처리의-책임, id: stop-tests}
+      - {source: vendor-integration.md, fragment: 구현-뒤-확인할-계약과-실행-한계, id: verification-limits}
+  - path: for-developer.md
+    group: developer
+    ko: ForDeveloper
+    en: ForDeveloper
+    intro:
+      ko: cam을 실행할 수 있는 환경에서 카메라 목록을 확인하세요. 카메라가 감지되면 첫 번째 카메라에서 프레임을 저장해 보세요. 이어서 탐색·구성·시작의 코드 진입점을 차례로 여세요.
+      en: List cameras in an environment where cam is available. If a camera is detected, save frames from the first one. Then open the code entry points for discovery, configuration, and startup.
+    links:
+      - {path: 'request-flow.md#stop-and-disconnect', ko: 취소 상태를 확인하는 코드, en: Code that checks cancellation status}
+      - {path: troubleshooting.md, ko: 주의점과 문제 진단, en: Caveats and Troubleshooting}
+    sections:
+      - {source: onboarding.md, fragment: 직접-실행해-보기, id: first-run}
+      - {source: scenarios/manager_start.md, fragment: 탐색을-시작하고-카메라를-사용할-시점, id: find-camera}
+      - {source: scenarios/configure.md, fragment: 구성-적용과-성공-상태를-확인할-위치, id: configure}
+      - {source: scenarios/camera_start.md, fragment: 시작-제어값과-파이프라인-결과-반영, id: start-capture}
+      - {source: index.md, fragment: 처음-읽는-개발자의-순서, id: cancellation-entry}
+  - path: request-flow.md
+    group: developer
+    ko: 요청 흐름과 핵심 개념
+    en: Request Flow and Core Concepts
+    intro:
+      ko: 요청을 만들고 제출하는 쪽에서 시작해 버퍼 완료, 요청 반환, 정지 뒤 취소 상태까지 따라가세요.
+      en: Follow a request from creation and submission through buffer completion, return to the caller, and cancellation during stop.
+    sections:
+      - {source: overview.md, fragment: 요청-생성과-소유권, id: request-creation}
+      - {source: overview.md, fragment: 요청-제출과-완료, id: submission}
+      - {source: request-lifecycle.md, fragment: 요청버퍼fence의-수명, id: resource-lifetime}
+      - {source: overview.md, fragment: 버퍼-완료와-요청-완료, id: completion}
+      - {source: overview.md, fragment: 스레드-경계와-동기화, id: callback-thread}
+      - {source: request-lifecycle.md, fragment: 정지와-연결-해제를-구분하기, id: stop-and-disconnect}
+  - path: implementation.md
+    group: developer
+    ko: 구현·확장 지점
+    en: Implementation and Extension Points
+    intro:
+      ko: 장치 매칭과 큐 계약을 확인한 뒤 변경 대상에 따라 IPA 모듈이나 장치별 보정 구현으로 이동하세요.
+      en: Check device matching and the queue contract, then follow the change into the IPA module or the device-specific correction code.
+    sections:
+      - {source: pipeline-handler.md, fragment: 장치-매칭과-객체-수명, id: device-matching}
+      - {source: pipeline-requests.md, fragment: 장치-요청-한도와-대기-큐, id: queue-limit}
+      - {source: ipa.md, fragment: 모듈-탐색과-격리-조건, id: ipa-extensions}
+      - {source: ipu3-lsc-flow.md, fragment: 빌드와-상태-연결, id: ipu3-lsc}
+      - {source: rkisp1-dewarp.md, fragment: 스트림-적용과-실행-확인-범위, id: rkisp1-dewarp}
+  - path: troubleshooting.md
+    group: developer
+    ko: 주의점과 문제 진단
+    en: Caveats and Troubleshooting
+    intro:
+      ko: 마지막으로 성공한 호출이나 알림부터 확인하세요. 구성, 제출, 완료, 자원 참조, 모듈 로드 가운데 어느 단계에서 기대한 결과와 달라졌는지 좁혀 보세요.
+      en: Start at the last successful call or notification. Isolate where the result diverged during configuration, submission, completion, resource access, or module loading.
+    sections:
+      - {source: request-diagnosis.md, fragment: 구성-실패를-좁히는-순서, id: configuration-failure}
+      - {source: request-diagnosis.md, fragment: 실패-위치별-확인-순서, id: failure-location}
+      - {source: framebuffer-allocator.md, fragment: 중복-할당과-내보내기-실패를-구분하기, id: allocation-failure}
+      - {source: framebuffer-allocator.md, fragment: buffers-반환-참조의-유효기간, id: buffer-reference}
+      - {source: ipa-module-validation.md, fragment: 메타데이터-오류를-구분하기, id: ipa-metadata}
+      - {source: ipa-module-validation.md, fragment: 서명-파일을-열지-못한-경우, id: ipa-signature}
+# Every legacy reader page has one orientation target. Selected section and
+# nested anchors route to their projected copy; omitted material stays in the
+# compatibility detail along with its evidence and review record.
+aliases:
+  index.md: index.md
+  team-overview.md: index.md
+  overview.md: architecture.md
+  scenarios/index.md: architecture.md
+  glossary.md: glossary.md
+  vendor-overview.md: for-vendor.md
+  vendor-assurance.md: features-and-support.md
+  vendor-integration.md: device-integration.md
+  official-cam-validation.md: device-integration.md
+  onboarding.md: for-developer.md
+  scenarios/manager_start.md: for-developer.md
+  scenarios/configure.md: for-developer.md
+  scenarios/camera_start.md: for-developer.md
+  request-lifecycle.md: request-flow.md
+  camera-requests.md: request-flow.md
+  camera-model.md: request-flow.md
+  scenarios/queue_request.md: request-flow.md
+  scenarios/complete_request.md: request-flow.md
+  scenarios/camera_stop.md: request-flow.md
+  pipeline-handler.md: implementation.md
+  pipeline-requests.md: implementation.md
+  ipa.md: implementation.md
+  ipa-algorithms.md: implementation.md
+  ipu3-lsc.md: implementation.md
+  ipu3-lsc-flow.md: implementation.md
+  ipu3-lsc-prepare.md: implementation.md
+  rkisp1-dewarp.md: implementation.md
+  component-index.md: implementation.md
+  request-diagnosis.md: troubleshooting.md
+  framebuffer-allocator.md: troubleshooting.md
+  ipa-module-validation.md: troubleshooting.md

@@ -733,6 +733,12 @@ def inspect_site(root, options, *, manifest=None, source_commit='', section_rela
     # The whole-document copy repeats every page; its items are audited on their own pages.
     from .full_document import is_combined
     files = [rel for rel in files if not is_combined(rel)]
+    # Compatibility pages preserve earlier evidence and fragment URLs. Audit
+    # the current reader pages where the selected explanations now appear.
+    from .reader_edition import REPORT as READER_EDITION, read_inventory
+    if (manifest and READER_EDITION in manifest['outputs']) or (not manifest and (root/READER_EDITION).is_file()):
+        canonical = read_inventory(root, files)['pages']
+        files = [rel for rel in files if rel in canonical]
     rows = []
     commits = set()
     for rel in files:
