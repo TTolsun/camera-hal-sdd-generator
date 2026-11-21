@@ -40,6 +40,30 @@ def changes(previous, current):
     return grounding, validation
 
 
+def verify_reused_origins(cfg, model, section, artifact, previous, rows):
+    """Recheck receipt bindings a same-revision manuscript rerun would keep."""
+    from .design_request import _design_units, prepare_requests
+
+    plan = prepare_requests(cfg, model, section, previous)
+    units = {(unit['id'], unit.get('_part_id'), unit.get('_subpart_id')): unit
+             for unit in _design_units(section, {})}
+    for row in rows:
+        key = (row.get('topic'), row.get('part'), row.get('subpart'))
+        topic, part, subpart = key
+        if topic not in artifact['reused_topics'] or key not in units:
+            return False
+        store, _ = store_for(cfg, model, section, units[key], plan.prompts[topic],
+                             plan.policy['design_grounding'], {})
+        if store is None or store.path.name != row.get('checkpoint'):
+            return False
+        saved = store.read()
+        statements = [answer for answer in artifact['answers'][topic]
+                      if (answer.get('part_id'), answer.get('subpart_id')) == (part, subpart)]
+        if saved is None or saved[0]['receipts'] != row.get('receipts') or saved[0]['statements'] != statements:
+            return False
+    return True
+
+
 class PendingReview:
     """A receipt for a draft whose grounding transport failed, without a verdict."""
 

@@ -7,6 +7,7 @@ import yaml
 from test_generated_design import generated, cli_units
 from sdd.document_metadata import split_frontmatter
 from sdd.generate import Generator
+from sdd.impact import ImpactReport
 
 
 def add_scope(section):
@@ -71,3 +72,24 @@ def test_changed_old_receipt_binding_is_not_discarded_as_a_run_annotation(cli_un
     Generator(tmp_cfg, model, agent()).run()
     assert calls == completed and path.read_bytes() != before
     assert 'wrong-origin.receipt.json' not in path.read_text(encoding='utf-8')
+
+
+@pytest.mark.parametrize('changed_origin', [False, True])
+def test_incremental_manuscript_reuse_checks_its_checkpoint_origins(cli_units, tmp_cfg, changed_origin):
+    section, model, save, calls, state, agent = cli_units
+    add_scope(section)
+    save()
+    report = ImpactReport('b' * 40, model.meta['source_commit'], sections={section['id']: ['source changed']})
+    with pytest.raises(ValueError, match='interrupted'):
+        Generator(tmp_cfg, model, agent()).run(impact=report)
+    state['interrupt'] = False
+    path = Generator(tmp_cfg, model, agent()).run(impact=report)[0]
+    meta, body = split_frontmatter(path.read_text(encoding='utf-8'))
+    assert meta['generated_design']['checkpoint_units']
+    if changed_origin:
+        meta['generated_design']['checkpoint_units'][0]['receipts'][0] = 'wrong-origin.receipt.json'
+        path.write_text('---\n' + yaml.safe_dump(meta, allow_unicode=True) + '---\n' + body, encoding='utf-8')
+    before, completed = path.read_bytes(), list(calls)
+    Generator(tmp_cfg, model, agent()).run(impact=report)
+    assert calls == completed
+    assert (path.read_bytes() == before) is not changed_origin

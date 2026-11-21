@@ -39,7 +39,7 @@ from .execution_lock import locked
 _FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
 
 
-def _cached_scope_page(section, artifact, previous, candidate):
+def _cached_scope_page(section, artifact, previous, candidate, verify_origins=None):
     """Compare unchanged prose only when every pending unit was checkpointed.
 
     Receipt-bound revalidation already happened before assembly. Per-run receipt
@@ -66,7 +66,7 @@ def _cached_scope_page(section, artifact, previous, candidate):
         return json.dumps({k: v for k, v in row.items()
                            if k not in ('revalidated', 'new_grounding_review')}, sort_keys=True)
     old_origins = [origin(row) for row in old_rows]
-    if len(set(old_origins)) != len(old_origins) or not set(old_origins) <= {origin(row) for row in checkpoints}:
+    if len(set(old_origins)) != len(old_origins):
         return False
 
     def comparison(text):
@@ -74,7 +74,11 @@ def _cached_scope_page(section, artifact, previous, candidate):
         meta.get('generated_design', {}).pop('checkpoint_units', None)
         return '---\n' + yaml.safe_dump(meta, allow_unicode=True) + '---\n' + body
 
-    return preserve_unchanged(comparison(previous), comparison(candidate))
+    if not preserve_unchanged(comparison(previous), comparison(candidate)):
+        return False
+    confirmed = {origin(row) for row in checkpoints}
+    missing = [row for row in old_rows if origin(row) not in confirmed]
+    return not missing or (verify_origins is not None and verify_origins(missing))
 
 
 class Generator:
@@ -685,7 +689,10 @@ class Generator:
         if (self.incremental or sec.get('reader_scope')) and generated_design.enabled(sec) and path.exists():
             current = self.generated_designs[sec['id']][3]
             previous = path.read_text(encoding='utf-8')
-            if _cached_scope_page(sec, current, previous, page):
+            from .design_checkpoint import verify_reused_origins
+            def verify_origins(rows):
+                return self.incremental and verify_reused_origins(self.cfg, self.model, sec, current, previous, rows)
+            if _cached_scope_page(sec, current, previous, page, verify_origins):
                 generated_design.verify(self.model, sec, previous, cfg=self.cfg)
                 return self._write(path, previous, preserve=True)
         return self._write(path, page)
