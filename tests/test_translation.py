@@ -62,6 +62,8 @@ def test_invalid_translation_does_not_replace_catalog(tmp_cfg):
 
 
 def test_translation_retry_preserves_only_validated_checkpoint(tmp_cfg, monkeypatch):
+    from sdd import translation
+
     tmp_cfg.agent.kind = 'ollama'
     tmp_cfg.raw.setdefault('review', {})['answer_cache'] = True
     monkeypatch.setattr('sdd.answer_cache.model_digest', lambda _: 'weights-v1')
@@ -83,6 +85,12 @@ def test_translation_retry_preserves_only_validated_checkpoint(tmp_cfg, monkeypa
     # A source change needs a new translation, even with the same checkpoint.
     translate_missing(tmp_cfg, {'strings': {'{{0}} 수정한 문장': ''}}, retry)
     assert len(retry.calls) == 2
+    # A new writing policy also needs a fresh answer for unchanged source.
+    monkeypatch.setattr(translation, 'ENGLISH_TRANSLATION_STYLE',
+                        translation.ENGLISH_TRANSLATION_STYLE + ' Revised writing policy.')
+    revised = Agent(False)
+    translate_missing(tmp_cfg, catalog, revised)
+    assert len(revised.calls) == 2
 
 
 def test_translation_receives_existing_terminology(tmp_cfg):
@@ -171,10 +179,9 @@ def test_bad_batch_preserves_original_catalog(tmp_cfg, bad):
 
 
 def test_batch_splits_on_budget_without_truncation(tmp_cfg):
-    from sdd.translation import _ACTOR_RULES
     tmp_cfg.agent.kind = 'ollama'
     tmp_cfg.raw['site'] = {'translation_batch_size': 4}
-    tmp_cfg.agent.max_input_chars = 1100 + len(_ACTOR_RULES)
+    tmp_cfg.agent.max_input_chars = 1660
     catalog = {'strings': {('설명' * 80) + str(i): '' for i in range(4)}}
     class Agent:
         sizes = []

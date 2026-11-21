@@ -4,6 +4,13 @@ from .config import Config
 
 _YAML_FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
 
+ENGLISH_TRANSLATION_STYLE = (
+    ' Write as a colleague who knows the code. Recast Korean word order and sentence structure into natural English. '
+    'Lead with the behavior, use concrete verbs, and keep conditions with the actions they qualify. '
+    'Make clear which actions a shared verb governs. For example, "첫 촬영과 정지를 어떻게 시험할지" '
+    'can read "how to test your first capture and check that capture stops as expected".'
+)
+
 def style_rules(readme_text: str) -> str:
     """style/README.md 에서 번호 붙은 규칙만 뽑는다.
 

@@ -803,7 +803,8 @@ def test_first_merge_pipeline_keeps_basis_through_translation_review_export_and_
     roles = []
     def run(argv, **kwargs):
         prompt = kwargs['prompt']
-        if 'Translate Korean to English;' in prompt:
+        schema = json.loads(argv[argv.index('--json-schema') + 1]) if '--json-schema' in argv else {}
+        if schema.get('required') == ['translations']:
             roles.append('translation')
             assert 'fixture-translation' in argv
             payload = json.loads(prompt.split('<user>\n',1)[1].split('\n</user>',1)[0])
