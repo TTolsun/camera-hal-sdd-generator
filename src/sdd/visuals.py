@@ -140,6 +140,51 @@ def render(cfg, model, section):
     return render_values(cfg, model, section, values)
 
 
+def _project(value, view):
+    views = value.get('views', {})
+    if (not isinstance(views, dict) or 'default' in views
+            or any(_id(name) != name or not isinstance(labels, dict)
+                   or set(labels) != {'title', 'title_en', 'question', 'question_en'}
+                   for name, labels in views.items())):
+        raise ValueError('Visual views require named bilingual titles and questions')
+    if view != 'default' and view not in views:
+        raise ValueError('Unknown visual view: ' + view)
+    result = {key: item for key, item in value.items() if key != 'views'}
+    for key in ('nodes', 'edges'):
+        entries = value.get(key)
+        if not isinstance(entries, list) or any(not isinstance(item, dict) for item in entries):
+            raise ValueError('Visual nodes and edges must be object lists')
+        projected = []
+        for entry in entries:
+            membership = entry.get('views', ['default'])
+            if (not isinstance(membership, list) or not membership
+                    or any(not isinstance(name, str) or name not in {'default', *views} for name in membership)
+                    or len(set(membership)) != len(membership)):
+                raise ValueError('Visual element references unknown or duplicate views')
+            if view in membership:
+                projected.append({field: val for field, val in entry.items() if field != 'views'})
+        result[key] = projected
+    if view != 'default':
+        labels = views[view]
+        for key, text in labels.items():
+            _text(text, 'view ' + key)
+        result.update(id=_id(value['id'] + '-' + view), title=labels['title'], question=labels['question'])
+        result.pop('caption', None)
+        result.pop('branch_table', None)
+    return result
+
+
+def render_view(cfg, model, section, figure, view):
+    """Render a named view through the same quote and node-bound checks."""
+    selected = [item for item in definitions(cfg, section) if item.get('id') == figure]
+    if len(selected) != 1:
+        raise ValueError('Named view must resolve to one source visual: ' + figure)
+    value, = selected
+    projected = _project(value, view)
+    rendered, = render_values(cfg, model, section, [projected])
+    return rendered, value['views'][view]
+
+
 def _caption(cfg, model, section, value):
     if not isinstance(value, dict) or set(value) - {'text', 'text_en', 'section', 'evidence'}:
         raise ValueError('Invalid visual caption')
@@ -209,6 +254,8 @@ def render_values(cfg, model, section, values):
     titles = [t.get('title') for t in section.get('design_topics', [])]
     seen, result = set(), []
     for visual in values:
+        if 'views' in visual:
+            visual = _project(visual, 'default')
         ident = _id(visual.get('id'))
         if ident in seen:
             raise ValueError('Duplicate visual ID')

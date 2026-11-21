@@ -1,4 +1,6 @@
 import copy
+import json
+import re
 
 import pytest
 import yaml
@@ -31,6 +33,75 @@ def visual(tmp_cfg, contract):
 # Reuse the source-bound fixture so both prose and diagrams must pass the same source pins.
 from test_design_contracts import contract
 from test_generated_design import generated
+
+
+def test_shared_views_keep_default_and_both_pick_up_a_label_edit(tmp_cfg, visual):
+    from sdd.visuals import render_view
+
+    section, model, graph, write = visual
+    original = render(tmp_cfg, model, section)[0][2]
+    graph['views'] = {'vendor': {'title': '장치 시험', 'title_en': 'Board tests',
+                                 'question': '무엇을 기록합니까?', 'question_en': 'What should be recorded?'}}
+    graph['nodes'][0]['views'] = ['default', 'vendor']
+    graph['nodes'].append(dict(graph['nodes'][1], id='record', label='기록', label_en='Record', views=['vendor']))
+    graph['edges'].append({**graph['edges'][0], 'to': 'record', 'views': ['vendor']})
+    write()
+    default = render(tmp_cfg, model, section)[0][2]
+    alternate = render_view(tmp_cfg, model, section, 'stop-flow', 'vendor')[0][2]
+    assert default == original
+    assert 'v_record' in alternate and 'v_cancelled' not in alternate
+    graph['nodes'][0].update(label='제출된 요청', label_en='Submitted requests')
+    write()
+    for source in (render(tmp_cfg, model, section)[0][2],
+                   render_view(tmp_cfg, model, section, 'stop-flow', 'vendor')[0][2]):
+        assert '제출된 요청' in source
+        assert 'Submitted requests' in english_diagram(source)
+
+
+def test_named_view_mounts_with_original_proof_and_bilingual_download(tmp_cfg, visual):
+    from sdd.site_build import verify_site
+    from sdd.site_localization import display_strings, source_hash
+
+    section, model, graph, write = visual
+    graph['views'] = {'vendor': {'title': '장치 시험', 'title_en': 'Board tests',
+                                 'question': '무엇을 기록합니까?', 'question_en': 'What should be recorded?'}}
+    for item in graph['nodes'] + graph['edges']:
+        item['views'] = ['default', 'vendor']
+    write()
+    tmp_cfg.raw['site'] = {'full_document': False}
+    Generator(tmp_cfg, model, object()).run()
+    out = export_site(tmp_cfg)
+    pages, strings = {}, set()
+    for path in out.rglob('*.html'):
+        source = path.read_text(encoding='utf-8')
+        pages[path.relative_to(out).as_posix()] = source_hash(source)
+        strings.update(display_strings(source))
+    for row in json.loads((out/'assets/search.json').read_bytes()):
+        strings.update((row['title'], row['page']))
+    def translate(value):
+        prefix = 'English section · Fixture' if ' · ' in value else 'English section'
+        return ' '.join([prefix, *re.findall(r'\{\{\d+\}\}', value)])
+
+    catalog = {'schema': 1, 'pages': pages, 'strings': {value: translate(value) for value in strings}}
+    (tmp_cfg.root/'english.json').write_text(json.dumps(catalog), encoding='utf-8')
+    tmp_cfg.raw['site'].update(english_catalog='english.json', reader_edition='reader.yaml')
+    data = {'schema': 1, 'groups': [{'id': 'start', 'ko': '시작', 'en': 'Start'}], 'pages': [
+        {'path': 'index.md', 'group': 'start', 'ko': '홈', 'en': 'Home',
+         'sections': [{'source': 'device.md', 'fragment': '종료-계약', 'children': [],
+                       'figure_views': [{'section': 'device', 'figure': 'stop-flow', 'view': 'vendor'}]}]},
+        {'path': 'developer.md', 'group': 'start', 'ko': '개발자', 'en': 'Developer',
+         'sections': [{'source': 'device.md', 'fragment': '종료의-분기'}]},
+    ]}
+    (tmp_cfg.root/'reader.yaml').write_text(yaml.safe_dump(data, allow_unicode=True), encoding='utf-8')
+    export_site(tmp_cfg)
+    english = (out/'en/index.html').read_text(encoding='utf-8')
+    korean = (out/'index.html').read_text(encoding='utf-8')
+    assert '장치 시험' in korean and 'Board tests' in english
+    assert 'device.stop-flow-vendor.mmd' in korean and 'device.stop-flow-vendor.mmd' in english
+    assert 'reader-archive/device.html#source-' in korean and 'reader-archive/device.html#source-' in english
+    assert 'Pending requests' in (out/'en/device.stop-flow-vendor.mmd').read_text(encoding='utf-8')
+    assert 'stop-flow-vendor' not in (out/'developer.html').read_text(encoding='utf-8')
+    assert verify_site(out)['manifest_verified']
 
 
 def test_stage_visual_stays_inside_its_question_after_first_explanation(tmp_cfg, visual):

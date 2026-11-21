@@ -457,6 +457,12 @@ sections:
     kind: flow
     title: 촬영을 멈췄는데 왜 완료 알림이 오는가?
     question: 정상 촬영과 정지 중 취소가 어떤 경로를 거쳐 같은 완료 신호로 앱에 전달됩니까?
+    views:
+      vendor:
+        title: 대상 보드에서 첫 캡처와 정지 시험
+        title_en: Test first capture and stopping on the target board
+        question: 대상 보드에서 정상 캡처와 미완료 요청의 중단을 어떻게 확인할까?
+        question_en: How can we check normal capture and stopping with an incomplete request on the target board?
     caption:
       text: 완료 시 상태 검사는 연결 해제도 허용합니다. Running과 Stopping 범위를 벗어나면 Fatal 로그 경로에 들어갑니다.
       text_en: The completion state check allows a disconnected camera. A state outside Running and Stopping triggers the Fatal log path.
@@ -469,6 +475,7 @@ sections:
         quote: 'LOG(Camera, Fatal) << "Trying to complete a request when stopped";'
     nodes:
     - id: app-stop
+      views: [default, vendor]
       label: "앱에서 Camera::stop() 호출"
       label_en: "App calls Camera::stop()"
       evidence:
@@ -540,6 +547,7 @@ sections:
         sha256: 6c0fefadbc69b9bb9371953979a07a38024dc18cb648266d81168f15d8e9e4fb
         quote: "if (request->_d()->cancelled_) {\n\t\tcompleteRequest(request);\n\t\treturn;\n\t}"
     - id: request-result
+      views: [default, vendor]
       label: "cancelled_에 따라 RequestCancelled 또는 RequestComplete"
       label_en: "cancelled_ selects RequestCancelled or RequestComplete"
       evidence:
@@ -547,6 +555,7 @@ sections:
         sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
         quote: "request->status_ = cancelled_ ? RequestCancelled : RequestComplete;"
     - id: camera-notify
+      views: [default, vendor]
       label: "Camera API: Running 또는 Stopping에서 requestCompleted 발행"
       label_en: "Camera API: emit requestCompleted in Running or Stopping"
       evidence:
@@ -557,6 +566,7 @@ sections:
         sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
         quote: "requestCompleted.emit(request);"
     - id: app-result
+      views: [default, vendor]
       label: "앱이 요청 상태와 버퍼별 FrameSuccess 여부를 확인"
       label_en: "App checks request status and whether each buffer reports FrameSuccess"
       evidence:
@@ -569,6 +579,58 @@ sections:
       - source: stopping/frame-result
         sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
         quote: "The frame has been captured with success"
+    - id: vendor-board
+      label: 대상 보드에서 두 가지 시험 계획
+      label_en: Plan two tests on the target board
+      views:
+      - vendor
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: int Camera::stop()
+      - source: stopping/frame-result
+        sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+        quote: The frame has been captured with success
+    - id: vendor-capture
+      label: '첫 시험: 정상 캡처 후 프레임 결과 확인'
+      label_en: 'First test: capture normally and check the frame result'
+      views:
+      - vendor
+      evidence:
+      - source: stopping/frame-result
+        sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+        quote: The frame has been captured with success
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: requestCompleted.emit(request);
+    - id: vendor-pending
+      label: '두 번째 시험: 미완료 요청을 남긴 상태로 준비'
+      label_en: 'Second test: leave a request incomplete'
+      views:
+      - vendor
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: int Camera::stop()
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: stopDevice(camera);
+    - id: vendor-record
+      label: 제출마다 수신한 콜백 수(없으면 0), 관찰된 요청 상태와 각 버퍼 상태 기록
+      label_en: For each submission, record the received callback count (zero if none observed), the observed request
+        status, and each buffer’s observed status
+      views:
+      - vendor
+      evidence:
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: requestCompleted.emit(request);
+      - source: stopping/request-result
+        sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+      - source: stopping/frame-result
+        sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+        quote: The frame has been captured with success
     edges:
     - from: app-stop
       to: camera-stop
@@ -691,6 +753,98 @@ sections:
       - source: stopping/stopping-call
         sha256: a75876cfb66d256185fe7085444cbe91f726b87bdceca83cb6b243514f03c1ed
         quote: "&PipelineHandler::stop, ConnectionTypeBlocking,"
+    - from: vendor-board
+      to: vendor-capture
+      label: 첫 번째 시험
+      label_en: First test
+      views:
+      - vendor
+      evidence:
+      - source: stopping/frame-result
+        sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+        quote: The frame has been captured with success
+    - from: vendor-board
+      to: vendor-pending
+      label: 두 번째 시험
+      label_en: Second test
+      views:
+      - vendor
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: int Camera::stop()
+      - source: stopping/device-stop
+        sha256: 108b1bea5a8314ba57213d15c1e3ba01abe2b3f8a9e0e1e1281864b5492c7304
+        quote: stopDevice(camera);
+    - from: vendor-capture
+      to: vendor-record
+      label: 제출별 결과 기록
+      label_en: Record results per submission
+      views:
+      - vendor
+      evidence:
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: requestCompleted.emit(request);
+      - source: stopping/frame-result
+        sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+        quote: The frame has been captured with success
+    - from: vendor-pending
+      to: app-stop
+      label: 중단 호출
+      label_en: Call stop
+      views:
+      - vendor
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: int Camera::stop()
+    - from: app-stop
+      to: vendor-record
+      label: 제출별 결과 기록
+      label_en: Record results per submission
+      views:
+      - vendor
+      evidence:
+      - source: stopping/stop
+        sha256: 0009c665993b995489738e48affc81643a7159d82b5326e5f182e30fe11e4901
+        quote: int Camera::stop()
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: requestCompleted.emit(request);
+    - from: camera-notify
+      to: vendor-record
+      label: 콜백을 받으면 횟수를 센다
+      label_en: Count callbacks if received
+      views:
+      - vendor
+      evidence:
+      - source: stopping/app-notice
+        sha256: b8dfbcf8a903847aa98db2793e682faae22e8fb4fd0d2eba3d80a00ffd4b835c
+        quote: requestCompleted.emit(request);
+    - from: vendor-record
+      to: request-result
+      label: 관찰한 요청 상태로 취소 여부를 판단한다
+      label_en: Judge cancellation from observed request status
+      views:
+      - vendor
+      evidence:
+      - source: stopping/request-result
+        sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+    - from: vendor-record
+      to: app-result
+      label: 버퍼 상태 확인
+      label_en: Check buffer statuses
+      views:
+      - vendor
+      evidence:
+      - source: stopping/request-result
+        sha256: 6b0b27fb1f87e0e0aa24009726a62d6220f07ebab0756d7330f73f5b3c3a4b26
+        quote: 'request->status_ = cancelled_ ? RequestCancelled : RequestComplete;'
+      - source: stopping/frame-result
+        sha256: 6679cce34a559d862713d4c73b36414ab8102397dd0356dd9beb32d683a9d2aa
+        quote: The frame has been captured with success
   - id: stop-order
     topic: stopping
     kind: flow
