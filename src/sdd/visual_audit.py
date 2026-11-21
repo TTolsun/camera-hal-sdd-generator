@@ -17,7 +17,7 @@ import posixpath
 import re
 from urllib.parse import unquote, urlsplit
 
-from .validation_stage import load_json, read_bytes
+from .validation_stage import current, load_json, read_bytes
 from .site_paths import owned_path
 
 STATUSES = ('appropriate', 'needs_visual', 'omit', 'unreviewed')
@@ -36,11 +36,11 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 
 
-def policy(cfg=None):
+def policy(cfg=None, *, draft=False):
     raw = cfg.visual_audit if cfg else {}
-    allowed = {'enabled', 'reviews', 'thresholds', 'signals', 'deferred_pages', 'baseline', 'require_provenance'}
+    allowed = {'enabled', 'reviews', 'thresholds', 'signals', 'deferred_pages', 'baseline', 'require_provenance', 'style'}
     if not isinstance(raw, dict) or set(raw) - allowed:
-        raise ValueError('visual_audit accepts enabled, reviews, thresholds, signals, deferred_pages, baseline, require_provenance')
+        raise ValueError('visual_audit accepts ' + ', '.join(sorted(allowed)))
     if type(raw.get('enabled', False)) is not bool:
         raise ValueError('visual_audit.enabled must be boolean')
     if type(raw.get('require_provenance', False)) is not bool:
@@ -76,7 +76,18 @@ def policy(cfg=None):
     if (not isinstance(deferred, dict) or any(not isinstance(k, str) or not isinstance(v, str)
                                            or not v.strip() for k, v in deferred.items())):
         raise ValueError('deferred_pages must map page paths to explicit pending review reasons')
-    styles = {p.name:hashlib.sha256(read_bytes(p)).hexdigest() for p in sorted(cfg.style_dir.glob('*.md'))} if cfg else {}
+    styles = {}
+    if cfg:
+        directory = cfg.style_dir if draft else cfg.visual_audit_style_dir
+        if draft:
+            raw = {key: value for key, value in raw.items() if key != 'style'}
+        elif 'style' in raw and (inputs := current()) is not None:
+            inputs.directories.setdefault((directory, '*.md'),
+                                          tuple(sorted(p for p in directory.rglob('*.md') if p.is_file())))
+        for path in sorted(directory.glob('*.md')):
+            if not draft and 'style' in raw:
+                owned_path(cfg.root, path.relative_to(cfg.root).as_posix())
+            styles[path.name] = hashlib.sha256(read_bytes(path)).hexdigest()
     return {**raw, 'thresholds': thresholds, 'signals': signals, 'deferred_pages': deferred, 'style_policy': styles}
 
 
@@ -733,6 +744,12 @@ def inspect_site(root, options, *, manifest=None, source_commit='', section_rela
     # The whole-document copy repeats every page; its items are audited on their own pages.
     from .full_document import is_combined
     files = [rel for rel in files if not is_combined(rel)]
+    # Compatibility pages preserve earlier evidence and fragment URLs. Audit
+    # the current reader pages where the selected explanations now appear.
+    from .reader_edition import REPORT as READER_EDITION, read_inventory
+    if (manifest and READER_EDITION in manifest['outputs']) or (not manifest and (root/READER_EDITION).is_file()):
+        canonical = read_inventory(root, files)['pages']
+        files = [rel for rel in files if rel in canonical]
     rows = []
     commits = set()
     for rel in files:
@@ -868,11 +885,18 @@ def apply_reviews(report, reviews):
 
 def verify_published(root, manifest):
     """Recompute item fingerprints in verify-site, not just the report's hash."""
+    style_digest = manifest.get('inputs', {}).get('item_visual_style')
     if REPORT not in manifest['outputs']:
+        if style_digest is not None:
+            raise ValueError('Published visualization style requires its audit report')
         if manifest.get('inputs',{}).get('item_visual_baseline') or manifest.get('inputs',{}).get('item_visual_retention'):
             raise ValueError('Published visualization baseline requires its audit report')
         return
     recorded = json.loads(owned_path(root, REPORT).read_bytes())
+    if ('style' in recorded['policy'] or style_digest is not None) and (
+        'style' not in recorded['policy'] or style_digest != digest(recorded['policy']['style_policy'])
+    ):
+        raise ValueError('Published visualization style policy differs from its manifest input')
     report = inspect_site(root, recorded['policy'], manifest=manifest, source_commit=recorded['source_commit'])
     records = {r['id']: {**r, 'figures': r.get('reviewed_figures', [])} for r in recorded['items']}
     if set(records) != {r['id'] for r in report['items']}:
@@ -980,7 +1004,7 @@ def manuscript_gate(cfg, model, path, text):
     Draft and final HTML reviews have distinct fingerprints and ledger entries;
     a draft review cannot stand in for final bilingual publication acceptance.
     """
-    options = policy(cfg)
+    options = policy(cfg, draft=True)
     if not options.get('enabled', False):
         return
     if not options.get('reviews'):

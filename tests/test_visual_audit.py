@@ -204,6 +204,38 @@ def test_manuscript_gate_requires_separate_draft_reviews(tmp_cfg, sample_model):
         manuscript_gate(tmp_cfg, sample_model, tmp_cfg.sdd_dir/'guide.md', text.replace('abc123', 'different'))
 
 
+def test_publication_style_is_independent_from_draft_and_pinned(tmp_cfg):
+    from sdd.site_build import build_site, verify_site
+    from sdd.validation_stage import InputChanged, stage
+    from sdd.visual_audit import digest
+
+    final = tmp_cfg.root / 'final-style'
+    final.mkdir()
+    (final/'README.md').write_text('Current final style', encoding='utf-8')
+    tmp_cfg.raw['visual_audit'] = dict(enabled=True, reviews='reviews.json', style='final-style')
+    final_policy = policy(tmp_cfg)
+    assert policy(tmp_cfg, draft=True)['style_policy'] != final_policy['style_policy']
+    body = document('<h2 id="one">One</h2><p>Short explanation.</p>')
+    rows = inventory_page(body, 'guide.html', final_policy)
+    (tmp_cfg.root/'reviews.json').write_text(json.dumps(ledger({'items': rows})), encoding='utf-8')
+    tmp_cfg.sdd_dir.mkdir(parents=True)
+
+    def render(cfg, output, mermaid):
+        (output/'guide.html').write_text(body, encoding='utf-8')
+
+    out = build_site(tmp_cfg, tmp_cfg.build_dir/'site', render, None)
+    manifest = json.loads((out/'site-manifest.json').read_bytes())
+    assert manifest['inputs']['item_visual_style'] == digest(final_policy['style_policy'])
+    assert verify_site(out)['manifest_verified']
+    with pytest.raises(InputChanged, match='input set changed'):
+        with stage():
+            policy(tmp_cfg)
+            (final/'new.md').write_text('Another rule', encoding='utf-8')
+    tmp_cfg.raw['visual_audit']['style'] = '../outside'
+    with pytest.raises(RuntimeError, match='Unsafe site artifact path'):
+        policy(tmp_cfg)
+
+
 def test_source_window_change_invalidates_omit_even_without_body_change():
     source = '<h2 id="one">One</h2><p>text</p><details class="source-excerpts"><pre>original</pre></details>'
     original = report(source)

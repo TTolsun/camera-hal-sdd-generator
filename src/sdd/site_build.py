@@ -86,6 +86,11 @@ def verify_site(root: Path, manifest: bool = True) -> dict:
                     errors.append(f"Ambiguous anchor: {path.name} -> {link}")
     if errors:
         raise RuntimeError("Site verification failed:\n" + "\n".join(errors))
+    from .reader_edition import REPORT as READER_EDITION, verify as verify_reader_edition
+    if (manifest and READER_EDITION in data['outputs']) or (not manifest and (root / READER_EDITION).is_file()):
+        from .full_document import is_combined
+        verify_reader_edition(root, {path.relative_to(root).as_posix(): page for path, page in pages.items()
+                                     if not is_combined(path.relative_to(root).as_posix())})
     if manifest:
         from .visual_audit import verify_published
         verify_published(root, data)
@@ -110,14 +115,18 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         publication_gate(cfg, stage)
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
-        from .visual_audit import policy as audit_policy
+        if cfg.site.reader_edition:
+            inputs['reader_edition'] = digest(owned_path(cfg.root, cfg.site.reader_edition))
+        from .visual_audit import digest as audit_digest, policy as audit_policy
         audit_settings = audit_policy(cfg)
         audit_file = audit_settings.get('reviews')
         if audit_settings.get('enabled', False) and audit_file:
             inputs['item_visual_reviews'] = digest(cfg.root / audit_file)
+        if audit_settings.get('enabled', False) and 'style' in audit_settings:
+            inputs['item_visual_style'] = audit_digest(audit_settings['style_policy'])
         if audit_settings.get('enabled',False) and audit_settings.get('baseline'):
             inputs['item_visual_baseline'] = digest(cfg.root/audit_settings['baseline']['file'])
-            from .visual_audit import REPORT, digest as audit_digest
+            from .visual_audit import REPORT
             inputs['item_visual_retention'] = audit_digest(json.loads((stage/REPORT).read_bytes())['baseline_retention'])
         from .render_profiles import inputs as editorial_inputs
         inputs.update({'editorial/'+key:value for key,value in editorial_inputs(cfg).items()})
@@ -164,7 +173,7 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
                                             code_root / "config.py", code_root / "render_profiles.py", code_root / "design_types.py",
                                             code_root / "validation_stage.py", code_root / "input_watch.py", code_root / "publication_plan.py",
                                             code_root / "publication_operation.py",
-                                            code_root / "publication_reports.py",
+                                            code_root / "publication_reports.py", code_root / "reader_edition.py",
                                             code_root / "validation_execution.py", code_root / "visual_audit.py", code_root / "visual_dom.py", code_root / "visual_presentation.py", code_root / "site_fragments.py", code_root / "site_paths.py", code_root / "mermaid_text.py", code_root / "full_document.py",
                                             code_root / "execution_lock.py", code_root / "generation_run.py", code_root / "guide_visuals.py",
                                             code_root / "consistency.py", code_root / "consistency_sources.py",

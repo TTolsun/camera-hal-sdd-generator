@@ -103,6 +103,7 @@ documentation:
     - ipu3-lsc-prepare
 site:
   public_url: https://ttolsun.github.io/libcamera-sdd/
+  reader_edition: config/reader-edition.yaml
   reading_checkpoints:
     request-diagnosis.md: [diagnosis]
   topic_links:

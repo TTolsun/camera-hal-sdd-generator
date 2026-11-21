@@ -170,7 +170,7 @@ def export_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = 
     from functools import partial
     from .site_build import build_site
     # Translation preparation renders without these copies, so its page hashes match localize_site.
-    render = partial(_render_site, full_document=bool(cfg.site.full_document))
+    render = partial(_render_site, full_document=bool(cfg.site.full_document), publish_reader=True)
     return build_site(cfg, out or cfg.build_dir / "site", render, mermaid_src)
 
 
@@ -654,7 +654,7 @@ def _write_search(out, rendered_pages, search, terms):
 
 
 def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None = None, *, check_consistency=True,
-                 full_document=False) -> Path:
+                 full_document=False, publish_reader=False) -> Path:
     from .document_health import retired_paths
     retired = retired_paths(cfg)
     settings = cfg.site
@@ -714,6 +714,9 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
                 assessment='Private preparation only; independent review has not run.'))+'\n', encoding='utf-8')
     from .site_localization import localize_site
     localize_site(cfg, out)
+    if publish_reader and settings.reader_edition:
+        from .reader_edition import publish as publish_reader_edition
+        entries = publish_reader_edition(cfg, out)
     if full_document:
         # Built from the final, translated pages so the copies show exactly what the site shows.
         from .full_document import publish
