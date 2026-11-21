@@ -143,6 +143,15 @@ def test_요약_문단_뒤에_넣는다():
     assert glossary.insert("## 본문\n", "## 용어\n\n").startswith("## 용어")
 
 
+def test_page_terms_marker_places_terms_after_reader_choices():
+    marker = '<!-- sdd:page-terms -->'
+    body = f'요약\n\n## 독자별 시작\n\n{marker}\n\n## 본문\n'
+    assert glossary.insert(body, '용어 목록') == body.replace(marker, '용어 목록')
+    assert glossary.insert(body, '') == body.replace(marker, '')
+    with pytest.raises(ValueError, match='Page terms placement marker must be unique'):
+        glossary.insert(f'{body}\n{marker}', '용어 목록')
+
+
 @pytest.mark.parametrize("body", ["```cpp\na();\n\nb();\n```\n\n문단\n", "<div>\n\n안\n</div>\n"])
 def test_코드나_HTML_블록으로_시작하면_블록을_자르지_않는다(body):
     assert glossary.insert(body, "## 용어\n\n") == "## 용어\n\n" + body
