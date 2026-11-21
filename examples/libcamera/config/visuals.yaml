@@ -7553,6 +7553,7 @@ sections:
     max_nodes: 7
     require_connected: true
     sources: [dewarper-dispatch, cancelled-output, frame-cancel]
+    whole_sources: [dewarper-dispatch, cancelled-output]
     prompt: >-
       dewarper를 쓰는 RKISP1 경로에서 ISP 내부 버퍼의 FrameCancelled와 dewarper_->queueBuffers()의
       음수 반환을 두 진입 조건으로 표시하세요. 두 경로가 cancelDewarpRequest()로 합쳐지고, 앱의 main-path
