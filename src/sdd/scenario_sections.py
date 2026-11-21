@@ -100,7 +100,10 @@ def index_fingerprint(cfg, model, section):
         raise ValueError('Scenario index requires exactly the configured extracted scenarios.')
     rows = [dict(id=sid, title=model.scenarios[sid].title, entry=model.scenarios[sid].entry,
                  lead=owners[sid].get('lead', '')) for sid in ids]
-    return hashlib.sha256(json.dumps(dict(section=section, rows=rows), sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    # The new exclusion affects impact routing only. Keep legacy inputs in
+    # the identity so earlier verified indexes retain their recorded hashes.
+    displayed = {key: value for key, value in section.items() if key != 'watch_exclude'}
+    return hashlib.sha256(json.dumps(dict(section=displayed, rows=rows), sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
 def verify_index(cfg, model, section, metadata, body):
