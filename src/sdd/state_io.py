@@ -8,6 +8,11 @@ from pathlib import Path
 def save(path, data, *, indent=2, sort_keys=False, newline=None, before_replace=None):
     """Replace one complete JSON file; callers own read/modify/write locking."""
     text = json.dumps(data, ensure_ascii=False, indent=indent, sort_keys=sort_keys) + "\n"
+    replace_text(path, text, newline=newline, before_replace=before_replace)
+
+
+def replace_text(path, text, *, newline=None, before_replace=None):
+    """Atomically replace one UTF-8 file beside its destination."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
     try:

@@ -1,4 +1,4 @@
-"""Native independent CLI review of selected bilingual inventory items.
+"""Native independent CLI review of selected draft or bilingual inventory items.
 
 Run against immutable public baseline files. Every response and source window
 is archived; a successful call is not final publication or human acceptance.
@@ -82,7 +82,9 @@ def selected_site_rows(site, report, pages):
             if recorded and recorded != commit:
                 raise ValueError('Visualization manuscript and facts commits differ: '+page)
         html = owned_path(root, page).read_text(encoding='utf-8')
-        rows.update((row['id'], row) for row in inventory_page(html,page,report['policy'],source_commit=commit,root=root))
+        rows.update((row['id'], row) for row in inventory_page(
+            html, page, report['policy'], source_commit=commit, root=root,
+            draft=report.get('review_stage') == 'manuscript'))
     return rows
 
 
@@ -218,6 +220,9 @@ def main():
             or cfg.agent.command or cfg.agent.args != ['-c', 'model_reasoning_effort="high"']):
         raise ValueError('This public independent review requires native Codex/Terra High with no inherited wrapper')
     report = json.loads(args.inventory.read_bytes())
+    draft = report.get('review_stage') == 'manuscript'
+    if draft and (args.source is None or not args.source_window or args.reader_models or args.previous_inventory):
+        raise ValueError('Manuscript review requires immutable source windows and its own current item evidence')
     if not re.fullmatch(r'[0-9a-f]{40}', report.get('source_commit', '')):
         raise ValueError('Immutable source review requires a full source commit')
     facts = json.loads(args.facts.read_bytes()) if args.facts else None
@@ -234,9 +239,10 @@ def main():
     peers = {}
     for row in selected:
         peers.setdefault(row['id'].removeprefix('en/'), []).append(row['language'])
-    if (not peers or any(sorted(values) != ['en', 'ko'] for values in peers.values())
+    languages = ['ko'] if draft else ['en', 'ko']
+    if (not peers or any(sorted(values) != languages for values in peers.values())
             or (args.item and set(peers) != set(args.item))):
-        raise ValueError('Every selected item needs exactly two language peers')
+        raise ValueError('Every selected item needs the exact languages for its review stage')
     if any(row['page'] in report['policy']['deferred_pages'] for row in selected):
         raise ValueError('Another session owns a selected item; wait for integration')
     selected_pages = {row['page'] for row in selected}
@@ -526,6 +532,8 @@ def main():
                    structural_facts_sha256=hashlib.sha256(args.facts.read_bytes()).hexdigest() if args.facts else None,
                    visual_policy=report['policy'], writing_rules=style_texts,
                    inventory_sha256=digest(report), source_commit=report.get('source_commit'))
+    if draft:
+        payload['review_stage'] = 'manuscript'
     if caption_mirror:
         payload['caption_mirror'] = caption_mirror
     if args.reader_models:
@@ -642,6 +650,10 @@ def main():
     (args.out/'execution-profile.json').write_text(json.dumps(dict(agent=asdict(cfg.agent),
         argv=command(cfg.agent)+arguments(cfg.agent, schema)), ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     system = SYSTEM
+    if draft:
+        system += ('\nReview this Korean manuscript before translation. Assess only the actual draft and supplied '
+                   'immutable source, not the eventual site or language parity. For each technical item answer '
+                   'using current source windows. Only an individual source-supported status and reason is sufficient.')
     user = json.dumps(payload, ensure_ascii=False)
     if args.compact_input or args.structured_window_input:
         from review_window_transport import prepare_review
@@ -689,6 +701,19 @@ def main():
                       inventory_sha256=digest(report), input_sha256=digest(payload),
                       additional_source_manifest={key:{k:v for k,v in value.items() if k != 'text'} for key,value in additional.items()})
         (args.out/'review.json').write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+        if draft:
+            current_items = {row['id']: row for row in selected}
+            records = {row['id']: {**row, 'fingerprint': current_items[row['id']]['fingerprint'],
+                                   'review_method': 'independent-codex-cli-manuscript'} for row in result['items']}
+            from sdd.visual_audit import apply_reviews
+
+            checked = dict(report, items=[dict(row) for row in actual.values()], errors=[])
+            apply_reviews(checked, {'schema': 1, 'items': records})
+            for row in checked['items']:
+                if row['id'] in records and row['status'] != records[row['id']]['status']:
+                    raise ValueError('Draft verdict does not satisfy manuscript gate: '+row['id']+': '+row['reason'])
+            (args.out/'draft-review-records.json').write_text(json.dumps(
+                {'schema': 1, 'manuscripts': records}, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
         print(json.dumps(result, ensure_ascii=True))
     finally:
         execution.persist()

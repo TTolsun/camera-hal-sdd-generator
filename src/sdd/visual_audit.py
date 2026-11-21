@@ -998,31 +998,52 @@ def publication_gate(cfg, stage):
     (stage/REPORT).write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8', newline='\n')
 
 
-def manuscript_gate(cfg, model, path, text):
-    """Check assembled draft items without extending focused response JSON.
+def draft_inventory(cfg, model, path, text):
+    """Render the exact assembled draft and collect its review inventory.
 
     Draft and final HTML reviews have distinct fingerprints and ledger entries;
     a draft review cannot stand in for final bilingual publication acceptance.
     """
-    options = policy(cfg, draft=True)
-    if not options.get('enabled', False):
-        return
-    if not options.get('reviews'):
-        raise ValueError('visual_audit.enabled requires a reviews file')
     from .document_metadata import split_frontmatter
     from .site_markdown import _render, _html_path
+    options = policy(cfg, draft=True)
     rel = path.relative_to(cfg.sdd_dir).as_posix()
     meta, body = split_frontmatter(text)
     commit = model.meta.get('source_commit', '')
     if meta.get('source_commit') != commit:
         raise ValueError('Visualization manuscript and facts commits differ')
     content, _, _ = _render(body, rel, {rel}, model, '', commit)
-    rows = inventory_page('<html lang="ko"><article>'+content+'</article></html>',
-                          _html_path(rel), options, source_commit=commit, root=cfg.sdd_dir, draft=True)
+    source = '<html lang="ko"><article>'+content+'</article></html>'
+    page = _html_path(rel)
+    rows = inventory_page(source, page, options, source_commit=commit, root=cfg.sdd_dir, draft=True)
+    return source, dict(schema=1, review_stage='manuscript', source_commit=commit,
+                        page=page, items=rows, errors=[], policy=options)
+
+
+def manuscript_gate(cfg, model, path, text):
+    options = policy(cfg, draft=True)
+    if not options.get('enabled', False):
+        return
+    if not options.get('reviews'):
+        raise ValueError('visual_audit.enabled requires a reviews file')
+    source, report = draft_inventory(cfg, model, path, text)
     records = load_json(cfg.root/options['reviews'])
-    report = dict(items=rows, errors=[], policy=options)
     apply_reviews(report, {'schema': records.get('schema'), 'items': records.get('manuscripts', {})})
-    enforce(report)
+    try:
+        enforce(report)
+    except ValueError as exc:
+        from .state_io import replace_text, save
+
+        packet = cfg.build_dir/'draft-visual-review'/digest([source, report])[:16]
+        page = owned_path(packet/'site', report['page'])
+        inventory = packet/'inventory.json'
+        if inventory.is_file():
+            if (json.loads(inventory.read_bytes()) != report or page.read_text(encoding='utf-8') != source):
+                raise ValueError(f'Saved draft source-review packet changed: {packet}') from exc
+        else:
+            replace_text(page, source, newline='\n')
+            save(inventory, report, newline='\n')
+        raise ValueError(f'{exc} draft source-review packet: {packet}') from exc
 
 
 def main():
