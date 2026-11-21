@@ -69,6 +69,10 @@ def test_incremental_topic_reuses_proved_lead_on_addition_and_followup(cli_units
         return [{'text': '노출 시간은 가드의 제한을 받습니다.', 'quote': model.evidence[key]['text'],
                  'evidence': ['limit'], 'covers': topic['covers'], 'kind': 'behavior', 'part_id': 'limit'}], None
     monkeypatch.setattr('sdd.generated_design._request_unit', answer)
+    reviewed = []
+    tmp_cfg.raw['visual_audit'] = {'enabled': True}
+    monkeypatch.setattr('sdd.visual_audit.manuscript_gate',
+                        lambda cfg, model, path, text: reviewed.append(text))
     report = ImpactReport('b' * 40, model.meta['source_commit'], sections={section['id']: ['new excerpt']})
     Generator(tmp_cfg, model, agent()).run(impact=report)
     assert requests == ['limit']
@@ -80,6 +84,7 @@ def test_incremental_topic_reuses_proved_lead_on_addition_and_followup(cli_units
     save()
     Generator(tmp_cfg, model, agent()).run(impact=report)
     assert requests == ['limit', 'limit']
+    assert any('### Integration condition' in text for text in reviewed)
     current = path.read_text(encoding='utf-8')
     current_meta, _ = split_frontmatter(current)
     assert current_meta['generated_design']['answers'][tid][:-1] == before['generated_design']['answers'][tid]

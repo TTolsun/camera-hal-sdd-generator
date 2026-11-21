@@ -752,18 +752,27 @@ class Generator:
             execution.publication_contract.preserve_output(path, text)
         from .visual_audit import manuscript_gate, policy
         if policy(self.cfg, draft=True).get('enabled', False):
-            from .validation_stage import current
             manuscript_gate(self.cfg, self.model, path, text)
-            if preserve:
-                return path
+        if preserve:
+            return path
+        from .validation_stage import current
+        inputs = current()
+        expected = (text.rstrip() + '\n').encode('utf-8')
+        if inputs is not None:
+            inputs.verify()
             previous = path.read_bytes() if path.exists() else None
             def rollback():
+                if not path.is_file() or path.read_bytes() != expected:
+                    return  # Do not overwrite an independently edited file.
                 if previous is None:
                     path.unlink(missing_ok=True)
                 else:
                     path.write_bytes(previous)
-            current().rollbacks.append(rollback)
-        return path if preserve else self.writer._write(path, text)
+            inputs.rollbacks.append(rollback)
+        written = self.writer._write(path, text)
+        if inputs is not None:
+            inputs.produced(path, expected)
+        return written
 
 
 # ---- helpers -----------------------------------------------------------------
