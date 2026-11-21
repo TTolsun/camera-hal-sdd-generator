@@ -720,7 +720,7 @@ def _render_site(cfg: Config, out: Path | None = None, mermaid_src: str | None =
     if full_document:
         # Built from the final, translated pages so the copies show exactly what the site shows.
         from .full_document import publish
-        publish(out, entries, site_title=title, public_url=str(settings.public_url or ''),
+        publish(out, entries, site_title=title, pdf_downloads=settings.pdf_downloads, public_url=str(settings.public_url or ''),
                 source_commit=str(model.meta.get('source_commit', '')) if model else '')
     return out
     return out

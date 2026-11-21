@@ -95,6 +95,7 @@ class SiteConfig:
     reading_checkpoints: dict = field(default_factory=dict)
     # Whole-document print page and Markdown file for sharing outside the site.
     full_document: bool = True
+    pdf_downloads: bool = False
     public_url: str = ''
 
     @classmethod

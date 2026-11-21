@@ -143,3 +143,31 @@ def test_visual_review_reuse_ignores_only_the_exact_download_menu(tmp_cfg, sampl
     assert without != with_menu and normalized(without) == normalized(with_menu)
     edited = with_menu.replace('.pdf</a>', '.pdf copy</a>', 1)
     assert normalized(edited) != normalized(without)
+
+@pytest.mark.parametrize('english', [False, True])
+def test_static_pdf_downloads_link_to_both_scopes(tmp_cfg, sample_model, monkeypatch, english):
+    from sdd.full_document import publish
+    import shutil
+
+    prepare(tmp_cfg, sample_model)
+    tmp_cfg.raw['site']['full_document'] = False
+    out = export_site(tmp_cfg)
+    prefix = 'en/' if english else ''
+    if english:
+        (out / 'en/nested').mkdir(parents=True)
+        shutil.copyfile(out / 'nested/detail.html', out / 'en/nested/detail.html')
+
+    def renderer(root, views, public_url):
+        for view in views:
+            source = root / view
+            assert source.is_file()
+            source.with_suffix('.pdf').write_bytes(b'%PDF-test')
+
+    monkeypatch.setattr('sdd.site_pdf.render_pdfs', renderer)
+    publish(out, [('Details', '', 'nested/detail.md')], site_title='Manual', pdf_downloads=True)
+    menu = (out / (prefix + 'nested/detail.html')).read_text(encoding='utf-8')
+    ext = '.en.pdf' if english else '.pdf'
+    for path, name in [('pages/nested/detail', 'detail'), ('full', 'Manual')]:
+        assert f'href="../download/{path}.pdf" download="{name}{ext}"' in menu
+        assert (out / (prefix + 'download') / (path + '.pdf')).is_file()
+    assert '?print' not in menu

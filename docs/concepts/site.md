@@ -137,19 +137,14 @@ python -m http.server 8765 --bind 127.0.0.1 --directory <설정 디렉터리>/bu
 
 사이트 URL을 전달하기 어렵거나, 받는 사람이 사내망 밖에 있거나, 문서를 보관해야 할 때 씁니다. 모든 페이지 상단의 `⤓`(Download) 메뉴는 두 가지 사본을 제공합니다.
 
-| 메뉴 | 파일 | 만드는 방법 |
+| 범위 | PDF | Markdown |
 |---|---|---|
-| PDF | `download/full.html` | 모든 문서를 한 페이지에 모은 인쇄용 페이지입니다. 그림을 모두 그리면 인쇄 창이 열리고, 대상을 PDF로 저장으로 고르면 됩니다. 메뉴 단추는 다운로드 아이콘(`⤓`)이고 툴팁과 화면 낭독기 이름은 `Download`입니다. 휴대폰 너비에서 기존 머리글 옆에 남는 공간이 약 58px뿐이기 때문입니다. 펼친 항목과 버튼 이름은 한국어판에서도 영어(`PDF`, `Markdown`, `Save as PDF`, `Download Markdown`)로 표시합니다. |
-| Markdown | `download/full.md` | 같은 내용을 Markdown 한 파일로 내려받습니다. |
+| 현재 페이지 | `download/pages/<페이지>.pdf` | `download/pages/<페이지>.md` |
+| 전체 문서 | `download/full.pdf` | `download/full.md` |
 
-영어판은 `en/download/`에 같은 이름으로 만듭니다.
+공개 libcamera 사이트에서는 범위 아래의 파일 형식을 누르면 바로 내려받습니다. 영어판 파일은 `en/download/`에 있습니다. 전체 PDF에는 선택한 언어판의 모든 글이 목차 순서로 들어갑니다.
 
-사본은 다음 순서로 만들어집니다.
-
-```text
-원고 → 페이지 HTML(검토 기록·링크·번역 반영) ─┬→ download/full.html ─(브라우저 인쇄)→ PDF
-                                              └→ download/full.md
-```
+직접 다운로드를 제공하려면 빌드 설정에 `site.pdf_downloads: true`와 로컬 Mermaid 배포본의 위치(`site.mermaid_dir`)를 지정합니다. 빌드 환경에서 `uv sync --extra pdf`와 `uv run --extra pdf python -m playwright install chromium --only-shell`로 렌더러를 준비하고 문서 언어를 지원하는 글꼴을 설치하세요. PDF를 다시 만들 때 같은 Chromium 버전과 글꼴을 사용하세요. PDF 생성 중에는 사이트에 동봉된 자산만 읽으며 그림이나 자산을 불러오지 못하면 빌드가 실패합니다. 기존 설정의 기본값인 `pdf_downloads: false`에서는 PDF 메뉴가 인쇄용 HTML을 엽니다.
 
 1. **최종 페이지에서 만듭니다.** 번역과 검토 기록, 다음 단계 링크까지 반영된 페이지 HTML을 메뉴 순서대로 모읍니다. 원고를 다시 읽지 않으므로 사이트와 사본의 내용이 같습니다.
 2. **빠지는 내용이 없어야 합니다.** 접힌 소스 발췌와 검토 기록은 펼친 상태로 넣습니다. Markdown 변환이 본문 글자를 하나라도 쓰지 못하면 빌드가 실패하고 기존 사이트를 유지합니다.
