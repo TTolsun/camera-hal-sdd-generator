@@ -150,7 +150,8 @@ def test_non_libcamera_reader_profiles_generate_and_preserve_outputs_on_failure(
     assert '<summary>구조 이해</summary>' in page
     assert page.count('<details class="nav-section" data-nav-id=') == 3
     # Menu grouping reuses the public renderer with unrelated HAL contracts.
-    assert page.index('vendor-assurance.html') < page.index('vendor-contract.html')
+    sidebar = page.split('<aside id="sidebar">', 1)[1].split('</aside>', 1)[0]
+    assert sidebar.index('href="vendor-assurance.html"') < sidebar.index('href="vendor-contract.html"')
     manifest_before = (site / 'site-manifest.json').read_bytes()
     export_site(tmp_cfg)
     assert (site / 'site-manifest.json').read_bytes() == manifest_before
