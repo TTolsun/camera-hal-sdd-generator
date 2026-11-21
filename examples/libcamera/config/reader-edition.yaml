@@ -10,7 +10,7 @@ pages:
     en: Start Here
     intro:
       ko: 장치를 처음 연동한다면 ForVendor에서 첫 촬영과 정지를 어떻게 시험할지 살펴보세요. 촬영을 멈춘 뒤에도 완료 알림이 온다면 ForDeveloper에서 요청의 취소 상태를 확인하는 코드를 따라가세요.
-      en: If you’re integrating a device for the first time, use ForVendor to test the first capture and test stopping capture. If completion notifications arrive after you stop capture, follow the code in ForDeveloper that checks the request’s cancellation status.
+      en: If you’re integrating a device for the first time, ForVendor walks you through testing your first capture and checking that capture stops as expected. If completion notifications arrive after you stop capture, follow the code in ForDeveloper that checks the request’s cancellation status.
     links:
       - {path: for-vendor.md, ko: ForVendor, en: ForVendor}
       - {path: for-developer.md, ko: ForDeveloper, en: ForDeveloper}
