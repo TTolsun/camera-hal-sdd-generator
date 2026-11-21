@@ -25,7 +25,7 @@ from .generated_design import enabled, verify as verify_design
 from .generated_visuals import from_manuscript, plans, render, resolve
 from .render_profiles import for_page
 from .validation_stage import staged
-from .visuals import place, placement_stage, owned_spans as _owned_spans, verify_stage_placement
+from .visuals import place, placement_heading, owned_spans as _owned_spans, verify_stage_placement
 
 
 def _digest(value):
@@ -64,7 +64,7 @@ def _reassemble(body, raw_body, to_raw, rendered, section):
             raise ValueError('Moving an existing figure to another topic requires normal generation')
     def placement_key(visual):
         topic = visual['topic']
-        return topic, placement_stage(visual, topics[topic])
+        return topic, placement_heading(visual, topics[topic])
 
     by_stage, old_by_stage = {}, {}
     for visual, _, _ in rendered:
