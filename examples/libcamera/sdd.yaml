@@ -102,6 +102,8 @@ documentation:
     sections:
     - ipu3-lsc-prepare
 site:
+  pdf_downloads: true
+  mermaid_dir: assets/mermaid
   public_url: https://ttolsun.github.io/libcamera-sdd/
   reader_edition: config/reader-edition.yaml
   reading_checkpoints:

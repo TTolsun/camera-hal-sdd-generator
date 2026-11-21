@@ -307,7 +307,7 @@ _DOWNLOAD_ICON = _icon('M10 2h4v8h4l-6 6-6-6h4z M3 15h3v4h12v-4h3v5a2 2 0 0 1-2 
 _FILE_ICON = _icon('M5 2h9l5 5v15H5z M13 4v5h5z M8 13v2h8v-2z M8 17v2h6v-2z', 16)
 
 
-def _menu(page: str, english: bool, filename: str, *, whole_only=False) -> str:
+def _menu(page: str, english: bool, filename: str, *, whole_only=False, pdf_downloads=False) -> str:
     text = LABELS['en' if english else 'ko']
     print_path, markdown_path = paths(english)
     here = posixpath.dirname(page) or '.'
@@ -317,18 +317,29 @@ def _menu(page: str, english: bool, filename: str, *, whole_only=False) -> str:
     row = 'display:flex;align-items:center;gap:.65rem;padding:.35rem .65rem;color:inherit;text-decoration:none'
 
     def group(heading, printable, markdown, name, pdf_label, md_label):
-        pdf = html.escape(quote(posixpath.relpath(printable, here)) + '?print', quote=True)
+        if pdf_downloads:
+            destination = posixpath.splitext(printable)[0] + '.pdf'
+            download = f' download="{html.escape(posixpath.splitext(name)[0], quote=True)}.pdf"'
+        else:
+            destination = printable + '?print'
+            download = ''
+        pdf = html.escape(quote(posixpath.relpath(destination, here), safe='/?'), quote=True)
         md = html.escape(quote(posixpath.relpath(markdown, here)), quote=True)
         return (f'<strong style="display:block;padding:.2rem .65rem;color:var(--muted);font-size:12px">{heading}</strong>'
-                f'<a href="{pdf}" title="{pdf_label}" aria-label="{pdf_label}" style="{row}">{_FILE_ICON}.pdf</a>'
+                f'<a href="{pdf}"{download} title="{pdf_label}" aria-label="{pdf_label}" style="{row}">{_FILE_ICON}.pdf</a>'
                 f'<a href="{md}" download="{html.escape(name, quote=True)}" title="{md_label}" '
                 f'aria-label="{md_label}" style="{row}">{_FILE_ICON}.md</a>')
 
-    groups = group(text['heading'], print_path, markdown_path, filename, text['pdf_action'], text['md_action'])
+    whole_pdf = text['pdf_action']
+    page_pdf = 'Print this page to PDF' if english else '현재 페이지를 PDF로 인쇄'
+    if pdf_downloads:
+        whole_pdf = 'Download the whole document as PDF' if english else '전체 문서를 PDF로 다운로드'
+        page_pdf = 'Download this page as PDF' if english else '현재 페이지를 PDF로 다운로드'
+    groups = group(text['heading'], print_path, markdown_path, filename, whole_pdf, text['md_action'])
     if not whole_only:
         this_page = group('Current page' if english else '현재 페이지', *page_paths(page, english),
                           download_name(posixpath.splitext(posixpath.basename(page))[0], english),
-                          'Print this page to PDF' if english else '현재 페이지를 PDF로 인쇄',
+                          page_pdf,
                           'Download this page as Markdown' if english else '현재 페이지를 Markdown으로 다운로드')
         groups = this_page + '<hr style="border:0;border-top:1px solid var(--line);margin:.25rem 0">' + groups
     return (f'<nav class="download-nav" aria-label="{label}" style="display:flex;align-items:center">'
@@ -342,8 +353,10 @@ def _menu(page: str, english: bool, filename: str, *, whole_only=False) -> str:
             f'{groups}</div></nav>')
 
 
-def publish(out: Path, entries, *, site_title: str, source_commit: str = '', public_url: str = '') -> None:
+def publish(out: Path, entries, *, site_title: str, source_commit: str = '', public_url: str = '',
+            pdf_downloads: bool = False) -> None:
     """Write current-page and whole-document exports for every available edition."""
+    print_views = []
     for english in (False, True):
         prefix = 'en/' if english else ''
         if english and not (out / 'en').is_dir():
@@ -365,6 +378,7 @@ def publish(out: Path, entries, *, site_title: str, source_commit: str = '', pub
         (out / print_path).parent.mkdir(parents=True, exist_ok=True)
         (out / print_path).write_text(document, encoding='utf-8', newline='\n')
         (out / markdown_path).write_text(markdown, encoding='utf-8', newline='\n')
+        print_views.append(print_path)
         for page, original in pages:
             printable, md = page_paths(page, english)
             if (out / printable).exists() or (out / md).exists():
@@ -373,11 +387,17 @@ def publish(out: Path, entries, *, site_title: str, source_commit: str = '', pub
             (out / printable).parent.mkdir(parents=True, exist_ok=True)
             (out / printable).write_text(page_html, encoding='utf-8', newline='\n')
             (out / md).write_text(page_markdown, encoding='utf-8', newline='\n')
+            print_views.append(printable)
             marker = '<button id="search-open"'
             if original.count(marker) != 1:
                 raise RuntimeError(f'Whole document: header actions are missing in {page}')
-            (out / page).write_text(original.replace(marker, _menu(page, english, download_name(site_title, english)) + marker, 1),
+            menu = _menu(page, english, download_name(site_title, english), pdf_downloads=pdf_downloads)
+            (out / page).write_text(original.replace(marker, menu + marker, 1),
                                     encoding='utf-8', newline='\n')
+
+    if pdf_downloads:
+        from .site_pdf import render_pdfs
+        render_pdfs(out, print_views, public_url)
 
 
 # ---------------------------------------------------------------- HTML to Markdown

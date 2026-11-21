@@ -17,6 +17,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
 docs = ["mkdocs-material>=9.5"]
+pdf = [
+    "pikepdf>=9,<12",
+    "playwright>=1.52,<2",
+]
 
 [project.scripts]
 sdd = "sdd.cli:main"

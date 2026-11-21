@@ -72,7 +72,8 @@ def _download_menu(node, page):
         filename = links[-1].attrs.get('download', '')
         if not filename.endswith('.md'):
             return False
-        expected = Document(_menu(page, page.startswith('en/'), filename, whole_only=len(links) == 2))
+        expected = Document(_menu(page, page.startswith('en/'), filename, whole_only=len(links) == 2,
+                                  pdf_downloads=len(links) == 4 and 'download' in links[0].attrs))
         return node == next(expected.root.all('nav'))
 
     # Previously published sites used a details disclosure with a text arrow.
