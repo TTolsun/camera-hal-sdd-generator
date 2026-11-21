@@ -39,7 +39,7 @@ from .execution_lock import locked
 _FRONTMATTER = re.compile(r"^---\n.*?\n---\n", re.S)
 
 
-def _cached_scope_page(section, artifact, previous, candidate):
+def _cached_scope_page(section, artifact, previous, candidate, verify_origins=None):
     """Compare unchanged prose only when every pending unit was checkpointed.
 
     Receipt-bound revalidation already happened before assembly. Per-run receipt
@@ -66,7 +66,7 @@ def _cached_scope_page(section, artifact, previous, candidate):
         return json.dumps({k: v for k, v in row.items()
                            if k not in ('revalidated', 'new_grounding_review')}, sort_keys=True)
     old_origins = [origin(row) for row in old_rows]
-    if len(set(old_origins)) != len(old_origins) or not set(old_origins) <= {origin(row) for row in checkpoints}:
+    if len(set(old_origins)) != len(old_origins):
         return False
 
     def comparison(text):
@@ -74,7 +74,11 @@ def _cached_scope_page(section, artifact, previous, candidate):
         meta.get('generated_design', {}).pop('checkpoint_units', None)
         return '---\n' + yaml.safe_dump(meta, allow_unicode=True) + '---\n' + body
 
-    return preserve_unchanged(comparison(previous), comparison(candidate))
+    if not preserve_unchanged(comparison(previous), comparison(candidate)):
+        return False
+    confirmed = {origin(row) for row in checkpoints}
+    missing = [row for row in old_rows if origin(row) not in confirmed]
+    return not missing or (verify_origins is not None and verify_origins(missing))
 
 
 class Generator:
@@ -92,6 +96,7 @@ class Generator:
         self.reviews: dict[str, dict] = {}
         self.generated_designs: dict[str, tuple] = {}
         self.generated_visuals: dict[str, dict] = {}
+        self.incremental = False
         # routes 표의 링크 글자: 페이지 링크는 섹션 제목, 앵커 링크는 본문의 ## 제목 원문을 쓴다.
         self.page_titles = {sec.get("output", f"{sec['id']}.md"): sec["title"] for sec in cfg.sections()}
         self.page_titles.update({f"{sid}.md": sc.title for sid, sc in model.scenarios.items()})
@@ -116,10 +121,11 @@ class Generator:
         original = self.agent
         self.agent = Execution(self.cfg, original, model=self.model)
         self.narrator.agent = self.agent
+        self.incremental = impact is not None and impact.head == self.model.meta.get('source_commit')
         try:
             with self.agent.track('generation'):
                 from .visual_audit import policy
-                if policy(self.cfg).get('enabled', False):
+                if policy(self.cfg, draft=True).get('enabled', False):
                     from .validation_stage import stage
                     with stage():
                         return self._run(section_ids, impact)
@@ -128,6 +134,7 @@ class Generator:
             self.agent.persist()
             self.agent = original
             self.narrator.agent = original
+            self.incremental = False
 
     @locked('generation')
     def plan(self, section_ids, impact):
@@ -679,12 +686,16 @@ class Generator:
             artifact['body_sha256'] = generated_design.digest(split_frontmatter(page)[1].strip())
             page = page.replace('\n---\n', '\ngenerated_visuals: ' + json.dumps(artifact, ensure_ascii=False) + '\n---\n', 1)
             from_manuscript(self.cfg, self.model, sec, page)
-        if sec.get('reader_scope') and generated_design.enabled(sec) and path.exists():
+        native_rerun = self.incremental and self.cfg.agent.kind == 'cli'
+        if (native_rerun or sec.get('reader_scope')) and generated_design.enabled(sec) and path.exists():
             current = self.generated_designs[sec['id']][3]
             previous = path.read_text(encoding='utf-8')
-            if _cached_scope_page(sec, current, previous, page):
+            from .design_checkpoint import verify_reused_origins
+            def verify_origins(rows):
+                return native_rerun and verify_reused_origins(self.cfg, self.model, sec, current, previous, rows)
+            if _cached_scope_page(sec, current, previous, page, verify_origins):
                 generated_design.verify(self.model, sec, previous, cfg=self.cfg)
-                return path
+                return self._write(path, previous, preserve=True)
         return self._write(path, page)
 
     def _render(self, *args, **kwargs):
@@ -726,23 +737,43 @@ class Generator:
                 and not re.match(r"^\s*\d+\. ", l)]
         return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
 
-    def _write(self, path, text):
+    def _write(self, path, text, *, preserve=False):
+        if self.incremental and not preserve and path.is_file():
+            from .document_metadata import split_frontmatter
+            from .reader_scope import preserve_unchanged
+            previous = path.read_text(encoding='utf-8')
+            meta, _ = split_frontmatter(text)
+            old, _ = split_frontmatter(previous)
+            if ('generated_design' not in meta and 'generated_design' not in old
+                    and preserve_unchanged(previous, text)):
+                text, preserve = previous, True
         from .generation_run import observed
         execution = observed()
         if execution is not None and execution.publication_contract is not None:
             execution.publication_contract.preserve_output(path, text)
         from .visual_audit import manuscript_gate, policy
-        if policy(self.cfg).get('enabled', False):
-            from .validation_stage import current
+        if policy(self.cfg, draft=True).get('enabled', False):
             manuscript_gate(self.cfg, self.model, path, text)
+        if preserve:
+            return path
+        from .validation_stage import current
+        inputs = current()
+        expected = (text.rstrip() + '\n').encode('utf-8')
+        if inputs is not None:
+            inputs.verify()
             previous = path.read_bytes() if path.exists() else None
             def rollback():
+                if not path.is_file() or path.read_bytes() != expected:
+                    return  # Do not overwrite an independently edited file.
                 if previous is None:
                     path.unlink(missing_ok=True)
                 else:
                     path.write_bytes(previous)
-            current().rollbacks.append(rollback)
-        return self.writer._write(path, text)
+            inputs.rollbacks.append(rollback)
+        written = self.writer._write(path, text)
+        if inputs is not None:
+            inputs.produced(path, expected)
+        return written
 
 
 # ---- helpers -----------------------------------------------------------------

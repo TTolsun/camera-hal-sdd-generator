@@ -120,3 +120,17 @@ def test_deterministic_pages_do_not_claim_llm_authorship_and_can_carry_forward(t
     assert generation_method({"design_topics": [{"statements": []}]}, "ollama") == "source-bound-contract"
     assert generation_method({"narration": "facts"}, "ollama") == "extracted-structure"
     assert generation_method({"design_topics": [{"statements": []}, {}]}, "ollama") == "mixed"
+def test_scenario_index_excludes_only_new_impact_routing_metadata(sample_model):
+    from types import SimpleNamespace
+
+    from sdd.scenario_sections import index_fingerprint
+
+    owners = [{'scenario': sid, 'lead': 'Trace the entry point'} for sid in sample_model.scenarios]
+    cfg = SimpleNamespace(sections=lambda: owners,
+                          scenarios=lambda: [{'id': sid} for sid in sample_model.scenarios])
+    section = {'id': 'scenario-index', 'watch': ['camera/**']}
+    original = index_fingerprint(cfg, sample_model, section)
+    assert index_fingerprint(cfg, sample_model, {**section, 'watch_exclude': ['camera/helper.cpp']}) == original
+    assert index_fingerprint(cfg, sample_model, {**section, 'watch': ['device/**']}) != original
+    owners[0]['lead'] = 'Changed display text'
+    assert index_fingerprint(cfg, sample_model, section) != original

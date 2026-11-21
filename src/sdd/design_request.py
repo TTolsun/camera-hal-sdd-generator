@@ -167,20 +167,39 @@ def _prepare_requests(cfg, model, section, previous):
         # Bind standard prompts to their actual unit requests as focused prompts
         # already bind their template. Changing drafting instructions/schema
         # cannot silently reuse a completed topic under an old fingerprint.
-        from .cli_checkpoint import style_policy
         for topic in section['design_topics']:
-            requests = []
-            for unit in _design_units({**section, 'design_topics': [topic]}, {}):
-                focus, selected_system, _ = topic_prompts[topic['id']]
-                request = _unit_request(model, section, unit, focus)
-                passages, user = request.passages, request.user
-                requests.append(dict(system=selected_system, user=user, schema=response_schema(unit, passages)))
-            inputs[topic['id']] = digest(inputs[topic['id']] + json.dumps(
-                dict(requests=requests, styles=style_policy(cfg), cli_protocol='native-schema-v1'), ensure_ascii=False, sort_keys=True))
+            tid = topic['id']
+            inputs[tid] = bind_native_topic(cfg, model, section, topic, topic_prompts[tid], inputs[tid])
     return RequestPlan(topic_prompts, policy, inputs, previous)
 
 
-def _design_units(section, retained):
+def bind_native_topic(cfg, model, section, topic, prompt, identity):
+    from .cli_checkpoint import style_policy
+    focus, system, _ = prompt
+    requests = []
+    for unit in _design_units({**section, 'design_topics': [topic]}, {}):
+        request = _unit_request(model, section, unit, focus)
+        requests.append(dict(system=system, user=request.user, schema=response_schema(unit, request.passages)))
+    return digest(identity + json.dumps(dict(requests=requests, styles=style_policy(cfg),
+                                             cli_protocol='native-schema-v1'), ensure_ascii=False, sort_keys=True))
+
+
+def reusable_prefixes(cfg, model, section, plan, reused, validate):
+    if cfg.agent.kind != 'cli':
+        return {}, {}
+    from .design_reuse import _part_scope, reusable_prefixes as retain, topic_inputs
+
+    def identity(topic, parts):
+        pinned, scoped, narrowed = _part_scope(model, section, topic, parts)
+        tid = topic['id']
+        prompt = plan.prompts[tid]
+        base = topic_inputs(pinned, scoped, prompt.policy + json.dumps(plan.policy))[tid]
+        return bind_native_topic(cfg, pinned, section, narrowed, prompt, base)
+
+    return retain(model, section, plan.previous, reused, validate, identity)
+
+
+def _design_units(section, retained, retained_parts=None):
     units = []
     for topic in section['design_topics']:
         if topic['id'] in retained:
@@ -189,6 +208,8 @@ def _design_units(section, retained):
             units.append(topic)
             continue
         for part in topic['parts']:
+            if part['id'] in (retained_parts or {}).get(topic['id'], ()):
+                continue
             unit = {**topic, 'question': part['question'], '_part_id': part['id'],
                     '_max_statements': part.get('max_statements', 1 if part.get('answer_contract') else 2),
                     'sources': [next(s for s in topic['sources'] if s['id'] == ref) for ref in part['sources']]}
@@ -203,6 +224,7 @@ def _design_units(section, retained):
             if 'answer_contract' in part:
                 unit['answer_contract'] = part['answer_contract']
             unit.pop('parts')
+            unit.pop('reuse_parts', None)
             if topic.get('explanation'):
                 from .explanation import context
                 unit['_explanation_context'] = context(topic, part['id'])

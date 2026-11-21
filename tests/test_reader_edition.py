@@ -79,7 +79,8 @@ def test_edition_projects_sections_and_keeps_earlier_addresses(tmp_cfg):
     assert 'ARCHIVED TECHNICAL DETAILS' not in (root / 'download/full.md').read_text(encoding='utf-8')
 
 
-def test_edition_table_pin_rejects_stale_displayed_conditions(tmp_cfg):
+@pytest.mark.parametrize('lead_only', [False, True])
+def test_edition_table_pin_rejects_stale_displayed_conditions(tmp_cfg, lead_only):
     data, detail = configure(tmp_cfg)
     fragment = _fragment()
     article = _first(_parse('<article><h2>Support</h2><p>Runtime condition.</p></article>'), tag='article')
@@ -89,8 +90,15 @@ def test_edition_table_pin_rejects_stale_displayed_conditions(tmp_cfg):
     page['table'] = {lang: [['Category', 'Condition'], ['Test', 'Runtime']] for lang in ('ko', 'en')}
     page['table_source'] = {'source': 'nested/detail.md', 'fragment': 'support',
                             'sha256': {lang: section_digest(fragment) for lang in ('ko', 'en')}}
+    if lead_only:
+        page['table_source']['lead_only'] = True
     save(tmp_cfg, data)
     root = export_site(tmp_cfg)
+    if lead_only:
+        detail.write_text(detail.read_text(encoding='utf-8') + '\n### Device-specific detail\n\nDifferent evidence.\n',
+                          encoding='utf-8')
+        export_site(tmp_cfg)
+        assert 'Different evidence.' in (root / 'tasks/support.html').read_text(encoding='utf-8')
     before = (root / 'site-manifest.json').read_bytes()
     detail.write_text(detail.read_text(encoding='utf-8').replace('Runtime condition.', 'Changed condition.'), encoding='utf-8')
     with pytest.raises(ValueError, match='ko table evidence changed'):

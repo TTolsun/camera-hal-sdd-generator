@@ -62,3 +62,8 @@ def glob_to_regex(pattern: str) -> re.Pattern[str]:
 
 def match_any(path: str, globs: list[str]) -> bool:
     return any(glob_to_regex(g).match(path) for g in globs)
+
+
+def watches(section: dict, path: str) -> bool:
+    return (match_any(path, section.get('watch') or [])
+            and not match_any(path, section.get('watch_exclude') or []))
