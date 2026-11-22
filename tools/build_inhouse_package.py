@@ -43,7 +43,8 @@ def selected(name):
 def requirements(lock):
     packages = {p["name"]: p for p in tomllib.loads(lock.decode())["package"]}
     root = packages["camera-hal-sdd-generator"]
-    todo = [d["name"] for d in root["dependencies"] + root.get("optional-dependencies", {}).get("dev", [])]
+    extras = root.get("optional-dependencies", {})
+    todo = [d["name"] for d in root["dependencies"] + extras.get("dev", []) + extras.get("pdf", [])]
     seen = set()
     while todo:
         name = todo.pop()
@@ -51,9 +52,9 @@ def requirements(lock):
             continue
         seen.add(name)
         todo.extend(d["name"] for d in packages[name].get("dependencies", []))
-    # Include conditional runtime/dev dependencies on all targets; pip still checks
+    # Include conditional dependencies on all targets; pip still checks
     # wheel compatibility. Do not bundle host-specific virtual environments.
-    return ("# Runtime and test dependencies pinned from the included uv.lock.\n" +
+    return ("# Runtime, PDF and test dependencies pinned from the included uv.lock.\n" +
             "\n".join(f"{n}=={packages[n]['version']}" for n in sorted(seen)) + "\n").encode()
 
 
@@ -89,7 +90,7 @@ def build(repo, output, ref="HEAD"):
                 "generated": {"AGENTS.md": "docs/inhouse/import-agent.md", "START_HERE.md": "tools/build_inhouse_package.py",
                               "START_PROMPT.txt": "docs/inhouse/package.md#시작-프롬프트",
                               "START_PROMPT_HERMES.txt": "docs/inhouse/package.md#시작-프롬프트 (Hermes selection)",
-                              "requirements-inhouse.txt": "uv.lock runtime/dev dependency closure"},
+                              "requirements-inhouse.txt": "uv.lock runtime/dev/pdf dependency closure"},
                 "files": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())}}
     files["IMPORT-MANIFEST.json"] = (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode()
     output.parent.mkdir(parents=True, exist_ok=True)
