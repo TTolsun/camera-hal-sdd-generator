@@ -14,6 +14,8 @@
 
 [이번 릴리스 노트](release-2026-11-20.md)에서 전체 문서 내려받기, 재검토 비용 확인과 이번 패키지의 검증 범위를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
 
+**현재 페이지와 전체 문서의 PDF를 바로 받으려면** 최신 사내 템플릿을 포함하는 커밋에서 [반입 패키지를 생성하세요](#패키지-재생성). 위의 11월 20일 ZIP은 인쇄 창을 사용하는 버전입니다. 새 ZIP에는 `site.pdf_downloads: true`와 PDF용 wheel 설치 목록이 함께 들어갑니다.
+
 ## 반입 확인과 설치
 
 이 버전은 [LLM 그림 자동화](../concepts/site.md#사내-llm으로-초안-자동-생성하기)를 포함합니다. `src/sdd/generated_visuals.py`, `examples/inhouse-template/config/visuals.yaml`, `tools/evaluate_visuals.py`가 manifest에 포함돼야 합니다. 반입본에서 실제 승인 모델로 재시험하기 전에는 사내 모델 검증 완료로 기록하지 않습니다.
