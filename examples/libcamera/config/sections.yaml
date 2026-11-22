@@ -9722,3 +9722,87 @@ sections:
   next:
     title: Camera·Request와 버퍼 참조의 책임
     link: camera-model.md
+- id: uvc-viewfinder-configuration
+  kind: prose
+  title: USB UVC 뷰파인더 스트림 구성
+  output: scenarios/uvc-viewfinder-configuration.md
+  group: For Developer
+  nav_section: 동작 추적과 문제 진단
+  lead: USB UVC 카메라에 뷰파인더 스트림 하나를 요청하고, 앱에서 받은 값과 장치에서 적용한 값을 확인하세요.
+  reader: 스트림 크기나 포맷이 달라진 이유를 찾는 앱 개발자와 장치 연동 담당자
+  design_generation: llm
+  semantic_review: true
+  show_evidence: true
+  design_grounding: true
+  design_requirements:
+  - id: uvc-viewfinder
+    question: USB UVC에 뷰파인더 스트림 하나를 640×480으로 요청하면 앱과 장치에서 어떤 값을 확인합니까?
+  design_topics:
+  - id: uvc-viewfinder
+    title: 요청한 640×480 뷰파인더는 어디에서 달라지나요?
+    covers: [uvc-viewfinder]
+    question: USB UVC 뷰파인더 스트림 하나에 요청한 640×480이 검증, 실제 적용 시도, 앱이 읽을 값으로 이어지는 경로를 설명하세요.
+    sources:
+    - id: app-default
+      file: Documentation/guides/application-developer.rst
+      start: In the example application, create a new configuration variable
+      end: StreamConfiguration &streamConfig = config->at(0);
+    - id: app-request
+      file: Documentation/guides/application-developer.rst
+      start: With an initialized ``CameraConfiguration``, an application can make changes to
+      end: which applications shall check to see if the Pipeline Handler adjusted the
+    - id: app-validated-output
+      file: Documentation/guides/application-developer.rst
+      start: For this example application, the code below prints the adjusted values to
+      end: std::cout << "Validated viewfinder configuration is
+    - id: validation-contract
+      file: src/libcamera/camera.cpp
+      start: '\fn CameraConfiguration::validate()'
+      end: "hasn't been adjusted."
+    - id: camera-configure
+      file: src/libcamera/camera.cpp
+      start: int Camera::configure(CameraConfiguration *config)
+      end: "\n}"
+    - id: app-stream
+      file: src/libcamera/stream.cpp
+      start: '\fn Stream::configuration()'
+      end: '\return The active configuration of the stream'
+    - id: uvc-validate
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: CameraConfiguration::Status UVCCameraConfiguration::validate()
+      end: return status;
+    - id: uvc-default
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: PipelineHandlerUVC::generateConfiguration(Camera *camera,
+      end: "\n}"
+    - id: uvc-configure
+      file: src/libcamera/pipeline/uvcvideo/uvcvideo.cpp
+      start: int PipelineHandlerUVC::configure(Camera *camera, CameraConfiguration *config)
+      end: "\n}"
+    - id: v4l2-configure
+      file: src/libcamera/v4l2_videodevice.cpp
+      start: '\brief Configure an image format on the V4L2 video device'
+      end: "\n}"
+    parts:
+    - id: answer
+      max_statements: 2
+      sources: [app-default, app-request, app-validated-output, validation-contract, camera-configure, app-stream, uvc-validate, uvc-default, uvc-configure, v4l2-configure]
+      question: >-
+        두 짧은 문단으로 쓰세요. 카메라를 확보한 앱이 공식 가이드처럼 Viewfinder 한 개를 640×480으로 요청하는 상황입니다.
+        첫 문단은 앱이 구성을 만들고 tryFormat 시험을 거친 뒤 크기·픽셀 포맷을 읽어 변경값을 받아들일지 판단하는 흐름을 설명하세요. Adjusted의 의미를 설명하되 모든 필드 변경을 Adjusted로 묶거나 후보 순회 알고리즘으로 들어가지 마세요. 공통 configure가 검증을 다시 하는 조건으로 문단을 닫으세요.
+        둘째 문단에서 형식을 시험하는 tryFormat과 실제로 적용하는 setFormat의 차이, 적용 시점에 검증된 크기·FourCC와 장치가 반환한 크기·FourCC를 대조하는 이유와 실패 분기를 설명하세요. 성공 뒤 앱은 연결된 Stream의 활성 구성을 읽으며, 이 값은 공통 코드가 복사한 검증 구성임을 밝혀 주세요.
+        640×480은 예시 입력입니다. 대상 장치에서 확인할 값은 검증 전후 및 적용 시도의 관찰 항목으로 쓰세요.
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - [640×480]
+        - [Viewfinder]
+        - [Adjusted]
+        - [Invalid]
+        - [Valid]
+        - [tryFormat]
+        - [setFormat]
+        - [-EINVAL]
+        - ['Stream::configuration()']
+    answer_contract:
+      basis: implementation

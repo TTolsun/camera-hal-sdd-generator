@@ -1,5 +1,231 @@
 schema: 1
 sections:
+  uvc-viewfinder-configuration:
+  - id: uvc-viewfinder-format-checks
+    topic: uvc-viewfinder
+    kind: decision
+    title: UVC 뷰파인더의 구성 검증과 장치 적용
+    question: 어디에서 값을 다시 확인하고 어디에서 오류로 반환합니까?
+    caption:
+      text: 앱은 검증이 바꾼 값을 확인해 적용할지 결정합니다. 장치 적용 때는 UVC 핸들러가 반환된 크기와 FourCC를 비교합니다.
+      text_en: The application decides whether to proceed with the values produced by
+        validation. When applying the format, the UVC handler compares the returned
+        size and FourCC.
+      evidence:
+      - source: uvc-viewfinder/validation-contract
+        sha256: 86bf9109257512866bf70a5d42cd3da29c70d851d871f0e496058141ba377623
+        quote: "The caller shall check the\n * configuration carefully."
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: "if (format.size != cfg.size ||\n\t    format.fourcc != data->video_->toV4L2PixelFormat(cfg.pixelFormat))"
+    nodes:
+    - id: validate
+      label: 앱이 validate 호출 · UVC tryFormat
+      label_en: App calls validate · UVC tryFormat
+      shape: decision
+      evidence:
+      - source: uvc-viewfinder/uvc-validate
+        sha256: 0aa2dad19ebf8758da23af411ff5e8983d194b5566eb48902b915288aceb52e4
+        quote: const Size size = cfg.size;
+      - source: uvc-viewfinder/uvc-validate
+        sha256: 0aa2dad19ebf8758da23af411ff5e8983d194b5566eb48902b915288aceb52e4
+        quote: int ret = data_->video_->tryFormat(&format);
+    - id: inspect
+      label: 앱이 변경된 값을 확인
+      label_en: App checks the adjusted values
+      shape: box
+      evidence:
+      - source: uvc-viewfinder/validation-contract
+        sha256: 86bf9109257512866bf70a5d42cd3da29c70d851d871f0e496058141ba377623
+        quote: "The caller shall check the\n * configuration carefully."
+    - id: stop
+      label: 앱이 적용을 중단
+      label_en: App stops before applying
+      shape: box
+      evidence:
+      - source: uvc-viewfinder/uvc-validate
+        sha256: 0aa2dad19ebf8758da23af411ff5e8983d194b5566eb48902b915288aceb52e4
+        quote: "if (opened)\n\t\t\tdata_->video_->close();\n\t\tif (ret)\n\t\t\treturn\
+          \ Invalid;"
+      - source: uvc-viewfinder/validation-contract
+        sha256: 86bf9109257512866bf70a5d42cd3da29c70d851d871f0e496058141ba377623
+        quote: "The caller shall check the\n * configuration carefully."
+    - id: gate
+      label: Camera::configure 재검증
+      label_en: Camera::configure revalidates
+      shape: decision
+      evidence:
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: if (config->validate() != CameraConfiguration::Valid)
+    - id: reject
+      label: 공통 검증에서 -EINVAL
+      label_en: Common validation returns -EINVAL
+      shape: box
+      evidence:
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: Can't configure camera with invalid configuration
+    - id: apply
+      label: UVC가 setFormat 호출
+      label_en: UVC calls setFormat
+      shape: decision
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: ret = data->video_->setFormat(&format);
+      - source: uvc-viewfinder/v4l2-configure
+        sha256: 9af0934ba2b90c413087e374e9b67b49768f06adeb723a56ce45abe73a8814c9
+        quote: "actually\n * applied format parameters"
+    - id: error
+      label: 장치 적용 오류 전달
+      label_en: Forward the format-setting error
+      shape: box
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: "if (ret)\n\t\treturn ret;"
+    - id: compare
+      label: 반환 크기와 FourCC가 일치?
+      label_en: Do the returned size and FourCC match?
+      shape: decision
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: "if (format.size != cfg.size ||\n\t    format.fourcc != data->video_->toV4L2PixelFormat(cfg.pixelFormat))"
+    - id: mismatch
+      label: UVC에서 -EINVAL
+      label_en: UVC returns -EINVAL
+      shape: box
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: return -EINVAL;
+    - id: linked
+      label: 성공 뒤 앱이 연결된 Stream 구성 확인
+      label_en: App reads the linked Stream configuration on success
+      shape: box
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: cfg.setStream(&data->stream_);
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: stream->configuration_ = cfg;
+      - source: uvc-viewfinder/app-stream
+        sha256: 3eb085cd58d1f1912392208e4a1fd6526d5fefdf597defc79f3a718152203a35
+        quote: Retrieve the active configuration of the stream
+    edges:
+    - from: validate
+      to: inspect
+      label: Adjusted
+      label_en: Adjusted
+      evidence:
+      - source: uvc-viewfinder/validation-contract
+        sha256: 86bf9109257512866bf70a5d42cd3da29c70d851d871f0e496058141ba377623
+        quote: "The caller shall check the\n * configuration carefully."
+    - from: validate
+      to: stop
+      label: Invalid
+      label_en: Invalid
+      evidence:
+      - source: uvc-viewfinder/uvc-validate
+        sha256: 0aa2dad19ebf8758da23af411ff5e8983d194b5566eb48902b915288aceb52e4
+        quote: "if (opened)\n\t\t\tdata_->video_->close();\n\t\tif (ret)\n\t\t\treturn\
+          \ Invalid;"
+    - from: validate
+      to: gate
+      label: Valid
+      label_en: Valid
+      evidence:
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: if (config->validate() != CameraConfiguration::Valid)
+    - from: inspect
+      to: gate
+      label: 변경값 수용
+      label_en: Accept changes
+      evidence:
+      - source: uvc-viewfinder/validation-contract
+        sha256: 86bf9109257512866bf70a5d42cd3da29c70d851d871f0e496058141ba377623
+        quote: "The caller shall check the\n * configuration carefully."
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: if (config->validate() != CameraConfiguration::Valid)
+    - from: inspect
+      to: stop
+      label: 변경값 거절
+      label_en: Decline changes
+      evidence:
+      - source: uvc-viewfinder/validation-contract
+        sha256: 86bf9109257512866bf70a5d42cd3da29c70d851d871f0e496058141ba377623
+        quote: "The caller shall check the\n * configuration carefully."
+    - from: gate
+      to: apply
+      label: Valid
+      label_en: Valid
+      evidence:
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: ret = d->pipe_->invokeMethod(&PipelineHandler::configure,
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: ret = data->video_->setFormat(&format);
+    - from: gate
+      to: reject
+      label: Invalid 또는 Adjusted
+      label_en: Invalid or Adjusted
+      evidence:
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: if (config->validate() != CameraConfiguration::Valid)
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: Can't configure camera with invalid configuration
+    - from: apply
+      to: error
+      label: 오류
+      label_en: Error
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: "if (ret)\n\t\treturn ret;"
+    - from: apply
+      to: compare
+      label: 성공
+      label_en: Success
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: "if (ret)\n\t\treturn ret;"
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: "if (format.size != cfg.size ||\n\t    format.fourcc != data->video_->toV4L2PixelFormat(cfg.pixelFormat))"
+    - from: compare
+      to: mismatch
+      label: 불일치
+      label_en: Mismatch
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: "if (format.size != cfg.size ||\n\t    format.fourcc != data->video_->toV4L2PixelFormat(cfg.pixelFormat))"
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: return -EINVAL;
+    - from: compare
+      to: linked
+      label: 일치
+      label_en: Match
+      evidence:
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: "if (format.size != cfg.size ||\n\t    format.fourcc != data->video_->toV4L2PixelFormat(cfg.pixelFormat))"
+      - source: uvc-viewfinder/uvc-configure
+        sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
+        quote: cfg.setStream(&data->stream_);
+      - source: uvc-viewfinder/camera-configure
+        sha256: ff6ceda14768503bdfe753d462853457743d5b46a80e0808a97375632403cd36
+        quote: stream->configuration_ = cfg;
   camera-model:
   - id: camera-states
     topic: state
