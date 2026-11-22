@@ -7,40 +7,51 @@ sections:
     title: UVC 뷰파인더의 구성 검증과 장치 적용
     question: 어디에서 값을 다시 확인하고 어디에서 오류로 반환합니까?
     caption:
-      text: 앱은 검증이 바꾼 값을 확인해 적용할지 결정합니다. 장치 적용 때는 UVC 핸들러가 반환된 크기와 FourCC를 비교합니다.
-      text_en: The application decides whether to proceed with the values produced by
-        validation. When applying the format, the UVC handler compares the returned
-        size and FourCC.
+      text: >-
+        공식 가이드 예제는 validate를 호출하고 구성을 출력합니다. 그림의 수용·거절은 호출자가 할 판단입니다.
+        UVC는 tryFormat에서 얻은 stride·frameSize·colorSpace를 구성에 저장하고,
+        setFormat 성공 뒤에는 크기와 FourCC만 비교합니다.
+      text_en: >-
+        The official guide example calls validate and prints the configuration.
+        The accept and decline branches show decisions for the caller.
+        UVC stores stride, frameSize, and colorSpace from tryFormat in the configuration.
+        After setFormat succeeds, it compares only the size and FourCC.
       evidence:
+      - source: uvc-viewfinder/app-validated-output
+        sha256: 7341104156eb8e07b967545a6776a355789e5e9d9006370cd378478c7f657b7b
+        quote: '<< streamConfig.toString() << std::endl;'
       - source: uvc-viewfinder/validation-contract
         sha256: 86bf9109257512866bf70a5d42cd3da29c70d851d871f0e496058141ba377623
         quote: "The caller shall check the\n * configuration carefully."
+      - source: uvc-viewfinder/uvc-validate
+        sha256: 0aa2dad19ebf8758da23af411ff5e8983d194b5566eb48902b915288aceb52e4
+        quote: "cfg.stride = format.planes[0].bpl;\n\tcfg.frameSize = format.planes[0].size;"
+      - source: uvc-viewfinder/uvc-validate
+        sha256: 0aa2dad19ebf8758da23af411ff5e8983d194b5566eb48902b915288aceb52e4
+        quote: cfg.colorSpace = format.colorSpace;
       - source: uvc-viewfinder/uvc-configure
         sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
         quote: "if (format.size != cfg.size ||\n\t    format.fourcc != data->video_->toV4L2PixelFormat(cfg.pixelFormat))"
     nodes:
     - id: validate
-      label: 앱이 validate 호출 · UVC tryFormat
-      label_en: App calls validate · UVC tryFormat
+      label: 앱이 validate 호출
+      label_en: App calls validate
       shape: decision
       evidence:
-      - source: uvc-viewfinder/uvc-validate
-        sha256: 0aa2dad19ebf8758da23af411ff5e8983d194b5566eb48902b915288aceb52e4
-        quote: const Size size = cfg.size;
-      - source: uvc-viewfinder/uvc-validate
-        sha256: 0aa2dad19ebf8758da23af411ff5e8983d194b5566eb48902b915288aceb52e4
-        quote: int ret = data_->video_->tryFormat(&format);
+      - source: uvc-viewfinder/app-validated-output
+        sha256: 7341104156eb8e07b967545a6776a355789e5e9d9006370cd378478c7f657b7b
+        quote: config->validate();
     - id: inspect
-      label: 앱이 변경된 값을 확인
-      label_en: App checks the adjusted values
+      label: 호출자가 변경값 수용 여부 판단
+      label_en: Caller decides whether to accept changes
       shape: box
       evidence:
       - source: uvc-viewfinder/validation-contract
         sha256: 86bf9109257512866bf70a5d42cd3da29c70d851d871f0e496058141ba377623
         quote: "The caller shall check the\n * configuration carefully."
     - id: stop
-      label: 앱이 적용을 중단
-      label_en: App stops before applying
+      label: 호출자가 적용을 진행하지 않음
+      label_en: Caller stops before applying
       shape: box
       evidence:
       - source: uvc-viewfinder/uvc-validate
@@ -102,8 +113,8 @@ sections:
         sha256: 826ac6a4484d5becacb65c669f4f122fadbbc0e92e1f128d67490a07a33ec0cb
         quote: return -EINVAL;
     - id: linked
-      label: 성공 뒤 앱이 연결된 Stream 구성 확인
-      label_en: App reads the linked Stream configuration on success
+      label: 검증 구성을 복사한 Stream을 앱에서 확인
+      label_en: App reads the Stream's copied validation configuration
       shape: box
       evidence:
       - source: uvc-viewfinder/uvc-configure
