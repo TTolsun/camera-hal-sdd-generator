@@ -13,6 +13,15 @@ kbd{border:1px solid var(--line);border-radius:3px;padding:0 5px;font:11px/1.8 "
 .layout{--sidebar-width:clamp(180px,var(--preferred-sidebar-width,240px),min(420px,45%));display:grid;grid-template-columns:var(--sidebar-width) minmax(0,1fr) 205px;max-width:1380px;margin:auto;min-height:calc(100vh - 68px)}
 #sidebar{position:sticky;top:68px;align-self:start;min-width:0;height:calc(100vh - 68px);overflow:auto;border-right:1px solid var(--line);padding:24px 18px 24px 20px;font-size:14px}
 .sidebar-resizer{display:none}
+/* Use spare space on the left while keeping the page outline anchored on the right. */
+@media screen and (min-width:1428px){
+  .layout{
+    --reading-extension:clamp(0px,calc((100vw - 1380px)/2 - 24px),72px);
+    max-width:calc(1380px + var(--reading-extension));
+    margin-right:calc((100% - 1380px)/2);
+  }
+  .layout>main{max-width:calc(804px + var(--reading-extension))}
+}
 body.resizing-sidebar,body.resizing-sidebar *{cursor:col-resize!important;user-select:none!important}
 /* Keep title wrapping stable when expanding branches introduces a scrollbar. */
 @media(min-width:761px){#sidebar{scrollbar-gutter:stable;grid-area:1/1}.layout>main{grid-area:1/2}.layout>.page-toc{grid-area:1/3}
