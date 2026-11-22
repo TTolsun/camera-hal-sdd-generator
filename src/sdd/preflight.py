@@ -83,6 +83,10 @@ def doctor(cfg, headers, *, check_endpoint=False):
             print(f'[..] {label} 외부 접근: 확인하지 않았습니다.')
 
     profile('생성', cfg.agent)
+    if path := cfg.paths.get('translation_profile'):
+        profile('번역', load(path).agent)
+    else:
+        print(f'[설정] 번역: {cfg.agent.label} (생성 설정 상속)')
     if path := cfg.paths.get('consistency_profile'):
         profile('독립 검토', load(path).agent)
     elif cfg.paths.get('consistency_file'):

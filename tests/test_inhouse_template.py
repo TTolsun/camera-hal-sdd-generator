@@ -40,3 +40,18 @@ def test_템플릿은_원고와_승인_장부와_mermaid_사본을_git_에_남�
     ignored = (TEMPLATE / ".gitignore").read_text(encoding="utf-8").split()
     assert "build/" in ignored and "sdd.local.yaml" in ignored
     assert not {"sdd/", "assets/"} & set(ignored)
+
+def test_doctor_checks_separate_translation_cli(tmp_cfg, capsys):
+    from sdd.preflight import doctor
+
+    doctor(tmp_cfg, [])
+    assert f'번역: {tmp_cfg.agent.label} (생성 설정 상속)' in capsys.readouterr().out
+
+    path = tmp_cfg.root / 'translation.yaml'
+    path.write_text('agent: {kind: cli, runner: claude, model: test-translator, '
+                    'command: [nonexistent-test-translator]}', encoding='utf-8')
+    tmp_cfg.paths['translation_profile'] = path
+    assert doctor(tmp_cfg, []) == 1
+    output = capsys.readouterr().out
+    assert '[설정] 번역: cli/claude/test-translator' in output
+    assert '[!!] 번역 실행 파일' in output
