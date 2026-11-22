@@ -1,6 +1,6 @@
 # 사내 반입 패키지 시작 안내
 
-**[2026-11-22 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-22) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
+**[2026-11-23 사내 반입 릴리스](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-23) 링크를 공유하세요.** 받은 ZIP을 풀고 무결성을 확인한 뒤 시작 프롬프트를 사내 에이전트에게 전달합니다. 설정과 계약은 에이전트가 실제 소스를 읽고 작성합니다. 이 패키지는 공개 테스트에서 검증한 생성기와 절차이며 사내 HAL 검증 완료를 뜻하지 않습니다.
 
 | 지금 필요한 것 | 여기서 시작하세요 |
 |---|---|
@@ -12,9 +12,9 @@
 | 결과를 인수인계합니다. | [완료 기록](#완료-기록) |
 | 새 버전의 반입 파일을 만듭니다. | [패키지 재생성](#패키지-재생성) |
 
-[이번 릴리스 노트](release-2026-11-22.md)에서 독자용 페이지 구성, PDF·Markdown 다운로드와 검증 범위를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
+[이번 릴리스 노트](release-2026-11-23.md)에서 데스크톱 본문 폭과 공개 사이트에서 확인한 화면 크기를 살펴보세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
 
-**11월 22일 ZIP의 사내 템플릿은 현재 페이지와 전체 문서의 PDF 다운로드를 기본으로 켭니다.** 동봉한 `requirements-inhouse.txt`로 PDF용 wheel을 준비하고, 아래 설치 절차에 따라 Chromium headless shell과 글꼴, 로컬 Mermaid를 빌드 환경에 갖추세요.
+**사내 템플릿은 현재 페이지와 전체 문서의 PDF 다운로드를 기본으로 켭니다.** 동봉한 `requirements-inhouse.txt`로 PDF용 wheel을 준비하고, 아래 설치 절차에 따라 Chromium headless shell과 글꼴, 로컬 Mermaid를 빌드 환경에 갖추세요.
 
 ## 반입 확인과 설치
 
@@ -24,15 +24,15 @@
 
 ### GitHub에서 받기
 
-`inhouse-2026-11-22` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`과 같은 릴리스의 `release-validation.json`에서 대조합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
+`inhouse-2026-11-23` 릴리스의 ZIP과 체크섬을 같은 폴더에 받으세요. 정확한 생성기 커밋은 ZIP의 `IMPORT-MANIFEST.json`과 같은 릴리스의 `release-validation.json`에서 대조합니다. GitHub에 접속할 수 없는 사내망에는 승인된 반입 경로로 전달합니다.
 
 | 파일 | 용도 |
 |---|---|
-| [camera-hal-sdd-inhouse-2026-11-22.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-22/camera-hal-sdd-inhouse-2026-11-22.zip) | 생성기·가이드·스킬·설정 템플릿 |
-| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-22/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
-| [START_PROMPT_HERMES.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-22/START_PROMPT_HERMES.txt) | Hermes를 선택한 경우에 사용하는 같은 프롬프트 |
-| [camera-hal-sdd-inhouse-2026-11-22.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-22/camera-hal-sdd-inhouse-2026-11-22.zip.sha256) | 반입 ZIP의 SHA-256 |
-| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-22/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
+| [camera-hal-sdd-inhouse-2026-11-23.zip](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-23/camera-hal-sdd-inhouse-2026-11-23.zip) | 생성기·가이드·스킬·설정 템플릿 |
+| [START_PROMPT.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-23/START_PROMPT.txt) | 경로와 허용 범위만 채워 복사하는 시작 프롬프트 |
+| [START_PROMPT_HERMES.txt](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-23/START_PROMPT_HERMES.txt) | Hermes를 선택한 경우에 사용하는 같은 프롬프트 |
+| [camera-hal-sdd-inhouse-2026-11-23.zip.sha256](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-23/camera-hal-sdd-inhouse-2026-11-23.zip.sha256) | 반입 ZIP의 SHA-256 |
+| [release-validation.json](https://github.com/TTolsun/camera-hal-sdd-generator/releases/download/inhouse-2026-11-23/release-validation.json) | 이번 반입본의 생성·무결성·실행 검증 기록 |
 
 범용·Hermes 프롬프트는 이 문서의 [시작 프롬프트](#시작-프롬프트)에서 자동 생성하여 ZIP 안에도 넣습니다. Hermes 사본은 CLI 선택 한 줄만 다르며 승인 모델·제공자를 고정하지 않습니다. 릴리스 첨부 사본은 ZIP 안의 파일과 바이트가 같아야 합니다. `RELEASE_NOTES.md`와 전체 첨부 체크섬인 `SHA256SUMS.txt`도 함께 보관하세요. 이후 버전의 절차는 해당 버전의 안내를 기준으로 확인합니다. [최종 공개 평가 요약](records/deployed-reader-evaluation.md#최종-공개-배포본-재평가)은 GitHub에서도 바로 읽을 수 있습니다.
 
@@ -47,14 +47,14 @@ ZIP 안의 `camera-hal-sdd-generator/START_HERE.md`가 입구입니다. `IMPORT-
 Windows PowerShell에서는 다운로드 폴더에서 다음 명령으로 검사합니다. 불일치하면 압축을 풀지 말고 같은 릴리스의 파일을 다시 받습니다.
 
 ```powershell
-$zip = 'camera-hal-sdd-inhouse-2026-11-22.zip'
+$zip = 'camera-hal-sdd-inhouse-2026-11-23.zip'
 $expected = ((Get-Content "$zip.sha256" -Raw).Trim() -split '\s+')[0]
 if ((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected.ToLowerInvariant()) {
     throw 'ZIP SHA-256 mismatch'
 }
 ```
 
-Linux에서는 `sha256sum -c camera-hal-sdd-inhouse-2026-11-22.zip.sha256`를 실행합니다. Windows 압축 해제는 짧은 경로와 긴 경로를 지원하는 도구를 사용하세요.
+Linux에서는 `sha256sum -c camera-hal-sdd-inhouse-2026-11-23.zip.sha256`를 실행합니다. Windows 압축 해제는 짧은 경로와 긴 경로를 지원하는 도구를 사용하세요.
 
 **의존성을 설치하거나 파일을 수정하기 전에** 압축을 푼 생성기 루트에서 실행합니다. Python 3.11 이상이 필요합니다.
 
