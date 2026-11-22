@@ -14,7 +14,7 @@
 
 [이번 릴리스 노트](release-2026-11-22.md)에서 독자용 페이지 구성, PDF·Markdown 다운로드와 검증 범위를 확인하세요. 공개 예제 시험과 실제 사내 HAL 검증을 구분합니다.
 
-**현재 페이지와 전체 문서의 PDF를 바로 받으려면** 최신 사내 템플릿을 포함하는 커밋에서 [반입 패키지를 생성하세요](#패키지-재생성). 위의 11월 20일 ZIP은 인쇄 창을 사용하는 버전입니다. 새 ZIP에는 `site.pdf_downloads: true`와 PDF용 wheel 설치 목록이 함께 들어갑니다.
+**11월 22일 ZIP의 사내 템플릿은 현재 페이지와 전체 문서의 PDF 다운로드를 기본으로 켭니다.** 동봉한 `requirements-inhouse.txt`로 PDF용 wheel을 준비하고, 아래 설치 절차에 따라 Chromium headless shell과 글꼴, 로컬 Mermaid를 빌드 환경에 갖추세요.
 
 ## 반입 확인과 설치
 
