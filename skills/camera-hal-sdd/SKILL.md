@@ -2,7 +2,7 @@
 name: camera-hal-sdd
 description: camera-hal-sdd-generator의 반입 릴리스로 사내 Camera HAL을 셋업하거나 SDD를 갱신할 때 사용합니다. 패키지 무결성, 승인된 CLI, 제품 빌드 설정, 소스에 근거한 계약 작성과 항목별 문서·사이트 검증을 수행합니다. 사람 승인이나 실기기 시험 결과를 대신 만들지 않습니다.
 metadata:
-  version: "13"
+  version: "14"
   repository: camera-hal-sdd-generator
 ---
 
@@ -12,7 +12,7 @@ metadata:
 
 반입 ZIP을 받은 경우 [패키지 시작 안내](../../docs/inhouse/package.md)의 무결성 검사·실행 순서·합격 기준·복구 진입점을 먼저 사용합니다. 안내와 CLI는 같은 커밋의 파일을 사용하며 설치된 스킬만 최신 것으로 바꾸지 않습니다.
 
-릴리스에서 처음 시작하면 `camera-hal-sdd-inhouse-<날짜>.zip`과 그 릴리스의 체크섬·검증 기록을 사용합니다. GitHub 자동 Source code 압축 파일은 반입본이 아닙니다. 설치·파일 수정 전에 `python tools/verify_import.py`를 실행하고 `source_commit`·`verified_files`를 기록합니다. ZIP 안의 `START_PROMPT.txt` 또는 Hermes를 선택한 경우 `START_PROMPT_HERMES.txt`와 같은 버전의 스킬을 사용합니다. Python wheel·제품 툴체인·CLI·모델 인증·Mermaid 자산은 별도 준비 항목입니다. 외부 다운로드는 승인된 준비 환경에서만 수행합니다.
+릴리스에서 처음 시작하면 `camera-hal-sdd-inhouse-<날짜>.zip`과 그 릴리스의 체크섬·검증 기록을 사용합니다. GitHub 자동 Source code 압축 파일은 반입본이 아닙니다. 설치·파일 수정 전에 `python tools/verify_import.py`를 실행하고 `source_commit`·`verified_files`를 기록합니다. ZIP 안의 `START_PROMPT.txt`에서 문서 생성·번역 CLI를 선택하고 같은 ZIP의 스킬을 사용합니다. Python wheel·제품 툴체인·CLI·모델 인증·Mermaid 자산은 별도 준비 항목입니다. 외부 다운로드는 승인된 준비 환경에서만 수행합니다.
 
 사내 템플릿은 현재 페이지와 전체 문서의 PDF를 빌드할 때 만듭니다. 기존 프로젝트는 실제 `site.full_document`와 `site.pdf_downloads` 설정을 따릅니다. PDF 다운로드가 켜져 있으면 [템플릿의 PDF 준비 절차](../../examples/inhouse-template/README.md#pdf-다운로드-준비)에 따라 `requirements-inhouse.txt`의 PDF 의존성, Chromium headless shell, 문서 언어에 맞는 글꼴과 `site.mermaid_dir`의 자산을 준비합니다. 사이트를 내보낸 뒤 다운로드 메뉴에서 현재 페이지와 전체 문서의 PDF를 각각 열어 본문과 그림을 확인합니다.
 
