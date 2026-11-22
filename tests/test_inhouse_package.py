@@ -80,9 +80,9 @@ def test_package_is_committed_allowlisted_deterministic_and_relocatable(kit_repo
     assert (root / "AGENTS.md").read_text() == "Internal destinations only."
     assert not (root / ".git").exists()
     assert verifier.verify(root)["source_commit"] == info["source_commit"]
-    prompts = builder.start_prompts((root / "docs/inhouse/package.md").read_text(encoding="utf-8"))
-    for name, expected in prompts.items():
-        assert (root / name).read_bytes() == expected
+    assert [p.name for p in root.glob("START_PROMPT*.txt")] == ["START_PROMPT.txt"]
+    assert (root / "START_PROMPT.txt").read_bytes() == builder.start_prompt(
+        (root / "docs/inhouse/package.md").read_text(encoding="utf-8"))
     result = subprocess.run([sys.executable, str(root / "tools/verify_import.py")], cwd=tmp_path, capture_output=True)
     assert result.returncode == 0, result.stdout
     # Run outside the package, without installing it, and retain a failed CLI exit.
@@ -129,20 +129,15 @@ def test_dependency_list_contains_locked_runtime_pdf_and_test_closure():
     assert not any("http" in line or line.startswith("-e") for line in lines)
 
 
-def test_prompt_variants_preserve_every_instruction_except_cli_selection():
+def test_shared_prompt_includes_all_cli_choices():
     guide = (ROOT / "docs/inhouse/package.md").read_text(encoding="utf-8")
-    prompts = builder.start_prompts(guide)
-    assert builder.start_prompts(guide.replace("\n", "\r\n")) == prompts
-    generic = prompts["START_PROMPT.txt"].decode().splitlines()
-    hermes = prompts["START_PROMPT_HERMES.txt"].decode().splitlines()
-    assert len(generic) == len(hermes)
-    changes = [(a, b) for a, b in zip(generic, hermes) if a != b]
-    assert len(changes) == 1
-    assert changes[0][1].startswith("문서 생성·번역 CLI: hermes ")
+    prompt = builder.start_prompt(guide)
+    assert builder.start_prompt(guide.replace("\n", "\r\n")) == prompt
+    assert "문서 생성·번역 CLI: <hermes | opencode | claude | codex;" in prompt.decode()
     # A missing/ambiguous authoring block must fail packaging, not publish stale text.
     for broken in ("", guide + "\n## 시작 프롬프트\n", guide.replace("```text", "```bash")):
         with pytest.raises(ValueError, match="Expected"):
-            builder.start_prompts(broken)
+            builder.start_prompt(broken)
 
 
 def test_real_import_runs_task_navigation(tmp_path):

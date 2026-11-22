@@ -13,9 +13,9 @@
 3. 반복 사용 시 `camera-hal-sdd/`를 사용하는 에이전트의 스킬 경로에 복사합니다. 경로는 사내에 설치된 에이전트의 문서를 따릅니다. 생성기 저장소 절대 경로도 함께 전달합니다.
 4. 복사한 스킬의 링크는 생성기 루트에서 해석합니다. 가이드는 생성기 저장소에서만 관리하며 설치된 스킬에 따로 복제하지 않습니다. 생성기 버전을 갱신할 때 스킬도 같은 커밋의 것으로 갱신합니다.
 
-반입본의 `START_PROMPT.txt`를 사용하면 스킬 설치 없이 같은 절차로 시작할 수 있습니다. Hermes를 선택했다면 `START_PROMPT_HERMES.txt`를 사용합니다. 두 파일은 패키지 안에 포함되며 릴리스 첨부 사본과 바이트가 같아야 합니다. `metadata.version`은 스킬 개정 번호이고 정확한 패키지 버전은 `IMPORT-MANIFEST.json`의 `source_commit`입니다.
+반입본의 `START_PROMPT.txt`를 사용하면 스킬 설치 없이 같은 절차로 시작할 수 있습니다. Hermes를 사용하려면 이 파일의 문서 생성·번역 CLI 입력란에 `hermes`를 적습니다. `metadata.version`은 스킬 개정 번호이고 정확한 패키지 버전은 `IMPORT-MANIFEST.json`의 `source_commit`입니다.
 
-[2026-11-23 반입본](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-23)은 스킬 v13과 같은 커밋의 생성기·가이드·템플릿, 범용·Hermes 시작 프롬프트를 포함합니다. v13은 PDF 다운로드가 켜진 프로젝트에서 렌더러와 로컬 자산을 준비하고 페이지별·전체 PDF를 확인하는 절차를 추가합니다. 기존 반입본에 스킬만 덮어쓰지 말고 새 ZIP을 별도 폴더에 풀어 검증한 뒤 생성기와 스킬 경로를 함께 갱신합니다. 기존 릴리스의 첨부 파일과 검증 기록은 보존합니다.
+[11월 23일 개정 반입본](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-23.1)은 스킬 v14와 같은 커밋의 생성기·가이드·템플릿, 네 CLI에서 함께 쓰는 시작 프롬프트를 포함합니다. 기존 반입본에 스킬만 덮어쓰지 말고 새 ZIP을 별도 폴더에 풀어 검증한 뒤 생성기와 스킬 경로를 함께 갱신합니다. 기존 릴리스의 첨부 파일과 검증 기록은 보존합니다.
 
 스킬은 터미널에서 `uv run sdd ...`를 실행할 수 있는 에이전트를 전제로 합니다. 문서 생성 CLI는 [선택 안내](../docs/inhouse/cli-agents.md)에 따라 Hermes, OpenCode, Claude Code 또는 Codex로 지정합니다. `sdd automate`가 부르는 검토 CLI는 선택한 실행기의 도구 제한을 적용한 별도 실행이므로, 이 스킬과 같은 작업 권한을 주지 않습니다([예약 게시 절차](../docs/inhouse/03-update-system.md)).
 

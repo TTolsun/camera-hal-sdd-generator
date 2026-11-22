@@ -5,7 +5,7 @@
 - 질문별 시각화는 config/visuals.yaml의 generation: llm 계획과 실제 design_topics 근거를 연결합니다. 승인된 사내 LLM으로 초안을 생성하고 근거·조건·본문 검사를 통과한 결과만 원고에 배치합니다. 소스 변경 후 generate --from-impact 또는 update로 다시 생성합니다. 반입본에서도 tools/evaluate_visuals.py로 허용된 모델의 실제 호출·두 커밋 재생성 기록을 남기며 테스트 대역을 실제 모델 시험으로 보고하지 않습니다.
 
 - START_HERE.md와 docs/inhouse/package.md에서 시작하고 skills/camera-hal-sdd/SKILL.md를 적용합니다.
-- 설치·수정 전에 `python tools/verify_import.py`로 반입 무결성을 검사하고 source_commit을 기록합니다. START_PROMPT.txt와 START_PROMPT_HERMES.txt는 같은 안내에서 생성된 사본입니다. 선택한 CLI에 맞는 사본을 사용하며 다른 버전의 스킬·안내를 혼합하지 않습니다.
+- 설치·수정 전에 `python tools/verify_import.py`로 반입 무결성을 검사하고 source_commit을 기록합니다. START_PROMPT.txt에서 문서 생성·번역용 CLI를 선택하고 다른 버전의 스킬·안내를 혼합하지 않습니다.
 - 최종 대상은 사용자가 지정한 사내 Camera HAL입니다. 실제 제품 구성과 소스 검증 전에는 사내 적용 완료라고 하지 않습니다.
 - 생성기와 사내 소스·설정·facts·원고·프롬프트·로그는 별도 위치에서 관리합니다. 사내 입력과 파생물을 공개 서비스나 저장소로 보내지 않습니다.
 - 이 반입본에는 Git 원격이 없습니다. docs/libcamera/와 examples/libcamera/는 공개 시험 참고 자료입니다. 그 안의 공개 동기화·PR·GitHub Pages 배포·예약 지시를 사내 작업에 적용하지 않습니다.
