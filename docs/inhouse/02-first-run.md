@@ -102,14 +102,10 @@ uv run sdd --config ../hal-sdd-project/sdd.yaml audit-consistency
 
 ### 로컬 사이트 확인
 
-Mermaid 사본을 준비하고 로컬 사이트를 확인합니다. 사내 미러가 있으면 `--registry`를 지정하고, 외부 네트워크 없이 반입한 파일을 사용할 때는 `--tarball`을 지정하세요. 전체 설정에 아직 생성하지 않은 페이지가 있다면 작은 시험 설정으로 사이트를 내보내거나 원고와 Mermaid 파일을 먼저 확인합니다.
+템플릿의 [PDF 다운로드 준비](../../examples/inhouse-template/README.md#pdf-다운로드-준비)에 따라 빌드 장비에 렌더러를 설치하고 Mermaid 자산을 동봉합니다. 전체 설정에 아직 생성하지 않은 페이지가 있다면 작은 시험 설정으로 사이트를 내보내거나 원고와 Mermaid 파일을 먼저 확인합니다.
 
 ```bash
-uv run sdd --config ../hal-sdd-project/sdd.yaml fetch-mermaid
-```
-
-```bash
-uv run sdd --config ../hal-sdd-project/sdd.yaml export-site
+uv run --extra pdf sdd --config ../hal-sdd-project/sdd.yaml export-site
 ```
 
 ```bash

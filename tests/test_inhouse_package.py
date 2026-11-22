@@ -120,10 +120,11 @@ def test_import_rejects_modified_missing_and_added_files_then_recovers(kit_repo,
         verifier.verify(root)
 
 
-def test_dependency_list_contains_locked_runtime_and_test_closure():
+def test_dependency_list_contains_locked_runtime_pdf_and_test_closure():
     lines = builder.requirements((ROOT / "uv.lock").read_bytes()).decode().splitlines()
     pins = {line.split("==")[0] for line in lines if not line.startswith("#")}
     assert {"libclang", "markdown", "pymdown-extensions", "pyyaml", "tzdata", "pytest", "pluggy", "packaging"} <= pins
+    assert {"playwright", "pikepdf", "greenlet", "lxml", "pillow"} <= pins
     assert "mkdocs-material" not in pins
     assert not any("http" in line or line.startswith("-e") for line in lines)
 

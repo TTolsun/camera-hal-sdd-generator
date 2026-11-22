@@ -76,7 +76,7 @@ workspace/
 |---|---|
 | 생성기 소스, 가이드, 스킬, 설정 템플릿, 공개 예제·테스트, 집필 규칙과 라이선스 | 사내 HAL 소스·제품 compile DB·생성 헤더·컴파일러·Git |
 | 고정 커밋, 파일별 해시, `uv.lock`에서 만든 `requirements-inhouse.txt` | 대상 OS·CPU·Python에 맞는 Python 실행 환경과 wheel |
-| CLI 선택 템플릿·로컬 덮어쓰기 예시, 로컬 Mermaid를 쓰는 설정 | 선택한 CLI·모델 접근 권한, 승인된 Mermaid 배포본 또는 사내 자산 서버 |
+| CLI 선택 템플릿·로컬 덮어쓰기 예시, PDF 다운로드와 로컬 Mermaid를 켠 설정 | 선택한 CLI·모델 접근 권한, 승인된 Mermaid 배포본, Chromium headless shell·시스템 라이브러리·한글 글꼴 |
 | 로컬 초안·품질·복구 절차 | 사람 검토자, 사내 게시·모델 접근 권한 |
 
 이 ZIP만으로 폐쇄망 의존성 설치까지 완료되지는 않습니다. `.venv`나 다른 OS의 libclang 바이너리를 복사하지 않습니다. **대상과 같은 OS·CPU·Python 환경**의 승인된 준비 장비에서 다음 명령으로 wheel을 모으고, 별도 해시 목록과 조직의 라이선스 검토 자료를 함께 반입합니다. 지원 wheel이 없으면 대상 환경을 확인하고 준비를 중단합니다.
@@ -100,7 +100,13 @@ Linux에서는 `../sdd-runtime/bin/python`, Windows PowerShell에서는 `../sdd-
 
 `tools/run_sdd.py`는 동봉한 `src/`를 사용하고 CLI 종료 코드를 그대로 전달합니다. 생성기 자체를 pip로 설치할 필요가 없습니다. 기존 승인된 가상 환경도 사용할 수 있습니다. `uv`는 필수가 아니며 아래 실행표는 이 래퍼 기준입니다. 상세 가이드의 `uv run sdd`는 `<PY> tools/run_sdd.py`로 바꾸면 같습니다.
 
-Mermaid는 대상 사내망에서 승인된 tarball을 `fetch-mermaid --tarball <파일>`로 가져오거나 승인된 사내 자산 주소를 설정합니다. tarball 반입·ESM 구성은 [사이트 자산 절차](../concepts/site.md)를 따릅니다. 모델, GitHub, 공개 CDN은 사내 운영의 필수 조건이 아닙니다.
+PDF용 Python 패키지도 `requirements-inhouse.txt`에 포함됩니다. 브라우저는 별도로 준비합니다. 대상과 같은 OS·CPU의 준비 장비에서 같은 requirements를 설치한 후 `PLAYWRIGHT_BROWSERS_PATH`를 반입할 디렉터리로 지정하고 `<PY> -m playwright install chromium --only-shell`을 실행하세요. 그 디렉터리를 복사한 뒤 빌드 계정의 `PLAYWRIGHT_BROWSERS_PATH`에 대상 경로를 지정합니다. [Playwright 브라우저 캐시 안내](https://playwright.dev/python/docs/browsers#managing-browser-binaries)
+
+Mermaid는 승인된 tarball이나 사내 npm 미러를 사용해 설정 디렉터리의 `assets/mermaid/`에 준비합니다. PDF 렌더러는 여기에 동봉된 본체와 `chunks/`로 그림을 그립니다. 아래 명령에서 tarball 경로를 실제 반입 위치로 바꾸세요. [템플릿의 PDF 다운로드 준비](../../examples/inhouse-template/README.md#pdf-다운로드-준비)
+
+```text
+<PY> tools/run_sdd.py --config ../hal-sdd-project/sdd.yaml fetch-mermaid --tarball ../mermaid-11.12.0.tgz
+```
 
 ## 시작 프롬프트
 

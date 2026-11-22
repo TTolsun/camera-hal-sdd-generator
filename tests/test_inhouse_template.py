@@ -15,6 +15,8 @@ def test_템플릿_설정을_읽고_검사_설정이_유효하다():
     # update 는 compdb_cmd 없이 ndk_build 의 project_dir·args 로 DB 를 다시 만든다.
     assert "compdb_cmd" not in (cfg.raw.get("update") or {})
     assert cfg.raw["site"]["require_approval"] is False
+    assert cfg.site.full_document and cfg.site.pdf_downloads
+    assert cfg.site.mermaid_dir == "assets/mermaid"
     coverage_triage.settings(cfg)
     document_health.settings(cfg)
     assert cfg.prompts_dir.name == "prompts" and "camera-hal-sdd-generator" in cfg.prompts_dir.as_posix()

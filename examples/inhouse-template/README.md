@@ -24,6 +24,26 @@
 
 NDK-build가 아닌 제품의 설정은 [환경별 선택](../../docs/inhouse/agent.md#1-환경과-데이터-경계)을 따릅니다.
 
+## PDF 다운로드 준비
+
+템플릿에는 `site.pdf_downloads: true`가 설정되어 있습니다. 사이트를 빌드하면 독자는 다운로드 메뉴의 **현재 페이지**와 **전체 문서**에서 PDF를 바로 받을 수 있습니다. 아래 명령은 생성기 저장소 루트에서 실행합니다.
+
+1. **빌드 장비에 PDF 렌더러를 설치합니다.** `uv sync --locked --extra dev --extra pdf`로 Playwright와 pikepdf를 설치하고, `uv run --no-sync python -m playwright install chromium --only-shell`로 해당 버전의 Chromium을 준비합니다. 한글을 지원하는 글꼴도 설치하세요. Linux 빌드 이미지에는 Chromium 실행에 필요한 시스템 라이브러리가 있어야 합니다. [Playwright 설치 안내](https://playwright.dev/python/docs/browsers#install-system-dependencies)
+2. **Mermaid 본체와 그림 모듈을 함께 준비합니다.** 아래 예시에서 tarball 경로를 반입한 파일 위치로 바꾸세요. 사내 npm 미러에서 받을 때는 `--tarball ../mermaid-11.12.0.tgz` 대신 `--registry <사내 npm 미러 URL>`을 지정합니다. 명령이 끝나면 설정 파일 옆의 `assets/mermaid/`에 `mermaid.esm.min.mjs`와 `chunks/`가 생깁니다.
+
+```bash
+uv run --no-sync sdd --config ../hal-sdd-project/sdd.yaml fetch-mermaid --tarball ../mermaid-11.12.0.tgz
+```
+
+폐쇄망에서는 반입 패키지의 `requirements-inhouse.txt`로 대상 OS·CPU·Python에 맞는 wheel을 준비합니다. 같은 OS·CPU에서 같은 Playwright 버전으로 설치한 브라우저 캐시도 함께 반입하고, 빌드 계정의 `PLAYWRIGHT_BROWSERS_PATH`를 반입한 캐시 디렉터리로 지정하세요. [폐쇄망 설치 절차](../../docs/inhouse/package.md#반입-확인과-설치)
+
+원고를 생성한 뒤 아래 명령으로 사이트를 빌드하고 검증합니다. 기본 출력은 `../hal-sdd-project/build/site/`이며, 현재 페이지 PDF는 `download/pages/<페이지>.pdf`, 전체 문서 PDF는 `download/full.pdf`에 있습니다.
+
+```bash
+uv run --extra pdf sdd --config ../hal-sdd-project/sdd.yaml export-site
+uv run --extra pdf sdd --config ../hal-sdd-project/sdd.yaml verify-site
+```
+
 ## 사내 CLI 선택
 
 사용자가 선택한 Hermes, OpenCode, Claude Code 또는 Codex CLI를 사용합니다. 템플릿의 Codex/Terra High는 저장소의 기본 예시이며 사내 사용의 필수 조건이 아닙니다. 사내에서 Hermes를 사용할 때는 `sdd.cli.local.example.yaml`을 `sdd.yaml` 옆의 `sdd.local.yaml`로 복사합니다. 다른 CLI는 예시의 `runner`를 `opencode`, `claude`, `codex`로 바꾸고 해당 CLI의 모델·인자를 설정합니다. 기존 로컬 파일이 있으면 다른 설정을 보존하고 `agent`만 병합합니다.
