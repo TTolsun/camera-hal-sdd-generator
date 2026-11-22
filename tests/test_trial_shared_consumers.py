@@ -106,8 +106,9 @@ def test_http_consumers_keep_legacy_receipts_but_reject_cli_origin(tmp_path, con
     assert {item: item.read_bytes() for item in calls.iterdir()} == originals
 
 
-def test_latest_response_keeps_tag_filter_and_exact_raw_response(tmp_path):
-    calls = tmp_path / 'prompts/calls'
+@pytest.mark.parametrize('prompt_path', ['prompts/calls', 'build/prompts/calls'])
+def test_latest_response_keeps_tag_filter_and_exact_raw_response(tmp_path, prompt_path):
+    calls = tmp_path / prompt_path
     raw = 'answer\r\ncontinued\n'
     archived(calls, '001', 'page_topic_0', raw)
     # A non-selected tag's incomplete response is not a producer answer for this unit.

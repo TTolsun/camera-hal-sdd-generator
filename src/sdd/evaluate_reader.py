@@ -42,7 +42,9 @@ def evaluate(cfg, section_ids, out: Path, *, agent_factory=Agent):
     model = KnowledgeModel.load(cfg.facts_path)
     collect(trial, model)
     model.save(trial.facts_path)
-    agent = agent_factory(trial.agent, out / 'prompts')
+    # CLI checkpoints store receipt paths relative to the standard build directory.
+    prompts_root = trial.build_dir if trial.agent.kind == 'cli' else out
+    agent = agent_factory(trial.agent, prompts_root / 'prompts')
     results = []
     for sid in section_ids:
         start = time.monotonic()

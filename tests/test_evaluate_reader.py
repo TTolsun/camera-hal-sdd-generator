@@ -24,8 +24,11 @@ def test_evaluation_protects_operational_inputs(tmp_cfg, tmp_path, monkeypatch):
             evaluate(cfg, ['overview'], path)
 
 
-def test_evaluation_records_failure_without_publishing(tmp_cfg, tmp_path, sample_model, monkeypatch):
+@pytest.mark.parametrize(('kind', 'prompt_path'), [('ollama', 'prompts'), ('cli', 'build/prompts')])
+def test_evaluation_records_failure_without_publishing(tmp_cfg, tmp_path, sample_model, monkeypatch,
+                                                        kind, prompt_path):
     cfg = configured(tmp_cfg, monkeypatch)
+    cfg.agent.kind = kind
     sample_model.save(cfg.facts_path)
     monkeypatch.setattr('sdd.evaluate_reader.collect', lambda *_: None)
     def fail(self, selected):
@@ -33,7 +36,11 @@ def test_evaluation_records_failure_without_publishing(tmp_cfg, tmp_path, sample
         raise ValueError('missing evidence')
     monkeypatch.setattr('sdd.evaluate_reader.Generator.run', fail)
     out = tmp_path/'trial'
-    report = evaluate(cfg, ['overview'], out)
+    def agent_factory(settings, dump_dir):
+        assert settings.kind == kind
+        assert dump_dir == out / prompt_path
+        return object()
+    report = evaluate(cfg, ['overview'], out, agent_factory=agent_factory)
     assert report['results'][0]['automatic_checks'] == 'failed'
     assert report['human_approval'] == 'pending' and report['publishable'] is False
     assert json.loads((out/'evaluation.json').read_text(encoding='utf-8')) == report

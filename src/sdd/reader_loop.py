@@ -76,6 +76,8 @@ def latest_response(trial, key):
     folder = trial / 'replay-prompts/calls'
     if not folder.exists():
         folder = trial / 'prompts/calls'
+    if not folder.exists():
+        folder = trial / 'build/prompts/calls'
     folder = reject_symlinks(folder, recursive=True)
     prefix = key.replace('/', '_') + '_'
     found = []
