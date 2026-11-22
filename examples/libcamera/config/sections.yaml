@@ -9728,7 +9728,7 @@ sections:
   output: scenarios/uvc-viewfinder-configuration.md
   group: For Developer
   nav_section: 동작 추적과 문제 진단
-  lead: USB UVC 카메라에 뷰파인더 스트림 하나를 요청하고, 앱에서 받은 값과 장치에서 적용한 값을 확인하세요.
+  lead: USB UVC 뷰파인더 하나를 요청하는 예로, 소스에서 앱의 검증 결과와 장치 적용 시의 크기·FourCC 비교를 따라가세요.
   reader: 스트림 크기나 포맷이 달라진 이유를 찾는 앱 개발자와 장치 연동 담당자
   design_generation: llm
   semantic_review: true
@@ -9754,7 +9754,7 @@ sections:
     - id: app-validated-output
       file: Documentation/guides/application-developer.rst
       start: For this example application, the code below prints the adjusted values to
-      end: std::cout << "Validated viewfinder configuration is
+      end: camera->configure(config.get());
     - id: validation-contract
       file: src/libcamera/camera.cpp
       start: '\fn CameraConfiguration::validate()'
@@ -9784,25 +9784,64 @@ sections:
       start: '\brief Configure an image format on the V4L2 video device'
       end: "\n}"
     parts:
-    - id: answer
-      max_statements: 2
-      sources: [app-default, app-request, app-validated-output, validation-contract, camera-configure, app-stream, uvc-validate, uvc-default, uvc-configure, v4l2-configure]
+    - id: app-validation
+      max_statements: 1
+      sources: [app-default, app-request, app-validated-output, validation-contract]
       question: >-
-        두 짧은 문단으로 쓰세요. 카메라를 확보한 앱이 공식 가이드처럼 Viewfinder 한 개를 640×480으로 요청하는 상황입니다.
-        첫 문단은 앱이 구성을 만들고 tryFormat 시험을 거친 뒤 크기·픽셀 포맷을 읽어 변경값을 받아들일지 판단하는 흐름을 설명하세요. Adjusted의 의미를 설명하되 모든 필드 변경을 Adjusted로 묶거나 후보 순회 알고리즘으로 들어가지 마세요. 공통 configure가 검증을 다시 하는 조건으로 문단을 닫으세요.
-        둘째 문단에서 형식을 시험하는 tryFormat과 실제로 적용하는 setFormat의 차이, 적용 시점에 검증된 크기·FourCC와 장치가 반환한 크기·FourCC를 대조하는 이유와 실패 분기를 설명하세요. 성공 뒤 앱은 연결된 Stream의 활성 구성을 읽으며, 이 값은 공통 코드가 복사한 검증 구성임을 밝혀 주세요.
-        640×480은 예시 입력입니다. 대상 장치에서 확인할 값은 검증 전후 및 적용 시도의 관찰 항목으로 쓰세요.
+        한 문단에서 Viewfinder 한 개의 640×480 예시 입력부터 시작하세요.
+        공식 가이드 예제의 실제 동작(validate 반환값을 사용하지 않고 toString으로 구성 출력)과
+        호출자가 해야 할 판단(상태 확인, Adjusted이면 스트림이 빠졌는지와 남은 스트림의 매개변수가 바뀌었는지
+        구성 전체를 확인해 수용 여부 결정, 이 사례의 확인 항목으로 크기와 픽셀 포맷 제시,
+        Invalid이면 지원 가능한 구성으로 조정할 수 없다는 뜻)을 명시적으로 구분하세요. 예제 코드에 상태 분기를 귀속하지 마세요.
+        640×480은 장치의 지원이나 최종 결과를 보장하지 않습니다.
       answer_contract:
         basis: implementation
         required_terms:
         - [640×480]
         - [Viewfinder]
+        - [toString]
         - [Adjusted]
+        - [구성 전체, 전체 구성]
         - [Invalid]
+        - [Valid]
+    - id: device-apply
+      max_statements: 1
+      sources: [camera-configure, uvc-validate, uvc-default, uvc-configure, v4l2-configure]
+      question: >-
+        한 문단으로 접근 검사 뒤 Camera::configure가 재검증하여 Valid만 통과시키는 조건과
+        UVC의 tryFormat 시험 및 setFormat 장치 적용을 구분하세요. UVC 검증은 지원 목록으로 픽셀 포맷과 크기를
+        선택합니다. setFormat 호출 자체의 오류를 그대로 반환하는 분기와 호출 성공 후 장치가 반환한
+        크기 또는 FourCC가 검증된 구성의 값과 다르면 -EINVAL이 되는 분기를 구분하세요.
+        비교 기준을 처음 앱이 요청한 640×480이 아니라 재검증을 통과한 구성이라고 명시하세요.
+      answer_contract:
+        basis: implementation
+        required_terms:
         - [Valid]
         - [tryFormat]
         - [setFormat]
+        - [FourCC]
+        - [검증된 구성, 재검증을 통과한 구성]
         - [-EINVAL]
+    - id: active-values
+      max_statements: 1
+      sources: [uvc-validate, uvc-configure, camera-configure, app-stream]
+      question: >-
+        한 문단에서 성공 뒤 Stream::configuration()의 각 값이 어디서 왔는지 설명하세요.
+        UVC validate가 tryFormat의 첫 평면 bpl과 size를 stride와 frameSize에 쓰고, 색 공간이 다르면
+        cfg.colorSpace에 써서 Adjusted로 표시합니다. UVC configure는 setFormat 성공 뒤 크기와 FourCC만 비교합니다.
+        stride·frameSize·colorSpace는 setFormat 결과로 비교하거나 덮어쓰지 않습니다.
+        UVC가 스트림을 연결하면 공통 코드가 검증된 cfg를 활성 스트림에 복사합니다.
+        설명은 코드에서 확인한 값의 출처와 비교 범위로 한정하세요. 특정 장치의 실제 결과는 이 소스로 정할 수 없습니다.
+      answer_contract:
+        basis: implementation
+        required_terms:
+        - [tryFormat]
+        - [setFormat]
+        - [bpl]
+        - [stride]
+        - [frameSize]
+        - [colorSpace]
+        - [FourCC]
         - ['Stream::configuration()']
     answer_contract:
       basis: implementation
