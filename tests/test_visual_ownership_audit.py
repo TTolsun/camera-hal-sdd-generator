@@ -92,9 +92,11 @@ def graphs():
              'Integration check before overwriting: verify that the last external consumer has finished and synchronization is complete.', 'stop'),
     ], 'edges': [
         edge('attach', 'wait', '실제 큐 진입 이후 준비합니다.', 'Prepare after actual queue entry.'),
-        edge('wait', 'failure', '대기가 실패하면 요청이 실패 상태로 완료됩니다.', 'If the wait fails, the request completes in a failed state.'),
+        edge('wait', 'failure', 'Fence 대기에 실패하면 FrameBuffer의 펜스가 초기화되지 않은 채 애플리케이션에 제공됩니다.',
+             "If waiting for the Fence fails, the FrameBuffer's fence remains unreset and is made available to the application."),
         edge('failure', 'cleanup', '실패한 펜스를 해제합니다.', 'Release the fence after the wait failure.'),
-        edge('stop', 'return', '모든 큐 요청을 애플리케이션에 반환하면 전환합니다.', 'Transition when all queued requests have been returned to the application.', 'stop'),
+        edge('stop', 'return', '큐에 접수된 모든 요청이 애플리케이션에 반환되면 전환합니다.',
+             'The transition occurs when all queued requests have been returned to the application.', 'stop'),
     ]}
     return before, after
 
@@ -114,6 +116,8 @@ def test_old_reverse_edge_is_rejected_and_corrected_at_generation(tmp_cfg, owner
         if not tag.endswith('_audit'):
             if tag.endswith('_1'):
                 assert 'fence -> buffer' in user
+                assert 'Preserve every requested stage and branch' in user
+                assert 'write that condition explicitly in both edge labels' in user
                 return json.dumps(corrected, ensure_ascii=False)
             return json.dumps(old, ensure_ascii=False)
         payload = json.loads(user)
@@ -121,10 +125,15 @@ def test_old_reverse_edge_is_rejected_and_corrected_at_generation(tmp_cfg, owner
         assert '같은 요청의 처음 연결로 되돌아가는 역순' in system
         assert '연동 확인 항목과 영어 Integration check' in system
         assert 'should not을 사용해서는 안 됨 또는 must not으로 강화' in system
-        assert payload['sources'] == {'fence': FENCE, 'stop': STOP}
-        if payload['draft'] == old:
+        assert {key: row['text'] for key, row in payload['sources'].items()} == {'fence': FENCE, 'stop': STOP}
+        assert 'condition_ref' not in user and 'node_bindings' not in user
+        diagrams = payload['diagram']
+        if any(item['from'] == 'fence' and item['to'] == 'buffer' for item in diagrams['edges']):
             return json.dumps(dict(passed=False, reason='fence -> buffer reverses failure and association.'))
-        assert payload['draft'] == corrected
+        assert diagrams['edges'] == [{field: value for field, value in item.items() if field != 'condition_ref'}
+                                    for item in corrected['edges']]
+        assert all('symbol' not in node for node in diagrams['nodes'])
+        assert payload['cited_passages']['fence:0'] == {'source': 'fence', 'start': 0, 'end': len(FENCE)}
         return json.dumps(dict(passed=True, reason='Direction, stop boundary and separate consumer check confirmed.'))
 
     agent.chat = chat
@@ -146,15 +155,43 @@ def test_old_reverse_edge_is_rejected_and_corrected_at_generation(tmp_cfg, owner
 
 def test_semantic_audit_keeps_full_input_and_fails_at_budget(tmp_cfg, ownership, graphs):
     section, plan, model = ownership
-    _, records, passages, _, request = generated_visuals.inputs(tmp_cfg, model, section, plan)
+    _, records, passages, _, _ = generated_visuals.inputs(tmp_cfg, model, section, plan)
+    graph = generated_visuals.materialize(tmp_cfg, model, section, plan, graphs[1], 'fixture')
     tmp_cfg.agent.max_input_chars = 1_000
 
     def no_call(*args, **kwargs):
         pytest.fail('an oversized request must never reach the CLI')
 
     with pytest.raises(ValueError, match='input budget'):
-        visual_audit_gate.review(tmp_cfg, SimpleNamespace(chat=no_call), plan, request,
-                                 records, passages, graphs[1], 'ownership')
+        visual_audit_gate.review(tmp_cfg, SimpleNamespace(chat=no_call), plan,
+                                 records, passages, graph, 'ownership')
+
+
+def test_semantic_audit_sees_materialized_guard_polarity(tmp_cfg, ownership):
+    section, plan, model = ownership
+    topic = next(t for t in section['design_topics'] if t['id'] == 'ownership')
+    text = 'if (waitingFailed) {\n    completeRequest();\n} else {\n    startRequest();\n}'
+    source = dict(id='guard', file='guard.cpp', start='if', end='}')
+    topic['sources'].append(source)
+    model.evidence['vendor-contract/ownership/guard'] = dict(
+        selector=source, file=source['file'], line=20, text=text, status='available',
+        sha256=hashlib.sha256(text.encode()).hexdigest(), commit='a' * 40)
+    draft = {'nodes': [
+        node('wait', 'waitingFailed', '대기 결과를 확인합니다.', 'Check the wait result.', 'guard'),
+        node('fail', 'completeRequest', '요청을 완료합니다.', 'Complete the request.', 'guard'),
+        node('start', 'startRequest', '요청을 시작합니다.', 'Start the request.', 'guard'),
+    ], 'edges': [
+        dict(edge('wait', 'fail', '실패한 경우입니다.', 'The wait failed.', 'guard'), condition_ref='c0:true'),
+        dict(edge('wait', 'start', '대기를 마친 경우입니다.', 'The wait succeeded.', 'guard'), condition_ref='c0:false'),
+    ]}
+    _, records, passages, _, _ = generated_visuals.inputs(tmp_cfg, model, section, plan)
+    graph = generated_visuals.materialize(tmp_cfg, model, section, plan, draft, 'fixture')
+    payload = visual_audit_gate.request_payload(plan, records, passages, graph)
+    true_edge, false_edge = payload['diagram']['edges']
+    for key in ('label', 'label_en'):
+        assert true_edge[key].endswith(' · waitingFailed [true]')
+        assert false_edge[key].endswith(' · waitingFailed [false]')
+    assert not any('condition_ref' in item for item in payload['diagram']['edges'])
 
 
 def test_stop_and_fence_retrieval_are_prioritized_by_template(tmp_cfg, ownership):
