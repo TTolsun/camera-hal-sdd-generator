@@ -1,6 +1,6 @@
 # 2단계: 질문 하나로 첫 실행 확인하기
 
-사내 템플릿을 복사한 뒤 개발자가 실제로 답해야 할 질문 하나를 고르세요. 예를 들어 “요청 제출이 성공한 뒤 언제 완료됐다고 판단하고, 언제 버퍼를 재사용할 수 있나요?”처럼 소스 범위를 한정할 수 있는 질문부터 시작합니다. 아래 절차의 공통 기능은 공개 입력에서 확인할 수 있습니다. 사내 제품의 빌드, 모델 인증, 코드 열람, 게시 권한은 해당 환경에서 확인해야 합니다.
+사내 템플릿을 복사하고 제품의 소스와 빌드 환경을 연결한 뒤 연동 가이드(`vendor-contract`)부터 생성하세요. 기본 설정은 주제별 질문과 발췌 위치를 준비합니다. 예를 들어 정지 중 통지가 돌아오면 요청의 상태, 개별 프레임의 유효성, 버퍼의 마지막 사용 시점을 따로 판단할 근거를 찾습니다.
 
 ```
 설정·빌드 확인 → 근거 추출 → 호출 없는 계획 → 초안과 독립 검토 → 로컬 확인
@@ -32,9 +32,9 @@ workspace/
 
 ### 승인된 모델로 첫 질문을 시험하기
 
-첫 원고를 읽고도 다음 행동을 정하기 어렵다면, 같은 질문을 개발자에게 먼저 주고 답에 사용한 문장을 짚어 달라고 하세요. 예를 들어 “정지 중 완료 통지를 받았을 때 이 프레임을 써도 되는가?”에 답하려면 요청의 상태를 정하는 코드와 개별 버퍼 데이터의 유효성을 정하는 코드가 함께 필요합니다. 둘 중 하나가 입력에서 빠졌다면 그 근거를 보강하세요. 둘 다 있는데 문장이 조건을 뒤섞었다면 질문에서 독자가 각각 판단해야 하는 대상을 명시하고, 새 원고를 같은 과제로 다시 읽힙니다. [공개 입력으로 재현하는 방법](../../examples/libcamera/validation/inhouse-stop-comparison/README.md) · [원고 두 편과 독자 판단](../libcamera/records/inhouse-stop-comparison/README.md)
+첫 원고에서 “정지 중 반환된 프레임을 어디에 써도 되는가?”에 답하는 문장과 그림의 분기를 찾아보세요. 제출 성공, 결과 통지, 영상 사용 가능 여부, 메모리를 다시 써도 되는 시점마다 근거가 다를 수 있습니다. 실제 제품 밖의 소비자가 언제 작업을 끝냈는지 소스에서 알 수 없다면 원고에 그 확인 조건이 남아야 합니다. [공개 원고 비교](../libcamera/records/inhouse-stop-comparison/README.md)
 
-1. 제품에서 잘못 판단하면 구현이 바뀌는 질문을 고릅니다. 예를 들어 요청 접수 성공, 결과 콜백, 버퍼 재사용 가능 시점은 서로 다른 사건입니다. 코드에서 확인할 주체·조건·순서를 먼저 적고, 버퍼 반환이나 fence처럼 발췌로 확인할 수 없는 항목도 표시합니다.
+1. 기본 질문을 사용해 원고를 만든 뒤, 처음 읽는 개발자에게 같은 과제를 줍니다. 실제 상태값이나 다음 행동을 찾지 못한 경우 답변과 해당 소스 발췌를 대조합니다.
 2. 원고 생성과 별도로 검토 세션을 엽니다. 같은 발췌에 정확한 문장과 주체·시점만 바꾼 문장을 섞어 검토한 뒤, 실제 생성한 답변도 문장별로 대조합니다. “콜백이 아직 실행되지 않았다”와 “콜백 완료가 보장되지 않는다”를 구별하는지 확인하세요. 빈 답변, 자리만 채운 답변, 근거가 없는 시간 순서를 놓쳤으면 해당 항목은 사람 검토로 남깁니다.
 3. `doctor` 출력에서 생성·번역·독립 검토의 CLI와 모델을 확인합니다. 번역을 분리하려면 `paths.translation_profile`, 계약 검토를 분리하려면 `paths.consistency_profile`을 지정합니다. 기존 프로필과 실행 인자는 로컬에 보관합니다. 승인 목록 밖의 모델이나 확인할 수 없는 CLI 기본값이 하나라도 있으면 호출 전에 해당 역할의 설정을 고칩니다. 반복 발행에서는 [작업 계약](../concepts/publication-inputs.md)에 세 역할의 실행 설정을 선언하면 실제 프로필이 달라진 단계가 호출 전에 중단됩니다.
 4. 시험 소스에서 완료 조건 하나만 바꿔 영향받은 원고와 번역을 갱신합니다. 호출 한도로 한 번 중단한 뒤 같은 입력으로 재개하고, 최종 사이트에서 새 조건과 이전 조건의 잔존 여부를 확인합니다. 한 질문이 통과할 때까지의 새 호출 수·재사용·소요 시간과 사람이 고친 문장을 함께 기록합니다.
@@ -44,13 +44,13 @@ workspace/
 실제 제품에서 빌드한 범위와 문서가 답할 질문을 정합니다.
 
 1. `config/scenarios.yaml`의 `<namespace>`와 시그니처를 실제 정의로 바꿉니다. 규칙은 [HAL3 진입점 작성 규칙](../reference/sections.md#hal3-진입점-작성-규칙)에 있습니다.
-2. `config/sections.yaml`의 클래스 패턴을 사내 이름에 맞추고, `vendor-contract`·`overview`의 필수 질문에 소스 근거와 답변을 작성합니다. 빈 계약으로는 생성할 수 없습니다. [계약 작성 절차](contract-authoring.md)를 따릅니다. 사내 에이전트가 이 작업을 직접 수행할 수 있습니다.
+2. 기본 템플릿에는 Vendor와 Developer의 설계 주제가 들어 있습니다. `first_run_inputs: true`이면 `generate`가 근거를 아직 지정하지 않은 LLM 주제의 질문과 발췌를 준비합니다. 직접 지정한 발췌나 검토한 고정 계약은 그대로 사용할 수 있습니다. 제품별 주제 추가와 근거 보강 방법은 [계약 작성 절차](contract-authoring.md)에 있습니다.
 3. `config/glossary.yaml`에 사내 약어의 뜻을 적습니다. `export-site`는 뜻이 없는 약어를 알려 주고 게시를 멈춥니다. 형식은 [glossary.yaml 참조](../reference/glossary.md)에 있습니다.
 4. `components` 섹션은 **구성 요소 색인**으로 켜 두었습니다(`narration: facts`, 클래스·함수 `'*'`). 빌드한 모든 코드가 한 문서에 실리므로, 문서가 다루지 않는 코드가 바뀔 때마다 갱신이 멈추는 일이 크게 줄어듭니다. 끄지 않습니다.
 
 ## 4. 환경을 점검하고 근거 추출하기
 
-`extract` 후에는 발췌 원문을 확인하고 해시와 답변을 채운 뒤 `generate`를 실행합니다. 첫 설정만으로 계약의 의미를 자동 완성하지 않습니다. 이 문서는 NDK-build 사례이며 다른 빌드는 [환경별 선택](agent.md#1-환경과-데이터-경계)을 따릅니다.
+`extract`가 만든 facts와 동일한 커밋에서 첫 원고를 생성합니다. 자동 입력 준비는 실제 제품 빌드와 분석 체크아웃이 필요합니다. NDK-build 이외의 제품은 [환경별 선택](agent.md#1-환경과-데이터-경계)을 따르세요.
 
 생성기 저장소 루트에서 `doctor`를 실행하세요. DB가 없으면 NDK 템플릿에서는 `compdb`를 실행합니다. Soong, CMake 등 다른 빌드에서는 제품 빌드에서 만든 DB와 생성 헤더를 준비하고 `source.compile_commands`를 지정하세요. 필요하면 `compdb --normalize`로 분석용 사본을 준비합니다.
 
@@ -66,31 +66,31 @@ uv run sdd --config ../hal-sdd-project/sdd.yaml extract
 
 ## 5. 호출 없이 계획을 확인한 뒤 질문 하나를 실행하기
 
-첫 실행에는 질문과 필요한 그림 하나를 담은 작은 섹션을 준비합니다. 아래 명령의 `first-question`은 그 섹션의 ID로 바꿉니다. 작은 설정에 `overview.md`가 없다면 섹션의 `next`를 실제로 열 수 있는 관련 자료로 지정하세요. 기본 다음 링크가 가리키는 페이지가 없으면 독립 검토와 로컬 링크 검사에서 멈춥니다. 템플릿의 전체 문서 범위는 운영에 사용할 수 있습니다. [질문·발췌 작성](contract-authoring.md) · [질문별 시각화 기준](../concepts/reader-quality.md#항목별-시각화-검토)
+기본 연동 가이드 하나로 시작합니다. 새 섹션을 만들거나 소스 줄 번호를 입력할 필요가 없습니다. 이전 설정을 사용한다면 프로젝트의 `sdd.yaml`에 `first_run_inputs: true`를 추가해 빈 LLM 주제에 적용할 수 있습니다. [질문별 시각화 기준](../concepts/reader-quality.md#항목별-시각화-검토)
 
 ```bash
-uv run sdd --config ../hal-sdd-project/sdd.yaml generate --sections first-question --plan-only
+uv run sdd --config ../hal-sdd-project/sdd.yaml generate --sections vendor-contract --plan-only
 ```
 
-출력된 계획 파일을 로컬에서 여세요. `facts`와 `documents`에서 추출·문서 범위를, `units`에서 질문, 근거 ID, 입력 문자 수, 새 생성과 재사용 후보를 확인합니다. 앞선 답변에 의존하는 후보는 실제 실행에서 결정됩니다. 그림은 `visuals`에서 확인합니다. 설정한 독립 검토의 실제 요청은 생성한 원고가 나온 뒤에 구성됩니다. 비교 가능한 시간·토큰 표본이 없으면 계획에 추정 불가로 표시합니다. 이 단계는 모델 호출 0회이며 초안, 검토 결과나 승인 상태를 만들지 않습니다.
+처음 계획에서는 `build/first-run-plan.json`에서 준비할 주제와 소스 커밋을 확인합니다. 실제 생성에서는 설정한 CLI가 주제별로 후보를 읽고 질문과 근거를 고릅니다. 선택 결과는 `build/first-run-inputs.json`에 기록합니다. 입력이 준비된 뒤의 문서 계획에는 질문별 근거와 생성 단위, 그림이 표시됩니다. 계획만 실행하면 모델 호출은 0회입니다.
 
-계획의 `execution`과 `independent_review.profile`에서 실행 파일, 래퍼 인자, 모델, 추가 인자와 timeout을 확인하세요. 검토할 질문은 `paths.consistency_file`에, 검토 실행기는 `paths.consistency_profile`에 지정합니다. 아래 예에서 `match`는 근거 대조에 포함할 원고 문장을 선택하는 정규식입니다. 핵심 답변이 빠지지 않는지 검토 보고서의 `claims`에서 확인하세요.
+생성 전에 `doctor`로 생성과 독립 검토의 프로필을 확인하세요. 별도 계약 대조를 실행하려면 검토할 질문을 `paths.consistency_file`에, 검토 실행기를 `paths.consistency_profile`에 지정합니다. 아래는 연동 가이드에서 독자가 사용할 문장을 선택하는 예입니다.
 
 ```yaml
 contracts:
-  - id: first-question
+  - id: buffer-reuse
     question: 요청이 완료된 뒤 버퍼를 언제 재사용할 수 있나요?
-    primary: first-question.md
-    documents: [first-question.md]
+    primary: vendor-contract.md
+    documents: [vendor-contract.md]
     match: '완료|재사용'
 ```
 
-실행하기 전에 첫 실행의 한도를 로컬 설정에 적습니다. 예를 들어 `review.max_calls: 4`, `review.max_seconds: 900`, `review.max_retries: 1`을 지정할 수 있습니다. 호출·시간 상한을 생략하거나 0으로 두면 해당 상한이 없습니다. 실패한 호출과 재시도도 호출 시도에 포함됩니다. `max_retries`의 0은 최초 시도만 허용합니다. 이 값은 응답 검증에서 재시도를 지원하는 경로에 적용되며 인증 실패나 독립 계약 대조를 자동으로 반복하지 않습니다.
+실행 전 주제 수와 그림 수에 맞게 로컬 설정의 `review.max_calls`와 `review.max_seconds`를 정하세요. 첫 실행의 입력 준비에도 모델 호출이 필요합니다. 호출·시간 상한을 생략하거나 0으로 두면 해당 상한이 없습니다. 실패와 재시도도 호출 시도에 들어갑니다. `review.max_retries: 0`이면 응답 검증에서 최초 시도만 허용합니다.
 
 `review.max_calls`와 `review.max_seconds`는 생성과 계약 대조의 각 호출 명령에 따로 적용됩니다. `review.document_max_*`는 장부의 문서 범위에서 실행되는 설계 답변·계약 대조에 적용됩니다. 준비 명령이나 그 범위 밖의 렌더링까지 제한하려면 별도 시간 측정이 필요합니다. 진행 중인 CLI에는 `agent.timeout_sec`와 남은 실행·문서·작업 시간 중 가장 짧은 값이 적용됩니다. 여러 명령과 재개에 걸친 누적 상한이 필요하면 `publication.operation_id`와 `publication.budget`을 사용합니다. [발행 입력과 작업 기록](../concepts/publication-inputs.md)
 
 ```bash
-uv run sdd --config ../hal-sdd-project/sdd.yaml generate --sections first-question
+uv run sdd --config ../hal-sdd-project/sdd.yaml generate --sections vendor-contract
 uv run sdd --config ../hal-sdd-project/sdd.yaml audit-consistency
 ```
 

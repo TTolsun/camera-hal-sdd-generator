@@ -31,6 +31,8 @@ paths:
 facts:
   package_depth: 2
 
+first_run_inputs: true
+
 # 실제 제품 자료 확보 후 활성화합니다. 예시 파일은 가상 시험 입력입니다.
 # products:
 #   file: config/products.yaml

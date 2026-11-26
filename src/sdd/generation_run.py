@@ -278,6 +278,11 @@ class Execution:
                 self.current['units'].update(states)
                 self.persist()
 
+    def _document_seconds(self, elapsed):
+        previous = sum(row.get("seconds", 0) for row in self.report["documents"]
+                       if row is not self.current and row["section"] == self.current["section"])
+        return previous + elapsed - self.current["started_seconds"]
+
     def check_time(self):
         elapsed = self.clock()-self.started
         if (self.operation_limits.get('max_seconds') and
@@ -286,7 +291,7 @@ class Execution:
         if self.limits['max_seconds'] and elapsed >= self.limits['max_seconds']:
             raise BudgetExceeded('run time budget exhausted; previous output preserved')
         if (self.current is not None and self.limits['document_max_seconds']
-                and elapsed-self.current['started_seconds'] >= self.limits['document_max_seconds']):
+                and self._document_seconds(elapsed) >= self.limits['document_max_seconds']):
             raise BudgetExceeded('document time budget exhausted; previous output preserved')
 
     @contextmanager
@@ -347,7 +352,7 @@ class Execution:
             scopes += [(self.limits['document_max_calls'],
                         sum(c.get('section') == self.current['section'] for c in calls), 'document call'),
                        (self.limits['document_max_seconds'],
-                        now-self.started-self.current['started_seconds'], 'document time')]
+                        self._document_seconds(now-self.started), 'document time')]
         for limit, used, label in scopes:
             if limit and used >= limit:
                 raise BudgetExceeded(f'{label} budget exhausted; previous output preserved')

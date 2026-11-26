@@ -268,6 +268,8 @@ def _process_queue(cfg: Config, queue: list[str], base: str, state: dict[str, An
                                    "소스 체크아웃이 실제로 반영됐는지 확인하세요.")
             files = source_git.changed_files(cfg.source_root, base, sha)
             report = impact_mod.compute(cfg, model, files, base, sha, base_model)
+            from .first_run import extend_impact
+            extend_impact(cfg, report)
             report.save(cfg.build_dir / "impact.json")
             # 판정 기록은 사람 승인 장부와 따로 둔다. 관문 통과 여부는 review.coverage_triage.pass_gate 가 정한다.
             judged = coverage_triage.triage(cfg, report, ledger)

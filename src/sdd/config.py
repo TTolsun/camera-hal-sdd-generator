@@ -422,9 +422,10 @@ class Config:
 
     def _sections(self) -> list[dict[str, Any]]:
         data = _load_yaml(self.sections_file)
+        from .first_run import bind as bind_first_run
         from .product_context import bind
         from .reader_scope import validate_locations
-        sections = bind(self, list(data.get("sections", []) or []))
+        sections = bind(self, bind_first_run(self, list(data.get("sections", []) or [])))
         from .scenario_ownership import validate
         validate(sections, self.scenarios(), section_output)
         return validate_locations(sections, {section_output(s) for s in sections})

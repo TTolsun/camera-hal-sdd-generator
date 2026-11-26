@@ -90,7 +90,7 @@ sections:
   show_evidence: true
   design_requirements:
   - id: integration
-    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    question: 연동 호출 하나를 골라, 호출자가 먼저 준비할 자원과 제공 측이 검사하거나 반환하는 결과를 설명하세요. 다음 호출로 넘어갈 수 있는 조건은 무엇입니까?
     aspects:
     - inputs
   - id: inputs
@@ -98,11 +98,11 @@ sections:
     aspects:
     - inputs
   - id: ownership
-    question: 요청과 버퍼를 누가 유지하고 반환합니까?
+    question: 요청을 다시 제출할 때 버퍼를 덮어써도 되는 시점은 언제입니까? 누가 참조를 보유하며 마지막 소비자의 사용 종료나 동기화 조건을 어떻게 확인합니까?
     aspects:
     - ownership
   - id: completion
-    question: 제출과 완료, 정지를 어떻게 구분합니까?
+    question: 정지 중 결과 통지를 받으면 어떤 상태를 확인해 프레임과 메타데이터의 사용 여부를 결정합니까? 제출 반환, 요청 완료, 개별 버퍼의 결과를 구분하세요.
     aspects:
     - completion
   - id: failure
@@ -116,7 +116,7 @@ sections:
   design_topics:
   - id: integration
     title: 연동 순서와 책임
-    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    question: 연동 호출 하나를 골라, 호출자가 먼저 준비할 자원과 제공 측이 검사하거나 반환하는 결과를 설명하세요. 다음 호출로 넘어갈 수 있는 조건은 무엇입니까?
     sources: []
     covers:
     - integration
@@ -128,13 +128,13 @@ sections:
     - inputs
   - id: ownership
     title: 요청과 버퍼 수명
-    question: 요청과 버퍼를 누가 유지하고 반환합니까?
+    question: 요청을 다시 제출할 때 버퍼를 덮어써도 되는 시점은 언제입니까? 누가 참조를 보유하며 마지막 소비자의 사용 종료나 동기화 조건을 어떻게 확인합니까?
     sources: []
     covers:
     - ownership
   - id: completion
     title: 제출·완료·정지
-    question: 제출과 완료, 정지를 어떻게 구분합니까?
+    question: 정지 중 결과 통지를 받으면 어떤 상태를 확인해 프레임과 메타데이터의 사용 여부를 결정합니까? 제출 반환, 요청 완료, 개별 버퍼의 결과를 구분하세요.
     sources: []
     covers:
     - completion

@@ -1,10 +1,10 @@
 # 사내 HAL 설정 템플릿
 
-`config/visuals.yaml`의 상태·요청·소유권·실패 질문을 실제 HAL의 `design_topics` 근거와 연결하세요. `generation: llm`이면 생성기가 승인된 사내 모델을 호출해 구조 초안을 받고 구절·심볼·조건을 검사하여 원고에 배치합니다. 빈 근거나 모델 실패는 게시를 중단합니다. [LLM 그림 자동화](../../docs/concepts/site.md#사내-llm으로-초안-자동-생성하기)에 작성·재생성 절차가 있습니다.
+기본 설정으로 `generate --sections vendor-contract`를 실행하면 연동 가이드의 설계 질문, 같은 커밋의 발췌, 답변과 그림을 준비합니다. 제품 소스와 빌드 설정, 승인된 CLI가 필요합니다. [첫 실행과 재개](../../docs/inhouse/02-first-run.md)
 
 [반입 패키지 시작 안내](../../docs/inhouse/package.md)에서 시작 프롬프트·실행 순서·합격 기준·복구 절차를 함께 찾을 수 있습니다.
 
-**이 디렉터리를 생성기 저장소 옆에 `hal-sdd-project/`로 복사하고, 파일 안의 `<...>`를 채우세요.** 그다음 생성기 저장소의 `docs/inhouse/02-first-run.md`("4. 실행하기")에 있는 명령을 순서대로 실행합니다. 설정 뒤에는 실제 소스를 대조하여 설계 계약을 작성해야 합니다. 에이전트에게 맡길 때는 [전달용 지시문](../../docs/inhouse/agent.md#전달할-지시문)과 [계약 작성 절차](../../docs/inhouse/contract-authoring.md)를 사용하세요.
+**이 디렉터리를 생성기 저장소 옆에 `hal-sdd-project/`로 복사하고 파일 안의 제품 경로와 빌드 설정을 채우세요.** [첫 실행](../../docs/inhouse/02-first-run.md) 순서대로 facts를 추출하고 원고를 만듭니다.
 
 | 파일 | 채울 것 |
 |---|---|
@@ -13,7 +13,7 @@
 | `config/scenarios.yaml` | `<namespace>`와 실제 시그니처, 대조한 정의 위치 |
 | `config/glossary.yaml` | 사내 약어의 뜻. `export-site`가 뜻이 없는 약어를 알려 줍니다. |
 | `handoff.md` | 단계별 완료·실패·재개 명령과 증거 경로 |
-| `config/sections.yaml` | `vendor-contract`·`overview`의 소스 근거와 답변, 사내 클래스 패턴 |
+| `config/sections.yaml` | 기존 설계 질문과 직접 지정한 발췌를 유지합니다. 제품별 주제나 클래스 패턴을 추가할 때 수정합니다. |
 
 이 템플릿이 기본으로 켜 둔 것:
 
@@ -58,6 +58,6 @@ uv run --extra pdf sdd --config ../hal-sdd-project/sdd.yaml verify-site
 
 템플릿은 Vendor의 제품 개요·지원 범위와 검증을 **도입 판단**, 연동 가이드를 **연동 구현**으로 묶습니다. Developer는 **구조 이해·코드 탐색·동작 추적과 문제 진단·변경 검토**로 나눕니다. 작업과 문서의 순서는 설정에서 처음 나온 순서를 따릅니다. 장치별 구현 문서는 실제 근거가 있을 때 해당 작업 소분류에 추가하며, libcamera의 장치 이름이나 문서를 사내 기본값으로 복사하지 않습니다. 기존 사내 설정에는 이 항목을 명시적으로 옮겨야 하며 생성기를 교체하는 것만으로 기존 YAML을 자동 수정하지 않습니다.
 
-Vendor 개요(`vendor-overview`)와 신입·타팀 Developer(`developer`) 독자 프로필은 기본으로 필수입니다. Vendor 개요의 기능·강점·연동 순서·지원 제약과 기존 입력·소유권·완료·실패·검증 질문을 실제 HAL 근거로 채웁니다. 상세 문서는 `vendor` 프로필로 나눌 수 있습니다. 기본 템플릿은 `design_generation: llm`을 사용합니다. 에이전트가 빈 `sources`를 실제 소스에 연결하고 질문·`covers`를 작성하면 사내 LLM이 답변과 그림 초안을 생성합니다. `statements`를 미리 넣지 않습니다. 직접 검토한 고정 계약을 선택한 섹션에서만 `design_generation`을 빼고 해시·`statements`를 작성합니다. 클래스 색인만으로 설계 문서가 완성된 것으로 처리하지 않습니다.
+기본 템플릿의 `first_run_inputs: true`는 비어 있는 LLM 주제에 적용됩니다. `build/first-run-inputs.json`에서 구체화한 질문과 선택된 발췌를 확인하세요. 생성 결과를 읽을 때는 독자가 어떤 상태를 확인하고 다음에 어떤 행동을 할 수 있는지 대조합니다. 직접 설정한 주제와 고정 계약은 [계약 작성 절차](../../docs/inhouse/contract-authoring.md)를 따릅니다.
 
 [공통 품질 기준과 읽기 검증](../../docs/concepts/reader-quality.md), [완성된 작은 HAL 예제](../mini-hal/config/reader-sections.yaml)를 따라 작성하세요. 소스 근거 고정과 필수 질문 검사는 libcamera와 같은 생성기를 사용합니다. 실제 사내 HAL의 동작과 설명은 사내 독자가 별도로 검토해야 합니다.
