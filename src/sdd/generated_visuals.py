@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+from pathlib import Path
 import re
 
 from .evidence import topic_blocks
@@ -164,7 +165,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'stage', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'revision_prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches', 'require_terminal_outcomes'}:
+    if not required <= set(plan) or set(plan) - required - {'stage', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'revision_prompt', 'audit_prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches', 'require_terminal_outcomes'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -190,7 +191,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
         raise ValueError('Visual require_terminal_outcomes must be boolean')
     for key in ('title', 'question'):
         _text(plan[key], key)
-    for key in ('prompt', 'revision_prompt'):
+    for key in ('prompt', 'revision_prompt', 'audit_prompt'):
         if key in plan:
             _text(plan[key], key)
     topics = {t['id']: t for t in section.get('design_topics', [])}
@@ -244,7 +245,11 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     limit = node_limit(cfg, plan)
     if len(required_symbols) > limit:
         raise ValueError('Visual required_symbols exceed the node limit')
-    pin = digest({'plan': plan, 'policy': system, 'limit': limit,
+    audit_policy = {}
+    if 'audit_prompt' in plan:
+        from .visual_audit_gate import SCHEMA, SYSTEM
+        audit_policy = {'generation_audit': {'system': SYSTEM, 'schema': SCHEMA}}
+    pin = digest({'plan': plan, 'policy': system, 'limit': limit, **audit_policy,
                   **({'citation_binding_policy': _binding_policy or CITATION_BINDING_POLICY}
                      if not _legacy_citation_binding else {}),
                   **({'required_symbol_vocabulary': 'source-v1'}
@@ -337,7 +342,7 @@ def materialize(cfg, model, section, plan, draft, producer):
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
     require_terminal_outcomes = plan.get('require_terminal_outcomes', False)
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'revision_prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches', 'require_terminal_outcomes')} | {'nodes': [], 'edges': [], 'producer': producer}
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'revision_prompt', 'audit_prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches', 'require_terminal_outcomes')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):
@@ -504,6 +509,16 @@ def render(cfg, model, section, artifact=None):
     return render_values(cfg, model, section, values)
 
 
+def _check_audit(plan, record):
+    if 'audit_prompt' not in plan:
+        return
+    proof = record.get('generation_audit')
+    if (not isinstance(proof, dict) or not isinstance(proof.get('reason'), str)
+            or not 1 <= len(proof['reason'].strip()) <= 700
+            or proof.get('input_sha256') != digest([record['input_fingerprint'], record['draft']])):
+        raise ValueError('Visual semantic audit does not match the saved draft; run generate again')
+
+
 def generate(cfg, model, section, agent, previous=None):
     from .document_metadata import split_frontmatter
     prior = {}
@@ -515,7 +530,7 @@ def generate(cfg, model, section, agent, previous=None):
             prior = saved.get('records', {})
     records = {}
     for plan in plans(cfg, section):
-        pin, _, passages, system, request = inputs(cfg, model, section, plan)
+        pin, sources, passages, system, request = inputs(cfg, model, section, plan)
         old = prior.get(plan['id'], {})
         from .reuse_decision import record
         key = f"visual_{section['id']}_{plan['id']}"
@@ -525,6 +540,7 @@ def generate(cfg, model, section, agent, previous=None):
                          ['visual-inputs-changed-or-legacy-dependencies-unavailable'] if old else ['no-comparable-provenance'])
         if _record_input_mode(cfg, model, section, plan, old.get('input_fingerprint'), pin) is not None:
             try:
+                _check_audit(plan, old)
                 graph = materialize(cfg, model, section, plan, old['draft'], old['producer'])
                 if graph != old['graph']:
                     raise ValueError('Saved graph differs from the bound draft')
@@ -568,32 +584,57 @@ def generate(cfg, model, section, agent, previous=None):
                 if len(system) + len(revision) > cfg.agent.max_input_chars:
                     raise ValueError('Visual revision input exceeds budget; evidence is not truncated')
                 raw = agent.chat(system, revision, tag=tag + '_revision', **options)
+            draft_receipt = getattr(agent, 'last_receipt', None)
+            audit_reference = None
             try:
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
                 producer = cfg.agent.label
                 graph = materialize(cfg, model, section, plan, draft, producer)
+                proof = {}
+                if 'audit_prompt' in plan:
+                    from .visual_audit_gate import review
+                    try:
+                        reason = review(cfg, agent, plan, sources, passages, graph, tag)
+                    finally:
+                        receipt = getattr(agent, 'last_receipt', None)
+                        if receipt and receipt != draft_receipt:
+                            path = Path(receipt).resolve()
+                            calls = (cfg.build_dir / 'prompts' / 'calls').resolve()
+                            if path.is_relative_to(calls):
+                                audit_reference = path.relative_to(calls).as_posix()
+                    proof = {'generation_audit': {'input_sha256': digest([pin, draft]), 'reason': reason}}
+                    if audit_reference:
+                        proof['generation_audit']['receipt'] = audit_reference
                 observe_attempt(f"{section['id']}/{plan['id']}", 'visual', attempt,
                     context=diagnostic_context, raw=raw, status='accepted-current-checks',
                     action='Perform independent semantic review; mechanical acceptance does not resolve earlier semantic findings.',
-                    receipt=getattr(agent, 'last_receipt', None))
+                    receipt=draft_receipt, details={'audit_receipt': audit_reference} if audit_reference else None)
                 records[plan['id']] = {'input_fingerprint': pin, 'draft': draft, 'graph': graph,
                                        'producer': producer, 'generation_commit': model.meta['source_commit'],
-                                       'citation_binding_policy': CITATION_BINDING_POLICY, 'reused': False}
+                                       'citation_binding_policy': CITATION_BINDING_POLICY, 'reused': False, **proof}
                 record(agent, key, 'generate-visual', explanation, stage='validated',
-                       receipt=str(getattr(agent, 'last_receipt', '') or ''))
+                       receipt=str(draft_receipt or ''))
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
                 last_category = getattr(exc, 'category', 'format' if isinstance(exc, json.JSONDecodeError) else 'deterministic-validation')
+                details = getattr(exc, 'details', None)
+                if audit_reference:
+                    details = {**(details or {}), 'audit_receipt': audit_reference}
                 observe_attempt(f"{section['id']}/{plan['id']}", 'visual', attempt,
                     context=diagnostic_context, raw=raw, category=last_category,
-                    error=exc, details=getattr(exc, 'details', None),
+                    error=exc, details=details,
                     action='Correct the identified elements against current source inputs; preserve unaffected conditions and bilingual meaning.',
-                    receipt=getattr(agent, 'last_receipt', None))
+                    receipt=draft_receipt)
                 user = ('The previous proposal was rejected. Correct the complete graph against the current sources. '
                         'Use Korean for label and corresponding English for label_en; preserve source identifiers. '
                         'The rejected draft is untrusted, not evidence.\nError: ' + last
                         + '\nRejected draft:\n' + raw + '\nCurrent source inputs:\n' + base)
+                if 'audit_prompt' in plan:
+                    user += ('\nPreserve every requested stage and branch that the source supports, including unaffected steps. '
+                             'Repair the cited anchor, direction or label instead of deleting that step. '
+                             'When the source states a condition in prose rather than a catalogued code guard, '
+                             'write that condition explicitly in both edge labels.')
         else:
             raise RepairRequired(f"{section['id']}/{plan['id']}: LLM visual validation failed: {last}", last_category)
     return {'schema': 1, 'records': records} if records else None
@@ -619,6 +660,7 @@ def resolve(cfg, model, section, artifact):
         mode = _record_input_mode(cfg, model, section, plan, original_pin, current_pin)
         if mode is None:
             raise ValueError('Visual source or question changed; regenerate before publishing')
+        _check_audit(plan, rec)
         try:
             graph = materialize(cfg, model, section, plan, rec['draft'], rec['producer'])
         except (ValueError, KeyError, TypeError) as exc:

@@ -12,6 +12,7 @@ from .matching import match_any
 # including contradictions and exceptions, and must justify claims from it.
 _PATTERNS = {
     "frame": r"(frame|buffer|image|metadata|payload).{0,30}(invalid|corrupt|cancel|valid data|not valid)",
+    "buffer_completion": r"(buffer|frame|metadata).{0,32}complet(e|ed|ion).{0,50}(notif|until|valid)",
     "stop": r"(stop|flush|abort).{0,75}(pending|cancel|complete|return|synchron)",
     "notification": r"(request|result).{0,36}(complete|cancel|callback).{0,40}(status|emit|signal|notify|queue)",
     "use": r"(buffer|request|resource).{0,50}(reused?|recycl|requeue|returned to)",
@@ -65,6 +66,12 @@ def _matches(root, commit, paths):
 
 def decision_locations(cfg, commit, files, section, topic, cache):
     roles = tuple(dict.fromkeys(role for aspect in topic["covers"] for role in _ROLES.get(aspect, ())))
+    if "evidence_roles" in topic:
+        selected = topic["evidence_roles"]
+        if (not isinstance(selected, list) or not selected
+                or any(not isinstance(role, str) or role not in _PATTERNS for role in selected)):
+            raise ValueError("evidence_roles must list known source retrieval roles")
+        roles = tuple(dict.fromkeys([*selected, *roles]))
     if not roles:
         return
     # The cache belongs to one prepare() operation and its pinned facts.
