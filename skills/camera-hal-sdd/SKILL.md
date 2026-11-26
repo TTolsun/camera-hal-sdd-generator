@@ -2,7 +2,7 @@
 name: camera-hal-sdd
 description: camera-hal-sdd-generator의 반입 릴리스로 사내 Camera HAL을 셋업하거나 SDD를 갱신할 때 사용합니다. 패키지 무결성, 승인된 CLI, 제품 빌드 설정, 소스에 근거한 계약 작성과 항목별 문서·사이트 검증을 수행합니다. 사람 승인이나 실기기 시험 결과를 대신 만들지 않습니다.
 metadata:
-  version: "14"
+  version: "15"
   repository: camera-hal-sdd-generator
 ---
 
@@ -42,6 +42,7 @@ metadata:
 | 처음 적용합니다. | 아래 첫 실행 절차로 질문 하나를 검증하고, [사내 파일럿](../../docs/inhouse/pilot.md)에 제품·빌드 변형·요청 경로의 판정을 남깁니다. |
 | 제품 범위를 넓힙니다. | [사내 실행 가이드](../../docs/inhouse/agent.md)의 환경 → 추출·계약 → 문서·화면 → 반복 운영 → 완료 기록을 수행합니다. NDK-build를 기본 사실로 가정하지 않습니다. |
 | 계약을 쓰거나 근거 변경을 고칩니다. | [소스에서 계약 작성하기](../../docs/inhouse/contract-authoring.md)를 수행합니다. LLM 모드는 질문·발췌·covers를 작성하고 생성기가 답변과 해시를 만듭니다. |
+| 설계 이유·제약·기각한 대안을 문서에 넣습니다. | [설계 이유를 근거로 연결하기](../../docs/inhouse/design-rationale.md)를 수행합니다. `history-candidates` 후보와 리뷰 스냅숏은 근거가 아니며, 메시지·코멘트를 읽고 고른 것만 `kind: commit`·`kind: review`로 등록합니다. 기록에서 이유를 찾지 못하면 추측으로 채우지 않습니다. |
 | 상태·요청·소유권·실패 그림을 자동화합니다. | [그림 생성 절차](../../docs/concepts/site.md#사내-llm으로-초안-자동-생성하기)에 따라 질문을 실제 근거와 연결합니다. 실제 호출 영수증과 변경 전후 재생성을 검증합니다. |
 | 새 커밋을 반영합니다. | 아래 갱신 절차와 [갱신 시스템](../../docs/inhouse/03-update-system.md)을 수행합니다. |
 | 추출·생성·게시가 실패했습니다. | 아래 실패 대응과 [문제 해결](../../docs/inhouse/troubleshooting.md)에서 원인을 좁힙니다. |
