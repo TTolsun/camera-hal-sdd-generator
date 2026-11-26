@@ -43,15 +43,19 @@ def examples(selectors, measure, limit, maximum, preferred):
             if choice:
                 measured[choice] = measure(choice)
                 break
+    if not measured:
+        for candidate in ids:
+            selection = (candidate,)
+            if measure(selection) <= limit:
+                measured[selection] = measure(selection)
+                if len(measured) == 4:
+                    break
     return [{"ids": ids, "diagram_chars": size} for ids, size in measured.items()]
 
 
-def select(cfg, model, files, section, topic, execution, request, selectors, tag, figures):
-    from .first_run import SCHEMA, SYSTEM, _key, _response
+def select(cfg, model, files, section, topic, execution, request, selectors, tag, figures, *, expand=None):
+    from .first_run_catalog import MissingEvidence, SCHEMA, SYSTEM, _key, _response
     key = _key(section, topic)
-    if not figures:
-        raw = execution.chat(SYSTEM, request, tag=f"{tag}_0", response_schema=SCHEMA)
-        return _response(raw, key, selectors)
     sizes = {}
 
     def measure(ids):
@@ -64,26 +68,38 @@ def select(cfg, model, files, section, topic, execution, request, selectors, tag
     preferred = []
     maximum = 4
     details = {}
+    expanded = False
     for attempt in range(cfg.max_retries + 1):
-        measured = examples(selectors, measure, limit, maximum, preferred)
-        if not measured:
-            raise ValueError(f"{key}: 그림 입력 한도 안에 들어가는 근거 조합이 없습니다.")
-        current_request = json.dumps({
-            **json.loads(request),
-            "figure_selection": {
-                "max_windows": maximum, "transport_limit_chars": limit,
-                "preferred_retry_headroom_chars": min(2500, limit // 10) if cfg.max_retries else 0,
-                "measured_examples": measured, **details,
-                "note": "These combinations fit the transport limit. Select enough relevant windows for the reader decision, preserving essential conditions.",
-            },
-        }, ensure_ascii=False)
-        response_schema = {**SCHEMA, "properties": {
-            **SCHEMA["properties"], "sources": {**SCHEMA["properties"]["sources"], "maxItems": maximum},
-        }}
+        current_request, response_schema = request, SCHEMA
+        if figures:
+            measured = examples(selectors, measure, limit, maximum, preferred)
+            if not measured:
+                raise ValueError(f"{key}: 그림 입력 한도 안에 들어가는 근거 조합이 없습니다.")
+            current_request = json.dumps({
+                **json.loads(request),
+                "figure_selection": {
+                    "max_windows": maximum, "transport_limit_chars": limit,
+                    "preferred_retry_headroom_chars": min(2500, limit // 10) if cfg.max_retries else 0,
+                    "measured_examples": measured, **details,
+                    "note": "These combinations fit the transport limit. Select enough relevant windows for the reader decision, preserving essential conditions.",
+                },
+            }, ensure_ascii=False)
+            response_schema = {**SCHEMA, "properties": {
+                **SCHEMA["properties"], "sources": {**SCHEMA["properties"]["sources"], "maxItems": maximum},
+            }}
         if len(build_prompt(SYSTEM, current_request, response_schema)) > limit:
             raise ValueError(f"{key}: 근거 선택 입력이 설정한 한도를 초과했습니다.")
         raw = execution.chat(SYSTEM, current_request, tag=f"{tag}_{attempt}", response_schema=response_schema)
-        question, sources = _response(raw, key, selectors)
+        try:
+            question, sources = _response(raw, key, selectors)
+        except MissingEvidence as exc:
+            if expanded or attempt == cfg.max_retries or not expand or not (retry := expand(selectors, str(exc))):
+                raise
+            request, selectors = retry
+            preferred, details, expanded = [], {}, True
+            continue
+        if not figures:
+            return question, sources
         preferred = [s["id"] for s in sources]
         size = measure(preferred)
         if len(sources) <= maximum and size <= limit:

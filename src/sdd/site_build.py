@@ -115,9 +115,8 @@ def build_site(cfg: Config, out: Path, render, mermaid_src: str | None) -> Path:
         publication_gate(cfg, stage)
         outputs = {p.relative_to(stage).as_posix(): digest(p) for p in sorted(stage.rglob("*")) if p.is_file()}
         inputs = {"sections": digest(cfg.sections_file)}
-        from .first_run import catalog_path, enabled as first_run_enabled
-        if first_run_enabled(cfg) and catalog_path(cfg).is_file():
-            inputs['first_run_inputs'] = digest(catalog_path(cfg))
+        if cfg.first_run_inputs and cfg.first_run_catalog.is_file():
+            inputs['first_run_inputs'] = digest(cfg.first_run_catalog)
         if cfg.site.reader_edition:
             inputs['reader_edition'] = digest(owned_path(cfg.root, cfg.site.reader_edition))
         from .visual_audit import digest as audit_digest, policy as audit_policy

@@ -299,6 +299,17 @@ class Config:
         return _settings(SiteConfig, self._option('site') or {})
 
     @property
+    def first_run_inputs(self) -> bool:
+        value = self._option("first_run_inputs", False)
+        if type(value) is not bool:
+            raise ValueError("first_run_inputs must be boolean")
+        return value
+
+    @property
+    def first_run_catalog(self) -> Path:
+        return self.build_dir / "first-run-inputs.json"
+
+    @property
     def visual_audit(self):
         return self._option('visual_audit', {})
 
@@ -385,6 +396,17 @@ class Config:
         return self.paths.get("style", self.root / "style")
 
     @property
+    def first_run_inputs(self) -> bool:
+        value = self._option("first_run_inputs", False)
+        if type(value) is not bool:
+            raise ValueError("first_run_inputs must be boolean")
+        return value
+
+    @property
+    def first_run_catalog(self) -> Path:
+        return self.build_dir / "first-run-inputs.json"
+
+    @property
     def visual_audit_style_dir(self) -> Path:
         settings = self.visual_audit
         if not isinstance(settings, dict) or 'style' not in settings:
@@ -422,7 +444,7 @@ class Config:
 
     def _sections(self) -> list[dict[str, Any]]:
         data = _load_yaml(self.sections_file)
-        from .first_run import bind as bind_first_run
+        from .first_run_catalog import bind as bind_first_run
         from .product_context import bind
         from .reader_scope import validate_locations
         sections = bind(self, bind_first_run(self, list(data.get("sections", []) or [])))

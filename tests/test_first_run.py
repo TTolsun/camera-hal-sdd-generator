@@ -6,7 +6,7 @@ import pytest
 import yaml
 
 from sdd import first_run
-from sdd.facts.model import FunctionInfo, KnowledgeModel, Location
+from sdd.facts.model import ClassInfo, FunctionInfo, KnowledgeModel, Location, Message, Method, Scenario
 from sdd.generate import Generator
 from sdd.generation_run import Execution
 from sdd.impact import ImpactReport
@@ -203,3 +203,80 @@ def test_figure_selection_reports_measured_retry_choices(initial, monkeypatch):
     assert history[1]["previous_ids"] == ids[:4]
     assert history[1]["previous_diagram_chars"] == 6400
     assert len(selected) == 3
+
+
+def test_figure_can_fit_with_only_a_later_candidate():
+    from sdd.first_run_visual_budget import examples
+    keys = [f"window-{n}" for n in range(1, 17)]
+    assert examples(keys, lambda ids: 20 if ids == ("window-16",) else 40, 30, 4, []) == [
+        {"ids": ("window-16",), "diagram_chars": 20},
+    ]
+
+
+def test_missing_evidence_expands_to_fresh_windows_once(initial, monkeypatch):
+    cfg, model, _ = initial
+    seen = []
+
+    def candidates(*args):
+        for n in range(1, 20):
+            yield {"file": "device.cpp", "text": f"source window {n}"}, {"file": "device.cpp", "start": "start", "end": "end"}
+
+    class Retry(Selected):
+        def chat(self, system, user, *, tag, response_schema):
+            payload = json.loads(user)
+            seen.append(payload)
+            if len(seen) == 1:
+                return json.dumps({"question": "", "sources": [], "missing": "completion state is missing"})
+            assert payload["previous_gap"].endswith("completion state is missing")
+            assert {"window-1", "window-17"} <= set(payload["candidates"])
+            return json.dumps({"question": "취소 상태는 어디서 읽습니까?", "sources": ["window-17"], "missing": ""})
+
+    monkeypatch.setattr(first_run, "_candidates", candidates)
+    section, topic = first_run.pending(cfg, ["selected"])[0]
+    first_run.prepare(cfg, model, [(section, topic)], Execution(cfg, Retry(cfg), model=model))
+    assert len(seen) == 2
+    assert "window-17" not in seen[0]["candidates"]
+    assert cfg.section("selected")["design_topics"][0]["sources"][0]["id"] == "window-17"
+
+
+def test_code_only_file_with_no_english_cue_supplies_pinned_fallback(initial):
+    cfg, model, _ = initial
+    model.functions = {"f": FunctionInfo("f", def_loc=Location("device.cpp", 1))}
+    section, topic = first_run.pending(cfg, ["selected"])[0]
+    candidates = list(first_run._candidates(cfg, first_run._locations(model), {},
+                                            model.meta["source_commit"], section, topic))
+    assert candidates and "cancelPending();" in candidates[0][0]["text"]
+
+
+def test_scenario_call_and_definition_are_presented_together(initial):
+    cfg, model, _ = initial
+    definition = cfg.source_root / "provider.cpp"
+    definition.write_text("void Provider::cancelPending() {\n  state = Cancelled;\n}\n", encoding="utf-8")
+    _git(cfg.source_root, "add", "provider.cpp")
+    _git(cfg.source_root, "-c", "user.name=Fixture", "-c", "user.email=test@example.invalid", "commit", "-qm", "provider")
+    commit = _git(cfg.source_root, "rev-parse", "HEAD")
+    cls = ClassInfo("hal::Provider", methods=[Method("cancelPending", def_loc=Location("provider.cpp", 1))])
+    model.classes[cls.name] = cls
+    caller = Location("device.cpp", 2)
+    model.scenarios["stop"] = Scenario("stop", "stop", "stopCaptureBuffer", messages=[
+        Message("Device", "Provider", "cancelPending()", caller),
+        Message("Device", "Provider", "cancelPending()", caller, "deferred"),
+    ])
+    pairs = list(first_run._scenario_pairs(model))
+    assert len(pairs) == 1
+    section, topic = first_run.pending(cfg, ["selected"])[0]
+    locations = first_run._locations(model)
+    candidates = list(first_run._candidates(cfg, locations, {}, commit, section, topic, pairs))
+    payload, _ = first_run._request(cfg, section, topic, candidates)
+    call, provider = list(json.loads(payload)["candidates"].values())[:2]
+    assert call["call_pair"] == provider["call_pair"]
+    assert (call["call_role"], provider["call_role"]) == ("call", "definition")
+    assert "cancelPending();" in call["text"] and "state = Cancelled;" in provider["text"]
+    payload, _ = first_run._request(cfg, section, topic, candidates[:1])
+    assert not json.loads(payload)["candidates"]
+    section["watch_exclude"] = ["provider.cpp"]
+    assert all("call_pair" not in item for item, _ in first_run._candidates(
+        cfg, locations, {}, commit, section, topic, pairs))
+    other = ClassInfo("other::Provider", methods=[Method("cancelPending", def_loc=Location("other.cpp", 1))])
+    model.classes[other.name] = other
+    assert not list(first_run._scenario_pairs(model))

@@ -68,9 +68,8 @@ class Inputs:
         for path, raw in getattr(cfg, '_loaded_inputs', {}).items():
             if self.read(path, optional=True) != raw:
                 raise InputChanged(f'Configuration changed since load: {path}; reload configuration')
-        from .first_run import catalog_path, enabled
-        if enabled(cfg):
-            self.read(catalog_path(cfg), optional=True)
+        if cfg.first_run_inputs:
+            self.read(cfg.first_run_catalog, optional=True)
         for path in (cfg.sections_file, cfg.scenarios_file, cfg.facts_path,
                      *cfg.paths.values()):
             if Path(path).is_file():

@@ -94,7 +94,7 @@ sections:
     aspects:
     - inputs
   - id: inputs
-    question: 입력 조건과 구현 책임은 무엇입니까?
+    question: 실제 호출에서 입력 하나가 거절되거나 조정되는 조건은 무엇입니까? 호출자가 넘긴 값과 검사한 코드, 관찰할 수 있는 반환값이나 상태를 연결하세요.
     aspects:
     - inputs
   - id: ownership
@@ -106,11 +106,11 @@ sections:
     aspects:
     - completion
   - id: failure
-    question: 실패를 어떻게 구분하고 처리합니까?
+    question: 소스에서 확인되는 실패 하나를 골라, 어느 단계에서 어떤 신호로 드러나는지 설명하세요. 그 시점에 호출자가 사용할 수 있는 결과와 확인해야 할 조건은 무엇입니까?
     aspects:
     - failure
   - id: verification
-    question: 어떤 조건을 실행에서 확인해야 합니까?
+    question: 이 경로에서 코드만으로 확인한 조건 하나와 실행 시 관찰해야 할 값은 무엇입니까? 어떤 결과가 나오면 다음 단계로 진행할 수 있습니까?
     aspects:
     - verification
   design_topics:
@@ -122,7 +122,7 @@ sections:
     - integration
   - id: inputs
     title: 입력 조건과 구현 책임
-    question: 입력 조건과 구현 책임은 무엇입니까?
+    question: 실제 호출에서 입력 하나가 거절되거나 조정되는 조건은 무엇입니까? 호출자가 넘긴 값과 검사한 코드, 관찰할 수 있는 반환값이나 상태를 연결하세요.
     sources: []
     covers:
     - inputs
@@ -140,13 +140,13 @@ sections:
     - completion
   - id: failure
     title: 실패 처리
-    question: 실패를 어떻게 구분하고 처리합니까?
+    question: 소스에서 확인되는 실패 하나를 골라, 어느 단계에서 어떤 신호로 드러나는지 설명하세요. 그 시점에 호출자가 사용할 수 있는 결과와 확인해야 할 조건은 무엇입니까?
     sources: []
     covers:
     - failure
   - id: verification
     title: 실행 확인
-    question: 어떤 조건을 실행에서 확인해야 합니까?
+    question: 이 경로에서 코드만으로 확인한 조건 하나와 실행 시 관찰해야 할 값은 무엇입니까? 어떤 결과가 나오면 다음 단계로 진행할 수 있습니까?
     sources: []
     covers:
     - verification
