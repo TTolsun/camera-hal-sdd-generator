@@ -106,6 +106,7 @@ pages:
       - {path: 'request-flow.md#stop-and-disconnect', ko: 정지 뒤 완료 알림과 상태 판정, en: Completion notifications and status checks after stop}
     sections:
       - {source: vendor-integration.md, fragment: 연동-순서와-책임, id: integration-order}
+      - {source: vendor-integration.md, fragment: 빌드와-지원-조건, id: build-support}
       - {source: vendor-assurance.md, fragment: 고객-보드의-첫-촬영을-검증했습니까, id: first-capture}
       - source: official-cam-validation.md
         fragment: 지원-커널과-장치-접근을-확인한-뒤-재현합니다

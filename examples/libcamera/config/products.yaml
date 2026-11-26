@@ -80,6 +80,27 @@ products:
     evidence:
     - virtual-first-capture-run
     claims: []
+- id: libcamera-rcar-gen4-build
+  scope: project
+  release: 7ae183f58d7c2ee8643f002560d3a616e2a77726
+  configuration: wsl2-clang21-all-pipelines-rppx1
+  simulation: false
+  as_of: '2026-11-27'
+  features:
+  - id: build-support
+    need: 대상 보드에 필요한 빌드 옵션과 지원 전제를 고릅니다.
+    usage: Vendor 빌드·지원 조건 확인
+    availability: unknown
+    conditions:
+    - Upstream build options and device prerequisites at the pinned commit.
+    - Clang 21.1.8 native compile and link under Ubuntu WSL2 x86_64 with all pipelines and rppx1 IPA enabled.
+    exclusions:
+    - 대상 보드와 센서에서 장치 탐색·카메라 등록·촬영·센서 보정을 확인하지 않았습니다.
+    - 전체 커널 ABI 헤더와 다른 새 기능은 이 가이드 변경의 검토 범위에서 제외합니다.
+    implementation: []
+    evidence:
+    - rcar-gen4-build-record
+    claims: []
 evidence:
 - id: official-stack
   type: project-document
@@ -124,3 +145,19 @@ evidence:
   availability: unknown
   file: product-evidence/virtual-first-capture.json
   sha256: 2284397098a8a2871f76f695264af00a36c57a8fc324630367a26e598ee165e8
+- id: rcar-gen4-build-record
+  type: project-document
+  supplier: libcamera upstream source and the public SDD build trial
+  version: 7ae183f58d7c2ee8643f002560d3a616e2a77726
+  date: '2026-11-27'
+  valid_until: '2026-11-27'
+  product: libcamera-rcar-gen4-build
+  release: 7ae183f58d7c2ee8643f002560d3a616e2a77726
+  configuration: wsl2-clang21-all-pipelines-rppx1
+  feature: build-support
+  conditions:
+  - Upstream build options and device prerequisites at the pinned commit.
+  - Clang 21.1.8 native compile and link under Ubuntu WSL2 x86_64 with all pipelines and rppx1 IPA enabled.
+  availability: unknown
+  file: product-evidence/rcar-gen4-build-7ae183f.txt
+  sha256: e51f90c5c66bfcb0ec6100150f4c37256177d19b5970a50e781be396aadac85a
