@@ -15,7 +15,7 @@
 
 반입본의 `START_PROMPT.txt`를 사용하면 스킬 설치 없이 같은 절차로 시작할 수 있습니다. Hermes를 사용하려면 이 파일의 문서 생성·번역 CLI 입력란에 `hermes`를 적습니다. `metadata.version`은 스킬 개정 번호이고 정확한 패키지 버전은 `IMPORT-MANIFEST.json`의 `source_commit`입니다.
 
-[11월 27일 반입본](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-27)은 스킬 v15와 같은 커밋의 생성기·가이드·템플릿, 네 CLI에서 함께 쓰는 시작 프롬프트를 포함합니다. v15는 커밋 메시지와 Gerrit 리뷰 코멘트에서 설계 이유를 찾아 근거로 연결하는 [절차](../docs/inhouse/design-rationale.md)를 작업표에 추가합니다. 기존 반입본에 스킬만 덮어쓰지 말고 새 ZIP을 별도 폴더에 풀어 검증한 뒤 생성기와 스킬 경로를 함께 갱신합니다. 기존 릴리스의 첨부 파일과 검증 기록은 보존합니다.
+[11월 27일 개정 반입본](https://github.com/TTolsun/camera-hal-sdd-generator/releases/tag/inhouse-2026-11-27.1)은 스킬 v16과 같은 커밋의 생성기·가이드·템플릿, 네 CLI에서 함께 쓰는 시작 프롬프트를 포함합니다. v16은 첫 실행을 `generate --sections vendor-contract` 하나로 시작하도록 바꿉니다. 빈 LLM 주제의 질문과 발췌는 생성기가 준비하고, 이미 지정한 근거는 유지합니다([첫 실행](../docs/inhouse/02-first-run.md)). v15의 [설계 이유 연결 절차](../docs/inhouse/design-rationale.md)도 그대로 포함합니다. 기존 반입본에 스킬만 덮어쓰지 말고 새 ZIP을 별도 폴더에 풀어 검증한 뒤 생성기와 스킬 경로를 함께 갱신합니다. 기존 릴리스의 첨부 파일과 검증 기록은 보존합니다.
 
 스킬은 터미널에서 `uv run sdd ...`를 실행할 수 있는 에이전트를 전제로 합니다. 문서 생성 CLI는 [선택 안내](../docs/inhouse/cli-agents.md)에 따라 Hermes, OpenCode, Claude Code 또는 Codex로 지정합니다. `sdd automate`가 부르는 검토 CLI는 선택한 실행기의 도구 제한을 적용한 별도 실행이므로, 이 스킬과 같은 작업 권한을 주지 않습니다([예약 게시 절차](../docs/inhouse/03-update-system.md)).
 
