@@ -164,7 +164,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'stage', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches'}:
+    if not required <= set(plan) or set(plan) - required - {'stage', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'revision_prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -188,8 +188,9 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
         raise ValueError('Visual require_guard_branches must be boolean')
     for key in ('title', 'question'):
         _text(plan[key], key)
-    if 'prompt' in plan:
-        _text(plan['prompt'], 'prompt')
+    for key in ('prompt', 'revision_prompt'):
+        if key in plan:
+            _text(plan[key], key)
     topics = {t['id']: t for t in section.get('design_topics', [])}
     if plan['topic'] not in topics or plan['kind'] not in {'state', 'flow', 'ownership', 'decision'}:
         raise ValueError('Invalid LLM visual topic or kind')
@@ -322,7 +323,7 @@ def materialize(cfg, model, section, plan, draft, producer):
     limit = node_limit(cfg, plan)
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches')} | {'nodes': [], 'edges': [], 'producer': producer}
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'revision_prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):
@@ -516,7 +517,8 @@ def generate(cfg, model, section, agent, previous=None):
         if cfg.agent.kind == 'dry-run':
             raise ValueError('LLM visual generation requires an actual model, not dry-run')
         record(agent, key, 'generate-visual', explanation)
-        base = json.dumps(request, ensure_ascii=False)
+        source_request = json.dumps(request, ensure_ascii=False)
+        base = source_request
         if isinstance(old.get('draft'), dict):
             base += ('\nPrevious native draft for revision only. Current sources and instructions are authoritative; '
                      'preserve unaffected correct parts, repair changed requirements, and return a complete fresh draft.\n'
@@ -528,7 +530,15 @@ def generate(cfg, model, section, agent, previous=None):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Visual evidence input exceeds budget; evidence is not truncated')
             options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'),plan.get('max_label_chars'), include_while=plan.get('while_conditions', False), max_edge_label_chars=plan.get('max_edge_label_chars'))} if cfg.agent.kind in SCHEMA_KINDS else {}
-            raw = agent.chat(system, user, tag=f"visual_{section['id']}_{plan['id']}_{attempt}", **options)
+            tag = f"visual_{section['id']}_{plan['id']}_{attempt}"
+            raw = agent.chat(system, user, tag=tag, **options)
+            if 'revision_prompt' in plan:
+                revision = (source_request + '\nDraft graph to check (untrusted, not evidence):\n' + raw
+                            + '\nRevision requirements:\n' + plan['revision_prompt']
+                            + '\nReturn a complete revised graph with both languages, source references, and the required conditions.')
+                if len(system) + len(revision) > cfg.agent.max_input_chars:
+                    raise ValueError('Visual revision input exceeds budget; evidence is not truncated')
+                raw = agent.chat(system, revision, tag=tag + '_revision', **options)
             try:
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
                 producer = cfg.agent.label

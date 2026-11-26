@@ -180,6 +180,8 @@ def bind_native_topic(cfg, model, section, topic, prompt, identity):
     for unit in _design_units({**section, 'design_topics': [topic]}, {}):
         request = _unit_request(model, section, unit, focus)
         requests.append(dict(system=system, user=request.user, schema=response_schema(unit, request.passages)))
+        if 'revision_prompt' in unit:
+            requests[-1]['revision_prompt'] = unit['revision_prompt']
     return digest(identity + json.dumps(dict(requests=requests, styles=style_policy(cfg),
                                              cli_protocol='native-schema-v1'), ensure_ascii=False, sort_keys=True))
 

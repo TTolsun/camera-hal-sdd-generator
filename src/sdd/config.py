@@ -54,6 +54,9 @@ class ReviewConfig:
             raise ValueError('review.design_grounding은 boolean이어야 합니다.')
         return value
 
+    def revision(self, topic):
+        return self.design_revision or bool(topic.get('revision_prompt'))
+
 
     def triage_options(self):
         opts = self.coverage_triage or {}

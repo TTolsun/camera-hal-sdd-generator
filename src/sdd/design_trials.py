@@ -40,8 +40,9 @@ class AnswerCheckpoint:
         answer_cache.save(self.path, response)
 
 
-def checkpoint(cfg, model, system, user, options, focused_system, unit_policy):
+def checkpoint(cfg, model, system, user, options, focused_system, unit_policy, topic):
+    revision = topic.get('revision_prompt', cfg.review.design_revision)
     path = answer_cache.checkpoint(cfg, model.meta.get('source_commit'), system, user,
         {'request': options, **({'policy': unit_policy} if focused_system is not None else {}),
-         'revision': cfg.review.design_revision})
+         'revision': revision})
     return AnswerCheckpoint(path, answer_cache.read(path))

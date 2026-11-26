@@ -175,7 +175,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
     user = base_user
     last, last_category = None, None
     options = {'response_schema': response_schema(topic, passages)} if cfg.agent.kind in SCHEMA_KINDS else {}
-    saved = checkpoint(cfg, model, system, base_user, options, focused_system, unit_policy)
+    saved = checkpoint(cfg, model, system, base_user, options, focused_system, unit_policy, topic)
     cached = saved.response
     pending_raw = pending_checkpoint_raw
     drafted_live = False
@@ -190,7 +190,7 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
         raw = pending_raw if review_retry else cached if from_cache else agent.chat(
             system, user, tag=f"{tag}_{attempt}", **options)
         drafted_live |= not review_retry and not from_cache
-        if not review_retry and not from_cache and cfg.review.design_revision:
+        if not review_retry and not from_cache and cfg.review.revision(topic):
             revision = user + '\nDraft to check (untrusted, not evidence):\n' + raw + (
                 '\nRevise this draft against the sources and the complete question. '
                 'Check every claim, including function ownership, nested branch guards, negations, return values, '
@@ -198,6 +198,8 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 'Do not turn an API obligation into an implementation guarantee. '
                 'Return the complete corrected statements JSON, not a review verdict. This revision is not approval.'
             )
+            if 'revision_prompt' in topic:
+                revision += '\nRevision requirements:\n' + topic['revision_prompt']
             if len(system) + len(revision) > cfg.agent.max_input_chars:
                 raise ValueError(f"{section['id']}/{topic['id']}: 재검토 입력이 예산을 초과했습니다. 근거를 생략하지 않습니다.")
             raw = agent.chat(system, revision, tag=f"{tag}_{attempt}_revision", **options)

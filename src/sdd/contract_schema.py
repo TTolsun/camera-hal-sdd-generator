@@ -24,8 +24,9 @@ def configuration_errors(section: dict) -> list[str]:
     for topic in section.get('design_topics', []):
         from .explanation import configuration_errors as explanation_errors
         errors.extend(explanation_errors(topic))
-        if 'prompt' in topic and (not isinstance(topic['prompt'], str) or not topic['prompt'].strip()):
-            errors.append(f"{topic['id']}: prompt는 비어 있지 않은 문자열이어야 합니다.")
+        for field in ('prompt', 'revision_prompt'):
+            if field in topic and (not isinstance(topic[field], str) or not topic[field].strip()):
+                errors.append(f"{topic['id']}: {field}는 비어 있지 않은 문자열이어야 합니다.")
         if topic.get('narration') == 'facts' and (section.get('design_requirements') or section.get('reader_profile')):
             errors.append('Source-question views cannot replace required design answers or reader profiles.')
         errors.extend(answer_contract_errors(topic))
