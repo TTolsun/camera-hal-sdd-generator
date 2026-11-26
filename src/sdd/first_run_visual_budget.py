@@ -93,7 +93,7 @@ def select(cfg, model, files, section, topic, execution, request, selectors, tag
         try:
             question, sources = _response(raw, key, selectors)
         except MissingEvidence as exc:
-            if expanded or attempt == cfg.max_retries or not expand or not (retry := expand(selectors, str(exc))):
+            if expanded or attempt == cfg.max_retries or not expand or not (retry := expand(selectors, exc)):
                 raise
             request, selectors = retry
             preferred, details, expanded = [], {}, True

@@ -21,9 +21,11 @@ still has to check. Do not require an application-specific callback proving that
 condition, infer permission to reuse a buffer, or infer that an implementation is absent.
 Prefer the smallest complete set of windows, particularly for a diagram. For asynchronous
 work distinguish submission, completion, state, and ownership. Ask for static conclusions
-and for an explicit limit on what needs runtime verification; missing device test results
-are not a reason to reject sufficient static evidence. Use an empty list only if the
-available windows cannot support a representative answer, and explain the missing evidence."""
+and for an explicit limit on what needs runtime verification. If the source supports
+the static decision, put the unresolved integration or runtime check in the question
+and return missing as an empty string. Reserve missing for absent evidence needed for
+the static decision itself. On a retry, reconsider the previously selected sources
+alongside the new evidence."""
 
 SCHEMA = {
     "type": "object",
@@ -113,7 +115,9 @@ def bind(cfg, sections):
 
 
 class MissingEvidence(ValueError):
-    pass
+    def __init__(self, message, selected):
+        super().__init__(message)
+        self.selected = selected
 
 
 def _response(raw, key, selectors):
@@ -129,7 +133,7 @@ def _response(raw, key, selectors):
             or len(ids) != len(set(ids)) or len(ids) > 6):
         raise ValueError(f"{key}: 선택한 근거는 서로 다른 발췌 후보 ID 최대 6개여야 합니다.")
     if not ids or result["missing"].strip():
-        raise MissingEvidence(f"{key}: 근거 부족. {result['missing']}")
+        raise MissingEvidence(f"{key}: 근거 부족. {result['missing']}", ids)
     if not isinstance(question, str) or not question.strip() or len(question) > 700:
         raise ValueError(f"{key}: 검토할 구체적 질문이 필요합니다.")
     return question.strip(), [selectors[i] for i in ids]

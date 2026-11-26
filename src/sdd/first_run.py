@@ -333,15 +333,17 @@ def prepare(cfg, model, missing, execution):
 
                     def expand(previous, reason):
                         fresh = [pair for pair in pool if pair[0]["candidate_id"] not in previous]
-                        names = {word.lower() for word in re.findall(r"[A-Za-z_][A-Za-z_0-9]{3,}", reason)}
+                        names = {word.lower() for word in re.findall(r"[A-Za-z_][A-Za-z_0-9]{3,}", str(reason))}
                         fresh.sort(key=lambda pair: -sum(
                             word in pair[0]["text"].lower() for word in names))
                         prior = [pair for pair in pool if pair[0]["candidate_id"] in previous]
-                        kept = prior[:3]
-                        if len(prior) > 3 and "call_pair" in prior[2][0] and prior[2][0].get("call_pair") == prior[3][0].get("call_pair"):
-                            kept.append(prior[3])
-                        retry, choices = _request(cfg, section, topic, fresh[:2] + kept + fresh[2:],
-                                                  visual=bool(figures), missing=reason)
+                        keep_ids = set(reason.selected) or {row["candidate_id"] for row, _ in prior[:3]}
+                        pair_ids = {row["call_pair"] for row, _ in prior
+                                    if row["candidate_id"] in keep_ids and "call_pair" in row}
+                        kept = [item for item in prior if item[0]["candidate_id"] in keep_ids
+                                or item[0].get("call_pair") in pair_ids]
+                        retry, choices = _request(cfg, section, topic, kept + fresh,
+                                                  visual=bool(figures), missing=str(reason))
                         return (retry, choices) if choices.keys() - previous.keys() else None
 
                     question, sources = select(cfg, model, files, section, topic, execution, request, selectors,

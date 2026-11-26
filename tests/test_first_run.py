@@ -241,9 +241,9 @@ def test_missing_evidence_expands_to_fresh_windows_once(initial, monkeypatch):
             payload = json.loads(user)
             seen.append(payload)
             if len(seen) == 1:
-                return json.dumps({"question": "", "sources": [], "missing": "completion state is missing"})
+                return json.dumps({"question": "", "sources": ["window-9"], "missing": "completion state is missing"})
             assert payload["previous_gap"].endswith("completion state is missing")
-            assert {"window-1", "window-17"} <= set(payload["candidates"])
+            assert {"window-9", "window-17"} <= set(payload["candidates"])
             return json.dumps({"question": "취소 상태는 어디서 읽습니까?", "sources": ["window-17"], "missing": ""})
 
     monkeypatch.setattr(first_run, "_candidates", candidates)

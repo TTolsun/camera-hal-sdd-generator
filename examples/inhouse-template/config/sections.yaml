@@ -79,7 +79,7 @@ sections:
   title: 연동 가이드
   output: vendor-contract.md
   kind: prose
-  lead: 연동 순서와 구현 책임을 확인하고 설정·요청·정지 계약을 적용하세요.
+  lead: 정지 중 결과를 받았다면 ‘제출·완료·정지’에서 프레임을 읽을 조건을 확인하세요. 같은 버퍼를 다시 제출할 때 필요한 조건은 ‘요청과 버퍼 수명’에서 확인하세요.
   reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
   facts:
     classes: []
