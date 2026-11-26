@@ -187,6 +187,30 @@ def _words(text):
     return set(re.findall(r"[a-z0-9]+", re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", text).lower()))
 
 
+def _enclosing_contract(rows, text, line):
+    """Find the API comment on the extracted definition containing a nearby guard."""
+    definitions = [n for n, (defined, _, _) in rows.items() if defined and 0 <= line - n < 64]
+    if not definitions:
+        return None
+    start = max(definitions)
+    lines = text.splitlines()
+    if start < 2 or start > len(lines) or any(s.startswith("}") for s in lines[start:line - 1]):
+        return None
+    end = start - 2
+    while end >= 0 and not lines[end].strip():
+        end -= 1
+    if end < 0 or not lines[end].rstrip().endswith("*/"):
+        return None
+    for pos in range(end, max(-1, end - 65), -1):
+        if pos != end and "*/" in lines[pos]:
+            break
+        if "/*" in lines[pos]:
+            if lines[pos].lstrip().startswith(("/**", "/*!")):
+                return pos + 1, rows[start][2]
+            break
+    return None
+
+
 def _candidates(cfg, locations, cache, commit, section, topic, pairs=()):
     from .decision_passages import decision_locations
     from .matching import match_any, watches
@@ -249,21 +273,31 @@ def _candidates(cfg, locations, cache, commit, section, topic, pairs=()):
 
     decisions = ((file, line, "") for file, line in
                  decision_locations(cfg, commit, locations, section, topic, cache))
-    for rows in (decisions, symbol_rows):
-        for row in rows:
-            if item := candidate(*row):
-                remember(item)
-                yield item
+    for file, line, name in decisions:
+        if item := candidate(file, line, name):
+            remember(item)
+            yield item
+            if set(topic["covers"]).intersection(("integration", "inputs")):
+                contract = _enclosing_contract(locations[file], cache[file], line)
+                if contract and (item := candidate(file, *contract)):
+                    remember(item)
+                    yield item
+    for row in symbol_rows:
+        if item := candidate(*row):
+            remember(item)
+            yield item
 
 
 def _request(cfg, section, topic, candidates, *, visual=False, missing=""):
     from .cli_agent import build_prompt
     displayed, selectors = {}, {}
     requirements = [r["question"] for r in section.get("design_requirements", []) if r["id"] in topic["covers"]]
+    other_topics = [t["title"] for t in section.get("design_topics", [])
+                    if t.get("id") != topic["id"] and t.get("title")]
 
     def payload():
         return json.dumps({"reader": section.get("reader", section.get("reader_profile", "")),
-                           "question": topic["question"], "requirements": requirements,
+                           "question": topic["question"], "requirements": requirements, "other_topics": other_topics,
                            **({"previous_gap": missing[:400]} if missing else {}),
                            "candidates": displayed}, ensure_ascii=False)
 

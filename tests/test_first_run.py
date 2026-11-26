@@ -104,6 +104,13 @@ def test_changed_figure_budget_invalidates_auto_selections(initial):
     assert len(first_run.pending(cfg, ["selected"])) == 2
 
 
+def test_guard_retrieves_its_own_api_contract():
+    text = "/**\n * Return zero on success.\n */\nint Device::configure()\n{\n  if (!valid)\n    return -1;\n}\nint unrelated;"
+    rows = {4: (True, 17, "Device::configure")}
+    assert first_run._enclosing_contract(rows, text, 7) == (1, "Device::configure")
+    assert first_run._enclosing_contract(rows, text, 9) is None
+
+
 def test_missing_source_keeps_template_and_previous_document(initial):
     cfg, model, _ = initial
     cfg.sdd_dir.mkdir()

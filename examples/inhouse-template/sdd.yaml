@@ -57,7 +57,7 @@ agent:
 
 review:
   require_citations: true
-  max_retries: 1
+  max_retries: 2              # 형식 수정 후에도 근거 또는 주제 중복을 한 번 더 바로잡을 수 있다
   cli_checkpoint: true        # 명시한 모델과 입력이 같은 완료 설계 단위를 검증한 후 재사용
   # 첫 실행 예산은 로컬 파일에서 작업 크기에 맞게 지정한다. 생략 또는 0이면 해당 상한이 없다.
   # max_calls: 4
