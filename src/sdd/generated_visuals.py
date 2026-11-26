@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+from pathlib import Path
 import re
 
 from .evidence import topic_blocks
@@ -583,6 +584,8 @@ def generate(cfg, model, section, agent, previous=None):
                 if len(system) + len(revision) > cfg.agent.max_input_chars:
                     raise ValueError('Visual revision input exceeds budget; evidence is not truncated')
                 raw = agent.chat(system, revision, tag=tag + '_revision', **options)
+            draft_receipt = getattr(agent, 'last_receipt', None)
+            audit_reference = None
             try:
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
                 producer = cfg.agent.label
@@ -590,26 +593,39 @@ def generate(cfg, model, section, agent, previous=None):
                 proof = {}
                 if 'audit_prompt' in plan:
                     from .visual_audit_gate import review
-                    reason = review(cfg, agent, plan, request, sources, passages, draft, tag)
+                    try:
+                        reason = review(cfg, agent, plan, request, sources, passages, draft, tag)
+                    finally:
+                        receipt = getattr(agent, 'last_receipt', None)
+                        if receipt and receipt != draft_receipt:
+                            path = Path(receipt).resolve()
+                            calls = (cfg.build_dir / 'prompts' / 'calls').resolve()
+                            if path.is_relative_to(calls):
+                                audit_reference = path.relative_to(calls).as_posix()
                     proof = {'generation_audit': {'input_sha256': digest([pin, draft]), 'reason': reason}}
+                    if audit_reference:
+                        proof['generation_audit']['receipt'] = audit_reference
                 observe_attempt(f"{section['id']}/{plan['id']}", 'visual', attempt,
                     context=diagnostic_context, raw=raw, status='accepted-current-checks',
                     action='Perform independent semantic review; mechanical acceptance does not resolve earlier semantic findings.',
-                    receipt=getattr(agent, 'last_receipt', None))
+                    receipt=draft_receipt, details={'audit_receipt': audit_reference} if audit_reference else None)
                 records[plan['id']] = {'input_fingerprint': pin, 'draft': draft, 'graph': graph,
                                        'producer': producer, 'generation_commit': model.meta['source_commit'],
                                        'citation_binding_policy': CITATION_BINDING_POLICY, 'reused': False, **proof}
                 record(agent, key, 'generate-visual', explanation, stage='validated',
-                       receipt=str(getattr(agent, 'last_receipt', '') or ''))
+                       receipt=str(draft_receipt or ''))
                 break
             except (ValueError, TypeError, KeyError) as exc:
                 last = str(exc)
                 last_category = getattr(exc, 'category', 'format' if isinstance(exc, json.JSONDecodeError) else 'deterministic-validation')
+                details = getattr(exc, 'details', None)
+                if audit_reference:
+                    details = {**(details or {}), 'audit_receipt': audit_reference}
                 observe_attempt(f"{section['id']}/{plan['id']}", 'visual', attempt,
                     context=diagnostic_context, raw=raw, category=last_category,
-                    error=exc, details=getattr(exc, 'details', None),
+                    error=exc, details=details,
                     action='Correct the identified elements against current source inputs; preserve unaffected conditions and bilingual meaning.',
-                    receipt=getattr(agent, 'last_receipt', None))
+                    receipt=draft_receipt)
                 user = ('The previous proposal was rejected. Correct the complete graph against the current sources. '
                         'Use Korean for label and corresponding English for label_en; preserve source identifiers. '
                         'The rejected draft is untrusted, not evidence.\nError: ' + last
