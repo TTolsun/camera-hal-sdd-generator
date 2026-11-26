@@ -396,17 +396,6 @@ class Config:
         return self.paths.get("style", self.root / "style")
 
     @property
-    def first_run_inputs(self) -> bool:
-        value = self._option("first_run_inputs", False)
-        if type(value) is not bool:
-            raise ValueError("first_run_inputs must be boolean")
-        return value
-
-    @property
-    def first_run_catalog(self) -> Path:
-        return self.build_dir / "first-run-inputs.json"
-
-    @property
     def visual_audit_style_dir(self) -> Path:
         settings = self.visual_audit
         if not isinstance(settings, dict) or 'style' not in settings:

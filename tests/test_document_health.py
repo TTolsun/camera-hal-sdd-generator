@@ -61,6 +61,22 @@ def test_first_failed_generation_keeps_its_empty_starting_baseline(tmp_cfg, samp
     assert set(health.baseline(tmp_cfg)['pages']) == {'overview.md', 'detail.md'}
 
 
+def test_scoped_first_draft_only_defers_unwritten_siblings(tmp_cfg, sample_model):
+    setup(tmp_cfg, sample_model, ('overview', 'detail'))
+    health.prepare(tmp_cfg)
+    page(tmp_cfg)
+    assert rules(health.enforce(tmp_cfg, draft_pages={'overview.md'})) == {'missing-page'}
+    with pytest.raises(RuntimeError, match='lifecycle'):
+        health.enforce(tmp_cfg, draft_pages={'detail.md'})
+    with pytest.raises(RuntimeError, match='lifecycle'):
+        health.enforce(tmp_cfg)
+    page(tmp_cfg, 'detail.md', body='A different completed explanation.')
+    health.checkpoint(tmp_cfg, health.enforce(tmp_cfg))
+    (tmp_cfg.sdd_dir / 'detail.md').unlink()
+    with pytest.raises(RuntimeError, match='lifecycle'):
+        health.enforce(tmp_cfg, draft_pages={'overview.md'})
+
+
 def test_new_feature_adds_page_without_commit_count_penalty(tmp_cfg, sample_model):
     setup(tmp_cfg, sample_model)
     page(tmp_cfg)

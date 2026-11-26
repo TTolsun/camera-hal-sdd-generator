@@ -263,12 +263,17 @@ def audit(cfg, model=None):
     return report
 
 
-def enforce(cfg, model=None):
+def enforce(cfg, model=None, *, draft_pages=None):
     if not settings(cfg).get("enabled"):
         return None
     report = audit(cfg, model)
-    if report["findings"]:
-        raise RuntimeError(f"Document lifecycle checks failed ({len(report['findings'])}); "
+    blockers = report["findings"]
+    if draft_pages:
+        protected = draft_pages | set((baseline(cfg) or {}).get("pages", {}))
+        blockers = [f for f in blockers if f["rule"] not in {"missing-page", "missing-scenario"}
+                    or protected.intersection(f["pages"])]
+    if blockers:
+        raise RuntimeError(f"Document lifecycle checks failed ({len(blockers)}); "
                            f"see {cfg.build_dir / 'document-health.md'}")
     return report
 

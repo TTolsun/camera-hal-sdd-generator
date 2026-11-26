@@ -50,7 +50,7 @@ workspace/
 
 ## 4. 환경을 점검하고 근거 추출하기
 
-`extract`가 만든 facts와 동일한 커밋에서 첫 원고를 생성합니다. 자동 입력 준비는 실제 제품 빌드와 분석 체크아웃이 필요합니다. NDK-build 이외의 제품은 [환경별 선택](agent.md#1-환경과-데이터-경계)을 따르세요.
+`extract`가 만든 facts와 동일한 커밋에서 첫 원고를 생성합니다. 기본 설정에서 `--sections vendor-contract`를 지정하면 해당 원고를 검사하며, 아직 생성하지 않은 다른 페이지와 시나리오는 `build/document-health.md`에 남습니다. 전체 생성과 사이트 게시 단계에서 이 항목들을 다시 검사합니다. 자동 입력 준비는 실제 제품 빌드와 분석 체크아웃이 필요합니다. NDK-build 이외의 제품은 [환경별 선택](agent.md#1-환경과-데이터-경계)을 따르세요.
 
 생성기 저장소 루트에서 `doctor`를 실행하세요. DB가 없으면 NDK 템플릿에서는 `compdb`를 실행합니다. Soong, CMake 등 다른 빌드에서는 제품 빌드에서 만든 DB와 생성 헤더를 준비하고 `source.compile_commands`를 지정하세요. 필요하면 `compdb --normalize`로 분석용 사본을 준비합니다.
 

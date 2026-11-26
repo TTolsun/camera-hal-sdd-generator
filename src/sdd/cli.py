@@ -273,7 +273,16 @@ def cmd_generate(args: argparse.Namespace) -> int:
                    + impact_mod.summary_facts(report, model))
         (cfg.build_dir / "change_impact.md").write_text(summary + "\n", encoding="utf-8")
         print("-> build/change_impact.md (리뷰어용 변경 요약)")
-    health = document_health.enforce(cfg, model)
+    draft_pages = None
+    if cfg.first_run_inputs and sections and not report and not cfg.site.enabled:
+        from .config import section_output
+        selected = [cfg.section(sid) for sid in sections]
+        if all(section.get('design_generation') == 'llm' for section in selected):
+            draft_pages = {section_output(section) for section in selected}
+    health = document_health.enforce(cfg, model, draft_pages=draft_pages)
+    if draft_pages and health and health['findings']:
+        print(f"선택한 원고를 생성했습니다. 전체 문서의 남은 항목은 {cfg.build_dir / 'document-health.md'}에서 확인하세요.")
+        return 0
     if cfg.site.enabled:
         from .export_site import export_site
         print(f"-> {export_site(cfg)}")

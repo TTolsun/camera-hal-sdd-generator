@@ -97,6 +97,13 @@ def test_completed_input_is_saved_before_recoverable_interrupt(initial):
     assert retry.tags == ["first_run_selected_ownership_0"]
 
 
+def test_changed_figure_budget_invalidates_auto_selections(initial):
+    cfg, model, _ = initial
+    first_run.prepare(cfg, model, first_run.pending(cfg, ["selected"]), Execution(cfg, Selected(cfg), model=model))
+    cfg.raw["visuals"] = {"max_nodes": cfg.visuals.max_nodes + 1}
+    assert len(first_run.pending(cfg, ["selected"])) == 2
+
+
 def test_missing_source_keeps_template_and_previous_document(initial):
     cfg, model, _ = initial
     cfg.sdd_dir.mkdir()

@@ -55,9 +55,13 @@ def _digest(value):
 
 
 def _identity(cfg, section, topic):
+    from .validation_stage import read_bytes
+    visuals = cfg.visuals
+    visual_hash = hashlib.sha256(read_bytes(cfg.root / visuals.file)).hexdigest() if visuals.file else None
     return _digest([section.get("reader_profile"), section.get("reader"), section.get("facts"),
                     section.get("watch"), section.get("watch_exclude"), cfg.exclude,
                     section.get("design_requirements"), topic, cfg.agent.label,
+                    visual_hash, visuals.max_nodes,
                     cfg.agent.command, cfg.agent.args, cfg.agent.max_input_chars, SYSTEM, SCHEMA])
 
 
