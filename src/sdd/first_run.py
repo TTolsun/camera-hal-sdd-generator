@@ -298,6 +298,7 @@ def _request(cfg, section, topic, candidates, *, visual=False, missing=""):
     def payload():
         return json.dumps({"reader": section.get("reader", section.get("reader_profile", "")),
                            "question": topic["question"], "requirements": requirements, "other_topics": other_topics,
+                           **({"writing_instructions": topic["prompt"]} if topic.get("prompt") else {}),
                            **({"previous_gap": missing[:400]} if missing else {}),
                            "candidates": displayed}, ensure_ascii=False)
 

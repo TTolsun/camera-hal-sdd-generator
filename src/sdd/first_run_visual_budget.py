@@ -27,7 +27,8 @@ def visual_size(cfg, model, files, section, topic, sources, figures):
         _, _, passages, system, request = inputs(cfg, candidate, selected, figure)
         response = schema(passages, request["max_nodes"], figure.get("required_symbols"),
                           figure.get("max_label_chars"), include_while=figure.get("while_conditions", False),
-                          max_edge_label_chars=figure.get("max_edge_label_chars"))
+                          max_edge_label_chars=figure.get("max_edge_label_chars"),
+                          require_terminal_outcomes=figure.get("require_terminal_outcomes", False))
         sizes.append(len(build_prompt(system, json.dumps(request, ensure_ascii=False), response)))
     return max(sizes)
 

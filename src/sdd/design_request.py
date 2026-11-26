@@ -149,6 +149,9 @@ def _prepare_requests(cfg, model, section, previous):
     for topic in section['design_topics']:
         focus = focused_prompt.system_prompt(cfg, topic.get('design_prompt', section.get('design_prompt')))
         topic_system = focus if focus is not None else standard_system
+        if section.get('_check_field_validity'):
+            from .field_validity import INSTRUCTIONS
+            topic_system += '\n' + INSTRUCTIONS
         if focus is not None and any(owner.get('answer_contract', {}).get('basis') == 'investigation'
                                      for owner in [topic, *topic.get('parts', [])]):
             topic_system += (
@@ -180,6 +183,8 @@ def bind_native_topic(cfg, model, section, topic, prompt, identity):
     for unit in _design_units({**section, 'design_topics': [topic]}, {}):
         request = _unit_request(model, section, unit, focus)
         requests.append(dict(system=system, user=request.user, schema=response_schema(unit, request.passages)))
+        if 'revision_prompt' in unit:
+            requests[-1]['revision_prompt'] = unit['revision_prompt']
     return digest(identity + json.dumps(dict(requests=requests, styles=style_policy(cfg),
                                              cli_protocol='native-schema-v1'), ensure_ascii=False, sort_keys=True))
 

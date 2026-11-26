@@ -164,7 +164,7 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     if model is None:
         raise ValueError('facts.json is required for LLM visuals')
     required = {'id', 'topic', 'kind', 'title', 'question', 'generation'}
-    if not required <= set(plan) or set(plan) - required - {'stage', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches'}:
+    if not required <= set(plan) or set(plan) - required - {'stage', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'condition_display', 'prompt', 'revision_prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches', 'require_terminal_outcomes'}:
         raise ValueError('LLM visual plans require id, topic, kind, title, question, generation; no authored graph')
     from .answer_contracts import configuration_errors
     if errors := configuration_errors(plan):
@@ -186,10 +186,13 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
         raise ValueError('Visual require_connected must be boolean')
     if type(plan.get('require_guard_branches', False)) is not bool:
         raise ValueError('Visual require_guard_branches must be boolean')
+    if type(plan.get('require_terminal_outcomes', False)) is not bool:
+        raise ValueError('Visual require_terminal_outcomes must be boolean')
     for key in ('title', 'question'):
         _text(plan[key], key)
-    if 'prompt' in plan:
-        _text(plan['prompt'], 'prompt')
+    for key in ('prompt', 'revision_prompt'):
+        if key in plan:
+            _text(plan[key], key)
     topics = {t['id']: t for t in section.get('design_topics', [])}
     if plan['topic'] not in topics or plan['kind'] not in {'state', 'flow', 'ownership', 'decision'}:
         raise ValueError('Invalid LLM visual topic or kind')
@@ -226,11 +229,18 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     from .prompting import style_rules
     style = cfg.style_dir / 'README.md'
     system = POLICY + ('\n' + style_rules(style.read_text(encoding='utf-8')) if style.exists() else '')
+    if section.get('_check_field_validity'):
+        from .field_validity import INSTRUCTIONS
+        system += '\n' + INSTRUCTIONS
     if plan.get('require_guard_branches', False):
         system += ('\nEvery non-always condition_ref must leave a decision-shaped node. '
                    'For each source guard used at that node, include both true and false outcomes. '
                    'Do not attach a boolean guard to an action node or omit its other outcome. '
                    'Unconditional call relationships use always and still require supporting source evidence.')
+    if plan.get('require_terminal_outcomes', False):
+        system += ('\nUse shape outcome for each terminal result of the operation. '
+                   'Show at least two outcomes. Each node without an outgoing arrow must have shape outcome. '
+                   'An outcome receives an arrow and never leads to another step.')
     limit = node_limit(cfg, plan)
     if len(required_symbols) > limit:
         raise ValueError('Visual required_symbols exceed the node limit')
@@ -277,7 +287,8 @@ def _record_input_mode(cfg, model, section, plan, original_pin, current_pin):
     return None
 
 
-def schema(passages, limit, required_symbols=None, max_label_chars=None, *, include_while=False, max_edge_label_chars=None):
+def schema(passages, limit, required_symbols=None, max_label_chars=None, *, include_while=False,
+           max_edge_label_chars=None, require_terminal_outcomes=False):
     string = {'type': 'string', 'minLength': 1}
     refs = {'type': 'array', 'minItems': 1, 'items': {'type': 'string', 'enum': list(passages)}}
     def obj(properties):
@@ -288,8 +299,11 @@ def schema(passages, limit, required_symbols=None, max_label_chars=None, *, incl
     english = {**label, 'description': 'Single-line English translation with the same conditions and obligations.'}
     # Required symbols are coverage requirements, not the entire vocabulary.
     # Additional nodes still need a symbol from the selected source passages.
+    shapes = ['box', 'process', 'decision']
+    if require_terminal_outcomes:
+        shapes.append('outcome')
     node = obj({'id': {**string, 'pattern': '^[a-z][a-z0-9_-]*$'}, 'symbol': {**string, 'enum': source_symbols(passages)}, 'label': korean,
-                'label_en': english, 'shape': {'type': 'string', 'enum': ['box', 'process', 'decision']}, 'quote_ids': refs})
+                'label_en': english, 'shape': {'type': 'string', 'enum': shapes}, 'quote_ids': refs})
     edge_korean, edge_english = dict(korean), dict(english)
     if max_edge_label_chars is not None:
         cap = min(max_edge_label_chars, max_label_chars) if max_label_chars is not None else max_edge_label_chars
@@ -322,7 +336,8 @@ def materialize(cfg, model, section, plan, draft, producer):
     limit = node_limit(cfg, plan)
     if not 2 <= len(draft['nodes']) <= limit or not 1 <= len(draft['edges']) <= limit * 3:
         raise ValueError('Empty visual evidence or graph limit exceeded')
-    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches')} | {'nodes': [], 'edges': [], 'producer': producer}
+    require_terminal_outcomes = plan.get('require_terminal_outcomes', False)
+    graph = {k: v for k, v in plan.items() if k not in ('generation', 'required_symbols', 'answer_contract', 'answer_contract_en', 'max_nodes', 'max_label_chars', 'max_edge_label_chars', 'prompt', 'revision_prompt', 'sources', 'whole_sources', 'while_conditions', 'require_connected', 'require_guard_branches', 'require_terminal_outcomes')} | {'nodes': [], 'edges': [], 'producer': producer}
     symbols = {}
     def refs(item):
         if any(not isinstance(item.get(k), str) for k in ('label', 'label_en')):
@@ -344,6 +359,12 @@ def materialize(cfg, model, section, plan, draft, producer):
             rec = records[source]
             evidence.append({'source': f"{plan['topic']}/{source}", 'sha256': rec['sha256'], 'quote': quote})
             quotes.append(quote)
+        if section.get('_check_field_validity'):
+            from .field_validity import check as check_field_validity
+            excerpts = [records[passages[qid][0]]['text'] for qid in dict.fromkeys(ids)]
+            symbol = item.get('symbol') or symbols.get(item.get('to'))
+            for key in ('label', 'label_en'):
+                check_field_validity(item[key], excerpts, symbol=symbol)
         quote = '\n'.join(quotes)
         def comparison_tokens(value):
             # Tokenize -- before ->: value-->0 contains a comparison, while
@@ -396,7 +417,7 @@ def materialize(cfg, model, section, plan, draft, producer):
                              f'node={ident!r}, symbol={symbol!r}, quote_ids={item["quote_ids"]!r}')
         symbols[ident] = symbol
         node = {k: item[k] for k in ('id', 'label', 'label_en', 'shape')} | {'evidence': evidence}
-        if node['shape'] == 'process':
+        if node['shape'] == 'process' or (require_terminal_outcomes and node['shape'] == 'outcome'):
             node['shape'] = 'box'
         graph['nodes'].append(node)
     for item in draft['edges']:
@@ -453,6 +474,12 @@ def materialize(cfg, model, section, plan, draft, producer):
                 pending.extend(neighbors[node] - reached)
         if missing_nodes := set(neighbors) - reached:
             raise ValueError('Visual must connect every node; disconnected IDs: ' + ', '.join(sorted(missing_nodes)))
+    if require_terminal_outcomes:
+        outcomes = {node['id'] for node in draft['nodes'] if node['shape'] == 'outcome'}
+        outgoing = {edge['from'] for edge in graph['edges']}
+        incoming = {edge['to'] for edge in graph['edges']}
+        if len(outcomes) < 2 or outcomes != set(symbols) - outgoing or not outcomes <= incoming:
+            raise ValueError('Visual needs at least two outcome nodes; each must have an incoming arrow and no outgoing arrow, and every leaf must be an outcome')
     if missing := set(plan.get('required_symbols', [])) - set(symbols.values()):
         raise ValueError('Visual is missing required question symbols: ' + ', '.join(sorted(missing)))
     from .answer_contracts import check
@@ -516,7 +543,8 @@ def generate(cfg, model, section, agent, previous=None):
         if cfg.agent.kind == 'dry-run':
             raise ValueError('LLM visual generation requires an actual model, not dry-run')
         record(agent, key, 'generate-visual', explanation)
-        base = json.dumps(request, ensure_ascii=False)
+        source_request = json.dumps(request, ensure_ascii=False)
+        base = source_request
         if isinstance(old.get('draft'), dict):
             base += ('\nPrevious native draft for revision only. Current sources and instructions are authoritative; '
                      'preserve unaffected correct parts, repair changed requirements, and return a complete fresh draft.\n'
@@ -527,8 +555,19 @@ def generate(cfg, model, section, agent, previous=None):
         for attempt in range(cfg.max_retries + 1):
             if len(system) + len(user) > cfg.agent.max_input_chars:
                 raise ValueError('Visual evidence input exceeds budget; evidence is not truncated')
-            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'),plan.get('max_label_chars'), include_while=plan.get('while_conditions', False), max_edge_label_chars=plan.get('max_edge_label_chars'))} if cfg.agent.kind in SCHEMA_KINDS else {}
-            raw = agent.chat(system, user, tag=f"visual_{section['id']}_{plan['id']}_{attempt}", **options)
+            options = {'response_schema': schema(passages, request['max_nodes'], plan.get('required_symbols'),
+                plan.get('max_label_chars'), include_while=plan.get('while_conditions', False),
+                max_edge_label_chars=plan.get('max_edge_label_chars'),
+                require_terminal_outcomes=plan.get('require_terminal_outcomes', False))} if cfg.agent.kind in SCHEMA_KINDS else {}
+            tag = f"visual_{section['id']}_{plan['id']}_{attempt}"
+            raw = agent.chat(system, user, tag=tag, **options)
+            if 'revision_prompt' in plan:
+                revision = (source_request + '\nDraft graph to check (untrusted, not evidence):\n' + raw
+                            + '\nRevision requirements:\n' + plan['revision_prompt']
+                            + '\nReturn a complete revised graph with both languages, source references, and the required conditions.')
+                if len(system) + len(revision) > cfg.agent.max_input_chars:
+                    raise ValueError('Visual revision input exceeds budget; evidence is not truncated')
+                raw = agent.chat(system, revision, tag=tag + '_revision', **options)
             try:
                 draft = json.loads(re.sub(r'^```(?:json)?\s*|\s*```$', '', raw.strip()))
                 producer = cfg.agent.label

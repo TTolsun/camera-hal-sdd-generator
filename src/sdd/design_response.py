@@ -161,11 +161,14 @@ def materialize(model, section, answers, enforce_repeats=True):
             quote = st.get('quote')
             if not isinstance(quote, str) or len(quote_text(quote)) < 12:
                 raise ValueError('각 설명에는 직접 근거로 삼은 원문 구절 quote가 필요합니다.')
-            original = [quote_text(model.evidence.get(f"{section['id']}/{topic['id']}/{ref}", {}).get('text', ''))
+            excerpts = [model.evidence.get(f"{section['id']}/{topic['id']}/{ref}", {}).get('text', '')
                         for ref in st['evidence']]
-            if not any(quote_text(quote) in source for source in original):
+            if not any(quote_text(quote) in quote_text(source) for source in excerpts):
                 raise ValueError('quote가 연결된 소스 발췌의 실제 원문과 일치하지 않습니다: '
                                  + repr(quote) + '. 문장 부호·대소문자·코드를 바꾸거나 생략하지 마세요.')
+            if section.get('_check_field_validity'):
+                from .field_validity import check as check_field_validity
+                check_field_validity(st['text'], excerpts)
             from .answer_contracts import sourced_check_obligation
             if (st.get('kind', 'behavior') == 'behavior' and only_uncertainty(st['text'])
                     and not sourced_check_obligation(st['text'], quote_text(quote))):

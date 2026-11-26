@@ -51,8 +51,8 @@ def _assemble_generation(cfg, model, section, answers, inputs, reused, replayed,
     if section.get('reader_scope'):
         artifact['reader_scope'] = section['reader_scope']
     if cfg.agent.kind == 'cli':
-        from .cli_checkpoint import validation_policy, validation_model, style_policy
-        artifact['validation_policy'] = validation_policy()
+        from .cli_checkpoint import design_validation_policy, validation_model, style_policy
+        artifact['validation_policy'] = design_validation_policy(section)
         artifact['validation_model'] = validation_model(model)
         artifact['style_policy'] = style_policy(cfg)
     return DesignResult(pinned, resolved, report, artifact)

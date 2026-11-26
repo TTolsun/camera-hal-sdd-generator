@@ -28,6 +28,7 @@ class ReviewConfig:
     design_prompt: str = 'standard'
     design_grounding: bool = False
     design_revision: bool = False
+    check_field_validity: bool = False
     answer_cache: bool = False
     cli_checkpoint: bool = False
     max_calls: int = 0
@@ -41,6 +42,8 @@ class ReviewConfig:
 
     def __post_init__(self):
         contract_batch_size(self.contract_batch_size)
+        if type(self.check_field_validity) is not bool:
+            raise ValueError('review.check_field_validity는 boolean이어야 합니다.')
 
     def prompt_mode(self, override=None):
         mode = self.design_prompt if override is None else override
@@ -53,6 +56,9 @@ class ReviewConfig:
         if type(value) is not bool:
             raise ValueError('review.design_grounding은 boolean이어야 합니다.')
         return value
+
+    def revision(self, topic):
+        return self.design_revision or bool(topic.get('revision_prompt'))
 
 
     def triage_options(self):
@@ -418,7 +424,8 @@ class Config:
 
     def _section_key(self):
         return ('sections', str(self.sections_file), str(self.scenarios_file),
-                str(self.root), str(self.paths.get('products_file')), repr(self._option('products')))
+                str(self.root), str(self.paths.get('products_file')), repr(self._option('products')),
+                self.review.check_field_validity)
 
     def section(self, sid):
         from .validation_stage import current
@@ -437,6 +444,10 @@ class Config:
         from .product_context import bind
         from .reader_scope import validate_locations
         sections = bind(self, bind_first_run(self, list(data.get("sections", []) or [])))
+        if self.review.check_field_validity:
+            for section in sections:
+                if section.get('design_generation') == 'llm':
+                    section['_check_field_validity'] = True
         from .scenario_ownership import validate
         validate(sections, self.scenarios(), section_output)
         return validate_locations(sections, {section_output(s) for s in sections})

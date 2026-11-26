@@ -31,7 +31,7 @@ def execution_identity(agent_config, schema):
                 arguments=arguments(agent_config, schema))
 
 
-def validation_policy():
+def validation_policy(*, check_field_validity=False):
     # Lexical/source/contract checks are distinct from model entailment policy.
     # Content hashes change with code; no compatibility aliases are added here.
     root = Path(__file__).parent
@@ -39,6 +39,9 @@ def validation_policy():
               for name in ('manuscript', 'semantic', 'duplicates', 'design_contracts', 'validate',
                            'reader_profiles', 'contract_schema', 'answer_contracts',
                            'reader_scope', 'product_context', 'explanation')}
+    if check_field_validity:
+        from .validation_stage import read_bytes
+        policy['field_validity'] = hashlib.sha256(read_bytes(root / 'field_validity.py')).hexdigest()
     # All pure response helpers participate, including quote resolution and
     # normalization called transitively by the selected validation functions.
     policy['design_response'] = hashlib.sha256((root/'design_response.py').read_bytes()).hexdigest()
@@ -52,6 +55,12 @@ def validation_policy():
     policy['design_validation'] = hashlib.sha256(ast.dump(ast.Module(body=nodes, type_ignores=[]),
                                                          include_attributes=False).encode()).hexdigest()
     return policy
+
+
+def design_validation_policy(section):
+    if section.get('_check_field_validity'):
+        return validation_policy(check_field_validity=True)
+    return validation_policy()
 
 
 def validation_model(model):
