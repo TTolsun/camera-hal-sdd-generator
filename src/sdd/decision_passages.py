@@ -65,6 +65,12 @@ def _matches(root, commit, paths):
 
 def decision_locations(cfg, commit, files, section, topic, cache):
     roles = tuple(dict.fromkeys(role for aspect in topic["covers"] for role in _ROLES.get(aspect, ())))
+    if "evidence_roles" in topic:
+        selected = topic["evidence_roles"]
+        if (not isinstance(selected, list) or not selected
+                or any(not isinstance(role, str) or role not in _PATTERNS for role in selected)):
+            raise ValueError("evidence_roles must list known source retrieval roles")
+        roles = tuple(dict.fromkeys([*selected, *roles]))
     if not roles:
         return
     # The cache belongs to one prepare() operation and its pinned facts.
