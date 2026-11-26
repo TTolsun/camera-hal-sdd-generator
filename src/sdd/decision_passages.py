@@ -12,6 +12,7 @@ from .matching import match_any
 # including contradictions and exceptions, and must justify claims from it.
 _PATTERNS = {
     "frame": r"(frame|buffer|image|metadata|payload).{0,30}(invalid|corrupt|cancel|valid data|not valid)",
+    "buffer_completion": r"(buffer|frame|metadata).{0,32}complet(e|ed|ion).{0,50}(notif|until|valid)",
     "stop": r"(stop|flush|abort).{0,75}(pending|cancel|complete|return|synchron)",
     "notification": r"(request|result).{0,36}(complete|cancel|callback).{0,40}(status|emit|signal|notify|queue)",
     "use": r"(buffer|request|resource).{0,50}(reused?|recycl|requeue|returned to)",
