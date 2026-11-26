@@ -91,8 +91,8 @@ def test_inhouse_graph_revision_preserves_source_conditions_in_both_languages(tm
     plan = next(p for p in yaml.safe_load((TEMPLATE / 'config/visuals.yaml').read_bytes())['sections']['vendor-contract']
                 if p['id'] == visual_id)
     monkeypatch.setattr(generated_visuals, 'plans', lambda cfg, section: [plan])
-    initial_labels = ('카메라에 요청을 큐에 넣습니다. 성공하면 0을 반환합니다.',
-                      'Queues a request to the camera. It returns 0 on success.')
+    initial_labels = ('카메라에 request를 큐에 넣습니다. 성공하면 0을 반환하고, 그렇지 않으면 음수 오류 코드를 반환합니다.',
+                      'Queues a request to the camera. It returns 0 on success or a negative error code otherwise.')
     expected_labels = ('요청 제출 함수를 호출합니다.', 'Call the request submission function.')
     failure = visual_id == 'request-failures'
     result = ('유효하지 않으면 큐에 넣지 않습니다.', 'Reject an invalid request without queuing it.') if failure else (
@@ -106,6 +106,11 @@ def test_inhouse_graph_revision_preserves_source_conditions_in_both_languages(tm
                           'condition_ref': 'always', 'quote_ids': ['queue:0']}]}
     expected = deepcopy(initial)
     expected['nodes'][0].update(label=expected_labels[0], label_en=expected_labels[1])
+    expected['nodes'].append(dict(id='returned', symbol='queueRequest', shape='box',
+        label='성공 시 0을, 실패 시 음수 오류 코드를 반환합니다.',
+        label_en='Returns 0 on success or a negative error code on failure.', quote_ids=['queue:0']))
+    expected['edges'].append({'from': 'submit', 'to': 'returned', 'label': '제출 함수의 반환',
+        'label_en': 'Submission return', 'condition_ref': 'always', 'quote_ids': ['queue:0']})
     calls = []
 
     def chat(system, user, *, tag, response_schema):
