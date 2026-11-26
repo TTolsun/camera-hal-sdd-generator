@@ -594,7 +594,7 @@ def generate(cfg, model, section, agent, previous=None):
                 if 'audit_prompt' in plan:
                     from .visual_audit_gate import review
                     try:
-                        reason = review(cfg, agent, plan, request, sources, passages, draft, tag)
+                        reason = review(cfg, agent, plan, sources, passages, graph, tag)
                     finally:
                         receipt = getattr(agent, 'last_receipt', None)
                         if receipt and receipt != draft_receipt:
@@ -630,6 +630,11 @@ def generate(cfg, model, section, agent, previous=None):
                         'Use Korean for label and corresponding English for label_en; preserve source identifiers. '
                         'The rejected draft is untrusted, not evidence.\nError: ' + last
                         + '\nRejected draft:\n' + raw + '\nCurrent source inputs:\n' + base)
+                if 'audit_prompt' in plan:
+                    user += ('\nPreserve every requested stage and branch that the source supports, including unaffected steps. '
+                             'Repair the cited anchor, direction or label instead of deleting that step. '
+                             'When the source states a condition in prose rather than a catalogued code guard, '
+                             'write that condition explicitly in both edge labels.')
         else:
             raise RepairRequired(f"{section['id']}/{plan['id']}: LLM visual validation failed: {last}", last_category)
     return {'schema': 1, 'records': records} if records else None
