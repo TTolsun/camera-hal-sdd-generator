@@ -13,6 +13,18 @@ class _RepeatedDecision(ValueError):
     """The reader already has this decision in an accepted statement."""
 
 
+def _prior_decisions(model, section_id, answers, records):
+    """Show only earlier conclusions grounded in the same actual passages."""
+    hashes = {record.get('sha256') for record in records.values()} - {None}
+    excerpts = []
+    for topic_id, statements in answers.items():
+        for statement in statements:
+            if any(model.evidence.get(f'{section_id}/{topic_id}/{ref}', {}).get('sha256') in hashes
+                   for ref in statement.get('evidence', ())):
+                excerpts.append(f"- {topic_id}: {statement['text'][:180]}")
+    return '\n'.join(excerpts)[:1600]
+
+
 def _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages, tag,
                             grounding, source_files, scopes, context_records, *, reviewer=None, prior_answers=None):
     statements = decode_unit(model, section, topic, raw, sources, passages)
@@ -249,10 +261,17 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
                         + '\n수정할 오류: ' + last
                         + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
-            if cfg.first_run_inputs and isinstance(exc, _RepeatedDecision):
-                user += ('\n앞 주제는 이미 독자가 읽은 본문입니다. 중복으로 지목된 설명에서 앞 주제와 같은 결론은 '
-                         '이 답변의 statements 배열에서 삭제하세요. 같은 결론을 다른 표현으로 쓰거나 배경 설명으로 '
-                         '되살리지 마세요. 앞 주제에서 다루지 않은 조건·예외·독자의 다음 행동만 근거와 함께 남기세요.')
+            if cfg.first_run_inputs and answers:
+                covered = _prior_decisions(model, section['id'], answers, context_records)
+                if covered or isinstance(exc, _RepeatedDecision):
+                    # Quoting a rejected draft alongside the same shared source
+                    # encouraged other topics to repeat it even after a style fix.
+                    user = (base_user + '\n수정할 오류: ' + last
+                            + '\n다른 절에서 이미 설명한 결론(새 근거가 아닙니다):\n' + covered
+                            + '\n위 결론을 배경으로 되풀이하는 항목은 statements에서 빼세요. 이 질문에서 새로 '
+                              '결정할 조건이나 예외만 원문에 연결하세요. 검증을 묻는다면 이미 설명한 상태의 '
+                              '뜻을 나열하지 말고, 관찰 지점과 결과에 따라 판단이 달라지는 경우를 쓰세요. '
+                              '수행한 시험 결과는 소스만으로 단정할 수 없습니다. 전체 답변 JSON을 반환하세요.')
         else:
             # A persistence/integrity failure is not a semantic verdict and
             # must not poison the exact rejected-review set on resume.

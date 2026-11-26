@@ -213,6 +213,21 @@ def test_figure_can_fit_with_only_a_later_candidate():
     ]
 
 
+def test_repair_shows_only_conclusions_with_shared_evidence():
+    from sdd.design_execution import _prior_decisions
+    model = KnowledgeModel()
+    model.evidence = {
+        "vendor/inputs/window-1": {"sha256": "earlier"},
+        "vendor/ownership/window-2": {"sha256": "shared"},
+    }
+    answers = {
+        "inputs": [{"text": "Separate condition", "evidence": ["window-1"]}],
+        "ownership": [{"text": "Return requires release", "evidence": ["window-2"]}],
+    }
+    assert _prior_decisions(model, "vendor", answers, {"window-1": {"sha256": "shared"}}) == (
+        "- ownership: Return requires release")
+
+
 def test_missing_evidence_expands_to_fresh_windows_once(initial, monkeypatch):
     cfg, model, _ = initial
     seen = []
