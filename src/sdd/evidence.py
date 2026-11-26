@@ -49,6 +49,7 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
     records = {}
     commit = str(model.meta.get("source_commit", ""))
     cache = {}
+    merged = {}  # Change-Id별 병합 커밋 조회 결과
     for sec in sections:
         for topic in sec.get("design_topics", []):
             for source in topic.get("sources", []):
@@ -65,6 +66,10 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
                     if source.get('kind') == 'commit':
                         from .history_evidence import record as commit_record
                         records[key] = commit_record(cfg.source_root, source, commit)
+                        continue
+                    if source.get('kind') == 'review':
+                        from .review_evidence import record as review_record
+                        records[key] = review_record(cfg.reviews_dir, cfg.source_root, source, commit, merged)
                         continue
                     file = str(source["file"])
                     if PurePosixPath(file).is_absolute() or ".." in PurePosixPath(file).parts or ":" in file or "\\" in file:
@@ -117,6 +122,11 @@ def topic_blocks(model: KnowledgeModel, section: str, topic: dict) -> tuple[list
             label = (f"커밋 메시지 발췌 `{record['file']}:{record['line']}` "
                      f"(커밋 {record['revision'][:12]}, {record['revision_date'][:10]}; "
                      "작성 당시의 변경 의도이며 현재 동작의 근거가 아닙니다)")
+        elif record.get("origin") == "review-comment":
+            # 리뷰 당시의 논의다. 채택된 결론인지와 현재 동작은 소스·커밋으로 확인해야 한다.
+            label = (f"리뷰 코멘트 발췌 `{record['file']}:{record['line']}` "
+                     f"(Change {record['change_number'] or record['change_id'][:9]}, {record['author']}, "
+                     f"{record['review_date'][:10]}; 리뷰 당시의 논의이며 현재 동작의 근거가 아닙니다)")
         else:
             label = f"소스 발췌 `{record['file']}:{record['line']}`"
         blocks.append(Block(key, f"{label}\n{record['text']}", 1))

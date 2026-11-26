@@ -35,7 +35,8 @@
 | `sdd impact --base <ref> --base-facts <파일>` | 두 커밋의 영향 섹션과 범위 검토 항목을 계산합니다. `--fail-on-coverage-gap`이면 미결 항목이 있을 때 2로 끝납니다. `--config-changes`를 더하면 소스 diff가 없어도 설계 질문·근거 지정이 원고를 만든 입력과 달라진 섹션(원고가 없는 새 섹션 포함)을 영향 섹션에 넣습니다. |
 | `sdd run --base <ref>` | extract → impact → generate를 한 번에 합니다. `update`와 달리 커밋을 하나씩 나누지 않습니다. |
 | `sdd audit-docs` | 문서 분량·증가·중복·Feature 범위를 검사합니다. 문제가 있으면 2. |
-| `sdd history-candidates [--sections a,b] [--limit 8] [--out <디렉터리>]` | 설계 주제의 소스 발췌 범위를 바꾼 커밋과 현재 줄의 출처 커밋을 찾아 설계 근거 후보 목록(`history-candidates.md`, `.json`)을 만듭니다. 설정·facts를 바꾸지 않고 모델도 부르지 않습니다. 후보는 사람이 읽고 고른 뒤에만 `kind: commit` 근거로 등록합니다. |
+| `sdd history-candidates [--sections a,b] [--limit 8] [--out <디렉터리>]` | 설계 주제의 소스 발췌 범위를 바꾼 커밋과 현재 줄의 출처 커밋을 찾아 설계 근거 후보 목록(`history-candidates.md`, `.json`)을 만듭니다. 설정·facts를 바꾸지 않고 모델도 부르지 않습니다. 후보는 사람이 읽고 고른 뒤에만 `kind: commit` 근거로 등록합니다. 리뷰 스냅숏이 있으면 커밋 후보 아래에 코멘트를 붙이고, 없으면 가져오기 명령을 표시합니다. |
+| `sdd import-reviews --change <파일> [--comments <파일>]` | 저장한 Gerrit REST 응답(`/changes/<id>?o=MESSAGES`, `/changes/<id>/comments`)을 `paths.reviews_dir`의 리뷰 스냅숏으로 정규화합니다. Gerrit에 접속하지 않고 이메일은 저장하지 않습니다. 다시 가져오면 바뀌거나 사라진 코멘트 id를 알려 줍니다. |
 | `sdd replay --baseline <게시 사이트> --out <새 디렉터리>` | 생성기 변경을 병합하기 전에 실행합니다. 게시된 입력을 현재 코드로 다시 빌드한 뒤, 다시 해야 할 모델 작업을 셉니다. 대상은 번역할 문자열, 재검토할 그림 항목, 새로 호출할 계약 감사 묶음입니다. 모델은 부르지 않으며 게시 디렉터리·검토 장부·영어 목록·체크포인트도 바꾸지 않습니다. 모델 작업이 필요하면 2로 끝납니다. 결과는 `<out>/replay.json`에 남습니다. |
 | `sdd improve` | 새 커밋이 없을 때 기존 문서의 누락 한 항목을 점검·보완합니다. 보류되면 2. |
 | `sdd verify-publication --url <주소> --site <로컬 사이트>` | 실제 게시 URL의 manifest와 산출물 해시가 로컬 사이트와 같을 때까지 확인합니다. `--site`를 생략하면 `SDD_SITE_DIR`을 씁니다(`sdd automate`가 설정합니다). 예: `sdd verify-publication --url https://docs.internal/hal/ --site build/site --timeout 600`. |

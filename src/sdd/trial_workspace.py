@@ -55,7 +55,7 @@ def validate_output(cfg: Config, out: Path, *, previous: Iterable[Path] = ()) ->
     protected = [cfg.source_root, cfg.compile_commands, cfg.sdd_dir, cfg.facts_dir,
                  cfg.diagrams_dir, cfg.sections_file, cfg.scenarios_file, cfg.clang_uml_file,
                  cfg.paths.get('glossary_file', cfg.config_dir / 'glossary.yaml'), cfg.prompts_dir,
-                 cfg.templates_dir, cfg.style_dir,
+                 cfg.templates_dir, cfg.style_dir, cfg.reviews_dir,
                  *[value for key, value in cfg.paths.items() if key != 'config']]
     site = cfg.raw.get('site') or {}
     visuals = cfg.raw.get('visuals') or {}
@@ -78,7 +78,8 @@ def clone_config(cfg: Config, out: Path, *, sections_file: Path | None = None) -
     trial.paths.update(config=cfg.config_dir, sections_file=sections_file or cfg.sections_file,
                        scenarios_file=cfg.scenarios_file, clang_uml_file=cfg.clang_uml_file,
                        prompts=cfg.prompts_dir, templates=cfg.templates_dir, style=cfg.style_dir,
-                       glossary_file=cfg.paths.get('glossary_file', cfg.config_dir / 'glossary.yaml'))
+                       glossary_file=cfg.paths.get('glossary_file', cfg.config_dir / 'glossary.yaml'),
+                       reviews_dir=cfg.reviews_dir)
     from .product_context import input_paths
     product_inputs = input_paths(cfg)
     if product_inputs:
