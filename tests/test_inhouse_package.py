@@ -152,7 +152,10 @@ def test_real_package_has_no_relative_links_to_excluded_records(tmp_path):
     for name, text in docs.items():
         assert builder.pin_excluded_links(name, text, docs.keys() | manifest["files"].keys(), archived,
                                           info["source_commit"])[1] == 0, name
-    assert manifest["pinned_public_links"]["base"].endswith(f"/blob/{info['source_commit']}/")
+    pinned = manifest["pinned_public_links"]
+    assert pinned["base"].endswith(f"/blob/{info['source_commit']}/")
+    # Root documents keep pointing at the packaged import-agent AGENTS.md.
+    assert "README.md" not in pinned["files"] and "](AGENTS.md)" in docs["README.md"]
 
 
 def test_dependency_list_contains_locked_runtime_pdf_and_test_closure():

@@ -115,8 +115,10 @@ def build(repo, output, ref="HEAD", public_repo=PUBLIC_REPO):
                 "src/sdd/evaluate_pipeline.py", "src/sdd/provenance.py", "src/sdd/design_replay.py",
                 "src/sdd/cli.py", "tools/verify_import.py", "tools/run_sdd.py", "uv.lock"}
     rewritten = {}
+    # The kit's root AGENTS.md is the import-agent replacement, so links to it stay local.
+    packaged = set(files) | {"AGENTS.md"}
     for name in sorted(n for n in files if n.endswith(".md")):
-        text, count = pin_excluded_links(name, files[name].decode("utf-8"), files.keys(), archived, revision, public_repo)
+        text, count = pin_excluded_links(name, files[name].decode("utf-8"), packaged, archived, revision, public_repo)
         if count:
             files[name], rewritten[name] = text.encode("utf-8"), count
     if missing := required - files.keys():
