@@ -759,6 +759,9 @@ sections:
     aspects:
     - ownership
     - verification
+  - id: rcar-build-support
+    question: 공개 upstream에서 R-Car Gen4 대상 빌드를 구성하고 지원 여부를 확인하려면 무엇을 봅니까?
+    aspects: [inputs]
   design_topics:
   - id: integration
     title: 연동 순서와 책임
@@ -835,6 +838,16 @@ sections:
         reject_patterns:
         - pattern: 아래에?\s*정의|as defined below
           message: 현재 문서에 없는 아래의 정의를 참조하지 마세요. 상태에 영향을 주는 함수와 동기화 책임을 독립적인 문장으로 설명하세요.
+  - id: rcar-build-support
+    title: 빌드와 지원 조건
+    question: >-
+      이 자료가 적용되는 libcamera upstream 커밋(짧은 SHA와 날짜)을 밝혀 주세요.
+      R-Car Gen4 파이프라인과 RPPX1 IPA의 Meson 선택 조건, 대상 보드에서 확인할 장치·ISP·튜닝 조건을 설명하세요.
+      기록된 최소 조합과 전체 구성의 컴파일·링크 시험을 구분하고, 대상 보드에서 아직 확인해야 할 동작을 설명하세요.
+      R-Car Gen4의 상용 기기 지원이나 커널 헤더 전체의 호환성 판정을 추정하지 마세요.
+    covers: [rcar-build-support]
+    product: {id: libcamera-rcar-gen4-build, feature: build-support}
+    max_statements: 4
   - id: boundary
     title: 하드웨어와 공통 계층의 경계
     question: 새 하드웨어의 match() 구현자가 장치 매칭 성공과 실패 때 각각 수행할 일과 카메라 등록 책임을 설명하세요. 객체 생성자나
