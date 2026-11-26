@@ -120,6 +120,41 @@ def test_import_rejects_modified_missing_and_added_files_then_recovers(kit_repo,
         verifier.verify(root)
 
 
+def test_links_to_excluded_records_point_to_the_packaged_public_commit():
+    archived = {"docs/a/guide.md", "docs/a/kept.json", "examples/v/runs/r/result.json", "examples/v/runs/r/x.json",
+                "examples/v/mixed/kept.md", "examples/v/mixed/raw/one.json"}
+    packaged = {"docs/a/guide.md", "docs/a/kept.json", "examples/v/mixed/kept.md"}
+    text = ("[raw](../../examples/v/runs/r/result.json#L2) [kept](kept.json) [dir](../../examples/v/runs/r)\n"
+            "[mixed](../../examples/v/mixed) [web](https://example.invalid/x) [self](#top) [gone](missing.md)\n"
+            "[ref]: ../../examples/v/runs/r/x.json\n"
+            "```text\n[fenced](../../examples/v/runs/r/result.json)\n```\n")
+    pinned, count = builder.pin_excluded_links("docs/a/guide.md", text, packaged, archived, "abc123",
+                                                "https://host.invalid/o/r")
+    base = "https://host.invalid/o/r"
+    assert count == 3
+    assert f"[raw]({base}/blob/abc123/examples/v/runs/r/result.json#L2)" in pinned
+    assert f"[dir]({base}/tree/abc123/examples/v/runs/r)" in pinned
+    assert f"[ref]: {base}/blob/abc123/examples/v/runs/r/x.json" in pinned
+    # Packaged targets, partly packaged directories, URLs, anchors, broken links and code stay as written.
+    for kept in ("[kept](kept.json)", "[mixed](../../examples/v/mixed)", "[web](https://example.invalid/x)",
+                 "[self](#top)", "[gone](missing.md)", "[fenced](../../examples/v/runs/r/result.json)"):
+        assert kept in pinned
+
+
+def test_real_package_has_no_relative_links_to_excluded_records(tmp_path):
+    archive = tmp_path / "kit.zip"
+    info = builder.build(ROOT, archive)
+    with zipfile.ZipFile(archive) as kit:
+        manifest = json.loads(kit.read(builder.PREFIX + "IMPORT-MANIFEST.json"))
+        docs = {n[len(builder.PREFIX):]: kit.read(n).decode("utf-8") for n in kit.namelist() if n.endswith(".md")}
+    archived = set(subprocess.check_output(["git", "-C", str(ROOT), "ls-tree", "-r", "--name-only",
+                                            info["source_commit"]], text=True).splitlines())
+    for name, text in docs.items():
+        assert builder.pin_excluded_links(name, text, docs.keys() | manifest["files"].keys(), archived,
+                                          info["source_commit"])[1] == 0, name
+    assert manifest["pinned_public_links"]["base"].endswith(f"/blob/{info['source_commit']}/")
+
+
 def test_dependency_list_contains_locked_runtime_pdf_and_test_closure():
     lines = builder.requirements((ROOT / "uv.lock").read_bytes()).decode().splitlines()
     pins = {line.split("==")[0] for line in lines if not line.startswith("#")}

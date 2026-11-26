@@ -3,15 +3,20 @@ import argparse
 import hashlib
 import io
 import json
+import posixpath
 import re
 import subprocess
 import tomllib
 import zipfile
 from pathlib import Path, PurePosixPath
+from urllib.parse import quote
 
 ROOT_FILES = {"README.md", "DESIGN.md", "LICENSE", "pyproject.toml", "uv.lock", ".gitignore", ".gitattributes", "mkdocs.yml", "sdd.yaml"}
 DIRECTORIES = {"src", "docs", "skills", "style", "templates", "prompts", "examples", "config", "tests", "ci", "tools"}
 PREFIX = "camera-hal-sdd-generator/"
+PUBLIC_REPO = "https://github.com/TTolsun/camera-hal-sdd-generator"
+LINK = re.compile(r"(\]\()([^)\s]+)(\))|^(\s*\[[^\]]+\]:\s*)(\S+)()", re.M)
+FENCE = re.compile(r"^(```|~~~).*?^\1", re.S | re.M)
 
 
 def start_prompt(guide):
@@ -39,6 +44,40 @@ def selected(name):
         or part.endswith((".pyc", ".local.yaml")) for part in parts)
 
 
+def pin_excluded_links(name, text, packaged, archived, revision, public_repo=PUBLIC_REPO):
+    """Point relative links at files left out of the kit to the same public commit.
+
+    The repository keeps relative links so its own link check covers them.
+    Inside the kit those targets (raw validation runs) are deliberately absent,
+    so the link becomes an immutable public URL for the packaged revision.
+    """
+    fences = [m.span() for m in FENCE.finditer(text)]
+    count = 0
+
+    def replace(match):
+        nonlocal count
+        if match.group(1):
+            lead, target, tail = match.group(1, 2, 3)
+        else:
+            lead, target, tail = match.group(4, 5, 6)
+        if any(a <= match.start() < b for a, b in fences) or re.match(r"^[a-z]+:", target) or target.startswith(("{", "#")):
+            return match.group(0)
+        file, sep, anchor = target.partition("#")
+        path = posixpath.normpath(posixpath.join(posixpath.dirname(name), file))
+        if path in packaged:
+            return match.group(0)
+        if path in archived:
+            kind = "blob"
+        elif any(a.startswith(path + "/") for a in archived) and not any(p.startswith(path + "/") for p in packaged):
+            kind = "tree"
+        else:
+            return match.group(0)  # broken in the repository too; the repository link check reports it
+        count += 1
+        return f"{lead}{public_repo}/{kind}/{revision}/{quote(path, safe='/')}{sep}{anchor}{tail}"
+
+    return LINK.sub(replace, text), count
+
+
 def requirements(lock):
     packages = {p["name"]: p for p in tomllib.loads(lock.decode())["package"]}
     root = packages["camera-hal-sdd-generator"]
@@ -57,13 +96,15 @@ def requirements(lock):
             "\n".join(f"{n}=={packages[n]['version']}" for n in sorted(seen)) + "\n").encode()
 
 
-def build(repo, output, ref="HEAD"):
+def build(repo, output, ref="HEAD", public_repo=PUBLIC_REPO):
     repo, output = Path(repo).resolve(), Path(output).resolve()
     revision = subprocess.check_output(["git", "-C", str(repo), "rev-parse", f"{ref}^{{commit}}"], text=True).strip()
     archive = subprocess.check_output(["git", "-C", str(repo), "archive", "--format=zip", revision])
-    files = {}
+    files, archived = {}, set()
     with zipfile.ZipFile(io.BytesIO(archive)) as source:
         for entry in source.infolist():
+            if not entry.is_dir():
+                archived.add(entry.filename)
             if not entry.is_dir() and selected(entry.filename):
                 if (entry.external_attr >> 16) & 0o170000 == 0o120000:
                     raise ValueError(f"Symlinks are not import payloads: {entry.filename}")
@@ -73,6 +114,11 @@ def build(repo, output, ref="HEAD"):
                 "src/sdd/generated_visuals.py", "tools/evaluate_visuals.py",
                 "src/sdd/evaluate_pipeline.py", "src/sdd/provenance.py", "src/sdd/design_replay.py",
                 "src/sdd/cli.py", "tools/verify_import.py", "tools/run_sdd.py", "uv.lock"}
+    rewritten = {}
+    for name in sorted(n for n in files if n.endswith(".md")):
+        text, count = pin_excluded_links(name, files[name].decode("utf-8"), files.keys(), archived, revision, public_repo)
+        if count:
+            files[name], rewritten[name] = text.encode("utf-8"), count
     if missing := required - files.keys():
         raise ValueError(f"Missing committed package inputs: {sorted(missing)}")
     files["AGENTS.md"] = files.pop("docs/inhouse/import-agent.md")
@@ -88,6 +134,7 @@ def build(repo, output, ref="HEAD"):
                 "generated": {"AGENTS.md": "docs/inhouse/import-agent.md", "START_HERE.md": "tools/build_inhouse_package.py",
                               "START_PROMPT.txt": "docs/inhouse/package.md#시작-프롬프트",
                               "requirements-inhouse.txt": "uv.lock runtime/dev/pdf dependency closure"},
+                "pinned_public_links": {"base": f"{public_repo}/blob/{revision}/", "files": rewritten},
                 "files": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())}}
     files["IMPORT-MANIFEST.json"] = (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode()
     output.parent.mkdir(parents=True, exist_ok=True)
