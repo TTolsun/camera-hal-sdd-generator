@@ -108,6 +108,8 @@ def cmd_impact(args: argparse.Namespace) -> int:
         from .evidence import collect as collect_evidence
         collect_evidence(cfg, model)
     report = impact_mod.compute(cfg, model, files, base, head, base_model)
+    from .first_run import extend_impact
+    extend_impact(cfg, report)
     if config_changes:
         for sid, reasons in impact_mod.config_changes(cfg, model).items():
             report.sections.setdefault(sid, []).extend(reasons)
@@ -209,14 +211,10 @@ def cmd_generate(args: argparse.Namespace) -> int:
     plan_only = getattr(args, 'plan_only', False)
     sections = args.sections.split(',') if args.sections else None
     from . import document_health
+    from . import first_run
     model = _load_model(cfg)
     if plan_only and model.meta.get('source_commit') != extract.git_head(cfg.source_root):
         raise ValueError('facts의 소스 커밋이 현재 체크아웃과 다릅니다. 대상 커밋에서 sdd extract를 실행하세요.')
-    if any(s.get("design_topics") for s in cfg.sections()):
-        from .evidence import collect as collect_evidence
-        collect_evidence(cfg, model)
-        if not plan_only:
-            model.save(cfg.facts_path)
     report = None
     if args.from_impact:
         p = cfg.build_dir / "impact.json"
@@ -226,6 +224,22 @@ def cmd_generate(args: argparse.Namespace) -> int:
         report = impact_mod.ImpactReport.load(p)
         if report.coverage.get("findings"):
             print(f"문서 범위 검토 {len(report.coverage['findings'])}개가 남아 있습니다. build/impact-review.md를 확인하세요.")
+    if first_run.enabled(cfg):
+        commit = first_run.source_commit(cfg, model)
+        if report and report.head != commit:
+            raise ValueError("영향 보고서와 현재 소스 커밋이 다릅니다. sdd impact를 다시 실행하세요.")
+        if unknown := set(sections or ()) - {s["id"] for s in cfg.sections()}:
+            raise ValueError("Unknown section IDs: " + ", ".join(sorted(unknown)))
+    missing = first_run.pending(cfg, sections, report)
+    if missing and plan_only:
+        print(f"첫 실행 입력 준비 계획: {first_run.plan(cfg, model, missing)}")
+        print("모델 호출 0회. 근거 후보 선택과 문서 생성은 실제 실행에서 진행합니다.")
+        return 0
+    if not missing and any(s.get("design_topics") for s in cfg.sections()):
+        from .evidence import collect as collect_evidence
+        collect_evidence(cfg, model)
+        if not plan_only:
+            model.save(cfg.facts_path)
     if plan_only:
         Generator(cfg, model, None).plan(sections, report)
         print('계획 확인 완료. 모델 호출 0회. 원고 생성, 독립 검토, 사람 승인, 게시는 대기 중입니다.')
@@ -259,7 +273,16 @@ def cmd_generate(args: argparse.Namespace) -> int:
                    + impact_mod.summary_facts(report, model))
         (cfg.build_dir / "change_impact.md").write_text(summary + "\n", encoding="utf-8")
         print("-> build/change_impact.md (리뷰어용 변경 요약)")
-    health = document_health.enforce(cfg, model)
+    draft_pages = None
+    if cfg.first_run_inputs and sections and not report and not cfg.site.enabled:
+        from .config import section_output
+        selected = [cfg.section(sid) for sid in sections]
+        if all(section.get('design_generation') == 'llm' for section in selected):
+            draft_pages = {section_output(section) for section in selected}
+    health = document_health.enforce(cfg, model, draft_pages=draft_pages)
+    if draft_pages and health and health['findings']:
+        print(f"선택한 원고를 생성했습니다. 전체 문서의 남은 항목은 {cfg.build_dir / 'document-health.md'}에서 확인하세요.")
+        return 0
     if cfg.site.enabled:
         from .export_site import export_site
         print(f"-> {export_site(cfg)}")

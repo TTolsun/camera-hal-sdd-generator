@@ -79,7 +79,7 @@ sections:
   title: 연동 가이드
   output: vendor-contract.md
   kind: prose
-  lead: 연동 순서와 구현 책임을 확인하고 설정·요청·정지 계약을 적용하세요.
+  lead: 정지 중 결과를 받았다면 ‘제출·완료·정지’에서 프레임을 읽을 조건을 확인하세요. 같은 버퍼를 다시 제출할 때 필요한 조건은 ‘요청과 버퍼 수명’에서 확인하세요.
   reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
   facts:
     classes: []
@@ -90,63 +90,63 @@ sections:
   show_evidence: true
   design_requirements:
   - id: integration
-    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    question: 연동 호출 하나를 골라, 호출자가 먼저 준비할 자원과 제공 측이 검사하거나 반환하는 결과를 설명하세요. 다음 호출로 넘어갈 수 있는 조건은 무엇입니까?
     aspects:
     - inputs
   - id: inputs
-    question: 입력 조건과 구현 책임은 무엇입니까?
+    question: 실제 호출에서 입력 하나가 거절되거나 조정되는 조건은 무엇입니까? 호출자가 넘긴 값과 검사한 코드, 관찰할 수 있는 반환값이나 상태를 연결하세요.
     aspects:
     - inputs
   - id: ownership
-    question: 요청과 버퍼를 누가 유지하고 반환합니까?
+    question: 코드에서 요청이나 버퍼의 보관·반환을 확인할 수 있는 마지막 지점은 어디입니까? 그 통지만으로 덮어쓰기를 결정할 수 있는지, 후속 소비자나 동기화에 관해 연동 측이 더 확인할 조건이 무엇인지 구분하세요.
     aspects:
     - ownership
   - id: completion
-    question: 제출과 완료, 정지를 어떻게 구분합니까?
+    question: 정지 중 결과 통지를 받으면 어떤 상태를 확인해 프레임과 메타데이터의 사용 여부를 결정합니까? 제출 반환, 요청 완료, 개별 버퍼의 결과를 구분하세요.
     aspects:
     - completion
   - id: failure
-    question: 실패를 어떻게 구분하고 처리합니까?
+    question: 소스에서 확인되는 실패 하나를 골라, 어느 단계에서 어떤 신호로 드러나는지 설명하세요. 그 시점에 호출자가 사용할 수 있는 결과와 확인해야 할 조건은 무엇입니까?
     aspects:
     - failure
   - id: verification
-    question: 어떤 조건을 실행에서 확인해야 합니까?
+    question: 이 경로에서 코드만으로 확인한 조건 하나와 실행 시 관찰해야 할 값은 무엇입니까? 어떤 결과가 나오면 다음 단계로 진행할 수 있습니까?
     aspects:
     - verification
   design_topics:
   - id: integration
     title: 연동 순서와 책임
-    question: 연동을 시작할 순서와 제공 측·Vendor의 구현 책임은 무엇입니까?
+    question: 카메라 연동자가 캡처를 구성하거나 요청을 제출하는 경로에서 직접 넘겨야 할 자원은 무엇입니까? 호출 전 조건과 반환 결과를 연결해 다음 동작을 결정하세요. 내부 유틸리티의 실행 조건만 확인되면 캡처 경로의 근거를 더 찾으세요.
     sources: []
     covers:
     - integration
   - id: inputs
     title: 입력 조건과 구현 책임
-    question: 입력 조건과 구현 책임은 무엇입니까?
+    question: 실제 호출에서 입력 하나가 거절되거나 조정되는 조건은 무엇입니까? 호출자가 넘긴 값과 검사한 코드, 관찰할 수 있는 반환값이나 상태를 연결하세요.
     sources: []
     covers:
     - inputs
   - id: ownership
     title: 요청과 버퍼 수명
-    question: 요청과 버퍼를 누가 유지하고 반환합니까?
+    question: 코드에서 요청이나 버퍼의 보관·반환을 확인할 수 있는 마지막 지점은 어디입니까? 그 통지만으로 덮어쓰기를 결정할 수 있는지, 후속 소비자나 동기화에 관해 연동 측이 더 확인할 조건이 무엇인지 구분하세요.
     sources: []
     covers:
     - ownership
   - id: completion
     title: 제출·완료·정지
-    question: 제출과 완료, 정지를 어떻게 구분합니까?
+    question: 정지 중 결과 통지를 받은 호출자는 어떤 프레임과 메타데이터를 사용할 수 있습니까? 해당 버퍼의 상태에 따른 행동부터 설명하고 제출 반환과 요청 완료가 각각 무엇을 보장하는지 연결하세요. 프레임을 읽는 판단과 그 버퍼를 덮어쓰는 판단에 각각 어떤 조건이 필요합니까?
     sources: []
     covers:
     - completion
   - id: failure
     title: 실패 처리
-    question: 실패를 어떻게 구분하고 처리합니까?
+    question: 소스에서 확인되는 실패 하나를 골라, 어느 단계에서 어떤 신호로 드러나는지 설명하세요. 그 시점에 호출자가 사용할 수 있는 결과와 확인해야 할 조건은 무엇입니까?
     sources: []
     covers:
     - failure
   - id: verification
     title: 실행 확인
-    question: 어떤 조건을 실행에서 확인해야 합니까?
+    question: 한 건의 캡처에서 어느 시점에 무엇을 관찰하면 영상 사용으로 넘어갈 수 있습니까? 버퍼 재사용으로 넘어가려면 연동 측에서 무엇을 더 확인해야 합니까? 소스가 보장하는 진행 조건과 실제 기기에서 관찰해야 할 결과를 구분하세요.
     sources: []
     covers:
     - verification

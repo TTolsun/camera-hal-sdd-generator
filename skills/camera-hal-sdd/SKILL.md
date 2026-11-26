@@ -2,7 +2,7 @@
 name: camera-hal-sdd
 description: camera-hal-sdd-generator의 반입 릴리스로 사내 Camera HAL을 셋업하거나 SDD를 갱신할 때 사용합니다. 패키지 무결성, 승인된 CLI, 제품 빌드 설정, 소스에 근거한 계약 작성과 항목별 문서·사이트 검증을 수행합니다. 사람 승인이나 실기기 시험 결과를 대신 만들지 않습니다.
 metadata:
-  version: "15"
+  version: "16"
   repository: camera-hal-sdd-generator
 ---
 
@@ -25,7 +25,7 @@ metadata:
 3. 반입본에는 Git 이력과 설치된 의존성이 없습니다. `IMPORT-MANIFEST.json`의 `source_commit`을 생성기 버전으로 기록합니다. 의존성을 준비한 뒤 `<PY> tools/run_sdd.py --config <사내 설정>/sdd.yaml ...`로 동봉 소스를 실행할 수 있습니다. 작업 디렉터리 밖에서도 래퍼의 절대 경로를 사용하면 됩니다.
 4. 생성기 루트에서 `uv run sdd --config <사내 설정>/sdd.yaml ...`을 실행합니다. 사내에서 준비한 가상 환경의 `sdd` 실행 파일 또는 `python -m sdd.cli`도 사용할 수 있습니다. 실행 도우미가 필요하면 [종료 코드 전달 규칙](../../docs/reference/cli.md#설치된-가상-환경에서-실행)을 따릅니다. 상대 설정 경로는 셸의 현재 디렉터리 기준이고, YAML 내부 경로는 설정 파일 기준입니다.
 
-작업 에이전트와 생성기의 모델은 별개입니다. 전자는 실제 소스에서 질문·범위를 작성하고 후자는 `sdd.yaml`의 `agent`로 선택합니다. 기본 사내 템플릿은 `design_generation: llm`으로 답변을, `generation: llm` 그림 계획으로 시각화를 생성합니다. 이 모드에 `statements`·노드·화살표를 정답으로 미리 넣지 않습니다. 모델 없이 직접 검토한 계약을 선택하려면 LLM 모드를 제거하고 소스에 연결한 `statements`와 그림을 작성합니다.
+새 사내 템플릿에서는 제품의 분석 범위를 연결하고 `generate --sections vendor-contract`를 실행합니다. 빈 LLM 주제의 질문과 고정 커밋의 발췌 선택은 생성기가 맡습니다. 기존 프로젝트에 근거가 지정돼 있으면 해당 근거를 유지합니다. [첫 실행](../../docs/inhouse/02-first-run.md)에서 계획, 원고, 독립 검토 순서를 확인하세요.
 
 ## 반드시 유지할 경계
 
@@ -74,7 +74,7 @@ flowchart TD
 그림은 첫 실행 순서와 재개 경로를 보여 줍니다. 같은 입력이어도 재사용 여부는 생성기의 검증 결과로 판단하며, 로컬 확인은 사람 승인·사내 게시와 구분합니다.
 
 1. 제품·변형·소스 SHA와 첫 질문의 통과 조건을 고정합니다. `doctor`로 로컬 입력·도구를 확인하고 실제 제품 빌드의 compile DB·생성 헤더를 준비한 뒤 `extract`를 실행합니다. `doctor --header <경로>`로 필요한 헤더를 확인할 수 있습니다. 실행 파일이 있다는 결과를 CLI 인증·모델 접근 성공으로 해석하지 않습니다.
-2. [호출·시간 한도](../../docs/inhouse/02-first-run.md#5-호출-없이-계획을-확인한-뒤-질문-하나를-실행하기)를 먼저 정합니다. `review.max_calls`·`review.max_seconds`는 각 호출 명령에 따로 적용되므로 여러 명령·재개의 누적 한도가 필요하면 같은 `publication.operation_id`와 `publication.budget`을 사용합니다. 질문·근거·그림을 연결한 작은 섹션으로 `generate --sections <ID> --plan-only`를 실행하고, 계획의 범위·재사용 후보·한도와 생성·독립 검토의 실제 `runner`·`command`·`model`·`args`·timeout을 확인합니다. 이 단계는 모델 호출·원고·검토 판정을 만들지 않습니다.
+2. [호출·시간 한도](../../docs/inhouse/02-first-run.md#5-호출-없이-계획을-확인한-뒤-질문-하나를-실행하기)를 정하고 `generate --sections vendor-contract --plan-only`로 준비할 주제를 확인합니다. 주제별 근거를 미리 작성할 필요는 없습니다. 독립 검토에는 사내에서 승인한 검토 설정을 사용합니다.
 3. 계획 확인 후 설정이나 한도를 바꿨다면 `--plan-only`를 다시 실행해 대조합니다. 작은 시험 설정의 링크 대상과 로컬 사이트 범위를 확인한 뒤 승인된 생성 CLI로 `generate --sections <ID>`를 실행합니다. `audit-docs`와 별도 승인 프로필의 `audit-consistency`를 수행하고, 필수 조건·예외가 검토 보고서의 `claims`에 포함됐는지 확인합니다.
 4. 실패하거나 중단되면 해당 `build/generation-runs/<실행 ID>.json`의 완료·재사용·실패·미시작 항목과 원본 stdout·stderr·영수증을 확인합니다. 실행별 한도라면 같은 입력과 `resume_argv`의 명령으로 재개할 수 있습니다. 누적 `publication.budget`을 소진했다면 기존 한도로는 더 호출할 수 없으므로, 추가 작업과 예산이 승인된 경우에만 예산을 조정하고 계획을 다시 확인한 뒤 재개합니다. 승인되지 않았다면 남은 일을 기록하고 멈춥니다. 작업 ID·장부·facts·체크포인트·원고·정상 사이트·승인 기록을 보존하며, 그 밖의 실패는 원인을 해결한 뒤 재개합니다. 소스·질문 등 입력을 바꿨다면 추출과 계획부터 다시 확인합니다.
 5. [재개 결과](../../docs/inhouse/02-first-run.md#6-결과를-확인하고-중단-지점에서-재개하기)에서 새 호출과 검증된 재사용을 구분합니다. `review.cli_checkpoint: true`와 명시한 CLI 모델·동일 입력이 있어도 완료 응답의 검증을 거쳐야 재사용할 수 있습니다. 미완성 호출이나 모델을 CLI 기본값에 맡긴 단위의 재사용을 보장하지 않습니다. 첫 질문의 원고·그림·로컬 사이트와 장부를 확인한 후 제품 범위를 넓힙니다.

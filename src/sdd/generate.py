@@ -124,6 +124,13 @@ class Generator:
         self.incremental = impact is not None and impact.head == self.model.meta.get('source_commit')
         try:
             with self.agent.track('generation'):
+                from . import first_run
+                if missing := first_run.pending(self.cfg, section_ids, impact):
+                    with self.agent.phase('first-run-inputs'):
+                        first_run.prepare(self.cfg, self.model, missing, self.agent)
+                        from .evidence import collect
+                        collect(self.cfg, self.model)
+                        self.model.save(self.cfg.facts_path)
                 from .visual_audit import policy
                 if policy(self.cfg, draft=True).get('enabled', False):
                     from .validation_stage import stage

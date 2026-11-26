@@ -36,6 +36,7 @@ def main() -> None:
         parser.error(f'Expected {args.commit}, but source has {commit} and facts have {facts_commit}.')
 
     cfg = yaml.safe_load((TEMPLATE / 'sdd.yaml').read_bytes())
+    cfg.pop('first_run_inputs', None)  # Preserve the two historical, manually configured inputs.
     cfg['source'].update(root=str(source), compile_commands=str(compdb), ndk_build={'enabled': False})
     cfg['output'] = {'facts_dir': str(facts_dir)}
     cfg['paths'].update(

@@ -15,6 +15,12 @@
 | 문서 분량·그림·사이트를 정합니다. | [documentation](#documentation), [diagrams](#diagrams), [site](#site) |
 | 커밋마다 갱신하고 게시합니다. | [update](#update), [automation](#automation) |
 
+## first_run_inputs
+
+최상위 불리언 설정입니다. 기본값은 `false`이고, 새 사내 템플릿은 `true`로 설정합니다. 켜면 `generate`가 선택한 섹션에서 근거가 비어 있는 기본 LLM 주제를 찾아, 같은 커밋의 추출 위치와 Git 원문을 승인된 생성 CLI에 제공합니다. CLI는 실제 발췌 후보에서 근거를 고르고 독자가 판단할 질문을 구체화합니다. 설정에 직접 지정한 근거와 고정 계약은 우선합니다.
+
+`--plan-only`는 모델을 호출하지 않고 준비할 주제를 보여 줍니다. 실제 실행의 질문과 선택자는 `build/first-run-inputs.json`에 남습니다. 입력 준비와 본문 생성은 같은 호출·시간 한도를 사용합니다. 사용할 근거가 없거나 지정된 한도 안에 담지 못하면 해당 주제와 중단 사유를 확인할 수 있습니다. [사내 첫 실행](../inhouse/02-first-run.md)
+
 ## source
 
 | 키 | 기본값 | 뜻 |
