@@ -36,6 +36,10 @@ def configuration_errors(section: dict) -> list[str]:
         if any(not isinstance(s.get('id'), str) or not s['id'].strip() for s in topic.get('sources', [])):
             return [f"{topic['id']}: 소스 id가 비었거나 문자열이 아닙니다."]
         for source in topic.get('sources', []):
+            if source.get('kind') == 'commit':
+                from .history_evidence import configuration_errors as commit_errors
+                errors.extend(commit_errors(f"{topic['id']}/{source['id']}", source))
+                continue
             if 'impact' in source and (source['impact'] != 'excerpt' or source.get('kind') == 'product'):
                 errors.append(f"{topic['id']}/{source['id']}: impact: excerpt requires a Git source.")
             for field in ('file', 'start', 'end'):

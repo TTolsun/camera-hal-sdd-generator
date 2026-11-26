@@ -5,6 +5,7 @@
   sdd extract [--skip-comments]    facts.json 생성 (clang-uml + libclang 주석 + flags)
   sdd impact --base <ref>         git diff 로 영향 섹션 계산 -> build/impact.json
   sdd generate [--sections a,b] [--from-impact]   SDD Markdown 생성
+  sdd history-candidates [--sections a,b]   소스 발췌를 바꾼 커밋에서 설계 근거 후보 목록 작성
   sdd accept [문서...] [--finding 키]   사람 검토 승인을 장부에 기록
   sdd run --base <ref>            extract -> impact -> generate 한 번에
   sdd update [--to ref]           새 커밋을 차례로 증분 갱신 (관문에서 멈춤, 게시 없음)
@@ -369,6 +370,22 @@ def cmd_audit_docs(args: argparse.Namespace) -> int:
     return 2 if report["findings"] else 0
 
 
+def cmd_history_candidates(args: argparse.Namespace) -> int:
+    from . import history_candidates
+    from .evidence import collect as collect_evidence
+    cfg = _cfg(args)
+    model = _load_model(cfg)
+    # 근거 발췌의 줄 범위가 필요하다. facts.json은 고치지 않는다.
+    collect_evidence(cfg, model)
+    sections = args.sections.split(',') if args.sections else None
+    report = history_candidates.collect(cfg, model, sections, limit=args.limit)
+    data, text = history_candidates.write(report, Path(args.out) if args.out else cfg.build_dir)
+    count = sum(len(e['candidates']) for t in report['topics'] for e in t['excerpts'])
+    print(f"설계 주제 {len(report['topics'])}개, 후보 커밋 {count}개 -> {text} ({data.name})")
+    print('후보는 근거가 아닙니다. 메시지를 읽고 고른 것만 kind: commit 근거로 등록하세요. 모델 호출 0회.')
+    return 0
+
+
 def cmd_verify_site(args: argparse.Namespace) -> int:
     from .site_build import verify_site
     cfg = _cfg(args)
@@ -447,6 +464,12 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(fn=cmd_doctor)
     sub.add_parser("audit-docs", help="문서 분량·증가·중복·Feature 범위·폐기 계획을 검사한다 (기준선 변경 없음)").set_defaults(fn=cmd_audit_docs)
     sub.add_parser('audit-consistency', help='선택한 CLI로 문서·언어 사이의 계약과 소스를 대조한다 (사람 승인 아님)').set_defaults(fn=cmd_audit_consistency)
+    s = sub.add_parser('history-candidates',
+                       help='설계 주제의 소스 발췌를 바꾼 커밋을 찾아 설계 근거 후보 목록을 만든다 (설정 변경·모델 호출 없음)')
+    s.add_argument('--sections', help='쉼표로 구분한 섹션 id. 생략하면 전체')
+    s.add_argument('--limit', type=int, default=8, help='발췌 하나에 표시할 최대 후보 수 (기본 8)')
+    s.add_argument('--out', help='출력 디렉터리 (기본: build 디렉터리)')
+    s.set_defaults(fn=cmd_history_candidates)
 
     from .progress_watch import command as watch_progress
     s = sub.add_parser('watch-progress', help='실행과 별도로 진행 파일을 감시하고 갱신 중단을 알린다')

@@ -99,8 +99,9 @@ def _render(body: str, rel: str, known: set[str], model: KnowledgeModel | None,
     rendered = re.sub(r'href="([^"]+)"', link, rendered)
     if model and source_url and re.fullmatch(r"[0-9a-f]{40}", commit):
         valid = model.citations() if commit == model.meta.get("source_commit") else set()
+        # 제품 자료와 커밋 메시지는 소스 트리의 파일이 아니므로 코드 링크를 만들지 않는다.
         product_citations = {f"{r['file']}:{r['line']}" for r in model.evidence.values()
-                             if r.get('origin') == 'product-material'}
+                             if r.get('origin') in ('product-material', 'commit-message')}
 
         def citation(match: re.Match) -> str:
             cite = html.unescape(match[1])
