@@ -9,6 +9,10 @@ from .llm import SCHEMA_KINDS
 from .design_trials import replay_unit, checkpoint
 
 
+class _RepeatedDecision(ValueError):
+    """The reader already has this decision in an accepted statement."""
+
+
 def _validate_unit_response(cfg, model, agent, section, topic, raw, sources, passages, tag,
                             grounding, source_files, scopes, context_records, *, reviewer=None, prior_answers=None):
     statements = decode_unit(model, section, topic, raw, sources, passages)
@@ -19,7 +23,7 @@ def _validate_unit_response(cfg, model, agent, section, topic, raw, sources, pas
             only_after={**{tid: len(v) for tid, v in prior.items()}, topic['id']: len(prior.get(topic['id'], []))},
             summaries=duplicates.summary_keys(section))
         if repeated:
-            raise ValueError(' / '.join(repeated))
+            raise _RepeatedDecision(' / '.join(repeated))
     if grounding:
         from .grounding import review as check_grounding
         # The existing grounding consumer needs only configuration and chat.
@@ -245,6 +249,10 @@ def _request_unit(cfg, model, agent, section, topic, prompt, grounding, archive,
                 user = (base_user + '\n검사에서 거절된 이전 답변(근거가 아닌 수정 대상):\n' + raw
                         + '\n수정할 오류: ' + last
                         + '\n질문의 모든 조건을 원문과 다시 대조하고 전체 답변 JSON을 반환하세요.')
+            if cfg.first_run_inputs and isinstance(exc, _RepeatedDecision):
+                user += ('\n앞 주제는 이미 독자가 읽은 본문입니다. 중복으로 지목된 설명에서 앞 주제와 같은 결론은 '
+                         '이 답변의 statements 배열에서 삭제하세요. 같은 결론을 다른 표현으로 쓰거나 배경 설명으로 '
+                         '되살리지 마세요. 앞 주제에서 다루지 않은 조건·예외·독자의 다음 행동만 근거와 함께 남기세요.')
         else:
             # A persistence/integrity failure is not a semantic verdict and
             # must not poison the exact rejected-review set on resume.
