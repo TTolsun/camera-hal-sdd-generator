@@ -7,7 +7,7 @@ meson_options.txt:49–93
 https://github.com/TTolsun/libcamera-sdd/blob/7ae183f58d7c2ee8643f002560d3a616e2a77726/meson_options.txt#L49-L93
 
 src/ipa/meson.build:26–63
-IPA 빌드는 활성화된 파이프라인과 `-Dipas`에 명시한 모듈을 대조한다. `rcar-gen4`의 대응 IPA는 `rppx1`이다. R-Car Gen4 대상 구성에서 `-Dpipelines=rcar-gen4 -Dipas=rppx1`은 두 항목을 선택하는 옵션 예시다. 이 최소 조합 자체는 아래 WSL2 빌드에서 실행하지 않았다.
+IPA 빌드는 활성화된 파이프라인과 `-Dipas`에 명시한 모듈을 대조한다. `rcar-gen4`의 대응 IPA는 `rppx1`이다. R-Car Gen4를 따로 선택하려면 `-Dpipelines=rcar-gen4 -Dipas=rppx1`을 지정한다.
 https://github.com/TTolsun/libcamera-sdd/blob/7ae183f58d7c2ee8643f002560d3a616e2a77726/src/ipa/meson.build#L26-L63
 
 src/libcamera/pipeline/rcar-gen4/rcar-gen4.cpp:115–140, 851–880
@@ -16,4 +16,4 @@ https://github.com/TTolsun/libcamera-sdd/blob/7ae183f58d7c2ee8643f002560d3a616e2
 https://github.com/TTolsun/libcamera-sdd/blob/7ae183f58d7c2ee8643f002560d3a616e2a77726/src/libcamera/pipeline/rcar-gen4/rcar-gen4.cpp#L851-L880
 
 빌드 관찰
-Ubuntu WSL2 x86_64, Clang 21.1.8, Meson 1.10.1에서 `pipelines=all`, `ipas=ipu3,mali-c55,rkisp1,rpi/pisp,rpi/vc4,rppx1,softisp,vimc`, GStreamer·V4L2·cam 활성화 구성으로 Ninja 빌드를 완료했다. 이 관찰은 컴파일과 링크 결과를 뒷받침한다. 대상 보드·커널·센서 조합에서 장치 탐색, 카메라 등록, 첫 촬영과 보정 품질은 확인하지 않았다. 이 자료는 전체 커널 헤더 변경이나 새 소스 커밋의 나머지 동작을 검토하는 시험에 해당하지 않는다.
+Ubuntu WSL2 x86_64, Clang 21.1.8, Meson 1.10.1에서 `pipelines=all`, `ipas=ipu3,mali-c55,rkisp1,rpi/pisp,rpi/vc4,rppx1,softisp,vimc`, GStreamer·V4L2·cam 활성화 구성으로 Ninja 빌드를 완료했다. 같은 고정 커밋에서 별도로 `-Dpipelines=rcar-gen4 -Dipas=rppx1`을 지정한 Ninja 빌드도 완료했고 `ipa_rppx1.so`가 생성됐다. 두 관찰은 기록한 환경의 컴파일과 링크만 뒷받침한다. 대상 보드·커널·센서 조합에서 장치 탐색, 카메라 등록, 첫 촬영과 보정 품질은 확인하지 않았다. 이 자료는 전체 커널 헤더 변경이나 새 소스 커밋의 나머지 동작을 검토하는 시험에 해당하지 않는다.

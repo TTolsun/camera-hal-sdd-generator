@@ -1600,10 +1600,13 @@ def test_libcamera_design_documents_have_no_fixed_answers():
     assert any(topic['id'] == 'allocation-preconditions' for topic in allocator['design_topics'])
     assurance = next(section for section in designs if section['id'] == 'vendor-assurance')
     assert assurance['design_topics'][0]['id'] == 'first-capture'
-    assert sum(len(section['design_topics']) for section in designs) == 90
+    assert sum(len(section['design_topics']) for section in designs) == 91
     from sdd.config import load
     profile = Path(__file__).parents[1] / 'examples/libcamera/sdd.yaml'
     bound = {section['id']: section for section in load(profile).sections()}
+    build_support = next(topic for topic in bound['vendor-integration']['design_topics']
+                         if topic['id'] == 'rcar-build-support')
+    assert [source['kind'] for source in build_support['sources']] == ['product']
     by_id = {section['id']: section for section in designs}
     assert [topic['id'] for topic in by_id['uvc-viewfinder-configuration']['design_topics']] == ['uvc-viewfinder']
     for page in ('vendor-overview', 'overview'):
@@ -1618,7 +1621,7 @@ def test_libcamera_design_documents_have_no_fixed_answers():
         assert not configuration_errors(bound[section['id']])
         assert all('statements' not in topic for topic in section['design_topics'])
         assert all('sha256' not in source or source.get('whole_file') is True
-                   for topic in section['design_topics'] for source in topic['sources'])
+                   for topic in section['design_topics'] for source in topic.get('sources', []))
 
 
 @pytest.mark.parametrize('profile', ['architecture', 'vendor', 'vendor-overview', 'vendor-assurance'])

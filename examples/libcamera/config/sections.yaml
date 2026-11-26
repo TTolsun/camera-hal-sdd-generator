@@ -843,7 +843,7 @@ sections:
     question: >-
       이 자료가 적용되는 libcamera upstream 커밋(짧은 SHA와 날짜)을 밝혀 주세요.
       R-Car Gen4 파이프라인과 RPPX1 IPA의 Meson 선택 조건, 대상 보드에서 확인할 장치·ISP·튜닝 조건을 설명하세요.
-      실험에서 컴파일과 링크가 완료된 전체 구성과 별도로, 실행하지 않은 최소 옵션 조합과 대상 보드 런타임 확인 범위를 구분하세요.
+      기록된 최소 조합과 전체 구성의 컴파일·링크 시험을 구분하고, 대상 보드에서 아직 확인해야 할 동작을 설명하세요.
       R-Car Gen4의 상용 기기 지원이나 커널 헤더 전체의 호환성 판정을 추정하지 마세요.
     covers: [rcar-build-support]
     product: {id: libcamera-rcar-gen4-build, feature: build-support}
