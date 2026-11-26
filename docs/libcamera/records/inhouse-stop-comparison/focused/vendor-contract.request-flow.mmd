@@ -1,0 +1,8 @@
+flowchart TB
+%% sdd:translations {"PipelineHandler::<br/>completeRequest는 완료 <br/>가능한 요청을 처리합니다.": "PipelineHandler::<br/>completeRequest processes <br/>requests that can be <br/>completed.", "PipelineHandler::<br/>queueRequest가 큐에 <br/>전달됩니다.": "PipelineHandler::<br/>queueRequest is dispatched <br/>through the queue.", "invokeMethod가 요청을 큐에 <br/>넣도록 호출합니다.": "invokeMethod schedules the <br/>request to be queued.", "requestComplete가 완료된 <br/>요청을 알립니다.": "requestComplete reports the <br/>completed request.", "완료 가능한 요청에 대해 <br/>호출합니다.": "Calls it for a request that <br/>can be completed.", "요청을 큐 방식으로 <br/>호출합니다.": "Invokes the request through <br/>a queued connection."}
+  v_invoke["invokeMethod가 요청을 큐에 <br/>넣도록 호출합니다."]
+  v_queue["PipelineHandler::<br/>queueRequest가 큐에 <br/>전달됩니다."]
+  v_complete["PipelineHandler::<br/>completeRequest는 완료 <br/>가능한 요청을 처리합니다."]
+  v_callback["requestComplete가 완료된 <br/>요청을 알립니다."]
+  v_invoke -->|"요청을 큐 방식으로 <br/>호출합니다."| v_queue
+  v_complete -->|"완료 가능한 요청에 대해 <br/>호출합니다."| v_callback

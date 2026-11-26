@@ -1,0 +1,51 @@
+sections:
+  - id: vendor-contract
+    title: 요청 완료와 버퍼 수명
+    output: vendor-contract.md
+    kind: prose
+    lead: 촬영 정지와 요청·버퍼 수명에 관한 연동 계약을 확인하세요.
+    reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
+    show_evidence: true
+    next:
+      title: Camera 구현 소스
+      link: https://github.com/TTolsun/libcamera-sdd/blob/adfa719f8ed67d18fd8a0739fc088a1f8b9e7252/src/libcamera/camera.cpp
+    design_generation: llm
+    design_requirements:
+      - id: completion
+        question: 촬영을 정지할 때 요청이 정상 완료됐는지 취소됐는지 어디에서 판단합니까?
+      - id: ownership
+        question: 완료 알림을 받은 뒤 요청과 버퍼를 재사용하기 전에 어떤 조건을 확인해야 합니까?
+    design_topics:
+      - id: completion
+        title: 제출·완료·정지
+        question: >-
+          제출과 촬영 정지의 반환값, 요청 완료 알림, 요청·버퍼 상태는 각각 무엇을 알려 줍니까?
+          이미 완료된 요청과 정지할 때 대기 중인 요청을 구분하고, 대기 요청이 어떤 경로에서 어떤 상태로 통지되는지 설명하세요.
+          공통 정지 코드에서 확인할 수 있는 순서와 장치별 구현을 확인해야 하는 범위를 밝혀 주세요.
+        covers: [completion]
+        sources:
+          - {id: queue, file: src/libcamera/camera.cpp, start: '/* Pre-process AeEnable. */', end: "return 0;\n}"}
+          - {id: stop, file: src/libcamera/camera.cpp, start: 'int Camera::stop()', end: "return 0;\n}"}
+          - {id: notification, file: src/libcamera/camera.cpp, start: 'void Camera::requestComplete(Request *request)', end: 'requestCompleted.emit(request);'}
+          - {id: pipeline-stop, file: src/libcamera/pipeline_handler.cpp, start: 'void PipelineHandler::stop(Camera *camera)', end: 'data->requestSequence_ = 0;'}
+          - {id: device-queue, file: src/libcamera/pipeline_handler.cpp, start: 'data->queuedRequests_.push_back(request);', end: 'completeRequest(request);'}
+          - {id: completion, file: src/libcamera/pipeline_handler.cpp, start: 'void PipelineHandler::completeRequest(Request *request)', end: 'doQueueRequests(camera);'}
+          - {id: request-status, file: src/libcamera/request.cpp, start: 'int ret = pending_.erase(buffer);', end: 'doCancelRequest();'}
+          - {id: frame-status, file: src/libcamera/framebuffer.cpp, start: '\var FrameMetadata::FrameSuccess', end: 'All other fields of the FrameMetadata structure are valid.'}
+      - id: ownership
+        title: 요청과 버퍼 수명
+        question: >-
+          완료 통지를 받은 뒤 버퍼별 프레임 상태를 어디에서 읽습니까? 각 상태에서 영상 데이터의 사용 가능 여부와 유효한 메타데이터 필드를 각각 설명하세요.
+          애플리케이션에서 지연된 콜백과 소비 작업이 사용을 끝냈는지 확인하는 조건과 카메라에 다시 제출할 조건을 구분하세요.
+          기존 연결을 유지할 때, 버퍼를 다시 추가할 때, 실패한 fence가 남았을 때의 준비를 설명하세요.
+        covers: [ownership]
+        sources:
+          - {id: notification, file: src/libcamera/camera.cpp, start: '\var Camera::bufferCompleted', end: 'Signal emitted when a request queued to the camera has completed'}
+          - {id: frame-status, file: src/libcamera/framebuffer.cpp, start: '\var FrameMetadata::FrameSuccess', end: 'All other fields of the FrameMetadata structure are valid.'}
+          - {id: completion, file: src/libcamera/pipeline_handler.cpp, start: '\brief Signal request completion', end: 'doQueueRequests(camera);'}
+          - {id: buffer-lifetime, file: src/libcamera/request.cpp, start: 'A reference to the buffer is stored in the request.', end: 'callback is called.'}
+          - {id: queued-receiver, file: src/libcamera/base/signal.cpp, start: 'When a slot belongs to an instance of the Object class,', end: 'passed through the signal will remain valid after the signal is emitted.'}
+          - {id: reuse, file: src/libcamera/request.cpp, start: '\brief Reset the request for reuse', end: '_d()->metadata_.clear();'}
+          - {id: add-buffer, file: src/libcamera/request.cpp, start: 'int Request::addBuffer(const Stream *stream, FrameBuffer *buffer,', end: '_d()->pending_.insert(buffer);'}
+          - {id: fence, file: src/libcamera/framebuffer.cpp, start: '\brief Extract the Fence associated with this Framebuffer', end: 'return std::move(_d()->fence_);'}
+          - {id: queue-state, file: src/libcamera/camera.cpp, start: 'Once the request has been queued, the camera will notify its completion', end: 'a negative error code otherwise'}

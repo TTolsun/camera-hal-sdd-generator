@@ -1,0 +1,674 @@
+{
+  "source_commit": "adfa719f8ed67d18fd8a0739fc088a1f8b9e7252",
+  "generator_commit": "e593aeeba23948074f989128bec45ad9f7ff889f",
+  "publication_commit": "663364db7ad97d38e15d217d46ed920010f0c865",
+  "build_id": "cd94f44da4c740fd19dd7b0b186c4e873367edd9c5ccf9e936ae1e75be341dec",
+  "published_request_flow_md_sha256": "1ac0114aae700831ce4b1d2a40e3cb4767bf9b0c749e63d7043bad8868ec2342",
+  "structure_facts_file_sha256": "640ed395aa40ad62d2d1c9d55d2b0d48c54490d1a715d9d8e8eaca73b3456aca",
+  "runs": {
+    "first-run": {
+      "sections_sha256": "7c9cefea4ba130ae4d7ec6bbdcd66379720d4316ed24bbf3f275944386ba97d6",
+      "first_evaluation": {
+        "section": "vendor-contract",
+        "automatic_checks": "passed",
+        "manuscripts": [
+          {
+            "path": "manuscripts/vendor-contract.md",
+            "sha256": "1cb27aa2467dc24e592fc2cf88615a5e93585b5fa60589c8f1c3d633512298c5"
+          }
+        ],
+        "elapsed_seconds": 96.45
+      },
+      "journals": [
+        {
+          "seconds": 96.393,
+          "counts": {
+            "completed": 2,
+            "reused": 0,
+            "revalidated": 0,
+            "failed": 0,
+            "running": 0,
+            "not_started": 0
+          },
+          "calls": [
+            {
+              "tag": "vendor-contract_completion_0",
+              "status": "completed",
+              "seconds": 15.044010800076649
+            },
+            {
+              "tag": "vendor-contract_ownership_0",
+              "status": "completed",
+              "seconds": 12.934517099987715
+            },
+            {
+              "tag": "vendor-contract_ownership_1",
+              "status": "completed",
+              "seconds": 11.080838999943808
+            },
+            {
+              "tag": "visual_vendor-contract_request-flow_0",
+              "status": "completed",
+              "seconds": 22.94971500011161
+            },
+            {
+              "tag": "visual_vendor-contract_buffer-ownership_0",
+              "status": "completed",
+              "seconds": 32.80383089999668
+            }
+          ],
+          "phases": [
+            {
+              "name": "generation",
+              "status": "completed"
+            },
+            {
+              "name": "prepare",
+              "status": "completed"
+            }
+          ]
+        },
+        {
+          "seconds": 1.473,
+          "counts": {
+            "completed": 0,
+            "reused": 2,
+            "revalidated": 0,
+            "failed": 0,
+            "running": 0,
+            "not_started": 0
+          },
+          "calls": [],
+          "phases": [
+            {
+              "name": "generation",
+              "status": "completed"
+            },
+            {
+              "name": "prepare",
+              "status": "completed"
+            }
+          ]
+        }
+      ],
+      "cli_calls": [
+        {
+          "tag": "vendor-contract_completion_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "5f2dda29dc5f0f7ff33d125bb5eb1d69645cd9c29e75314d5b731d940d190c1b",
+          "response_sha256": "3d0869a972826176b240791803347101f3c971d5aeb14e8c9864a50158cdb96d",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "vendor-contract_ownership_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "6a70662cdd2c830e22f780df1aae6af377d30a6335e3c3fcda2b84f981df48a1",
+          "response_sha256": "eaf65477e380885702ff76148c8483c95eb9d9278755ffb628e131f30106388d",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "vendor-contract_ownership_1",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "cab40bf81dddfc3804baff0be73cdc63805c4f415f423e2f3d259f9e8acdb5a0",
+          "response_sha256": "a9450c426028a98c7f7d9500f1ca4153590e032f1b19f890f5c6d7fcaa2e8f13",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "visual_vendor-contract_request-flow_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "a3743cea18b4326572d2da3358243d5b0b416b8a5d12a93bdf082f097cd357fe",
+          "response_sha256": "fdc6fe835e02049115ace1766e8c4ab8dcbd7724afb5237ef7d02fca212b76b2",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "visual_vendor-contract_buffer-ownership_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "cd6a9aa30c26671731b526aa31437b2f3285e7c871d0d35940443778a09cd370",
+          "response_sha256": "4634779e89069aed60d6ccae7b738ae665df59afb56290ffb2026033680826c9",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        }
+      ],
+      "manuscript_sha256": "824a69ea7fa88fe8115c47eb213c774e989f5a8d101c4c18d65d15cdb102834c",
+      "render_sections_sha256": "d3709aee342bbd7bdb144cddf40dfcba10b979f8916c0fc542ecb20b58c11a41",
+      "evaluated_manuscript_sha256": "1cb27aa2467dc24e592fc2cf88615a5e93585b5fa60589c8f1c3d633512298c5"
+    },
+    "initial-focused": {
+      "sections_sha256": "c9ab99d943133b1dfdf2e9fa6568c9edf6b7e456b04802075e433714b3838608",
+      "first_evaluation": {
+        "section": "vendor-contract",
+        "automatic_checks": "failed",
+        "error": "CLI 입력 한도를 초과했습니다. 규칙·근거·schema를 포함한 질문을 나누세요.",
+        "elapsed_seconds": 65.71
+      },
+      "journals": [
+        {
+          "seconds": 65.685,
+          "counts": {
+            "completed": 2,
+            "reused": 0,
+            "revalidated": 0,
+            "failed": 0,
+            "running": 0,
+            "not_started": 0
+          },
+          "calls": [
+            {
+              "tag": "vendor-contract_completion_0",
+              "status": "completed",
+              "seconds": 26.661283999914303
+            },
+            {
+              "tag": "vendor-contract_ownership_0",
+              "status": "completed",
+              "seconds": 20.318966099992394
+            },
+            {
+              "tag": "vendor-contract_ownership_1",
+              "status": "completed",
+              "seconds": 18.14215309987776
+            },
+            {
+              "tag": "visual_vendor-contract_request-flow_0",
+              "status": "failed",
+              "seconds": 0.007368100108578801
+            }
+          ],
+          "phases": [
+            {
+              "name": "generation",
+              "status": "failed"
+            },
+            {
+              "name": "prepare",
+              "status": "completed"
+            }
+          ]
+        }
+      ],
+      "cli_calls": [
+        {
+          "tag": "vendor-contract_completion_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "fbc95458d7cae73655088883c992f71c7a4e0e7bf98363a518324909052dd636",
+          "response_sha256": "15b878c873e596bc5ec0a4d793ba65c0afe418ca7547bf2dce8741f03281c5ee",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "vendor-contract_ownership_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "eef5260d4cd35c19a8f6b95b8c20b90138187038b29555cd687509a2a4451bc4",
+          "response_sha256": "1627d6dc2bfeb8caae3d3899ecddd2ce8acbf74bf882da0703af8daf04504d95",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "vendor-contract_ownership_1",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "031e601b0e00f3e1b23d4fca0d64ca4c0e70664a68e6598117fdae2e2d167732",
+          "response_sha256": "febcad18e13c812fcdec9bfcad7716603085f22e7ebd325a3b5f7ab31f4f30ab",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        }
+      ]
+    },
+    "intermediate-focused": {
+      "sections_sha256": "20822a9779a491a7fe590ed468521d1afc3161297178ef58731aee7f546abd91",
+      "first_evaluation": {
+        "section": "vendor-contract",
+        "automatic_checks": "passed",
+        "manuscripts": [
+          {
+            "path": "manuscripts/vendor-contract.md",
+            "sha256": "74ba9144483accf13bd6e3bf40549a0cfdac5a8ddfd9020435bac6b63b76db2a"
+          }
+        ],
+        "elapsed_seconds": 112.95
+      },
+      "journals": [
+        {
+          "seconds": 112.923,
+          "counts": {
+            "completed": 2,
+            "reused": 0,
+            "revalidated": 0,
+            "failed": 0,
+            "running": 0,
+            "not_started": 0
+          },
+          "calls": [
+            {
+              "tag": "vendor-contract_completion_0",
+              "status": "completed",
+              "seconds": 18.837255199905485
+            },
+            {
+              "tag": "vendor-contract_ownership_0",
+              "status": "completed",
+              "seconds": 18.321491499897093
+            },
+            {
+              "tag": "visual_vendor-contract_request-flow_0",
+              "status": "completed",
+              "seconds": 18.46973540005274
+            },
+            {
+              "tag": "visual_vendor-contract_buffer-ownership_0",
+              "status": "completed",
+              "seconds": 28.60522840009071
+            },
+            {
+              "tag": "visual_vendor-contract_buffer-ownership_1",
+              "status": "completed",
+              "seconds": 27.14334230008535
+            }
+          ],
+          "phases": [
+            {
+              "name": "generation",
+              "status": "completed"
+            },
+            {
+              "name": "prepare",
+              "status": "completed"
+            }
+          ]
+        }
+      ],
+      "cli_calls": [
+        {
+          "tag": "vendor-contract_completion_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "5ac2f338460f9aa721d7583a4496cdaf9f66162919c0c511597c119f607192c1",
+          "response_sha256": "d4cbbce6fb28279d8b78a00a11d7140e9c3bac9d1b913049a84bc001111755b4",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "vendor-contract_ownership_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "b02958d196232457b1f32d6dbc065b5b23905542cd9c3efc935c030823f90c9a",
+          "response_sha256": "98f7c1701d42163ac1e6ab2ce0865174026fdd33f196fdfdd8c26b4e75198b70",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "visual_vendor-contract_request-flow_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "1c1596bc0f3aa53ae5d983858198287f2c73dc74c3ed87f62459cb9f40e4d56e",
+          "response_sha256": "0bb5efaeb28810f05a8bdd0314172e5fbae5e129e2ff2de404c8177a8c4e5054",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "visual_vendor-contract_buffer-ownership_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "4d954d0f5ca17d51069ea75ab2a39c2af08147e41d33e39b5a857dda308f5ec8",
+          "response_sha256": "83442ae21eb26fcb9306bc88873d63b4083865da26cf3735a3f229000a8dcd88",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "visual_vendor-contract_buffer-ownership_1",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "17277368d13bdef7dd60034975db71f10d0717fde575feb2410df0b10c5af288",
+          "response_sha256": "3a4a10892ebebedc30e6de1b06b3dd40f23e0df1ac40ae448108669b5790f467",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        }
+      ],
+      "manuscript_sha256": "74ba9144483accf13bd6e3bf40549a0cfdac5a8ddfd9020435bac6b63b76db2a",
+      "render_sections_sha256": "20822a9779a491a7fe590ed468521d1afc3161297178ef58731aee7f546abd91"
+    },
+    "focused": {
+      "sections_sha256": "a47814cc1f3ebd357793edb1596d07fd172bf5a58a4d67b31de531a462637503",
+      "first_evaluation": {
+        "section": "vendor-contract",
+        "automatic_checks": "failed",
+        "error": "CLI 실행 시간이 초과됐습니다. 다른 실행기로 대체하지 않습니다.",
+        "elapsed_seconds": 370.99
+      },
+      "journals": [
+        {
+          "seconds": 370.959,
+          "counts": {
+            "completed": 2,
+            "reused": 0,
+            "revalidated": 0,
+            "failed": 0,
+            "running": 0,
+            "not_started": 0
+          },
+          "calls": [
+            {
+              "tag": "vendor-contract_completion_0",
+              "status": "completed",
+              "seconds": 21.446125799790025
+            },
+            {
+              "tag": "vendor-contract_completion_1",
+              "status": "completed",
+              "seconds": 22.298462300095707
+            },
+            {
+              "tag": "vendor-contract_ownership_0",
+              "status": "completed",
+              "seconds": 24.813752199988812
+            },
+            {
+              "tag": "visual_vendor-contract_request-flow_0",
+              "status": "failed",
+              "seconds": 301.7725083997939
+            }
+          ],
+          "phases": [
+            {
+              "name": "generation",
+              "status": "failed"
+            },
+            {
+              "name": "prepare",
+              "status": "completed"
+            }
+          ]
+        },
+        {
+          "seconds": 45.063,
+          "counts": {
+            "completed": 0,
+            "reused": 2,
+            "revalidated": 0,
+            "failed": 0,
+            "running": 0,
+            "not_started": 0
+          },
+          "calls": [
+            {
+              "tag": "visual_vendor-contract_request-flow_0",
+              "status": "completed",
+              "seconds": 15.187678299844265
+            },
+            {
+              "tag": "visual_vendor-contract_buffer-ownership_0",
+              "status": "completed",
+              "seconds": 27.95680040004663
+            }
+          ],
+          "phases": [
+            {
+              "name": "generation",
+              "status": "completed"
+            },
+            {
+              "name": "prepare",
+              "status": "completed"
+            }
+          ]
+        },
+        {
+          "seconds": 1.61,
+          "counts": {
+            "completed": 0,
+            "reused": 2,
+            "revalidated": 0,
+            "failed": 0,
+            "running": 0,
+            "not_started": 0
+          },
+          "calls": [],
+          "phases": [
+            {
+              "name": "generation",
+              "status": "completed"
+            },
+            {
+              "name": "prepare",
+              "status": "completed"
+            }
+          ]
+        }
+      ],
+      "cli_calls": [
+        {
+          "tag": "vendor-contract_completion_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "26d0d9093f3f35c59c3dd29f22340536a5fbbe3184a1d87b6af1b7674be98cb8",
+          "response_sha256": "f6651ec5c37b3bd7ca3c1e0019606212c159d893edddd4b67f99579ca1cd5852",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "vendor-contract_completion_1",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "05598f7b94e9d0cf260f1ed1d3698265078941bdd2f1a46289aa062a31c0f959",
+          "response_sha256": "b685268150c46d177a4787f3ebef83b1e0fb132c83e55a0a5df505177b363350",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "vendor-contract_ownership_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "4e4abdef5bcd269703b2a32e21a9138ad485452409a745c5435f2df2ed567d09",
+          "response_sha256": "3961bace41ad6d0455cac3c548b4c30a5ed22932991caf10a60c7b57303a8efd",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "visual_vendor-contract_request-flow_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "1159071ea5dc4e77059744a3a9b629613772734b7feadd0812eccea4018df440",
+          "response_sha256": "8bf19e184087582803da46d3549ec9ec76ef6533caa4e00adb5fca7b91a47549",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        },
+        {
+          "tag": "visual_vendor-contract_buffer-ownership_0",
+          "model": "gpt-6.1-terra",
+          "version": "codex-cli 0.171.0-alpha.13.2",
+          "request_sha256": "523bee1db295c097991a1fe2a8484ce24034e5365e1ad7fa4d11c83016690bf2",
+          "response_sha256": "18278199aebf64c81def83a271efb2179c746db0093b3026159b3c933336c070",
+          "arguments": [
+            "--model",
+            "gpt-6.1-terra",
+            "-c",
+            "model_reasoning_effort=\"high\""
+          ]
+        }
+      ],
+      "manuscript_sha256": "0ab8064c0ff967206792acc381d758b39b9c1ec69a5570eac01e2041d8678c44",
+      "render_sections_sha256": "8e0fe9b5427dcb4899ed39b958cc66950f9ab0170fc901495fe3dc3ffd870e09",
+      "evaluated_manuscript_sha256": "5e1a1b42ceb344c87527e583c91d3e342db6c3d809b6ae80e3d64eb1295acec5"
+    }
+  },
+  "independent_cli_assessments": {
+    "assess-A-reader": {
+      "body_sha256": "5da228461784aa17f25babcd264b9bc1c0098216b2cd729b0a124ecf7aad0748",
+      "source_sha256": "1cb27aa2467dc24e592fc2cf88615a5e93585b5fa60589c8f1c3d633512298c5",
+      "model": "gpt-6.1-terra",
+      "cli_version": "codex-cli 0.171.0-alpha.13.2",
+      "arguments": [
+        "--model",
+        "gpt-6.1-terra",
+        "-c",
+        "model_reasoning_effort=\"high\""
+      ],
+      "stdout_sha256": "2c6ee40408956c94a59c6daf4d4c47b7a0d085afd9b983be0e27da303c6642e5",
+      "prompt_sha256": "c0e7955b65051e6eaa620f3e89dc8c3988c27900e38e66422c1c4f1418e15141"
+    },
+    "assess-A-review": {
+      "body_sha256": "5da228461784aa17f25babcd264b9bc1c0098216b2cd729b0a124ecf7aad0748",
+      "source_sha256": "1cb27aa2467dc24e592fc2cf88615a5e93585b5fa60589c8f1c3d633512298c5",
+      "model": "gpt-6.1-terra",
+      "cli_version": "codex-cli 0.171.0-alpha.13.2",
+      "arguments": [
+        "--model",
+        "gpt-6.1-terra",
+        "-c",
+        "model_reasoning_effort=\"high\""
+      ],
+      "stdout_sha256": "6806880151fb31fff521591052399d5100b63677452a89bc2e1d8dc7410acdce",
+      "prompt_sha256": "3bc905b209bc0f544288c457ee662fb095e815408e44bec3165a705827f0f1f9"
+    },
+    "assess-B2-reader": {
+      "body_sha256": "5d5b8d91b6476cc8e0fce1602d5c4c9125e7a11a91469ad4b8bb53416a3d3648",
+      "source_sha256": "74ba9144483accf13bd6e3bf40549a0cfdac5a8ddfd9020435bac6b63b76db2a",
+      "model": "gpt-6.1-terra",
+      "cli_version": "codex-cli 0.171.0-alpha.13.2",
+      "arguments": [
+        "--model",
+        "gpt-6.1-terra",
+        "-c",
+        "model_reasoning_effort=\"high\""
+      ],
+      "stdout_sha256": "13ccc488d50c58d01471e26725a4c77e56a0de72c1b22f72c008bffada99a9b4",
+      "prompt_sha256": "32fc9f4a7f98642d9663375cfeffd2236d3b5dca1c6fe1967bdd3488d633c5d7"
+    },
+    "assess-B2-review": {
+      "body_sha256": "5d5b8d91b6476cc8e0fce1602d5c4c9125e7a11a91469ad4b8bb53416a3d3648",
+      "source_sha256": "74ba9144483accf13bd6e3bf40549a0cfdac5a8ddfd9020435bac6b63b76db2a",
+      "model": "gpt-6.1-terra",
+      "cli_version": "codex-cli 0.171.0-alpha.13.2",
+      "arguments": [
+        "--model",
+        "gpt-6.1-terra",
+        "-c",
+        "model_reasoning_effort=\"high\""
+      ],
+      "stdout_sha256": "f235efd9e423a6d1ff248b4aeb61ba2d2e3acb6101df371d0af490b8c2dfee1b",
+      "prompt_sha256": "961be2d31861c4c7c516cccdb6a7519da0a5f2665e1f117e213f31e456fe785e"
+    },
+    "assess-B3-reader": {
+      "body_sha256": "d77b36398af624b11f5c8fc96c7c9b4af89c3f1207e1c75d80ad2f2ca1e6718b",
+      "source_sha256": "5e1a1b42ceb344c87527e583c91d3e342db6c3d809b6ae80e3d64eb1295acec5",
+      "model": "gpt-6.1-terra",
+      "cli_version": "codex-cli 0.171.0-alpha.13.2",
+      "arguments": [
+        "--model",
+        "gpt-6.1-terra",
+        "-c",
+        "model_reasoning_effort=\"high\""
+      ],
+      "stdout_sha256": "4c00e56ea500db43030a8cc33ec141f5f1d8ee1c0f3f488c369919e84aa6f38a",
+      "prompt_sha256": "f88b8d8b5f3d05ee66ec57da2e6c7cc7b4ebc32874a837b895b355c8894b15fc"
+    },
+    "assess-B3-review": {
+      "body_sha256": "d77b36398af624b11f5c8fc96c7c9b4af89c3f1207e1c75d80ad2f2ca1e6718b",
+      "source_sha256": "5e1a1b42ceb344c87527e583c91d3e342db6c3d809b6ae80e3d64eb1295acec5",
+      "model": "gpt-6.1-terra",
+      "cli_version": "codex-cli 0.171.0-alpha.13.2",
+      "arguments": [
+        "--model",
+        "gpt-6.1-terra",
+        "-c",
+        "model_reasoning_effort=\"high\""
+      ],
+      "stdout_sha256": "d0dfb36f1ba94ae0074f7b6a9fb8a10963375b0b36e3011b73f711f00aae1ee8",
+      "prompt_sha256": "cb2c6104d083dd056f01ba1bd75b7c655899937e46b96e9a7a6b76a34f829e8d"
+    },
+    "assess-public-reader": {
+      "body_sha256": "5e5ea1d0eb0201fa9ea827900082d09e502d41661c420e476945d09f4d2c41b0",
+      "source_sha256": "1ac0114aae700831ce4b1d2a40e3cb4767bf9b0c749e63d7043bad8868ec2342",
+      "model": "gpt-6.1-terra",
+      "cli_version": "codex-cli 0.171.0-alpha.13.2",
+      "arguments": [
+        "--model",
+        "gpt-6.1-terra",
+        "-c",
+        "model_reasoning_effort=\"high\""
+      ],
+      "stdout_sha256": "77c4ed3729a39b8b108763f738e74d80de320a9541db748336acd17f66fcf05b",
+      "prompt_sha256": "251edd7f3134e5b5ab58b0d9fcb23c8b4a91917c15643ea1e7b3b1f0cc90727c"
+    }
+  },
+  "human_approval": "pending"
+}

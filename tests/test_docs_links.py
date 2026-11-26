@@ -4,6 +4,7 @@
 """
 
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,16 @@ SKIP = {".venv", "build", "node_modules", ".git", ".claude"}
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 REFERENCE = re.compile(r"^\s*\[[^\]]+\]:\s*(\S+)", re.M)   # [이름]: 경로
 FENCE = re.compile(r"^(```|~~~).*?^\1", re.S | re.M)
+INLINE_CODE = re.compile(r"(?<!`)(`+)(?!`).*?\1(?!`)")
+
+
+class _ExplicitAnchors(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.ids: set[str] = set()
+
+    def handle_starttag(self, tag, attrs):
+        self.ids.update(value for key, value in attrs if key == "id" and value)
 
 
 def _docs():
@@ -50,7 +61,10 @@ def _anchors(path: Path) -> set[str]:
             candidate = f"{base}-{n}"
         counts[base] = n + 1
         used.add(candidate)
-    return used
+    explicit = _ExplicitAnchors()
+    explicit.feed(INLINE_CODE.sub("", text))
+    explicit.close()
+    return used | explicit.ids
 
 
 def _links():
@@ -66,6 +80,17 @@ def test_중복_제목은_이미_쓴_id_와_겹치지_않게_번호를_붙인다
     page = tmp_path / "p.md"
     page.write_text("## A\n\n## A\n\n## A 1\n\n## A\n", encoding="utf-8")
     assert _anchors(page) == {"a", "a-1", "a-1-1", "a-2"}
+
+
+def test_문서의_명시적_HTML_id를_근거_앵커로_인식한다(tmp_path):
+    page = tmp_path / "p.md"
+    page.write_text(
+        '## 소스 근거\n\n<a id="source-123"></a>\n\n'
+        '```html\n<a id="fenced-example"></a>\n```\n\n'
+        '`<a id="inline-example"></a>`\n\n<!-- <a id="comment"></a> -->\n',
+        encoding="utf-8",
+    )
+    assert _anchors(page) == {"소스-근거", "source-123"}
 
 
 def test_실행_원본만_제외하고_실제_안내서는_검사한다(tmp_path, monkeypatch):
