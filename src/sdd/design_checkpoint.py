@@ -24,7 +24,7 @@ def store_for(cfg, model, section, topic, prompt, grounding, answers, *, schema=
     identity = dict(source_commit=model.meta.get('source_commit'), topic=topic,
         request=dict(system=system, user=request.user, response_schema=schema),
         execution=checkpoints.execution_identity(cfg.agent, schema), prompt_policy=unit_policy,
-        validation_policy=checkpoints.validation_policy(), validation_model=checkpoints.validation_model(model),
+        validation_policy=checkpoints.design_validation_policy(section), validation_model=checkpoints.validation_model(model),
         validation_answers=checkpoints.checksum(answers), style_policy=checkpoints.style_policy(cfg),
         grounding_policy=policy_hash() if grounding else None, revision=cfg.review.revision(topic))
     return checkpoints.UnitStore(cfg, identity, comparison_scope=(

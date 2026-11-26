@@ -229,6 +229,9 @@ def inputs(cfg, model, section, plan, *, _legacy_cli_command=False, _legacy_cita
     from .prompting import style_rules
     style = cfg.style_dir / 'README.md'
     system = POLICY + ('\n' + style_rules(style.read_text(encoding='utf-8')) if style.exists() else '')
+    if section.get('_check_field_validity'):
+        from .field_validity import INSTRUCTIONS
+        system += '\n' + INSTRUCTIONS
     if plan.get('require_guard_branches', False):
         system += ('\nEvery non-always condition_ref must leave a decision-shaped node. '
                    'For each source guard used at that node, include both true and false outcomes. '
@@ -356,6 +359,12 @@ def materialize(cfg, model, section, plan, draft, producer):
             rec = records[source]
             evidence.append({'source': f"{plan['topic']}/{source}", 'sha256': rec['sha256'], 'quote': quote})
             quotes.append(quote)
+        if section.get('_check_field_validity'):
+            from .field_validity import check as check_field_validity
+            excerpts = [records[passages[qid][0]]['text'] for qid in dict.fromkeys(ids)]
+            symbol = item.get('symbol') or symbols.get(item.get('to'))
+            for key in ('label', 'label_en'):
+                check_field_validity(item[key], excerpts, symbol=symbol)
         quote = '\n'.join(quotes)
         def comparison_tokens(value):
             # Tokenize -- before ->: value-->0 contains a comparison, while
