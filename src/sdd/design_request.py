@@ -261,7 +261,9 @@ def _build_unit_request(model, section, topic, focused_system):
     requirements = {r['id']: r['question'] for r in section['design_requirements']}
     from . import focused_prompt
     sources = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"]['text'] for s in topic['sources']}
-    source_files = {s['id']: s['file'] for s in topic['sources']}
+    # 커밋 메시지 근거에는 설정의 file이 없으므로 수집한 기록의 인용 경로를 쓴다.
+    source_files = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"].get('file', s.get('file'))
+                    for s in topic['sources']}
     context_records = {s['id']: model.evidence[f"{section['id']}/{topic['id']}/{s['id']}"] for s in topic['sources']}
     # A focused answer can relate a guard, loop and final check. Splitting
     # those on blank lines makes one quote_id insufficient for that claim.

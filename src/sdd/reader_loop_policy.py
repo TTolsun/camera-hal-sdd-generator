@@ -84,7 +84,7 @@ def candidates(cfg, model, key, unit, scopes):
             raise ValueError('Loop requires available revision-pinned evidence')
         cid = source['id'] + ':current'
         result[cid] = dict(source=source['id'], text=record['text'], selector=source,
-                           file=source['file'], sha256=record['sha256'])
+                           file=record['file'], sha256=record['sha256'])
         envelopes = []
         if source.get('scope'):
             envelopes.append(source['scope'])

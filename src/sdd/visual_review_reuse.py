@@ -25,7 +25,8 @@ from .visual_audit import (
 # so a changed range, added prose or edited translation still differs.
 PRESENTATION_NORMALIZATION = 'generator-note-labels-v3'
 _EXCERPT_TITLES = {'소스 근거: ': 'source', 'Source evidence: ': 'source', '제품 자료: ': 'product',
-                   'Product evidence: ': 'product', 'Product material: ': 'product'}
+                   'Product evidence: ': 'product', 'Product material: ': 'product',
+                   '커밋 기록: ': 'commit', 'Commit record: ': 'commit'}
 _SCOPE_TITLES = {'그림 근거와 확인 범위', 'Diagram evidence and verification scope'}
 _LEGACY_EXCERPT_KEY = '{{0}}에서 시작하는 발췌입니다. 종료 줄은 {end}이며, 아래 원문을 설명과 대조할 수 있습니다.'
 _RANGE_KEY = '발췌 범위: {{1}} ~ {{3}}'

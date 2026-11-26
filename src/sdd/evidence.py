@@ -12,6 +12,7 @@ import subprocess
 from pathlib import PurePosixPath
 
 from .config import Config
+from .evidence_span import select_span  # noqa: F401  기존 호출자의 import 경로를 유지한다.
 from .facts.model import KnowledgeModel
 
 
@@ -29,23 +30,6 @@ _PRESENTATION_KEYS = ("group", "nav_section", "routes", "next", "watch", "watch_
 def requires_fingerprint(section: dict) -> bool:
     return bool(section.get("semantic_review") or section.get("design_topics") or section.get("design_requirements") or section.get("reader_profile")
                 or section.get("narration") == "facts")
-
-
-def select_span(text: str, source: dict) -> tuple[int, int]:
-    """Select a unique passage inside an optional uniquely anchored scope."""
-    offset, region = 0, text
-    if 'scope' in source:
-        scope = source['scope']
-        offset, limit = select_span(text, scope)
-        region = text[offset:limit]
-    start, end = source['start'], source['end']
-    if not start or not end or region.count(start) != 1:
-        raise ValueError('시작 앵커가 없거나 유일하지 않습니다.')
-    begin = region.index(start)
-    finish = region.find(end, begin + len(start))
-    if finish < 0:
-        raise ValueError('종료 앵커가 선택 범위 안에 없습니다.')
-    return offset + begin, offset + finish + len(end)
 
 
 def collect(cfg: Config, model: KnowledgeModel) -> None:
@@ -71,7 +55,6 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
                 key = f"{sec['id']}/{topic['id']}/{source['id']}"
                 record = {"commit": commit, "selector": source, "status": "needs-review"}
                 records[key] = record
-                file = str(source["file"])
                 try:
                     if not re.fullmatch(r"[0-9a-f]{40}", commit):
                         raise ValueError("facts에 불변 Git 커밋이 없습니다.")
@@ -79,6 +62,11 @@ def collect(cfg: Config, model: KnowledgeModel) -> None:
                         from .product_context import record as product_record
                         records[key] = product_record(source, commit)
                         continue
+                    if source.get('kind') == 'commit':
+                        from .history_evidence import record as commit_record
+                        records[key] = commit_record(cfg.source_root, source, commit)
+                        continue
+                    file = str(source["file"])
                     if PurePosixPath(file).is_absolute() or ".." in PurePosixPath(file).parts or ":" in file or "\\" in file:
                         raise ValueError("소스 루트 상대 경로가 필요합니다.")
                     if file not in cache:
@@ -124,7 +112,14 @@ def topic_blocks(model: KnowledgeModel, section: str, topic: dict) -> tuple[list
                 or record.get("selector") != source):
             gaps.append(f"{key}: {record.get('reason', '현재 설정·커밋에 맞는 근거가 없습니다.')}")
             continue
-        blocks.append(Block(key, f"소스 발췌 `{record['file']}:{record['line']}`\n{record['text']}", 1))
+        if record.get("origin") == "commit-message":
+            # 당시 변경 의도를 담은 기록이다. 현재 동작은 소스 발췌로 확인해야 한다.
+            label = (f"커밋 메시지 발췌 `{record['file']}:{record['line']}` "
+                     f"(커밋 {record['revision'][:12]}, {record['revision_date'][:10]}; "
+                     "작성 당시의 변경 의도이며 현재 동작의 근거가 아닙니다)")
+        else:
+            label = f"소스 발췌 `{record['file']}:{record['line']}`"
+        blocks.append(Block(key, f"{label}\n{record['text']}", 1))
     if not topic.get("sources"):
         gaps.append(f"{section}/{topic['id']}: 근거 선택이 없습니다.")
     return blocks, gaps

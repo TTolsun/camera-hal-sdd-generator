@@ -207,7 +207,8 @@ def _caption(cfg, model, section, value):
         evidence = {key: item for key, item in ref.items() if key != 'section'}
         record, = _records(model, sections[section_id], {'evidence': [evidence]})
         file = PurePosixPath(record['file'])
-        if file.is_absolute() or '..' in file.parts or record.get('origin') == 'product-material':
+        if (file.is_absolute() or '..' in file.parts
+                or record.get('origin') in ('product-material', 'commit-message')):
             raise ValueError('Visual caption requires a repository source file')
         line = record['line'] + record['text'][:record['text'].index(evidence['quote'])].count('\n')
         url = template.format(url=settings.source_url.rstrip('/'), commit=record['commit'],
