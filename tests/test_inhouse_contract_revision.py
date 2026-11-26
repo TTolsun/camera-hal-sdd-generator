@@ -127,6 +127,7 @@ def test_inhouse_graph_revision_preserves_source_conditions_in_both_languages(tm
         if failure:
             assert '오류로 이어지는 모든 화살표의 시작 라벨' in user
             assert '반환에서 후속 처리나 통지로 나가는 화살표' in user
+            assert '배타적 검사 순서나 오류 우선순위로 읽히지 않도록 두 언어' in user
             assert 'outcome' in response_schema['properties']['nodes']['items']['properties']['shape']['enum']
         else:
             assert '반환 이후 통지라는 시간 보장' in user

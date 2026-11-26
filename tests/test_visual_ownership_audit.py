@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from sdd import generated_visuals, visual_audit_gate
+from sdd import generated_design, generated_visuals, visual_audit_gate
 from sdd.config import load
 from sdd.decision_passages import decision_locations
 from sdd.facts.model import KnowledgeModel
@@ -88,8 +88,8 @@ def graphs():
         node('stop', 'Stopping', '정지 중에는 대기 요청을 완료하거나 취소합니다.', 'While stopping, complete or cancel pending requests.', 'stop'),
         node('return', 'Configured', '큐에 들어간 모든 요청을 애플리케이션에 반환하면 Configured로 전환합니다.',
              'Transition to Configured when all queued requests have been returned to the application.', 'stop'),
-        node('consumer', 'application', '덮어쓰기 전 마지막 외부 소비자의 사용 종료와 동기화를 별도로 확인하세요. 확인 주체는 발췌에서 명시되지 않습니다.',
-             'Before overwriting, separately verify the last external consumer has finished and synchronization is complete. The excerpt does not identify who verifies this.', 'stop'),
+        node('consumer', 'application', '연동 확인 항목으로 덮어쓰기 전 마지막 외부 소비자의 사용 종료와 동기화를 확인합니다.',
+             'Integration check before overwriting: verify that the last external consumer has finished and synchronization is complete.', 'stop'),
     ], 'edges': [
         edge('attach', 'wait', '실제 큐 진입 이후 준비합니다.', 'Prepare after actual queue entry.'),
         edge('wait', 'failure', '대기가 실패하면 요청이 실패 상태로 완료됩니다.', 'If the wait fails, the request completes in a failed state.'),
@@ -119,6 +119,8 @@ def test_old_reverse_edge_is_rejected_and_corrected_at_generation(tmp_cfg, owner
         payload = json.loads(user)
         assert 'Korean and English separately' in system
         assert '같은 요청의 처음 연결로 되돌아가는 역순' in system
+        assert '연동 확인 항목과 영어 Integration check' in system
+        assert 'should not을 사용해서는 안 됨 또는 must not으로 강화' in system
         assert payload['sources'] == {'fence': FENCE, 'stop': STOP}
         if payload['draft'] == old:
             return json.dumps(dict(passed=False, reason='fence -> buffer reverses failure and association.'))
@@ -164,3 +166,42 @@ def test_stop_and_fence_retrieval_are_prioritized_by_template(tmp_cfg, ownership
     cache = {('decision-passages', commit): matches}
     picks = list(decision_locations(tmp_cfg, commit, (), section, topic, cache))
     assert picks[:2] == [('stop.cpp', 5), ('fence.cpp', 9)]
+
+
+@pytest.mark.parametrize('topic_id, excerpt, old, corrected, required_revision', [
+    ('ownership', 'The ReuseBuffers flag should not be used if fences are used.',
+     '펜스를 사용하는 경우 이 플래그를 사용해서는 안 됩니다.',
+     '펜스를 사용하는 경우 `ReuseBuffers`를 사용하지 않는 것이 권장됩니다.',
+     'should not은 사용하지 않는 것이 권장된다고 쓰고'),
+    ('verification', 'Dynamic metadata is valid from buffer completion signaled by bufferComplete() '
+     'until the buffer is reused in a new request or deleted.',
+     '`requestCompleted` 통지 후 실제 프레임의 `FrameMetadata::Status`를 관찰해 영상 사용 여부를 판단할 수 있습니다.',
+     '개별 버퍼의 메타데이터는 `bufferComplete()`로 알린 완료 시점부터 새 요청에 재사용하거나 삭제하기 전까지 유효합니다.',
+     '메타데이터를 읽을 수 있는 시작점과 끝점이 발췌에 있으면 모두'),
+])
+def test_template_revises_actual_review_findings(tmp_cfg, topic_id, excerpt, old, corrected, required_revision):
+    tmp_cfg.agent.kind = 'cli'
+    tmp_cfg.agent.max_input_chars = 30_000
+    section = load(TEMPLATE / 'sdd.yaml').section('vendor-contract')
+    section.pop('reader_profile')
+    topic = next(t for t in section['design_topics'] if t['id'] == topic_id)
+    section['design_topics'] = [topic]
+    section['design_requirements'] = [r for r in section['design_requirements'] if r['id'] == topic_id]
+    source = dict(id='contract', file='capture.cpp', start=excerpt[:10], end=excerpt[-10:])
+    topic['sources'] = [source]
+    model = KnowledgeModel(meta={'source_commit': 'a' * 40}, evidence={
+        f'vendor-contract/{topic_id}/contract': dict(selector=source, file=source['file'], line=1,
+            status='available', commit='a' * 40, text=excerpt, sha256=hashlib.sha256(excerpt.encode()).hexdigest())})
+    tags = []
+
+    def chat(system, user, *, tag, response_schema):
+        tags.append(tag)
+        assert excerpt in user
+        if tag.endswith('_revision'):
+            assert old in user and required_revision in user
+        return json.dumps({'statements': [dict(text=corrected if tag.endswith('_revision') else old,
+            quote_id='contract:0', evidence=['contract'], covers=[topic_id], kind='behavior')]}, ensure_ascii=False)
+
+    result = generated_design.generate(tmp_cfg, model, SimpleNamespace(chat=chat), section)
+    assert [answer['text'] for answer in result.artifact['answers'][topic_id]] == [corrected]
+    assert tags == [f'vendor-contract_{topic_id}_0', f'vendor-contract_{topic_id}_0_revision']
