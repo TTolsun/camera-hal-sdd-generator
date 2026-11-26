@@ -35,7 +35,7 @@ def contract(tmp_cfg):
     for topic in section['design_topics']:
         if topic['id'] not in ('completion', 'failure'):
             continue
-        excerpts = {'queue': QUEUE, 'metadata': METADATA} if topic['id'] == 'completion' else {'queue': QUEUE}
+        excerpts = {'queue': QUEUE, 'metadata': METADATA}
         for sid, text in excerpts.items():
             source = dict(id=sid, file='camera.cpp', start=text[:15], end=text[-15:])
             topic['sources'].append(source)
@@ -111,6 +111,9 @@ def test_inhouse_graph_revision_preserves_source_conditions_in_both_languages(tm
         label_en='Returns 0 on success or a negative error code on failure.', quote_ids=['queue:0']))
     expected['edges'].append({'from': 'submit', 'to': 'returned', 'label': '제출 함수의 반환',
         'label_en': 'Submission return', 'condition_ref': 'always', 'quote_ids': ['queue:0']})
+    if failure:
+        for node in expected['nodes'][1:]:
+            node['shape'] = 'outcome'
     calls = []
 
     def chat(system, user, *, tag, response_schema):
@@ -123,6 +126,8 @@ def test_inhouse_graph_revision_preserves_source_conditions_in_both_languages(tm
         assert '한국어와 영어' in plan['revision_prompt']
         if failure:
             assert '오류로 이어지는 모든 화살표의 시작 라벨' in user
+            assert '반환에서 후속 처리나 통지로 나가는 화살표' in user
+            assert 'outcome' in response_schema['properties']['nodes']['items']['properties']['shape']['enum']
         else:
             assert '반환 이후 통지라는 시간 보장' in user
         return json.dumps(expected, ensure_ascii=False)
@@ -134,6 +139,21 @@ def test_inhouse_graph_revision_preserves_source_conditions_in_both_languages(tm
     assert record['graph']['nodes'][0]['label_en'] == expected_labels[1]
     assert 'revision_prompt' not in record['graph']
     assert calls == [f'visual_vendor-contract_{visual_id}_0', f'visual_vendor-contract_{visual_id}_0_revision']
+    if failure:
+        followup = deepcopy(expected)
+        followup['nodes'].append(dict(id='completion', symbol='requestCompleted', shape='outcome',
+            label='요청 완료 통지', label_en='Request completion signal', quote_ids=['queue:0']))
+        followup['edges'].append({'from': 'returned', 'to': 'completion', 'label': '큐에 들어간 요청을 처리합니다.',
+            'label_en': 'Process the queued request.', 'condition_ref': 'always', 'quote_ids': ['queue:0']})
+        with pytest.raises(ValueError, match='no outgoing arrow'):
+            generated_visuals.materialize(tmp_cfg, model, section, plan, followup, 'fixture')
+
+        disconnected = deepcopy(expected)
+        disconnected['nodes'].append(dict(id='frame_error', symbol='FrameError', shape='box',
+            label='다른 필드는 유효하지 않을 수 있습니다.', label_en='Other fields may be invalid.',
+            quote_ids=['metadata:0']))
+        with pytest.raises(ValueError, match='disconnected IDs: frame_error'):
+            generated_visuals.materialize(tmp_cfg, model, section, plan, disconnected, 'fixture')
 
 
 def test_inhouse_evidence_selection_receives_contract_scope(tmp_cfg, contract):
