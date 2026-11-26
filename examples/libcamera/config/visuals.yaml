@@ -6011,6 +6011,80 @@ sections:
     sources:
     - valid
   vendor-integration:
+  - id: rcar-build-boundary
+    topic: rcar-build-support
+    kind: flow
+    title: R-Car Gen4 빌드와 보드 확인
+    question: 빌드에서 확인한 결과와 대상 보드에서 별도로 확인할 조건은 무엇입니까?
+    nodes:
+    - id: options
+      label: rcar-gen4 파이프라인과 rppx1 IPA 선택
+      label_en: Select the rcar-gen4 pipeline and rppx1 IPA
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: -Dpipelines=rcar-gen4 -Dipas=rppx1`을 지정한다.
+    - id: host
+      label: WSL2에서 ipa_rppx1.so 빌드 확인
+      label_en: The WSL2 build produced ipa_rppx1.so
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: 을 지정한 Ninja 빌드도 완료했고 `ipa_rppx1.so`가 생성됐다.
+    - id: board
+      label: 대상 보드에서 rcar_vin·rcar_isp 확인
+      label_en: Check rcar_vin and rcar_isp on the target board
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: 파이프라인은 `rcar_vin` 미디어 장치를 확보하고 `rcar_isp` 코어 엔티티를 찾아 카메라 생성을 시도한다.
+    - id: ipa
+      label: IPA 초기화와 센서 YAML 확인
+      label_en: Check IPA initialization and sensor YAML
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: 대응 IPA 모듈이 없으면 초기화가 실패한다. IPA 구성 파일을 찾을 때 센서 모델의 YAML을 사용하며 `uncalibrated.yaml`이 대체 파일이다.
+    - id: capture
+      label: 첫 촬영·보정 품질은 미검증
+      label_en: First capture and calibration remain unverified
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: 대상 보드·커널·센서 조합에서 장치 탐색, 카메라 등록, 첫 촬영과 보정 품질은 확인하지 않았다.
+    edges:
+    - from: options
+      to: host
+      label: 컴파일·링크 관찰
+      label_en: Observed compilation and linking
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: 을 지정한 Ninja 빌드도 완료했고 `ipa_rppx1.so`가 생성됐다.
+    - from: host
+      to: board
+      label: 실행은 별도 검증
+      label_en: Verify operation separately
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: 두 관찰은 기록한 환경의 컴파일과 링크만 뒷받침한다.
+    - from: board
+      to: ipa
+      label: 카메라 등록의 전제
+      label_en: Prerequisites for camera setup
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: 파이프라인은 `rcar_vin` 미디어 장치를 확보하고 `rcar_isp` 코어 엔티티를 찾아 카메라 생성을 시도한다. 대응 IPA 모듈이 없으면 초기화가 실패한다.
+    - from: ipa
+      to: capture
+      label: 기기에서 확인할 결과
+      label_en: Check the observed device outcome
+      evidence:
+      - source: rcar-build-support/product-rcar-gen4-build-record
+        sha256: 84f0a955ce63197c06474673de3f39ddb233ed6ab06b49d5b553d40d4d5f5035
+        quote: 대체 파일의 존재는 렌즈나 센서의 보정 상태를 보증하지 않는다.
   - id: integration-stages
     topic: integration
     kind: flow
