@@ -12,6 +12,7 @@ docs/libcamera/records/issue253/automated/** -text -whitespace
 docs/libcamera/records/issue241/** -text -whitespace
 
 # Preserve measured agent records and native provenance bytes.
+docs/libcamera/records/inhouse-stop-comparison/*/vendor-contract.md -text -whitespace
 docs/libcamera/records/issue-248/final-automatic/** -text -whitespace
 docs/libcamera/records/issue-248/failure-repair/** -text -whitespace
 docs/libcamera/records/issue253/maintenance-cost-v2/** -text -whitespace

@@ -1,0 +1,36 @@
+sections:
+  - id: vendor-contract
+    title: 요청 완료와 버퍼 수명
+    output: vendor-contract.md
+    kind: prose
+    lead: 촬영 정지와 요청·버퍼 수명에 관한 연동 계약을 확인하세요.
+    reader: 기술 채택을 검토하고 연동·구현 범위를 정하는 Vendor 담당자
+    show_evidence: true
+    next:
+      title: Camera 구현 소스
+      link: https://github.com/TTolsun/libcamera-sdd/blob/adfa719f8ed67d18fd8a0739fc088a1f8b9e7252/src/libcamera/camera.cpp
+    design_generation: llm
+    design_requirements:
+      - id: completion
+        question: 제출과 완료, 정지를 어떻게 구분합니까?
+      - id: ownership
+        question: 요청과 버퍼를 누가 유지하고 반환합니까?
+    design_topics:
+      - id: completion
+        title: 제출·완료·정지
+        question: 제출과 완료, 정지를 어떻게 구분합니까?
+        covers: [completion]
+        sources:
+          - {id: queue, file: src/libcamera/camera.cpp, start: '\brief Queue a request to the camera', end: '\retval -ENOMEM'}
+          - {id: stop, file: src/libcamera/camera.cpp, start: '\brief Stop capture from camera', end: 'void Camera::requestComplete(Request *request)'}
+          - {id: pipeline-stop, file: src/libcamera/pipeline_handler.cpp, start: '\brief Stop capturing from all running streams and cancel pending requests', end: 'data->requestSequence_ = 0;'}
+          - {id: completion, file: src/libcamera/pipeline_handler.cpp, start: '\brief Signal request completion', end: 'doQueueRequests(camera);'}
+          - {id: request-status, file: src/libcamera/request.cpp, start: '\brief Complete a queued request', end: 'void Request::Private::reset()'}
+      - id: ownership
+        title: 요청과 버퍼 수명
+        question: 요청과 버퍼를 누가 유지하고 반환합니까?
+        covers: [ownership]
+        sources:
+          - {id: completion, file: src/libcamera/pipeline_handler.cpp, start: '\brief Signal request completion', end: 'doQueueRequests(camera);'}
+          - {id: reuse, file: src/libcamera/request.cpp, start: '\brief Reset the request for reuse', end: '_d()->metadata_.clear();'}
+          - {id: fence, file: src/libcamera/framebuffer.cpp, start: '\brief Extract the Fence associated with this Framebuffer', end: 'return std::move(_d()->fence_);'}
