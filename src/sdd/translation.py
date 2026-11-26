@@ -78,8 +78,9 @@ def _validate_text(source, text):
 # (예: Documentation/introduction.rst:10 발췌) 기존 번역과 같은 형식으로 결정적으로 만든다.
 _LOCATION_LABEL = re.compile(r"^(\S+:\d+) 발췌$")
 # 발췌마다 하나씩 생기는 펼침 제목도 위치 표기다. 경로에 공백이 있어도 같은 형식이다.
-_SOURCE_TITLE = re.compile(r"^(소스 근거|제품 자료|커밋 기록): (\S.*:\d+)$")
-_SOURCE_TITLE_EN = {'소스 근거': 'Source evidence', '제품 자료': 'Product evidence', '커밋 기록': 'Commit record'}
+_SOURCE_TITLE = re.compile(r"^(소스 근거|제품 자료|커밋 기록|리뷰 기록): (\S.*:\d+)$")
+_SOURCE_TITLE_EN = {'소스 근거': 'Source evidence', '제품 자료': 'Product evidence', '커밋 기록': 'Commit record',
+                    '리뷰 기록': 'Review record'}
 
 
 # 생성기가 모든 발췌·그림에 붙이는 고정 라벨이다. LLM에 맡기면 같은 라벨이 호출마다 다른 영어가 되고

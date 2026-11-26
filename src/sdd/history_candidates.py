@@ -88,6 +88,54 @@ def anchors(message: str) -> dict | None:
     return selected
 
 
+def comment_anchors(message: str) -> dict | None:
+    """Anchors selecting a whole review comment, including a one-line comment."""
+    lines = [line.strip() for line in message.strip().splitlines() if line.strip()]
+    if not lines:
+        return None
+    if len(lines) >= 2:
+        selected = {'start': lines[0], 'end': lines[-1]}
+    else:
+        # 리뷰 코멘트는 한 줄이 흔하다. 단어 경계에서 둘로 나눠 시작·종료 앵커를 만든다.
+        words = lines[0].split(' ')
+        if len(words) < 2:
+            return None
+        middle = len(words) // 2
+        selected = {'start': ' '.join(words[:middle]), 'end': ' '.join(words[middle:])}
+    try:
+        begin, finish = select_span(message, selected)
+    except ValueError:
+        return None
+    if message[begin:finish].strip() != message.strip():
+        return None
+    return selected
+
+
+def reviews(cfg, change_id: str | None, links: list[str], files: set[str], limit: int) -> dict | None:
+    """Comments of the change from a local snapshot, or how to fetch a missing one."""
+    from . import review_evidence
+    if not change_id or not review_evidence.CHANGE_ID.fullmatch(change_id):
+        return None
+    try:
+        snapshot = review_evidence.load(cfg.reviews_dir, change_id)
+    except ValueError:
+        base = next((link.split('/c/', 1)[0] for link in links if '/c/' in link), '<GERRIT>')
+        return {'status': 'missing', 'change_id': change_id, 'base_url': base}
+    comments = []
+    for comment in snapshot['comments']:
+        if not str(comment.get('message', '')).strip():
+            continue
+        flags = ['Gerrit 자동 알림'] if review_evidence.automated(comment) else []
+        if comment.get('unresolved'):
+            flags.append('미해결로 닫히지 않은 코멘트')
+        comments.append({**comment, 'signals': flags, 'same_file': comment.get('path') in files,
+                         'anchors': comment_anchors(comment['message'])})
+    # 자동 알림이 아닌 코멘트, 발췌와 같은 파일에 단 코멘트를 먼저 보인다.
+    comments.sort(key=lambda c: ('Gerrit 자동 알림' in c['signals'], not c['same_file'], c['date'], c['id']))
+    return {'status': 'available', 'change_id': change_id, 'number': snapshot.get('number'),
+            'subject': snapshot.get('subject', ''), 'total': len(comments), 'comments': comments[:limit]}
+
+
 def signals(info: dict) -> list[str]:
     flags = []
     if info['body_lines'] == 0:
@@ -97,7 +145,7 @@ def signals(info: dict) -> list[str]:
     return flags
 
 
-def collect(cfg, model, sections: list[str] | None = None, limit: int = 8) -> dict:
+def collect(cfg, model, sections: list[str] | None = None, limit: int = 8, review_limit: int = 6) -> dict:
     commit = str(model.meta.get('source_commit', ''))
     if not REVISION.fullmatch(commit):
         raise ValueError('facts에 불변 Git 커밋이 없습니다.')
@@ -111,11 +159,13 @@ def collect(cfg, model, sections: list[str] | None = None, limit: int = 8) -> di
             entry = {'section': sec['id'], 'topic': topic['id'], 'question': topic.get('question', ''),
                      'existing_commits': [s['revision'] for s in topic.get('sources', [])
                                           if s.get('kind') == 'commit' and isinstance(s.get('revision'), str)],
+                     'existing_comments': [[s.get('change'), s.get('comment')] for s in topic.get('sources', [])
+                                           if s.get('kind') == 'review'],
                      'excerpts': [], 'skipped': []}
             for source in topic.get('sources', []):
                 key = f"{sec['id']}/{topic['id']}/{source['id']}"
                 record = model.evidence.get(key, {})
-                if source.get('kind') in ('product', 'commit'):
+                if source.get('kind') in ('product', 'commit', 'review'):
                     continue
                 if record.get('status') != 'available' or record.get('commit') != commit:
                     entry['skipped'].append({'source': source['id'],
@@ -128,6 +178,7 @@ def collect(cfg, model, sections: list[str] | None = None, limit: int = 8) -> di
                 except ValueError as exc:
                     entry['skipped'].append({'source': source['id'], 'reason': str(exc)})
                     continue
+                files = {file}.union(*(origin['files'] for origin in origins.values()))
                 ordered = list(dict.fromkeys(history + sorted(origins, key=lambda r: -origins[r]['lines'])))
                 candidates = []
                 for revision in ordered[:limit]:
@@ -150,13 +201,17 @@ def collect(cfg, model, sections: list[str] | None = None, limit: int = 8) -> di
                         'change_id': info['change_id'], 'links': info['links'],
                         'already_linked': revision in entry['existing_commits'],
                         'anchors': anchors(info['message']), 'message': info['message'],
+                        'reviews': reviews(cfg, info['change_id'], info['links'], files, review_limit),
                     })
+                    for comment in (candidates[-1]['reviews'] or {}).get('comments', []):
+                        comment['already_linked'] = [info['change_id'], comment['id']] in entry['existing_comments']
                 entry['excerpts'].append({'source': source['id'], 'file': file, 'line': first, 'end_line': last,
                                           'history_total': len(history), 'candidates': candidates})
             if entry['excerpts'] or entry['skipped']:
                 topics.append(entry)
     return {'schema': 1, 'source_commit': commit, 'limit': limit, 'topics': topics,
-            'note': '후보는 설계 의도를 찾을 위치일 뿐이며, 사람이 메시지를 읽고 고른 것만 kind: commit 근거로 등록합니다.'}
+            'note': '후보는 설계 의도를 찾을 위치일 뿐이며, 사람이 메시지·코멘트를 읽고 고른 것만 '
+                    'kind: commit 또는 kind: review 근거로 등록합니다.'}
 
 
 def _yaml_snippet(candidate: dict) -> str:
@@ -171,11 +226,59 @@ def _yaml_snippet(candidate: dict) -> str:
     ])
 
 
+def _review_snippet(change_id: str, comment: dict) -> str:
+    anchor = comment['anchors']
+    return '\n'.join([
+        f"- id: review-{comment['id'][:12]}",
+        '  kind: review',
+        f"  change: {change_id}",
+        f"  comment: {json.dumps(comment['id'], ensure_ascii=False)}",
+        f"  start: {json.dumps(anchor['start'], ensure_ascii=False)}",
+        f"  end: {json.dumps(anchor['end'], ensure_ascii=False)}",
+    ])
+
+
+def _fence(text: str) -> str:
+    return '`' * max(3, 1 + max((len(m[0]) for m in re.finditer(r'`+', text)), default=0))
+
+
+def _review_lines(review: dict) -> list[str]:
+    change = review['change_id']
+    if review['status'] == 'missing':
+        raw = f"reviews-raw/{change[:9]}"
+        return ['리뷰 스냅숏이 없습니다. 논의를 확인하려면 두 응답을 저장한 뒤 가져옵니다. '
+                'Change-Id가 여러 브랜치에 있으면 `<project>~<branch>~<Change-Id>` 형식으로 지정합니다.', '',
+                '```powershell',
+                f'curl.exe -u <사용자> "{review["base_url"]}/a/changes/{change}?o=MESSAGES" -o {raw}-change.json',
+                f'curl.exe -u <사용자> "{review["base_url"]}/a/changes/{change}/comments" -o {raw}-comments.json',
+                f'uv run sdd --config <CFG> import-reviews --change {raw}-change.json --comments {raw}-comments.json',
+                '```', '']
+    lines = [f"리뷰 코멘트 (Change {review['number'] or change[:9]}): 전체 {review['total']}개 중 "
+             f"{len(review['comments'])}개를 표시합니다.", '']
+    for comment in review['comments']:
+        # /PATCHSET_LEVEL, /COMMIT_MSG 같은 특수 경로와 줄이 없는 코멘트는 경로만 보인다.
+        path, line = comment.get('path'), comment.get('line')
+        where = f" `{path}:{line}`" if path and line else (f" `{path}`" if path else '')
+        flags = ', '.join(comment['signals']) or '없음'
+        lines += [f"- `{comment['id']}` {comment['author']} {comment['date'][:10]}{where}"
+                  f" (같은 파일: {'예' if comment['same_file'] else '아니요'}, 주의 신호: {flags})"]
+        fence = _fence(comment['message'])
+        lines += ['', f'  {fence}text', *['  ' + line for line in comment['message'].rstrip('\n').splitlines()],
+                  f'  {fence}', '']
+        if comment.get('already_linked'):
+            lines += ['  이미 이 설계 주제의 근거로 연결되어 있습니다.', '']
+        elif comment['anchors'] and not comment['signals']:
+            lines += ['  ```yaml', *['  ' + line for line in _review_snippet(change, comment).splitlines()],
+                      '  ```', '']
+    return lines
+
+
 def markdown(report: dict) -> str:
-    lines = ['# 설계 근거 후보 (커밋 기록)', '',
+    lines = ['# 설계 근거 후보 (커밋·리뷰 기록)', '',
              f"facts 커밋: `{report['source_commit']}`", '',
              '> ' + report['note'],
              '> 커밋 메시지는 작성 당시의 의도입니다. `이후 변경`이 1 이상이면 현재 코드와 다를 수 있으므로 소스 근거와 함께 대조하세요.',
+             '> 리뷰 코멘트는 논의 과정입니다. 제안이 채택됐는지는 답글과 최종 코드로 확인하세요.',
              '']
     if not report['topics']:
         lines.append('후보를 찾을 설계 주제가 없습니다. 설계 주제에 Git 소스 근거를 먼저 연결하세요.')
@@ -211,6 +314,8 @@ def markdown(report: dict) -> str:
                 if c['anchors'] and not c['already_linked']:
                     lines += ['메시지를 근거로 쓰기로 했다면 이 주제의 `sources`에 추가합니다.', '',
                               '```yaml', _yaml_snippet(c), '```', '']
+                if c.get('reviews'):
+                    lines += _review_lines(c['reviews'])
     return '\n'.join(lines).rstrip('\n') + '\n'
 
 

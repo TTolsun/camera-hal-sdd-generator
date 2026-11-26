@@ -40,6 +40,10 @@ def configuration_errors(section: dict) -> list[str]:
                 from .history_evidence import configuration_errors as commit_errors
                 errors.extend(commit_errors(f"{topic['id']}/{source['id']}", source))
                 continue
+            if source.get('kind') == 'review':
+                from .review_evidence import configuration_errors as review_errors
+                errors.extend(review_errors(f"{topic['id']}/{source['id']}", source))
+                continue
             if 'impact' in source and (source['impact'] != 'excerpt' or source.get('kind') == 'product'):
                 errors.append(f"{topic['id']}/{source['id']}: impact: excerpt requires a Git source.")
             for field in ('file', 'start', 'end'):

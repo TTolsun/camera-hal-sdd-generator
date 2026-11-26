@@ -43,6 +43,7 @@
 | `paths.prompts`, `paths.templates`, `paths.style` | 설정 디렉터리의 `prompts`, `templates`, `style` | 지시문, 페이지 뼈대, 집필 규칙. **설정 디렉터리를 생성기 저장소 밖에 두면 반드시 생성기 저장소의 것을 가리키게 적습니다.** 적지 않으면 생성할 때 파일을 찾지 못합니다. |
 | `paths.glossary_file` | 설정 디렉터리의 `config/glossary.yaml` | 용어집. [glossary.yaml 참조](glossary.md). |
 | `paths.clang_uml_file` | 설정 디렉터리의 `config/clang-uml.yaml` | clang-uml을 쓸 때의 기본 설정. |
+| `paths.reviews_dir` | 설정 디렉터리의 `reviews` | `sdd import-reviews`가 쓰는 Gerrit 리뷰 스냅숏. `kind: review` 근거가 읽습니다. 사내 자료이므로 공개 저장소에 두지 않습니다. [리뷰 코멘트 근거](sections.md#리뷰-코멘트-근거). |
 
 상태 파일(`update-state.json`, `impact.json`, `coverage-triage.json` 등)은 설정 디렉터리의 `build/`에 생깁니다. 목록은 [명령 참조](cli.md#build에-생기는-파일)에 있습니다.
 

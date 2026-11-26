@@ -6,6 +6,7 @@
   sdd impact --base <ref>         git diff 로 영향 섹션 계산 -> build/impact.json
   sdd generate [--sections a,b] [--from-impact]   SDD Markdown 생성
   sdd history-candidates [--sections a,b]   소스 발췌를 바꾼 커밋에서 설계 근거 후보 목록 작성
+  sdd import-reviews --change f [--comments f]   저장한 Gerrit 응답을 리뷰 스냅숏으로 정규화
   sdd accept [문서...] [--finding 키]   사람 검토 승인을 장부에 기록
   sdd run --base <ref>            extract -> impact -> generate 한 번에
   sdd update [--to ref]           새 커밋을 차례로 증분 갱신 (관문에서 멈춤, 게시 없음)
@@ -370,6 +371,24 @@ def cmd_audit_docs(args: argparse.Namespace) -> int:
     return 2 if report["findings"] else 0
 
 
+def cmd_import_reviews(args: argparse.Namespace) -> int:
+    from . import review_evidence
+    cfg = _cfg(args)
+    change = Path(args.change).read_bytes()
+    comments = Path(args.comments).read_bytes() if args.comments else None
+    snapshot = review_evidence.normalize(change, comments)
+    path, report = review_evidence.write(cfg.reviews_dir, snapshot)
+    print(f"Change {snapshot['number'] or snapshot['change_id']}: 코멘트 {len(snapshot['comments'])}개 -> {path}")
+    print(f"새 코멘트 {report['added']}개, 바뀐 코멘트 {len(report['changed'])}개, 사라진 코멘트 {len(report['removed'])}개.")
+    if report['changed'] or report['removed']:
+        print('바뀌거나 사라진 코멘트를 인용한 근거는 다음 수집에서 검토 대상이 됩니다: '
+              + ', '.join(report['changed'] + report['removed']))
+    if comments is None:
+        print('인라인 코멘트 응답(--comments)이 없어 변경 메시지만 가져왔습니다.')
+    print('리뷰 스냅숏은 사내 자료입니다. 공개 저장소에 올리지 마세요. 네트워크·모델 호출 0회.')
+    return 0
+
+
 def cmd_history_candidates(args: argparse.Namespace) -> int:
     from . import history_candidates
     from .evidence import collect as collect_evidence
@@ -470,6 +489,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument('--limit', type=int, default=8, help='발췌 하나에 표시할 최대 후보 수 (기본 8)')
     s.add_argument('--out', help='출력 디렉터리 (기본: build 디렉터리)')
     s.set_defaults(fn=cmd_history_candidates)
+    s = sub.add_parser('import-reviews',
+                       help='저장한 Gerrit REST 응답을 리뷰 스냅숏으로 정규화한다 (네트워크·모델 호출 없음)')
+    s.add_argument('--change', required=True, help='/changes/<id>?o=MESSAGES 응답 파일')
+    s.add_argument('--comments', help='/changes/<id>/comments 응답 파일 (인라인 코멘트)')
+    s.set_defaults(fn=cmd_import_reviews)
 
     from .progress_watch import command as watch_progress
     s = sub.add_parser('watch-progress', help='실행과 별도로 진행 파일을 감시하고 갱신 중단을 알린다')

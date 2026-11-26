@@ -360,6 +360,11 @@ class Config:
         return self.paths.get("sections_file", self.config_dir / "sections.yaml")
 
     @property
+    def reviews_dir(self) -> Path:
+        # `sdd import-reviews`가 쓰는 Gerrit 리뷰 스냅숏. 사내 파생물이므로 사내 설정과 함께 관리한다.
+        return self.paths.get("reviews_dir", self.root / "reviews")
+
+    @property
     def scenarios_file(self) -> Path:
         return self.paths.get("scenarios_file", self.config_dir / "scenarios.yaml")
 

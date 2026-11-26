@@ -71,6 +71,15 @@ def _source_detail(record: dict, title: str) -> str:
         import json
         body = '소스와 별도로 제공된 자료입니다. 제공자·버전·적용 범위를 아래 기록에서 확인하세요. 자동 검사는 사람 승인이 아닙니다.\n\n' + body
         body += '\n\n```json\n' + json.dumps(metadata, ensure_ascii=False, indent=2) + '\n```'
+    elif record.get('origin') == 'review-comment':
+        label = '리뷰 기록'
+        metadata = {key: record[key] for key in ('change_id', 'change_number', 'project', 'comment_id', 'comment_type',
+                                                 'author', 'review_date', 'reviewed_path', 'reviewed_line',
+                                                 'patch_set', 'merged_revision') if record.get(key) is not None}
+        import json
+        body = ('리뷰 당시의 논의를 담은 코멘트입니다. 제안이 그대로 채택되지 않았을 수 있으므로 '
+                '현재 동작은 소스 근거로 확인하세요.\n\n' + body)
+        body += '\n\n```json\n' + json.dumps(metadata, ensure_ascii=False, indent=2) + '\n```'
     elif record.get('origin') == 'commit-message':
         label = '커밋 기록'
         metadata = {key: record[key] for key in ('revision', 'revision_date', 'subject', 'change_id') if key in record}
